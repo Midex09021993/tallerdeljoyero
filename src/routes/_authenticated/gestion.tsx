@@ -964,11 +964,6 @@ function EditorUsuario({
 
 /* ---------------- Sedes ---------------- */
 
-const MODOS = [
-  { valor: "completo", etiqueta: "Modo completo por áreas" },
-  { valor: "guiado", etiqueta: "Modo individual guiado" },
-];
-
 function ModuloSedes() {
   const { data: sedes = [] } = useSedes();
   const guardar = useGuardarSede();
@@ -1003,17 +998,6 @@ function ModuloSedes() {
             value={nueva.ciudad}
             onChange={(e) => setNueva({ ...nueva, ciudad: e.target.value })}
           />
-          <select
-            className={inputCls}
-            value={nueva.modo}
-            onChange={(e) => setNueva({ ...nueva, modo: e.target.value })}
-          >
-            {MODOS.map((m) => (
-              <option key={m.valor} value={m.valor}>
-                {m.etiqueta}
-              </option>
-            ))}
-          </select>
           <button
             type="submit"
             className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
@@ -1026,7 +1010,7 @@ function ModuloSedes() {
       <Panel titulo="Sedes del grupo">
         <ul className="divide-y divide-border">
           {sedes.map((s) => (
-            <li key={s.id} className="grid gap-3 px-6 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+            <li key={s.id} className="grid gap-3 px-6 py-4 sm:grid-cols-2 sm:items-center">
               <input
                 className={inputCls}
                 defaultValue={s.nombre}
@@ -1044,17 +1028,6 @@ function ModuloSedes() {
                   guardar.mutate({ id: s.id, nombre: s.nombre, ciudad: e.target.value, modo: s.modo })
                 }
               />
-              <select
-                className={inputCls}
-                defaultValue={s.modo}
-                onChange={(e) => guardar.mutate({ id: s.id, nombre: s.nombre, ciudad: s.ciudad, modo: e.target.value })}
-              >
-                {MODOS.map((m) => (
-                  <option key={m.valor} value={m.valor}>
-                    {m.etiqueta}
-                  </option>
-                ))}
-              </select>
             </li>
           ))}
           {sedes.length === 0 ? <li className="px-6 py-6 text-sm text-muted-foreground">Sin sedes.</li> : null}
@@ -1063,3 +1036,4 @@ function ModuloSedes() {
     </div>
   );
 }
+
