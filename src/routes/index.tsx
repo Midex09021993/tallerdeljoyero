@@ -1,6 +1,15 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { estadoClases, pedidos } from "@/data/taller";
+import {
+  estadoClases,
+  estados,
+  useActualizarPedido,
+  useBorrarPedido,
+  useCrearPedido,
+  useInventario,
+  usePedidos,
+} from "@/lib/taller-db";
 import floral from "@/assets/diseno-floral.jpg";
 import colgante from "@/assets/diseno-colgante.jpg";
 import gemelos from "@/assets/diseno-gemelos.jpg";
@@ -32,37 +41,135 @@ const disenos = [
   { img: corona, nombre: "Corona Imperial v2", meta: "Modificado hace 3 d", archivo: "Crown_Final.stl" },
 ];
 
+const vacio = {
+  referencia: "",
+  pieza: "",
+  cliente: "",
+  material: "Oro blanco 18k",
+  estado: estados[0] as string,
+  entrega: "",
+  importe: "0",
+};
+
 function PedidosPage() {
+  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: inventario = [] } = useInventario();
+  const crear = useCrearPedido();
+  const actualizar = useActualizarPedido();
+  const borrar = useBorrarPedido();
+  const [form, setForm] = useState(vacio);
+  const [abierto, setAbierto] = useState(false);
+
+  const bajos = inventario.filter((m) => m.stock < m.minimo);
+  const resina = inventario.find((m) => m.material.toLowerCase().includes("resina"));
+  const oro = inventario.find((m) => m.material.toLowerCase().includes("oro 18k"));
+
   return (
     <AppShell
       titulo="Panel de Producción"
-      subtitulo="Lunes, 22 de mayo · 14 pedidos activos"
+      subtitulo={isLoading ? "Cargando pedidos…" : `${pedidos.length} pedidos en la base de datos`}
       acciones={
         <>
-          <StatCard etiqueta="Resina 3D" valor="840 ml" delta="-12%" tono="negativo" />
-          <StatCard etiqueta="Oro 18k" valor="242 g" delta="+5 g" tono="positivo" />
+          <StatCard
+            etiqueta="Resina 3D"
+            valor={resina ? `${resina.stock} ${resina.unidad}` : "—"}
+            tono={resina && resina.stock < resina.minimo ? "negativo" : "neutro"}
+          />
+          <StatCard etiqueta="Oro 18k" valor={oro ? `${oro.stock} ${oro.unidad}` : "—"} />
         </>
       }
     >
       <section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel
-          titulo="Pedidos recientes"
+          titulo="Pedidos"
           className="lg:col-span-2"
           accion={
-            <Link to="/gestion" className="text-xs font-medium text-gold hover:underline">
-              Ver todos
-            </Link>
+            <button
+              type="button"
+              onClick={() => setAbierto((v) => !v)}
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-surface-muted"
+            >
+              {abierto ? "Cancelar" : "Nuevo pedido"}
+            </button>
           }
         >
+          {abierto ? (
+            <form
+              className="grid grid-cols-2 gap-3 border-b border-border bg-surface-muted/40 p-6 lg:grid-cols-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                crear.mutate(
+                  {
+                    referencia: form.referencia || `#${Math.floor(Math.random() * 9000 + 1000)}`,
+                    pieza: form.pieza,
+                    cliente: form.cliente,
+                    material: form.material,
+                    estado: form.estado,
+                    entrega: form.entrega,
+                    importe: Number(form.importe) || 0,
+                  },
+                  {
+                    onSuccess: () => {
+                      setForm(vacio);
+                      setAbierto(false);
+                    },
+                  },
+                );
+              }}
+            >
+              {(
+                [
+                  ["referencia", "Referencia"],
+                  ["pieza", "Pieza"],
+                  ["cliente", "Cliente"],
+                  ["material", "Material"],
+                  ["entrega", "Entrega"],
+                  ["importe", "Importe (€)"],
+                ] as const
+              ).map(([campo, etiqueta]) => (
+                <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {etiqueta}
+                  <input
+                    required={campo === "pieza" || campo === "cliente"}
+                    value={form[campo]}
+                    onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                  />
+                </label>
+              ))}
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Estado
+                <select
+                  value={form.estado}
+                  onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                >
+                  {estados.map((e) => (
+                    <option key={e}>{e}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={crear.isPending}
+                  className="w-full rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                >
+                  {crear.isPending ? "Guardando…" : "Guardar pedido"}
+                </button>
+              </div>
+            </form>
+          ) : null}
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-surface-muted">
-                  {["ID", "Pieza", "Cliente", "Estado", "Entrega"].map((h, i) => (
+                  {["Ref", "Pieza", "Cliente", "Estado", "Entrega", ""].map((h, i) => (
                     <th
-                      key={h}
+                      key={h || i}
                       className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
-                        i === 4 ? "text-right" : ""
+                        i >= 4 ? "text-right" : ""
                       }`}
                     >
                       {h}
@@ -73,7 +180,7 @@ function PedidosPage() {
               <tbody className="divide-y divide-border">
                 {pedidos.map((p) => (
                   <tr key={p.id} className="transition-colors hover:bg-surface-muted/60">
-                    <td className="px-6 py-4 text-xs font-medium">{p.id}</td>
+                    <td className="px-6 py-4 text-xs font-medium">{p.referencia}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="grid size-10 shrink-0 place-items-center rounded border border-border bg-surface-muted text-[8px] font-medium text-muted-foreground">
@@ -84,15 +191,35 @@ function PedidosPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{p.cliente}</td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado]}`}
+                      <select
+                        value={p.estado}
+                        onChange={(e) => actualizar.mutate({ id: p.id, estado: e.target.value })}
+                        className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado] ?? "bg-surface-muted"}`}
                       >
-                        {p.estado}
-                      </span>
+                        {estados.map((e) => (
+                          <option key={e}>{e}</option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-right text-sm tabular-nums">{p.entrega}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => borrar.mutate(p.id)}
+                        className="text-xs text-muted-foreground transition-colors hover:text-danger"
+                      >
+                        Borrar
+                      </button>
+                    </td>
                   </tr>
                 ))}
+                {!isLoading && pedidos.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
+                      No hay pedidos todavía.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -129,15 +256,23 @@ function PedidosPage() {
             <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Alertas de stock
             </h2>
-            <div className="mb-4 flex items-center gap-4">
-              <div className="grid size-10 place-items-center rounded-full bg-danger-soft text-xs font-bold text-danger">
-                !
-              </div>
-              <div>
-                <p className="text-sm font-medium">Plata de ley 925</p>
-                <p className="text-xs text-muted-foreground">Bajo el mínimo (45 g restantes)</p>
-              </div>
-            </div>
+            {bajos.length === 0 ? (
+              <p className="mb-4 text-sm text-muted-foreground">Todo el material por encima del mínimo.</p>
+            ) : (
+              bajos.map((m) => (
+                <div key={m.id} className="mb-4 flex items-center gap-4">
+                  <div className="grid size-10 place-items-center rounded-full bg-danger-soft text-xs font-bold text-danger">
+                    !
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{m.material}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Bajo el mínimo ({m.stock} {m.unidad} restantes)
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
             <Link
               to="/inventario"
               className="block w-full rounded-lg border border-border bg-surface-muted py-2 text-center text-xs font-medium transition-colors hover:bg-accent"
