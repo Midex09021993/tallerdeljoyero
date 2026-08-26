@@ -196,6 +196,37 @@ export function useMoverPedido() {
   });
 }
 
+/** Envía el pedido directamente a cualquier área, sin seguir la ruta. */
+export function useEnviarAArea() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pedido,
+      destino,
+      usuarioId,
+    }: {
+      pedido: Pedido;
+      destino: string;
+      usuarioId: string | null;
+    }) => {
+      if (!destino || destino === pedido.area_actual) return;
+      const { error } = await supabase
+        .from("pedidos")
+        .update({ area_actual: destino, area_desde: new Date().toISOString() })
+        .eq("id", pedido.id);
+      if (error) throw error;
+      await supabase.from("pedido_movimientos").insert({
+        pedido_id: pedido.id,
+        area_origen: pedido.area_actual,
+        area_destino: destino,
+        accion: "enviar",
+        usuario_id: usuarioId,
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+  });
+}
+
 export function useSedes() {
   return useQuery({
     queryKey: ["sedes"],

@@ -3,8 +3,8 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useSesion } from "@/lib/auth";
-import { useActualizarPedido, useMoverPedido, usePedidos } from "@/lib/taller-db";
+import { AREAS, useSesion } from "@/lib/auth";
+import { useActualizarPedido, useEnviarAArea, useMoverPedido, usePedidos } from "@/lib/taller-db";
 import { areaClase } from "./pedidos.index";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
