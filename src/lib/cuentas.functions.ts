@@ -146,26 +146,25 @@ type EdicionUsuario = {
 /** Edición de un usuario existente (dueño o gerente). */
 export const actualizarUsuario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: EdicionUsuario) => {
-    if (!input.id) throw new Error("Usuario no válido");
-    if (!input.nombre) throw new Error("El nombre es obligatorio");
-    if (input.password && input.password.length < 6)
-      throw new Error("La contraseña debe tener al menos 6 caracteres");
-    if (input.acceso_desde && input.acceso_hasta && input.acceso_hasta < input.acceso_desde)
-      throw new Error("La fecha final debe ser posterior a la inicial");
-    return input;
-  })
-  .handler(async ({ data, context }) => {
+  .inputValidator((input: EdicionUsuario) => input)
+  .handler(async ({ data, context }): Promise<{ ok: boolean; error?: string }> => {
+    if (!data.id) return { ok: false, error: "Usuario no válido" };
+    if (!data.nombre) return { ok: false, error: "El nombre es obligatorio" };
+    if (data.password && data.password.length < 6)
+      return { ok: false, error: "La contraseña debe tener al menos 6 caracteres" };
+    if (data.acceso_desde && data.acceso_hasta && data.acceso_hasta < data.acceso_desde)
+      return { ok: false, error: "La fecha final debe ser posterior a la inicial" };
+
     const { data: roles } = await context.supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId);
     const misRoles = (roles ?? []).map((r) => r.role);
     if (!misRoles.includes("dueno") && !misRoles.includes("gerente")) {
-      throw new Error("No tienes permiso para editar usuarios");
+      return { ok: false, error: "No tienes permiso para editar usuarios" };
     }
     if (data.rol === "dueno" && !misRoles.includes("dueno")) {
-      throw new Error("Sólo un dueño puede asignar el rol de dueño");
+      return { ok: false, error: "Sólo un dueño puede asignar el rol de dueño" };
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -182,7 +181,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
         acceso_hasta: data.acceso_hasta,
       })
       .eq("id", data.id);
-    if (errPerfil) throw new Error(errPerfil.message);
+    if (errPerfil) return { ok: false, error: errPerfil.message };
 
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
     await supabaseAdmin
@@ -199,7 +198,14 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
         password: data.password,
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        return {
+          ok: false,
+          error: /weak/i.test(error.message)
+            ? "Esa contraseña es demasiado común. Usa una más segura (letras, números y símbolos)."
+            : error.message,
+        };
+      }
     }
     return { ok: true };
   });
