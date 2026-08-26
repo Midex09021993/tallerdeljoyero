@@ -37,7 +37,8 @@ const vacio = {
   origen: "",
   contrato: "",
   trabajo: "",
-  material: "Oro 18k",
+  material: "",
+  peso_estimado: "",
   importe: "0",
   fecha_ingreso: hoy(),
   fecha_entrega: "",
@@ -94,7 +95,7 @@ function PedidosPage() {
 
   const [abierto, setAbierto] = useState(false);
   const [form, setForm] = useState(vacio);
-  const [ruta, setRuta] = useState<string[]>(["Diseño 3D", "Impresión 3D", "Casting", "Taller", "Área ventas"]);
+  const [ruta, setRuta] = useState<string[]>([]);
   const [sedeId, setSedeId] = useState<string>("");
   const [filtro, setFiltro] = useState("Todas");
   const [busca, setBusca] = useState("");
@@ -158,6 +159,10 @@ function PedidosPage() {
             className="border-b border-border bg-surface-muted/40 p-6"
             onSubmit={(e) => {
               e.preventDefault();
+              if (ruta.length === 0) {
+                alert("Marca al menos un área en la ruta del pedido.");
+                return;
+              }
               const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
               const nuevo: PedidoNuevo = {
                 referencia: siguienteReferencia(
@@ -171,6 +176,7 @@ function PedidosPage() {
                 origen: form.origen,
                 contrato: form.contrato,
                 material: form.material,
+                peso_estimado: form.peso_estimado,
                 estado: "Diseño 3D",
                 entrega: form.fecha_entrega,
                 importe: Number(form.importe) || 0,
@@ -187,6 +193,7 @@ function PedidosPage() {
               crear.mutate(nuevo, {
                 onSuccess: () => {
                   setForm(vacio);
+                  setRuta([]);
                   setAbierto(false);
                 },
               });
@@ -201,6 +208,7 @@ function PedidosPage() {
                   ["contrato", "N° contrato", "text"],
                   ["trabajo", "Trabajo solicitado", "text"],
                   ["material", "Material", "text"],
+                  ["peso_estimado", "Peso estimado (g)", "text"],
                   ["importe", "Costo (S/)", "number"],
                   ["fecha_ingreso", "Fecha de ingreso", "date"],
                   ["fecha_entrega", "Fecha de entrega", "date"],

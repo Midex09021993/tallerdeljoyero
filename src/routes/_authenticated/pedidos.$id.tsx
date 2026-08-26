@@ -247,8 +247,9 @@ function FichaPedido() {
                       contrato: String(fd.get("contrato")),
                       trabajo: String(fd.get("trabajo")),
                       pieza: String(fd.get("trabajo")),
-                      material: String(fd.get("material")),
-                      talla: String(fd.get("talla")),
+                       material: String(fd.get("material")),
+                       peso_estimado: String(fd.get("peso_estimado")),
+                       talla: String(fd.get("talla")),
                       cantidad_piezas: Number(fd.get("cantidad_piezas")) || 1,
                       piedras: String(fd.get("piedras")),
                       importe: Number(fd.get("importe")) || 0,
@@ -266,8 +267,9 @@ function FichaPedido() {
                     ["origen", "Origen", pedido.origen, "text"],
                     ["contrato", "Contrato", pedido.contrato, "text"],
                     ["trabajo", "Trabajo", pedido.trabajo || pedido.pieza, "text"],
-                    ["material", "Material", pedido.material, "text"],
-                    ["talla", "Talla / Medida", pedido.talla, "text"],
+                     ["material", "Material", pedido.material, "text"],
+                     ["peso_estimado", "Peso estimado (g)", pedido.peso_estimado, "text"],
+                     ["talla", "Talla / Medida", pedido.talla, "text"],
                     ["cantidad_piezas", "Cantidad de piezas", String(pedido.cantidad_piezas), "number"],
                     ["piedras", "Piedras / Componentes", pedido.piedras, "text"],
                     ["importe", "Costo", String(pedido.importe), "number"],
@@ -305,9 +307,10 @@ function FichaPedido() {
                     [
                       ["Talla / Medida", pedido.talla || "—"],
                       ["Cantidad de piezas", String(pedido.cantidad_piezas || 1)],
-                      ["Piedras / Componentes", pedido.piedras || "—"],
-                      ["Material", pedido.material || "—"],
-                    ] as const
+                       ["Piedras / Componentes", pedido.piedras || "—"],
+                       ["Material", pedido.material || "—"],
+                       ["Peso estimado", pedido.peso_estimado || "—"],
+                     ] as const
                   ).map(([label, valor]) => (
                     <div key={label}>
                       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
