@@ -32,10 +32,30 @@ const estadosTarea = ["Pendiente", "En curso", "Terminada"];
 function TallerPage() {
   const { data: tareas = [], isLoading } = useTareas();
   const { data: pedidos = [] } = usePedidos();
+  const { data: sesion } = useSesion();
   const navigate = useNavigate();
   const actualizar = useActualizarTarea();
-  const enTaller = pedidos.filter(
-    (p) => p.area_actual === "Taller" || p.area_actual === "Casting",
+  const [busca, setBusca] = useState("");
+
+  // Los operarios ven los pedidos de sus áreas asignadas; al buscar por texto
+  // pueden encontrar cualquier pedido, aunque ya haya avanzado de área.
+  const soloSusAreas = Boolean(sesion && !sesion.esAdmin && (sesion.areas?.length ?? 0) > 0);
+  const misAreas = sesion?.areas ?? [];
+  const enTaller = useMemo(
+    () =>
+      pedidos.filter((p) => {
+        const t = busca.trim().toLowerCase();
+        const okTexto =
+          !t ||
+          [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
+            (v ?? "").toLowerCase().includes(t),
+          );
+        const okArea = soloSusAreas
+          ? Boolean(t) || misAreas.includes(p.area_actual)
+          : p.area_actual === "Taller" || p.area_actual === "Casting";
+        return okTexto && okArea;
+      }),
+    [pedidos, busca, soloSusAreas, misAreas],
   );
   return (
     <AppShell
@@ -48,7 +68,18 @@ function TallerPage() {
         </>
       }
     >
-      <Panel titulo="Pedidos en el área de taller" className="mb-6">
+      <Panel
+        titulo={soloSusAreas ? "Pedidos de mis áreas" : "Pedidos en el área de taller"}
+        className="mb-6"
+        accion={
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por referencia, cliente, contrato…"
+            className="w-64 rounded-lg border border-border bg-background px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-gold"
+          />
+        }
+      >
         <ul className="divide-y divide-border">
           {enTaller.map((p) => (
             <li key={p.id}>
