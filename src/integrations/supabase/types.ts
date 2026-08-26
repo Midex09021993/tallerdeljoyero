@@ -383,6 +383,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          acceso_desde: string | null
+          acceso_hasta: string | null
           activo: boolean
           created_at: string
           dni: string
@@ -393,6 +395,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acceso_desde?: string | null
+          acceso_hasta?: string | null
           activo?: boolean
           created_at?: string
           dni?: string
@@ -403,6 +407,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acceso_desde?: string | null
+          acceso_hasta?: string | null
           activo?: boolean
           created_at?: string
           dni?: string
