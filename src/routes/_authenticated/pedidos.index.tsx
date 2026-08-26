@@ -193,6 +193,7 @@ function PedidosPage() {
               crear.mutate(nuevo, {
                 onSuccess: () => {
                   setForm(vacio);
+                  setRuta([]);
                   setAbierto(false);
                 },
               });
