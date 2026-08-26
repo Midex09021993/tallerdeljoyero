@@ -106,6 +106,11 @@ function PedidosPage() {
   const puedeCrear = Boolean(sesion?.esAdmin);
   const sedePorDefecto = sedeId || sesion?.perfil.sede_id || sedes[0]?.id || "";
 
+  // Los operarios solo ven los pedidos que están en sus áreas asignadas.
+  // Al buscar por texto pueden encontrar cualquier pedido, aunque ya haya avanzado.
+  const soloSusAreas = Boolean(sesion && !sesion.esAdmin && (sesion.areas?.length ?? 0) > 0);
+  const misAreas = sesion?.areas ?? [];
+
   const lista = useMemo(
     () =>
       pedidos.filter((p) => {
@@ -116,12 +121,14 @@ function PedidosPage() {
           [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
             (v ?? "").toLowerCase().includes(t),
           );
-        return okArea && okTexto;
+        const okOperario = !soloSusAreas || Boolean(t) || misAreas.includes(p.area_actual);
+        return okArea && okTexto && okOperario;
       }),
-    [pedidos, filtro, busca],
+    [pedidos, filtro, busca, soloSusAreas, misAreas],
   );
 
   const activos = pedidos.filter((p) => p.area_actual !== "Entregado").length;
+
 
   return (
     <AppShell
@@ -304,7 +311,11 @@ function PedidosPage() {
 
         <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">
           <input
-            placeholder="Buscar cliente, contrato o referencia…"
+            placeholder={
+              soloSusAreas
+                ? "Buscar en todos los pedidos (aunque ya avanzaron)…"
+                : "Buscar cliente, contrato o referencia…"
+            }
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="min-w-[220px] flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
@@ -314,11 +325,18 @@ function PedidosPage() {
             onChange={(e) => setFiltro(e.target.value)}
             className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
           >
-            {["Todas", ...AREAS].map((a) => (
+            {["Todas", ...(soloSusAreas ? misAreas : AREAS)].map((a) => (
               <option key={a}>{a}</option>
             ))}
           </select>
         </div>
+        {soloSusAreas && !busca.trim() ? (
+          <p className="px-6 pt-3 text-[11px] text-muted-foreground">
+            Ves los pedidos que están en tus áreas: {misAreas.join(", ")}. Usa el buscador para
+            encontrar pedidos que ya avanzaron a otra área.
+          </p>
+        ) : null}
+
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
