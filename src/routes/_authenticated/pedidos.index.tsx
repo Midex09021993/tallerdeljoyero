@@ -127,8 +127,36 @@ function PedidosPage() {
     [pedidos, filtro, busca, soloSusAreas, misAreas],
   );
 
-  const activos = pedidos.filter((p) => p.area_actual !== "Entregado").length;
+  const activos = pedidos.filter((p) => p.area_actual !== "Entregado");
 
+  const diasHastaEntrega = (fechaIso: string | null | undefined): number | null => {
+    if (!fechaIso) return null;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const entrega = new Date(fechaIso);
+    entrega.setHours(0, 0, 0, 0);
+    return Math.ceil((entrega.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const atrasados = activos.filter((p) => {
+    const d = diasHastaEntrega(p.fecha_entrega);
+    return d !== null && d < 0;
+  });
+
+  const proximos = activos.filter((p) => {
+    const d = diasHastaEntrega(p.fecha_entrega);
+    return d !== null && d >= 0 && d <= 3;
+  });
+
+  const atrasadosPorArea = atrasados.reduce((acc, p) => {
+    acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const proximosPorArea = proximos.reduce((acc, p) => {
+    acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <AppShell
@@ -139,14 +167,46 @@ function PedidosPage() {
           : `${pedidos.length} pedidos · ${sesion?.esDueno ? "todas las sedes" : (sesion?.sede?.nombre ?? "tu sede")}`
       }
       acciones={
-        <>
-          <StatCard etiqueta="Activos" valor={String(activos)} />
-          <StatCard
-            etiqueta="Entregados"
-            valor={String(pedidos.length - activos)}
-            tono="positivo"
-          />
-        </>
+        <div className="flex flex-wrap items-stretch gap-3">
+          <StatCard etiqueta="Activos" valor={String(activos.length)} />
+          <div className="flex min-w-[150px] flex-col rounded-xl border border-border bg-card p-4 shadow-card">
+            <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Atrasados</p>
+            <p className="text-xl font-medium text-danger">{String(atrasados.length)}</p>
+            {Object.keys(atrasadosPorArea).length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {Object.entries(atrasadosPorArea).map(([area, n]) => (
+                  <span
+                    key={area}
+                    className="rounded-md bg-danger/10 px-1.5 py-0.5 text-[9px] leading-tight text-danger"
+                    title={area}
+                  >
+                    {area}: {n}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex min-w-[150px] flex-col rounded-xl border border-border bg-card p-4 shadow-card">
+            <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Entrega próxima</p>
+            <p className={`text-xl font-medium ${proximos.length > 0 ? "text-warning" : "text-success"}`}>
+              {String(proximos.length)}
+            </p>
+            <p className="mt-1 text-[10px] text-muted-foreground">Próximos 3 días</p>
+            {Object.keys(proximosPorArea).length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {Object.entries(proximosPorArea).map(([area, n]) => (
+                  <span
+                    key={area}
+                    className="rounded-md bg-warning/10 px-1.5 py-0.5 text-[9px] leading-tight text-warning"
+                    title={area}
+                  >
+                    {area}: {n}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
       }
     >
       <Panel
