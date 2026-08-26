@@ -58,6 +58,28 @@ export function areaClase(area: string) {
   return mapa[area] ?? "bg-surface-muted";
 }
 
+/** Prefijo de referencia: dos primeras iniciales del taller (sede). */
+export function prefijoSede(nombre: string | null | undefined) {
+  const limpio = (nombre ?? "").replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g, "").trim();
+  const palabras = limpio.split(/\s+/).filter(Boolean);
+  const base =
+    palabras.length >= 2
+      ? palabras[0]!.charAt(0) + palabras[1]!.charAt(0)
+      : (palabras[0] ?? "TA").slice(0, 2);
+  return (base || "TA").toUpperCase();
+}
+
+/** Genera la siguiente referencia tipo GG-001 para esa sede. */
+export function siguienteReferencia(nombreSede: string | null | undefined, refs: string[]) {
+  const prefijo = prefijoSede(nombreSede);
+  const re = new RegExp(`^${prefijo}-(\\d+)$`, "i");
+  const max = refs.reduce((acc, r) => {
+    const m = re.exec((r ?? "").trim());
+    return m ? Math.max(acc, Number(m[1])) : acc;
+  }, 0);
+  return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
+}
+
 function PedidosPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
@@ -72,6 +94,7 @@ function PedidosPage() {
   const [sedeId, setSedeId] = useState<string>("");
   const [filtro, setFiltro] = useState("Todas");
   const [busca, setBusca] = useState("");
+  const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
   const sedePorDefecto = sedeId || sesion?.perfil.sede_id || sedes[0]?.id || "";
@@ -131,8 +154,12 @@ function PedidosPage() {
             className="border-b border-border bg-surface-muted/40 p-6"
             onSubmit={(e) => {
               e.preventDefault();
+              const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
               const nuevo: PedidoNuevo = {
-                referencia: `#${Math.floor(Math.random() * 9000 + 1000)}`,
+                referencia: siguienteReferencia(
+                  nombreSede,
+                  pedidos.map((p) => p.referencia),
+                ),
                 pieza: form.trabajo,
                 trabajo: form.trabajo,
                 cliente: form.cliente,
@@ -338,7 +365,7 @@ function PedidosPage() {
                       {puedeCrear ? (
                         <button
                           type="button"
-                          onClick={() => borrar.mutate(p.id)}
+                          onClick={() => setPorBorrar({ id: p.id, referencia: p.referencia })}
                           className="text-xs text-muted-foreground transition-colors hover:text-danger"
                         >
                           Borrar
@@ -359,6 +386,42 @@ function PedidosPage() {
           </table>
         </div>
       </Panel>
+
+      {porBorrar ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-lg">
+            <h2 className="text-base font-semibold">Eliminar pedido</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              ¿Seguro que quieres eliminar el pedido {porBorrar.referencia}? Esta acción no se puede
+              deshacer.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPorBorrar(null)}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-surface-muted"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={borrar.isPending}
+                onClick={() =>
+                  borrar.mutate(porBorrar.id, { onSettled: () => setPorBorrar(null) })
+                }
+                className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {borrar.isPending ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
+
   );
 }
