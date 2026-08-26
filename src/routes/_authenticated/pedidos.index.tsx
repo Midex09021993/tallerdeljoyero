@@ -380,11 +380,19 @@ function PedidosPage() {
                         <option value="" disabled>
                           Enviar a…
                         </option>
-                        {AREAS.filter((a) => a !== p.area_actual).map((a) => (
-                          <option key={a} value={a}>
-                            {a}
+                        {p.ruta
+                          .filter((a) => a !== p.area_actual)
+                          .map((a) => (
+                            <option key={a} value={a}>
+                              {a}
+                            </option>
+                          ))}
+                        {p.ruta.filter((a) => a !== p.area_actual).length === 0 ? (
+                          <option value="" disabled>
+                            Sin áreas siguientes
                           </option>
-                        ))}
+                        ) : null}
+
                       </select>
                     </div>
                   </td>
