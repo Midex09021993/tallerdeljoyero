@@ -258,6 +258,7 @@ export type Database = {
         Row: {
           area_actual: string
           area_desde: string
+          cantidad_piezas: number
           cliente: string
           contrato: string
           created_at: string
@@ -270,10 +271,12 @@ export type Database = {
           material: string
           notas: string
           origen: string
+          piedras: string
           pieza: string
           referencia: string
           ruta: string[]
           sede_id: string | null
+          talla: string
           telefono: string
           trabajo: string
           updated_at: string
@@ -281,6 +284,7 @@ export type Database = {
         Insert: {
           area_actual?: string
           area_desde?: string
+          cantidad_piezas?: number
           cliente: string
           contrato?: string
           created_at?: string
@@ -293,10 +297,12 @@ export type Database = {
           material: string
           notas?: string
           origen?: string
+          piedras?: string
           pieza: string
           referencia: string
           ruta?: string[]
           sede_id?: string | null
+          talla?: string
           telefono?: string
           trabajo?: string
           updated_at?: string
@@ -304,6 +310,7 @@ export type Database = {
         Update: {
           area_actual?: string
           area_desde?: string
+          cantidad_piezas?: number
           cliente?: string
           contrato?: string
           created_at?: string
@@ -316,10 +323,12 @@ export type Database = {
           material?: string
           notas?: string
           origen?: string
+          piedras?: string
           pieza?: string
           referencia?: string
           ruta?: string[]
           sede_id?: string | null
+          talla?: string
           telefono?: string
           trabajo?: string
           updated_at?: string
