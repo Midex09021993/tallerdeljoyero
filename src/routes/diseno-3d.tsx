@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, ColaLista, Panel, StatCard } from "@/components/AppShell";
-import { colaDiseno } from "@/data/taller";
+import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
+import { useActualizarProceso, useProcesos } from "@/lib/taller-db";
 import floral from "@/assets/diseno-floral.jpg";
 import colgante from "@/assets/diseno-colgante.jpg";
 import gemelos from "@/assets/diseno-gemelos.jpg";
@@ -29,20 +29,26 @@ const biblioteca = [
 ];
 
 function Diseno3D() {
+  const { data: cola = [], isLoading } = useProcesos("diseno");
+  const actualizar = useActualizarProceso("diseno");
   return (
     <AppShell
       titulo="Diseño 3D"
       subtitulo="Modelado CAD y validación de piezas antes de impresión"
       acciones={
         <>
-          <StatCard etiqueta="En modelado" valor="3" />
-          <StatCard etiqueta="Pendiente validar" valor="2" />
+          <StatCard etiqueta="En modelado" valor={String(cola.length)} />
+          <StatCard etiqueta="Pendiente validar" valor={String(cola.filter((c) => c.progreso < 100).length)} />
         </>
       }
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
-          <ColaLista items={colaDiseno} />
+          <ColaProcesos
+            items={cola}
+            cargando={isLoading}
+            onProgreso={(id, progreso) => actualizar.mutate({ id, progreso })}
+          />
         </Panel>
 
         <Panel titulo="Biblioteca de archivos" className="lg:col-span-2">

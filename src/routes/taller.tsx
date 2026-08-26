@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { tareasTaller } from "@/data/taller";
+import { useActualizarTarea, useTareas } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/taller")({
   head: () => ({
@@ -24,14 +24,18 @@ const bancos = [
   { banco: "Fundición", joyero: "Turno 14:30", ocupacion: 100 },
 ];
 
+const estadosTarea = ["Pendiente", "En curso", "Terminada"];
+
 function TallerPage() {
+  const { data: tareas = [], isLoading } = useTareas();
+  const actualizar = useActualizarTarea();
   return (
     <AppShell
       titulo="Taller"
       subtitulo="Engaste, pulido y fundición · 3 joyeros en piso"
       acciones={
         <>
-          <StatCard etiqueta="Tareas activas" valor="4" />
+          <StatCard etiqueta="Tareas activas" valor={String(tareas.filter((t) => t.estado !== "Terminada").length)} />
           <StatCard etiqueta="Fundición" valor="14:30 h" />
         </>
       }
@@ -49,18 +53,31 @@ function TallerPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {tareasTaller.map((t) => (
-                <tr key={t.tarea} className="transition-colors hover:bg-surface-muted/60">
+              {tareas.map((t) => (
+                <tr key={t.id} className="transition-colors hover:bg-surface-muted/60">
                   <td className="px-6 py-4 text-sm">{t.tarea}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{t.responsable}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{t.banco}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-accent px-2 py-1 text-[10px] font-semibold uppercase">
-                      {t.estado}
-                    </span>
+                    <select
+                      value={estadosTarea.includes(t.estado) ? t.estado : "Pendiente"}
+                      onChange={(e) => actualizar.mutate({ id: t.id, estado: e.target.value })}
+                      className="rounded-full bg-accent px-2 py-1 text-[10px] font-semibold uppercase"
+                    >
+                      {estadosTarea.map((e) => (
+                        <option key={e}>{e}</option>
+                      ))}
+                    </select>
                   </td>
                 </tr>
               ))}
+              {!isLoading && tareas.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-sm text-muted-foreground">
+                    Sin tareas registradas.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </Panel>
