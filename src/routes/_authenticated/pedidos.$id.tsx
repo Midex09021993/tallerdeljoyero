@@ -141,8 +141,6 @@ function FichaPedido() {
     );
   }
 
-  const secuencia = ["Pedidos", ...pedido.ruta, "Entregado"];
-  const indice = secuencia.indexOf(pedido.area_actual);
   const puedeEditar = Boolean(sesion?.esAdmin);
   const urlSeguimiento =
     typeof window !== "undefined"
