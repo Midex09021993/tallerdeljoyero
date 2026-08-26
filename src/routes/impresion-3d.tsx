@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, ColaLista, Panel, StatCard } from "@/components/AppShell";
-import { colaImpresion } from "@/data/taller";
+import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
+import { useActualizarProceso, useInventario, useProcesos } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/impresion-3d")({
   head: () => ({
@@ -24,14 +24,22 @@ const impresoras = [
 ];
 
 function Impresion3D() {
+  const { data: cola = [], isLoading } = useProcesos("impresion");
+  const actualizar = useActualizarProceso("impresion");
+  const { data: inventario = [] } = useInventario();
+  const resina = inventario.find((m) => m.material.toLowerCase().includes("resina"));
   return (
     <AppShell
       titulo="Impresión 3D"
       subtitulo="Resina castable · 2 impresoras activas"
       acciones={
         <>
-          <StatCard etiqueta="Resina 3D" valor="840 ml" delta="-12%" tono="negativo" />
-          <StatCard etiqueta="Trabajos hoy" valor="5" />
+          <StatCard
+            etiqueta="Resina 3D"
+            valor={resina ? `${resina.stock} ${resina.unidad}` : "—"}
+            tono={resina && resina.stock < resina.minimo ? "negativo" : "neutro"}
+          />
+          <StatCard etiqueta="Trabajos en cola" valor={String(cola.length)} />
         </>
       }
     >
@@ -63,7 +71,11 @@ function Impresion3D() {
         </Panel>
 
         <Panel titulo="Cola de impresión">
-          <ColaLista items={colaImpresion} />
+          <ColaProcesos
+            items={cola}
+            cargando={isLoading}
+            onProgreso={(id, progreso) => actualizar.mutate({ id, progreso })}
+          />
         </Panel>
       </div>
     </AppShell>

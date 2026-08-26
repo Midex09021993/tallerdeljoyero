@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, ColaLista, Panel, StatCard } from "@/components/AppShell";
-import { colaLaser } from "@/data/taller";
+import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
+import { useActualizarProceso, useProcesos } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/corte-laser")({
   head: () => ({
@@ -24,6 +24,8 @@ const parametros = [
 ];
 
 function CorteLaser() {
+  const { data: cola = [], isLoading } = useProcesos("laser");
+  const actualizar = useActualizarProceso("laser");
   return (
     <AppShell
       titulo="Corte Láser"
@@ -31,13 +33,17 @@ function CorteLaser() {
       acciones={
         <>
           <StatCard etiqueta="Máquina" valor="Operativa" />
-          <StatCard etiqueta="Horas hoy" valor="2,5 h" />
+          <StatCard etiqueta="Trabajos en cola" valor={String(cola.length)} />
         </>
       }
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel titulo="Cola de corte">
-          <ColaLista items={colaLaser} />
+          <ColaProcesos
+            items={cola}
+            cargando={isLoading}
+            onProgreso={(id, progreso) => actualizar.mutate({ id, progreso })}
+          />
         </Panel>
 
         <Panel titulo="Parámetros de máquina">
