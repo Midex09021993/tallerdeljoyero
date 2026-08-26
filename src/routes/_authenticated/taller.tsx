@@ -46,6 +46,35 @@ function TallerPage() {
         </>
       }
     >
+      <Panel titulo="Pedidos en el área de taller" className="mb-6">
+        <ul className="divide-y divide-border">
+          {enTaller.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+                className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-surface-muted/70"
+              >
+                <span className="min-w-0">
+                  <span className="text-sm font-medium">{p.referencia}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {p.cliente} · {p.trabajo || p.pieza}
+                  </span>
+                </span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                  {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "—"}
+                </span>
+              </button>
+            </li>
+          ))}
+          {enTaller.length === 0 ? (
+            <li className="px-6 py-8 text-sm text-muted-foreground">
+              No hay pedidos en el área de taller.
+            </li>
+          ) : null}
+        </ul>
+      </Panel>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Tareas del día" className="lg:col-span-2">
           <table className="w-full border-collapse text-left">
