@@ -301,6 +301,9 @@ function FichaPedido() {
                       trabajo: String(fd.get("trabajo")),
                       pieza: String(fd.get("trabajo")),
                       material: String(fd.get("material")),
+                      talla: String(fd.get("talla")),
+                      cantidad_piezas: Number(fd.get("cantidad_piezas")) || 1,
+                      piedras: String(fd.get("piedras")),
                       importe: Number(fd.get("importe")) || 0,
                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
                       notas: String(fd.get("notas")),
@@ -317,9 +320,12 @@ function FichaPedido() {
                     ["contrato", "Contrato", pedido.contrato, "text"],
                     ["trabajo", "Trabajo", pedido.trabajo || pedido.pieza, "text"],
                     ["material", "Material", pedido.material, "text"],
+                    ["talla", "Talla / Medida", pedido.talla, "text"],
+                    ["cantidad_piezas", "Cantidad de piezas", String(pedido.cantidad_piezas), "number"],
+                    ["piedras", "Piedras / Componentes", pedido.piedras, "text"],
                     ["importe", "Costo", String(pedido.importe), "number"],
                     ["fecha_entrega", "Entrega", pedido.fecha_entrega ?? "", "date"],
-                    ["notas", "Notas", pedido.notas, "text"],
+                    ["notas", "Notas generales", pedido.notas, "text"],
                   ] as const
                 ).map(([name, label, val, tipo]) => (
                   <label key={name} className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -347,7 +353,23 @@ function FichaPedido() {
               </form>
             ) : (
               <div>
-                <p className="text-sm text-muted-foreground">{pedido.notas || "Sin notas técnicas."}</p>
+                <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                  {(
+                    [
+                      ["Talla / Medida", pedido.talla || "—"],
+                      ["Cantidad de piezas", String(pedido.cantidad_piezas || 1)],
+                      ["Piedras / Componentes", pedido.piedras || "—"],
+                      ["Material", pedido.material || "—"],
+                    ] as const
+                  ).map(([label, valor]) => (
+                    <div key={label}>
+                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
+                      <dd className="mt-1 text-sm font-medium text-foreground">{valor}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-4 text-[10px] uppercase tracking-wider text-muted-foreground">Notas generales</p>
+                <p className="mt-1 text-sm text-muted-foreground">{pedido.notas || "Sin notas técnicas."}</p>
                 {puedeEditar ? (
                   <button
                     type="button"

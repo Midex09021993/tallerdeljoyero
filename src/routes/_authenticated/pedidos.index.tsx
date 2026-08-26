@@ -177,6 +177,9 @@ function PedidosPage() {
                 area_actual: "Pedidos",
                 ruta,
                 notas: form.notas,
+                talla: "",
+                cantidad_piezas: 1,
+                piedras: "",
               };
               crear.mutate(nuevo, {
                 onSuccess: () => {

@@ -48,6 +48,9 @@ export type Pedido = {
   ruta: string[];
   area_desde: string;
   notas: string;
+  talla: string;
+  cantidad_piezas: number;
+  piedras: string;
 };
 
 export type Sede = {
@@ -102,10 +105,13 @@ export type PedidoNuevo = {
   area_actual: string;
   ruta: string[];
   notas: string;
+  talla: string;
+  cantidad_piezas: number;
+  piedras: string;
 };
 
 const CAMPOS_PEDIDO =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, sedes(nombre)";
 
 export function usePedidos() {
   return useQuery({
