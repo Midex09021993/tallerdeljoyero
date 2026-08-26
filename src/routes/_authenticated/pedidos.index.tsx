@@ -297,11 +297,31 @@ function PedidosPage() {
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
-                    >
-                      {p.area_actual}
-                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      <span
+                        className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
+                      >
+                        {p.area_actual}
+                      </span>
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const destino = e.target.value;
+                          if (destino) enviar.mutate({ pedido: p, destino, usuarioId: sesion?.user.id ?? null });
+                        }}
+                        disabled={enviar.isPending}
+                        className="w-fit rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground disabled:opacity-40"
+                      >
+                        <option value="" disabled>
+                          Enviar a…
+                        </option>
+                        {AREAS.filter((a) => a !== p.area_actual).map((a) => (
+                          <option key={a} value={a}>
+                            {a}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right text-sm tabular-nums">
                     {p.fecha_entrega ?? p.entrega ?? "—"}
