@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { FechaInput } from "@/components/FechaInput";
+import { fmtFecha } from "@/lib/utils";
 import { AREAS, useSesion } from "@/lib/auth";
 import {
   useBorrarPedido,
@@ -219,14 +221,22 @@ function PedidosPage() {
               ).map(([campo, etiqueta, tipo]) => (
                 <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {etiqueta}
-                  <input
-                    type={tipo}
-                    min={campo === "cantidad_piezas" ? 1 : undefined}
-                    required={campo === "cliente" || campo === "trabajo"}
-                    value={form[campo]}
-                    onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
-                  />
+                  {tipo === "date" ? (
+                    <FechaInput
+                      value={form[campo]}
+                      onChangeIso={(iso) => setForm((f) => ({ ...f, [campo]: iso }))}
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    />
+                  ) : (
+                    <input
+                      type={tipo}
+                      min={campo === "cantidad_piezas" ? 1 : undefined}
+                      required={campo === "cliente" || campo === "trabajo"}
+                      value={form[campo]}
+                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    />
+                  )}
                 </label>
               ))}
 
@@ -397,7 +407,7 @@ function PedidosPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right text-sm tabular-nums">
-                    {p.fecha_entrega ?? p.entrega ?? "—"}
+                    {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "—"}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>

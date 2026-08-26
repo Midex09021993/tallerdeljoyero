@@ -5,6 +5,8 @@ import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { AREAS, useSesion } from "@/lib/auth";
 import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
+import { FechaInput } from "@/components/FechaInput";
+import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   head: () => ({
@@ -174,7 +176,7 @@ function FichaPedido() {
                 ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
                 ["N° de contrato", pedido.contrato || "—"],
                 ["Área de proceso", pedido.area_actual],
-                ["Fecha de entrega", pedido.fecha_entrega ?? pedido.entrega ?? "—"],
+                ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
               ].map(([k, v]) => (
                 <div key={k}>
@@ -265,12 +267,20 @@ function FichaPedido() {
                 ).map(([name, label, val, tipo]) => (
                   <label key={name} className="text-[10px] uppercase tracking-wider text-muted-foreground">
                     {label}
-                    <input
-                      name={name}
-                      type={tipo}
-                      defaultValue={val}
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    />
+                    {tipo === "date" ? (
+                      <FechaInput
+                        name={name}
+                        defaultValue={val}
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                      />
+                    ) : (
+                      <input
+                        name={name}
+                        type={tipo}
+                        defaultValue={val}
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                      />
+                    )}
                   </label>
                 ))}
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-3">

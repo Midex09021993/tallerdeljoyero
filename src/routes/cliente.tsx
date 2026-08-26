@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/cliente")({
   head: () => ({
@@ -129,7 +130,7 @@ function SeguimientoCliente() {
 
             <p className="mt-6 text-sm">
               <span className="text-muted-foreground">Fecha estimada de entrega: </span>
-              {pedido.fecha_entrega ?? "por confirmar"}
+              {fmtFecha(pedido.fecha_entrega) ?? "por confirmar"}
             </p>
           </article>
         ) : null}

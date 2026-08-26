@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { FechaInput } from "@/components/FechaInput";
+import { fmtFecha } from "@/lib/utils";
 import {
   estadoClases,
   useActualizarPedido,
@@ -148,7 +150,7 @@ function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
                 <span className="text-sm">
                   {p.referencia} · <span className="text-muted-foreground">{p.cliente}</span>
                 </span>
-                <span className="text-xs text-danger">{p.fecha_entrega}</span>
+                <span className="text-xs text-danger">{fmtFecha(p.fecha_entrega)}</span>
               </li>
             ))}
             {atrasados.length === 0 ? (
@@ -231,7 +233,7 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
                 <td className="px-6 py-3 text-xs font-medium">{p.referencia}</td>
                 <td className="px-6 py-3 text-sm">{p.cliente}</td>
                 <td className="px-6 py-3 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
-                <td className="px-6 py-3 text-xs text-muted-foreground">{p.fecha_entrega ?? "—"}</td>
+                <td className="px-6 py-3 text-xs text-muted-foreground">{fmtFecha(p.fecha_entrega) ?? "—"}</td>
                 <td className="px-6 py-3 text-right text-sm tabular-nums">{eur.format(p.importe)}</td>
               </tr>
             ))}
@@ -321,11 +323,10 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
                 value={nuevo.importe}
                 onChange={(e) => setNuevo({ ...nuevo, importe: Number(e.target.value) })}
               />
-              <input
+              <FechaInput
                 className={inputCls}
-                type="date"
                 value={nuevo.fecha}
-                onChange={(e) => setNuevo({ ...nuevo, fecha: e.target.value })}
+                onChangeIso={(iso) => setNuevo({ ...nuevo, fecha: iso })}
               />
             </div>
             <button
@@ -341,7 +342,7 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
                 <div>
                   <p className="text-sm">{g.concepto}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {g.categoria} · {g.fecha}
+                    {g.categoria} · {fmtFecha(g.fecha)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -633,20 +634,18 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
             <div className="grid grid-cols-2 gap-3">
               <label className="text-[11px] text-muted-foreground">
                 Desde
-                <input
-                  type="date"
+                <FechaInput
                   className={inputCls}
                   value={form.acceso_desde}
-                  onChange={(e) => setForm({ ...form, acceso_desde: e.target.value })}
+                  onChangeIso={(iso) => setForm({ ...form, acceso_desde: iso })}
                 />
               </label>
               <label className="text-[11px] text-muted-foreground">
                 Hasta
-                <input
-                  type="date"
+                <FechaInput
                   className={inputCls}
                   value={form.acceso_hasta}
-                  onChange={(e) => setForm({ ...form, acceso_hasta: e.target.value })}
+                  onChangeIso={(iso) => setForm({ ...form, acceso_hasta: iso })}
                 />
               </label>
             </div>
@@ -714,7 +713,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                       <span className="text-destructive">Desactivado</span>
                     ) : u.acceso_desde || u.acceso_hasta ? (
                       <span className="text-muted-foreground">
-                        {u.acceso_desde ?? "—"} → {u.acceso_hasta ?? "—"}
+                        {fmtFecha(u.acceso_desde) ?? "—"} → {fmtFecha(u.acceso_hasta) ?? "—"}
                       </span>
                     ) : (
                       <span className="text-muted-foreground">Sin límite</span>
@@ -903,20 +902,18 @@ function EditorUsuario({
       <div className="grid gap-3 md:grid-cols-3">
         <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
           Puede entrar desde
-          <input
-            type="date"
+          <FechaInput
             className={inputCls}
             value={datos.acceso_desde}
-            onChange={(e) => setDatos({ ...datos, acceso_desde: e.target.value })}
+            onChangeIso={(iso) => setDatos({ ...datos, acceso_desde: iso })}
           />
         </label>
         <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
           Hasta
-          <input
-            type="date"
+          <FechaInput
             className={inputCls}
             value={datos.acceso_hasta}
-            onChange={(e) => setDatos({ ...datos, acceso_hasta: e.target.value })}
+            onChangeIso={(iso) => setDatos({ ...datos, acceso_hasta: iso })}
           />
         </label>
         <label className="flex items-end gap-2 text-xs text-muted-foreground">
