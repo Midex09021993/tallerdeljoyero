@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { AREAS, useSesion } from "@/lib/auth";
-import { useActualizarPedido, useEnviarAArea, useMoverPedido, usePedidos } from "@/lib/taller-db";
+import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
 import { areaClase } from "./pedidos.index";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
@@ -71,7 +71,6 @@ function FichaPedido() {
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
   const actualizar = useActualizarPedido();
-  const mover = useMoverPedido();
   const enviar = useEnviarAArea();
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
@@ -160,64 +159,12 @@ function FichaPedido() {
       titulo={`${pedido.referencia} · ${pedido.trabajo || pedido.pieza}`}
       subtitulo={`${pedido.cliente}${pedido.sede_nombre ? ` · ${pedido.sede_nombre}` : ""}`}
     >
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            mover.mutate({ pedido, direccion: "devolver", usuarioId: sesion?.user.id ?? null })
-          }
-          disabled={indice <= 0 || mover.isPending}
-          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium disabled:opacity-40"
+      <div className="mb-6">
+        <Link
+          to="/pedidos"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          ← Devolver
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            mover.mutate({ pedido, direccion: "avanzar", usuarioId: sesion?.user.id ?? null })
-          }
-          disabled={indice >= secuencia.length - 1 || mover.isPending}
-          className="rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-40"
-        >
-          Avanzar →
-        </button>
-        <select
-          value=""
-          onChange={(e) => {
-            const destino = e.target.value;
-            if (destino) enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
-          }}
-          disabled={enviar.isPending}
-          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium disabled:opacity-40"
-        >
-          <option value="" disabled>
-            Enviar a área…
-          </option>
-          {AREAS.filter((a) => a !== pedido.area_actual).map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-        </select>
-        {pedido.telefono ? (
-          <a
-            href={wa}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-lg border border-success/40 bg-success-soft px-4 py-2 text-xs font-medium text-success"
-          >
-            Enviar WhatsApp
-          </a>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium"
-        >
-          Imprimir QR
-        </button>
-        <Link to="/pedidos" className="rounded-lg px-4 py-2 text-xs text-muted-foreground hover:underline">
-          Volver
+          ← Volver a pedidos
         </Link>
       </div>
 
