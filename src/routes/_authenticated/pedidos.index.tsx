@@ -81,6 +81,7 @@ export function siguienteReferencia(nombreSede: string | null | undefined, refs:
 }
 
 function PedidosPage() {
+  const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: sedes = [] } = useSedes();
