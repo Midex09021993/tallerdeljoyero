@@ -386,6 +386,42 @@ function PedidosPage() {
           </table>
         </div>
       </Panel>
+
+      {porBorrar ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-lg">
+            <h2 className="text-base font-semibold">Eliminar pedido</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              ¿Seguro que quieres eliminar el pedido {porBorrar.referencia}? Esta acción no se puede
+              deshacer.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPorBorrar(null)}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-surface-muted"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={borrar.isPending}
+                onClick={() =>
+                  borrar.mutate(porBorrar.id, { onSettled: () => setPorBorrar(null) })
+                }
+                className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-danger-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {borrar.isPending ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
+
   );
 }
