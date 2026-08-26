@@ -153,8 +153,12 @@ function PedidosPage() {
             className="border-b border-border bg-surface-muted/40 p-6"
             onSubmit={(e) => {
               e.preventDefault();
+              const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
               const nuevo: PedidoNuevo = {
-                referencia: `#${Math.floor(Math.random() * 9000 + 1000)}`,
+                referencia: siguienteReferencia(
+                  nombreSede,
+                  pedidos.map((p) => p.referencia),
+                ),
                 pieza: form.trabajo,
                 trabajo: form.trabajo,
                 cliente: form.cliente,
