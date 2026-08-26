@@ -215,25 +215,6 @@ function FichaPedido() {
                 </select>
               </label>
             </div>
-
-
-            <div className="border-t border-border px-6 py-5">
-              <p className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Ruta del pedido
-              </p>
-              <ol className="flex flex-wrap gap-2">
-                {secuencia.map((a, i) => (
-                  <li
-                    key={a}
-                    className={`rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase ${
-                      i === indice ? areaClase(a) : i < indice ? "bg-success-soft text-success" : "bg-surface-muted text-muted-foreground"
-                    }`}
-                  >
-                    {a}
-                  </li>
-                ))}
-              </ol>
-            </div>
           </Panel>
 
           <Seccion titulo="Ficha técnica general">
