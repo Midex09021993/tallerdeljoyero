@@ -18,6 +18,7 @@ import {
   useSedes,
   useUsuarios,
   type Pedido,
+  type Usuario,
 } from "@/lib/taller-db";
 import { AREAS, correoDesdeUsuario, rolEtiqueta, useSesion, type Rol } from "@/lib/auth";
 import { actualizarUsuario, borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
