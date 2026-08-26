@@ -238,7 +238,7 @@ function PedidosPage() {
               </label>
 
               <label className="col-span-2 text-[10px] uppercase tracking-wider text-muted-foreground lg:col-span-2">
-                Referencias / notas del diseño
+                Notas generales
                 <input
                   value={form.notas}
                   onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))}
