@@ -200,10 +200,10 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
     };
     if (data.dni) {
-      cambios.email = `${data.dni.replace(/\s+/g, "")}@taller.local`;
-      cambios.email_confirm = true;
+      cambios['email'] = `${data.dni.replace(/\s+/g, "")}@taller.local`;
+      cambios['email_confirm'] = true;
     }
-    if (data.password) cambios.password = data.password;
+    if (data.password) cambios['password'] = data.password;
 
     {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, cambios);
