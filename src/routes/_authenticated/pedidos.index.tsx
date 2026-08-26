@@ -201,15 +201,19 @@ function PedidosPage() {
                   ["contrato", "N° contrato", "text"],
                   ["trabajo", "Trabajo solicitado", "text"],
                   ["material", "Material", "text"],
-                  ["importe", "Costo", "number"],
+                  ["importe", "Costo (S/)", "number"],
                   ["fecha_ingreso", "Fecha de ingreso", "date"],
                   ["fecha_entrega", "Fecha de entrega", "date"],
+                  ["talla", "Talla / medida", "text"],
+                  ["cantidad_piezas", "Cantidad de piezas", "number"],
+                  ["piedras", "Piedras / componentes", "text"],
                 ] as const
               ).map(([campo, etiqueta, tipo]) => (
                 <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {etiqueta}
                   <input
                     type={tipo}
+                    min={campo === "cantidad_piezas" ? 1 : undefined}
                     required={campo === "cliente" || campo === "trabajo"}
                     value={form[campo]}
                     onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
