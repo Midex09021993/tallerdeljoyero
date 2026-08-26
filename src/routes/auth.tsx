@@ -57,8 +57,7 @@ function LoginPage() {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) throw new Error("Usuario o contraseña incorrectos");
       await qc.invalidateQueries();
-      const { data: nueva } = await qc.fetchQuery({ queryKey: ["sesion"] }).then((d) => ({ data: d }));
-      navigate({ to: nueva ? inicioSegunRol(nueva as never) : "/pedidos" });
+      navigate({ to: "/" });
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : "No se pudo iniciar sesión");
     } finally {
