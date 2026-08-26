@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { inventario } from "@/data/taller";
+import { useActualizarStock, useInventario } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/inventario")({
   head: () => ({
@@ -18,15 +18,20 @@ export const Route = createFileRoute("/inventario")({
 });
 
 function InventarioPage() {
+  const { data: inventario = [], isLoading } = useInventario();
+  const actualizar = useActualizarStock();
   const bajos = inventario.filter((i) => i.stock < i.minimo);
+
   return (
     <AppShell
       titulo="Inventario"
-      subtitulo={`${inventario.length} referencias · ${bajos.length} bajo mínimo`}
+      subtitulo={
+        isLoading ? "Cargando…" : `${inventario.length} referencias · ${bajos.length} bajo mínimo`
+      }
       acciones={
         <>
           <StatCard etiqueta="Referencias" valor={String(inventario.length)} />
-          <StatCard etiqueta="Bajo mínimo" valor={String(bajos.length)} tono="negativo" delta="revisar" />
+          <StatCard etiqueta="Bajo mínimo" valor={String(bajos.length)} tono="negativo" />
         </>
       }
     >
@@ -44,11 +49,22 @@ function InventarioPage() {
           <tbody className="divide-y divide-border">
             {inventario.map((m) => {
               const bajo = m.stock < m.minimo;
+              const pct = m.minimo > 0 ? Math.min(100, Math.round((m.stock / (m.minimo * 2)) * 100)) : 100;
               return (
-                <tr key={m.material} className="transition-colors hover:bg-surface-muted/60">
+                <tr key={m.id} className="transition-colors hover:bg-surface-muted/60">
                   <td className="px-6 py-4 text-sm font-medium">{m.material}</td>
                   <td className="px-6 py-4 text-sm tabular-nums">
-                    {m.stock} {m.unidad}
+                    <input
+                      type="number"
+                      step="0.1"
+                      defaultValue={m.stock}
+                      onBlur={(e) => {
+                        const stock = Number(e.target.value);
+                        if (stock !== m.stock) actualizar.mutate({ id: m.id, stock });
+                      }}
+                      className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
+                    />
+                    <span className="ml-2 text-xs text-muted-foreground">{m.unidad}</span>
                     {bajo ? (
                       <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase text-danger">
                         bajo
@@ -62,13 +78,20 @@ function InventarioPage() {
                     <div className="h-1 w-40 overflow-hidden rounded-full bg-surface-muted">
                       <div
                         className={`h-full rounded-full ${bajo ? "bg-danger" : "bg-gold"}`}
-                        style={{ width: `${m.pct}%` }}
+                        style={{ width: `${pct}%` }}
                       />
                     </div>
                   </td>
                 </tr>
               );
             })}
+            {!isLoading && inventario.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-8 text-sm text-muted-foreground">
+                  Sin materiales registrados.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </Panel>
