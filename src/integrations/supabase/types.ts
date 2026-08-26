@@ -478,6 +478,18 @@ export type Database = {
         Returns: boolean
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
+      seguimiento_pedido: {
+        Args: { _ref: string }
+        Returns: {
+          area_actual: string
+          cliente: string
+          fecha_entrega: string
+          referencia: string
+          ruta: string[]
+          sede: string
+          trabajo: string
+        }[]
+      }
       ve_sede: {
         Args: { _sede_id: string; _user_id: string }
         Returns: boolean
