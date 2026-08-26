@@ -86,6 +86,57 @@ export function siguienteReferencia(nombreSede: string | null | undefined, refs:
   return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
 }
 
+function TarjetaResumen({
+  etiqueta,
+  valor,
+  tono = "neutro",
+  porArea,
+  subtitulo,
+}: {
+  etiqueta: string;
+  valor: number;
+  tono?: "neutro" | "positivo" | "negativo" | "warning";
+  porArea?: Record<string, number>;
+  subtitulo?: string;
+}) {
+  const colorClase =
+    tono === "negativo"
+      ? "text-danger"
+      : tono === "positivo"
+        ? "text-success"
+        : tono === "warning"
+          ? "text-warning"
+          : "text-foreground";
+  const badgeClase =
+    tono === "negativo"
+      ? "bg-danger/10 text-danger"
+      : tono === "positivo"
+        ? "bg-success/10 text-success"
+        : tono === "warning"
+          ? "bg-warning/10 text-warning"
+          : "bg-surface-muted text-muted-foreground";
+  return (
+    <div className="flex min-w-[150px] flex-col rounded-xl border border-border bg-card p-4 shadow-card">
+      <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
+      <p className={`text-xl font-medium ${colorClase}`}>{String(valor)}</p>
+      {subtitulo ? <p className="mt-1 text-[10px] text-muted-foreground">{subtitulo}</p> : null}
+      {porArea && Object.keys(porArea).length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {Object.entries(porArea).map(([area, n]) => (
+            <span
+              key={area}
+              className={`rounded-md px-1.5 py-0.5 text-[9px] leading-tight ${badgeClase}`}
+              title={area}
+            >
+              {area}: {n}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function PedidosPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
@@ -128,6 +179,7 @@ function PedidosPage() {
   );
 
   const activos = pedidos.filter((p) => p.area_actual !== "Entregado");
+  const entregados = pedidos.filter((p) => p.area_actual === "Entregado");
 
   const diasHastaEntrega = (fechaIso: string | null | undefined): number | null => {
     if (!fechaIso) return null;
@@ -148,15 +200,16 @@ function PedidosPage() {
     return d !== null && d >= 0 && d <= 3;
   });
 
-  const atrasadosPorArea = atrasados.reduce((acc, p) => {
-    acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const contarPorArea = (items: typeof pedidos) =>
+    items.reduce((acc, p) => {
+      acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const proximosPorArea = proximos.reduce((acc, p) => {
-    acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const activosPorArea = contarPorArea(activos);
+  const entregadosPorArea = contarPorArea(entregados);
+  const atrasadosPorArea = contarPorArea(atrasados);
+  const proximosPorArea = contarPorArea(proximos);
 
   return (
     <AppShell
@@ -168,44 +221,26 @@ function PedidosPage() {
       }
       acciones={
         <div className="flex flex-wrap items-stretch gap-3">
-          <StatCard etiqueta="Activos" valor={String(activos.length)} />
-          <div className="flex min-w-[150px] flex-col rounded-xl border border-border bg-card p-4 shadow-card">
-            <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Atrasados</p>
-            <p className="text-xl font-medium text-danger">{String(atrasados.length)}</p>
-            {Object.keys(atrasadosPorArea).length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {Object.entries(atrasadosPorArea).map(([area, n]) => (
-                  <span
-                    key={area}
-                    className="rounded-md bg-danger/10 px-1.5 py-0.5 text-[9px] leading-tight text-danger"
-                    title={area}
-                  >
-                    {area}: {n}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          <div className="flex min-w-[150px] flex-col rounded-xl border border-border bg-card p-4 shadow-card">
-            <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Entrega próxima</p>
-            <p className={`text-xl font-medium ${proximos.length > 0 ? "text-warning" : "text-success"}`}>
-              {String(proximos.length)}
-            </p>
-            <p className="mt-1 text-[10px] text-muted-foreground">Próximos 3 días</p>
-            {Object.keys(proximosPorArea).length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {Object.entries(proximosPorArea).map(([area, n]) => (
-                  <span
-                    key={area}
-                    className="rounded-md bg-warning/10 px-1.5 py-0.5 text-[9px] leading-tight text-warning"
-                    title={area}
-                  >
-                    {area}: {n}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <TarjetaResumen etiqueta="Activos" valor={activos.length} porArea={activosPorArea} />
+          <TarjetaResumen
+            etiqueta="Entregados"
+            valor={entregados.length}
+            tono="positivo"
+            porArea={entregadosPorArea}
+          />
+          <TarjetaResumen
+            etiqueta="Atrasados"
+            valor={atrasados.length}
+            tono="negativo"
+            porArea={atrasadosPorArea}
+          />
+          <TarjetaResumen
+            etiqueta="Entrega próxima"
+            valor={proximos.length}
+            tono={proximos.length > 0 ? "warning" : "positivo"}
+            porArea={proximosPorArea}
+            subtitulo="Próximos 3 días"
+          />
         </div>
       }
     >
