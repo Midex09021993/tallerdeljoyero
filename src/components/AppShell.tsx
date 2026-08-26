@@ -16,7 +16,7 @@ const secciones: Seccion[] = [
   { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
   { to: "/taller", label: "Taller", area: "Taller" },
   { to: "/inventario", label: "Inventario", area: "Taller" },
-  { to: "/monitor", label: "Monitor de taller" },
+  { to: "/monitor", label: "Monitor de taller", roles: ["monitor"] },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"] },
 ];
 
@@ -26,8 +26,9 @@ function seccionesVisibles(
   esAdmin: boolean | undefined,
 ): Seccion[] {
   if (!roles) return [];
-  if (esAdmin) return secciones;
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
+  // El monitor no es un área: solo es visible para usuarios con rol "monitor".
+  if (esAdmin) return secciones.filter((s) => s.to !== "/monitor");
   return secciones.filter((s) => s.area && (areas ?? []).includes(s.area));
 }
 
