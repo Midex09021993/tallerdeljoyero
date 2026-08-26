@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CorteLaserRouteImport } from './routes/corte-laser'
+import { Route as Diseno3dRouteImport } from './routes/diseno-3d'
+import { Route as GestionRouteImport } from './routes/gestion'
+import { Route as Impresion3dRouteImport } from './routes/impresion-3d'
+import { Route as InventarioRouteImport } from './routes/inventario'
+import { Route as TallerRouteImport } from './routes/taller'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CorteLaserRoute = CorteLaserRouteImport.update({
+  id: '/corte-laser',
+  path: '/corte-laser',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Diseno3dRoute = Diseno3dRouteImport.update({
+  id: '/diseno-3d',
+  path: '/diseno-3d',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GestionRoute = GestionRouteImport.update({
+  id: '/gestion',
+  path: '/gestion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Impresion3dRoute = Impresion3dRouteImport.update({
+  id: '/impresion-3d',
+  path: '/impresion-3d',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventarioRoute = InventarioRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TallerRoute = TallerRouteImport.update({
+  id: '/taller',
+  path: '/taller',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/corte-laser': typeof CorteLaserRoute
+  '/diseno-3d': typeof Diseno3dRoute
+  '/gestion': typeof GestionRoute
+  '/impresion-3d': typeof Impresion3dRoute
+  '/inventario': typeof InventarioRoute
+  '/taller': typeof TallerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/corte-laser': typeof CorteLaserRoute
+  '/diseno-3d': typeof Diseno3dRoute
+  '/gestion': typeof GestionRoute
+  '/impresion-3d': typeof Impresion3dRoute
+  '/inventario': typeof InventarioRoute
+  '/taller': typeof TallerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/corte-laser': typeof CorteLaserRoute
+  '/diseno-3d': typeof Diseno3dRoute
+  '/gestion': typeof GestionRoute
+  '/impresion-3d': typeof Impresion3dRoute
+  '/inventario': typeof InventarioRoute
+  '/taller': typeof TallerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/corte-laser'
+    | '/diseno-3d'
+    | '/gestion'
+    | '/impresion-3d'
+    | '/inventario'
+    | '/taller'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/corte-laser'
+    | '/diseno-3d'
+    | '/gestion'
+    | '/impresion-3d'
+    | '/inventario'
+    | '/taller'
+  id:
+    | '__root__'
+    | '/'
+    | '/corte-laser'
+    | '/diseno-3d'
+    | '/gestion'
+    | '/impresion-3d'
+    | '/inventario'
+    | '/taller'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CorteLaserRoute: typeof CorteLaserRoute
+  Diseno3dRoute: typeof Diseno3dRoute
+  GestionRoute: typeof GestionRoute
+  Impresion3dRoute: typeof Impresion3dRoute
+  InventarioRoute: typeof InventarioRoute
+  TallerRoute: typeof TallerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/corte-laser': {
+      id: '/corte-laser'
+      path: '/corte-laser'
+      fullPath: '/corte-laser'
+      preLoaderRoute: typeof CorteLaserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diseno-3d': {
+      id: '/diseno-3d'
+      path: '/diseno-3d'
+      fullPath: '/diseno-3d'
+      preLoaderRoute: typeof Diseno3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gestion': {
+      id: '/gestion'
+      path: '/gestion'
+      fullPath: '/gestion'
+      preLoaderRoute: typeof GestionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impresion-3d': {
+      id: '/impresion-3d'
+      path: '/impresion-3d'
+      fullPath: '/impresion-3d'
+      preLoaderRoute: typeof Impresion3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventario': {
+      id: '/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof InventarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/taller': {
+      id: '/taller'
+      path: '/taller'
+      fullPath: '/taller'
+      preLoaderRoute: typeof TallerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CorteLaserRoute: CorteLaserRoute,
+  Diseno3dRoute: Diseno3dRoute,
+  GestionRoute: GestionRoute,
+  Impresion3dRoute: Impresion3dRoute,
+  InventarioRoute: InventarioRoute,
+  TallerRoute: TallerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
