@@ -10,6 +10,8 @@ type NuevoUsuario = {
   rol: "dueno" | "gerente" | "operario" | "monitor" | "cliente";
   sede_id: string | null;
   areas: string[];
+  acceso_desde?: string | null;
+  acceso_hasta?: string | null;
 };
 
 function validar(input: NuevoUsuario): NuevoUsuario {
@@ -96,6 +98,8 @@ export const crearUsuario = createServerFn({ method: "POST" })
       dni: data.dni,
       telefono: data.telefono,
       sede_id: data.sede_id,
+      acceso_desde: data.acceso_desde ?? null,
+      acceso_hasta: data.acceso_hasta ?? null,
     });
     await supabaseAdmin
       .from("user_roles")

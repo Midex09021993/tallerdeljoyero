@@ -263,6 +263,9 @@ export type Usuario = {
   dni: string;
   telefono: string;
   sede_id: string | null;
+  activo: boolean;
+  acceso_desde: string | null;
+  acceso_hasta: string | null;
   roles: string[];
   areas: string[];
 };
@@ -272,7 +275,10 @@ export function useUsuarios() {
     queryKey: ["usuarios"],
     queryFn: async (): Promise<Usuario[]> => {
       const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
-        supabase.from("profiles").select("id, nombre, dni, telefono, sede_id").order("nombre"),
+        supabase
+          .from("profiles")
+          .select("id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta")
+          .order("nombre"),
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("user_areas").select("user_id, area"),
       ]);

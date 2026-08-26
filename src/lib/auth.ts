@@ -38,7 +38,16 @@ export const areaRuta: Record<string, string> = {
 
 export type Sesion = {
   user: User;
-  perfil: { id: string; nombre: string; dni: string; telefono: string; sede_id: string | null };
+  perfil: {
+    id: string;
+    nombre: string;
+    dni: string;
+    telefono: string;
+    sede_id: string | null;
+    activo?: boolean;
+    acceso_desde?: string | null;
+    acceso_hasta?: string | null;
+  };
   roles: Rol[];
   areas: string[];
   sede: { id: string; nombre: string; ciudad: string; modo: string } | null;
@@ -57,12 +66,28 @@ export function useSesion() {
       if (!user) return null;
 
       const [{ data: perfil }, { data: roles }, { data: areas }] = await Promise.all([
-        supabase.from("profiles").select("id, nombre, dni, telefono, sede_id").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta")
+          .eq("id", user.id)
+          .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
         supabase.from("user_areas").select("area").eq("user_id", user.id),
       ]);
 
       const listaRoles = (roles ?? []).map((r) => r.role as Rol);
+
+      // Ventana de acceso: cuenta desactivada o fuera del periodo permitido.
+      const hoy = new Date().toISOString().slice(0, 10);
+      const bloqueado =
+        perfil != null &&
+        (perfil.activo === false ||
+          (perfil.acceso_desde != null && hoy < perfil.acceso_desde) ||
+          (perfil.acceso_hasta != null && hoy > perfil.acceso_hasta));
+      if (bloqueado) {
+        await supabase.auth.signOut();
+        return null;
+      }
       let sede = null as Sesion["sede"];
       if (perfil?.sede_id) {
         const { data } = await supabase
