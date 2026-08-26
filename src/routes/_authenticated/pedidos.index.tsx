@@ -41,6 +41,9 @@ const vacio = {
   importe: "0",
   fecha_ingreso: hoy(),
   fecha_entrega: "",
+  talla: "",
+  cantidad_piezas: "1",
+  piedras: "",
   notas: "",
 };
 
@@ -177,9 +180,9 @@ function PedidosPage() {
                 area_actual: "Pedidos",
                 ruta,
                 notas: form.notas,
-                talla: "",
-                cantidad_piezas: 1,
-                piedras: "",
+                talla: form.talla,
+                cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
+                piedras: form.piedras,
               };
               crear.mutate(nuevo, {
                 onSuccess: () => {
@@ -198,15 +201,19 @@ function PedidosPage() {
                   ["contrato", "N° contrato", "text"],
                   ["trabajo", "Trabajo solicitado", "text"],
                   ["material", "Material", "text"],
-                  ["importe", "Costo", "number"],
+                  ["importe", "Costo (S/)", "number"],
                   ["fecha_ingreso", "Fecha de ingreso", "date"],
                   ["fecha_entrega", "Fecha de entrega", "date"],
+                  ["talla", "Talla / medida", "text"],
+                  ["cantidad_piezas", "Cantidad de piezas", "number"],
+                  ["piedras", "Piedras / componentes", "text"],
                 ] as const
               ).map(([campo, etiqueta, tipo]) => (
                 <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {etiqueta}
                   <input
                     type={tipo}
+                    min={campo === "cantidad_piezas" ? 1 : undefined}
                     required={campo === "cliente" || campo === "trabajo"}
                     value={form[campo]}
                     onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
@@ -231,7 +238,7 @@ function PedidosPage() {
               </label>
 
               <label className="col-span-2 text-[10px] uppercase tracking-wider text-muted-foreground lg:col-span-2">
-                Referencias / notas del diseño
+                Notas generales
                 <input
                   value={form.notas}
                   onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))}
