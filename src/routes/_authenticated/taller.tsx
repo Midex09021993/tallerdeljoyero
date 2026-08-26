@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { useActualizarTarea, useTareas } from "@/lib/taller-db";
+import { fmtFecha } from "@/lib/utils";
+import { useActualizarTarea, usePedidos, useTareas } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
