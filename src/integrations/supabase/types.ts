@@ -20,6 +20,7 @@ export type Database = {
           id: string
           material: string
           minimo: number
+          sede_id: string | null
           stock: number
           unidad: string
           updated_at: string
@@ -29,6 +30,7 @@ export type Database = {
           id?: string
           material: string
           minimo?: number
+          sede_id?: string | null
           stock?: number
           unidad?: string
           updated_at?: string
@@ -38,50 +40,217 @@ export type Database = {
           id?: string
           material?: string
           minimo?: number
+          sede_id?: string | null
           stock?: number
           unidad?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventario_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventario_movimientos: {
+        Row: {
+          cantidad: number
+          created_at: string
+          id: string
+          material_id: string
+          motivo: string
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          cantidad: number
+          created_at?: string
+          id?: string
+          material_id: string
+          motivo?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          id?: string
+          material_id?: string
+          motivo?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_movimientos_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_archivos: {
+        Row: {
+          created_at: string
+          es_enlace: boolean
+          id: string
+          nombre: string
+          pedido_id: string
+          tipo: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          es_enlace?: boolean
+          id?: string
+          nombre?: string
+          pedido_id: string
+          tipo?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          es_enlace?: boolean
+          id?: string
+          nombre?: string
+          pedido_id?: string
+          tipo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_archivos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_movimientos: {
+        Row: {
+          accion: string
+          area_destino: string
+          area_origen: string
+          created_at: string
+          id: string
+          nota: string
+          pedido_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          accion?: string
+          area_destino: string
+          area_origen?: string
+          created_at?: string
+          id?: string
+          nota?: string
+          pedido_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          accion?: string
+          area_destino?: string
+          area_origen?: string
+          created_at?: string
+          id?: string
+          nota?: string
+          pedido_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_movimientos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pedidos: {
         Row: {
+          area_actual: string
+          area_desde: string
           cliente: string
+          contrato: string
           created_at: string
           entrega: string
           estado: string
+          fecha_entrega: string | null
+          fecha_ingreso: string
           id: string
           importe: number
           material: string
+          notas: string
+          origen: string
           pieza: string
           referencia: string
+          ruta: string[]
+          sede_id: string | null
+          telefono: string
+          trabajo: string
           updated_at: string
         }
         Insert: {
+          area_actual?: string
+          area_desde?: string
           cliente: string
+          contrato?: string
           created_at?: string
           entrega?: string
           estado?: string
+          fecha_entrega?: string | null
+          fecha_ingreso?: string
           id?: string
           importe?: number
           material: string
+          notas?: string
+          origen?: string
           pieza: string
           referencia: string
+          ruta?: string[]
+          sede_id?: string | null
+          telefono?: string
+          trabajo?: string
           updated_at?: string
         }
         Update: {
+          area_actual?: string
+          area_desde?: string
           cliente?: string
+          contrato?: string
           created_at?: string
           entrega?: string
           estado?: string
+          fecha_entrega?: string | null
+          fecha_ingreso?: string
           id?: string
           importe?: number
           material?: string
+          notas?: string
+          origen?: string
           pieza?: string
           referencia?: string
+          ruta?: string[]
+          sede_id?: string | null
+          telefono?: string
+          trabajo?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       procesos: {
         Row: {
@@ -93,6 +262,7 @@ export type Database = {
           pieza: string
           progreso: number
           referencia: string
+          sede_id: string | null
           updated_at: string
         }
         Insert: {
@@ -104,6 +274,7 @@ export type Database = {
           pieza: string
           progreso?: number
           referencia: string
+          sede_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -115,6 +286,86 @@ export type Database = {
           pieza?: string
           progreso?: number
           referencia?: string
+          sede_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procesos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          activo: boolean
+          created_at: string
+          dni: string
+          id: string
+          nombre: string
+          sede_id: string | null
+          telefono: string
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          dni?: string
+          id: string
+          nombre?: string
+          sede_id?: string | null
+          telefono?: string
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          dni?: string
+          id?: string
+          nombre?: string
+          sede_id?: string | null
+          telefono?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sedes: {
+        Row: {
+          activa: boolean
+          ciudad: string
+          created_at: string
+          id: string
+          modo: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          ciudad?: string
+          created_at?: string
+          id?: string
+          modo?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          ciudad?: string
+          created_at?: string
+          id?: string
+          modo?: string
+          nombre?: string
           updated_at?: string
         }
         Relationships: []
@@ -126,6 +377,7 @@ export type Database = {
           estado: string
           id: string
           responsable: string
+          sede_id: string | null
           tarea: string
           updated_at: string
         }
@@ -135,6 +387,7 @@ export type Database = {
           estado?: string
           id?: string
           responsable?: string
+          sede_id?: string | null
           tarea: string
           updated_at?: string
         }
@@ -144,20 +397,94 @@ export type Database = {
           estado?: string
           id?: string
           responsable?: string
+          sede_id?: string | null
           tarea?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "tareas_taller_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_areas: {
+        Row: {
+          area: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
         Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          sede_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          sede_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          sede_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      es_admin: { Args: { _user_id: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      mi_sede: { Args: { _user_id: string }; Returns: string }
+      ve_sede: {
+        Args: { _sede_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "dueno" | "gerente" | "operario" | "monitor" | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -284,6 +611,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["dueno", "gerente", "operario", "monitor", "cliente"],
+    },
   },
 } as const
