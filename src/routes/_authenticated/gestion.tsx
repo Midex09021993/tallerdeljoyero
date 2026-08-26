@@ -513,9 +513,12 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     telefono: "",
     rol: "gerente" as Rol,
     sede_id: sedePropia ?? "",
+    acceso_desde: "",
+    acceso_hasta: "",
   });
   const [areas, setAreas] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
+  const [editando, setEditando] = useState<string | null>(null);
 
   const rolesDisponibles: Rol[] = esDueno
     ? ["dueno", "gerente", "operario", "monitor", "cliente"]
@@ -535,6 +538,8 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           rol: form.rol,
           sede_id: form.sede_id || null,
           areas: form.rol === "operario" ? areas : [],
+          acceso_desde: form.acceso_desde || null,
+          acceso_hasta: form.acceso_hasta || null,
         },
       });
       toast.success("Usuario creado");
@@ -614,6 +619,32 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
             ))}
           </select>
 
+          <div className="rounded-lg border border-border p-3">
+            <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Acceso al sistema (opcional)
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-[11px] text-muted-foreground">
+                Desde
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={form.acceso_desde}
+                  onChange={(e) => setForm({ ...form, acceso_desde: e.target.value })}
+                />
+              </label>
+              <label className="text-[11px] text-muted-foreground">
+                Hasta
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={form.acceso_hasta}
+                  onChange={(e) => setForm({ ...form, acceso_hasta: e.target.value })}
+                />
+              </label>
+            </div>
+          </div>
+
           {form.rol === "operario" ? (
             <div className="rounded-lg border border-border p-3">
               <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Áreas habilitadas</p>
@@ -652,7 +683,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Nombre", "DNI", "Rol", "Sede", "Áreas", ""].map((h) => (
+                {["Nombre", "DNI", "Rol", "Sede", "Áreas", "Acceso", ""].map((h) => (
                   <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">
                     {h}
                   </th>
@@ -671,7 +702,25 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                     {sedes.find((s) => s.id === u.sede_id)?.nombre ?? "—"}
                   </td>
                   <td className="px-6 py-3 text-xs text-muted-foreground">{u.areas.join(", ") || "—"}</td>
-                  <td className="px-6 py-3 text-right">
+                  <td className="px-6 py-3 text-xs">
+                    {u.activo === false ? (
+                      <span className="text-destructive">Desactivado</span>
+                    ) : u.acceso_desde || u.acceso_hasta ? (
+                      <span className="text-muted-foreground">
+                        {u.acceso_desde ?? "—"} → {u.acceso_hasta ?? "—"}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Sin límite</span>
+                    )}
+                  </td>
+                  <td className="space-x-3 px-6 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setEditando(editando === u.id ? null : u.id)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {editando === u.id ? "Cerrar" : "Editar"}
+                    </button>
                     {esDueno ? (
                       <button
                         type="button"
@@ -692,10 +741,27 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                     ) : null}
                   </td>
                 </tr>
-              ))}
+              )).flatMap((fila, i) => {
+                const u = usuarios[i]!;
+                return editando === u.id
+                  ? [
+                      fila,
+                      <tr key={`${u.id}-edit`} className="bg-surface-muted/40">
+                        <td colSpan={7} className="px-6 py-4">
+                          <EditorUsuario
+                            usuario={u}
+                            sedes={sedes}
+                            esDueno={esDueno}
+                            onCerrar={() => setEditando(null)}
+                          />
+                        </td>
+                      </tr>,
+                    ]
+                  : [fila];
+              })}
               {usuarios.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
                     Sin usuarios todavía.
                   </td>
                 </tr>
@@ -705,6 +771,189 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
         </div>
       </Panel>
     </div>
+  );
+}
+
+function EditorUsuario({
+  usuario,
+  sedes,
+  esDueno,
+  onCerrar,
+}: {
+  usuario: Usuario;
+  sedes: { id: string; nombre: string; ciudad: string }[];
+  esDueno: boolean;
+  onCerrar: () => void;
+}) {
+  const qc = useQueryClient();
+  const actualizar = useServerFn(actualizarUsuario);
+  const [datos, setDatos] = useState({
+    nombre: usuario.nombre,
+    dni: usuario.dni,
+    telefono: usuario.telefono,
+    sede_id: usuario.sede_id ?? "",
+    rol: (usuario.roles[0] as Rol) ?? "operario",
+    activo: usuario.activo !== false,
+    acceso_desde: usuario.acceso_desde ?? "",
+    acceso_hasta: usuario.acceso_hasta ?? "",
+    password: "",
+  });
+  const [areas, setAreas] = useState<string[]>(usuario.areas);
+  const [guardando, setGuardando] = useState(false);
+
+  const rolesDisponibles: Rol[] = esDueno
+    ? ["dueno", "gerente", "operario", "monitor", "cliente"]
+    : ["operario", "monitor", "cliente"];
+
+  async function guardar(e: React.FormEvent) {
+    e.preventDefault();
+    setGuardando(true);
+    try {
+      await actualizar({
+        data: {
+          id: usuario.id,
+          nombre: datos.nombre,
+          dni: datos.dni,
+          telefono: datos.telefono,
+          sede_id: datos.sede_id || null,
+          rol: datos.rol,
+          areas,
+          activo: datos.activo,
+          acceso_desde: datos.acceso_desde || null,
+          acceso_hasta: datos.acceso_hasta || null,
+          password: datos.password || null,
+        },
+      });
+      toast.success("Usuario actualizado");
+      qc.invalidateQueries({ queryKey: ["usuarios"] });
+      onCerrar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo actualizar");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <form onSubmit={guardar} className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-3">
+        <input
+          className={inputCls}
+          placeholder="Nombre"
+          value={datos.nombre}
+          onChange={(e) => setDatos({ ...datos, nombre: e.target.value })}
+          required
+        />
+        <input
+          className={inputCls}
+          placeholder="DNI"
+          value={datos.dni}
+          onChange={(e) => setDatos({ ...datos, dni: e.target.value })}
+        />
+        <input
+          className={inputCls}
+          placeholder="Teléfono"
+          value={datos.telefono}
+          onChange={(e) => setDatos({ ...datos, telefono: e.target.value })}
+        />
+        <select
+          className={inputCls}
+          value={datos.rol}
+          onChange={(e) => setDatos({ ...datos, rol: e.target.value as Rol })}
+        >
+          {rolesDisponibles.map((r) => (
+            <option key={r} value={r}>
+              {rolEtiqueta[r]}
+            </option>
+          ))}
+        </select>
+        <select
+          className={inputCls}
+          value={datos.sede_id}
+          onChange={(e) => setDatos({ ...datos, sede_id: e.target.value })}
+          disabled={!esDueno}
+        >
+          <option value="">Sin sede asignada</option>
+          {sedes.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nombre}
+            </option>
+          ))}
+        </select>
+        <input
+          className={inputCls}
+          type="password"
+          placeholder="Nueva contraseña (opcional)"
+          value={datos.password}
+          onChange={(e) => setDatos({ ...datos, password: e.target.value })}
+        />
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Puede entrar desde
+          <input
+            type="date"
+            className={inputCls}
+            value={datos.acceso_desde}
+            onChange={(e) => setDatos({ ...datos, acceso_desde: e.target.value })}
+          />
+        </label>
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Hasta
+          <input
+            type="date"
+            className={inputCls}
+            value={datos.acceso_hasta}
+            onChange={(e) => setDatos({ ...datos, acceso_hasta: e.target.value })}
+          />
+        </label>
+        <label className="flex items-end gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={datos.activo}
+            onChange={(e) => setDatos({ ...datos, activo: e.target.checked })}
+          />
+          Cuenta activa
+        </label>
+      </div>
+
+      {datos.rol === "operario" ? (
+        <div className="rounded-lg border border-border p-3">
+          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Áreas habilitadas</p>
+          <div className="flex flex-wrap gap-2">
+            {AREAS.map((a) => {
+              const activo = areas.includes(a);
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setAreas(activo ? areas.filter((x) => x !== a) : [...areas, a])}
+                  className={`rounded-full px-3 py-1 text-[11px] ${
+                    activo ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"
+                  }`}
+                >
+                  {a}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={guardando}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {guardando ? "Guardando…" : "Guardar cambios"}
+        </button>
+        <button type="button" onClick={onCerrar} className="rounded-lg border border-border px-4 py-2 text-sm">
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
 
