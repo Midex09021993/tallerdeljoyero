@@ -310,9 +310,24 @@ function PedidosPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {lista.map((p) => (
-                <tr key={p.id} className="transition-colors hover:bg-surface-muted/60">
+                <tr
+                  key={p.id}
+                  onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+                  className="group cursor-pointer transition-colors hover:bg-surface-muted/80 active:bg-surface-muted"
+                  role="button"
+                  aria-label={`Abrir ficha del pedido ${p.referencia}`}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate({ to: "/pedidos/$id", params: { id: p.id } });
+                    }
+                  }}
+                >
                   <td className="px-6 py-4 text-xs font-medium">
-                    {p.referencia}
+                    <span className="rounded-md bg-surface-muted px-2 py-1 group-hover:bg-gold/10 group-hover:text-gold">
+                      {p.referencia}
+                    </span>
                     {p.contrato ? (
                       <span className="block text-[10px] text-muted-foreground">Contrato {p.contrato}</span>
                     ) : null}
@@ -325,7 +340,11 @@ function PedidosPage() {
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
                   <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1.5">
+                    <div
+                      className="flex flex-col gap-1.5"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
                       <span
                         className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
                       >
@@ -355,14 +374,10 @@ function PedidosPage() {
                     {p.fecha_entrega ?? p.entrega ?? "—"}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-3">
-                      <Link
-                        to="/pedidos/$id"
-                        params={{ id: p.id }}
-                        className="text-xs font-medium text-info hover:underline"
-                      >
-                        Ficha
-                      </Link>
+                    <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-xs font-medium text-info opacity-0 transition-opacity group-hover:opacity-100">
+                        Abrir ficha →
+                      </span>
                       {puedeCrear ? (
                         <button
                           type="button"
