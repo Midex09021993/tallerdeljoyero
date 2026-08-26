@@ -501,7 +501,13 @@ function ModuloAutomatizacion({ pedidos, sedePropia }: { pedidos: Pedido[]; sede
 
 function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia: string | null }) {
   const qc = useQueryClient();
-  const { data: usuarios = [] } = useUsuarios();
+  const { data: todos = [] } = useUsuarios();
+  // Un gerente solo ve a los usuarios de su propia sede (nunca al dueño ni a otras sedes).
+  const usuarios = esDueno
+    ? todos
+    : todos.filter(
+        (u) => !u.roles.includes("dueno") && u.sede_id != null && u.sede_id === sedePropia,
+      );
   const { data: sedes = [] } = useSedes();
   const crear = useServerFn(crearUsuario);
   const borrar = useServerFn(borrarUsuario);
