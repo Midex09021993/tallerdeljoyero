@@ -29,7 +29,12 @@ const estadosTarea = ["Pendiente", "En curso", "Terminada"];
 
 function TallerPage() {
   const { data: tareas = [], isLoading } = useTareas();
+  const { data: pedidos = [] } = usePedidos();
+  const navigate = useNavigate();
   const actualizar = useActualizarTarea();
+  const enTaller = pedidos.filter(
+    (p) => p.area_actual === "Taller" || p.area_actual === "Casting",
+  );
   return (
     <AppShell
       titulo="Taller"
