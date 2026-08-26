@@ -36,6 +36,26 @@ export type Pedido = {
   estado: string;
   entrega: string;
   importe: number;
+  sede_id: string | null;
+  sede_nombre: string | null;
+  telefono: string;
+  origen: string;
+  contrato: string;
+  trabajo: string;
+  fecha_ingreso: string;
+  fecha_entrega: string | null;
+  area_actual: string;
+  ruta: string[];
+  area_desde: string;
+  notas: string;
+};
+
+export type Sede = {
+  id: string;
+  nombre: string;
+  ciudad: string;
+  modo: string;
+  activa: boolean;
 };
 
 export type Material = {

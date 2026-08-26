@@ -17,6 +17,7 @@ import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
+import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 
@@ -60,6 +61,11 @@ const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
   path: '/inventario',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMonitorRoute = AuthenticatedMonitorRouteImport.update({
+  id: '/monitor',
+  path: '/monitor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/gestion': typeof AuthenticatedGestionRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inventario': typeof AuthenticatedInventarioRoute
+  '/monitor': typeof AuthenticatedMonitorRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/taller': typeof AuthenticatedTallerRoute
 }
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/gestion': typeof AuthenticatedGestionRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inventario': typeof AuthenticatedInventarioRoute
+  '/monitor': typeof AuthenticatedMonitorRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/taller': typeof AuthenticatedTallerRoute
 }
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
+  '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
 }
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/gestion'
     | '/impresion-3d'
     | '/inventario'
+    | '/monitor'
     | '/pedidos'
     | '/taller'
   fileRoutesByTo: FileRoutesByTo
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/gestion'
     | '/impresion-3d'
     | '/inventario'
+    | '/monitor'
     | '/pedidos'
     | '/taller'
   id:
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/_authenticated/gestion'
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inventario'
+    | '/_authenticated/monitor'
     | '/_authenticated/pedidos'
     | '/_authenticated/taller'
   fileRoutesById: FileRoutesById
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInventarioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/monitor': {
+      id: '/_authenticated/monitor'
+      path: '/monitor'
+      fullPath: '/monitor'
+      preLoaderRoute: typeof AuthenticatedMonitorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedidos': {
       id: '/_authenticated/pedidos'
       path: '/pedidos'
@@ -230,6 +249,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
+  AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
 }
@@ -240,6 +260,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
+  AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
 }
