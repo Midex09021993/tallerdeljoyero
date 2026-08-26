@@ -18,8 +18,8 @@ import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
-import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
+import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -66,16 +66,17 @@ const AuthenticatedMonitorRoute = AuthenticatedMonitorRouteImport.update({
   path: '/monitor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
-  id: '/pedidos',
-  path: '/pedidos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
   id: '/taller',
   path: '/taller',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPedidosIndexRoute =
+  AuthenticatedPedidosIndexRouteImport.update({
+    id: '/pedidos/',
+    path: '/pedidos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,8 +87,8 @@ export interface FileRoutesByFullPath {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inventario': typeof AuthenticatedInventarioRoute
   '/monitor': typeof AuthenticatedMonitorRoute
-  '/pedidos': typeof AuthenticatedPedidosRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -98,8 +99,8 @@ export interface FileRoutesByTo {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inventario': typeof AuthenticatedInventarioRoute
   '/monitor': typeof AuthenticatedMonitorRoute
-  '/pedidos': typeof AuthenticatedPedidosRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/pedidos': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -112,8 +113,8 @@ export interface FileRoutesById {
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
-  '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
+  '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -126,8 +127,8 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inventario'
     | '/monitor'
-    | '/pedidos'
     | '/taller'
+    | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -138,8 +139,8 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inventario'
     | '/monitor'
-    | '/pedidos'
     | '/taller'
+    | '/pedidos'
   id:
     | '__root__'
     | '/'
@@ -151,8 +152,8 @@ export interface FileRouteTypes {
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inventario'
     | '/_authenticated/monitor'
-    | '/_authenticated/pedidos'
     | '/_authenticated/taller'
+    | '/_authenticated/pedidos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -226,18 +227,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMonitorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/pedidos': {
-      id: '/_authenticated/pedidos'
-      path: '/pedidos'
-      fullPath: '/pedidos'
-      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/taller': {
       id: '/_authenticated/taller'
       path: '/taller'
       fullPath: '/taller'
       preLoaderRoute: typeof AuthenticatedTallerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos/': {
+      id: '/_authenticated/pedidos/'
+      path: '/pedidos'
+      fullPath: '/pedidos/'
+      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -250,8 +251,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
-  AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
+  AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -261,8 +262,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
-  AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
+  AuthenticatedPedidosIndexRoute: AuthenticatedPedidosIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
