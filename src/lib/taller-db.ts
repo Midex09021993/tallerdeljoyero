@@ -68,6 +68,30 @@ export type Material = {
   stock: number;
   unidad: string;
   minimo: number;
+  categoria: string;
+  sede_id: string | null;
+  areas: string[];
+};
+
+export const CATEGORIAS_MATERIAL = [
+  "Oro",
+  "Plata",
+  "Resina",
+  "Piedras",
+  "Soldadura",
+  "Herramientas",
+  "Otros insumos",
+] as const;
+
+export type MovimientoInventario = {
+  id: string;
+  material_id: string;
+  material: string;
+  cantidad: number;
+  tipo: string;
+  motivo: string;
+  area: string;
+  created_at: string;
 };
 
 export type Proceso = {
@@ -307,10 +331,16 @@ export function useInventario() {
     queryFn: async (): Promise<Material[]> => {
       const { data, error } = await supabase
         .from("inventario")
-        .select("id, material, stock, unidad, minimo")
+        .select("id, material, stock, unidad, minimo, categoria, sede_id")
         .order("material");
       if (error) throw error;
-      return (data ?? []).map((m) => ({ ...m, stock: Number(m.stock), minimo: Number(m.minimo) }));
+      const { data: asignaciones } = await supabase.from("material_areas").select("material_id, area");
+      return (data ?? []).map((m) => ({
+        ...m,
+        stock: Number(m.stock),
+        minimo: Number(m.minimo),
+        areas: (asignaciones ?? []).filter((a) => a.material_id === m.id).map((a) => a.area),
+      }));
     },
   });
 }
@@ -458,5 +488,145 @@ export function useGuardarConfigArea() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["config_areas"] }),
+  });
+}
+
+
+/** Alta de un material del inventario. */
+export function useCrearMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (nuevo: {
+      material: string;
+      categoria: string;
+      unidad: string;
+      stock: number;
+      minimo: number;
+      sede_id: string | null;
+      areas: string[];
+    }) => {
+      const { data, error } = await supabase
+        .from("inventario")
+        .insert({
+          material: nuevo.material,
+          categoria: nuevo.categoria,
+          unidad: nuevo.unidad,
+          stock: nuevo.stock,
+          minimo: nuevo.minimo,
+          sede_id: nuevo.sede_id,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      if (nuevo.areas.length > 0) {
+        await supabase
+          .from("material_areas")
+          .insert(nuevo.areas.map((area) => ({ material_id: data.id, area })));
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+/** Actualiza los datos base de un material. */
+export function useActualizarMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      cambios,
+    }: {
+      id: string;
+      cambios: Partial<{ material: string; categoria: string; unidad: string; minimo: number }>;
+    }) => {
+      const { error } = await supabase.from("inventario").update(cambios).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+/** Asigna o quita un material de un área del taller. */
+export function useAsignarArea() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ materialId, area, activo }: { materialId: string; area: string; activo: boolean }) => {
+      if (activo) {
+        const { error } = await supabase
+          .from("material_areas")
+          .insert({ material_id: materialId, area });
+        if (error && !/duplicate/i.test(error.message)) throw error;
+      } else {
+        const { error } = await supabase
+          .from("material_areas")
+          .delete()
+          .eq("material_id", materialId)
+          .eq("area", area);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+export function useBorrarMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("inventario").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+export function useMovimientosInventario() {
+  return useQuery({
+    queryKey: ["inventario-movimientos"],
+    queryFn: async (): Promise<MovimientoInventario[]> => {
+      const { data, error } = await supabase
+        .from("inventario_movimientos")
+        .select("id, material_id, cantidad, tipo, motivo, area, created_at, inventario(material)")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return (data ?? []).map((m) => {
+        const { inventario, ...resto } = m as typeof m & { inventario: { material: string } | null };
+        return {
+          ...resto,
+          cantidad: Number(resto.cantidad),
+          material: inventario?.material ?? "",
+        };
+      });
+    },
+  });
+}
+
+/** Registra un consumo o entrada: el stock general se ajusta en automático. */
+export function useRegistrarMovimiento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (mov: {
+      material_id: string;
+      cantidad: number;
+      tipo: "entrada" | "consumo";
+      area: string;
+      motivo: string;
+    }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase.from("inventario_movimientos").insert({
+        material_id: mov.material_id,
+        cantidad: Math.abs(mov.cantidad),
+        tipo: mov.tipo,
+        area: mov.area,
+        motivo: mov.motivo,
+        usuario_id: userData.user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inventario"] });
+      qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+    },
   });
 }

@@ -98,6 +98,7 @@ export type Database = {
       }
       inventario: {
         Row: {
+          categoria: string
           created_at: string
           id: string
           material: string
@@ -108,6 +109,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          categoria?: string
           created_at?: string
           id?: string
           material: string
@@ -118,6 +120,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          categoria?: string
           created_at?: string
           id?: string
           material?: string
@@ -139,6 +142,7 @@ export type Database = {
       }
       inventario_movimientos: {
         Row: {
+          area: string
           cantidad: number
           created_at: string
           id: string
@@ -148,6 +152,7 @@ export type Database = {
           usuario_id: string | null
         }
         Insert: {
+          area?: string
           cantidad: number
           created_at?: string
           id?: string
@@ -157,6 +162,7 @@ export type Database = {
           usuario_id?: string | null
         }
         Update: {
+          area?: string
           cantidad?: number
           created_at?: string
           id?: string
@@ -168,6 +174,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inventario_movimientos_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_areas: {
+        Row: {
+          area: string
+          created_at: string
+          id: string
+          material_id: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          id?: string
+          material_id: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          id?: string
+          material_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_areas_material_id_fkey"
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "inventario"
