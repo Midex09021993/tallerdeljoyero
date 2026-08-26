@@ -20,7 +20,7 @@ import {
   type Pedido,
 } from "@/lib/taller-db";
 import { AREAS, correoDesdeUsuario, rolEtiqueta, useSesion, type Rol } from "@/lib/auth";
-import { borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
+import { actualizarUsuario, borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
