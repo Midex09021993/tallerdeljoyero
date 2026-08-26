@@ -29,7 +29,11 @@ function seccionesVisibles(
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) return secciones.filter((s) => s.to !== "/monitor");
-  return secciones.filter((s) => s.area && (areas ?? []).includes(s.area));
+  // Todo operario ve "Pedidos" (allí solo aparecen los de sus áreas) más las
+  // pantallas de las áreas que tiene asignadas.
+  return secciones.filter(
+    (s) => s.to === "/pedidos" || (s.area && (areas ?? []).includes(s.area)),
+  );
 }
 
 export function AppShell({
