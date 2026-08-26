@@ -41,6 +41,9 @@ const vacio = {
   importe: "0",
   fecha_ingreso: hoy(),
   fecha_entrega: "",
+  talla: "",
+  cantidad_piezas: "1",
+  piedras: "",
   notas: "",
 };
 
@@ -177,9 +180,9 @@ function PedidosPage() {
                 area_actual: "Pedidos",
                 ruta,
                 notas: form.notas,
-                talla: "",
-                cantidad_piezas: 1,
-                piedras: "",
+                talla: form.talla,
+                cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
+                piedras: form.piedras,
               };
               crear.mutate(nuevo, {
                 onSuccess: () => {
