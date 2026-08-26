@@ -72,6 +72,7 @@ function FichaPedido() {
   const { data: archivos = [] } = useArchivos(id);
   const actualizar = useActualizarPedido();
   const mover = useMoverPedido();
+  const enviar = useEnviarAArea();
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
@@ -180,6 +181,24 @@ function FichaPedido() {
         >
           Avanzar →
         </button>
+        <select
+          value=""
+          onChange={(e) => {
+            const destino = e.target.value;
+            if (destino) enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
+          }}
+          disabled={enviar.isPending}
+          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium disabled:opacity-40"
+        >
+          <option value="" disabled>
+            Enviar a área…
+          </option>
+          {AREAS.filter((a) => a !== pedido.area_actual).map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
         {pedido.telefono ? (
           <a
             href={wa}
