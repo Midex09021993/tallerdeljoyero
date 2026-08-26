@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,10 +7,17 @@ import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import {
   estadoClases,
   useActualizarPedido,
+  useBorrarGasto,
+  useConfigAreas,
+  useCrearGasto,
+  useGastos,
+  useGuardarConfigArea,
   useGuardarSede,
+  useInventario,
   usePedidos,
   useSedes,
   useUsuarios,
+  type Pedido,
 } from "@/lib/taller-db";
 import { AREAS, correoDesdeUsuario, rolEtiqueta, useSesion, type Rol } from "@/lib/auth";
 import { borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
@@ -22,10 +29,10 @@ export const Route = createFileRoute("/_authenticated/gestion")({
       {
         name: "description",
         content:
-          "Zona administrativa del taller: finanzas por pedido, alta de usuarios de gerencia y control de sedes.",
+          "Zona administrativa del taller: resumen, flujo por áreas, entregados, finanzas, automatización, usuarios y sedes.",
       },
       { property: "og:title", content: "Gestión — Aurum Lab" },
-      { property: "og:description", content: "Finanzas, usuarios y sedes del taller de joyería." },
+      { property: "og:description", content: "Administración completa del taller de joyería." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -34,36 +41,44 @@ export const Route = createFileRoute("/_authenticated/gestion")({
 });
 
 const eur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const inputCls =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
 
-type Modulo = "finanzas" | "usuarios" | "sedes";
+type Modulo = "resumen" | "flujo" | "entregados" | "finanzas" | "automatizacion" | "usuarios" | "sedes";
+
+function esEntregado(p: Pedido) {
+  return p.area_actual === "Entregado" || p.estado === "Entregado";
+}
+function delMes(fecha: string | null) {
+  if (!fecha) return false;
+  const d = new Date(fecha);
+  const hoy = new Date();
+  return d.getFullYear() === hoy.getFullYear() && d.getMonth() === hoy.getMonth();
+}
+function horasEn(desde: string) {
+  return (Date.now() - new Date(desde).getTime()) / 36e5;
+}
 
 function GestionPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
-  const actualizar = useActualizarPedido();
-  const [modulo, setModulo] = useState<Modulo>("finanzas");
+  const [modulo, setModulo] = useState<Modulo>("resumen");
 
-  const puedeGestionarUsuarios = Boolean(sesion?.esDueno || sesion?.roles.includes("gerente"));
-  const total = pedidos.reduce((acc, p) => acc + p.importe, 0);
-  const entregado = pedidos.filter((p) => p.estado === "Entregado").reduce((a, p) => a + p.importe, 0);
+  const esDueno = Boolean(sesion?.esDueno);
+  const puedeUsuarios = Boolean(esDueno || sesion?.roles.includes("gerente"));
 
   const modulos: { id: Modulo; label: string; visible: boolean }[] = [
+    { id: "resumen", label: "Resumen", visible: true },
+    { id: "flujo", label: "Flujo", visible: true },
+    { id: "entregados", label: "Entregados", visible: true },
     { id: "finanzas", label: "Finanzas", visible: true },
-    { id: "usuarios", label: "Usuarios", visible: puedeGestionarUsuarios },
-    { id: "sedes", label: "Sedes", visible: Boolean(sesion?.esDueno) },
+    { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
+    { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
+    { id: "sedes", label: "Sedes", visible: esDueno },
   ];
 
   return (
-    <AppShell
-      titulo="Gestión"
-      subtitulo={isLoading ? "Cargando…" : "Finanzas, usuarios y sedes del taller"}
-      acciones={
-        <>
-          <StatCard etiqueta="Cartera" valor={eur.format(total)} />
-          <StatCard etiqueta="Facturado" valor={eur.format(entregado)} tono="positivo" />
-        </>
-      }
-    >
+    <AppShell titulo="Gestión" subtitulo={isLoading ? "Cargando…" : "Zona administrativa del taller"}>
       <div className="flex flex-wrap gap-2">
         {modulos
           .filter((m) => m.visible)
@@ -83,18 +98,275 @@ function GestionPage() {
           ))}
       </div>
 
-      {modulo === "finanzas" ? (
-        <Panel titulo="Detalle económico">
+      {modulo === "resumen" ? <ModuloResumen pedidos={pedidos} /> : null}
+      {modulo === "flujo" ? <ModuloFlujo pedidos={pedidos} /> : null}
+      {modulo === "entregados" ? <ModuloEntregados pedidos={pedidos} /> : null}
+      {modulo === "finanzas" ? <ModuloFinanzas pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} /> : null}
+      {modulo === "automatizacion" && puedeUsuarios ? (
+        <ModuloAutomatizacion pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} />
+      ) : null}
+      {modulo === "usuarios" && puedeUsuarios ? (
+        <ModuloUsuarios esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
+      ) : null}
+      {modulo === "sedes" && esDueno ? <ModuloSedes /> : null}
+    </AppShell>
+  );
+}
+
+/* ---------------- Resumen ---------------- */
+
+function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
+  const { data: materiales = [] } = useInventario();
+  const { data: sedes = [] } = useSedes();
+  const { data: gastos = [] } = useGastos();
+
+  const activos = pedidos.filter((p) => !esEntregado(p));
+  const hoy = new Date().toISOString().slice(0, 10);
+  const atrasados = activos.filter((p) => p.fecha_entrega && p.fecha_entrega < hoy);
+  const entregadosMes = pedidos.filter((p) => esEntregado(p) && delMes(p.fecha_entrega ?? p.fecha_ingreso));
+  const ingresosMes = entregadosMes.reduce((a, p) => a + p.importe, 0);
+  const gastosMes = gastos.filter((g) => delMes(g.fecha)).reduce((a, g) => a + g.importe, 0);
+  const stockBajo = materiales.filter((m) => m.stock <= m.minimo);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatCard etiqueta="Pedidos activos" valor={String(activos.length)} />
+        <StatCard etiqueta="Atrasados" valor={String(atrasados.length)} tono={atrasados.length ? "negativo" : "neutro"} />
+        <StatCard etiqueta="Entregados del mes" valor={String(entregadosMes.length)} tono="positivo" />
+        <StatCard etiqueta="Ingresos del mes" valor={eur.format(ingresosMes)} tono="positivo" />
+        <StatCard etiqueta="Stock bajo" valor={String(stockBajo.length)} tono={stockBajo.length ? "negativo" : "neutro"} />
+        <StatCard etiqueta="Sedes activas" valor={String(sedes.filter((s) => s.activa).length)} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel titulo="Pedidos atrasados">
+          <ul className="divide-y divide-border">
+            {atrasados.slice(0, 8).map((p) => (
+              <li key={p.id} className="flex items-center justify-between px-6 py-3">
+                <span className="text-sm">
+                  {p.referencia} · <span className="text-muted-foreground">{p.cliente}</span>
+                </span>
+                <span className="text-xs text-danger">{p.fecha_entrega}</span>
+              </li>
+            ))}
+            {atrasados.length === 0 ? (
+              <li className="px-6 py-6 text-sm text-muted-foreground">Sin pedidos atrasados.</li>
+            ) : null}
+          </ul>
+        </Panel>
+        <Panel titulo="Material bajo mínimo">
+          <ul className="divide-y divide-border">
+            {stockBajo.slice(0, 8).map((m) => (
+              <li key={m.id} className="flex items-center justify-between px-6 py-3">
+                <span className="text-sm">{m.material}</span>
+                <span className="text-xs text-danger tabular-nums">
+                  {m.stock} / {m.minimo} {m.unidad}
+                </span>
+              </li>
+            ))}
+            {stockBajo.length === 0 ? (
+              <li className="px-6 py-6 text-sm text-muted-foreground">Stock correcto.</li>
+            ) : null}
+          </ul>
+        </Panel>
+      </div>
+      <p className="text-xs text-muted-foreground">Gastos registrados este mes: {eur.format(gastosMes)}</p>
+    </div>
+  );
+}
+
+/* ---------------- Flujo ---------------- */
+
+function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
+  const activos = pedidos.filter((p) => !esEntregado(p));
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {AREAS.filter((a) => a !== "Entregado").map((area) => {
+        const lista = activos.filter((p) => p.area_actual === area);
+        return (
+          <Panel key={area} titulo={`${area} · ${lista.length}`}>
+            <ul className="divide-y divide-border">
+              {lista.slice(0, 10).map((p) => (
+                <li key={p.id} className="px-6 py-3">
+                  <p className="text-sm font-medium">{p.referencia}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.cliente} · {Math.round(horasEn(p.area_desde))} h en área
+                  </p>
+                </li>
+              ))}
+              {lista.length === 0 ? <li className="px-6 py-5 text-xs text-muted-foreground">Vacío</li> : null}
+            </ul>
+          </Panel>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Entregados ---------------- */
+
+function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
+  const entregados = pedidos.filter(esEntregado);
+  return (
+    <Panel titulo={`Trabajos finalizados · ${entregados.length}`}>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="bg-surface-muted">
+              {["Ref", "Cliente", "Trabajo", "Entrega", "Importe"].map((h, i) => (
+                <th
+                  key={h}
+                  className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${i === 4 ? "text-right" : ""}`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {entregados.map((p) => (
+              <tr key={p.id} className="hover:bg-surface-muted/60">
+                <td className="px-6 py-3 text-xs font-medium">{p.referencia}</td>
+                <td className="px-6 py-3 text-sm">{p.cliente}</td>
+                <td className="px-6 py-3 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
+                <td className="px-6 py-3 text-xs text-muted-foreground">{p.fecha_entrega ?? "—"}</td>
+                <td className="px-6 py-3 text-right text-sm tabular-nums">{eur.format(p.importe)}</td>
+              </tr>
+            ))}
+            {entregados.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-8 text-sm text-muted-foreground">
+                  Todavía no hay trabajos entregados.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
+/* ---------------- Finanzas ---------------- */
+
+function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia: string | null }) {
+  const actualizar = useActualizarPedido();
+  const { data: gastos = [] } = useGastos();
+  const crearGasto = useCrearGasto();
+  const borrarGasto = useBorrarGasto();
+  const [nuevo, setNuevo] = useState({
+    concepto: "",
+    categoria: "Material",
+    importe: 0,
+    fecha: new Date().toISOString().slice(0, 10),
+  });
+
+  const ventas = pedidos.filter(esEntregado);
+  const ingresos = ventas.reduce((a, p) => a + p.importe, 0);
+  const cartera = pedidos.reduce((a, p) => a + p.importe, 0);
+  const totalGastos = gastos.reduce((a, g) => a + g.importe, 0);
+  const margen = ingresos - totalGastos;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard etiqueta="Ingresos (entregados)" valor={eur.format(ingresos)} tono="positivo" />
+        <StatCard etiqueta="Gastos" valor={eur.format(totalGastos)} tono="negativo" />
+        <StatCard etiqueta="Margen estimado" valor={eur.format(margen)} tono={margen >= 0 ? "positivo" : "negativo"} />
+        <StatCard etiqueta="Cartera total" valor={eur.format(cartera)} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
+        <Panel titulo="Registrar gasto">
+          <form
+            className="space-y-3 p-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              crearGasto.mutate(
+                { ...nuevo, importe: Number(nuevo.importe), sede_id: sedePropia },
+                {
+                  onSuccess: () => {
+                    toast.success("Gasto registrado");
+                    setNuevo({ ...nuevo, concepto: "", importe: 0 });
+                  },
+                  onError: (err) => toast.error(err instanceof Error ? err.message : "Error"),
+                },
+              );
+            }}
+          >
+            <input
+              className={inputCls}
+              placeholder="Concepto"
+              value={nuevo.concepto}
+              onChange={(e) => setNuevo({ ...nuevo, concepto: e.target.value })}
+              required
+            />
+            <select
+              className={inputCls}
+              value={nuevo.categoria}
+              onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}
+            >
+              {["Material", "Personal", "Maquinaria", "Local", "General"].map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                className={inputCls}
+                type="number"
+                step="0.01"
+                placeholder="Importe"
+                value={nuevo.importe}
+                onChange={(e) => setNuevo({ ...nuevo, importe: Number(e.target.value) })}
+              />
+              <input
+                className={inputCls}
+                type="date"
+                value={nuevo.fecha}
+                onChange={(e) => setNuevo({ ...nuevo, fecha: e.target.value })}
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Añadir gasto
+            </button>
+          </form>
+          <ul className="divide-y divide-border border-t border-border">
+            {gastos.slice(0, 10).map((g) => (
+              <li key={g.id} className="flex items-center justify-between px-6 py-3">
+                <div>
+                  <p className="text-sm">{g.concepto}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {g.categoria} · {g.fecha}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm tabular-nums">{eur.format(g.importe)}</span>
+                  <button
+                    type="button"
+                    onClick={() => borrarGasto.mutate(g.id)}
+                    className="text-xs text-destructive hover:underline"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+
+        <Panel titulo="Ventas e importes por pedido">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-surface-muted">
-                  {["Ref", "Cliente", "Pieza", "Estado", "Importe"].map((h, i) => (
+                  {["Ref", "Cliente", "Estado", "Importe"].map((h, i) => (
                     <th
                       key={h}
-                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
-                        i === 4 ? "text-right" : ""
-                      }`}
+                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${i === 3 ? "text-right" : ""}`}
                     >
                       {h}
                     </th>
@@ -103,18 +375,17 @@ function GestionPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {pedidos.map((p) => (
-                  <tr key={p.id} className="transition-colors hover:bg-surface-muted/60">
-                    <td className="px-6 py-4 text-xs font-medium">{p.referencia}</td>
-                    <td className="px-6 py-4 text-sm">{p.cliente}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{p.pieza}</td>
-                    <td className="px-6 py-4">
+                  <tr key={p.id} className="hover:bg-surface-muted/60">
+                    <td className="px-6 py-3 text-xs font-medium">{p.referencia}</td>
+                    <td className="px-6 py-3 text-sm">{p.cliente}</td>
+                    <td className="px-6 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado] ?? "bg-surface-muted"}`}
+                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.area_actual] ?? "bg-surface-muted"}`}
                       >
-                        {p.estado}
+                        {p.area_actual}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-3 text-right">
                       <input
                         type="number"
                         defaultValue={p.importe}
@@ -127,30 +398,105 @@ function GestionPage() {
                     </td>
                   </tr>
                 ))}
-                {!isLoading && pedidos.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-sm text-muted-foreground">
-                      Sin pedidos registrados.
-                    </td>
-                  </tr>
-                ) : null}
               </tbody>
             </table>
           </div>
         </Panel>
-      ) : null}
-
-      {modulo === "usuarios" && puedeGestionarUsuarios ? (
-        <ModuloUsuarios esDueno={Boolean(sesion?.esDueno)} sedePropia={sesion?.perfil.sede_id ?? null} />
-      ) : null}
-
-      {modulo === "sedes" && sesion?.esDueno ? <ModuloSedes /> : null}
-    </AppShell>
+      </div>
+    </div>
   );
 }
 
-const inputCls =
-  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
+/* ---------------- Automatización ---------------- */
+
+function ModuloAutomatizacion({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia: string | null }) {
+  const { data: config = [] } = useConfigAreas();
+  const guardar = useGuardarConfigArea();
+
+  const porArea = useMemo(() => {
+    const mapa = new Map(config.map((c) => [c.area, c]));
+    return AREAS.filter((a) => a !== "Entregado").map((area) => ({
+      area,
+      horas: mapa.get(area)?.horas_objetivo ?? 48,
+      alerta: mapa.get(area)?.alerta_activa ?? true,
+    }));
+  }, [config]);
+
+  const alertas = pedidos
+    .filter((p) => !esEntregado(p))
+    .map((p) => {
+      const cfg = porArea.find((c) => c.area === p.area_actual);
+      const horas = horasEn(p.area_desde);
+      return cfg && cfg.alerta && horas > cfg.horas ? { pedido: p, horas, objetivo: cfg.horas } : null;
+    })
+    .filter(Boolean) as { pedido: Pedido; horas: number; objetivo: number }[];
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Panel titulo="Tiempos objetivo por área">
+        <ul className="divide-y divide-border">
+          {porArea.map((c) => (
+            <li key={c.area} className="flex items-center justify-between gap-3 px-6 py-3">
+              <span className="text-sm">{c.area}</span>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min={1}
+                  defaultValue={c.horas}
+                  onBlur={(e) =>
+                    guardar.mutate({
+                      sede_id: sedePropia,
+                      area: c.area,
+                      horas_objetivo: Number(e.target.value),
+                      alerta_activa: c.alerta,
+                    })
+                  }
+                  className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-right text-sm tabular-nums"
+                />
+                <span className="text-xs text-muted-foreground">h</span>
+                <label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={c.alerta}
+                    onChange={(e) =>
+                      guardar.mutate({
+                        sede_id: sedePropia,
+                        area: c.area,
+                        horas_objetivo: c.horas,
+                        alerta_activa: e.target.checked,
+                      })
+                    }
+                  />
+                  Alerta
+                </label>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+
+      <Panel titulo={`Alertas internas · ${alertas.length}`}>
+        <ul className="divide-y divide-border">
+          {alertas.map(({ pedido, horas, objetivo }) => (
+            <li key={pedido.id} className="px-6 py-3">
+              <p className="text-sm font-medium">
+                {pedido.referencia} · {pedido.area_actual}
+              </p>
+              <p className="text-xs text-danger">
+                {Math.round(horas)} h en área (objetivo {objetivo} h)
+              </p>
+            </li>
+          ))}
+          {alertas.length === 0 ? (
+            <li className="px-6 py-6 text-sm text-muted-foreground">Ningún pedido supera su tiempo objetivo.</li>
+          ) : null}
+        </ul>
+      </Panel>
+    </div>
+  );
+}
+
+/* ---------------- Usuarios ---------------- */
 
 function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia: string | null }) {
   const qc = useQueryClient();
@@ -306,7 +652,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Nombre", "DNI", "Rol", "Sede", ""].map((h) => (
+                {["Nombre", "DNI", "Rol", "Sede", "Áreas", ""].map((h) => (
                   <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">
                     {h}
                   </th>
@@ -324,6 +670,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                   <td className="px-6 py-3 text-xs text-muted-foreground">
                     {sedes.find((s) => s.id === u.sede_id)?.nombre ?? "—"}
                   </td>
+                  <td className="px-6 py-3 text-xs text-muted-foreground">{u.areas.join(", ") || "—"}</td>
                   <td className="px-6 py-3 text-right">
                     {esDueno ? (
                       <button
@@ -348,7 +695,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
               ))}
               {usuarios.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-sm text-muted-foreground">
+                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
                     Sin usuarios todavía.
                   </td>
                 </tr>
@@ -360,6 +707,13 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     </div>
   );
 }
+
+/* ---------------- Sedes ---------------- */
+
+const MODOS = [
+  { valor: "completo", etiqueta: "Modo completo por áreas" },
+  { valor: "guiado", etiqueta: "Modo individual guiado" },
+];
 
 function ModuloSedes() {
   const { data: sedes = [] } = useSedes();
@@ -400,8 +754,11 @@ function ModuloSedes() {
             value={nueva.modo}
             onChange={(e) => setNueva({ ...nueva, modo: e.target.value })}
           >
-            <option value="completo">Modo completo por áreas</option>
-            <option value="simple">Modo simple</option>
+            {MODOS.map((m) => (
+              <option key={m.valor} value={m.valor}>
+                {m.etiqueta}
+              </option>
+            ))}
           </select>
           <button
             type="submit"
@@ -412,19 +769,41 @@ function ModuloSedes() {
         </form>
       </Panel>
 
-      <Panel titulo="Sedes">
+      <Panel titulo="Sedes del grupo">
         <ul className="divide-y divide-border">
           {sedes.map((s) => (
-            <li key={s.id} className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium">{s.nombre}</p>
-                <p className="text-xs text-muted-foreground">{s.ciudad || "Sin ciudad"}</p>
-              </div>
-              <span className="rounded-full bg-surface-muted px-3 py-1 text-[10px] uppercase tracking-wide">
-                {s.modo}
-              </span>
+            <li key={s.id} className="grid gap-3 px-6 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+              <input
+                className={inputCls}
+                defaultValue={s.nombre}
+                onBlur={(e) =>
+                  e.target.value !== s.nombre &&
+                  guardar.mutate({ id: s.id, nombre: e.target.value, ciudad: s.ciudad, modo: s.modo })
+                }
+              />
+              <input
+                className={inputCls}
+                defaultValue={s.ciudad}
+                placeholder="Ciudad"
+                onBlur={(e) =>
+                  e.target.value !== s.ciudad &&
+                  guardar.mutate({ id: s.id, nombre: s.nombre, ciudad: e.target.value, modo: s.modo })
+                }
+              />
+              <select
+                className={inputCls}
+                defaultValue={s.modo}
+                onChange={(e) => guardar.mutate({ id: s.id, nombre: s.nombre, ciudad: s.ciudad, modo: e.target.value })}
+              >
+                {MODOS.map((m) => (
+                  <option key={m.valor} value={m.valor}>
+                    {m.etiqueta}
+                  </option>
+                ))}
+              </select>
             </li>
           ))}
+          {sedes.length === 0 ? <li className="px-6 py-6 text-sm text-muted-foreground">Sin sedes.</li> : null}
         </ul>
       </Panel>
     </div>

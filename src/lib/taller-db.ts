@@ -361,3 +361,87 @@ export function useActualizarTarea() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tareas"] }),
   });
 }
+
+export type Gasto = {
+  id: string;
+  sede_id: string | null;
+  concepto: string;
+  categoria: string;
+  importe: number;
+  fecha: string;
+};
+
+export function useGastos() {
+  return useQuery({
+    queryKey: ["gastos"],
+    queryFn: async (): Promise<Gasto[]> => {
+      const { data, error } = await supabase
+        .from("gastos")
+        .select("id, sede_id, concepto, categoria, importe, fecha")
+        .order("fecha", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((g) => ({ ...g, importe: Number(g.importe) }));
+    },
+  });
+}
+
+export function useCrearGasto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (gasto: Omit<Gasto, "id">) => {
+      const { error } = await supabase.from("gastos").insert(gasto);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gastos"] }),
+  });
+}
+
+export function useBorrarGasto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("gastos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gastos"] }),
+  });
+}
+
+export type ConfigArea = {
+  id: string;
+  sede_id: string | null;
+  area: string;
+  horas_objetivo: number;
+  alerta_activa: boolean;
+};
+
+export function useConfigAreas() {
+  return useQuery({
+    queryKey: ["config_areas"],
+    queryFn: async (): Promise<ConfigArea[]> => {
+      const { data, error } = await supabase
+        .from("config_areas")
+        .select("id, sede_id, area, horas_objetivo, alerta_activa");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useGuardarConfigArea() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (cfg: {
+      sede_id: string | null;
+      area: string;
+      horas_objetivo: number;
+      alerta_activa: boolean;
+    }) => {
+      const { error } = await supabase
+        .from("config_areas")
+        .upsert(cfg, { onConflict: "sede_id,area" });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["config_areas"] }),
+  });
+}
