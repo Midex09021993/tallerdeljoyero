@@ -22,7 +22,7 @@ export const Route = createFileRoute("/cliente")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    ref: typeof search['ref'] === "string" ? (search['ref'] as string) : "",
+    ...(typeof search['ref'] === "string" && search['ref'] ? { ref: search['ref'] as string } : {}),
   }),
   component: SeguimientoCliente,
 });
@@ -39,7 +39,7 @@ type Seguimiento = {
 
 function SeguimientoCliente() {
   const { ref } = Route.useSearch();
-  const [valor, setValor] = useState(ref);
+  const [valor, setValor] = useState(ref ?? "");
   const [buscado, setBuscado] = useState(false);
 
   const consulta = useMutation({
