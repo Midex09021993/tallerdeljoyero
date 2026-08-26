@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_authenticated/gestion")({
   component: GestionPage,
 });
 
-const eur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const eur = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN", maximumFractionDigits: 0 });
 const inputCls =
   "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
 

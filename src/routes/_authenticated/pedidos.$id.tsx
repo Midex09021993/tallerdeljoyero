@@ -231,7 +231,7 @@ function FichaPedido() {
                 ["Origen", pedido.origen || "—"],
                 ["Contrato", pedido.contrato || "—"],
                 ["Material", pedido.material],
-                ["Costo", `${pedido.importe}`],
+                ["Costo", `S/ ${pedido.importe}`],
                 ["Ingreso", pedido.fecha_ingreso],
                 ["Entrega", pedido.fecha_entrega ?? pedido.entrega ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
