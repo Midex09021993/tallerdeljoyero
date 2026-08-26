@@ -84,16 +84,43 @@ export type Tarea = {
   estado: string;
 };
 
+export type PedidoNuevo = {
+  referencia: string;
+  pieza: string;
+  cliente: string;
+  material: string;
+  estado: string;
+  entrega: string;
+  importe: number;
+  sede_id: string | null;
+  telefono: string;
+  origen: string;
+  contrato: string;
+  trabajo: string;
+  fecha_ingreso: string;
+  fecha_entrega: string | null;
+  area_actual: string;
+  ruta: string[];
+  notas: string;
+};
+
+const CAMPOS_PEDIDO =
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, sedes(nombre)";
+
 export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
     queryFn: async (): Promise<Pedido[]> => {
       const { data, error } = await supabase
         .from("pedidos")
-        .select("id, referencia, pieza, cliente, material, estado, entrega, importe")
+        .select(CAMPOS_PEDIDO)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((p) => ({ ...p, importe: Number(p.importe) }));
+      return (data ?? []).map(({ sedes, ...p }) => ({
+        ...p,
+        importe: Number(p.importe),
+        sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
+      }));
     },
   });
 }
@@ -101,7 +128,7 @@ export function usePedidos() {
 export function useCrearPedido() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (pedido: Omit<Pedido, "id">) => {
+    mutationFn: async (pedido: PedidoNuevo) => {
       const { error } = await supabase.from("pedidos").insert(pedido);
       if (error) throw error;
     },
@@ -112,7 +139,7 @@ export function useCrearPedido() {
 export function useActualizarPedido() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...cambios }: Partial<Pedido> & { id: string }) => {
+    mutationFn: async ({ id, ...cambios }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
       const { error } = await supabase.from("pedidos").update(cambios).eq("id", id);
       if (error) throw error;
     },
@@ -128,6 +155,103 @@ export function useBorrarPedido() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+  });
+}
+
+/** Avanza o devuelve el pedido siguiendo su propia ruta. */
+export function useMoverPedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pedido,
+      direccion,
+      usuarioId,
+    }: {
+      pedido: Pedido;
+      direccion: "avanzar" | "devolver";
+      usuarioId: string | null;
+    }) => {
+      const secuencia = ["Pedidos", ...pedido.ruta, "Entregado"];
+      const i = secuencia.indexOf(pedido.area_actual);
+      const destino =
+        direccion === "avanzar"
+          ? secuencia[Math.min(secuencia.length - 1, i + 1)]
+          : secuencia[Math.max(0, i - 1)];
+      if (!destino || destino === pedido.area_actual) return;
+
+      const { error } = await supabase
+        .from("pedidos")
+        .update({ area_actual: destino, area_desde: new Date().toISOString() })
+        .eq("id", pedido.id);
+      if (error) throw error;
+      await supabase.from("pedido_movimientos").insert({
+        pedido_id: pedido.id,
+        area_origen: pedido.area_actual,
+        area_destino: destino,
+        accion: direccion,
+        usuario_id: usuarioId,
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+  });
+}
+
+export function useSedes() {
+  return useQuery({
+    queryKey: ["sedes"],
+    queryFn: async (): Promise<Sede[]> => {
+      const { data, error } = await supabase
+        .from("sedes")
+        .select("id, nombre, ciudad, modo, activa")
+        .order("nombre");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useGuardarSede() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (sede: { id?: string; nombre: string; ciudad: string; modo: string }) => {
+      const { error } = sede.id
+        ? await supabase
+            .from("sedes")
+            .update({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo })
+            .eq("id", sede.id)
+        : await supabase.from("sedes").insert({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sedes"] }),
+  });
+}
+
+export type Usuario = {
+  id: string;
+  nombre: string;
+  dni: string;
+  telefono: string;
+  sede_id: string | null;
+  roles: string[];
+  areas: string[];
+};
+
+export function useUsuarios() {
+  return useQuery({
+    queryKey: ["usuarios"],
+    queryFn: async (): Promise<Usuario[]> => {
+      const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
+        supabase.from("profiles").select("id, nombre, dni, telefono, sede_id").order("nombre"),
+        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("user_areas").select("user_id, area"),
+      ]);
+      if (error) throw error;
+      return (perfiles ?? []).map((p) => ({
+        ...p,
+        roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as string),
+        areas: (areas ?? []).filter((a) => a.user_id === p.id).map((a) => a.area),
+      }));
+    },
   });
 }
 
