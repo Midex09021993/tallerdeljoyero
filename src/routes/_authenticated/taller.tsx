@@ -91,7 +91,7 @@ function TallerPage() {
                 <span className="min-w-0">
                   <span className="text-sm font-medium">{p.referencia}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {p.cliente} · {p.trabajo || p.pieza}
+                    {p.cliente} · {p.trabajo || p.pieza} · {p.area_actual}
                   </span>
                 </span>
                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
