@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { AREAS, useSesion } from "@/lib/auth";
 import {
