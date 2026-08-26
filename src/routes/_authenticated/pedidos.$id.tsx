@@ -301,6 +301,9 @@ function FichaPedido() {
                       trabajo: String(fd.get("trabajo")),
                       pieza: String(fd.get("trabajo")),
                       material: String(fd.get("material")),
+                      talla: String(fd.get("talla")),
+                      cantidad_piezas: Number(fd.get("cantidad_piezas")) || 1,
+                      piedras: String(fd.get("piedras")),
                       importe: Number(fd.get("importe")) || 0,
                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
                       notas: String(fd.get("notas")),
@@ -317,9 +320,12 @@ function FichaPedido() {
                     ["contrato", "Contrato", pedido.contrato, "text"],
                     ["trabajo", "Trabajo", pedido.trabajo || pedido.pieza, "text"],
                     ["material", "Material", pedido.material, "text"],
+                    ["talla", "Talla / Medida", pedido.talla, "text"],
+                    ["cantidad_piezas", "Cantidad de piezas", String(pedido.cantidad_piezas), "number"],
+                    ["piedras", "Piedras / Componentes", pedido.piedras, "text"],
                     ["importe", "Costo", String(pedido.importe), "number"],
                     ["fecha_entrega", "Entrega", pedido.fecha_entrega ?? "", "date"],
-                    ["notas", "Notas", pedido.notas, "text"],
+                    ["notas", "Notas generales", pedido.notas, "text"],
                   ] as const
                 ).map(([name, label, val, tipo]) => (
                   <label key={name} className="text-[10px] uppercase tracking-wider text-muted-foreground">
