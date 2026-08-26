@@ -311,7 +311,11 @@ function PedidosPage() {
 
         <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">
           <input
-            placeholder="Buscar cliente, contrato o referencia…"
+            placeholder={
+              soloSusAreas
+                ? "Buscar en todos los pedidos (aunque ya avanzaron)…"
+                : "Buscar cliente, contrato o referencia…"
+            }
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="min-w-[220px] flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
@@ -321,11 +325,18 @@ function PedidosPage() {
             onChange={(e) => setFiltro(e.target.value)}
             className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
           >
-            {["Todas", ...AREAS].map((a) => (
+            {["Todas", ...(soloSusAreas ? misAreas : AREAS)].map((a) => (
               <option key={a}>{a}</option>
             ))}
           </select>
         </div>
+        {soloSusAreas && !busca.trim() ? (
+          <p className="px-6 pt-3 text-[11px] text-muted-foreground">
+            Ves los pedidos que están en tus áreas: {misAreas.join(", ")}. Usa el buscador para
+            encontrar pedidos que ya avanzaron a otra área.
+          </p>
+        ) : null}
+
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
