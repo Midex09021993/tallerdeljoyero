@@ -106,6 +106,11 @@ function PedidosPage() {
   const puedeCrear = Boolean(sesion?.esAdmin);
   const sedePorDefecto = sedeId || sesion?.perfil.sede_id || sedes[0]?.id || "";
 
+  // Los operarios solo ven los pedidos que están en sus áreas asignadas.
+  // Al buscar por texto pueden encontrar cualquier pedido, aunque ya haya avanzado.
+  const soloSusAreas = Boolean(sesion && !sesion.esAdmin && (sesion.areas?.length ?? 0) > 0);
+  const misAreas = sesion?.areas ?? [];
+
   const lista = useMemo(
     () =>
       pedidos.filter((p) => {
@@ -116,12 +121,14 @@ function PedidosPage() {
           [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
             (v ?? "").toLowerCase().includes(t),
           );
-        return okArea && okTexto;
+        const okOperario = !soloSusAreas || Boolean(t) || misAreas.includes(p.area_actual);
+        return okArea && okTexto && okOperario;
       }),
-    [pedidos, filtro, busca],
+    [pedidos, filtro, busca, soloSusAreas, misAreas],
   );
 
   const activos = pedidos.filter((p) => p.area_actual !== "Entregado").length;
+
 
   return (
     <AppShell
