@@ -94,6 +94,7 @@ function PedidosPage() {
   const [sedeId, setSedeId] = useState<string>("");
   const [filtro, setFiltro] = useState("Todas");
   const [busca, setBusca] = useState("");
+  const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
   const sedePorDefecto = sedeId || sesion?.perfil.sede_id || sedes[0]?.id || "";
