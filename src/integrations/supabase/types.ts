@@ -14,7 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inventario: {
+        Row: {
+          created_at: string
+          id: string
+          material: string
+          minimo: number
+          stock: number
+          unidad: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material: string
+          minimo?: number
+          stock?: number
+          unidad?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material?: string
+          minimo?: number
+          stock?: number
+          unidad?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pedidos: {
+        Row: {
+          cliente: string
+          created_at: string
+          entrega: string
+          estado: string
+          id: string
+          importe: number
+          material: string
+          pieza: string
+          referencia: string
+          updated_at: string
+        }
+        Insert: {
+          cliente: string
+          created_at?: string
+          entrega?: string
+          estado?: string
+          id?: string
+          importe?: number
+          material: string
+          pieza: string
+          referencia: string
+          updated_at?: string
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          entrega?: string
+          estado?: string
+          id?: string
+          importe?: number
+          material?: string
+          pieza?: string
+          referencia?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      procesos: {
+        Row: {
+          cliente: string
+          created_at: string
+          detalle: string
+          fase: string
+          id: string
+          pieza: string
+          progreso: number
+          referencia: string
+          updated_at: string
+        }
+        Insert: {
+          cliente?: string
+          created_at?: string
+          detalle?: string
+          fase: string
+          id?: string
+          pieza: string
+          progreso?: number
+          referencia: string
+          updated_at?: string
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          detalle?: string
+          fase?: string
+          id?: string
+          pieza?: string
+          progreso?: number
+          referencia?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tareas_taller: {
+        Row: {
+          banco: string
+          created_at: string
+          estado: string
+          id: string
+          responsable: string
+          tarea: string
+          updated_at: string
+        }
+        Insert: {
+          banco?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          responsable?: string
+          tarea: string
+          updated_at?: string
+        }
+        Update: {
+          banco?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          responsable?: string
+          tarea?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
