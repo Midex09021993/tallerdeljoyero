@@ -1,89 +1,119 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { AREAS, useSesion } from "@/lib/auth";
 import {
-  estadoClases,
-  estados,
-  useActualizarPedido,
   useBorrarPedido,
   useCrearPedido,
-  useInventario,
   usePedidos,
+  useSedes,
+  type PedidoNuevo,
 } from "@/lib/taller-db";
-import floral from "@/assets/diseno-floral.jpg";
-import colgante from "@/assets/diseno-colgante.jpg";
-import gemelos from "@/assets/diseno-gemelos.jpg";
-import corona from "@/assets/diseno-corona.jpg";
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({
     meta: [
-      { title: "Panel de producción — Aurum Lab" },
+      { title: "Pedidos — Aurum Lab" },
       {
         name: "description",
         content:
-          "Panel del taller de joyería Aurum Lab: pedidos activos, colas de diseño e impresión 3D, estado de impresoras y stock de materiales.",
+          "Seguimiento general de los pedidos del taller de joyería: área actual, ruta del trabajo, cliente, contrato y fecha de entrega.",
       },
-      { property: "og:title", content: "Panel de producción — Aurum Lab" },
-      {
-        property: "og:description",
-        content: "Pedidos activos, producción y stock del taller de joyería en una sola vista.",
-      },
+      { property: "og:title", content: "Pedidos — Aurum Lab" },
+      { property: "og:description", content: "Todos los pedidos de la sede y su área actual." },
     ],
   }),
   component: PedidosPage,
 });
 
-const disenos = [
-  { img: floral, nombre: 'Anillo orgánico "Orchid"', meta: "Modificado hace 2 h", archivo: "Floral_V1.stl" },
-  { img: colgante, nombre: "Colgante hexagonal", meta: "Modificado hace 5 h", archivo: "Geom_Pendant.stl" },
-  { img: gemelos, nombre: "Gemelos iniciales 'B'", meta: "Modificado ayer", archivo: "Cufflink_04.stl" },
-  { img: corona, nombre: "Corona Imperial v2", meta: "Modificado hace 3 d", archivo: "Crown_Final.stl" },
-];
+const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
+
+const hoy = () => new Date().toISOString().slice(0, 10);
 
 const vacio = {
-  referencia: "",
-  pieza: "",
   cliente: "",
-  material: "Oro blanco 18k",
-  estado: estados[0] as string,
-  entrega: "",
+  telefono: "",
+  origen: "",
+  contrato: "",
+  trabajo: "",
+  material: "Oro 18k",
   importe: "0",
+  fecha_ingreso: hoy(),
+  fecha_entrega: "",
+  notas: "",
 };
 
-function PedidosPage() {
-  const { data: pedidos = [], isLoading } = usePedidos();
-  const { data: inventario = [] } = useInventario();
-  const crear = useCrearPedido();
-  const actualizar = useActualizarPedido();
-  const borrar = useBorrarPedido();
-  const [form, setForm] = useState(vacio);
-  const [abierto, setAbierto] = useState(false);
+export function areaClase(area: string) {
+  const mapa: Record<string, string> = {
+    Pedidos: "bg-surface-muted text-muted-foreground",
+    "Diseño 3D": "bg-info-soft text-info",
+    "Impresión 3D": "bg-accent text-foreground",
+    Casting: "bg-warning-soft text-warning",
+    Taller: "bg-warning-soft text-warning",
+    "Servicio láser": "bg-surface-muted text-muted-foreground",
+    "Área ventas": "bg-info-soft text-info",
+    Entregado: "bg-success-soft text-success",
+  };
+  return mapa[area] ?? "bg-surface-muted";
+}
 
-  const bajos = inventario.filter((m) => m.stock < m.minimo);
-  const resina = inventario.find((m) => m.material.toLowerCase().includes("resina"));
-  const oro = inventario.find((m) => m.material.toLowerCase().includes("oro 18k"));
+function PedidosPage() {
+  const { data: sesion } = useSesion();
+  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: sedes = [] } = useSedes();
+  const crear = useCrearPedido();
+  const borrar = useBorrarPedido();
+
+  const [abierto, setAbierto] = useState(false);
+  const [form, setForm] = useState(vacio);
+  const [ruta, setRuta] = useState<string[]>(["Diseño 3D", "Impresión 3D", "Casting", "Taller", "Área ventas"]);
+  const [sedeId, setSedeId] = useState<string>("");
+  const [filtro, setFiltro] = useState("Todas");
+  const [busca, setBusca] = useState("");
+
+  const puedeCrear = Boolean(sesion?.esAdmin);
+  const sedePorDefecto = sedeId || sesion?.perfil.sede_id || sedes[0]?.id || "";
+
+  const lista = useMemo(
+    () =>
+      pedidos.filter((p) => {
+        const okArea = filtro === "Todas" || p.area_actual === filtro;
+        const t = busca.trim().toLowerCase();
+        const okTexto =
+          !t ||
+          [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
+            (v ?? "").toLowerCase().includes(t),
+          );
+        return okArea && okTexto;
+      }),
+    [pedidos, filtro, busca],
+  );
+
+  const activos = pedidos.filter((p) => p.area_actual !== "Entregado").length;
 
   return (
     <AppShell
-      titulo="Panel de Producción"
-      subtitulo={isLoading ? "Cargando pedidos…" : `${pedidos.length} pedidos en la base de datos`}
+      titulo="Pedidos"
+      subtitulo={
+        isLoading
+          ? "Cargando…"
+          : `${pedidos.length} pedidos · ${sesion?.esDueno ? "todas las sedes" : (sesion?.sede?.nombre ?? "tu sede")}`
+      }
       acciones={
         <>
+          <StatCard etiqueta="Activos" valor={String(activos)} />
           <StatCard
-            etiqueta="Resina 3D"
-            valor={resina ? `${resina.stock} ${resina.unidad}` : "—"}
-            tono={resina && resina.stock < resina.minimo ? "negativo" : "neutro"}
+            etiqueta="Entregados"
+            valor={String(pedidos.length - activos)}
+            tono="positivo"
           />
-          <StatCard etiqueta="Oro 18k" valor={oro ? `${oro.stock} ${oro.unidad}` : "—"} />
         </>
       }
     >
-      <section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Panel
-          titulo="Pedidos"
-          className="lg:col-span-2"
-          accion={
+      <Panel
+        titulo="Seguimiento general"
+        accion={
+          puedeCrear ? (
             <button
               type="button"
               onClick={() => setAbierto((v) => !v)}
@@ -91,217 +121,222 @@ function PedidosPage() {
             >
               {abierto ? "Cancelar" : "Nuevo pedido"}
             </button>
-          }
-        >
-          {abierto ? (
-            <form
-              className="grid grid-cols-2 gap-3 border-b border-border bg-surface-muted/40 p-6 lg:grid-cols-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                crear.mutate(
-                  {
-                    referencia: form.referencia || `#${Math.floor(Math.random() * 9000 + 1000)}`,
-                    pieza: form.pieza,
-                    cliente: form.cliente,
-                    material: form.material,
-                    estado: form.estado,
-                    entrega: form.entrega,
-                    importe: Number(form.importe) || 0,
-                  },
-                  {
-                    onSuccess: () => {
-                      setForm(vacio);
-                      setAbierto(false);
-                    },
-                  },
-                );
-              }}
-            >
+          ) : null
+        }
+      >
+        {abierto ? (
+          <form
+            className="border-b border-border bg-surface-muted/40 p-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const nuevo: PedidoNuevo = {
+                referencia: `#${Math.floor(Math.random() * 9000 + 1000)}`,
+                pieza: form.trabajo,
+                trabajo: form.trabajo,
+                cliente: form.cliente,
+                telefono: form.telefono,
+                origen: form.origen,
+                contrato: form.contrato,
+                material: form.material,
+                estado: "Diseño 3D",
+                entrega: form.fecha_entrega,
+                importe: Number(form.importe) || 0,
+                fecha_ingreso: form.fecha_ingreso || hoy(),
+                fecha_entrega: form.fecha_entrega || null,
+                sede_id: sedePorDefecto || null,
+                area_actual: "Pedidos",
+                ruta,
+                notas: form.notas,
+              };
+              crear.mutate(nuevo, {
+                onSuccess: () => {
+                  setForm(vacio);
+                  setAbierto(false);
+                },
+              });
+            }}
+          >
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               {(
                 [
-                  ["referencia", "Referencia"],
-                  ["pieza", "Pieza"],
-                  ["cliente", "Cliente"],
-                  ["material", "Material"],
-                  ["entrega", "Entrega"],
-                  ["importe", "Importe (€)"],
+                  ["cliente", "Cliente", "text"],
+                  ["telefono", "WhatsApp", "tel"],
+                  ["origen", "Origen / lugar", "text"],
+                  ["contrato", "N° contrato", "text"],
+                  ["trabajo", "Trabajo solicitado", "text"],
+                  ["material", "Material", "text"],
+                  ["importe", "Costo", "number"],
+                  ["fecha_ingreso", "Fecha de ingreso", "date"],
+                  ["fecha_entrega", "Fecha de entrega", "date"],
                 ] as const
-              ).map(([campo, etiqueta]) => (
+              ).map(([campo, etiqueta, tipo]) => (
                 <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {etiqueta}
                   <input
-                    required={campo === "pieza" || campo === "cliente"}
+                    type={tipo}
+                    required={campo === "cliente" || campo === "trabajo"}
                     value={form[campo]}
                     onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
                     className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
                   />
                 </label>
               ))}
+
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Estado
+                Sede
                 <select
-                  value={form.estado}
-                  onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))}
+                  value={sedePorDefecto}
+                  onChange={(e) => setSedeId(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
                 >
-                  {estados.map((e) => (
-                    <option key={e}>{e}</option>
+                  {sedes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
                   ))}
                 </select>
               </label>
-              <div className="flex items-end">
-                <button
-                  type="submit"
-                  disabled={crear.isPending}
-                  className="w-full rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
-                >
-                  {crear.isPending ? "Guardando…" : "Guardar pedido"}
-                </button>
-              </div>
-            </form>
-          ) : null}
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-surface-muted">
-                  {["Ref", "Pieza", "Cliente", "Estado", "Entrega", ""].map((h, i) => (
-                    <th
-                      key={h || i}
-                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
-                        i >= 4 ? "text-right" : ""
+              <label className="col-span-2 text-[10px] uppercase tracking-wider text-muted-foreground lg:col-span-2">
+                Referencias / notas del diseño
+                <input
+                  value={form.notas}
+                  onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                />
+              </label>
+            </div>
+
+            <fieldset className="mt-5">
+              <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Ruta del pedido (marca sólo las áreas que necesita)
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {RUTA_AREAS.map((a) => {
+                  const activa = ruta.includes(a);
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() =>
+                        setRuta((r) =>
+                          activa ? r.filter((x) => x !== a) : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                        activa ? "border-transparent bg-ink text-gold-bright" : "border-border bg-card"
                       }`}
                     >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {pedidos.map((p) => (
-                  <tr key={p.id} className="transition-colors hover:bg-surface-muted/60">
-                    <td className="px-6 py-4 text-xs font-medium">{p.referencia}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="grid size-10 shrink-0 place-items-center rounded border border-border bg-surface-muted text-[8px] font-medium text-muted-foreground">
-                          {p.material.slice(0, 3).toUpperCase()}
-                        </div>
-                        <span className="text-sm">{p.pieza}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{p.cliente}</td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={p.estado}
-                        onChange={(e) => actualizar.mutate({ id: p.id, estado: e.target.value })}
-                        className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado] ?? "bg-surface-muted"}`}
-                      >
-                        {estados.map((e) => (
-                          <option key={e}>{e}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-right text-sm tabular-nums">{p.entrega}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => borrar.mutate(p.id)}
-                        className="text-xs text-muted-foreground transition-colors hover:text-danger"
-                      >
-                        Borrar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {!isLoading && pedidos.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
-                      No hay pedidos todavía.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-
-        <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl bg-ink p-6 text-ink-foreground shadow-card">
-            <div className="relative z-10">
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gold">
-                Estado impresoras
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-ink-foreground/80">Formlabs 3B+ (A)</span>
-                  <span className="rounded border border-success/30 bg-success/20 px-2 py-0.5 text-[10px] text-success">
-                    ACTIVA
-                  </span>
-                </div>
-                <div className="h-1 w-full overflow-hidden rounded-full bg-ink-foreground/10">
-                  <div className="h-full w-[72%] bg-gold" />
-                </div>
-                <div className="flex justify-between text-[10px] text-ink-foreground/40">
-                  <span>Anillo compromiso v2</span>
-                  <span>1 h 14 m restante</span>
-                </div>
+                      {a}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-            <div className="absolute -bottom-8 -right-8 opacity-10">
-              <div className="size-32 rotate-45 border-4 border-ink-foreground" />
-            </div>
-          </div>
+            </fieldset>
 
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Alertas de stock
-            </h2>
-            {bajos.length === 0 ? (
-              <p className="mb-4 text-sm text-muted-foreground">Todo el material por encima del mínimo.</p>
-            ) : (
-              bajos.map((m) => (
-                <div key={m.id} className="mb-4 flex items-center gap-4">
-                  <div className="grid size-10 place-items-center rounded-full bg-danger-soft text-xs font-bold text-danger">
-                    !
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{m.material}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Bajo el mínimo ({m.stock} {m.unidad} restantes)
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-            <Link
-              to="/inventario"
-              className="block w-full rounded-lg border border-border bg-surface-muted py-2 text-center text-xs font-medium transition-colors hover:bg-accent"
+            <button
+              type="submit"
+              disabled={crear.isPending}
+              className="mt-5 rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
             >
-              Pedir suministros
-            </Link>
-          </div>
-        </div>
-      </section>
+              {crear.isPending ? "Guardando…" : "Guardar pedido"}
+            </button>
+          </form>
+        ) : null}
 
-      <section>
-        <h2 className="mb-6 font-display text-xl">Últimos diseños 3D</h2>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {disenos.map((d) => (
-            <article key={d.archivo}>
-              <img
-                src={d.img}
-                alt={d.nombre}
-                loading="lazy"
-                width={512}
-                height={512}
-                className="mb-3 aspect-square w-full rounded-xl border border-border object-cover"
-              />
-              <p className="text-sm font-medium">{d.nombre}</p>
-              <p className="text-xs text-muted-foreground">{d.meta}</p>
-            </article>
-          ))}
+        <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">
+          <input
+            placeholder="Buscar cliente, contrato o referencia…"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="min-w-[220px] flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
+          />
+          <select
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
+          >
+            {["Todas", ...AREAS].map((a) => (
+              <option key={a}>{a}</option>
+            ))}
+          </select>
         </div>
-      </section>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="bg-surface-muted">
+                {["Ref", "Cliente", "Trabajo", "Área actual", "Entrega", ""].map((h, i) => (
+                  <th
+                    key={h || i}
+                    className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
+                      i >= 4 ? "text-right" : ""
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {lista.map((p) => (
+                <tr key={p.id} className="transition-colors hover:bg-surface-muted/60">
+                  <td className="px-6 py-4 text-xs font-medium">
+                    {p.referencia}
+                    {p.contrato ? (
+                      <span className="block text-[10px] text-muted-foreground">Contrato {p.contrato}</span>
+                    ) : null}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {p.cliente}
+                    {sesion?.esDueno && p.sede_nombre ? (
+                      <span className="block text-[10px] text-muted-foreground">{p.sede_nombre}</span>
+                    ) : null}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
+                    >
+                      {p.area_actual}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm tabular-nums">
+                    {p.fecha_entrega ?? p.entrega ?? "—"}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-3">
+                      <Link
+                        to="/pedidos/$id"
+                        params={{ id: p.id }}
+                        className="text-xs font-medium text-info hover:underline"
+                      >
+                        Ficha
+                      </Link>
+                      {puedeCrear ? (
+                        <button
+                          type="button"
+                          onClick={() => borrar.mutate(p.id)}
+                          className="text-xs text-muted-foreground transition-colors hover:text-danger"
+                        >
+                          Borrar
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!isLoading && lista.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
+                    No hay pedidos que coincidan.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
     </AppShell>
   );
 }
