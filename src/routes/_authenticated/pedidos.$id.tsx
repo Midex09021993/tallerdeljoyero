@@ -202,11 +202,19 @@ function FichaPedido() {
                   <option value="" disabled>
                     Selecciona el área destino…
                   </option>
-                  {AREAS.filter((a) => a !== pedido.area_actual).map((a) => (
-                    <option key={a} value={a}>
-                      {a}
+                  {pedido.ruta
+                    .filter((a) => a !== pedido.area_actual)
+                    .map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                  {pedido.ruta.filter((a) => a !== pedido.area_actual).length === 0 ? (
+                    <option value="" disabled>
+                      Sin áreas siguientes en la ruta
                     </option>
-                  ))}
+                  ) : null}
+
                 </select>
               </label>
             </div>
