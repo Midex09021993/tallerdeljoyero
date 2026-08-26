@@ -194,10 +194,19 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       await supabaseAdmin.from("user_areas").insert(areas.map((area) => ({ user_id: data.id, area })));
     }
 
-    if (data.password) {
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
-        password: data.password,
-      });
+    // El acceso se hace con DNI → correo sintético, así que el correo de la
+    // cuenta debe seguir siempre al DNI del perfil.
+    const cambios: Record<string, unknown> = {
+      user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
+    };
+    if (data.dni) {
+      cambios['email'] = `${data.dni.replace(/\s+/g, "")}@taller.local`;
+      cambios['email_confirm'] = true;
+    }
+    if (data.password) cambios['password'] = data.password;
+
+    {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, cambios);
       if (error) {
         return {
           ok: false,
