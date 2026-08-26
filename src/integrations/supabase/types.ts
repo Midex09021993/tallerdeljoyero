@@ -271,6 +271,7 @@ export type Database = {
           material: string
           notas: string
           origen: string
+          peso_estimado: string
           piedras: string
           pieza: string
           referencia: string
@@ -297,6 +298,7 @@ export type Database = {
           material: string
           notas?: string
           origen?: string
+          peso_estimado?: string
           piedras?: string
           pieza: string
           referencia: string
@@ -323,6 +325,7 @@ export type Database = {
           material?: string
           notas?: string
           origen?: string
+          peso_estimado?: string
           piedras?: string
           pieza?: string
           referencia?: string
