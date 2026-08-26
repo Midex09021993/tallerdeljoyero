@@ -413,7 +413,7 @@ function PedidosPage() {
                 onClick={() =>
                   borrar.mutate(porBorrar.id, { onSettled: () => setPorBorrar(null) })
                 }
-                className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-danger-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {borrar.isPending ? "Eliminando…" : "Eliminar"}
               </button>
