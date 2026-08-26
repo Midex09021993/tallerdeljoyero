@@ -102,7 +102,11 @@ function TallerPage() {
           ))}
           {enTaller.length === 0 ? (
             <li className="px-6 py-8 text-sm text-muted-foreground">
-              No hay pedidos en el área de taller.
+              {busca.trim()
+                ? "Sin resultados para esa búsqueda."
+                : soloSusAreas
+                  ? "No hay pedidos en tus áreas asignadas. Usa el buscador para localizar cualquier pedido."
+                  : "No hay pedidos en el área de taller."}
             </li>
           ) : null}
         </ul>
