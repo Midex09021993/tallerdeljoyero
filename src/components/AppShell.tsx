@@ -16,7 +16,7 @@ const secciones: Seccion[] = [
   { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
   { to: "/taller", label: "Taller", area: "Taller" },
   { to: "/inventario", label: "Inventario", area: "Taller" },
-  { to: "/monitor", label: "Monitor de taller" },
+  { to: "/monitor", label: "Monitor de taller", roles: ["monitor"] },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"] },
 ];
 
