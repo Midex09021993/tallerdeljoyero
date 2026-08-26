@@ -5,6 +5,7 @@ import { AREAS, useSesion } from "@/lib/auth";
 import {
   useBorrarPedido,
   useCrearPedido,
+  useEnviarAArea,
   usePedidos,
   useSedes,
   type PedidoNuevo,
@@ -63,6 +64,7 @@ function PedidosPage() {
   const { data: sedes = [] } = useSedes();
   const crear = useCrearPedido();
   const borrar = useBorrarPedido();
+  const enviar = useEnviarAArea();
 
   const [abierto, setAbierto] = useState(false);
   const [form, setForm] = useState(vacio);
