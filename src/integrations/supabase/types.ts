@@ -14,6 +14,88 @@ export type Database = {
   }
   public: {
     Tables: {
+      config_areas: {
+        Row: {
+          alerta_activa: boolean
+          area: string
+          created_at: string
+          horas_objetivo: number
+          id: string
+          sede_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          alerta_activa?: boolean
+          area: string
+          created_at?: string
+          horas_objetivo?: number
+          id?: string
+          sede_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alerta_activa?: boolean
+          area?: string
+          created_at?: string
+          horas_objetivo?: number
+          id?: string
+          sede_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_areas_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gastos: {
+        Row: {
+          categoria: string
+          concepto: string
+          created_at: string
+          fecha: string
+          id: string
+          importe: number
+          sede_id: string | null
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          categoria?: string
+          concepto?: string
+          created_at?: string
+          fecha?: string
+          id?: string
+          importe?: number
+          sede_id?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          categoria?: string
+          concepto?: string
+          created_at?: string
+          fecha?: string
+          id?: string
+          importe?: number
+          sede_id?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gastos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventario: {
         Row: {
           created_at: string
