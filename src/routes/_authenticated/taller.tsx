@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarTarea, useTareas } from "@/lib/taller-db";
 
-export const Route = createFileRoute("/taller")({
+export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
     meta: [
       { title: "Taller — Aurum Lab" },

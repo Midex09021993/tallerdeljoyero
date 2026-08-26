@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarProceso, useProcesos } from "@/lib/taller-db";
 
-export const Route = createFileRoute("/corte-laser")({
+export const Route = createFileRoute("/_authenticated/corte-laser")({
   head: () => ({
     meta: [
       { title: "Corte láser — Aurum Lab" },

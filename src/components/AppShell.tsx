@@ -1,15 +1,35 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 
-const secciones = [
-  { to: "/", label: "Pedidos" },
-  { to: "/diseno-3d", label: "Diseño 3D" },
-  { to: "/impresion-3d", label: "Impresión 3D" },
-  { to: "/corte-laser", label: "Corte Láser" },
-  { to: "/taller", label: "Taller" },
-  { to: "/inventario", label: "Inventario" },
-  { to: "/gestion", label: "Gestión" },
-] as const;
+type Seccion = {
+  to: "/pedidos" | "/diseno-3d" | "/impresion-3d" | "/corte-laser" | "/taller" | "/inventario" | "/gestion" | "/monitor";
+  label: string;
+  area?: string;
+  roles?: Rol[];
+};
+
+const secciones: Seccion[] = [
+  { to: "/pedidos", label: "Pedidos", area: "Pedidos" },
+  { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
+  { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
+  { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
+  { to: "/taller", label: "Taller", area: "Taller" },
+  { to: "/inventario", label: "Inventario", area: "Taller" },
+  { to: "/monitor", label: "Monitor de taller" },
+  { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"] },
+];
+
+function seccionesVisibles(
+  roles: Rol[] | undefined,
+  areas: string[] | undefined,
+  esAdmin: boolean | undefined,
+): Seccion[] {
+  if (!roles) return [];
+  if (esAdmin) return secciones;
+  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
+  return secciones.filter((s) => s.area && (areas ?? []).includes(s.area));
+}
 
 export function AppShell({
   titulo,
@@ -22,22 +42,26 @@ export function AppShell({
   acciones?: ReactNode;
   children: ReactNode;
 }) {
+  const { data: sesion } = useSesion();
+  const cerrarSesion = useCerrarSesion();
+  const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
+  const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden w-64 shrink-0 flex-col bg-ink text-ink-foreground md:flex">
         <div className="p-8">
           <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
           <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
-            Portal del taller
+            {sesion?.sede?.nombre ?? "Portal del taller"}
           </p>
         </div>
 
         <nav className="flex-1 space-y-1 px-4">
-          {secciones.map((s) => (
+          {visibles.map((s) => (
             <Link
               key={s.to}
               to={s.to}
-              activeOptions={{ exact: s.to === "/" }}
               className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
               activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
             >
@@ -47,15 +71,24 @@ export function AppShell({
         </nav>
 
         <div className="border-t border-ink-foreground/5 p-6">
-          <div className="flex items-center gap-3">
-            <div className="grid size-8 place-items-center rounded-full border border-gold/30 bg-gold/20 font-display italic text-gold">
-              M
+          <div className="mb-4 flex items-center gap-3">
+            <div className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/20 font-display italic text-gold">
+              {inicial}
             </div>
-            <div>
-              <p className="text-xs font-medium">Marco V.</p>
-              <p className="text-[10px] text-ink-foreground/40">Maestro joyero</p>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
+              <p className="truncate text-[10px] text-ink-foreground/40">
+                {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+              </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => void cerrarSesion()}
+            className="w-full rounded-lg border border-ink-foreground/15 py-2 text-[10px] uppercase tracking-wider text-ink-foreground/60 transition-colors hover:text-ink-foreground"
+          >
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 
@@ -69,11 +102,10 @@ export function AppShell({
         </header>
 
         <nav className="mb-8 flex flex-wrap gap-2 md:hidden">
-          {secciones.map((s) => (
+          {visibles.map((s) => (
             <Link
               key={s.to}
               to={s.to}
-              activeOptions={{ exact: s.to === "/" }}
               className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground"
               activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
             >

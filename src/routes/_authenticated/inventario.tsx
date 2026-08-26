@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarStock, useInventario } from "@/lib/taller-db";
 
-export const Route = createFileRoute("/inventario")({
+export const Route = createFileRoute("/_authenticated/inventario")({
   head: () => ({
     meta: [
       { title: "Inventario — Aurum Lab" },

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarProceso, useInventario, useProcesos } from "@/lib/taller-db";
 
-export const Route = createFileRoute("/impresion-3d")({
+export const Route = createFileRoute("/_authenticated/impresion-3d")({
   head: () => ({
     meta: [
       { title: "Impresión 3D — Aurum Lab" },
