@@ -365,7 +365,7 @@ function PedidosPage() {
                       {puedeCrear ? (
                         <button
                           type="button"
-                          onClick={() => borrar.mutate(p.id)}
+                          onClick={() => setPorBorrar({ id: p.id, referencia: p.referencia })}
                           className="text-xs text-muted-foreground transition-colors hover:text-danger"
                         >
                           Borrar
