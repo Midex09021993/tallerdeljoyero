@@ -5,7 +5,6 @@ import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { AREAS, useSesion } from "@/lib/auth";
 import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
-import { areaClase } from "./pedidos.index";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   head: () => ({
