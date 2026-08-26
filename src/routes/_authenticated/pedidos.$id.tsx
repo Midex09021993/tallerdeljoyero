@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
-  const [abierta, setAbierta] = useState(true);
+  const [abierta, setAbierta] = useState(false);
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <button
@@ -226,14 +226,11 @@ function FichaPedido() {
           <Panel titulo="Ficha rápida">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 p-6 lg:grid-cols-3">
               {[
-                ["Cliente", pedido.cliente],
-                ["WhatsApp", pedido.telefono || "—"],
-                ["Origen", pedido.origen || "—"],
-                ["Contrato", pedido.contrato || "—"],
-                ["Material", pedido.material],
-                ["Costo", `S/ ${pedido.importe}`],
-                ["Ingreso", pedido.fecha_ingreso],
-                ["Entrega", pedido.fecha_entrega ?? pedido.entrega ?? "—"],
+                ["Código del pedido", pedido.referencia],
+                ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
+                ["N° de contrato", pedido.contrato || "—"],
+                ["Área de proceso", pedido.area_actual],
+                ["Fecha de entrega", pedido.fecha_entrega ?? pedido.entrega ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
               ].map(([k, v]) => (
                 <div key={k}>
@@ -242,6 +239,31 @@ function FichaPedido() {
                 </div>
               ))}
             </div>
+
+            <div className="border-t border-border px-6 py-5">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Mover a área
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const destino = e.target.value;
+                    if (destino) enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
+                  }}
+                  disabled={enviar.isPending}
+                  className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
+                >
+                  <option value="" disabled>
+                    Selecciona el área destino…
+                  </option>
+                  {AREAS.filter((a) => a !== pedido.area_actual).map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
 
             <div className="border-t border-border px-6 py-5">
               <p className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
