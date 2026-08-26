@@ -29,11 +29,10 @@ function seccionesVisibles(
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) return secciones.filter((s) => s.to !== "/monitor");
-  // Todo operario ve "Pedidos" (allí solo aparecen los de sus áreas) más las
-  // pantallas de las áreas que tiene asignadas.
-  return secciones.filter(
-    (s) => s.to === "/pedidos" || (s.area && (areas ?? []).includes(s.area)),
-  );
+  // Los operarios solo ven Taller e Inventario; el seguimiento y la búsqueda
+  // de pedidos de su área viven dentro de la pantalla Taller.
+  void areas;
+  return secciones.filter((s) => s.to === "/taller" || s.to === "/inventario");
 }
 
 export function AppShell({
