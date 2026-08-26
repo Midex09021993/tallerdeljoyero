@@ -159,6 +159,10 @@ function PedidosPage() {
             className="border-b border-border bg-surface-muted/40 p-6"
             onSubmit={(e) => {
               e.preventDefault();
+              if (ruta.length === 0) {
+                alert("Marca al menos un área en la ruta del pedido.");
+                return;
+              }
               const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
               const nuevo: PedidoNuevo = {
                 referencia: siguienteReferencia(
