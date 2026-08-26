@@ -61,6 +61,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
         dni: data.dni,
         telefono: data.telefono,
         sede_id: sede?.id ?? null,
+        clave_visible: data.password,
       });
     await supabaseAdmin.from("user_roles").insert({ user_id: creado.user.id, role: "dueno" });
     return { ok: true };
@@ -98,6 +99,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
       dni: data.dni,
       telefono: data.telefono,
       sede_id: data.sede_id,
+      clave_visible: data.password,
       acceso_desde: data.acceso_desde ?? null,
       acceso_hasta: data.acceso_hasta ?? null,
     });
@@ -179,6 +181,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
         activo: data.activo,
         acceso_desde: data.acceso_desde,
         acceso_hasta: data.acceso_hasta,
+        ...(data.password ? { clave_visible: data.password } : {}),
       })
       .eq("id", data.id);
     if (errPerfil) return { ok: false, error: errPerfil.message };
