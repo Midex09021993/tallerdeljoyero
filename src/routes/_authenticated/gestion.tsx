@@ -810,7 +810,7 @@ function EditorUsuario({
     e.preventDefault();
     setGuardando(true);
     try {
-      await actualizar({
+      const res = await actualizar({
         data: {
           id: usuario.id,
           nombre: datos.nombre,
@@ -825,6 +825,10 @@ function EditorUsuario({
           password: datos.password || null,
         },
       });
+      if (!res.ok) {
+        toast.error(res.error ?? "No se pudo actualizar");
+        return;
+      }
       toast.success("Usuario actualizado");
       qc.invalidateQueries({ queryKey: ["usuarios"] });
       onCerrar();
