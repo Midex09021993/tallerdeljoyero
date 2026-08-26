@@ -22,7 +22,7 @@ export const Route = createFileRoute("/cliente")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    ref: typeof search.ref === "string" ? search.ref : "",
+    ref: typeof search['ref'] === "string" ? (search['ref'] as string) : "",
   }),
   component: SeguimientoCliente,
 });
