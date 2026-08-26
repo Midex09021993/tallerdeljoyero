@@ -9,180 +9,181 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as CorteLaserRouteImport } from './routes/corte-laser'
-import { Route as Diseno3dRouteImport } from './routes/diseno-3d'
-import { Route as GestionRouteImport } from './routes/gestion'
-import { Route as Impresion3dRouteImport } from './routes/impresion-3d'
-import { Route as InventarioRouteImport } from './routes/inventario'
-import { Route as TallerRouteImport } from './routes/taller'
+import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
+import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
+import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
+import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
+import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
+import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
+import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CorteLaserRoute = CorteLaserRouteImport.update({
-  id: '/corte-laser',
+const AuthenticatedCorteLaserRoute = AuthenticatedCorteLaserRouteImport.update({
+  id: '/_authenticated/corte-laser',
   path: '/corte-laser',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Diseno3dRoute = Diseno3dRouteImport.update({
-  id: '/diseno-3d',
+const AuthenticatedDiseno3dRoute = AuthenticatedDiseno3dRouteImport.update({
+  id: '/_authenticated/diseno-3d',
   path: '/diseno-3d',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GestionRoute = GestionRouteImport.update({
-  id: '/gestion',
+const AuthenticatedGestionRoute = AuthenticatedGestionRouteImport.update({
+  id: '/_authenticated/gestion',
   path: '/gestion',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Impresion3dRoute = Impresion3dRouteImport.update({
-  id: '/impresion-3d',
-  path: '/impresion-3d',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InventarioRoute = InventarioRouteImport.update({
-  id: '/inventario',
+const AuthenticatedImpresion3dRoute =
+  AuthenticatedImpresion3dRouteImport.update({
+    id: '/_authenticated/impresion-3d',
+    path: '/impresion-3d',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
+  id: '/_authenticated/inventario',
   path: '/inventario',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TallerRoute = TallerRouteImport.update({
-  id: '/taller',
+const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
+  id: '/_authenticated/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
+  id: '/_authenticated/taller',
   path: '/taller',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/corte-laser': typeof CorteLaserRoute
-  '/diseno-3d': typeof Diseno3dRoute
-  '/gestion': typeof GestionRoute
-  '/impresion-3d': typeof Impresion3dRoute
-  '/inventario': typeof InventarioRoute
-  '/taller': typeof TallerRoute
+  '/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/diseno-3d': typeof AuthenticatedDiseno3dRoute
+  '/gestion': typeof AuthenticatedGestionRoute
+  '/impresion-3d': typeof AuthenticatedImpresion3dRoute
+  '/inventario': typeof AuthenticatedInventarioRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
+  '/taller': typeof AuthenticatedTallerRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/corte-laser': typeof CorteLaserRoute
-  '/diseno-3d': typeof Diseno3dRoute
-  '/gestion': typeof GestionRoute
-  '/impresion-3d': typeof Impresion3dRoute
-  '/inventario': typeof InventarioRoute
-  '/taller': typeof TallerRoute
+  '/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/diseno-3d': typeof AuthenticatedDiseno3dRoute
+  '/gestion': typeof AuthenticatedGestionRoute
+  '/impresion-3d': typeof AuthenticatedImpresion3dRoute
+  '/inventario': typeof AuthenticatedInventarioRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
+  '/taller': typeof AuthenticatedTallerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/corte-laser': typeof CorteLaserRoute
-  '/diseno-3d': typeof Diseno3dRoute
-  '/gestion': typeof GestionRoute
-  '/impresion-3d': typeof Impresion3dRoute
-  '/inventario': typeof InventarioRoute
-  '/taller': typeof TallerRoute
+  '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
+  '/_authenticated/gestion': typeof AuthenticatedGestionRoute
+  '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
+  '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
+  '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/taller': typeof AuthenticatedTallerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/corte-laser'
     | '/diseno-3d'
     | '/gestion'
     | '/impresion-3d'
     | '/inventario'
+    | '/pedidos'
     | '/taller'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/corte-laser'
     | '/diseno-3d'
     | '/gestion'
     | '/impresion-3d'
     | '/inventario'
+    | '/pedidos'
     | '/taller'
   id:
     | '__root__'
-    | '/'
-    | '/corte-laser'
-    | '/diseno-3d'
-    | '/gestion'
-    | '/impresion-3d'
-    | '/inventario'
-    | '/taller'
+    | '/_authenticated/corte-laser'
+    | '/_authenticated/diseno-3d'
+    | '/_authenticated/gestion'
+    | '/_authenticated/impresion-3d'
+    | '/_authenticated/inventario'
+    | '/_authenticated/pedidos'
+    | '/_authenticated/taller'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  CorteLaserRoute: typeof CorteLaserRoute
-  Diseno3dRoute: typeof Diseno3dRoute
-  GestionRoute: typeof GestionRoute
-  Impresion3dRoute: typeof Impresion3dRoute
-  InventarioRoute: typeof InventarioRoute
-  TallerRoute: typeof TallerRoute
+  AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
+  AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
+  AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
+  AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
+  AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
+  AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/corte-laser': {
-      id: '/corte-laser'
+    '/_authenticated/corte-laser': {
+      id: '/_authenticated/corte-laser'
       path: '/corte-laser'
       fullPath: '/corte-laser'
-      preLoaderRoute: typeof CorteLaserRouteImport
+      preLoaderRoute: typeof AuthenticatedCorteLaserRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/diseno-3d': {
-      id: '/diseno-3d'
+    '/_authenticated/diseno-3d': {
+      id: '/_authenticated/diseno-3d'
       path: '/diseno-3d'
       fullPath: '/diseno-3d'
-      preLoaderRoute: typeof Diseno3dRouteImport
+      preLoaderRoute: typeof AuthenticatedDiseno3dRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/gestion': {
-      id: '/gestion'
+    '/_authenticated/gestion': {
+      id: '/_authenticated/gestion'
       path: '/gestion'
       fullPath: '/gestion'
-      preLoaderRoute: typeof GestionRouteImport
+      preLoaderRoute: typeof AuthenticatedGestionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/impresion-3d': {
-      id: '/impresion-3d'
+    '/_authenticated/impresion-3d': {
+      id: '/_authenticated/impresion-3d'
       path: '/impresion-3d'
       fullPath: '/impresion-3d'
-      preLoaderRoute: typeof Impresion3dRouteImport
+      preLoaderRoute: typeof AuthenticatedImpresion3dRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/inventario': {
-      id: '/inventario'
+    '/_authenticated/inventario': {
+      id: '/_authenticated/inventario'
       path: '/inventario'
       fullPath: '/inventario'
-      preLoaderRoute: typeof InventarioRouteImport
+      preLoaderRoute: typeof AuthenticatedInventarioRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/taller': {
-      id: '/taller'
+    '/_authenticated/pedidos': {
+      id: '/_authenticated/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/taller': {
+      id: '/_authenticated/taller'
       path: '/taller'
       fullPath: '/taller'
-      preLoaderRoute: typeof TallerRouteImport
+      preLoaderRoute: typeof AuthenticatedTallerRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  CorteLaserRoute: CorteLaserRoute,
-  Diseno3dRoute: Diseno3dRoute,
-  GestionRoute: GestionRoute,
-  Impresion3dRoute: Impresion3dRoute,
-  InventarioRoute: InventarioRoute,
-  TallerRoute: TallerRoute,
+  AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
+  AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
+  AuthenticatedGestionRoute: AuthenticatedGestionRoute,
+  AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
+  AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
+  AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedTallerRoute: AuthenticatedTallerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

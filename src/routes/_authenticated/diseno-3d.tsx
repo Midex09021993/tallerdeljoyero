@@ -6,7 +6,7 @@ import colgante from "@/assets/diseno-colgante.jpg";
 import gemelos from "@/assets/diseno-gemelos.jpg";
 import corona from "@/assets/diseno-corona.jpg";
 
-export const Route = createFileRoute("/diseno-3d")({
+export const Route = createFileRoute("/_authenticated/diseno-3d")({
   head: () => ({
     meta: [
       { title: "Diseño 3D — Aurum Lab" },
