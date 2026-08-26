@@ -58,6 +58,28 @@ export function areaClase(area: string) {
   return mapa[area] ?? "bg-surface-muted";
 }
 
+/** Prefijo de referencia: dos primeras iniciales del taller (sede). */
+export function prefijoSede(nombre: string | null | undefined) {
+  const limpio = (nombre ?? "").replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g, "").trim();
+  const palabras = limpio.split(/\s+/).filter(Boolean);
+  const base =
+    palabras.length >= 2
+      ? palabras[0]!.charAt(0) + palabras[1]!.charAt(0)
+      : (palabras[0] ?? "TA").slice(0, 2);
+  return (base || "TA").toUpperCase();
+}
+
+/** Genera la siguiente referencia tipo GG-001 para esa sede. */
+export function siguienteReferencia(nombreSede: string | null | undefined, refs: string[]) {
+  const prefijo = prefijoSede(nombreSede);
+  const re = new RegExp(`^${prefijo}-(\\d+)$`, "i");
+  const max = refs.reduce((acc, r) => {
+    const m = re.exec((r ?? "").trim());
+    return m ? Math.max(acc, Number(m[1])) : acc;
+  }, 0);
+  return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
+}
+
 function PedidosPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
