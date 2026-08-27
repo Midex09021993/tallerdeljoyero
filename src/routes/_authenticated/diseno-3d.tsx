@@ -82,13 +82,21 @@ function Diseno3D() {
   const claveDe = (a: ArchivoPedido) => `${a.pedido_id}::${a.grupo || a.nombre.toLowerCase()}`;
 
   const filtrados = useMemo(() => {
-    const ultimas = [...porGrupo.values()].map((lista) => lista[0]!);
+    const posPedido = new Map<string, ArchivoPedido>();
+    for (const a of archivos) {
+      if (!esModelo(a)) continue;
+      const actual = posPedido.get(a.pedido_id);
+      if (!actual || a.version > actual.version) {
+        posPedido.set(a.pedido_id, a);
+      }
+    }
+    const ultimas = Array.from(posPedido.values());
     const q = busca.trim().toLowerCase();
     if (!q) return ultimas;
     return ultimas.filter((a) =>
       [a.nombre, a.referencia, a.cliente, a.trabajo].join(" ").toLowerCase().includes(q),
     );
-  }, [porGrupo, busca]);
+  }, [archivos, busca]);
 
   const totalModelos = archivos.filter(esModelo).length;
 
@@ -127,23 +135,49 @@ function Diseno3D() {
                     <th className="px-4 py-3 text-left">Cliente</th>
                     <th className="px-4 py-3 text-left">Trabajo</th>
                     <th className="px-4 py-3 text-left">Área actual</th>
-                    <th className="px-4 py-3 text-right">Modelos</th>
+                    <th className="px-4 py-3 text-left">Archivo</th>
                   </tr>
                 </thead>
                 <tbody>
                   {atendidos.map((p) => {
-                    const modelosPedido = (archivosPorPedido.get(p.id) ?? []).filter(esModelo).length;
+                    const archivosModelo = (archivosPorPedido.get(p.id) ?? []).filter(esModelo);
+                    const tiposArchivos = [...new Set(archivosModelo.map((a) => {
+                      if (a.tipo === "visor3d") return "Visor 3D";
+                      const ext = a.nombre.split(".").pop()?.toUpperCase() || "";
+                      return ext;
+                    }))].join(", ");
                     return (
-                      <tr key={p.id} className="border-t border-border">
+                      <tr
+                        key={p.id}
+                        className="border-t border-border transition-colors hover:bg-surface-muted cursor-pointer"
+                      >
                         <td className="px-4 py-3 font-medium">
-                          <Link to="/pedidos/$id" params={{ id: p.id }} className="hover:underline">
+                          <Link to="/pedidos/$id" params={{ id: p.id }} className="block">
                             {p.referencia}
                           </Link>
                         </td>
-                        <td className="px-4 py-3">{p.cliente}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{p.trabajo}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{p.area_actual}</td>
-                        <td className="px-4 py-3 text-right">{modelosPedido}</td>
+                        <td className="px-4 py-3">
+                          <Link to="/pedidos/$id" params={{ id: p.id }} className="block">
+                            {p.cliente}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          <Link to="/pedidos/$id" params={{ id: p.id }} className="block">
+                            {p.trabajo}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          <Link to="/pedidos/$id" params={{ id: p.id }} className="block">
+                            {p.area_actual}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Link to="/pedidos/$id" params={{ id: p.id }} className="block">
+                            <span className="rounded-full bg-ink/10 px-2 py-1 text-xs font-medium text-info">
+                              {tiposArchivos}
+                            </span>
+                          </Link>
+                        </td>
                       </tr>
                     );
                   })}
@@ -298,18 +332,22 @@ function ColaModelado({ items, cargando }: { items: Pedido[]; cargando?: boolean
   return (
     <ul className="divide-y divide-border">
       {items.map((item) => (
-        <li key={item.id} className="px-6 py-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-sm font-medium">
-              <Link to="/pedidos/$id" params={{ id: item.id }} className="hover:underline">
+        <li key={item.id}>
+          <Link
+            to="/pedidos/$id"
+            params={{ id: item.id }}
+            className="block px-6 py-4 transition-colors hover:bg-surface-muted"
+          >
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-medium">
                 {item.pieza}
-              </Link>
+              </p>
+              <span className="text-xs text-muted-foreground">{item.referencia}</span>
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {item.cliente} · {item.trabajo || "Sin trabajo definido"}
             </p>
-            <span className="text-xs text-muted-foreground">{item.referencia}</span>
-          </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {item.cliente} · {item.trabajo || "Sin trabajo definido"}
-          </p>
+          </Link>
         </li>
       ))}
     </ul>
