@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SeguimientoArea } from "@/components/SeguimientoArea";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarProceso, useProcesos } from "@/lib/taller-db";
 
@@ -37,6 +38,7 @@ function CorteLaser() {
         </>
       }
     >
+      <SeguimientoArea area="Servicio láser" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel titulo="Cola de corte">
           <ColaProcesos

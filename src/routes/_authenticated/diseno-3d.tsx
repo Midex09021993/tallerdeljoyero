@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SeguimientoArea } from "@/components/SeguimientoArea";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarProceso, useProcesos } from "@/lib/taller-db";
 import floral from "@/assets/diseno-floral.jpg";
@@ -42,6 +43,7 @@ function Diseno3D() {
         </>
       }
     >
+      <SeguimientoArea area="Diseño 3D" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
           <ColaProcesos
