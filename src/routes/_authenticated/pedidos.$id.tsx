@@ -84,7 +84,7 @@ function FichaPedido() {
   const pedido = pedidos.find((p) => p.id === id);
 
   const subir = useMutation({
-    mutationFn: async ({ file, tipo, grupo }: { file: File; tipo: string; grupo?: string }) => {
+    mutationFn: async ({ file, tipo, grupo }: { file: File; tipo: string; grupo?: string | undefined }) => {
       const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from("pedidos").upload(ruta, file);
       if (error) throw error;
@@ -444,7 +444,7 @@ function FichaPedido() {
                         <option value="">Subir como archivo nuevo</option>
                         {entradas.map(([grupo, lista]) => (
                           <option key={grupo} value={grupo}>
-                            Nueva versión de: {lista[0].nombre} (v{lista[0].version})
+                            Nueva versión de: {lista[0]!.nombre} (v{lista[0]!.version})
                           </option>
                         ))}
                       </select>
@@ -464,7 +464,7 @@ function FichaPedido() {
                   </div>
                   <ul className="mb-4 space-y-2">
                     {entradas.map(([grupo, lista]) => {
-                      const actual = lista[0];
+                      const actual = lista[0]!;
                       const abierto = grupoAbierto === grupo;
                       return (
                         <li key={grupo} className="rounded-xl border border-border p-3">
