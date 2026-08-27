@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SeguimientoArea } from "@/components/SeguimientoArea";
-import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
+import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
 import { VisorIframe } from "@/components/VisorIframe";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useActualizarProceso, useArchivosPedidos, useProcesos, type ArchivoPedido } from "@/lib/taller-db";
+import { useArchivosPedidos, usePedidos, type ArchivoPedido, type Pedido } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/diseno-3d")({
   head: () => ({
@@ -23,15 +23,48 @@ export const Route = createFileRoute("/_authenticated/diseno-3d")({
   component: Diseno3D,
 });
 
-const es3D = (nombre: string) => /\.stl$/i.test(nombre);
+const es3D = (nombre: string) => /\.(stl|3mf)$/i.test(nombre);
 const esImagen = (nombre: string) => /\.(png|jpe?g|webp|gif|avif)$/i.test(nombre);
+const esModelo = (a: ArchivoPedido) => a.tipo === "visor3d" || es3D(a.nombre);
 
 function Diseno3D() {
-  const { data: cola = [], isLoading } = useProcesos("diseno");
-  const actualizar = useActualizarProceso("diseno");
+  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
   const { data: archivos = [], isLoading: cargandoArchivos } = useArchivosPedidos();
   const [busca, setBusca] = useState("");
   const [modelo, setModelo] = useState<ArchivoPedido | null>(null);
+
+  /** Agrupa todos los archivos por pedido. */
+  const archivosPorPedido = useMemo(() => {
+    const mapa = new Map<string, ArchivoPedido[]>();
+    for (const a of archivos) {
+      const lista = mapa.get(a.pedido_id) ?? [];
+      lista.push(a);
+      mapa.set(a.pedido_id, lista);
+    }
+    return mapa;
+  }, [archivos]);
+
+  /** Pedidos que están en Diseño 3D y aún no tienen modelo cargado. */
+  const cola = useMemo(() => {
+    return pedidos
+      .filter((p) => p.area_actual === "Diseño 3D")
+      .filter((p) => !(archivosPorPedido.get(p.id) ?? []).some(esModelo));
+  }, [pedidos, archivosPorPedido]);
+
+  /** Pedidos con al menos un modelo (STL/3MF/visor 3D). */
+  const atendidos = useMemo(() => {
+    const vistos = new Set<string>();
+    const lista: Pedido[] = [];
+    for (const a of archivos) {
+      if (!esModelo(a) || vistos.has(a.pedido_id)) continue;
+      const pedido = pedidos.find((p) => p.id === a.pedido_id);
+      if (pedido) {
+        vistos.add(a.pedido_id);
+        lista.push(pedido);
+      }
+    }
+    return lista;
+  }, [archivos, pedidos]);
 
   /** Todas las versiones agrupadas por pedido + grupo, más recientes primero. */
   const porGrupo = useMemo(() => {
@@ -57,33 +90,7 @@ function Diseno3D() {
     );
   }, [porGrupo, busca]);
 
-  const atendidos = useMemo(() => {
-    const mapa = new Map<
-      string,
-      { pedido_id: string; referencia: string; cliente: string; trabajo: string; area_actual: string; total: number; modelos: number; ultima: string }
-    >();
-    for (const a of archivos) {
-      const prev = mapa.get(a.pedido_id);
-      if (prev) {
-        prev.total += 1;
-        prev.modelos += es3D(a.nombre) ? 1 : 0;
-      } else {
-        mapa.set(a.pedido_id, {
-          pedido_id: a.pedido_id,
-          referencia: a.referencia,
-          cliente: a.cliente,
-          trabajo: a.trabajo,
-          area_actual: a.area_actual,
-          total: 1,
-          modelos: es3D(a.nombre) ? 1 : 0,
-          ultima: a.created_at,
-        });
-      }
-    }
-    return [...mapa.values()];
-  }, [archivos]);
-
-  const totalModelos = archivos.filter((a) => es3D(a.nombre)).length;
+  const totalModelos = archivos.filter(esModelo).length;
 
   return (
     <AppShell
@@ -101,20 +108,16 @@ function Diseno3D() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
-          <ColaProcesos
-            items={cola}
-            cargando={isLoading}
-            onProgreso={(id, progreso) => actualizar.mutate({ id, progreso })}
-          />
+          <ColaModelado items={cola} cargando={cargandoPedidos || cargandoArchivos} />
         </Panel>
 
         <Panel titulo="Modelados atendidos" className="lg:col-span-2">
           <div className="overflow-x-auto">
-            {cargandoArchivos ? (
+            {cargandoPedidos || cargandoArchivos ? (
               <p className="p-6 text-sm text-muted-foreground">Cargando…</p>
             ) : atendidos.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground">
-                Todavía no hay pedidos con archivos subidos por el equipo.
+                Todavía no hay pedidos con modelos subidos por el equipo.
               </p>
             ) : (
               <table className="w-full text-sm">
@@ -124,25 +127,26 @@ function Diseno3D() {
                     <th className="px-4 py-3 text-left">Cliente</th>
                     <th className="px-4 py-3 text-left">Trabajo</th>
                     <th className="px-4 py-3 text-left">Área actual</th>
-                    <th className="px-4 py-3 text-right">Archivos</th>
+                    <th className="px-4 py-3 text-right">Modelos</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {atendidos.map((p) => (
-                    <tr key={p.pedido_id} className="border-t border-border">
-                      <td className="px-4 py-3 font-medium">
-                        <Link to="/pedidos/$id" params={{ id: p.pedido_id }} className="hover:underline">
-                          {p.referencia}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3">{p.cliente}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.trabajo}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.area_actual}</td>
-                      <td className="px-4 py-3 text-right">
-                        {p.total} {p.modelos > 0 ? <span className="text-xs text-muted-foreground">({p.modelos} STL)</span> : null}
-                      </td>
-                    </tr>
-                  ))}
+                  {atendidos.map((p) => {
+                    const modelosPedido = (archivosPorPedido.get(p.id) ?? []).filter(esModelo).length;
+                    return (
+                      <tr key={p.id} className="border-t border-border">
+                        <td className="px-4 py-3 font-medium">
+                          <Link to="/pedidos/$id" params={{ id: p.id }} className="hover:underline">
+                            {p.referencia}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">{p.cliente}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{p.trabajo}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{p.area_actual}</td>
+                        <td className="px-4 py-3 text-right">{modelosPedido}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -283,3 +287,32 @@ function Diseno3D() {
     </AppShell>
   );
 }
+
+function ColaModelado({ items, cargando }: { items: Pedido[]; cargando?: boolean }) {
+  if (cargando) {
+    return <p className="px-6 py-8 text-sm text-muted-foreground">Cargando…</p>;
+  }
+  if (items.length === 0) {
+    return <p className="px-6 py-8 text-sm text-muted-foreground">No hay pedidos pendientes de modelado.</p>;
+  }
+  return (
+    <ul className="divide-y divide-border">
+      {items.map((item) => (
+        <li key={item.id} className="px-6 py-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-sm font-medium">
+              <Link to="/pedidos/$id" params={{ id: item.id }} className="hover:underline">
+                {item.pieza}
+              </Link>
+            </p>
+            <span className="text-xs text-muted-foreground">{item.referencia}</span>
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {item.cliente} · {item.trabajo || "Sin trabajo definido"}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
