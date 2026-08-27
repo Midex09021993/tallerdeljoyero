@@ -8,6 +8,8 @@ import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
+import { urlEmbedVisor } from "@/lib/visor-embed";
+import { VisorIframe } from "@/components/VisorIframe";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   head: () => ({
