@@ -3,6 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SeguimientoArea } from "@/components/SeguimientoArea";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
+import { VisorIframe } from "@/components/VisorIframe";
+import { urlEmbedVisor } from "@/lib/visor-embed";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useActualizarProceso, useArchivosPedidos, useProcesos, type ArchivoPedido } from "@/lib/taller-db";
 
@@ -198,9 +200,9 @@ function Diseno3D() {
                 </p>
                 <div className="mt-2 flex items-center gap-3 text-xs">
                   {a.tipo === "visor3d" ? (
-                    <a href={a.url} target="_blank" rel="noreferrer" className="font-medium text-info hover:underline">
+                    <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
                       Visor realista
-                    </a>
+                    </button>
                   ) : es3D(a.nombre) ? (
                     <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
                       Visor 3D
