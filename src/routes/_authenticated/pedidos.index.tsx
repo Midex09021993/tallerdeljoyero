@@ -58,7 +58,7 @@ export function areaClase(area: string) {
     Casting: "bg-warning-soft text-warning",
     Taller: "bg-warning-soft text-warning",
     "Servicio láser": "bg-surface-muted text-muted-foreground",
-    "Área ventas": "bg-info-soft text-info",
+    Terminado: "bg-info-soft text-info",
     Entregado: "bg-success-soft text-success",
   };
   return mapa[area] ?? "bg-surface-muted";
