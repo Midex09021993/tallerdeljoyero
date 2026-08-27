@@ -134,7 +134,7 @@ function Diseno3D() {
 
       <Panel
         titulo="Biblioteca de archivos"
-        acciones={
+        accion={
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
