@@ -609,44 +609,7 @@ function FichaPedido() {
               return (
                 <ul className="mb-4 grid gap-3 sm:grid-cols-2">
                   {enlaces.map((a) => (
-                    <li key={a.id} className="overflow-hidden rounded-xl border border-border">
-                      <a href={a.url} target="_blank" rel="noreferrer" className="block">
-                        {a.poster ? (
-                          <img
-                            src={a.poster}
-                            alt={`Vista previa de ${a.nombre}`}
-                            loading="lazy"
-                            className="aspect-video w-full bg-surface-muted object-cover"
-                          />
-                        ) : (
-                          <div className="grid aspect-video w-full place-items-center bg-surface-muted text-2xl text-muted-foreground">
-                            {a.tipo === "visor3d" ? "◈" : "🔗"}
-                          </div>
-                        )}
-                      </a>
-                      <div className="flex items-center justify-between gap-3 p-3 text-sm">
-                        <div className="min-w-0">
-                          <a
-                            href={a.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block truncate font-medium text-info hover:underline"
-                          >
-                            {a.nombre}
-                          </a>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            {a.tipo === "visor3d" ? "Visor 3D realista" : "Enlace externo"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => borrarArchivo.mutate(a.id)}
-                          className="shrink-0 text-xs text-muted-foreground hover:text-danger"
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    </li>
+                    <TarjetaEnlace key={a.id} a={a} onQuitar={(id) => borrarArchivo.mutate(id)} />
                   ))}
                 </ul>
               );
