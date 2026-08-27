@@ -59,7 +59,10 @@ export type Sesion = {
 export function useSesion() {
   return useQuery({
     queryKey: ["sesion"],
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+
     queryFn: async (): Promise<Sesion | null> => {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
