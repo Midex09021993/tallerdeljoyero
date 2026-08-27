@@ -25,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 });
 
 const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
+const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(false);
@@ -75,6 +76,7 @@ function FichaPedido() {
   const enviar = useEnviarAArea();
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
+  const [rutaEdit, setRutaEdit] = useState<string[]>([]);
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
 
   const pedido = pedidos.find((p) => p.id === id);
@@ -241,9 +243,10 @@ function FichaPedido() {
                       cantidad_piezas: Number(fd.get("cantidad_piezas")) || 1,
                       piedras: String(fd.get("piedras")),
                       importe: Number(fd.get("importe")) || 0,
-                      fecha_entrega: String(fd.get("fecha_entrega")) || null,
-                      notas: String(fd.get("notas")),
-                    },
+                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
+                       notas: String(fd.get("notas")),
+                       ruta: rutaEdit.length > 0 ? rutaEdit : pedido.ruta,
+                     },
                     { onSuccess: () => setEditando(false) },
                   );
                 }}
@@ -283,6 +286,32 @@ function FichaPedido() {
                     )}
                   </label>
                 ))}
+                <fieldset className="col-span-2 lg:col-span-3">
+                  <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Ruta del pedido (marca las áreas a las que se destinará)
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {RUTA_AREAS.map((a) => {
+                      const activa = rutaEdit.includes(a);
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() =>
+                            setRutaEdit((r) =>
+                              activa ? r.filter((x) => x !== a) : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
+                            )
+                          }
+                          className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                            activa ? "border-transparent bg-ink text-gold-bright" : "border-border bg-card"
+                          }`}
+                        >
+                          {a}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-3">
                   <button type="submit" className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground">
                     Guardar
@@ -317,9 +346,12 @@ function FichaPedido() {
                 <p className="mt-4 text-[10px] uppercase tracking-wider text-muted-foreground">Notas generales</p>
                 <p className="mt-1 text-sm text-muted-foreground">{pedido.notas || "Sin notas técnicas."}</p>
                 {puedeEditar ? (
-                  <button
-                    type="button"
-                    onClick={() => setEditando(true)}
+                   <button
+                     type="button"
+                     onClick={() => {
+                       setRutaEdit(pedido.ruta ?? []);
+                       setEditando(true);
+                     }}
                     className="mt-4 rounded-lg border border-border px-4 py-2 text-xs font-medium"
                   >
                     Editar pedido
