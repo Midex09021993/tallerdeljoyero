@@ -214,29 +214,35 @@ export type Database = {
         Row: {
           created_at: string
           es_enlace: boolean
+          grupo: string
           id: string
           nombre: string
           pedido_id: string
           tipo: string
           url: string
+          version: number
         }
         Insert: {
           created_at?: string
           es_enlace?: boolean
+          grupo?: string
           id?: string
           nombre?: string
           pedido_id: string
           tipo?: string
           url: string
+          version?: number
         }
         Update: {
           created_at?: string
           es_enlace?: boolean
+          grupo?: string
           id?: string
           nombre?: string
           pedido_id?: string
           tipo?: string
           url?: string
+          version?: number
         }
         Relationships: [
           {

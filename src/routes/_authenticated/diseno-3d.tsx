@@ -31,13 +31,29 @@ function Diseno3D() {
   const [busca, setBusca] = useState("");
   const [modelo, setModelo] = useState<ArchivoPedido | null>(null);
 
+  /** Todas las versiones agrupadas por pedido + grupo, más recientes primero. */
+  const porGrupo = useMemo(() => {
+    const mapa = new Map<string, ArchivoPedido[]>();
+    for (const a of archivos) {
+      const clave = `${a.pedido_id}::${a.grupo || a.nombre.toLowerCase()}`;
+      const lista = mapa.get(clave) ?? [];
+      lista.push(a);
+      mapa.set(clave, lista);
+    }
+    for (const lista of mapa.values()) lista.sort((x, y) => y.version - x.version);
+    return mapa;
+  }, [archivos]);
+
+  const claveDe = (a: ArchivoPedido) => `${a.pedido_id}::${a.grupo || a.nombre.toLowerCase()}`;
+
   const filtrados = useMemo(() => {
+    const ultimas = [...porGrupo.values()].map((lista) => lista[0]!);
     const q = busca.trim().toLowerCase();
-    if (!q) return archivos;
-    return archivos.filter((a) =>
+    if (!q) return ultimas;
+    return ultimas.filter((a) =>
       [a.nombre, a.referencia, a.cliente, a.trabajo].join(" ").toLowerCase().includes(q),
     );
-  }, [archivos, busca]);
+  }, [porGrupo, busca]);
 
   const atendidos = useMemo(() => {
     const mapa = new Map<
@@ -165,8 +181,13 @@ function Diseno3D() {
                     </button>
                   )}
                 </div>
-                <p className="truncate text-xs font-medium" title={a.nombre}>
-                  {a.nombre}
+                <p className="flex items-center gap-2 text-xs font-medium">
+                  <span className="truncate" title={a.nombre}>
+                    {a.nombre}
+                  </span>
+                  <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    v{a.version}
+                  </span>
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {a.referencia} · {a.cliente}
@@ -201,7 +222,30 @@ function Diseno3D() {
               {modelo?.nombre} — {modelo?.referencia}
             </DialogTitle>
           </DialogHeader>
-          {modelo ? <VisorSTL url={modelo.url} /> : null}
+          {modelo ? (
+            <>
+              {(porGrupo.get(claveDe(modelo)) ?? []).length > 1 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Versión:</span>
+                  {(porGrupo.get(claveDe(modelo)) ?? []).map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setModelo(v)}
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        v.id === modelo.id
+                          ? "border-info bg-info/10 text-info"
+                          : "border-border text-muted-foreground hover:bg-accent"
+                      }`}
+                    >
+                      v{v.version}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <VisorSTL url={modelo.url} />
+            </>
+          ) : null}
           <p className="text-xs text-muted-foreground">Arrastra para girar, rueda para acercar.</p>
         </DialogContent>
       </Dialog>
