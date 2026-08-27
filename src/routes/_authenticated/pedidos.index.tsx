@@ -260,7 +260,7 @@ function PedidosPage() {
       >
         {abierto ? (
           <form
-            className="border-b border-border bg-surface-muted/40 p-6"
+            className="border-b border-border bg-surface-muted/40 p-4 sm:p-6"
             onSubmit={(e) => {
               e.preventDefault();
               if (ruta.length === 0) {
@@ -303,7 +303,7 @@ function PedidosPage() {
               });
             }}
           >
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {(
                 [
                   ["cliente", "Cliente", "text"],
@@ -317,17 +317,23 @@ function PedidosPage() {
                   ["talla", "Talla / medida", "text"],
                   ["cantidad_piezas", "Cantidad de piezas", "number"],
                   ["piedras", "Piedras / componentes", "text"],
+                  ["notas", "Notas generales", "text"],
                   ["fecha_ingreso", "Fecha de ingreso", "date"],
                   ["fecha_entrega", "Fecha de entrega", "date"],
                 ] as const
               ).map(([campo, etiqueta, tipo]) => (
-                <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                <label
+                  key={campo}
+                  className={`text-[10px] uppercase tracking-wider text-muted-foreground ${
+                    campo === "notas" ? "sm:col-span-2 lg:col-span-2" : ""
+                  }`}
+                >
                   {etiqueta}
                   {tipo === "date" ? (
                     <FechaInput
                       value={form[campo]}
                       onChangeIso={(iso) => setForm((f) => ({ ...f, [campo]: iso }))}
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
                     />
                   ) : (
                     <input
@@ -336,7 +342,7 @@ function PedidosPage() {
                       required={campo === "cliente" || campo === "trabajo"}
                       value={form[campo]}
                       onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
                     />
                   )}
                 </label>
@@ -347,7 +353,7 @@ function PedidosPage() {
                 <select
                   value={sedePorDefecto}
                   onChange={(e) => setSedeId(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
                 >
                   {sedes.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -357,21 +363,13 @@ function PedidosPage() {
                 </select>
               </label>
 
-              <label className="col-span-2 text-[10px] uppercase tracking-wider text-muted-foreground lg:col-span-2">
-                Notas generales
-                <input
-                  value={form.notas}
-                  onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
-                />
-              </label>
             </div>
 
             <fieldset className="mt-5">
               <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
                 Ruta del pedido (marca sólo las áreas que necesita)
               </legend>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                 {RUTA_AREAS.map((a) => {
                   const activa = ruta.includes(a);
                   return (
@@ -383,7 +381,7 @@ function PedidosPage() {
                           activa ? r.filter((x) => x !== a) : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
                         )
                       }
-                      className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                      className={`rounded-lg border px-3 py-2 text-xs transition-colors sm:rounded-full sm:py-1.5 ${
                         activa ? "border-transparent bg-ink text-gold-bright" : "border-border bg-card"
                       }`}
                     >
@@ -397,14 +395,14 @@ function PedidosPage() {
             <button
               type="submit"
               disabled={crear.isPending}
-              className="mt-5 rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
+              className="mt-5 w-full rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
             >
               {crear.isPending ? "Guardando…" : "Guardar pedido"}
             </button>
           </form>
         ) : null}
 
-        <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">
+        <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:px-6">
           <input
             placeholder={
               soloSusAreas
@@ -413,12 +411,12 @@ function PedidosPage() {
             }
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="min-w-[220px] flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
+            className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-3 text-base outline-none focus:ring-1 focus:ring-gold sm:min-w-[220px] sm:py-1.5 sm:text-xs"
           />
           <select
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs"
+            className="rounded-lg border border-border bg-card px-3 py-3 text-base sm:py-1.5 sm:text-xs"
           >
             {["Todas", ...(soloSusAreas ? misAreas : AREAS)].map((a) => (
               <option key={a}>{a}</option>
@@ -433,7 +431,59 @@ function PedidosPage() {
         ) : null}
 
 
-        <div className="overflow-x-auto">
+        <div className="block divide-y divide-border md:hidden">
+          {lista.map((p) => (
+            <article
+              key={p.id}
+              onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+              className="cursor-pointer px-4 py-4 transition-colors active:bg-surface-muted"
+              role="button"
+              aria-label={`Abrir ficha del pedido ${p.referencia}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate({ to: "/pedidos/$id", params: { id: p.id } });
+                }
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">{p.referencia}</p>
+                  {p.contrato ? (
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">Contrato {p.contrato}</p>
+                  ) : null}
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}>
+                  {p.area_actual}
+                </span>
+              </div>
+              <p className="mt-2 truncate text-sm font-medium">{p.cliente}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.trabajo || p.pieza}</p>
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span className="truncate">{sesion?.esDueno && p.sede_nombre ? p.sede_nombre : p.origen || "Sin origen"}</span>
+                <span className="shrink-0 tabular-nums">{fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}</span>
+              </div>
+              {puedeCrear ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPorBorrar({ id: p.id, referencia: p.referencia });
+                  }}
+                  className="mt-3 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground"
+                >
+                  Borrar
+                </button>
+              ) : null}
+            </article>
+          ))}
+          {!isLoading && lista.length === 0 ? (
+            <p className="px-4 py-8 text-sm text-muted-foreground">No hay pedidos que coincidan.</p>
+          ) : null}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
