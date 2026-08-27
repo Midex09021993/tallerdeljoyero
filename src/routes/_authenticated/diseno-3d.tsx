@@ -14,10 +14,14 @@ export const Route = createFileRoute("/_authenticated/diseno-3d")({
       { title: "Diseño 3D — Aurum Lab" },
       {
         name: "description",
-        content: "Cola de modelado CAD del taller: piezas en diseño, versiones y biblioteca de archivos STL.",
+        content:
+          "Cola de modelado CAD del taller: piezas en diseño, versiones y biblioteca de archivos STL.",
       },
       { property: "og:title", content: "Diseño 3D — Aurum Lab" },
-      { property: "og:description", content: "Modelado CAD, versiones y biblioteca de piezas del taller." },
+      {
+        property: "og:description",
+        content: "Modelado CAD, versiones y biblioteca de piezas del taller.",
+      },
     ],
   }),
   component: Diseno3D,
@@ -31,6 +35,8 @@ const prioridadPortada = (a: ArchivoPedido) => {
   if (esModelo(a)) return 1;
   return 2;
 };
+const archivoValido = (archivo: ArchivoPedido | undefined): archivo is ArchivoPedido =>
+  Boolean(archivo);
 
 function Diseno3D() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
@@ -90,14 +96,15 @@ function Diseno3D() {
   /** Biblioteca compacta: una sola portada por pedido. */
   const bibliotecaPorPedido = useMemo(() => {
     return [...archivosPorPedido.values()]
-      .map((lista) =>
-        [...lista].sort((a, b) => {
-          const prioridad = prioridadPortada(a) - prioridadPortada(b);
-          if (prioridad !== 0) return prioridad;
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        })[0],
+      .map(
+        (lista) =>
+          [...lista].sort((a, b) => {
+            const prioridad = prioridadPortada(a) - prioridadPortada(b);
+            if (prioridad !== 0) return prioridad;
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          })[0],
       )
-      .filter(Boolean);
+      .filter(archivoValido);
   }, [archivosPorPedido]);
 
   const filtrados = useMemo(() => {
@@ -134,7 +141,9 @@ function Diseno3D() {
           <ColaModelado
             items={cola}
             cargando={cargandoPedidos || cargandoArchivos}
-            contarModelos={(pedidoId) => (archivosPorPedido.get(pedidoId) ?? []).filter(esModelo).length}
+            contarModelos={(pedidoId) =>
+              (archivosPorPedido.get(pedidoId) ?? []).filter(esModelo).length
+            }
           />
         </Panel>
 
@@ -159,7 +168,9 @@ function Diseno3D() {
                 </thead>
                 <tbody>
                   {atendidos.map((p) => {
-                    const modelosPedido = (archivosPorPedido.get(p.id) ?? []).filter(esModelo).length;
+                    const modelosPedido = (archivosPorPedido.get(p.id) ?? []).filter(
+                      esModelo,
+                    ).length;
                     return (
                       <tr
                         key={p.id}
@@ -175,9 +186,7 @@ function Diseno3D() {
                         className="cursor-pointer border-t border-border transition-colors hover:bg-surface-muted/70 focus-visible:bg-surface-muted/70 focus-visible:outline-none"
                         aria-label={`Abrir pedido ${p.referencia}`}
                       >
-                        <td className="px-4 py-3 font-medium">
-                          {p.referencia}
-                        </td>
+                        <td className="px-4 py-3 font-medium">{p.referencia}</td>
                         <td className="px-4 py-3">{p.cliente}</td>
                         <td className="px-4 py-3 text-muted-foreground">{p.trabajo}</td>
                         <td className="px-4 py-3 text-muted-foreground">{p.area_actual}</td>
@@ -216,16 +225,40 @@ function Diseno3D() {
                   <div className="mb-3 aspect-square w-full overflow-hidden rounded-lg bg-surface-muted">
                     {a.poster ? (
                       a.tipo === "visor3d" && urlEmbedVisor(a.url) ? (
-                        <button type="button" onClick={() => setModelo(a)} className="block h-full w-full">
-                          <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setModelo(a)}
+                          className="block h-full w-full"
+                        >
+                          <img
+                            src={a.poster}
+                            alt={a.nombre}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
                         </button>
                       ) : (
-                        <a href={a.url} target="_blank" rel="noreferrer" className="block h-full w-full">
-                          <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                        <a
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block h-full w-full"
+                        >
+                          <img
+                            src={a.poster}
+                            alt={a.nombre}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
                         </a>
                       )
                     ) : esImagen(a.nombre) ? (
-                      <img src={a.url} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                      <img
+                        src={a.url}
+                        alt={a.nombre}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <button
                         type="button"
@@ -266,7 +299,12 @@ function Diseno3D() {
                         Visor 3D
                       </button>
                     ) : null}
-                    <a href={a.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:underline">
+                    <a
+                      href={a.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:underline"
+                    >
                       Abrir
                     </a>
                     <Link
@@ -317,7 +355,12 @@ function Diseno3D() {
                   <VisorIframe url={urlEmbedVisor(modelo.url)!} titulo={modelo.nombre} />
                   <p className="text-xs text-muted-foreground">
                     Visor realista interactivo — también puedes{" "}
-                    <a href={modelo.url} target="_blank" rel="noreferrer" className="text-info hover:underline">
+                    <a
+                      href={modelo.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-info hover:underline"
+                    >
                       abrirlo en pestaña nueva
                     </a>
                     .
@@ -326,7 +369,9 @@ function Diseno3D() {
               ) : (
                 <>
                   <VisorSTL url={modelo.url} />
-                  <p className="text-xs text-muted-foreground">Arrastra para girar, rueda para acercar.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Arrastra para girar, rueda para acercar.
+                  </p>
                 </>
               )}
             </>
@@ -350,7 +395,11 @@ function ColaModelado({
     return <p className="px-6 py-8 text-sm text-muted-foreground">Cargando…</p>;
   }
   if (items.length === 0) {
-    return <p className="px-6 py-8 text-sm text-muted-foreground">No hay pedidos pendientes de modelado.</p>;
+    return (
+      <p className="px-6 py-8 text-sm text-muted-foreground">
+        No hay pedidos pendientes de modelado.
+      </p>
+    );
   }
   return (
     <ul className="divide-y divide-border">

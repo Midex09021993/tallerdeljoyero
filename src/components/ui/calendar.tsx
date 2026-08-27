@@ -2,31 +2,51 @@
 
 import * as React from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
+import { DayButton, DayPicker, getDefaultClassNames, type DateLib } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 // Traducciones al español
-const formattersEspanol = {
-  formatMonthDropdown: (date: Date) => {
+const formattersEspanol: NonNullable<React.ComponentProps<typeof DayPicker>["formatters"]> = {
+  formatMonthDropdown: (date: Date, _dateLib?: DateLib) => {
     const meses = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
     ];
-    return meses[date.getMonth()];
+    return meses[date.getMonth()] ?? "";
   },
-  formatYearDropdown: (date: Date) => date.getFullYear().toString(),
+  formatYearDropdown: (date: Date, _dateLib?: DateLib) => date.getFullYear().toString(),
   formatCaption: (date: Date) => {
     const meses = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
     ];
     return `${meses[date.getMonth()]} ${date.getFullYear()}`;
   },
   formatWeekdayName: (date: Date) => {
     const dias = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
-    return dias[date.getDay()];
+    return dias[date.getDay()] ?? "";
   },
 };
 
