@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SeguimientoArea } from "@/components/SeguimientoArea";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { useActualizarProceso, useInventario, useProcesos } from "@/lib/taller-db";
 
@@ -43,6 +44,7 @@ function Impresion3D() {
         </>
       }
     >
+      <SeguimientoArea area="Impresión 3D" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Impresoras" className="lg:col-span-2">
           <ul className="divide-y divide-border">
