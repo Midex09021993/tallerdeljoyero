@@ -641,6 +641,7 @@ export type ArchivoPedido = {
   created_at: string;
   grupo: string;
   version: number;
+  poster: string;
   referencia: string;
   cliente: string;
   trabajo: string;
@@ -655,7 +656,7 @@ export function useArchivosPedidos() {
       const { data, error } = await supabase
         .from("pedido_archivos")
         .select(
-          "id, pedido_id, tipo, nombre, url, es_enlace, created_at, grupo, version, pedidos(referencia, cliente, trabajo, area_actual)",
+          "id, pedido_id, tipo, nombre, url, es_enlace, created_at, grupo, version, poster, pedidos(referencia, cliente, trabajo, area_actual)",
         )
         .order("created_at", { ascending: false })
         .limit(300);

@@ -7,6 +7,7 @@ import { AREAS, useSesion } from "@/lib/auth";
 import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
+import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   head: () => ({
@@ -58,7 +59,7 @@ function useArchivos(pedidoId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedido_archivos")
-        .select("id, tipo, nombre, url, es_enlace, grupo, version, created_at")
+        .select("id, tipo, nombre, url, es_enlace, grupo, version, poster, created_at")
         .eq("pedido_id", pedidoId)
         .order("created_at");
       if (error) throw error;
@@ -117,13 +118,20 @@ function FichaPedido() {
 
   const guardarEnlace = useMutation({
     mutationFn: async () => {
+      const meta = await leerMetadatosEnlace({ data: { url: enlace.url } }).catch(() => ({
+        titulo: "",
+        poster: "",
+      }));
+      const esVisor = /ijewel\.design|sketchfab\.com|p3d\.in|vectary\.com/i.test(enlace.url);
+      const nombre = enlace.nombre || meta.titulo || (esVisor ? "Visor 3D realista" : "Archivo externo");
       const { error } = await supabase.from("pedido_archivos").insert({
         pedido_id: id,
-        tipo: "enlace",
-        nombre: enlace.nombre || "Archivo externo",
+        tipo: esVisor ? "visor3d" : "enlace",
+        nombre,
         url: enlace.url,
         es_enlace: true,
-        grupo: (enlace.nombre || "enlace").toLowerCase(),
+        poster: meta.poster,
+        grupo: nombre.toLowerCase(),
         version: 1,
       });
       if (error) throw error;
@@ -523,28 +531,56 @@ function FichaPedido() {
               );
             })()}
 
-            <ul className="mb-4 space-y-2">
-
-              {archivos
-                .filter((a) => a.es_enlace)
-                .map((a) => (
-                  <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
-                    <a href={a.url} target="_blank" rel="noreferrer" className="truncate text-info hover:underline">
-                      {a.nombre}
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => borrarArchivo.mutate(a.id)}
-                      className="text-xs text-muted-foreground hover:text-danger"
-                    >
-                      Quitar
-                    </button>
-                  </li>
-                ))}
-              {archivos.filter((a) => a.es_enlace).length === 0 ? (
-                <li className="text-sm text-muted-foreground">Sin enlaces guardados.</li>
-              ) : null}
-            </ul>
+            {(() => {
+              const enlaces = archivos.filter((a) => a.es_enlace);
+              if (enlaces.length === 0) {
+                return <p className="mb-4 text-sm text-muted-foreground">Sin enlaces guardados.</p>;
+              }
+              return (
+                <ul className="mb-4 grid gap-3 sm:grid-cols-2">
+                  {enlaces.map((a) => (
+                    <li key={a.id} className="overflow-hidden rounded-xl border border-border">
+                      <a href={a.url} target="_blank" rel="noreferrer" className="block">
+                        {a.poster ? (
+                          <img
+                            src={a.poster}
+                            alt={`Vista previa de ${a.nombre}`}
+                            loading="lazy"
+                            className="aspect-video w-full bg-surface-muted object-cover"
+                          />
+                        ) : (
+                          <div className="grid aspect-video w-full place-items-center bg-surface-muted text-2xl text-muted-foreground">
+                            {a.tipo === "visor3d" ? "◈" : "🔗"}
+                          </div>
+                        )}
+                      </a>
+                      <div className="flex items-center justify-between gap-3 p-3 text-sm">
+                        <div className="min-w-0">
+                          <a
+                            href={a.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block truncate font-medium text-info hover:underline"
+                          >
+                            {a.nombre}
+                          </a>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {a.tipo === "visor3d" ? "Visor 3D realista" : "Enlace externo"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => borrarArchivo.mutate(a.id)}
+                          className="shrink-0 text-xs text-muted-foreground hover:text-danger"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              );
+            })()}
             <form
               className="flex flex-wrap gap-2"
               onSubmit={(e) => {
@@ -553,14 +589,14 @@ function FichaPedido() {
               }}
             >
               <input
-                placeholder="Nombre (Drive, Dropbox, OneDrive…)"
+                placeholder="Nombre (iJewel, Drive, Dropbox…)"
                 value={enlace.nombre}
                 onChange={(e) => setEnlace((v) => ({ ...v, nombre: e.target.value }))}
                 className="min-w-[160px] flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm"
               />
               <input
                 type="url"
-                placeholder="https://…"
+                placeholder="https://ijewel.design/… o cualquier enlace"
                 value={enlace.url}
                 onChange={(e) => setEnlace((v) => ({ ...v, url: e.target.value }))}
                 className="min-w-[200px] flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm"

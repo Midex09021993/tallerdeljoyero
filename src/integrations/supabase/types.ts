@@ -218,6 +218,7 @@ export type Database = {
           id: string
           nombre: string
           pedido_id: string
+          poster: string
           tipo: string
           url: string
           version: number
@@ -229,6 +230,7 @@ export type Database = {
           id?: string
           nombre?: string
           pedido_id: string
+          poster?: string
           tipo?: string
           url: string
           version?: number
@@ -240,6 +242,7 @@ export type Database = {
           id?: string
           nombre?: string
           pedido_id?: string
+          poster?: string
           tipo?: string
           url?: string
           version?: number
