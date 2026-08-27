@@ -86,16 +86,15 @@ function Diseno3D() {
 
   const claveDe = (a: ArchivoPedido) => `${a.pedido_id}::${a.grupo || a.nombre.toLowerCase()}`;
 
-  /** Biblioteca compacta: solo una tarjeta/portada por pedido. */
+  /** Biblioteca compacta: una sola portada por pedido. */
   const bibliotecaPorPedido = useMemo(() => {
     return [...archivosPorPedido.values()]
       .map((lista) =>
-        [...lista].sort((x, y) => {
-          const prioridad = prioridadPortada(x) - prioridadPortada(y);
+        [...lista].sort((a, b) => {
+          const prioridad = prioridadPortada(a) - prioridadPortada(b);
           if (prioridad !== 0) return prioridad;
-          if (y.version !== x.version) return y.version - x.version;
-          return y.created_at.localeCompare(x.created_at);
-        })[0]!,
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        })[0],
       )
       .filter(Boolean);
   }, [archivosPorPedido]);
@@ -103,8 +102,8 @@ function Diseno3D() {
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
     if (!q) return bibliotecaPorPedido;
-    return bibliotecaPorPedido.filter((a) =>
-      [...(archivosPorPedido.get(a.pedido_id) ?? []), a].some((archivo) =>
+    return bibliotecaPorPedido.filter((portada) =>
+      (archivosPorPedido.get(portada.pedido_id) ?? []).some((archivo) =>
         [archivo.nombre, archivo.referencia, archivo.cliente, archivo.trabajo, archivo.area_actual]
           .join(" ")
           .toLowerCase()
@@ -224,22 +223,30 @@ function Diseno3D() {
                   </div>
                   <p className="flex items-center gap-2 text-xs font-medium">
                     <span className="truncate" title={a.nombre}>
-                      {a.referencia || a.nombre}
+                      {a.nombre}
                     </span>
                     <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                       {totalPedido} archivo{totalPedido === 1 ? "" : "s"}
                     </span>
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {a.cliente} · {a.trabajo}
+                    {a.referencia} · {a.cliente}
                   </p>
                   <div className="mt-2 flex items-center gap-3 text-xs">
                     {a.tipo === "visor3d" ? (
-                      <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => setModelo(a)}
+                        className="font-medium text-info hover:underline"
+                      >
                         Visor realista
                       </button>
                     ) : es3D(a.nombre) ? (
-                      <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => setModelo(a)}
+                        className="font-medium text-info hover:underline"
+                      >
                         Visor 3D
                       </button>
                     ) : null}
