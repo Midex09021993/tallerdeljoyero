@@ -4,7 +4,7 @@ import { rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 
 type Seccion = {
   to:
-    | "/pedidos"
+    | "/perdidos"
     | "/diseno-3d"
     | "/impresion-3d"
     | "/corte-laser"
