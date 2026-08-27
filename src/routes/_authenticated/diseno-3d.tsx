@@ -26,6 +26,11 @@ export const Route = createFileRoute("/_authenticated/diseno-3d")({
 const es3D = (nombre: string) => /\.(stl|3mf)$/i.test(nombre);
 const esImagen = (nombre: string) => /\.(png|jpe?g|webp|gif|avif)$/i.test(nombre);
 const esModelo = (a: ArchivoPedido) => a.tipo === "visor3d" || es3D(a.nombre);
+const prioridadPortada = (a: ArchivoPedido) => {
+  if (a.poster || esImagen(a.nombre)) return 0;
+  if (esModelo(a)) return 1;
+  return 2;
+};
 
 function Diseno3D() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
@@ -81,14 +86,32 @@ function Diseno3D() {
 
   const claveDe = (a: ArchivoPedido) => `${a.pedido_id}::${a.grupo || a.nombre.toLowerCase()}`;
 
+  /** Biblioteca compacta: solo una tarjeta/portada por pedido. */
+  const bibliotecaPorPedido = useMemo(() => {
+    return [...archivosPorPedido.values()]
+      .map((lista) =>
+        [...lista].sort((x, y) => {
+          const prioridad = prioridadPortada(x) - prioridadPortada(y);
+          if (prioridad !== 0) return prioridad;
+          if (y.version !== x.version) return y.version - x.version;
+          return y.created_at.localeCompare(x.created_at);
+        })[0]!,
+      )
+      .filter(Boolean);
+  }, [archivosPorPedido]);
+
   const filtrados = useMemo(() => {
-    const ultimas = [...porGrupo.values()].map((lista) => lista[0]!);
     const q = busca.trim().toLowerCase();
-    if (!q) return ultimas;
-    return ultimas.filter((a) =>
-      [a.nombre, a.referencia, a.cliente, a.trabajo].join(" ").toLowerCase().includes(q),
+    if (!q) return bibliotecaPorPedido;
+    return bibliotecaPorPedido.filter((a) =>
+      [...(archivosPorPedido.get(a.pedido_id) ?? []), a].some((archivo) =>
+        [archivo.nombre, archivo.referencia, archivo.cliente, archivo.trabajo, archivo.area_actual]
+          .join(" ")
+          .toLowerCase()
+          .includes(q),
+      ),
     );
-  }, [porGrupo, busca]);
+  }, [archivosPorPedido, bibliotecaPorPedido, busca]);
 
   const totalModelos = archivos.filter(esModelo).length;
 
@@ -171,66 +194,69 @@ function Diseno3D() {
           <p className="p-6 text-sm text-muted-foreground">No hay archivos que coincidan.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 p-6 md:grid-cols-3 lg:grid-cols-4">
-            {filtrados.map((a) => (
-              <article key={a.id} className="rounded-xl border border-border p-3">
-                <div className="mb-3 aspect-square w-full overflow-hidden rounded-lg bg-surface-muted">
-                  {a.poster ? (
-                    a.tipo === "visor3d" && urlEmbedVisor(a.url) ? (
-                      <button type="button" onClick={() => setModelo(a)} className="block h-full w-full">
-                        <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
-                      </button>
+            {filtrados.map((a) => {
+              const totalPedido = archivosPorPedido.get(a.pedido_id)?.length ?? 1;
+              return (
+                <article key={a.pedido_id} className="rounded-xl border border-border p-3">
+                  <div className="mb-3 aspect-square w-full overflow-hidden rounded-lg bg-surface-muted">
+                    {a.poster ? (
+                      a.tipo === "visor3d" && urlEmbedVisor(a.url) ? (
+                        <button type="button" onClick={() => setModelo(a)} className="block h-full w-full">
+                          <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                        </button>
+                      ) : (
+                        <a href={a.url} target="_blank" rel="noreferrer" className="block h-full w-full">
+                          <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                        </a>
+                      )
+                    ) : esImagen(a.nombre) ? (
+                      <img src={a.url} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
                     ) : (
-                      <a href={a.url} target="_blank" rel="noreferrer" className="block h-full w-full">
-                        <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
-                      </a>
-                    )
-                  ) : esImagen(a.nombre) ? (
-                    <img src={a.url} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => es3D(a.nombre) && setModelo(a)}
-                      className="flex h-full w-full flex-col items-center justify-center gap-1 text-xs text-muted-foreground"
+                      <button
+                        type="button"
+                        onClick={() => es3D(a.nombre) && setModelo(a)}
+                        className="flex h-full w-full flex-col items-center justify-center gap-1 text-xs text-muted-foreground"
+                      >
+                        <span className="text-2xl">{es3D(a.nombre) ? "◈" : "▤"}</span>
+                        {es3D(a.nombre) ? "Ver en 3D" : a.nombre.split(".").pop()?.toUpperCase()}
+                      </button>
+                    )}
+                  </div>
+                  <p className="flex items-center gap-2 text-xs font-medium">
+                    <span className="truncate" title={a.nombre}>
+                      {a.referencia || a.nombre}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {totalPedido} archivo{totalPedido === 1 ? "" : "s"}
+                    </span>
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {a.cliente} · {a.trabajo}
+                  </p>
+                  <div className="mt-2 flex items-center gap-3 text-xs">
+                    {a.tipo === "visor3d" ? (
+                      <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
+                        Visor realista
+                      </button>
+                    ) : es3D(a.nombre) ? (
+                      <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
+                        Visor 3D
+                      </button>
+                    ) : null}
+                    <a href={a.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:underline">
+                      Abrir
+                    </a>
+                    <Link
+                      to="/pedidos/$id"
+                      params={{ id: a.pedido_id }}
+                      className="text-muted-foreground hover:underline"
                     >
-                      <span className="text-2xl">{es3D(a.nombre) ? "◈" : "▤"}</span>
-                      {es3D(a.nombre) ? "Ver en 3D" : a.nombre.split(".").pop()?.toUpperCase()}
-                    </button>
-                  )}
-                </div>
-                <p className="flex items-center gap-2 text-xs font-medium">
-                  <span className="truncate" title={a.nombre}>
-                    {a.nombre}
-                  </span>
-                  <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                    v{a.version}
-                  </span>
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {a.referencia} · {a.cliente}
-                </p>
-                <div className="mt-2 flex items-center gap-3 text-xs">
-                  {a.tipo === "visor3d" ? (
-                    <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
-                      Visor realista
-                    </button>
-                  ) : es3D(a.nombre) ? (
-                    <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
-                      Visor 3D
-                    </button>
-                  ) : null}
-                  <a href={a.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:underline">
-                    Abrir
-                  </a>
-                  <Link
-                    to="/pedidos/$id"
-                    params={{ id: a.pedido_id }}
-                    className="text-muted-foreground hover:underline"
-                  >
-                    Pedido
-                  </Link>
-                </div>
-              </article>
-            ))}
+                      Pedido
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </Panel>
@@ -315,4 +341,3 @@ function ColaModelado({ items, cargando }: { items: Pedido[]; cargando?: boolean
     </ul>
   );
 }
-
