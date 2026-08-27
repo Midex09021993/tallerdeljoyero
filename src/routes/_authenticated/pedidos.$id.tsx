@@ -360,12 +360,12 @@ function FichaPedido() {
                     ["trabajo", "Trabajo", pedido.trabajo || pedido.pieza, "text"],
                      ["material", "Material", pedido.material, "text"],
                      ["peso_estimado", "Peso estimado (g)", pedido.peso_estimado, "text"],
-                     ["talla", "Talla / Medida", pedido.talla, "text"],
+                    ["talla", "Talla / Medida", pedido.talla, "text"],
                     ["cantidad_piezas", "Cantidad de piezas", String(pedido.cantidad_piezas), "number"],
                     ["piedras", "Piedras / Componentes", pedido.piedras, "text"],
+                    ["notas", "Notas generales", pedido.notas, "text"],
                     ["importe", "Costo", String(pedido.importe), "number"],
                     ["fecha_entrega", "Entrega", pedido.fecha_entrega ?? "", "date"],
-                    ["notas", "Notas generales", pedido.notas, "text"],
                   ] as const
                 ).map(([name, label, val, tipo]) => (
                   <label key={name} className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -433,6 +433,7 @@ function FichaPedido() {
                       ["Talla / Medida", pedido.talla || "—"],
                       ["Cantidad de piezas", String(pedido.cantidad_piezas || 1)],
                        ["Piedras / Componentes", pedido.piedras || "—"],
+                       ["Notas generales", pedido.notas || "Sin notas técnicas."],
                        ["Material", pedido.material || "—"],
                        ["Peso estimado", pedido.peso_estimado || "—"],
                      ] as const
@@ -440,12 +441,6 @@ function FichaPedido() {
                     <div key={label}>
                       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
                       <dd className="mt-1 text-sm font-medium text-foreground">{valor}</dd>
-                      {label === "Piedras / Componentes" ? (
-                        <>
-                          <p className="mt-4 text-[10px] uppercase tracking-wider text-muted-foreground">Notas generales</p>
-                          <p className="mt-1 text-sm text-muted-foreground">{pedido.notas || "Sin notas técnicas."}</p>
-                        </>
-                      ) : null}
                     </div>
                   ))}
                 </dl>
@@ -480,7 +475,7 @@ function FichaPedido() {
                         className="aspect-square w-full rounded-xl border border-border object-cover"
                       />
                     ) : (
-                      <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foregroun[...]
+                      <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foreground">
                         Subir
                         <input
                           type="file"
@@ -531,8 +526,8 @@ function FichaPedido() {
                         ))}
                       </select>
                     ) : null}
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground [...]
-                      {subir.isPending ? "Subiendo…" : "Subir archivo del trabajo (STL, 3MF, PDF, foto…)"}
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground">
+                      {subir.isPending ? "Subiendo..." : "Subir archivo del trabajo (STL, 3MF, PDF, foto...)"}
                       <input
                         type="file"
                         className="hidden"
