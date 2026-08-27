@@ -1,9 +1,7 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { fmtFecha } from "@/lib/utils";
-import { useSesion } from "@/lib/auth";
-import { useActualizarTarea, usePedidos, useTareas } from "@/lib/taller-db";
+import { SeguimientoArea } from "@/components/SeguimientoArea";
+import { useActualizarTarea, useTareas } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
