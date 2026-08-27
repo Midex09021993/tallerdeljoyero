@@ -18,7 +18,7 @@ type Seccion = {
 };
 
 const secciones: Seccion[] = [
-  { to: "/pedidos", label: "Mis Pedidos", area: "Pedidos" },
+  { to: "/pedidos", label: "Pedidos", area: "Mis pedidos" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
   { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
