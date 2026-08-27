@@ -314,11 +314,11 @@ function PedidosPage() {
                   ["material", "Material", "text"],
                   ["peso_estimado", "Peso estimado (g)", "text"],
                   ["importe", "Costo (S/)", "number"],
-                  ["fecha_ingreso", "Fecha de ingreso", "date"],
-                  ["fecha_entrega", "Fecha de entrega", "date"],
                   ["talla", "Talla / medida", "text"],
                   ["cantidad_piezas", "Cantidad de piezas", "number"],
                   ["piedras", "Piedras / componentes", "text"],
+                  ["fecha_ingreso", "Fecha de ingreso", "date"],
+                  ["fecha_entrega", "Fecha de entrega", "date"],
                 ] as const
               ).map(([campo, etiqueta, tipo]) => (
                 <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
