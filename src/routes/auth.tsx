@@ -50,7 +50,16 @@ function LoginPage() {
       const email = correoDesdeUsuario(usuario);
       if (modoAlta) {
         await registrarPrimerDueno({
-          data: { correo: email, password, nombre, dni: usuario.trim(), telefono: "", rol: "dueno", sede_id: null, areas: [] },
+          data: {
+            correo: email,
+            password,
+            nombre,
+            dni: usuario.trim(),
+            telefono: "",
+            rol: "dueno",
+            sede_id: null,
+            areas: [],
+          },
         });
         await qc.invalidateQueries({ queryKey: ["sistema-vacio"] });
       }
@@ -66,75 +75,81 @@ function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-ink px-4 py-12 text-ink-foreground">
-      <div className="w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <p className="font-display text-4xl italic text-gold">Aurum Lab</p>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-ink-foreground/40">
-            Sistema del taller de joyería
-          </p>
-        </div>
+    <main className="auth-shell relative grid min-h-screen overflow-hidden px-4 py-8 text-ink-foreground sm:place-items-center sm:py-12">
+      <div className="auth-workbench" aria-hidden="true" />
+      <div className="relative z-10 flex min-h-[calc(100vh-4rem)] w-full max-w-5xl items-center justify-center sm:min-h-0">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center sm:mb-10">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-lg border border-gold/35 bg-ink/75 shadow-[0_18px_45px_-28px_rgba(0,0,0,0.85)]">
+              <span className="font-display text-3xl italic text-gold">A</span>
+            </div>
+            <p className="font-display text-4xl italic text-gold sm:text-5xl">Aurum Lab</p>
+            <p className="mt-2 text-[10px] uppercase tracking-[0.24em] text-ink-foreground/55">
+              Sistema del taller de joyería
+            </p>
+          </div>
 
-        <form
-          onSubmit={entrar}
-          className="rounded-2xl border border-ink-foreground/10 bg-ink-foreground/[0.03] p-8"
-        >
-          <h1 className="mb-6 text-sm font-medium">
-            {modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}
-          </h1>
+          <form
+            onSubmit={entrar}
+            className="rounded-lg border border-ink-foreground/12 bg-ink/82 p-6 shadow-[0_24px_70px_-32px_rgba(0,0,0,0.9)] backdrop-blur-md sm:p-8"
+          >
+            <h1 className="mb-6 text-sm font-medium">
+              {modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}
+            </h1>
 
-          {modoAlta ? (
-            <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-              Nombre completo
+            {modoAlta ? (
+              <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/55">
+                Nombre completo
+                <input
+                  required
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="mt-2 w-full rounded-lg border border-ink-foreground/15 bg-ink/80 px-3 py-3 text-base text-ink-foreground outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20 sm:text-sm"
+                />
+              </label>
+            ) : null}
+
+            <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/55">
+              Usuario o DNI
               <input
                 required
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
+                autoComplete="username"
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-ink-foreground/15 bg-ink/80 px-3 py-3 text-base text-ink-foreground outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20 sm:text-sm"
               />
             </label>
-          ) : null}
 
-          <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-            Usuario o DNI
-            <input
-              required
-              autoComplete="username"
-              value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-            />
-          </label>
+            <label className="mb-6 block text-[10px] uppercase tracking-wider text-ink-foreground/55">
+              Contraseña
+              <input
+                required
+                type="password"
+                autoComplete={modoAlta ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-ink-foreground/15 bg-ink/80 px-3 py-3 text-base text-ink-foreground outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20 sm:text-sm"
+              />
+            </label>
 
-          <label className="mb-6 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-            Contraseña
-            <input
-              required
-              type="password"
-              autoComplete={modoAlta ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-            />
-          </label>
+            {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
 
-          {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
+            <button
+              type="submit"
+              disabled={cargando}
+              className="w-full rounded-lg bg-gold py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:bg-gold-bright disabled:opacity-50"
+            >
+              {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={cargando}
-            className="w-full rounded-lg bg-gold py-2.5 text-xs font-semibold uppercase tracking-wider text-ink disabled:opacity-50"
-          >
-            {cargando ? "Entrando…" : modoAlta ? "Crear y entrar" : "Entrar"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-[11px] text-ink-foreground/35">
-          ¿Eres cliente?{" "}
-          <a href="/cliente" className="text-gold underline-offset-2 hover:underline">
-            Consulta tu pedido aquí
-          </a>
-        </p>
+          <p className="mt-6 text-center text-[11px] text-ink-foreground/45">
+            ¿Eres cliente?{" "}
+            <a href="/cliente" className="text-gold underline-offset-2 hover:underline">
+              Consulta tu pedido aquí
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   );
