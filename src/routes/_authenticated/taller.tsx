@@ -29,32 +29,8 @@ const estadosTarea = ["Pendiente", "En curso", "Terminada"];
 
 function TallerPage() {
   const { data: tareas = [], isLoading } = useTareas();
-  const { data: pedidos = [] } = usePedidos();
-  const { data: sesion } = useSesion();
-  const navigate = useNavigate();
   const actualizar = useActualizarTarea();
-  const [busca, setBusca] = useState("");
 
-  // Los operarios ven los pedidos de sus áreas asignadas; al buscar por texto
-  // pueden encontrar cualquier pedido, aunque ya haya avanzado de área.
-  const soloSusAreas = Boolean(sesion && !sesion.esAdmin && (sesion.areas?.length ?? 0) > 0);
-  const misAreas = sesion?.areas ?? [];
-  const enTaller = useMemo(
-    () =>
-      pedidos.filter((p) => {
-        const t = busca.trim().toLowerCase();
-        const okTexto =
-          !t ||
-          [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
-            (v ?? "").toLowerCase().includes(t),
-          );
-        const okArea = soloSusAreas
-          ? Boolean(t) || misAreas.includes(p.area_actual)
-          : p.area_actual === "Taller" || p.area_actual === "Casting";
-        return okTexto && okArea;
-      }),
-    [pedidos, busca, soloSusAreas, misAreas],
-  );
   return (
     <AppShell
       titulo="Taller"
