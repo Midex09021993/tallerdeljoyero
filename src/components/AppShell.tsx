@@ -3,14 +3,22 @@ import type { ReactNode } from "react";
 import { rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 
 type Seccion = {
-  to: "/pedidos" | "/diseno-3d" | "/impresion-3d" | "/corte-laser" | "/taller" | "/inventario" | "/gestion" | "/monitor";
+  to:
+    | "/pedidos"
+    | "/diseno-3d"
+    | "/impresion-3d"
+    | "/corte-laser"
+    | "/taller"
+    | "/inventario"
+    | "/gestion"
+    | "/monitor";
   label: string;
   area?: string;
   roles?: Rol[];
 };
 
 const secciones: Seccion[] = [
-  { to: "/pedidos", label: "Pedidos", area: "Pedidos" },
+  { to: "/perdidos", label: "Pedidos", area: "Pedidos" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
   { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
@@ -32,15 +40,12 @@ function seccionesVisibles(
   // Los operarios ven la pantalla de cada área que el dueño/gerente les asignó
   // (además de Inventario). Si aún no tienen áreas, se les deja Taller.
   const asignadas = areas ?? [];
-  const porArea = secciones.filter(
-    (s) => s.to !== "/inventario" && s.area != null && asignadas.includes(s.area),
-  );
+  const porArea = secciones.filter((s) => s.to !== "/inventario" && s.area != null && asignadas.includes(s.area));
   const inventario = secciones.filter((s) => s.to === "/inventario");
   if (porArea.length === 0) {
     return secciones.filter((s) => s.to === "/taller" || s.to === "/inventario");
   }
   return [...porArea, ...inventario];
-
 }
 
 export function AppShell({
@@ -232,9 +237,7 @@ export function ColaProcesos({
             <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-muted">
               <div className="h-full rounded-full bg-gold" style={{ width: `${item.progreso}%` }} />
             </div>
-            <span className="w-10 text-right text-[10px] tabular-nums text-muted-foreground">
-              {item.progreso}%
-            </span>
+            <span className="w-10 text-right text-[10px] tabular-nums text-muted-foreground">{item.progreso}%</span>
             {onProgreso ? (
               <div className="flex gap-1">
                 <button
