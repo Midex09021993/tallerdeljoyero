@@ -25,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 });
 
 const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
+const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(false);
@@ -75,6 +76,7 @@ function FichaPedido() {
   const enviar = useEnviarAArea();
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
+  const [rutaEdit, setRutaEdit] = useState<string[]>([]);
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
 
   const pedido = pedidos.find((p) => p.id === id);
