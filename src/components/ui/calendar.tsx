@@ -7,6 +7,29 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 
+// Traducciones al español
+const formattersEspanol = {
+  formatMonthDropdown: (date: Date) => {
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    return meses[date.getMonth()];
+  },
+  formatYearDropdown: (date: Date) => date.getFullYear().toString(),
+  formatCaption: (date: Date) => {
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    return `${meses[date.getMonth()]} ${date.getFullYear()}`;
+  },
+  formatWeekdayName: (date: Date) => {
+    const dias = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
+    return dias[date.getDay()];
+  },
+};
+
 function Calendar({
   className,
   classNames,
@@ -32,7 +55,7 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
+        ...formattersEspanol,
         ...formatters,
       }}
       classNames={{
