@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calculator } from "lucide-react";
+import { Calculator, Settings2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { SeguimientoArea } from "@/components/SeguimientoArea";
@@ -31,10 +31,27 @@ const bancos = [
 const estadosTarea = ["Pendiente", "En curso", "Terminada"];
 
 const proporcionesYeso = [
-  { agua: 38, yeso: 62, recomendada: false },
-  { agua: 40, yeso: 60, recomendada: true },
-  { agua: 42, yeso: 58, recomendada: false },
+  { agua: 38, yeso: 62, ratioAgua: 0.38, recomendada: false },
+  { agua: 40, yeso: 60, ratioAgua: 0.4, recomendada: true },
+  { agua: 42, yeso: 58, ratioAgua: 0.42, recomendada: false },
 ];
+
+const tiposTarro = {
+  liso: {
+    etiqueta: "Tarro liso",
+    toleranciaInicial: -5,
+    ayuda: "Descuenta tolerancia por cilindro liso.",
+  },
+  perforado: {
+    etiqueta: "Tarro perforado",
+    toleranciaInicial: 20,
+    ayuda: "Agrega tolerancia por perforaciones y mayor consumo.",
+  },
+} as const;
+
+type TipoTarro = keyof typeof tiposTarro;
+
+const volumenPorGramoYeso = 0.4238;
 
 function formatearCantidad(valor: number, decimales = 1) {
   return new Intl.NumberFormat("es-PE", {
@@ -43,19 +60,36 @@ function formatearCantidad(valor: number, decimales = 1) {
   }).format(valor);
 }
 
+function calcularMezcla(volumen: number, ratioAgua: number) {
+  const yeso = volumen / (volumenPorGramoYeso + ratioAgua);
+  const agua = yeso * ratioAgua;
+  return { agua, yeso };
+}
+
 function TallerPage() {
   const { data: tareas = [], isLoading } = useTareas();
   const actualizar = useActualizarTarea();
   const [diametro, setDiametro] = useState("");
   const [altura, setAltura] = useState("");
+  const [tipoTarro, setTipoTarro] = useState<TipoTarro>("liso");
+  const [mostrarAjustes, setMostrarAjustes] = useState(false);
+  const [tolerancias, setTolerancias] = useState<Record<TipoTarro, number>>({
+    liso: tiposTarro.liso.toleranciaInicial,
+    perforado: tiposTarro.perforado.toleranciaInicial,
+  });
 
-  const volumen = useMemo(() => {
+  const volumenBase = useMemo(() => {
     const d = Number(diametro);
     const h = Number(altura);
     if (!Number.isFinite(d) || !Number.isFinite(h) || d <= 0 || h <= 0) return 0;
     const radio = d / 2;
     return Math.PI * radio * radio * h;
   }, [altura, diametro]);
+
+  const volumen = useMemo(() => {
+    if (volumenBase <= 0) return 0;
+    return volumenBase * (1 + tolerancias[tipoTarro] / 100);
+  }, [tipoTarro, tolerancias, volumenBase]);
 
   return (
     <AppShell
@@ -76,13 +110,89 @@ function TallerPage() {
       <Panel
         titulo="Calculadora de yeso"
         accion={
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground">
-            <Calculator className="size-3" aria-hidden="true" />
-            Joyería 40/60
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden items-center gap-1 rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground sm:inline-flex">
+              <Calculator className="size-3" aria-hidden="true" />
+              Joyería 40/60
+            </span>
+            <button
+              type="button"
+              onClick={() => setMostrarAjustes((actual) => !actual)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:border-gold hover:text-foreground"
+              aria-label="Ajustar tolerancias"
+            >
+              <Settings2 className="size-4" aria-hidden="true" />
+            </button>
+          </div>
         }
       >
         <div className="space-y-5 p-4 sm:p-6">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-muted p-1">
+            {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                onClick={() => setTipoTarro(tipo)}
+                className={`rounded-xl px-3 py-3 text-sm font-semibold transition ${
+                  tipoTarro === tipo
+                    ? "bg-background text-foreground shadow-card"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tiposTarro[tipo].etiqueta}
+              </button>
+            ))}
+          </div>
+
+          {mostrarAjustes ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Tolerancias</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Ajusta el porcentaje si tus tarros reales consumen más o menos mezcla.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTolerancias({
+                      liso: tiposTarro.liso.toleranciaInicial,
+                      perforado: tiposTarro.perforado.toleranciaInicial,
+                    })
+                  }
+                  className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:border-gold hover:text-foreground"
+                >
+                  Reset
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
+                  <label key={tipo} className="space-y-2">
+                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {tiposTarro[tipo].etiqueta} (%)
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="1"
+                      value={tolerancias[tipo]}
+                      onChange={(e) => {
+                        const valor = Number(e.target.value);
+                        setTolerancias((actual) => ({
+                          ...actual,
+                          [tipo]: Number.isFinite(valor) ? valor : 0,
+                        }));
+                      }}
+                      className="h-12 w-full rounded-xl border border-input bg-background px-4 text-base outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20"
+                    />
+                    <p className="text-xs text-muted-foreground">{tiposTarro[tipo].ayuda}</p>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="space-y-2">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -118,20 +228,24 @@ function TallerPage() {
 
           <div className="rounded-xl border border-border bg-surface-muted p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Volumen total
+              Volumen ajustado
             </p>
             <p className="mt-1 text-2xl font-semibold text-foreground">
               {volumen > 0 ? `${formatearCantidad(volumen)} ml` : "Ingresa medidas"}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Fórmula: V = π x r² x h, con radio = diámetro / 2.
+              Base: {volumenBase > 0 ? `${formatearCantidad(volumenBase)} cm³` : "0 cm³"} ·{" "}
+              {tiposTarro[tipoTarro].etiqueta} {tolerancias[tipoTarro] >= 0 ? "+" : ""}
+              {tolerancias[tipoTarro]}%
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Fórmula: V = π x r² x h. El agua se calcula sobre el peso del yeso.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             {proporcionesYeso.map((p) => {
-              const agua = volumen * (p.agua / 100);
-              const yeso = volumen * (p.yeso / 100);
+              const { agua, yeso } = calcularMezcla(volumen, p.ratioAgua);
               return (
                 <article
                   key={`${p.agua}-${p.yeso}`}
@@ -157,7 +271,7 @@ function TallerPage() {
                         Agua
                       </dt>
                       <dd className="mt-1 text-xl font-semibold">
-                        {volumen > 0 ? formatearCantidad(agua) : "0"} ml
+                        {volumen > 0 ? formatearCantidad(agua, 0) : "0"} ml
                       </dd>
                     </div>
                     <div className="rounded-lg bg-background p-3">
@@ -165,7 +279,7 @@ function TallerPage() {
                         Yeso
                       </dt>
                       <dd className="mt-1 text-xl font-semibold">
-                        {volumen > 0 ? formatearCantidad(yeso) : "0"} g
+                        {volumen > 0 ? formatearCantidad(yeso, 0) : "0"} g
                       </dd>
                     </div>
                   </dl>

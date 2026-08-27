@@ -140,10 +140,7 @@ function LoginPage() {
 
         <p className="mt-6 text-center text-[11px] text-ink-foreground/35">
           ¿Eres cliente?{" "}
-          <a
-            href="/cliente"
-            className="text-gold underline-offset-2 hover:underline"
-          >
+          <a href="/cliente" className="text-gold underline-offset-2 hover:underline">
             Consulta tu pedido aquí
           </a>
         </p>
