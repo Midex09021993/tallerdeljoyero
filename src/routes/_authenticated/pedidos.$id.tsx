@@ -21,7 +21,10 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
           "Ficha rápida y ficha técnica del pedido: área actual, tiempo en área, avanzar o devolver, QR, WhatsApp y archivos de diseño.",
       },
       { property: "og:title", content: "Ficha del pedido — Aurum Lab" },
-      { property: "og:description", content: "Pantalla de trabajo diaria del pedido en el taller." },
+      {
+        property: "og:description",
+        content: "Pantalla de trabajo diaria del pedido en el taller.",
+      },
     ],
   }),
   component: FichaPedido,
@@ -48,7 +51,9 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
 }
 
 function tiempoEnArea(desde: string) {
-  const ms = Date.now() - new Date(desde).getTime();
+  const fecha = new Date(desde);
+  const base = Number.isNaN(fecha.getTime()) ? Date.now() : fecha.getTime();
+  const ms = Date.now() - base;
   const horas = Math.floor(ms / 3_600_000);
   if (horas < 1) return `${Math.max(1, Math.floor(ms / 60_000))} min`;
   if (horas < 48) return `${horas} h`;
@@ -155,11 +160,21 @@ function FichaPedido() {
   const pedido = pedidos.find((p) => p.id === id);
 
   const subir = useMutation({
-    mutationFn: async ({ file, tipo, grupo }: { file: File; tipo: string; grupo?: string | undefined }) => {
+    mutationFn: async ({
+      file,
+      tipo,
+      grupo,
+    }: {
+      file: File;
+      tipo: string;
+      grupo?: string | undefined;
+    }) => {
       const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from("pedidos").upload(ruta, file);
       if (error) throw error;
-      const { data } = await supabase.storage.from("pedidos").createSignedUrl(ruta, 60 * 60 * 24 * 365);
+      const { data } = await supabase.storage
+        .from("pedidos")
+        .createSignedUrl(ruta, 60 * 60 * 24 * 365);
       const claveGrupo = (grupo || file.name).toLowerCase();
       const { data: previas } = await supabase
         .from("pedido_archivos")
@@ -193,7 +208,8 @@ function FichaPedido() {
         poster: "",
       }));
       const esVisor = /ijewel\.design|sketchfab\.com|p3d\.in|vectary\.com/i.test(enlace.url);
-      const nombre = enlace.nombre || meta.titulo || (esVisor ? "Visor 3D realista" : "Archivo externo");
+      const nombre =
+        enlace.nombre || meta.titulo || (esVisor ? "Visor 3D realista" : "Archivo externo");
       const { error } = await supabase.from("pedido_archivos").insert({
         pedido_id: id,
         tipo: esVisor ? "visor3d" : "enlace",
@@ -223,7 +239,6 @@ function FichaPedido() {
     },
   });
 
-
   if (isLoading) {
     return (
       <AppShell titulo="Ficha del pedido" subtitulo="Cargando…">
@@ -236,7 +251,7 @@ function FichaPedido() {
     return (
       <AppShell titulo="Pedido no encontrado">
         <p className="text-sm text-muted-foreground">
-          Este pedido no existe o no pertenece a tu sede. {" "}
+          Este pedido no existe o no pertenece a tu sede.{" "}
           <Link to="/pedidos" className="text-info hover:underline">
             Volver a pedidos
           </Link>
@@ -246,14 +261,18 @@ function FichaPedido() {
   }
 
   const puedeEditar = Boolean(sesion?.esAdmin);
+  const telefonoWhatsapp = (pedido.telefono ?? "").replace(/\D/g, "");
   const urlSeguimiento =
     typeof window !== "undefined"
       ? `${window.location.origin}/cliente?ref=${encodeURIComponent(pedido.referencia)}`
       : "";
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(urlSeguimiento)}`;
-  const wa = `https://wa.me/${pedido.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `Hola ${pedido.cliente}, su pedido ${pedido.referencia} está en ${pedido.area_actual}.`,
-  )}`;
+  const wa = telefonoWhatsapp
+    ? `https://wa.me/${telefonoWhatsapp}?text=${encodeURIComponent(
+        `Hola ${pedido.cliente}, su pedido ${pedido.referencia} está en ${pedido.area_actual}.`,
+      )}`
+    : "";
+  const rutaPedido = Array.isArray(pedido.ruta) ? pedido.ruta : [];
 
   return (
     <AppShell
@@ -280,6 +299,9 @@ function FichaPedido() {
                 ["Área de proceso", pedido.area_actual],
                 ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
+                ["Estado ventas", pedido.ventas_estado || "—"],
+                ["Medio de envío", pedido.medio_envio || "—"],
+                ["Guía de envío", pedido.guia_envio || "—"],
               ].map(([k, v]) => (
                 <div key={k}>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
@@ -295,7 +317,8 @@ function FichaPedido() {
                   value=""
                   onChange={(e) => {
                     const destino = e.target.value;
-                    if (destino) enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
+                    if (destino)
+                      enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
                   }}
                   disabled={enviar.isPending}
                   className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
@@ -303,19 +326,18 @@ function FichaPedido() {
                   <option value="" disabled>
                     Selecciona el área destino…
                   </option>
-                  {pedido.ruta
+                  {rutaPedido
                     .filter((a) => a !== pedido.area_actual)
                     .map((a) => (
                       <option key={a} value={a}>
                         {a}
                       </option>
                     ))}
-                  {pedido.ruta.filter((a) => a !== pedido.area_actual).length === 0 ? (
+                  {rutaPedido.filter((a) => a !== pedido.area_actual).length === 0 ? (
                     <option value="" disabled>
                       Sin áreas siguientes en la ruta
                     </option>
                   ) : null}
-
                 </select>
               </label>
             </div>
@@ -337,15 +359,15 @@ function FichaPedido() {
                       contrato: String(fd.get("contrato")),
                       trabajo: String(fd.get("trabajo")),
                       pieza: String(fd.get("trabajo")),
-                       material: String(fd.get("material")),
-                       peso_estimado: String(fd.get("peso_estimado")),
-                       talla: String(fd.get("talla")),
+                      material: String(fd.get("material")),
+                      peso_estimado: String(fd.get("peso_estimado")),
+                      talla: String(fd.get("talla")),
                       cantidad_piezas: Number(fd.get("cantidad_piezas")) || 1,
                       piedras: String(fd.get("piedras")),
                       importe: Number(fd.get("importe")) || 0,
-                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
-                       notas: String(fd.get("notas")),
-                       ruta: rutaEdit.length > 0 ? rutaEdit : pedido.ruta,
+                      fecha_entrega: String(fd.get("fecha_entrega")) || null,
+                      notas: String(fd.get("notas")),
+                      ruta: rutaEdit.length > 0 ? rutaEdit : pedido.ruta,
                     },
                     { onSuccess: () => setEditando(false) },
                   );
@@ -358,17 +380,25 @@ function FichaPedido() {
                     ["origen", "Origen", pedido.origen, "text"],
                     ["contrato", "Contrato", pedido.contrato, "text"],
                     ["trabajo", "Trabajo", pedido.trabajo || pedido.pieza, "text"],
-                     ["material", "Material", pedido.material, "text"],
-                     ["peso_estimado", "Peso estimado (g)", pedido.peso_estimado, "text"],
+                    ["material", "Material", pedido.material, "text"],
+                    ["peso_estimado", "Peso estimado (g)", pedido.peso_estimado, "text"],
                     ["talla", "Talla / Medida", pedido.talla, "text"],
-                    ["cantidad_piezas", "Cantidad de piezas", String(pedido.cantidad_piezas), "number"],
+                    [
+                      "cantidad_piezas",
+                      "Cantidad de piezas",
+                      String(pedido.cantidad_piezas),
+                      "number",
+                    ],
                     ["piedras", "Piedras / Componentes", pedido.piedras, "text"],
                     ["notas", "Notas generales", pedido.notas, "text"],
                     ["importe", "Costo", String(pedido.importe), "number"],
                     ["fecha_entrega", "Entrega", pedido.fecha_entrega ?? "", "date"],
                   ] as const
                 ).map(([name, label, val, tipo]) => (
-                  <label key={name} className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <label
+                    key={name}
+                    className="text-[10px] uppercase tracking-wider text-muted-foreground"
+                  >
                     {label}
                     {tipo === "date" ? (
                       <FechaInput
@@ -399,11 +429,15 @@ function FichaPedido() {
                           type="button"
                           onClick={() =>
                             setRutaEdit((r) =>
-                              activa ? r.filter((x) => x !== a) : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
+                              activa
+                                ? r.filter((x) => x !== a)
+                                : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
                             )
                           }
                           className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                            activa ? "border-transparent bg-ink text-gold-bright" : "border-border bg-card"
+                            activa
+                              ? "border-transparent bg-ink text-gold-bright"
+                              : "border-border bg-card"
                           }`}
                         >
                           {a}
@@ -413,7 +447,10 @@ function FichaPedido() {
                   </div>
                 </fieldset>
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-3">
-                  <button type="submit" className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground">
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground"
+                  >
                     Guardar
                   </button>
                   <button
@@ -432,25 +469,31 @@ function FichaPedido() {
                     [
                       ["Talla / Medida", pedido.talla || "—"],
                       ["Cantidad de piezas", String(pedido.cantidad_piezas || 1)],
-                       ["Piedras / Componentes", pedido.piedras || "—"],
-                       ["Notas generales", pedido.notas || "Sin notas técnicas."],
-                       ["Material", pedido.material || "—"],
-                       ["Peso estimado", pedido.peso_estimado || "—"],
-                     ] as const
+                      ["Piedras / Componentes", pedido.piedras || "—"],
+                      ["Notas generales", pedido.notas || "Sin notas técnicas."],
+                      ["Material", pedido.material || "—"],
+                      ["Peso estimado", pedido.peso_estimado || "—"],
+                      ["Packing", pedido.packing_estado || "Pendiente"],
+                      ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
+                      ["Recibe / contacto", pedido.receptor_envio || "—"],
+                      ["Nota de ventas", pedido.notas_ventas || "—"],
+                    ] as const
                   ).map(([label, valor]) => (
                     <div key={label}>
-                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
+                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {label}
+                      </dt>
                       <dd className="mt-1 text-sm font-medium text-foreground">{valor}</dd>
                     </div>
                   ))}
                 </dl>
                 {puedeEditar ? (
-                   <button
-                     type="button"
-                     onClick={() => {
-                       setRutaEdit(pedido.ruta ?? []);
-                       setEditando(true);
-                     }}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRutaEdit(pedido.ruta ?? []);
+                      setEditando(true);
+                    }}
                     className="mt-4 rounded-lg border border-border px-4 py-2 text-xs font-medium"
                   >
                     Editar pedido
@@ -466,7 +509,9 @@ function FichaPedido() {
                 const img = archivos.find((a) => a.tipo === vista && !a.es_enlace);
                 return (
                   <div key={vista}>
-                    <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">{vista}</p>
+                    <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {vista}
+                    </p>
                     {img ? (
                       <img
                         src={img.url}
@@ -527,13 +572,20 @@ function FichaPedido() {
                       </select>
                     ) : null}
                     <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground">
-                      {subir.isPending ? "Subiendo..." : "Subir archivo del trabajo (STL, 3MF, PDF, foto...)"}
+                      {subir.isPending
+                        ? "Subiendo..."
+                        : "Subir archivo del trabajo (STL, 3MF, PDF, foto...)"}
                       <input
                         type="file"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) subir.mutate({ file, tipo: "archivo", grupo: grupoDestino || undefined });
+                          if (file)
+                            subir.mutate({
+                              file,
+                              tipo: "archivo",
+                              grupo: grupoDestino || undefined,
+                            });
                           e.target.value = "";
                         }}
                       />
@@ -546,7 +598,12 @@ function FichaPedido() {
                       return (
                         <li key={grupo} className="rounded-xl border border-border p-3">
                           <div className="flex items-center justify-between gap-3 text-sm">
-                            <a href={actual.url} target="_blank" rel="noreferrer" className="truncate text-info hover:underline">
+                            <a
+                              href={actual.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="truncate text-info hover:underline"
+                            >
                               {actual.nombre}
                             </a>
                             <div className="flex shrink-0 items-center gap-3">
@@ -574,8 +631,16 @@ function FichaPedido() {
                           {abierto ? (
                             <ul className="mt-3 space-y-1 border-t border-border pt-2">
                               {lista.slice(1).map((v) => (
-                                <li key={v.id} className="flex items-center justify-between gap-3 text-xs">
-                                  <a href={v.url} target="_blank" rel="noreferrer" className="truncate text-muted-foreground hover:underline">
+                                <li
+                                  key={v.id}
+                                  className="flex items-center justify-between gap-3 text-xs"
+                                >
+                                  <a
+                                    href={v.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="truncate text-muted-foreground hover:underline"
+                                  >
                                     v{v.version} · {v.nombre}
                                   </a>
                                   <button
@@ -633,7 +698,10 @@ function FichaPedido() {
                 onChange={(e) => setEnlace((v) => ({ ...v, url: e.target.value }))}
                 className="min-w-[200px] flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm"
               />
-              <button type="submit" className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground">
+              <button
+                type="submit"
+                className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground"
+              >
                 Añadir enlace
               </button>
             </form>

@@ -55,6 +55,13 @@ export type Pedido = {
   cantidad_piezas: number;
   piedras: string;
   peso_estimado: string;
+  ventas_estado: string;
+  packing_estado: string;
+  medio_envio: string;
+  guia_envio: string;
+  fecha_envio: string | null;
+  receptor_envio: string;
+  notas_ventas: string;
 };
 
 export type Sede = {
@@ -137,10 +144,17 @@ export type PedidoNuevo = {
   cantidad_piezas: number;
   piedras: string;
   peso_estimado: string;
+  ventas_estado?: string;
+  packing_estado?: string;
+  medio_envio?: string;
+  guia_envio?: string;
+  fecha_envio?: string | null;
+  receptor_envio?: string;
+  notas_ventas?: string;
 };
 
 const CAMPOS_PEDIDO =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, receptor_envio, notas_ventas, sedes(nombre)";
 
 export function usePedidos() {
   return useQuery({
@@ -175,6 +189,13 @@ export function usePedidos() {
         cantidad_piezas: Number(p.cantidad_piezas) || 1,
         piedras: p.piedras ?? "",
         peso_estimado: p.peso_estimado ?? "",
+        ventas_estado: p.ventas_estado ?? "Recibido en ventas",
+        packing_estado: p.packing_estado ?? "Pendiente",
+        medio_envio: p.medio_envio ?? "",
+        guia_envio: p.guia_envio ?? "",
+        fecha_envio: p.fecha_envio ?? null,
+        receptor_envio: p.receptor_envio ?? "",
+        notas_ventas: p.notas_ventas ?? "",
       }));
     },
   });
