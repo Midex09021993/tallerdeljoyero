@@ -126,17 +126,35 @@ export function AppShell({
           ) : null}
         </header>
 
-        <nav className="sticky top-0 z-20 -mx-4 mb-5 flex gap-2 overflow-x-auto border-y border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
-          {visibles.map((s) => (
-            <Link
-              key={s.to}
-              to={s.to}
-              className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
-              activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
+        <nav className="sticky top-0 z-20 -mx-4 mb-5 border-y border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {visibles.map((s) => (
+              <Link
+                key={s.to}
+                to={s.to}
+                className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
+                activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void cerrarSesion()}
+              className="shrink-0 rounded-full border border-danger/25 bg-danger-soft px-3 py-2 text-xs font-semibold text-danger"
             >
-              {s.label}
-            </Link>
-          ))}
+              Cerrar sesión
+            </button>
+          </div>
         </nav>
 
         {children}
