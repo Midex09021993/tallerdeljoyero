@@ -8,6 +8,8 @@ import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
+import { urlEmbedVisor } from "@/lib/visor-embed";
+import { VisorIframe } from "@/components/VisorIframe";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   head: () => ({
@@ -51,6 +53,74 @@ function tiempoEnArea(desde: string) {
   if (horas < 1) return `${Math.max(1, Math.floor(ms / 60_000))} min`;
   if (horas < 48) return `${horas} h`;
   return `${Math.floor(horas / 24)} días`;
+}
+
+interface EnlaceArchivo {
+  id: string;
+  tipo: string;
+  nombre: string;
+  url: string;
+  poster: string | null;
+}
+
+function TarjetaEnlace({ a, onQuitar }: { a: EnlaceArchivo; onQuitar: (id: string) => void }) {
+  const [incrustado, setIncrustado] = useState(false);
+  const embed = a.tipo === "visor3d" ? urlEmbedVisor(a.url) : null;
+  return (
+    <li className="overflow-hidden rounded-xl border border-border">
+      {embed && incrustado ? (
+        <VisorIframe url={embed} titulo={a.nombre} />
+      ) : (
+        <a href={a.url} target="_blank" rel="noreferrer" className="block">
+          {a.poster ? (
+            <img
+              src={a.poster}
+              alt={`Vista previa de ${a.nombre}`}
+              loading="lazy"
+              className="aspect-video w-full bg-surface-muted object-cover"
+            />
+          ) : (
+            <div className="grid aspect-video w-full place-items-center bg-surface-muted text-2xl text-muted-foreground">
+              {a.tipo === "visor3d" ? "◈" : "🔗"}
+            </div>
+          )}
+        </a>
+      )}
+      <div className="flex items-center justify-between gap-3 p-3 text-sm">
+        <div className="min-w-0">
+          <a
+            href={a.url}
+            target="_blank"
+            rel="noreferrer"
+            className="block truncate font-medium text-info hover:underline"
+          >
+            {a.nombre}
+          </a>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {a.tipo === "visor3d" ? "Visor 3D realista" : "Enlace externo"}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {embed ? (
+            <button
+              type="button"
+              onClick={() => setIncrustado((v) => !v)}
+              className="text-xs font-medium text-info hover:underline"
+            >
+              {incrustado ? "Ver portada" : "Ver aquí"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onQuitar(a.id)}
+            className="text-xs text-muted-foreground hover:text-danger"
+          >
+            Quitar
+          </button>
+        </div>
+      </div>
+    </li>
+  );
 }
 
 function useArchivos(pedidoId: string) {
@@ -539,44 +609,7 @@ function FichaPedido() {
               return (
                 <ul className="mb-4 grid gap-3 sm:grid-cols-2">
                   {enlaces.map((a) => (
-                    <li key={a.id} className="overflow-hidden rounded-xl border border-border">
-                      <a href={a.url} target="_blank" rel="noreferrer" className="block">
-                        {a.poster ? (
-                          <img
-                            src={a.poster}
-                            alt={`Vista previa de ${a.nombre}`}
-                            loading="lazy"
-                            className="aspect-video w-full bg-surface-muted object-cover"
-                          />
-                        ) : (
-                          <div className="grid aspect-video w-full place-items-center bg-surface-muted text-2xl text-muted-foreground">
-                            {a.tipo === "visor3d" ? "◈" : "🔗"}
-                          </div>
-                        )}
-                      </a>
-                      <div className="flex items-center justify-between gap-3 p-3 text-sm">
-                        <div className="min-w-0">
-                          <a
-                            href={a.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block truncate font-medium text-info hover:underline"
-                          >
-                            {a.nombre}
-                          </a>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            {a.tipo === "visor3d" ? "Visor 3D realista" : "Enlace externo"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => borrarArchivo.mutate(a.id)}
-                          className="shrink-0 text-xs text-muted-foreground hover:text-danger"
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    </li>
+                    <TarjetaEnlace key={a.id} a={a} onQuitar={(id) => borrarArchivo.mutate(id)} />
                   ))}
                 </ul>
               );

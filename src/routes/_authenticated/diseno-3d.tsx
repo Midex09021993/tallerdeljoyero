@@ -3,6 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SeguimientoArea } from "@/components/SeguimientoArea";
 import { AppShell, ColaProcesos, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
+import { VisorIframe } from "@/components/VisorIframe";
+import { urlEmbedVisor } from "@/lib/visor-embed";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useActualizarProceso, useArchivosPedidos, useProcesos, type ArchivoPedido } from "@/lib/taller-db";
 
@@ -169,9 +171,15 @@ function Diseno3D() {
               <article key={a.id} className="rounded-xl border border-border p-3">
                 <div className="mb-3 aspect-square w-full overflow-hidden rounded-lg bg-surface-muted">
                   {a.poster ? (
-                    <a href={a.url} target="_blank" rel="noreferrer" className="block h-full w-full">
-                      <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
-                    </a>
+                    a.tipo === "visor3d" && urlEmbedVisor(a.url) ? (
+                      <button type="button" onClick={() => setModelo(a)} className="block h-full w-full">
+                        <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                      </button>
+                    ) : (
+                      <a href={a.url} target="_blank" rel="noreferrer" className="block h-full w-full">
+                        <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                      </a>
+                    )
                   ) : esImagen(a.nombre) ? (
                     <img src={a.url} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
                   ) : (
@@ -198,9 +206,9 @@ function Diseno3D() {
                 </p>
                 <div className="mt-2 flex items-center gap-3 text-xs">
                   {a.tipo === "visor3d" ? (
-                    <a href={a.url} target="_blank" rel="noreferrer" className="font-medium text-info hover:underline">
+                    <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
                       Visor realista
-                    </a>
+                    </button>
                   ) : es3D(a.nombre) ? (
                     <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
                       Visor 3D
@@ -251,10 +259,25 @@ function Diseno3D() {
                   ))}
                 </div>
               ) : null}
-              <VisorSTL url={modelo.url} />
+              {modelo.tipo === "visor3d" && urlEmbedVisor(modelo.url) ? (
+                <>
+                  <VisorIframe url={urlEmbedVisor(modelo.url)!} titulo={modelo.nombre} />
+                  <p className="text-xs text-muted-foreground">
+                    Visor realista interactivo — también puedes{" "}
+                    <a href={modelo.url} target="_blank" rel="noreferrer" className="text-info hover:underline">
+                      abrirlo en pestaña nueva
+                    </a>
+                    .
+                  </p>
+                </>
+              ) : (
+                <>
+                  <VisorSTL url={modelo.url} />
+                  <p className="text-xs text-muted-foreground">Arrastra para girar, rueda para acercar.</p>
+                </>
+              )}
             </>
           ) : null}
-          <p className="text-xs text-muted-foreground">Arrastra para girar, rueda para acercar.</p>
         </DialogContent>
       </Dialog>
     </AppShell>
