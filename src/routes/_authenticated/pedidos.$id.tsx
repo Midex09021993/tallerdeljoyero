@@ -58,7 +58,7 @@ function useArchivos(pedidoId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedido_archivos")
-        .select("id, tipo, nombre, url, es_enlace")
+        .select("id, tipo, nombre, url, es_enlace, grupo, version, created_at")
         .eq("pedido_id", pedidoId)
         .order("created_at");
       if (error) throw error;
@@ -78,25 +78,41 @@ function FichaPedido() {
   const [editando, setEditando] = useState(false);
   const [rutaEdit, setRutaEdit] = useState<string[]>([]);
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
+  const [grupoDestino, setGrupoDestino] = useState("");
+  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
 
   const pedido = pedidos.find((p) => p.id === id);
 
   const subir = useMutation({
-    mutationFn: async ({ file, tipo }: { file: File; tipo: string }) => {
+    mutationFn: async ({ file, tipo, grupo }: { file: File; tipo: string; grupo?: string }) => {
       const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from("pedidos").upload(ruta, file);
       if (error) throw error;
       const { data } = await supabase.storage.from("pedidos").createSignedUrl(ruta, 60 * 60 * 24 * 365);
+      const claveGrupo = (grupo || file.name).toLowerCase();
+      const { data: previas } = await supabase
+        .from("pedido_archivos")
+        .select("version")
+        .eq("pedido_id", id)
+        .eq("grupo", claveGrupo)
+        .order("version", { ascending: false })
+        .limit(1);
+      const siguiente = (previas?.[0]?.version ?? 0) + 1;
       const { error: e2 } = await supabase.from("pedido_archivos").insert({
         pedido_id: id,
         tipo,
         nombre: file.name,
         url: data?.signedUrl ?? ruta,
         es_enlace: false,
+        grupo: claveGrupo,
+        version: siguiente,
       });
       if (e2) throw e2;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedido-archivos", id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedido-archivos", id] });
+      qc.invalidateQueries({ queryKey: ["archivos-pedidos"] });
+    },
   });
 
   const guardarEnlace = useMutation({
@@ -107,6 +123,8 @@ function FichaPedido() {
         nombre: enlace.nombre || "Archivo externo",
         url: enlace.url,
         es_enlace: true,
+        grupo: (enlace.nombre || "enlace").toLowerCase(),
+        version: 1,
       });
       if (error) throw error;
     },
@@ -121,8 +139,12 @@ function FichaPedido() {
       const { error } = await supabase.from("pedido_archivos").delete().eq("id", archivoId);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedido-archivos", id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedido-archivos", id] });
+      qc.invalidateQueries({ queryKey: ["archivos-pedidos"] });
+    },
   });
+
 
   if (isLoading) {
     return (
