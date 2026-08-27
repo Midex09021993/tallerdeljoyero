@@ -168,7 +168,11 @@ function Diseno3D() {
             {filtrados.map((a) => (
               <article key={a.id} className="rounded-xl border border-border p-3">
                 <div className="mb-3 aspect-square w-full overflow-hidden rounded-lg bg-surface-muted">
-                  {esImagen(a.nombre) ? (
+                  {a.poster ? (
+                    <a href={a.url} target="_blank" rel="noreferrer" className="block h-full w-full">
+                      <img src={a.poster} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
+                    </a>
+                  ) : esImagen(a.nombre) ? (
                     <img src={a.url} alt={a.nombre} loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <button
@@ -193,7 +197,11 @@ function Diseno3D() {
                   {a.referencia} · {a.cliente}
                 </p>
                 <div className="mt-2 flex items-center gap-3 text-xs">
-                  {es3D(a.nombre) ? (
+                  {a.tipo === "visor3d" ? (
+                    <a href={a.url} target="_blank" rel="noreferrer" className="font-medium text-info hover:underline">
+                      Visor realista
+                    </a>
+                  ) : es3D(a.nombre) ? (
                     <button type="button" onClick={() => setModelo(a)} className="font-medium text-info hover:underline">
                       Visor 3D
                     </button>

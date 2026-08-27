@@ -59,7 +59,7 @@ function useArchivos(pedidoId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedido_archivos")
-        .select("id, tipo, nombre, url, es_enlace, grupo, version, created_at")
+        .select("id, tipo, nombre, url, es_enlace, grupo, version, poster, created_at")
         .eq("pedido_id", pedidoId)
         .order("created_at");
       if (error) throw error;
