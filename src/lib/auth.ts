@@ -19,7 +19,7 @@ export const AREAS = [
   "Casting",
   "Taller",
   "Servicio láser",
-  "Área ventas",
+  "Terminado",
   "Entregado",
 ] as const;
 
@@ -33,7 +33,7 @@ export const areaRuta: Record<string, string> = {
   Casting: "/taller",
   Taller: "/taller",
   "Servicio láser": "/corte-laser",
-  "Área ventas": "/gestion",
+  Terminado: "/gestion",
 };
 
 export type Sesion = {
