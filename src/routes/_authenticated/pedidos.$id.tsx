@@ -480,7 +480,7 @@ function FichaPedido() {
                         className="aspect-square w-full rounded-xl border border-border object-cover"
                       />
                     ) : (
-                      <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foreground">
+                      <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foregroun[...]
                         Subir
                         <input
                           type="file"
@@ -531,8 +531,8 @@ function FichaPedido() {
                         ))}
                       </select>
                     ) : null}
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground">
-                      {subir.isPending ? "Subiendo..." : "Subir archivo del trabajo (STL, 3MF, PDF, foto...)"}
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground [...]
+                      {subir.isPending ? "Subiendo…" : "Subir archivo del trabajo (STL, 3MF, PDF, foto…)"}
                       <input
                         type="file"
                         className="hidden"
