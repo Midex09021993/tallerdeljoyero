@@ -418,36 +418,111 @@ function FichaPedido() {
           </Seccion>
 
           <Seccion titulo="Archivos del pedido">
-            <label className="mb-4 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground hover:bg-accent">
-              {subir.isPending ? "Subiendo…" : "Subir archivo del trabajo (STL, 3MF, PDF, foto…)"}
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) subir.mutate({ file, tipo: "archivo" });
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <ul className="mb-4 space-y-2">
-              {archivos
-                .filter((a) => !a.es_enlace && !VISTAS.includes(a.tipo as (typeof VISTAS)[number]))
-                .map((a) => (
-                  <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
-                    <a href={a.url} target="_blank" rel="noreferrer" className="truncate text-info hover:underline">
-                      {a.nombre}
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => borrarArchivo.mutate(a.id)}
-                      className="text-xs text-muted-foreground hover:text-danger"
-                    >
-                      Quitar
-                    </button>
-                  </li>
-                ))}
-            </ul>
+            {(() => {
+              const trabajo = archivos.filter(
+                (a) => !a.es_enlace && !VISTAS.includes(a.tipo as (typeof VISTAS)[number]),
+              );
+              const grupos = new Map<string, typeof trabajo>();
+              for (const a of trabajo) {
+                const lista = grupos.get(a.grupo) ?? [];
+                lista.push(a);
+                grupos.set(a.grupo, lista);
+              }
+              const entradas = [...grupos.entries()].map(
+                ([grupo, lista]) =>
+                  [grupo, [...lista].sort((x, y) => y.version - x.version)] as const,
+              );
+              return (
+                <>
+                  <div className="mb-4 space-y-2">
+                    {entradas.length > 0 ? (
+                      <select
+                        value={grupoDestino}
+                        onChange={(e) => setGrupoDestino(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs"
+                      >
+                        <option value="">Subir como archivo nuevo</option>
+                        {entradas.map(([grupo, lista]) => (
+                          <option key={grupo} value={grupo}>
+                            Nueva versión de: {lista[0].nombre} (v{lista[0].version})
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground hover:bg-accent">
+                      {subir.isPending ? "Subiendo…" : "Subir archivo del trabajo (STL, 3MF, PDF, foto…)"}
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) subir.mutate({ file, tipo: "archivo", grupo: grupoDestino || undefined });
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <ul className="mb-4 space-y-2">
+                    {entradas.map(([grupo, lista]) => {
+                      const actual = lista[0];
+                      const abierto = grupoAbierto === grupo;
+                      return (
+                        <li key={grupo} className="rounded-xl border border-border p-3">
+                          <div className="flex items-center justify-between gap-3 text-sm">
+                            <a href={actual.url} target="_blank" rel="noreferrer" className="truncate text-info hover:underline">
+                              {actual.nombre}
+                            </a>
+                            <div className="flex shrink-0 items-center gap-3">
+                              <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                v{actual.version}
+                              </span>
+                              {lista.length > 1 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setGrupoAbierto(abierto ? null : grupo)}
+                                  className="text-xs text-muted-foreground hover:text-foreground"
+                                >
+                                  {abierto ? "Ocultar historial" : `Historial (${lista.length})`}
+                                </button>
+                              ) : null}
+                              <button
+                                type="button"
+                                onClick={() => borrarArchivo.mutate(actual.id)}
+                                className="text-xs text-muted-foreground hover:text-danger"
+                              >
+                                Quitar
+                              </button>
+                            </div>
+                          </div>
+                          {abierto ? (
+                            <ul className="mt-3 space-y-1 border-t border-border pt-2">
+                              {lista.slice(1).map((v) => (
+                                <li key={v.id} className="flex items-center justify-between gap-3 text-xs">
+                                  <a href={v.url} target="_blank" rel="noreferrer" className="truncate text-muted-foreground hover:underline">
+                                    v{v.version} · {v.nombre}
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => borrarArchivo.mutate(v.id)}
+                                    className="text-muted-foreground hover:text-danger"
+                                  >
+                                    Quitar
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                    {entradas.length === 0 ? (
+                      <li className="text-sm text-muted-foreground">Sin archivos subidos.</li>
+                    ) : null}
+                  </ul>
+                </>
+              );
+            })()}
+
             <ul className="mb-4 space-y-2">
 
               {archivos
