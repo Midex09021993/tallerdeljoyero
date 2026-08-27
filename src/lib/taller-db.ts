@@ -6,6 +6,7 @@ export type Estado =
   | "Impresión 3D"
   | "Corte láser"
   | "Taller / Engaste"
+  | "Área ventas"
   | "Entregado"
   | "Espera material";
 
@@ -14,6 +15,7 @@ export const estados: Estado[] = [
   "Impresión 3D",
   "Corte láser",
   "Taller / Engaste",
+  "Área ventas",
   "Entregado",
   "Espera material",
 ];
@@ -23,6 +25,7 @@ export const estadoClases: Record<string, string> = {
   "Impresión 3D": "bg-accent text-foreground",
   "Corte láser": "bg-surface-muted text-muted-foreground",
   "Taller / Engaste": "bg-warning-soft text-warning",
+  "Área ventas": "bg-success-soft text-success",
   Entregado: "bg-success-soft text-success",
   "Espera material": "bg-danger-soft text-danger",
 };
@@ -150,8 +153,28 @@ export function usePedidos() {
       if (error) throw error;
       return (data ?? []).map(({ sedes, ...p }) => ({
         ...p,
-        importe: Number(p.importe),
+        referencia: p.referencia ?? "",
+        pieza: p.pieza ?? "",
+        cliente: p.cliente ?? "",
+        material: p.material ?? "",
+        estado: p.estado ?? "",
+        entrega: p.entrega ?? "",
+        importe: Number(p.importe) || 0,
         sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
+        telefono: p.telefono ?? "",
+        origen: p.origen ?? "",
+        contrato: p.contrato ?? "",
+        trabajo: p.trabajo ?? "",
+        fecha_ingreso: p.fecha_ingreso ?? "",
+        fecha_entrega: p.fecha_entrega ?? null,
+        area_actual: p.area_actual ?? "Pedidos",
+        ruta: Array.isArray(p.ruta) ? p.ruta : [],
+        area_desde: p.area_desde ?? p.fecha_ingreso ?? new Date().toISOString(),
+        notas: p.notas ?? "",
+        talla: p.talla ?? "",
+        cantidad_piezas: Number(p.cantidad_piezas) || 1,
+        piedras: p.piedras ?? "",
+        peso_estimado: p.peso_estimado ?? "",
       }));
     },
   });
@@ -171,7 +194,10 @@ export function useCrearPedido() {
 export function useActualizarPedido() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...cambios }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
+    mutationFn: async ({
+      id,
+      ...cambios
+    }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
       const { error } = await supabase.from("pedidos").update(cambios).eq("id", id);
       if (error) throw error;
     },
@@ -282,7 +308,9 @@ export function useGuardarSede() {
             .from("sedes")
             .update({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo })
             .eq("id", sede.id)
-        : await supabase.from("sedes").insert({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo });
+        : await supabase
+            .from("sedes")
+            .insert({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sedes"] }),
@@ -310,7 +338,9 @@ export function useUsuarios() {
       const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta, clave_visible")
+          .select(
+            "id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta, clave_visible",
+          )
           .order("nombre"),
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("user_areas").select("user_id, area"),
@@ -334,7 +364,9 @@ export function useInventario() {
         .select("id, material, stock, unidad, minimo, categoria, sede_id")
         .order("material");
       if (error) throw error;
-      const { data: asignaciones } = await supabase.from("material_areas").select("material_id, area");
+      const { data: asignaciones } = await supabase
+        .from("material_areas")
+        .select("material_id, area");
       return (data ?? []).map((m) => ({
         ...m,
         stock: Number(m.stock),
@@ -491,7 +523,6 @@ export function useGuardarConfigArea() {
   });
 }
 
-
 /** Alta de un material del inventario. */
 export function useCrearMaterial() {
   const qc = useQueryClient();
@@ -550,7 +581,15 @@ export function useActualizarMaterial() {
 export function useAsignarArea() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ materialId, area, activo }: { materialId: string; area: string; activo: boolean }) => {
+    mutationFn: async ({
+      materialId,
+      area,
+      activo,
+    }: {
+      materialId: string;
+      area: string;
+      activo: boolean;
+    }) => {
       if (activo) {
         const { error } = await supabase
           .from("material_areas")
@@ -591,7 +630,9 @@ export function useMovimientosInventario() {
         .limit(200);
       if (error) throw error;
       return (data ?? []).map((m) => {
-        const { inventario, ...resto } = m as typeof m & { inventario: { material: string } | null };
+        const { inventario, ...resto } = m as typeof m & {
+          inventario: { material: string } | null;
+        };
         return {
           ...resto,
           cantidad: Number(resto.cantidad),
@@ -664,7 +705,12 @@ export function useArchivosPedidos() {
 
       return (data ?? []).map((a) => {
         const { pedidos, ...resto } = a as typeof a & {
-          pedidos: { referencia: string; cliente: string; trabajo: string; area_actual: string } | null;
+          pedidos: {
+            referencia: string;
+            cliente: string;
+            trabajo: string;
+            area_actual: string;
+          } | null;
         };
         return {
           ...resto,

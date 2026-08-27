@@ -21,6 +21,7 @@ import { Route as AuthenticatedInventarioRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
+import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos.$id'
 
@@ -84,6 +85,11 @@ const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
   path: '/taller',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVentasRoute = AuthenticatedVentasRouteImport.update({
+  id: '/ventas',
+  path: '/ventas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPedidosIndexRoute =
   AuthenticatedPedidosIndexRouteImport.update({
     id: '/',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/monitor': typeof AuthenticatedMonitorRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/taller': typeof AuthenticatedTallerRoute
+  '/ventas': typeof AuthenticatedVentasRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/ventas': typeof AuthenticatedVentasRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
 }
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
+  '/_authenticated/ventas': typeof AuthenticatedVentasRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
 }
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/monitor'
     | '/pedidos'
     | '/taller'
+    | '/ventas'
     | '/pedidos/$id'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/monitor'
     | '/taller'
+    | '/ventas'
     | '/pedidos/$id'
     | '/pedidos'
   id:
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/monitor'
     | '/_authenticated/pedidos'
     | '/_authenticated/taller'
+    | '/_authenticated/ventas'
     | '/_authenticated/pedidos/$id'
     | '/_authenticated/pedidos/'
   fileRoutesById: FileRoutesById
@@ -283,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTallerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ventas': {
+      id: '/_authenticated/ventas'
+      path: '/ventas'
+      fullPath: '/ventas'
+      preLoaderRoute: typeof AuthenticatedVentasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedidos/': {
       id: '/_authenticated/pedidos/'
       path: '/'
@@ -322,6 +341,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
+  AuthenticatedVentasRoute: typeof AuthenticatedVentasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -333,6 +353,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
+  AuthenticatedVentasRoute: AuthenticatedVentasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

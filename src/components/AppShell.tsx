@@ -9,6 +9,7 @@ type Seccion = {
     | "/impresion-3d"
     | "/corte-laser"
     | "/taller"
+    | "/ventas"
     | "/inventario"
     | "/gestion"
     | "/monitor";
@@ -23,6 +24,7 @@ const secciones: Seccion[] = [
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
   { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
   { to: "/taller", label: "Taller", area: "Taller" },
+  { to: "/ventas", label: "Área ventas", area: "Área ventas" },
   { to: "/inventario", label: "Inventario", area: "Taller" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"] },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"] },
@@ -40,7 +42,9 @@ function seccionesVisibles(
   // Los operarios ven la pantalla de cada área que el dueño/gerente les asignó
   // (además de Inventario). Si aún no tienen áreas, se les deja Taller.
   const asignadas = areas ?? [];
-  const porArea = secciones.filter((s) => s.to !== "/inventario" && s.area != null && asignadas.includes(s.area));
+  const porArea = secciones.filter(
+    (s) => s.to !== "/inventario" && s.area != null && asignadas.includes(s.area),
+  );
   const inventario = secciones.filter((s) => s.to === "/inventario");
   if (porArea.length === 0) {
     return secciones.filter((s) => s.to === "/taller" || s.to === "/inventario");
@@ -109,21 +113,25 @@ export function AppShell({
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-y-auto p-6 lg:p-10">
-        <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-5 pb-8 sm:px-6 lg:p-10">
+        <header className="mb-5 flex flex-wrap items-end justify-between gap-4 sm:mb-8 lg:mb-10">
           <div>
-            <h1 className="mb-2 font-display text-3xl">{titulo}</h1>
+            <h1 className="mb-1 font-display text-2xl sm:mb-2 sm:text-3xl">{titulo}</h1>
             {subtitulo ? <p className="text-sm text-muted-foreground">{subtitulo}</p> : null}
           </div>
-          {acciones ? <div className="flex gap-4">{acciones}</div> : null}
+          {acciones ? (
+            <div className="flex w-full gap-2 overflow-x-auto pb-1 sm:w-auto sm:flex-wrap sm:gap-4">
+              {acciones}
+            </div>
+          ) : null}
         </header>
 
-        <nav className="mb-8 flex flex-wrap gap-2 md:hidden">
+        <nav className="sticky top-0 z-20 -mx-4 mb-5 flex gap-2 overflow-x-auto border-y border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
           {visibles.map((s) => (
             <Link
               key={s.to}
               to={s.to}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground"
+              className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
               activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
             >
               {s.label}
@@ -149,11 +157,15 @@ export function StatCard({
   tono?: "neutro" | "positivo" | "negativo";
 }) {
   const tonoClase =
-    tono === "positivo" ? "text-success" : tono === "negativo" ? "text-danger" : "text-muted-foreground";
+    tono === "positivo"
+      ? "text-success"
+      : tono === "negativo"
+        ? "text-danger"
+        : "text-muted-foreground";
   return (
-    <div className="min-w-[140px] rounded-xl border border-border bg-card p-4 shadow-card">
+    <div className="min-w-[112px] rounded-xl border border-border bg-card p-3 shadow-card sm:min-w-[140px] sm:p-4">
       <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
-      <p className="text-xl font-medium">
+      <p className="text-lg font-medium sm:text-xl">
         {valor} {delta ? <span className={`text-xs font-normal ${tonoClase}`}>{delta}</span> : null}
       </p>
     </div>
@@ -172,8 +184,10 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-2xl border border-border bg-card shadow-card ${className}`}>
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+    <section
+      className={`overflow-hidden rounded-xl border border-border bg-card shadow-card sm:rounded-2xl ${className}`}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
         <h2 className="text-sm font-medium">{titulo}</h2>
         {accion}
       </div>
@@ -212,7 +226,14 @@ export function ColaProcesos({
   onProgreso,
   cargando,
 }: {
-  items: { id: string; referencia: string; pieza: string; cliente: string; detalle: string; progreso: number }[];
+  items: {
+    id: string;
+    referencia: string;
+    pieza: string;
+    cliente: string;
+    detalle: string;
+    progreso: number;
+  }[];
   onProgreso?: (id: string, progreso: number) => void;
   cargando?: boolean;
 }) {
@@ -237,7 +258,9 @@ export function ColaProcesos({
             <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-muted">
               <div className="h-full rounded-full bg-gold" style={{ width: `${item.progreso}%` }} />
             </div>
-            <span className="w-10 text-right text-[10px] tabular-nums text-muted-foreground">{item.progreso}%</span>
+            <span className="w-10 text-right text-[10px] tabular-nums text-muted-foreground">
+              {item.progreso}%
+            </span>
             {onProgreso ? (
               <div className="flex gap-1">
                 <button

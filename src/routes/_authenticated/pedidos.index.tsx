@@ -50,13 +50,14 @@ const vacio = {
   notas: "",
 };
 
-export function areaClase(area: string) {
+function areaClase(area: string) {
   const mapa: Record<string, string> = {
     Pedidos: "bg-surface-muted text-muted-foreground",
     "Diseño 3D": "bg-info-soft text-info",
     "Impresión 3D": "bg-accent text-foreground",
     Casting: "bg-warning-soft text-warning",
     Taller: "bg-warning-soft text-warning",
+    "Área ventas": "bg-success-soft text-success",
     "Servicio láser": "bg-surface-muted text-muted-foreground",
     Terminado: "bg-info-soft text-info",
     Entregado: "bg-success-soft text-success",
@@ -65,7 +66,7 @@ export function areaClase(area: string) {
 }
 
 /** Prefijo de referencia: dos primeras iniciales del taller (sede). */
-export function prefijoSede(nombre: string | null | undefined) {
+function prefijoSede(nombre: string | null | undefined) {
   const limpio = (nombre ?? "").replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g, "").trim();
   const palabras = limpio.split(/\s+/).filter(Boolean);
   const base =
@@ -76,7 +77,7 @@ export function prefijoSede(nombre: string | null | undefined) {
 }
 
 /** Genera la siguiente referencia tipo GG-001 para esa sede. */
-export function siguienteReferencia(nombreSede: string | null | undefined, refs: string[]) {
+function siguienteReferencia(nombreSede: string | null | undefined, refs: string[]) {
   const prefijo = prefijoSede(nombreSede);
   const re = new RegExp(`^${prefijo}-(\\d+)$`, "i");
   const max = refs.reduce((acc, r) => {
@@ -160,7 +161,7 @@ function PedidosPage() {
   // Los operarios solo ven los pedidos que están en sus áreas asignadas.
   // Al buscar por texto pueden encontrar cualquier pedido, aunque ya haya avanzado.
   const soloSusAreas = Boolean(sesion && !sesion.esAdmin && (sesion.areas?.length ?? 0) > 0);
-  const misAreas = sesion?.areas ?? [];
+  const misAreas = useMemo(() => sesion?.areas ?? [], [sesion?.areas]);
 
   const lista = useMemo(
     () =>
@@ -201,10 +202,13 @@ function PedidosPage() {
   });
 
   const contarPorArea = (items: typeof pedidos) =>
-    items.reduce((acc, p) => {
-      acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    items.reduce(
+      (acc, p) => {
+        acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
   const activosPorArea = contarPorArea(activos);
   const entregadosPorArea = contarPorArea(entregados);
@@ -362,7 +366,6 @@ function PedidosPage() {
                   ))}
                 </select>
               </label>
-
             </div>
 
             <fieldset className="mt-5">
@@ -378,11 +381,15 @@ function PedidosPage() {
                       type="button"
                       onClick={() =>
                         setRuta((r) =>
-                          activa ? r.filter((x) => x !== a) : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
+                          activa
+                            ? r.filter((x) => x !== a)
+                            : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
                         )
                       }
                       className={`rounded-lg border px-3 py-2 text-xs transition-colors sm:rounded-full sm:py-1.5 ${
-                        activa ? "border-transparent bg-ink text-gold-bright" : "border-border bg-card"
+                        activa
+                          ? "border-transparent bg-ink text-gold-bright"
+                          : "border-border bg-card"
                       }`}
                     >
                       {a}
@@ -430,7 +437,6 @@ function PedidosPage() {
           </p>
         ) : null}
 
-
         <div className="block divide-y divide-border md:hidden">
           {lista.map((p) => (
             <article
@@ -451,18 +457,28 @@ function PedidosPage() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{p.referencia}</p>
                   {p.contrato ? (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">Contrato {p.contrato}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      Contrato {p.contrato}
+                    </p>
                   ) : null}
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
+                >
                   {p.area_actual}
                 </span>
               </div>
               <p className="mt-2 truncate text-sm font-medium">{p.cliente}</p>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.trabajo || p.pieza}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {p.trabajo || p.pieza}
+              </p>
               <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                <span className="truncate">{sesion?.esDueno && p.sede_nombre ? p.sede_nombre : p.origen || "Sin origen"}</span>
-                <span className="shrink-0 tabular-nums">{fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}</span>
+                <span className="truncate">
+                  {sesion?.esDueno && p.sede_nombre ? p.sede_nombre : p.origen || "Sin origen"}
+                </span>
+                <span className="shrink-0 tabular-nums">
+                  {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}
+                </span>
               </div>
               {puedeCrear ? (
                 <button
@@ -520,16 +536,22 @@ function PedidosPage() {
                       {p.referencia}
                     </span>
                     {p.contrato ? (
-                      <span className="block text-[10px] text-muted-foreground">Contrato {p.contrato}</span>
+                      <span className="block text-[10px] text-muted-foreground">
+                        Contrato {p.contrato}
+                      </span>
                     ) : null}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {p.cliente}
                     {sesion?.esDueno && p.sede_nombre ? (
-                      <span className="block text-[10px] text-muted-foreground">{p.sede_nombre}</span>
+                      <span className="block text-[10px] text-muted-foreground">
+                        {p.sede_nombre}
+                      </span>
                     ) : null}
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                    {p.trabajo || p.pieza}
+                  </td>
                   <td className="px-6 py-4">
                     <div
                       className="flex flex-col gap-1.5"
@@ -545,7 +567,12 @@ function PedidosPage() {
                         value=""
                         onChange={(e) => {
                           const destino = e.target.value;
-                          if (destino) enviar.mutate({ pedido: p, destino, usuarioId: sesion?.user.id ?? null });
+                          if (destino)
+                            enviar.mutate({
+                              pedido: p,
+                              destino,
+                              usuarioId: sesion?.user.id ?? null,
+                            });
                         }}
                         disabled={enviar.isPending}
                         className="w-fit rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground disabled:opacity-40"
@@ -565,7 +592,6 @@ function PedidosPage() {
                             Sin áreas siguientes
                           </option>
                         ) : null}
-
                       </select>
                     </div>
                   </td>
@@ -625,9 +651,7 @@ function PedidosPage() {
               <button
                 type="button"
                 disabled={borrar.isPending}
-                onClick={() =>
-                  borrar.mutate(porBorrar.id, { onSettled: () => setPorBorrar(null) })
-                }
+                onClick={() => borrar.mutate(porBorrar.id, { onSettled: () => setPorBorrar(null) })}
                 className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {borrar.isPending ? "Eliminando…" : "Eliminar"}
@@ -637,6 +661,5 @@ function PedidosPage() {
         </div>
       ) : null}
     </AppShell>
-
   );
 }

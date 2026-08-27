@@ -18,6 +18,7 @@ export const AREAS = [
   "Impresión 3D",
   "Casting",
   "Taller",
+  "Área ventas",
   "Servicio láser",
   "Terminado",
   "Entregado",
@@ -32,6 +33,7 @@ export const areaRuta: Record<string, string> = {
   "Impresión 3D": "/impresion-3d",
   Casting: "/taller",
   Taller: "/taller",
+  "Área ventas": "/ventas",
   "Servicio láser": "/corte-laser",
   Terminado: "/gestion",
 };
