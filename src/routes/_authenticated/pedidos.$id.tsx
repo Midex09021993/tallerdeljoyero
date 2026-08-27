@@ -236,7 +236,7 @@ function FichaPedido() {
     return (
       <AppShell titulo="Pedido no encontrado">
         <p className="text-sm text-muted-foreground">
-          Este pedido no existe o no pertenece a tu sede.{" "}
+          Este pedido no existe o no pertenece a tu sede. {" "}
           <Link to="/pedidos" className="text-info hover:underline">
             Volver a pedidos
           </Link>
@@ -346,7 +346,7 @@ function FichaPedido() {
                        fecha_entrega: String(fd.get("fecha_entrega")) || null,
                        notas: String(fd.get("notas")),
                        ruta: rutaEdit.length > 0 ? rutaEdit : pedido.ruta,
-                     },
+                    },
                     { onSuccess: () => setEditando(false) },
                   );
                 }}
@@ -440,11 +440,15 @@ function FichaPedido() {
                     <div key={label}>
                       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
                       <dd className="mt-1 text-sm font-medium text-foreground">{valor}</dd>
+                      {label === "Piedras / Componentes" ? (
+                        <>
+                          <p className="mt-4 text-[10px] uppercase tracking-wider text-muted-foreground">Notas generales</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{pedido.notas || "Sin notas técnicas."}</p>
+                        </>
+                      ) : null}
                     </div>
                   ))}
                 </dl>
-                <p className="mt-4 text-[10px] uppercase tracking-wider text-muted-foreground">Notas generales</p>
-                <p className="mt-1 text-sm text-muted-foreground">{pedido.notas || "Sin notas técnicas."}</p>
                 {puedeEditar ? (
                    <button
                      type="button"
@@ -476,7 +480,7 @@ function FichaPedido() {
                         className="aspect-square w-full rounded-xl border border-border object-cover"
                       />
                     ) : (
-                      <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foreground">
+                      <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foregroun[...]
                         Subir
                         <input
                           type="file"
@@ -527,7 +531,7 @@ function FichaPedido() {
                         ))}
                       </select>
                     ) : null}
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground hover:bg-accent">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground [...]
                       {subir.isPending ? "Subiendo…" : "Subir archivo del trabajo (STL, 3MF, PDF, foto…)"}
                       <input
                         type="file"
