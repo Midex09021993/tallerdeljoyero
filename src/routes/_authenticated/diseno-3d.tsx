@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SeguimientoArea } from "@/components/SeguimientoArea";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
@@ -37,6 +37,7 @@ function Diseno3D() {
   const { data: archivos = [], isLoading: cargandoArchivos } = useArchivosPedidos();
   const [busca, setBusca] = useState("");
   const [modelo, setModelo] = useState<ArchivoPedido | null>(null);
+  const navigate = useNavigate();
 
   /** Agrupa todos los archivos por pedido. */
   const archivosPorPedido = useMemo(() => {
@@ -130,10 +131,14 @@ function Diseno3D() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
-          <ColaModelado items={cola} cargando={cargandoPedidos || cargandoArchivos} />
+          <ColaModelado
+            items={cola}
+            cargando={cargandoPedidos || cargandoArchivos}
+            contarModelos={(pedidoId) => (archivosPorPedido.get(pedidoId) ?? []).filter(esModelo).length}
+          />
         </Panel>
 
-        <Panel titulo="Modelados atendidos" className="lg:col-span-2">
+        <Panel titulo="Modelos atendidos" className="lg:col-span-2">
           <div className="overflow-x-auto">
             {cargandoPedidos || cargandoArchivos ? (
               <p className="p-6 text-sm text-muted-foreground">Cargando…</p>
@@ -156,11 +161,22 @@ function Diseno3D() {
                   {atendidos.map((p) => {
                     const modelosPedido = (archivosPorPedido.get(p.id) ?? []).filter(esModelo).length;
                     return (
-                      <tr key={p.id} className="border-t border-border">
+                      <tr
+                        key={p.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => void navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            void navigate({ to: "/pedidos/$id", params: { id: p.id } });
+                          }
+                        }}
+                        className="cursor-pointer border-t border-border transition-colors hover:bg-surface-muted/70 focus-visible:bg-surface-muted/70 focus-visible:outline-none"
+                        aria-label={`Abrir pedido ${p.referencia}`}
+                      >
                         <td className="px-4 py-3 font-medium">
-                          <Link to="/pedidos/$id" params={{ id: p.id }} className="hover:underline">
-                            {p.referencia}
-                          </Link>
+                          {p.referencia}
                         </td>
                         <td className="px-4 py-3">{p.cliente}</td>
                         <td className="px-4 py-3 text-muted-foreground">{p.trabajo}</td>
@@ -321,7 +337,15 @@ function Diseno3D() {
   );
 }
 
-function ColaModelado({ items, cargando }: { items: Pedido[]; cargando?: boolean }) {
+function ColaModelado({
+  items,
+  cargando,
+  contarModelos,
+}: {
+  items: Pedido[];
+  cargando?: boolean;
+  contarModelos: (pedidoId: string) => number;
+}) {
   if (cargando) {
     return <p className="px-6 py-8 text-sm text-muted-foreground">Cargando…</p>;
   }
@@ -331,18 +355,36 @@ function ColaModelado({ items, cargando }: { items: Pedido[]; cargando?: boolean
   return (
     <ul className="divide-y divide-border">
       {items.map((item) => (
-        <li key={item.id} className="px-6 py-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-sm font-medium">
-              <Link to="/pedidos/$id" params={{ id: item.id }} className="hover:underline">
-                {item.pieza}
-              </Link>
+        <li key={item.id}>
+          <Link
+            to="/pedidos/$id"
+            params={{ id: item.id }}
+            className="block px-5 py-4 transition-colors hover:bg-surface-muted/70 focus-visible:bg-surface-muted/70 focus-visible:outline-none sm:px-6"
+            aria-label={`Abrir pedido ${item.referencia}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">{item.referencia}</p>
+                <p className="mt-1 truncate text-sm text-foreground">{item.cliente}</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-info-soft px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-info">
+                {item.area_actual}
+              </span>
+            </div>
+            <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+              {item.trabajo || item.pieza || "Sin trabajo definido"}
             </p>
-            <span className="text-xs text-muted-foreground">{item.referencia}</span>
-          </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {item.cliente} · {item.trabajo || "Sin trabajo definido"}
-          </p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+              <span>
+                <strong className="block font-medium text-foreground">Trabajo</strong>
+                <span className="line-clamp-1">{item.pieza || "Pedido"}</span>
+              </span>
+              <span className="text-right">
+                <strong className="block font-medium text-foreground">Modelos</strong>
+                {contarModelos(item.id)}
+              </span>
+            </div>
+          </Link>
         </li>
       ))}
     </ul>
