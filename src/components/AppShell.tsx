@@ -80,7 +80,7 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       {!ocultarNavegacion ? (
-        <aside className="hidden w-64 shrink-0 flex-col bg-ink text-ink-foreground md:flex">
+        <aside className="hidden w-64 shrink-0 flex-col bg-ink text-ink-foreground lg:flex">
           <div className="p-8">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
             <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
@@ -124,27 +124,29 @@ export function AppShell({
         </aside>
       ) : null}
 
-      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-5 pb-8 sm:px-6 lg:p-10">
-        <header className="mb-5 flex flex-wrap items-end justify-between gap-4 sm:mb-8 lg:mb-10">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10">
+        <header className="mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4">
           <div>
-            <h1 className="mb-1 font-display text-2xl sm:mb-2 sm:text-3xl">{titulo}</h1>
-            {subtitulo ? <p className="text-sm text-muted-foreground">{subtitulo}</p> : null}
+            <h1 className="mb-0.5 font-display text-2xl sm:text-3xl lg:mb-2">{titulo}</h1>
+            {subtitulo ? (
+              <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
+            ) : null}
           </div>
           {acciones ? (
-            <div className="flex w-full gap-2 overflow-x-auto pb-1 sm:w-auto sm:flex-wrap sm:gap-4">
+            <div className="flex w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:flex-wrap lg:gap-4">
               {acciones}
             </div>
           ) : null}
         </header>
 
         {!ocultarNavegacion ? (
-          <nav className="sticky top-0 z-20 -mx-4 mb-5 border-y border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+          <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-2.5 backdrop-blur lg:hidden">
             <div className="flex gap-2 overflow-x-auto pb-2">
               {visibles.map((s) => (
                 <Link
                   key={s.to}
                   to={s.to}
-                  className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
+                  className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
                   activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
                 >
                   {s.label}
@@ -152,7 +154,7 @@ export function AppShell({
               ))}
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="flex items-center justify-between gap-3 pt-0.5">
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
                 <p className="truncate text-[10px] text-muted-foreground">
@@ -194,9 +196,9 @@ export function StatCard({
         ? "text-danger"
         : "text-muted-foreground";
   return (
-    <div className="min-w-[112px] rounded-xl border border-border bg-card p-3 shadow-card sm:min-w-[140px] sm:p-4">
+    <div className="min-w-[104px] rounded-xl border border-border bg-card p-2.5 shadow-card lg:min-w-[140px] lg:p-4">
       <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
-      <p className="text-lg font-medium sm:text-xl">
+      <p className="text-base font-medium lg:text-xl">
         {valor} {delta ? <span className={`text-xs font-normal ${tonoClase}`}>{delta}</span> : null}
       </p>
     </div>
@@ -216,9 +218,9 @@ export function Panel({
 }) {
   return (
     <section
-      className={`overflow-hidden rounded-xl border border-border bg-card shadow-card sm:rounded-2xl ${className}`}
+      className={`overflow-hidden rounded-xl border border-border bg-card shadow-card lg:rounded-2xl ${className}`}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 lg:px-6 lg:py-4">
         <h2 className="text-sm font-medium">{titulo}</h2>
         {accion}
       </div>

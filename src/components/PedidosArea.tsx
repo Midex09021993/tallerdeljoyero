@@ -25,7 +25,7 @@ export function PedidosArea({
 
   if (variante === "operario") {
     return (
-      <ListaTrabajosOperario
+      <ListaTrabajosMovil
         area={area}
         pedidos={pedidos}
         isLoading={isLoading}
@@ -41,123 +41,146 @@ export function PedidosArea({
   }
 
   return (
-    <Panel titulo={`${titulo} · ${pedidos.length}`}>
-      <div className="divide-y divide-border">
-        {isLoading ? <p className="px-5 py-8 text-sm text-muted-foreground">Cargando...</p> : null}
-        {!isLoading && pedidos.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-muted-foreground">
-            No hay pedidos asignados a {area}.
-          </p>
-        ) : null}
+    <>
+      <div className="lg:hidden">
+        <ListaTrabajosMovil
+          area={area}
+          pedidos={pedidos}
+          isLoading={isLoading}
+          onAbrir={(id) =>
+            void navigate({
+              to: "/pedidos/$id",
+              params: { id },
+              search: { from: origen },
+            })
+          }
+        />
+      </div>
 
-        {pedidos.map((pedido) => {
-          const enArea = pedidoEnAreaActual(pedido, area);
-          return (
-            <article key={pedido.id} className="px-4 py-4 sm:px-5">
-              <button
-                type="button"
-                onClick={() =>
-                  void navigate({
-                    to: "/pedidos/$id",
-                    params: { id: pedido.id },
-                    search: { from: origen },
-                  })
-                }
-                className="block w-full text-left"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {pedido.referencia}
-                    </p>
-                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                      {pedido.cliente}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
-                      enArea
-                        ? "bg-success-soft text-success"
-                        : "bg-surface-muted text-muted-foreground"
-                    }`}
-                  >
-                    {enArea ? "En trabajo" : normalizarArea(pedido.area_actual)}
-                  </span>
-                </div>
+      <div className="hidden lg:block">
+        <Panel titulo={`${titulo} · ${pedidos.length}`}>
+          <div className="divide-y divide-border">
+            {isLoading ? (
+              <p className="px-5 py-8 text-sm text-muted-foreground">Cargando...</p>
+            ) : null}
+            {!isLoading && pedidos.length === 0 ? (
+              <p className="px-5 py-8 text-sm text-muted-foreground">
+                No hay pedidos asignados a {area}.
+              </p>
+            ) : null}
 
-                <p className="mt-3 line-clamp-2 text-sm text-foreground">
-                  {pedido.trabajo || pedido.pieza || "Sin trabajo definido"}
-                </p>
-
-                <dl className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Contrato
-                    </dt>
-                    <dd className="mt-0.5 truncate text-foreground">{pedido.contrato || "-"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Entrega
-                    </dt>
-                    <dd className="mt-0.5 text-foreground">
-                      {fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "-"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Taller
-                    </dt>
-                    <dd className="mt-0.5 truncate text-foreground">
-                      {pedido.sede_nombre || "Sin sede"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Ruta
-                    </dt>
-                    <dd className="mt-0.5 truncate text-foreground">
-                      {pedido.ruta.map(normalizarArea).join(" -> ") || "-"}
-                    </dd>
-                  </div>
-                </dl>
-              </button>
-
-              <div className="mt-4 flex gap-2">
-                <Link
-                  to="/pedidos/$id"
-                  params={{ id: pedido.id }}
-                  search={{ from: origen }}
-                  className="rounded-xl border border-border px-3 py-2.5 text-xs font-medium"
-                >
-                  Ficha
-                </Link>
-                {enArea ? (
+            {pedidos.map((pedido) => {
+              const enArea = pedidoEnAreaActual(pedido, area);
+              return (
+                <article key={pedido.id} className="px-4 py-4 sm:px-5">
                   <button
                     type="button"
-                    disabled={mover.isPending}
                     onClick={() =>
-                      mover.mutate({
-                        pedido,
-                        direccion: "avanzar",
-                        usuarioId: sesion?.user.id ?? null,
+                      void navigate({
+                        to: "/pedidos/$id",
+                        params: { id: pedido.id },
+                        search: { from: origen },
                       })
                     }
-                    className="flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                    className="block w-full text-left"
                   >
-                    Avanzar
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {pedido.referencia}
+                        </p>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                          {pedido.cliente}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
+                          enArea
+                            ? "bg-success-soft text-success"
+                            : "bg-surface-muted text-muted-foreground"
+                        }`}
+                      >
+                        {enArea ? "En trabajo" : normalizarArea(pedido.area_actual)}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 line-clamp-2 text-sm text-foreground">
+                      {pedido.trabajo || pedido.pieza || "Sin trabajo definido"}
+                    </p>
+
+                    <dl className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Contrato
+                        </dt>
+                        <dd className="mt-0.5 truncate text-foreground">
+                          {pedido.contrato || "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Entrega
+                        </dt>
+                        <dd className="mt-0.5 text-foreground">
+                          {fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Taller
+                        </dt>
+                        <dd className="mt-0.5 truncate text-foreground">
+                          {pedido.sede_nombre || "Sin sede"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Ruta
+                        </dt>
+                        <dd className="mt-0.5 truncate text-foreground">
+                          {pedido.ruta.map(normalizarArea).join(" -> ") || "-"}
+                        </dd>
+                      </div>
+                    </dl>
                   </button>
-                ) : (
-                  <span className="flex-1 rounded-xl bg-surface-muted px-3 py-2.5 text-center text-xs font-medium text-muted-foreground">
-                    Esperando llegada
-                  </span>
-                )}
-              </div>
-            </article>
-          );
-        })}
+
+                  <div className="mt-4 flex gap-2">
+                    <Link
+                      to="/pedidos/$id"
+                      params={{ id: pedido.id }}
+                      search={{ from: origen }}
+                      className="rounded-xl border border-border px-3 py-2.5 text-xs font-medium"
+                    >
+                      Ficha
+                    </Link>
+                    {enArea ? (
+                      <button
+                        type="button"
+                        disabled={mover.isPending}
+                        onClick={() =>
+                          mover.mutate({
+                            pedido,
+                            direccion: "avanzar",
+                            usuarioId: sesion?.user.id ?? null,
+                          })
+                        }
+                        className="flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                      >
+                        Avanzar
+                      </button>
+                    ) : (
+                      <span className="flex-1 rounded-xl bg-surface-muted px-3 py-2.5 text-center text-xs font-medium text-muted-foreground">
+                        Esperando llegada
+                      </span>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </Panel>
       </div>
-    </Panel>
+    </>
   );
 }
 
@@ -177,7 +200,7 @@ function clasesEstadoTrabajo(estado: string) {
   return "bg-surface-muted text-muted-foreground";
 }
 
-function ListaTrabajosOperario({
+function ListaTrabajosMovil({
   area,
   pedidos,
   isLoading,
@@ -216,7 +239,7 @@ function ListaTrabajosOperario({
               key={pedido.id}
               type="button"
               onClick={() => onAbrir(pedido.id)}
-              className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold focus-visible:border-gold focus-visible:outline-none"
+              className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold active:border-gold active:bg-surface-muted focus-visible:border-gold focus-visible:outline-none"
               aria-label={`Abrir pedido ${pedido.referencia}`}
             >
               <div className="flex items-start justify-between gap-3">

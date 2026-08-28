@@ -575,7 +575,7 @@ function PedidosPage() {
           </p>
         ) : null}
 
-        <div className="block divide-y divide-border md:hidden">
+        <div className="block divide-y divide-border lg:hidden">
           {lista.map((p) => (
             <article
               key={p.id}
@@ -669,7 +669,7 @@ function PedidosPage() {
           ) : null}
         </div>
 
-        <div className="hidden overflow-x-auto md:block">
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
