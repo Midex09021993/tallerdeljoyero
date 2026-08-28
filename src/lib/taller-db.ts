@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export type Estado =
   | "Diseño 3D"
@@ -547,6 +548,11 @@ export type ConfigArea = {
   alerta_activa: boolean;
 };
 
+export type ConfigSistema = {
+  clave: string;
+  valor: Json;
+};
+
 export function useConfigAreas() {
   return useQuery({
     queryKey: ["config_areas"],
@@ -575,6 +581,36 @@ export function useGuardarConfigArea() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["config_areas"] }),
+  });
+}
+
+export function useConfigSistema(clave: string) {
+  return useQuery({
+    queryKey: ["config_sistema", clave],
+    queryFn: async (): Promise<ConfigSistema | null> => {
+      const { data, error } = await supabase
+        .from("config_sistema")
+        .select("clave, valor")
+        .eq("clave", clave)
+        .maybeSingle();
+      if (error) {
+        const mensaje = (error.message ?? "").toLowerCase();
+        if (error.code === "42P01" || mensaje.includes("config_sistema")) return null;
+        throw error;
+      }
+      return (data as ConfigSistema | null) ?? null;
+    },
+  });
+}
+
+export function useGuardarConfigSistema() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (cfg: ConfigSistema) => {
+      const { error } = await supabase.from("config_sistema").upsert(cfg, { onConflict: "clave" });
+      if (error) throw error;
+    },
+    onSuccess: (_data, cfg) => qc.invalidateQueries({ queryKey: ["config_sistema", cfg.clave] }),
   });
 }
 

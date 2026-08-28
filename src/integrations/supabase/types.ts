@@ -46,6 +46,27 @@ export type Database = {
           },
         ];
       };
+      config_sistema: {
+        Row: {
+          clave: string;
+          created_at: string;
+          updated_at: string;
+          valor: Json;
+        };
+        Insert: {
+          clave: string;
+          created_at?: string;
+          updated_at?: string;
+          valor?: Json;
+        };
+        Update: {
+          clave?: string;
+          created_at?: string;
+          updated_at?: string;
+          valor?: Json;
+        };
+        Relationships: [];
+      };
       gastos: {
         Row: {
           categoria: string;
