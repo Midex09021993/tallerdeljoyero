@@ -75,7 +75,7 @@ function formatearEntero(valor: number) {
 }
 
 function calcularMezcla(volumen: number, partesAgua: number, partesYeso: number) {
-  const ratioAguaSobreYeso = partesAgua / partesYeso;
+  const ratioAguaSobreYeso = partesAgua / 100;
   const yeso = volumen / (volumenPorGramoYeso + ratioAguaSobreYeso);
   const agua = yeso * ratioAguaSobreYeso;
   return { agua, yeso };
