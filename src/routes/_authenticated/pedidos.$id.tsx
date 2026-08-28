@@ -547,12 +547,43 @@ function FichaPedido() {
                       {vista}
                     </p>
                     {img ? (
-                      <img
-                        src={img.url}
-                        alt={`Vista ${vista} del pedido ${pedido.referencia}`}
-                        loading="lazy"
-                        className="aspect-square w-full rounded-xl border border-border object-cover"
-                      />
+                      <div className="overflow-hidden rounded-xl border border-border bg-surface-muted">
+                        <a href={img.url} target="_blank" rel="noreferrer" className="block">
+                          <img
+                            src={img.url}
+                            alt={`Vista ${vista} del pedido ${pedido.referencia}`}
+                            loading="lazy"
+                            className="aspect-square w-full object-cover"
+                          />
+                        </a>
+                        <div className="grid grid-cols-2 border-t border-border text-xs">
+                          <label className="cursor-pointer px-3 py-2 text-center font-medium text-info hover:bg-card">
+                            Reemplazar
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) subir.mutate({ file, tipo: vista });
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`¿Eliminar la vista ${vista}?`)) {
+                                borrarArchivo.mutate(img.id);
+                              }
+                            }}
+                            disabled={borrarArchivo.isPending}
+                            className="border-l border-border px-3 py-2 text-muted-foreground hover:bg-card hover:text-danger disabled:opacity-60"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <label className="grid aspect-square w-full cursor-pointer place-items-center rounded-xl border border-dashed border-border bg-surface-muted text-[10px] text-muted-foreground">
                         Subir
@@ -563,6 +594,7 @@ function FichaPedido() {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) subir.mutate({ file, tipo: vista });
+                            e.target.value = "";
                           }}
                         />
                       </label>
