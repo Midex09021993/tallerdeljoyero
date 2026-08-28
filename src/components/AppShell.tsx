@@ -1,4 +1,16 @@
 import { Link } from "@tanstack/react-router";
+import {
+  Boxes,
+  ClipboardList,
+  Gauge,
+  Hammer,
+  Landmark,
+  LayoutDashboard,
+  LayoutGrid,
+  PackageCheck,
+  Scissors,
+  UserRound,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 
@@ -19,21 +31,22 @@ type Seccion = {
   label: string;
   area?: string;
   roles?: Rol[];
+  icono?: typeof LayoutGrid;
 };
 
 const secciones: Seccion[] = [
-  { to: "/operario", label: "Mi trabajo", roles: ["operario"] },
-  { to: "/pedidos", label: "Pedidos", area: "Pedidos" },
-  { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
-  { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
-  { to: "/casting", label: "Casting", area: "Casting" },
-  { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser" },
-  { to: "/taller", label: "Taller", area: "Taller" },
-  { to: "/ventas", label: "Área ventas", area: "Área ventas" },
-  { to: "/inventario", label: "Inventario", area: "Taller" },
+  { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard },
+  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList },
+  { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid },
+  { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes },
+  { to: "/casting", label: "Casting", area: "Casting", icono: Landmark },
+  { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors },
+  { to: "/taller", label: "Taller", area: "Taller", icono: Hammer },
+  { to: "/ventas", label: "Área ventas", area: "Área ventas", icono: PackageCheck },
+  { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"] },
-  { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"] },
-  { to: "/perfil", label: "Perfil", roles: ["operario"] },
+  { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard },
+  { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound },
 ];
 
 function seccionesVisibles(
@@ -76,6 +89,7 @@ export function AppShell({
   const cerrarSesion = useCerrarSesion();
   const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
+  const usarTarjetasMoviles = Boolean(sesion?.esAdmin);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -140,21 +154,8 @@ export function AppShell({
         </header>
 
         {!ocultarNavegacion ? (
-          <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-2.5 backdrop-blur lg:hidden">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {visibles.map((s) => (
-                <Link
-                  key={s.to}
-                  to={s.to}
-                  className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-                  activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
-                >
-                  {s.label}
-                </Link>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between gap-3 pt-0.5">
+          <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
                 <p className="truncate text-[10px] text-muted-foreground">
@@ -169,6 +170,42 @@ export function AppShell({
                 Cerrar sesión
               </button>
             </div>
+
+            {usarTarjetasMoviles ? (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {visibles.map((s) => {
+                  const Icono = s.icono ?? LayoutGrid;
+                  return (
+                    <Link
+                      key={s.to}
+                      to={s.to}
+                      className="group flex min-h-[64px] items-center gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-sm transition active:scale-[0.98]"
+                      activeProps={{
+                        className: "border-transparent bg-ink text-gold-bright shadow-card",
+                      }}
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-muted text-muted-foreground transition-colors group-[.bg-ink]:bg-gold/15 group-[.bg-ink]:text-gold-bright">
+                        <Icono className="size-4" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 text-sm font-semibold leading-tight">{s.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {visibles.map((s) => (
+                  <Link
+                    key={s.to}
+                    to={s.to}
+                    className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+                    activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </nav>
         ) : null}
 
