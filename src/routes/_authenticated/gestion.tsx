@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -175,6 +175,7 @@ function GestionPage() {
 /* ---------------- Resumen ---------------- */
 
 function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {
+  const navigate = useNavigate();
   const { data: materiales = [] } = useInventario();
   const { data: sedes = [] } = useSedes();
   const { data: gastos = [] } = useGastos();
@@ -222,11 +223,23 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
         <Panel titulo="Pedidos atrasados">
           <ul className="divide-y divide-border">
             {atrasados.slice(0, 8).map((p) => (
-              <li key={p.id} className="flex items-center justify-between px-6 py-3">
-                <span className="text-sm">
-                  {p.referencia} · <span className="text-muted-foreground">{p.cliente}</span>
-                </span>
-                <span className="text-xs text-danger">{fmtFecha(p.fecha_entrega)}</span>
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate({
+                      to: "/pedidos/$id",
+                      params: { id: p.id },
+                      search: { from: "gestion" },
+                    })
+                  }
+                  className="flex w-full items-center justify-between gap-3 px-6 py-3 text-left transition-colors hover:bg-surface-muted/60"
+                >
+                  <span className="text-sm">
+                    {p.referencia} · <span className="text-muted-foreground">{p.cliente}</span>
+                  </span>
+                  <span className="text-xs text-danger">{fmtFecha(p.fecha_entrega)}</span>
+                </button>
               </li>
             ))}
             {atrasados.length === 0 ? (
@@ -260,6 +273,7 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
 /* ---------------- Flujo ---------------- */
 
 function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
+  const navigate = useNavigate();
   const activos = pedidos.filter((p) => !esEntregado(p));
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -269,11 +283,23 @@ function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
           <Panel key={area} titulo={`${area} · ${lista.length}`}>
             <ul className="divide-y divide-border">
               {lista.slice(0, 10).map((p) => (
-                <li key={p.id} className="px-6 py-3">
-                  <p className="text-sm font-medium">{p.referencia}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.cliente} · {Math.round(horasEn(p.area_desde))} h en área
-                  </p>
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate({
+                        to: "/pedidos/$id",
+                        params: { id: p.id },
+                        search: { from: "gestion" },
+                      })
+                    }
+                    className="block w-full px-6 py-3 text-left transition-colors hover:bg-surface-muted/60"
+                  >
+                    <p className="text-sm font-medium">{p.referencia}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.cliente} · {Math.round(horasEn(p.area_desde))} h en área
+                    </p>
+                  </button>
                 </li>
               ))}
               {lista.length === 0 ? (
@@ -290,6 +316,7 @@ function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
 /* ---------------- Entregados ---------------- */
 
 function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
+  const navigate = useNavigate();
   const entregados = pedidos.filter(esEntregado);
   return (
     <Panel titulo={`Trabajos finalizados · ${entregados.length}`}>
@@ -309,7 +336,17 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
           </thead>
           <tbody className="divide-y divide-border">
             {entregados.map((p) => (
-              <tr key={p.id} className="hover:bg-surface-muted/60">
+              <tr
+                key={p.id}
+                onClick={() =>
+                  navigate({
+                    to: "/pedidos/$id",
+                    params: { id: p.id },
+                    search: { from: "gestion" },
+                  })
+                }
+                className="cursor-pointer hover:bg-surface-muted/60"
+              >
                 <td className="px-6 py-3 text-xs font-medium">{p.referencia}</td>
                 <td className="px-6 py-3 text-sm">{p.cliente}</td>
                 <td className="px-6 py-3 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>

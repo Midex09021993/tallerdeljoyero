@@ -57,7 +57,9 @@ export function SeguimientoArea({ area }: { area: string }) {
           <button
             key={p.id}
             type="button"
-            onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+            onClick={() =>
+              navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: area } })
+            }
             className="w-full px-4 py-4 text-left transition-colors active:bg-surface-muted"
           >
             <div className="flex items-start justify-between gap-3">
@@ -105,7 +107,9 @@ export function SeguimientoArea({ area }: { area: string }) {
             {lista.map((p) => (
               <tr
                 key={p.id}
-                onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+                onClick={() =>
+                  navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: area } })
+                }
                 className="cursor-pointer transition-colors hover:bg-surface-muted/70"
               >
                 <td className="px-6 py-4 text-sm font-medium">{p.referencia}</td>

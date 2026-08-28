@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,9 @@ import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search["from"] === "string" ? search["from"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Ficha del pedido — Aurum Lab" },
@@ -32,6 +35,29 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 
 const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
 const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
+
+const regresosFicha = {
+  pedidos: { etiqueta: "Pedidos", ruta: "/pedidos" },
+  "Diseño 3D": { etiqueta: "Diseño 3D", ruta: "/diseno-3d" },
+  "diseno-3d": { etiqueta: "Diseño 3D", ruta: "/diseno-3d" },
+  "Impresión 3D": { etiqueta: "Impresión 3D", ruta: "/impresion-3d" },
+  "impresion-3d": { etiqueta: "Impresión 3D", ruta: "/impresion-3d" },
+  "Corte Láser": { etiqueta: "Corte Láser", ruta: "/corte-laser" },
+  "corte-laser": { etiqueta: "Corte Láser", ruta: "/corte-laser" },
+  Casting: { etiqueta: "Taller", ruta: "/taller" },
+  Taller: { etiqueta: "Taller", ruta: "/taller" },
+  taller: { etiqueta: "Taller", ruta: "/taller" },
+  "Área ventas": { etiqueta: "Área ventas", ruta: "/ventas" },
+  ventas: { etiqueta: "Área ventas", ruta: "/ventas" },
+  gestion: { etiqueta: "Gestión", ruta: "/gestion" },
+} as const;
+
+type RegresoFicha = (typeof regresosFicha)[keyof typeof regresosFicha];
+
+function regresoDesde(origen: string | undefined): RegresoFicha {
+  if (!origen) return regresosFicha.pedidos;
+  return regresosFicha[origen as keyof typeof regresosFicha] ?? regresosFicha.pedidos;
+}
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(false);
@@ -145,6 +171,8 @@ function useArchivos(pedidoId: string) {
 
 function FichaPedido() {
   const { id } = useParams({ from: "/_authenticated/pedidos/$id" });
+  const { from } = Route.useSearch();
+  const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
@@ -156,6 +184,8 @@ function FichaPedido() {
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
   const [grupoDestino, setGrupoDestino] = useState("");
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
+  const regreso = regresoDesde(from);
+  const volver = () => void navigate({ to: regreso.ruta });
 
   const pedido = pedidos.find((p) => p.id === id);
 
@@ -252,9 +282,9 @@ function FichaPedido() {
       <AppShell titulo="Pedido no encontrado">
         <p className="text-sm text-muted-foreground">
           Este pedido no existe o no pertenece a tu sede.{" "}
-          <Link to="/pedidos" className="text-info hover:underline">
-            Volver a pedidos
-          </Link>
+          <button type="button" onClick={volver} className="text-info hover:underline">
+            Volver a {regreso.etiqueta}
+          </button>
         </p>
       </AppShell>
     );
@@ -283,12 +313,13 @@ function FichaPedido() {
       subtitulo={`${pedido.cliente}${pedido.sede_nombre ? ` · ${pedido.sede_nombre}` : ""}`}
     >
       <div className="mb-6">
-        <Link
-          to="/pedidos"
+        <button
+          type="button"
+          onClick={volver}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          ← Volver a pedidos
-        </Link>
+          ← Volver a {regreso.etiqueta}
+        </button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

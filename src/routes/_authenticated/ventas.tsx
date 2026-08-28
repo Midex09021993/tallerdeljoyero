@@ -63,7 +63,8 @@ function VentasPage() {
     (p) => p.area_actual === "Entregado" && ["Enviado", "Entregado"].includes(p.ventas_estado),
   );
 
-  const abrirPedido = (id: string) => navigate({ to: "/pedidos/$id", params: { id } });
+  const abrirPedido = (id: string) =>
+    navigate({ to: "/pedidos/$id", params: { id }, search: { from: "ventas" } });
 
   return (
     <AppShell

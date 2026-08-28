@@ -471,7 +471,9 @@ function PedidosPage() {
           {lista.map((p) => (
             <article
               key={p.id}
-              onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+              onClick={() =>
+                navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: "pedidos" } })
+              }
               className="cursor-pointer px-4 py-4 transition-colors active:bg-surface-muted"
               role="button"
               aria-label={`Abrir ficha del pedido ${p.referencia}`}
@@ -479,7 +481,11 @@ function PedidosPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate({ to: "/pedidos/$id", params: { id: p.id } });
+                  navigate({
+                    to: "/pedidos/$id",
+                    params: { id: p.id },
+                    search: { from: "pedidos" },
+                  });
                 }
               }}
             >
@@ -549,7 +555,13 @@ function PedidosPage() {
               {lista.map((p) => (
                 <tr
                   key={p.id}
-                  onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+                  onClick={() =>
+                    navigate({
+                      to: "/pedidos/$id",
+                      params: { id: p.id },
+                      search: { from: "pedidos" },
+                    })
+                  }
                   className="group cursor-pointer transition-colors hover:bg-surface-muted/80 active:bg-surface-muted"
                   role="button"
                   aria-label={`Abrir ficha del pedido ${p.referencia}`}
@@ -557,7 +569,11 @@ function PedidosPage() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      navigate({ to: "/pedidos/$id", params: { id: p.id } });
+                      navigate({
+                        to: "/pedidos/$id",
+                        params: { id: p.id },
+                        search: { from: "pedidos" },
+                      });
                     }
                   }}
                 >

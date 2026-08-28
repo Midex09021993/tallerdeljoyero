@@ -8,14 +8,17 @@ import { fmtFecha } from "@/lib/utils";
 export function PedidosArea({
   area,
   titulo = "Pedidos del área",
+  from,
 }: {
   area: string;
   titulo?: string;
+  from?: string;
 }) {
   const { data: sesion } = useSesion();
   const mover = useMoverPedido();
   const navigate = useNavigate();
   const { pedidos, isLoading } = usePedidosDeArea(area);
+  const origen = from ?? area;
 
   return (
     <Panel titulo={`${titulo} · ${pedidos.length}`}>
@@ -33,7 +36,13 @@ export function PedidosArea({
             <article key={pedido.id} className="px-4 py-4 sm:px-5">
               <button
                 type="button"
-                onClick={() => void navigate({ to: "/pedidos/$id", params: { id: pedido.id } })}
+                onClick={() =>
+                  void navigate({
+                    to: "/pedidos/$id",
+                    params: { id: pedido.id },
+                    search: { from: origen },
+                  })
+                }
                 className="block w-full text-left"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -98,6 +107,7 @@ export function PedidosArea({
                 <Link
                   to="/pedidos/$id"
                   params={{ id: pedido.id }}
+                  search={{ from: origen }}
                   className="rounded-xl border border-border px-3 py-2.5 text-xs font-medium"
                 >
                   Ficha

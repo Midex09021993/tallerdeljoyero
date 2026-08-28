@@ -192,11 +192,21 @@ function Diseno3D() {
                         key={p.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => void navigate({ to: "/pedidos/$id", params: { id: p.id } })}
+                        onClick={() =>
+                          void navigate({
+                            to: "/pedidos/$id",
+                            params: { id: p.id },
+                            search: { from: "diseno-3d" },
+                          })
+                        }
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
-                            void navigate({ to: "/pedidos/$id", params: { id: p.id } });
+                            void navigate({
+                              to: "/pedidos/$id",
+                              params: { id: p.id },
+                              search: { from: "diseno-3d" },
+                            });
                           }
                         }}
                         className="cursor-pointer border-t border-border transition-colors hover:bg-surface-muted/70 focus-visible:bg-surface-muted/70 focus-visible:outline-none"
@@ -326,6 +336,7 @@ function Diseno3D() {
                     <Link
                       to="/pedidos/$id"
                       params={{ id: a.pedido_id }}
+                      search={{ from: "diseno-3d" }}
                       className="text-muted-foreground hover:underline"
                     >
                       Pedido
@@ -424,6 +435,7 @@ function ColaModelado({
           <Link
             to="/pedidos/$id"
             params={{ id: item.id }}
+            search={{ from: "diseno-3d" }}
             className="block px-5 py-4 transition-colors hover:bg-surface-muted/70 focus-visible:bg-surface-muted/70 focus-visible:outline-none sm:px-6"
             aria-label={`Abrir pedido ${item.referencia}`}
           >
