@@ -192,21 +192,6 @@ function ListaTrabajosOperario({
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Lista de trabajos</h2>
-          <p className="text-sm text-muted-foreground">
-            {pendientes.length} pendiente{pendientes.length === 1 ? "" : "s"}
-          </p>
-        </div>
-        <Link
-          to="/operario"
-          className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-        >
-          Mis áreas
-        </Link>
-      </div>
-
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-card">
           Cargando trabajos...
@@ -283,24 +268,30 @@ function ListaTrabajosOperario({
           );
         })}
       </div>
+
+      {!isLoading && pedidos.length > 0 ? (
+        <p className="px-1 text-xs text-muted-foreground">
+          {pendientes.length} pendiente{pendientes.length === 1 ? "" : "s"} en esta área.
+        </p>
+      ) : null}
     </section>
   );
 }
 
 export function AreaOperario({ area, children }: { area: string; children?: ReactNode }) {
   return (
-    <main className="min-h-screen bg-background px-4 py-5 pb-8 text-foreground sm:px-6">
-      <header className="mb-5">
+    <main className="min-h-screen bg-background px-4 py-4 pb-8 text-foreground sm:px-6">
+      <header className="mb-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-3xl">{area}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Trabajos asignados</p>
+        </div>
         <Link
           to="/operario"
-          className="mb-4 inline-flex rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+          className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
         >
-          ← Mis áreas
+          Mis áreas
         </Link>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Cola de trabajo
-        </p>
-        <h1 className="mt-1 font-display text-3xl">{area}</h1>
       </header>
       <PedidosArea area={area} from={area} variante="operario" />
       {children ? <div className="mt-5">{children}</div> : null}

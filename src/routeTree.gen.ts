@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
@@ -45,6 +46,11 @@ const ClienteRoute = ClienteRouteImport.update({
   id: '/cliente',
   path: '/cliente',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
+  id: '/casting',
+  path: '/casting',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCorteLaserRoute = AuthenticatedCorteLaserRouteImport.update({
   id: '/corte-laser',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
+  '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
+  '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
+  '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cliente'
+    | '/casting'
     | '/corte-laser'
     | '/diseno-3d'
     | '/gestion'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cliente'
+    | '/casting'
     | '/corte-laser'
     | '/diseno-3d'
     | '/gestion'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/cliente'
+    | '/_authenticated/casting'
     | '/_authenticated/corte-laser'
     | '/_authenticated/diseno-3d'
     | '/_authenticated/gestion'
@@ -262,6 +274,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cliente'
       preLoaderRoute: typeof ClienteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/casting': {
+      id: '/_authenticated/casting'
+      path: '/casting'
+      fullPath: '/casting'
+      preLoaderRoute: typeof AuthenticatedCastingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/corte-laser': {
       id: '/_authenticated/corte-laser'
@@ -371,6 +390,7 @@ const AuthenticatedPedidosRouteWithChildren =
   AuthenticatedPedidosRoute._addFileChildren(AuthenticatedPedidosRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
@@ -385,6 +405,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,

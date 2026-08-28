@@ -7,6 +7,7 @@ type Seccion = {
     | "/pedidos"
     | "/diseno-3d"
     | "/impresion-3d"
+    | "/casting"
     | "/corte-laser"
     | "/taller"
     | "/ventas"
@@ -25,6 +26,7 @@ const secciones: Seccion[] = [
   { to: "/pedidos", label: "Pedidos", area: "Pedidos" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
+  { to: "/casting", label: "Casting", area: "Casting" },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser" },
   { to: "/taller", label: "Taller", area: "Taller" },
   { to: "/ventas", label: "Área ventas", area: "Área ventas" },
