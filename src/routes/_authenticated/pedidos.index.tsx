@@ -17,6 +17,8 @@ import {
   usePedidos,
   useSedes,
   esEstadoFinalPedido,
+  estadoClases,
+  estados,
   pedidoEnEvaluacion,
   type PedidoNuevo,
 } from "@/lib/taller-db";
@@ -38,6 +40,16 @@ export const Route = createFileRoute("/_authenticated/pedidos/")({
 });
 
 const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Área ventas");
+const AREAS_SEGUIMIENTO = [
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Taller",
+  "Área ventas",
+] as const;
+const FILTROS_ENTREGA = ["Todas", "Hoy", "Esta semana", "Este mes", "Vencidos"] as const;
+type FiltroEntrega = (typeof FILTROS_ENTREGA)[number];
 
 const hoy = () => new Date().toISOString().slice(0, 10);
 
@@ -72,6 +84,56 @@ function areaClase(area: string) {
     Entregado: "bg-success-soft text-success",
   };
   return mapa[area] ?? "bg-surface-muted";
+}
+
+function etiquetaAreaSeguimiento(area: string) {
+  const normalizada = normalizarArea(area);
+  return areaCoincide(normalizada, "Área ventas") ? "Área de Ventas" : normalizada;
+}
+
+function inicioDia(fecha = new Date()) {
+  const d = new Date(fecha);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function finDia(fecha = new Date()) {
+  const d = new Date(fecha);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+function coincideEntrega(fechaIso: string | null | undefined, filtro: FiltroEntrega) {
+  if (filtro === "Todas") return true;
+  if (!fechaIso) return false;
+
+  const fecha = new Date(`${fechaIso}T00:00:00`);
+  if (Number.isNaN(fecha.getTime())) return false;
+
+  const hoyInicio = inicioDia();
+  const hoyFin = finDia();
+
+  if (filtro === "Hoy") {
+    return fecha >= hoyInicio && fecha <= hoyFin;
+  }
+
+  if (filtro === "Vencidos") {
+    return fecha < hoyInicio;
+  }
+
+  if (filtro === "Esta semana") {
+    const finSemana = finDia();
+    finSemana.setDate(hoyInicio.getDate() + 6);
+    return fecha >= hoyInicio && fecha <= finSemana;
+  }
+
+  if (filtro === "Este mes") {
+    return (
+      fecha.getFullYear() === hoyInicio.getFullYear() && fecha.getMonth() === hoyInicio.getMonth()
+    );
+  }
+
+  return true;
 }
 
 /** Prefijo de referencia: dos primeras iniciales del taller (sede). */
@@ -168,7 +230,9 @@ function PedidosPage() {
   const [form, setForm] = useState(vacio);
   const [ruta, setRuta] = useState<string[]>([]);
   const [sedeId, setSedeId] = useState<string>("");
-  const [filtro, setFiltro] = useState("Todas");
+  const [filtroArea, setFiltroArea] = useState("Todas");
+  const [filtroEstado, setFiltroEstado] = useState("Todas");
+  const [filtroEntrega, setFiltroEntrega] = useState<FiltroEntrega>("Todas");
   const [busca, setBusca] = useState("");
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
 
@@ -186,18 +250,27 @@ function PedidosPage() {
   const lista = useMemo(
     () =>
       pedidosPorSede.filter((p) => {
-        const okArea = filtro === "Todas" || areaCoincide(p.area_actual, filtro);
+        const okArea = filtroArea === "Todas" || areaCoincide(p.area_actual, filtroArea);
+        const okEstado = filtroEstado === "Todas" || p.estado === filtroEstado;
+        const okEntrega = coincideEntrega(p.fecha_entrega ?? p.entrega, filtroEntrega);
         const t = busca.trim().toLowerCase();
         const okTexto =
           !t ||
-          [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
-            (v ?? "").toLowerCase().includes(t),
-          );
+          [
+            p.referencia,
+            p.cliente,
+            p.contrato,
+            p.origen,
+            p.trabajo,
+            p.pieza,
+            p.estado,
+            p.area_actual,
+          ].some((v) => (v ?? "").toLowerCase().includes(t));
         const okOperario =
           !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
-        return okArea && okTexto && okOperario;
+        return okArea && okEstado && okEntrega && okTexto && okOperario;
       }),
-    [pedidosPorSede, filtro, busca, soloSusAreas, misAreas],
+    [pedidosPorSede, filtroArea, filtroEstado, filtroEntrega, busca, soloSusAreas, misAreas],
   );
 
   const activos = pedidosPorSede.filter((p) => !esEstadoFinalPedido(p.estado));
@@ -443,7 +516,7 @@ function PedidosPage() {
           </form>
         ) : null}
 
-        <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:px-6">
+        <div className="border-b border-border px-4 py-3 sm:px-6">
           <input
             placeholder={
               soloSusAreas
@@ -452,17 +525,48 @@ function PedidosPage() {
             }
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-3 text-base outline-none focus:ring-1 focus:ring-gold sm:min-w-[220px] sm:py-1.5 sm:text-xs"
+            className="w-full min-w-0 rounded-lg border border-border bg-card px-3 py-3 text-base outline-none focus:ring-1 focus:ring-gold sm:py-2 sm:text-sm"
           />
-          <select
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="rounded-lg border border-border bg-card px-3 py-3 text-base sm:py-1.5 sm:text-xs"
-          >
-            {["Todas", ...(soloSusAreas ? misAreas : AREAS)].map((a) => (
-              <option key={a}>{a}</option>
-            ))}
-          </select>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Estado
+              <select
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+              >
+                {["Todas", ...estados].map((estado) => (
+                  <option key={estado}>{estado}</option>
+                ))}
+              </select>
+            </label>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Área actual
+              <select
+                value={filtroArea}
+                onChange={(e) => setFiltroArea(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+              >
+                {["Todas", ...(soloSusAreas ? misAreas : AREAS_SEGUIMIENTO)].map((area) => (
+                  <option key={area} value={area}>
+                    {area === "Todas" ? "Todas" : etiquetaAreaSeguimiento(area)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Entrega
+              <select
+                value={filtroEntrega}
+                onChange={(e) => setFiltroEntrega(e.target.value as FiltroEntrega)}
+                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+              >
+                {FILTROS_ENTREGA.map((entrega) => (
+                  <option key={entrega}>{entrega}</option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
         {soloSusAreas && !busca.trim() ? (
           <p className="px-6 pt-3 text-[11px] text-muted-foreground">
@@ -505,9 +609,16 @@ function PedidosPage() {
                 <span
                   className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
                 >
-                  {p.area_actual}
+                  {etiquetaAreaSeguimiento(p.area_actual)}
                 </span>
               </div>
+              <span
+                className={`mt-2 inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
+                  estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"
+                }`}
+              >
+                {p.estado}
+              </span>
               <p className="mt-2 truncate text-sm font-medium">{p.cliente}</p>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                 {p.trabajo || p.pieza}
@@ -561,16 +672,18 @@ function PedidosPage() {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Ref", "Cliente", "Trabajo", "Área actual", "Entrega", ""].map((h, i) => (
-                  <th
-                    key={h || i}
-                    className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
-                      i >= 4 ? "text-right" : ""
-                    }`}
-                  >
-                    {h}
-                  </th>
-                ))}
+                {["Ref", "Cliente", "Trabajo", "Estado", "Área actual", "Entrega", ""].map(
+                  (h, i) => (
+                    <th
+                      key={h || i}
+                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
+                        i >= 5 ? "text-right" : ""
+                      }`}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -621,6 +734,15 @@ function PedidosPage() {
                     {p.trabajo || p.pieza}
                   </td>
                   <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
+                        estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"
+                      }`}
+                    >
+                      {p.estado}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
                     <div
                       className="flex flex-col gap-1.5"
                       onClick={(e) => e.stopPropagation()}
@@ -629,7 +751,7 @@ function PedidosPage() {
                       <span
                         className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
                       >
-                        {p.area_actual}
+                        {etiquetaAreaSeguimiento(p.area_actual)}
                       </span>
                       <select
                         value=""
@@ -701,7 +823,7 @@ function PedidosPage() {
               ))}
               {!isLoading && lista.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
                     No hay pedidos que coincidan.
                   </td>
                 </tr>
