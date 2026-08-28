@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useMemo } from "react";
 import { areaCoincide, areaRuta, normalizarArea, useCerrarSesion, useSesion } from "@/lib/auth";
-import { usePedidos, type Pedido } from "@/lib/taller-db";
+import { pedidoEnEvaluacion, usePedidos, type Pedido } from "@/lib/taller-db";
 import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 
 export const Route = createFileRoute("/_authenticated/operario")({
@@ -70,6 +70,7 @@ function OperarioPage() {
           (pedido) =>
             pedido.estado !== "Entregado" &&
             pedido.estado !== "Cancelado" &&
+            !pedidoEnEvaluacion(pedido.estado) &&
             pedidoAsignadoAArea(pedido, area),
         );
         const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));

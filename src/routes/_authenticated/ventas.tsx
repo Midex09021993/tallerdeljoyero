@@ -66,7 +66,9 @@ function VentasPage() {
 
   const pendientesEntrega = filtrados.filter((p) => {
     const estado = estadoVenta(p);
-    return p.area_actual === "Área ventas" && ["En Ventas", "Listo para Entrega"].includes(estado);
+    return (
+      p.area_actual === "Área ventas" && ["Área de Ventas", "Listo para Entrega"].includes(estado)
+    );
   });
   const enviados = filtrados.filter((p) => estadoVenta(p) === "Enviado");
   const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
@@ -269,7 +271,7 @@ function estadoVenta(pedido: Pedido) {
     return pedido.ventas_estado;
   }
   if (esEstadoFinalPedido(pedido.estado)) return pedido.estado;
-  return "En Ventas";
+  return "Área de Ventas";
 }
 
 function SeccionVentas({

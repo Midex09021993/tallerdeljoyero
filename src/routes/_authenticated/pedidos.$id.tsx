@@ -4,7 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
-import { estadoClases, useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
+import {
+  estadoClases,
+  pedidoEnEvaluacion,
+  useActualizarPedido,
+  useAutorizarProduccion,
+  useEnviarAArea,
+  usePedidos,
+} from "@/lib/taller-db";
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
@@ -93,7 +100,7 @@ function mostrarEstadoVentas(pedido: { estado: string; ventas_estado: string }) 
   if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
-  if (pedido.estado === "En Ventas") return "En Ventas";
+  if (pedido.estado === "Área de Ventas" || pedido.estado === "En Ventas") return "Área de Ventas";
   return "Pendiente";
 }
 
@@ -188,6 +195,7 @@ function FichaPedido() {
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
   const actualizar = useActualizarPedido();
+  const autorizar = useAutorizarProduccion();
   const enviar = useEnviarAArea();
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
@@ -322,6 +330,8 @@ function FichaPedido() {
   const puedeMover =
     Boolean(sesion?.esAdmin) ||
     (sesion?.areas ?? []).some((area) => areaCoincide(area, pedido.area_actual));
+  const requiereAutorizacion = pedidoEnEvaluacion(pedido.estado);
+  const puedeAutorizar = Boolean(sesion?.esAdmin) && requiereAutorizacion;
 
   return (
     <AppShell
@@ -373,6 +383,29 @@ function FichaPedido() {
             </div>
 
             <div className="border-t border-border px-6 py-5">
+              {puedeAutorizar ? (
+                <div className="mb-4 rounded-xl border border-warning/20 bg-warning-soft p-4">
+                  <p className="text-sm font-semibold text-warning">
+                    Pedido pendiente de autorización
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    No aparecerá en las colas de producción hasta iniciar el trabajo.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={autorizar.isPending || rutaPedido.length === 0}
+                    onClick={() =>
+                      autorizar.mutate({
+                        pedido,
+                        usuarioId: sesion?.user.id ?? null,
+                      })
+                    }
+                    className="mt-3 w-full rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
+                  >
+                    {autorizar.isPending ? "Autorizando..." : "Autorizar Producción"}
+                  </button>
+                </div>
+              ) : null}
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Mover a área
                 <select
@@ -382,7 +415,7 @@ function FichaPedido() {
                     if (destino)
                       enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
                   }}
-                  disabled={enviar.isPending || !puedeMover}
+                  disabled={enviar.isPending || !puedeMover || requiereAutorizacion}
                   className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
                 >
                   <option value="" disabled>

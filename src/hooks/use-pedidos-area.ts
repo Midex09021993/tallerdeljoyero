@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
-import { esEstadoFinalPedido, usePedidos, type Pedido } from "@/lib/taller-db";
+import { esEstadoFinalPedido, pedidoEnEvaluacion, usePedidos, type Pedido } from "@/lib/taller-db";
 
 export function pedidoAsignadoAArea(pedido: Pedido, area: string) {
   const ruta = Array.isArray(pedido.ruta) ? pedido.ruta : [];
@@ -28,6 +28,8 @@ export function usePedidosDeArea(area: string) {
 
     return filtrarPedidos(pedidos)
       .filter((pedido) => !esEstadoFinalPedido(pedido.estado))
+      .filter((pedido) => !pedidoEnEvaluacion(pedido.estado))
+      .filter((pedido) => pedido.estado === "En Producción")
       .filter((pedido) => pedidoAsignadoAArea(pedido, area))
       .sort((a, b) => {
         const aEnArea = pedidoEnAreaActual(a, area) ? 0 : 1;

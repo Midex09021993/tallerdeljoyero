@@ -59,7 +59,13 @@ function estadoCliente(pedido: Seguimiento) {
   if (estado === "Cancelado") return "Cancelado";
   if (["Listo para Entrega", "Enviado", "Entregado"].includes(estado)) return estado;
   if (["Listo para Entrega", "Enviado", "Entregado"].includes(ventas)) return ventas;
-  if (estado === "En Ventas" || pedido.area_actual === "Área ventas") return "Área de Ventas";
+  if (
+    estado === "Área de Ventas" ||
+    estado === "En Ventas" ||
+    pedido.area_actual === "Área ventas"
+  ) {
+    return "Área de Ventas";
+  }
   if (estado === "En Producción") return "En Producción";
   if (estado === "Evaluación") return "Evaluación";
   return "Recibido";

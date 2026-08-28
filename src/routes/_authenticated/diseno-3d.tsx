@@ -9,7 +9,13 @@ import { VisorIframe } from "@/components/VisorIframe";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { areaCoincide, useSesion } from "@/lib/auth";
-import { useArchivosPedidos, usePedidos, type ArchivoPedido, type Pedido } from "@/lib/taller-db";
+import {
+  pedidoEnEvaluacion,
+  useArchivosPedidos,
+  usePedidos,
+  type ArchivoPedido,
+  type Pedido,
+} from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/diseno-3d")({
   head: () => ({
@@ -73,6 +79,8 @@ function Diseno3DCompleto() {
   const cola = useMemo(() => {
     return pedidosFiltrados
       .filter((p) => areaCoincide(p.area_actual, "Diseño 3D"))
+      .filter((p) => !pedidoEnEvaluacion(p.estado))
+      .filter((p) => p.estado === "En Producción")
       .filter((p) => !(archivosPorPedido.get(p.id) ?? []).some(esModelo));
   }, [pedidosFiltrados, archivosPorPedido]);
 

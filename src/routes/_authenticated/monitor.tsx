@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AREAS, areaCoincide } from "@/lib/auth";
-import { esEstadoFinalPedido, usePedidos } from "@/lib/taller-db";
+import { esEstadoFinalPedido, pedidoEnEvaluacion, usePedidos } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/monitor")({
@@ -52,7 +52,10 @@ function MonitorPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {AREAS.map((area) => {
           const lista = pedidosPorSede.filter(
-            (p) => !esEstadoFinalPedido(p.estado) && areaCoincide(p.area_actual, area),
+            (p) =>
+              !esEstadoFinalPedido(p.estado) &&
+              !pedidoEnEvaluacion(p.estado) &&
+              areaCoincide(p.area_actual, area),
           );
           const activa = abierta === area;
           return (

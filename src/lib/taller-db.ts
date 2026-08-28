@@ -7,7 +7,7 @@ export type Estado =
   | "Recibido"
   | "Evaluación"
   | "En Producción"
-  | "En Ventas"
+  | "Área de Ventas"
   | "Listo para Entrega"
   | "Enviado"
   | "Entregado"
@@ -17,7 +17,7 @@ export const estados: Estado[] = [
   "Recibido",
   "Evaluación",
   "En Producción",
-  "En Ventas",
+  "Área de Ventas",
   "Listo para Entrega",
   "Enviado",
   "Entregado",
@@ -28,7 +28,7 @@ export const estadoClases: Record<string, string> = {
   Recibido: "bg-surface-muted text-muted-foreground",
   Evaluación: "bg-info-soft text-info",
   "En Producción": "bg-warning-soft text-warning",
-  "En Ventas": "bg-success-soft text-success",
+  "Área de Ventas": "bg-success-soft text-success",
   "Listo para Entrega": "bg-accent text-foreground",
   Enviado: "bg-info-soft text-info",
   Entregado: "bg-success-soft text-success",
@@ -60,6 +60,10 @@ export function esEstadoFinalPedido(valor: string | null | undefined) {
   return valor === "Entregado" || valor === "Cancelado";
 }
 
+export function pedidoEnEvaluacion(valor: string | null | undefined) {
+  return valor === "Recibido" || valor === "Evaluación";
+}
+
 export function normalizarEstadoPedido(
   estado: string | null | undefined,
   areaActual: string | null | undefined,
@@ -67,11 +71,13 @@ export function normalizarEstadoPedido(
   if (esEstadoPedido(estado)) return estado;
   const area = normalizarArea(areaActual || estado || "");
   if (estado === "Espera material") return "Evaluación";
-  if (estado === "En packing" || estado === "Recibido en ventas") return "En Ventas";
+  if (estado === "En Ventas" || estado === "En packing" || estado === "Recibido en ventas") {
+    return "Área de Ventas";
+  }
   if (estado === "Despachado") return "Enviado";
   if (estado === "Terminado") return "Entregado";
   if (area === "Pedidos") return "Recibido";
-  if (area === "Área ventas") return "En Ventas";
+  if (area === "Área ventas") return "Área de Ventas";
   if (estadosObsoletosPorArea.has(estado ?? "")) return "En Producción";
   return "Recibido";
 }
@@ -83,7 +89,7 @@ function areaOperativa(area: string | null | undefined) {
 function estadoPorDestino(destino: string, direccion: "avanzar" | "devolver" | "enviar"): Estado {
   const area = areaOperativa(destino);
   if (area === "Pedidos") return direccion === "devolver" ? "Evaluación" : "Recibido";
-  if (area === "Área ventas") return "En Ventas";
+  if (area === "Área ventas") return "Área de Ventas";
   return "En Producción";
 }
 
@@ -93,6 +99,12 @@ function secuenciaPedido(pedido: Pedido) {
     .filter((area) => area !== "Pedidos" && area !== "Área ventas");
   const unicas = [...new Set(ruta)];
   return ["Pedidos", ...unicas, "Área ventas"];
+}
+
+function primeraAreaProduccion(pedido: Pick<Pedido, "ruta">) {
+  return (Array.isArray(pedido.ruta) ? pedido.ruta : [])
+    .map(areaOperativa)
+    .find((area) => area !== "Pedidos" && area !== "Área ventas");
 }
 
 export type Pedido = {
@@ -365,6 +377,37 @@ export function useMoverPedido() {
         area_origen: areaActual,
         area_destino: destino,
         accion: direccion,
+        usuario_id: usuarioId,
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+  });
+}
+
+/** Autoriza el pedido para entrar a producción y lo ubica en la primera área de su ruta. */
+export function useAutorizarProduccion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ pedido, usuarioId }: { pedido: Pedido; usuarioId: string | null }) => {
+      const destino = primeraAreaProduccion(pedido);
+      if (!destino) throw new Error("El pedido no tiene áreas productivas asignadas.");
+
+      const areaActual = areaOperativa(pedido.area_actual);
+      const { error } = await supabase
+        .from("pedidos")
+        .update({
+          area_actual: destino,
+          estado: "En Producción",
+          area_desde: new Date().toISOString(),
+        })
+        .eq("id", pedido.id);
+      if (error) throw error;
+
+      await supabase.from("pedido_movimientos").insert({
+        pedido_id: pedido.id,
+        area_origen: areaActual,
+        area_destino: destino,
+        accion: "autorizar_produccion",
         usuario_id: usuarioId,
       });
     },

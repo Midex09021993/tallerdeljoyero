@@ -11,11 +11,13 @@ import { fmtFecha } from "@/lib/utils";
 import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import {
   useBorrarPedido,
+  useAutorizarProduccion,
   useCrearPedido,
   useEnviarAArea,
   usePedidos,
   useSedes,
   esEstadoFinalPedido,
+  pedidoEnEvaluacion,
   type PedidoNuevo,
 } from "@/lib/taller-db";
 
@@ -160,6 +162,7 @@ function PedidosPage() {
   const crear = useCrearPedido();
   const borrar = useBorrarPedido();
   const enviar = useEnviarAArea();
+  const autorizar = useAutorizarProduccion();
 
   const [abierto, setAbierto] = useState(false);
   const [form, setForm] = useState(vacio);
@@ -518,16 +521,34 @@ function PedidosPage() {
                 </span>
               </div>
               {puedeCrear ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPorBorrar({ id: p.id, referencia: p.referencia });
-                  }}
-                  className="mt-3 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground"
-                >
-                  Borrar
-                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {pedidoEnEvaluacion(p.estado) ? (
+                    <button
+                      type="button"
+                      disabled={autorizar.isPending || p.ruta.length === 0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        autorizar.mutate({
+                          pedido: p,
+                          usuarioId: sesion?.user.id ?? null,
+                        });
+                      }}
+                      className="rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                    >
+                      Autorizar Producción
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPorBorrar({ id: p.id, referencia: p.referencia });
+                    }}
+                    className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground"
+                  >
+                    Borrar
+                  </button>
+                </div>
               ) : null}
             </article>
           ))}
@@ -621,7 +642,7 @@ function PedidosPage() {
                               usuarioId: sesion?.user.id ?? null,
                             });
                         }}
-                        disabled={enviar.isPending}
+                        disabled={enviar.isPending || pedidoEnEvaluacion(p.estado)}
                         className="w-fit rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground disabled:opacity-40"
                       >
                         <option value="" disabled>
@@ -647,6 +668,21 @@ function PedidosPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
+                      {puedeCrear && pedidoEnEvaluacion(p.estado) ? (
+                        <button
+                          type="button"
+                          disabled={autorizar.isPending || p.ruta.length === 0}
+                          onClick={() =>
+                            autorizar.mutate({
+                              pedido: p,
+                              usuarioId: sesion?.user.id ?? null,
+                            })
+                          }
+                          className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                        >
+                          Autorizar Producción
+                        </button>
+                      ) : null}
                       <span className="text-xs font-medium text-info opacity-0 transition-opacity group-hover:opacity-100">
                         Abrir ficha →
                       </span>
