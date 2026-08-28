@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -80,13 +81,19 @@ export type Sesion = {
 export function useSesion() {
   return useQuery({
     queryKey: ["sesion"],
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    retry: 1,
 
     queryFn: async (): Promise<Sesion | null> => {
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.warn("[auth] Error al leer sesión persistida", sessionError.message);
+      }
+
+      const user = sessionData.session?.user;
       if (!user) return null;
 
       const [{ data: perfil }, { data: roles }, { data: areas }] = await Promise.all([
@@ -159,4 +166,25 @@ export function useCerrarSesion() {
     qc.clear();
     window.location.href = "/auth";
   };
+}
+
+export function useSincronizarSesion() {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        qc.clear();
+        return;
+      }
+
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        void qc.invalidateQueries({ queryKey: ["sesion"] });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [qc]);
 }
