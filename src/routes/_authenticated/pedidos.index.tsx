@@ -582,7 +582,7 @@ function PedidosPage() {
               onClick={() =>
                 navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: "pedidos" } })
               }
-              className="cursor-pointer px-4 py-4 transition-colors active:bg-surface-muted"
+              className="group cursor-pointer px-4 py-4 transition-colors hover:bg-surface-muted/70 active:bg-surface-muted"
               role="button"
               aria-label={`Abrir ficha del pedido ${p.referencia}`}
               tabIndex={0}
@@ -655,9 +655,10 @@ function PedidosPage() {
                       e.stopPropagation();
                       setPorBorrar({ id: p.id, referencia: p.referencia });
                     }}
-                    className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground"
+                    className="ml-auto rounded-lg border border-danger/30 px-3 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10"
+                    aria-label={`Eliminar pedido ${p.referencia}`}
                   >
-                    Borrar
+                    Eliminar
                   </button>
                 </div>
               ) : null}
@@ -672,7 +673,7 @@ function PedidosPage() {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Ref", "Cliente", "Trabajo", "Estado", "Área actual", "Entrega", ""].map(
+                {["Ref", "Cliente", "Trabajo", "Estado", "Área actual", "Entrega", "Acciones"].map(
                   (h, i) => (
                     <th
                       key={h || i}
@@ -700,6 +701,7 @@ function PedidosPage() {
                   className="group cursor-pointer transition-colors hover:bg-surface-muted/80 active:bg-surface-muted"
                   role="button"
                   aria-label={`Abrir ficha del pedido ${p.referencia}`}
+                  title={`Abrir ficha del pedido ${p.referencia}`}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -805,16 +807,14 @@ function PedidosPage() {
                           Autorizar Producción
                         </button>
                       ) : null}
-                      <span className="text-xs font-medium text-info opacity-0 transition-opacity group-hover:opacity-100">
-                        Abrir ficha →
-                      </span>
                       {puedeCrear ? (
                         <button
                           type="button"
                           onClick={() => setPorBorrar({ id: p.id, referencia: p.referencia })}
-                          className="text-xs text-muted-foreground transition-colors hover:text-danger"
+                          className="rounded-md border border-danger/25 px-2.5 py-1.5 text-xs font-medium text-danger opacity-80 transition-colors hover:bg-danger/10 hover:opacity-100"
+                          aria-label={`Eliminar pedido ${p.referencia}`}
                         >
-                          Borrar
+                          Eliminar
                         </button>
                       ) : null}
                     </div>
