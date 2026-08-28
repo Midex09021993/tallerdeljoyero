@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FechaInput } from "@/components/FechaInput";
+import { supabase } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
 import {
   estadoClases,
@@ -19,7 +20,10 @@ import {
   usePedidos,
   useSedes,
   useUsuarios,
+  type Gasto,
+  type Material,
   type Pedido,
+  type Sede,
   type Usuario,
 } from "@/lib/taller-db";
 import { AREAS, correoDesdeUsuario, rolEtiqueta, useSesion, type Rol } from "@/lib/auth";
@@ -43,11 +47,23 @@ export const Route = createFileRoute("/_authenticated/gestion")({
   component: GestionPage,
 });
 
-const eur = new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN", maximumFractionDigits: 0 });
+const eur = new Intl.NumberFormat("es-PE", {
+  style: "currency",
+  currency: "PEN",
+  maximumFractionDigits: 0,
+});
 const inputCls =
   "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
 
-type Modulo = "resumen" | "flujo" | "entregados" | "finanzas" | "automatizacion" | "usuarios" | "sedes";
+type Modulo =
+  | "resumen"
+  | "flujo"
+  | "entregados"
+  | "finanzas"
+  | "respaldo"
+  | "automatizacion"
+  | "usuarios"
+  | "sedes";
 
 function esEntregado(p: Pedido) {
   return p.area_actual === "Entregado" || p.estado === "Entregado";
@@ -75,13 +91,17 @@ function GestionPage() {
     { id: "flujo", label: "Flujo", visible: true },
     { id: "entregados", label: "Entregados", visible: true },
     { id: "finanzas", label: "Finanzas", visible: true },
+    { id: "respaldo", label: "Respaldo", visible: puedeUsuarios },
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
     { id: "sedes", label: "Sedes", visible: esDueno },
   ];
 
   return (
-    <AppShell titulo="Gestión" subtitulo={isLoading ? "Cargando…" : "Zona administrativa del taller"}>
+    <AppShell
+      titulo="Gestión"
+      subtitulo={isLoading ? "Cargando…" : "Zona administrativa del taller"}
+    >
       <div className="flex flex-wrap gap-2">
         {modulos
           .filter((m) => m.visible)
@@ -104,7 +124,12 @@ function GestionPage() {
       {modulo === "resumen" ? <ModuloResumen pedidos={pedidos} /> : null}
       {modulo === "flujo" ? <ModuloFlujo pedidos={pedidos} /> : null}
       {modulo === "entregados" ? <ModuloEntregados pedidos={pedidos} /> : null}
-      {modulo === "finanzas" ? <ModuloFinanzas pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} /> : null}
+      {modulo === "finanzas" ? (
+        <ModuloFinanzas pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} />
+      ) : null}
+      {modulo === "respaldo" && puedeUsuarios ? (
+        <ModuloRespaldo esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
+      ) : null}
       {modulo === "automatizacion" && puedeUsuarios ? (
         <ModuloAutomatizacion pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} />
       ) : null}
@@ -126,7 +151,9 @@ function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
   const activos = pedidos.filter((p) => !esEntregado(p));
   const hoy = new Date().toISOString().slice(0, 10);
   const atrasados = activos.filter((p) => p.fecha_entrega && p.fecha_entrega < hoy);
-  const entregadosMes = pedidos.filter((p) => esEntregado(p) && delMes(p.fecha_entrega ?? p.fecha_ingreso));
+  const entregadosMes = pedidos.filter(
+    (p) => esEntregado(p) && delMes(p.fecha_entrega ?? p.fecha_ingreso),
+  );
   const ingresosMes = entregadosMes.reduce((a, p) => a + p.importe, 0);
   const gastosMes = gastos.filter((g) => delMes(g.fecha)).reduce((a, g) => a + g.importe, 0);
   const stockBajo = materiales.filter((m) => m.stock <= m.minimo);
@@ -135,10 +162,22 @@ function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard etiqueta="Pedidos activos" valor={String(activos.length)} />
-        <StatCard etiqueta="Atrasados" valor={String(atrasados.length)} tono={atrasados.length ? "negativo" : "neutro"} />
-        <StatCard etiqueta="Entregados del mes" valor={String(entregadosMes.length)} tono="positivo" />
+        <StatCard
+          etiqueta="Atrasados"
+          valor={String(atrasados.length)}
+          tono={atrasados.length ? "negativo" : "neutro"}
+        />
+        <StatCard
+          etiqueta="Entregados del mes"
+          valor={String(entregadosMes.length)}
+          tono="positivo"
+        />
         <StatCard etiqueta="Ingresos del mes" valor={eur.format(ingresosMes)} tono="positivo" />
-        <StatCard etiqueta="Stock bajo" valor={String(stockBajo.length)} tono={stockBajo.length ? "negativo" : "neutro"} />
+        <StatCard
+          etiqueta="Stock bajo"
+          valor={String(stockBajo.length)}
+          tono={stockBajo.length ? "negativo" : "neutro"}
+        />
         <StatCard etiqueta="Sedes activas" valor={String(sedes.filter((s) => s.activa).length)} />
       </div>
 
@@ -174,7 +213,9 @@ function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
           </ul>
         </Panel>
       </div>
-      <p className="text-xs text-muted-foreground">Gastos registrados este mes: {eur.format(gastosMes)}</p>
+      <p className="text-xs text-muted-foreground">
+        Gastos registrados este mes: {eur.format(gastosMes)}
+      </p>
     </div>
   );
 }
@@ -198,7 +239,9 @@ function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
                   </p>
                 </li>
               ))}
-              {lista.length === 0 ? <li className="px-6 py-5 text-xs text-muted-foreground">Vacío</li> : null}
+              {lista.length === 0 ? (
+                <li className="px-6 py-5 text-xs text-muted-foreground">Vacío</li>
+              ) : null}
             </ul>
           </Panel>
         );
@@ -233,8 +276,12 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
                 <td className="px-6 py-3 text-xs font-medium">{p.referencia}</td>
                 <td className="px-6 py-3 text-sm">{p.cliente}</td>
                 <td className="px-6 py-3 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
-                <td className="px-6 py-3 text-xs text-muted-foreground">{fmtFecha(p.fecha_entrega) ?? "—"}</td>
-                <td className="px-6 py-3 text-right text-sm tabular-nums">{eur.format(p.importe)}</td>
+                <td className="px-6 py-3 text-xs text-muted-foreground">
+                  {fmtFecha(p.fecha_entrega) ?? "—"}
+                </td>
+                <td className="px-6 py-3 text-right text-sm tabular-nums">
+                  {eur.format(p.importe)}
+                </td>
               </tr>
             ))}
             {entregados.length === 0 ? (
@@ -276,7 +323,11 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard etiqueta="Ingresos (entregados)" valor={eur.format(ingresos)} tono="positivo" />
         <StatCard etiqueta="Gastos" valor={eur.format(totalGastos)} tono="negativo" />
-        <StatCard etiqueta="Margen estimado" valor={eur.format(margen)} tono={margen >= 0 ? "positivo" : "negativo"} />
+        <StatCard
+          etiqueta="Margen estimado"
+          valor={eur.format(margen)}
+          tono={margen >= 0 ? "positivo" : "negativo"}
+        />
         <StatCard etiqueta="Cartera total" valor={eur.format(cartera)} />
       </div>
 
@@ -409,9 +460,428 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
   );
 }
 
+/* ---------------- Respaldo ---------------- */
+
+const COLUMNAS_PEDIDOS = [
+  "id",
+  "referencia",
+  "cliente",
+  "telefono",
+  "origen",
+  "contrato",
+  "trabajo",
+  "pieza",
+  "material",
+  "peso_estimado",
+  "talla",
+  "cantidad_piezas",
+  "piedras",
+  "notas",
+  "importe",
+  "fecha_ingreso",
+  "fecha_entrega",
+  "entrega",
+  "estado",
+  "area_actual",
+  "area_desde",
+  "ruta",
+  "sede_id",
+  "sede_nombre",
+  "ventas_estado",
+  "packing_estado",
+  "medio_envio",
+  "guia_envio",
+  "fecha_envio",
+  "receptor_envio",
+  "notas_ventas",
+] as const;
+
+const COLUMNAS_INVENTARIO = [
+  "id",
+  "material",
+  "categoria",
+  "stock",
+  "unidad",
+  "minimo",
+  "sede_id",
+  "areas",
+] as const;
+
+const COLUMNAS_GASTOS = ["id", "concepto", "categoria", "importe", "fecha", "sede_id"] as const;
+const COLUMNAS_SEDES = ["id", "nombre", "ciudad", "modo", "activa"] as const;
+const COLUMNAS_USUARIOS = [
+  "id",
+  "nombre",
+  "dni",
+  "telefono",
+  "sede_id",
+  "activo",
+  "acceso_desde",
+  "acceso_hasta",
+  "roles",
+  "areas",
+] as const;
+
+type CsvRegistro = Record<string, string>;
+
+function valorCsv(valor: unknown) {
+  if (Array.isArray(valor)) return valor.join("|");
+  if (valor == null) return "";
+  return String(valor);
+}
+
+function generarCsv<T extends Record<string, unknown>>(columnas: readonly string[], filas: T[]) {
+  const escapar = (valor: unknown) => {
+    const texto = valorCsv(valor);
+    return /[;"\n\r]/.test(texto) ? `"${texto.replaceAll('"', '""')}"` : texto;
+  };
+  return [
+    columnas.join(";"),
+    ...filas.map((fila) => columnas.map((col) => escapar(fila[col])).join(";")),
+  ].join("\n");
+}
+
+function descargarCsv(nombre: string, contenido: string) {
+  const blob = new Blob([`\uFEFF${contenido}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = nombre;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function detectarSeparador(cabecera: string) {
+  return cabecera.includes(";") ? ";" : ",";
+}
+
+function dividirLineaCsv(linea: string, separador: string) {
+  const celdas: string[] = [];
+  let actual = "";
+  let enComillas = false;
+  for (let i = 0; i < linea.length; i += 1) {
+    const char = linea[i];
+    const siguiente = linea[i + 1];
+    if (char === '"' && enComillas && siguiente === '"') {
+      actual += '"';
+      i += 1;
+    } else if (char === '"') {
+      enComillas = !enComillas;
+    } else if (char === separador && !enComillas) {
+      celdas.push(actual);
+      actual = "";
+    } else {
+      actual += char;
+    }
+  }
+  celdas.push(actual);
+  return celdas;
+}
+
+function leerCsv(texto: string): CsvRegistro[] {
+  const limpio = texto.replace(/^\uFEFF/, "").trim();
+  if (!limpio) return [];
+  const lineas = limpio.split(/\r?\n/).filter(Boolean);
+  const separador = detectarSeparador(lineas[0] ?? "");
+  const columnas = dividirLineaCsv(lineas[0] ?? "", separador).map((c) => c.trim());
+  return lineas.slice(1).map((linea) => {
+    const valores = dividirLineaCsv(linea, separador);
+    return Object.fromEntries(columnas.map((col, i) => [col, valores[i] ?? ""]));
+  });
+}
+
+function listaDesdeCsv(valor: string) {
+  return valor
+    .split("|")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function nuloSiVacio(valor: string) {
+  const limpio = valor.trim();
+  return limpio ? limpio : null;
+}
+
+function nombreArchivo(prefix: string) {
+  return `${prefix}-${new Date().toISOString().slice(0, 10)}.csv`;
+}
+
+function errorCampoOpcional(error: { message?: string; code?: string }) {
+  const mensaje = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "42703" ||
+    mensaje.includes("schema cache") ||
+    mensaje.includes("ventas_estado") ||
+    mensaje.includes("packing_estado")
+  );
+}
+
+async function importarPedidosCsv(registros: CsvRegistro[]) {
+  const filas = registros
+    .filter((r) => r["referencia"]?.trim())
+    .map((r) => ({
+      ...(r["id"]?.trim() ? { id: r["id"].trim() } : {}),
+      referencia: r["referencia"]!.trim(),
+      cliente: r["cliente"] ?? "",
+      telefono: r["telefono"] ?? "",
+      origen: r["origen"] ?? "",
+      contrato: r["contrato"] ?? "",
+      trabajo: r["trabajo"] ?? "",
+      pieza: r["pieza"] ?? r["trabajo"] ?? "",
+      material: r["material"] ?? "",
+      peso_estimado: r["peso_estimado"] ?? "",
+      talla: r["talla"] ?? "",
+      cantidad_piezas: Number(r["cantidad_piezas"]) || 1,
+      piedras: r["piedras"] ?? "",
+      notas: r["notas"] ?? "",
+      importe: Number(r["importe"]) || 0,
+      fecha_ingreso: r["fecha_ingreso"] || new Date().toISOString().slice(0, 10),
+      fecha_entrega: nuloSiVacio(r["fecha_entrega"] ?? ""),
+      entrega: r["entrega"] ?? r["fecha_entrega"] ?? "",
+      estado: r["estado"] || r["area_actual"] || "Pedidos",
+      area_actual: r["area_actual"] || r["estado"] || "Pedidos",
+      area_desde: r["area_desde"] || new Date().toISOString(),
+      ruta: listaDesdeCsv(r["ruta"] ?? ""),
+      sede_id: nuloSiVacio(r["sede_id"] ?? ""),
+      ventas_estado: r["ventas_estado"] || "Recibido en ventas",
+      packing_estado: r["packing_estado"] || "Pendiente",
+      medio_envio: r["medio_envio"] ?? "",
+      guia_envio: r["guia_envio"] ?? "",
+      fecha_envio: nuloSiVacio(r["fecha_envio"] ?? ""),
+      receptor_envio: r["receptor_envio"] ?? "",
+      notas_ventas: r["notas_ventas"] ?? "",
+    }));
+
+  const base = filas.map(
+    ({
+      ventas_estado,
+      packing_estado,
+      medio_envio,
+      guia_envio,
+      fecha_envio,
+      receptor_envio,
+      notas_ventas,
+      ...fila
+    }) => fila,
+  );
+  const { error } = await supabase.from("pedidos").upsert(filas);
+  if (!error) return filas.length;
+  if (!errorCampoOpcional(error)) throw error;
+
+  const { error: errorBase } = await supabase.from("pedidos").upsert(base);
+  if (errorBase) throw errorBase;
+  return base.length;
+}
+
+async function importarInventarioCsv(registros: CsvRegistro[]) {
+  let total = 0;
+  for (const r of registros.filter((item) => item["material"]?.trim())) {
+    const areas = listaDesdeCsv(r["areas"] ?? "");
+    const fila = {
+      ...(r["id"]?.trim() ? { id: r["id"].trim() } : {}),
+      material: r["material"]!.trim(),
+      categoria: r["categoria"] || "Otros insumos",
+      stock: Number(r["stock"]) || 0,
+      unidad: r["unidad"] || "und",
+      minimo: Number(r["minimo"]) || 0,
+      sede_id: nuloSiVacio(r["sede_id"] ?? ""),
+    };
+
+    const { data, error } = await supabase.from("inventario").upsert(fila).select("id").single();
+    if (error) throw error;
+    total += 1;
+
+    const materialId = data.id as string;
+    await supabase.from("material_areas").delete().eq("material_id", materialId);
+    if (areas.length > 0) {
+      const { error: errorAreas } = await supabase
+        .from("material_areas")
+        .insert(areas.map((area) => ({ material_id: materialId, area })));
+      if (errorAreas) throw errorAreas;
+    }
+  }
+  return total;
+}
+
+function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia: string | null }) {
+  const qc = useQueryClient();
+  const { data: pedidos = [] } = usePedidos();
+  const { data: inventario = [] } = useInventario();
+  const { data: gastos = [] } = useGastos();
+  const { data: sedes = [] } = useSedes();
+  const { data: usuarios = [] } = useUsuarios();
+  const [importando, setImportando] = useState<string | null>(null);
+
+  const pedidosVisibles = esDueno ? pedidos : pedidos.filter((p) => p.sede_id === sedePropia);
+  const inventarioVisible = esDueno
+    ? inventario
+    : inventario.filter((m) => m.sede_id == null || m.sede_id === sedePropia);
+  const gastosVisibles = esDueno ? gastos : gastos.filter((g) => g.sede_id === sedePropia);
+  const usuariosVisibles = esDueno ? usuarios : usuarios.filter((u) => u.sede_id === sedePropia);
+
+  async function importarArchivo(archivo: File | undefined, tipo: "pedidos" | "inventario") {
+    if (!archivo) return;
+    const confirmado = confirm(
+      `Vas a importar ${archivo.name}. Antes de continuar, asegúrate de tener un respaldo descargado. ¿Continuar?`,
+    );
+    if (!confirmado) return;
+
+    setImportando(tipo);
+    try {
+      const registros = leerCsv(await archivo.text());
+      const total =
+        tipo === "pedidos"
+          ? await importarPedidosCsv(registros)
+          : await importarInventarioCsv(registros);
+      toast.success(`Importación completada: ${total} registros`);
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      qc.invalidateQueries({ queryKey: ["inventario"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo importar el archivo");
+    } finally {
+      setImportando(null);
+    }
+  }
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+      <Panel titulo="Descargar respaldo">
+        <div className="grid gap-3 p-5 sm:grid-cols-2">
+          <BotonRespaldo
+            titulo="Pedidos"
+            detalle={`${pedidosVisibles.length} registros`}
+            onClick={() =>
+              descargarCsv(nombreArchivo("pedidos"), generarCsv(COLUMNAS_PEDIDOS, pedidosVisibles))
+            }
+          />
+          <BotonRespaldo
+            titulo="Inventario"
+            detalle={`${inventarioVisible.length} registros`}
+            onClick={() =>
+              descargarCsv(
+                nombreArchivo("inventario"),
+                generarCsv(COLUMNAS_INVENTARIO, inventarioVisible),
+              )
+            }
+          />
+          <BotonRespaldo
+            titulo="Gastos"
+            detalle={`${gastosVisibles.length} registros`}
+            onClick={() =>
+              descargarCsv(nombreArchivo("gastos"), generarCsv(COLUMNAS_GASTOS, gastosVisibles))
+            }
+          />
+          <BotonRespaldo
+            titulo="Usuarios"
+            detalle={`${usuariosVisibles.length} registros`}
+            onClick={() =>
+              descargarCsv(
+                nombreArchivo("usuarios"),
+                generarCsv(COLUMNAS_USUARIOS, usuariosVisibles),
+              )
+            }
+          />
+          {esDueno ? (
+            <BotonRespaldo
+              titulo="Sedes"
+              detalle={`${sedes.length} registros`}
+              onClick={() =>
+                descargarCsv(nombreArchivo("sedes"), generarCsv(COLUMNAS_SEDES, sedes))
+              }
+            />
+          ) : null}
+        </div>
+      </Panel>
+
+      <Panel titulo="Subir respaldo">
+        <div className="space-y-4 p-5">
+          <p className="text-sm leading-6 text-muted-foreground">
+            Usa archivos CSV exportados desde esta sección. La importación actualiza registros con
+            el mismo ID y crea los que no existan.
+          </p>
+          <ImportadorCsv
+            titulo="Importar pedidos"
+            cargando={importando === "pedidos"}
+            onArchivo={(archivo) => void importarArchivo(archivo, "pedidos")}
+          />
+          <ImportadorCsv
+            titulo="Importar inventario"
+            cargando={importando === "inventario"}
+            onArchivo={(archivo) => void importarArchivo(archivo, "inventario")}
+          />
+          <p className="rounded-lg bg-warning-soft px-4 py-3 text-xs leading-5 text-warning">
+            Usuarios y sedes se descargan para auditoría. Para restaurarlos conviene revisarlos
+            antes, porque afectan accesos y permisos.
+          </p>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function BotonRespaldo({
+  titulo,
+  detalle,
+  onClick,
+}: {
+  titulo: string;
+  detalle: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-surface-muted"
+    >
+      <span className="block text-sm font-semibold">{titulo}</span>
+      <span className="mt-1 block text-xs text-muted-foreground">{detalle}</span>
+      <span className="mt-4 inline-flex rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground">
+        Descargar CSV
+      </span>
+    </button>
+  );
+}
+
+function ImportadorCsv({
+  titulo,
+  cargando,
+  onArchivo,
+}: {
+  titulo: string;
+  cargando: boolean;
+  onArchivo: (archivo: File | undefined) => void;
+}) {
+  return (
+    <label className="block rounded-xl border border-dashed border-border bg-card p-4">
+      <span className="block text-sm font-semibold">{titulo}</span>
+      <span className="mt-1 block text-xs text-muted-foreground">Selecciona un archivo .csv</span>
+      <input
+        type="file"
+        accept=".csv,text/csv"
+        disabled={cargando}
+        onChange={(e) => {
+          onArchivo(e.target.files?.[0]);
+          e.currentTarget.value = "";
+        }}
+        className="mt-3 block w-full text-xs file:mr-3 file:rounded-full file:border-0 file:bg-primary file:px-3 file:py-2 file:text-xs file:font-semibold file:text-primary-foreground disabled:opacity-60"
+      />
+      {cargando ? (
+        <span className="mt-2 block text-xs text-muted-foreground">Importando...</span>
+      ) : null}
+    </label>
+  );
+}
+
 /* ---------------- Automatización ---------------- */
 
-function ModuloAutomatizacion({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia: string | null }) {
+function ModuloAutomatizacion({
+  pedidos,
+  sedePropia,
+}: {
+  pedidos: Pedido[];
+  sedePropia: string | null;
+}) {
   const { data: config = [] } = useConfigAreas();
   const guardar = useGuardarConfigArea();
 
@@ -429,7 +899,9 @@ function ModuloAutomatizacion({ pedidos, sedePropia }: { pedidos: Pedido[]; sede
     .map((p) => {
       const cfg = porArea.find((c) => c.area === p.area_actual);
       const horas = horasEn(p.area_desde);
-      return cfg && cfg.alerta && horas > cfg.horas ? { pedido: p, horas, objetivo: cfg.horas } : null;
+      return cfg && cfg.alerta && horas > cfg.horas
+        ? { pedido: p, horas, objetivo: cfg.horas }
+        : null;
     })
     .filter(Boolean) as { pedido: Pedido; horas: number; objetivo: number }[];
 
@@ -490,7 +962,9 @@ function ModuloAutomatizacion({ pedidos, sedePropia }: { pedidos: Pedido[]; sede
             </li>
           ))}
           {alertas.length === 0 ? (
-            <li className="px-6 py-6 text-sm text-muted-foreground">Ningún pedido supera su tiempo objetivo.</li>
+            <li className="px-6 py-6 text-sm text-muted-foreground">
+              Ningún pedido supera su tiempo objetivo.
+            </li>
           ) : null}
         </ul>
       </Panel>
@@ -653,7 +1127,9 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
           {form.rol === "operario" ? (
             <div className="rounded-lg border border-border p-3">
-              <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Áreas habilitadas</p>
+              <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Áreas habilitadas
+              </p>
               <div className="flex flex-wrap gap-2">
                 {AREAS.map((a) => {
                   const activo = areas.includes(a);
@@ -661,9 +1137,13 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                     <button
                       key={a}
                       type="button"
-                      onClick={() => setAreas(activo ? areas.filter((x) => x !== a) : [...areas, a])}
+                      onClick={() =>
+                        setAreas(activo ? areas.filter((x) => x !== a) : [...areas, a])
+                      }
                       className={`rounded-full px-3 py-1 text-[11px] ${
-                        activo ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"
+                        activo
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-surface-muted text-muted-foreground"
                       }`}
                     >
                       {a}
@@ -690,81 +1170,90 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
             <thead>
               <tr className="bg-surface-muted">
                 {["Nombre", "DNI", "Rol", "Sede", "Áreas", "Acceso", ""].map((h) => (
-                  <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th
+                    key={h}
+                    className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
+                  >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {usuarios.map((u) => (
-                <tr key={u.id} className="hover:bg-surface-muted/60">
-                  <td className="px-6 py-3 text-sm">{u.nombre || "—"}</td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">{u.dni || "—"}</td>
-                  <td className="px-6 py-3 text-xs">
-                    {u.roles.map((r) => rolEtiqueta[r as Rol] ?? r).join(", ") || "Sin rol"}
-                  </td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">
-                    {sedes.find((s) => s.id === u.sede_id)?.nombre ?? "—"}
-                  </td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">{u.areas.join(", ") || "—"}</td>
-                  <td className="px-6 py-3 text-xs">
-                    {u.activo === false ? (
-                      <span className="text-destructive">Desactivado</span>
-                    ) : u.acceso_desde || u.acceso_hasta ? (
-                      <span className="text-muted-foreground">
-                        {fmtFecha(u.acceso_desde) ?? "—"} → {fmtFecha(u.acceso_hasta) ?? "—"}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">Sin límite</span>
-                    )}
-                  </td>
-                  <td className="space-x-3 px-6 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setEditando(editando === u.id ? null : u.id)}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      {editando === u.id ? "Cerrar" : "Editar"}
-                    </button>
-                    {esDueno ? (
+              {usuarios
+                .map((u) => (
+                  <tr key={u.id} className="hover:bg-surface-muted/60">
+                    <td className="px-6 py-3 text-sm">{u.nombre || "—"}</td>
+                    <td className="px-6 py-3 text-xs text-muted-foreground">{u.dni || "—"}</td>
+                    <td className="px-6 py-3 text-xs">
+                      {u.roles.map((r) => rolEtiqueta[r as Rol] ?? r).join(", ") || "Sin rol"}
+                    </td>
+                    <td className="px-6 py-3 text-xs text-muted-foreground">
+                      {sedes.find((s) => s.id === u.sede_id)?.nombre ?? "—"}
+                    </td>
+                    <td className="px-6 py-3 text-xs text-muted-foreground">
+                      {u.areas.join(", ") || "—"}
+                    </td>
+                    <td className="px-6 py-3 text-xs">
+                      {u.activo === false ? (
+                        <span className="text-destructive">Desactivado</span>
+                      ) : u.acceso_desde || u.acceso_hasta ? (
+                        <span className="text-muted-foreground">
+                          {fmtFecha(u.acceso_desde) ?? "—"} → {fmtFecha(u.acceso_hasta) ?? "—"}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Sin límite</span>
+                      )}
+                    </td>
+                    <td className="space-x-3 px-6 py-3 text-right">
                       <button
                         type="button"
-                        onClick={async () => {
-                          if (!confirm(`¿Eliminar a ${u.nombre || "este usuario"}?`)) return;
-                          try {
-                            await borrar({ data: { id: u.id } });
-                            toast.success("Usuario eliminado");
-                            qc.invalidateQueries({ queryKey: ["usuarios"] });
-                          } catch (err) {
-                            toast.error(err instanceof Error ? err.message : "No se pudo eliminar");
-                          }
-                        }}
-                        className="text-xs text-destructive hover:underline"
+                        onClick={() => setEditando(editando === u.id ? null : u.id)}
+                        className="text-xs text-primary hover:underline"
                       >
-                        Eliminar
+                        {editando === u.id ? "Cerrar" : "Editar"}
                       </button>
-                    ) : null}
-                  </td>
-                </tr>
-              )).flatMap((fila, i) => {
-                const u = usuarios[i]!;
-                return editando === u.id
-                  ? [
-                      fila,
-                      <tr key={`${u.id}-edit`} className="bg-surface-muted/40">
-                        <td colSpan={7} className="px-6 py-4">
-                          <EditorUsuario
-                            usuario={u}
-                            sedes={sedes}
-                            esDueno={esDueno}
-                            onCerrar={() => setEditando(null)}
-                          />
-                        </td>
-                      </tr>,
-                    ]
-                  : [fila];
-              })}
+                      {esDueno ? (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm(`¿Eliminar a ${u.nombre || "este usuario"}?`)) return;
+                            try {
+                              await borrar({ data: { id: u.id } });
+                              toast.success("Usuario eliminado");
+                              qc.invalidateQueries({ queryKey: ["usuarios"] });
+                            } catch (err) {
+                              toast.error(
+                                err instanceof Error ? err.message : "No se pudo eliminar",
+                              );
+                            }
+                          }}
+                          className="text-xs text-destructive hover:underline"
+                        >
+                          Eliminar
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))
+                .flatMap((fila, i) => {
+                  const u = usuarios[i]!;
+                  return editando === u.id
+                    ? [
+                        fila,
+                        <tr key={`${u.id}-edit`} className="bg-surface-muted/40">
+                          <td colSpan={7} className="px-6 py-4">
+                            <EditorUsuario
+                              usuario={u}
+                              sedes={sedes}
+                              esDueno={esDueno}
+                              onCerrar={() => setEditando(null)}
+                            />
+                          </td>
+                        </tr>,
+                      ]
+                    : [fila];
+                })}
               {usuarios.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
@@ -937,7 +1426,9 @@ function EditorUsuario({
 
       {datos.rol === "operario" ? (
         <div className="rounded-lg border border-border p-3">
-          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Áreas habilitadas</p>
+          <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Áreas habilitadas
+          </p>
           <div className="flex flex-wrap gap-2">
             {AREAS.map((a) => {
               const activo = areas.includes(a);
@@ -947,7 +1438,9 @@ function EditorUsuario({
                   type="button"
                   onClick={() => setAreas(activo ? areas.filter((x) => x !== a) : [...areas, a])}
                   className={`rounded-full px-3 py-1 text-[11px] ${
-                    activo ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"
+                    activo
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-surface-muted text-muted-foreground"
                   }`}
                 >
                   {a}
@@ -966,7 +1459,11 @@ function EditorUsuario({
         >
           {guardando ? "Guardando…" : "Guardar cambios"}
         </button>
-        <button type="button" onClick={onCerrar} className="rounded-lg border border-border px-4 py-2 text-sm">
+        <button
+          type="button"
+          onClick={onCerrar}
+          className="rounded-lg border border-border px-4 py-2 text-sm"
+        >
           Cancelar
         </button>
       </div>
@@ -1028,7 +1525,12 @@ function ModuloSedes() {
                 defaultValue={s.nombre}
                 onBlur={(e) =>
                   e.target.value !== s.nombre &&
-                  guardar.mutate({ id: s.id, nombre: e.target.value, ciudad: s.ciudad, modo: s.modo })
+                  guardar.mutate({
+                    id: s.id,
+                    nombre: e.target.value,
+                    ciudad: s.ciudad,
+                    modo: s.modo,
+                  })
                 }
               />
               <input
@@ -1037,15 +1539,21 @@ function ModuloSedes() {
                 placeholder="Ciudad"
                 onBlur={(e) =>
                   e.target.value !== s.ciudad &&
-                  guardar.mutate({ id: s.id, nombre: s.nombre, ciudad: e.target.value, modo: s.modo })
+                  guardar.mutate({
+                    id: s.id,
+                    nombre: s.nombre,
+                    ciudad: e.target.value,
+                    modo: s.modo,
+                  })
                 }
               />
             </li>
           ))}
-          {sedes.length === 0 ? <li className="px-6 py-6 text-sm text-muted-foreground">Sin sedes.</li> : null}
+          {sedes.length === 0 ? (
+            <li className="px-6 py-6 text-sm text-muted-foreground">Sin sedes.</li>
+          ) : null}
         </ul>
       </Panel>
     </div>
   );
 }
-
