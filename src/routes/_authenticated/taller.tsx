@@ -31,9 +31,9 @@ const bancos = [
 const estadosTarea = ["Pendiente", "En curso", "Terminada"];
 
 const proporcionesYeso = [
-  { agua: 38, yeso: 62, ratioAgua: 0.38, recomendada: false },
-  { agua: 40, yeso: 60, ratioAgua: 0.4, recomendada: true },
-  { agua: 42, yeso: 58, ratioAgua: 0.42, recomendada: false },
+  { agua: 38, yeso: 62, recomendada: false },
+  { agua: 40, yeso: 60, recomendada: true },
+  { agua: 42, yeso: 58, recomendada: false },
 ];
 
 const tiposTarro = {
@@ -56,14 +56,18 @@ const volumenPorGramoYeso = 0.4238;
 function formatearCantidad(valor: number, decimales = 1) {
   return new Intl.NumberFormat("es-PE", {
     maximumFractionDigits: decimales,
-    minimumFractionDigits: valor > 0 && valor < 10 ? 1 : 0,
+    minimumFractionDigits: valor > 0 ? decimales : 0,
   }).format(valor);
 }
 
-function calcularMezcla(volumen: number, ratioAgua: number) {
-  const yeso = volumen / (volumenPorGramoYeso + ratioAgua);
-  const agua = yeso * ratioAgua;
-  return { agua, yeso };
+function calcularMezcla(volumen: number, partesAgua: number, partesYeso: number) {
+  const ratioAguaSobreYeso = partesAgua / partesYeso;
+  const yeso = volumen / (volumenPorGramoYeso + ratioAguaSobreYeso);
+  const agua = yeso * ratioAguaSobreYeso;
+  const total = agua + yeso;
+  const porcentajeAgua = total > 0 ? (agua / total) * 100 : partesAgua;
+  const porcentajeYeso = total > 0 ? (yeso / total) * 100 : partesYeso;
+  return { agua, porcentajeAgua, porcentajeYeso, ratioAguaSobreYeso, yeso };
 }
 
 function TallerPage() {
@@ -239,13 +243,14 @@ function TallerPage() {
               {tolerancias[tipoTarro]}%
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Fórmula: V = π x r² x h. El agua se calcula sobre el peso del yeso.
+              Fórmula: V = π x r² x h. La proporción se calcula como partes exactas de agua/yeso.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             {proporcionesYeso.map((p) => {
-              const { agua, yeso } = calcularMezcla(volumen, p.ratioAgua);
+              const { agua, porcentajeAgua, porcentajeYeso, ratioAguaSobreYeso, yeso } =
+                calcularMezcla(volumen, p.agua, p.yeso);
               return (
                 <article
                   key={`${p.agua}-${p.yeso}`}
@@ -256,7 +261,11 @@ function TallerPage() {
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
                       <p className="text-lg font-semibold">
-                        {p.agua}% agua / {p.yeso}% yeso
+                        {p.agua}/{p.yeso}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatearCantidad(porcentajeAgua, 2)}% agua /{" "}
+                        {formatearCantidad(porcentajeYeso, 2)}% yeso
                       </p>
                       {p.recomendada ? (
                         <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-gold">
@@ -265,13 +274,13 @@ function TallerPage() {
                       ) : null}
                     </div>
                   </div>
-                  <dl className="grid grid-cols-2 gap-3">
+                  <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="rounded-lg bg-background p-3">
                       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Agua
                       </dt>
                       <dd className="mt-1 text-xl font-semibold">
-                        {volumen > 0 ? formatearCantidad(agua, 0) : "0"} ml
+                        {volumen > 0 ? formatearCantidad(agua, 2) : "0"} ml
                       </dd>
                     </div>
                     <div className="rounded-lg bg-background p-3">
@@ -279,10 +288,13 @@ function TallerPage() {
                         Yeso
                       </dt>
                       <dd className="mt-1 text-xl font-semibold">
-                        {volumen > 0 ? formatearCantidad(yeso, 0) : "0"} g
+                        {volumen > 0 ? formatearCantidad(yeso, 2) : "0"} g
                       </dd>
                     </div>
                   </dl>
+                  <p className="mt-3 text-[11px] text-muted-foreground">
+                    Ratio agua/yeso: {formatearCantidad(ratioAguaSobreYeso, 6)} ml por g
+                  </p>
                 </article>
               );
             })}
