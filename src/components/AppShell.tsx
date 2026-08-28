@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
+import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 
 type Seccion = {
   to:
@@ -19,10 +19,10 @@ type Seccion = {
 };
 
 const secciones: Seccion[] = [
-  { to: "/pedidos", label: "Pedidos", area: "Mis pedidos" },
+  { to: "/pedidos", label: "Pedidos", area: "Pedidos" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
-  { to: "/corte-laser", label: "Servicio láser", area: "Servicio láser" },
+  { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser" },
   { to: "/taller", label: "Taller", area: "Taller" },
   { to: "/ventas", label: "Área ventas", area: "Área ventas" },
   { to: "/inventario", label: "Inventario", area: "Taller" },
@@ -43,7 +43,10 @@ function seccionesVisibles(
   // (además de Inventario). Si aún no tienen áreas, se les deja Taller.
   const asignadas = areas ?? [];
   const porArea = secciones.filter(
-    (s) => s.to !== "/inventario" && s.area != null && asignadas.includes(s.area),
+    (s) =>
+      s.to !== "/inventario" &&
+      s.area != null &&
+      asignadas.some((area) => areaCoincide(area, s.area)),
   );
   const inventario = secciones.filter((s) => s.to === "/inventario");
   if (porArea.length === 0) {
@@ -211,97 +214,5 @@ export function Panel({
       </div>
       {children}
     </section>
-  );
-}
-
-export function ColaLista({
-  items,
-}: {
-  items: { ref: string; pieza: string; cliente: string; detalle: string; progreso: number }[];
-}) {
-  return (
-    <ul className="divide-y divide-border">
-      {items.map((item) => (
-        <li key={item.ref} className="px-6 py-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-sm font-medium">{item.pieza}</p>
-            <span className="text-xs text-muted-foreground">{item.ref}</span>
-          </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {item.cliente} · {item.detalle}
-          </p>
-          <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-surface-muted">
-            <div className="h-full rounded-full bg-gold" style={{ width: `${item.progreso}%` }} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export function ColaProcesos({
-  items,
-  onProgreso,
-  cargando,
-}: {
-  items: {
-    id: string;
-    referencia: string;
-    pieza: string;
-    cliente: string;
-    detalle: string;
-    progreso: number;
-  }[];
-  onProgreso?: (id: string, progreso: number) => void;
-  cargando?: boolean;
-}) {
-  if (cargando) {
-    return <p className="px-6 py-8 text-sm text-muted-foreground">Cargando…</p>;
-  }
-  if (items.length === 0) {
-    return <p className="px-6 py-8 text-sm text-muted-foreground">Sin trabajos en cola.</p>;
-  }
-  return (
-    <ul className="divide-y divide-border">
-      {items.map((item) => (
-        <li key={item.id} className="px-6 py-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-sm font-medium">{item.pieza}</p>
-            <span className="text-xs text-muted-foreground">{item.referencia}</span>
-          </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {item.cliente} · {item.detalle}
-          </p>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-muted">
-              <div className="h-full rounded-full bg-gold" style={{ width: `${item.progreso}%` }} />
-            </div>
-            <span className="w-10 text-right text-[10px] tabular-nums text-muted-foreground">
-              {item.progreso}%
-            </span>
-            {onProgreso ? (
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  aria-label="Reducir progreso"
-                  onClick={() => onProgreso(item.id, Math.max(0, item.progreso - 10))}
-                  className="size-6 rounded border border-border text-xs transition-colors hover:bg-surface-muted"
-                >
-                  −
-                </button>
-                <button
-                  type="button"
-                  aria-label="Aumentar progreso"
-                  onClick={() => onProgreso(item.id, Math.min(100, item.progreso + 10))}
-                  className="size-6 rounded border border-border text-xs transition-colors hover:bg-surface-muted"
-                >
-                  +
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </li>
-      ))}
-    </ul>
   );
 }

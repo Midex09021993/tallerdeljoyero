@@ -19,12 +19,28 @@ export const AREAS = [
   "Casting",
   "Taller",
   "Área ventas",
-  "Servicio láser",
+  "Corte Láser",
   "Terminado",
   "Entregado",
 ] as const;
 
 export type Area = (typeof AREAS)[number];
+
+export const areaAliases: Record<string, string> = {
+  "Servicio láser": "Corte Láser",
+  "Corte láser": "Corte Láser",
+  "Corte Laser": "Corte Láser",
+  "Taller / Engaste": "Taller",
+};
+
+export function normalizarArea(area: string | null | undefined) {
+  if (!area) return "";
+  return areaAliases[area] ?? area;
+}
+
+export function areaCoincide(areaA: string | null | undefined, areaB: string | null | undefined) {
+  return normalizarArea(areaA) === normalizarArea(areaB);
+}
 
 /** Ruta de la app por área habilitada. */
 export const areaRuta: Record<string, string> = {
@@ -34,6 +50,7 @@ export const areaRuta: Record<string, string> = {
   Casting: "/taller",
   Taller: "/taller",
   "Área ventas": "/ventas",
+  "Corte Láser": "/corte-laser",
   "Servicio láser": "/corte-laser",
   Terminado: "/gestion",
 };

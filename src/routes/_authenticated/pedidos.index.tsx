@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
-import { AREAS, useSesion } from "@/lib/auth";
+import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import {
   useBorrarPedido,
   useCrearPedido,
@@ -58,6 +58,7 @@ function areaClase(area: string) {
     Casting: "bg-warning-soft text-warning",
     Taller: "bg-warning-soft text-warning",
     "Área ventas": "bg-success-soft text-success",
+    "Corte Láser": "bg-surface-muted text-muted-foreground",
     "Servicio láser": "bg-surface-muted text-muted-foreground",
     Terminado: "bg-info-soft text-info",
     Entregado: "bg-success-soft text-success",
@@ -166,14 +167,15 @@ function PedidosPage() {
   const lista = useMemo(
     () =>
       pedidos.filter((p) => {
-        const okArea = filtro === "Todas" || p.area_actual === filtro;
+        const okArea = filtro === "Todas" || areaCoincide(p.area_actual, filtro);
         const t = busca.trim().toLowerCase();
         const okTexto =
           !t ||
           [p.referencia, p.cliente, p.contrato, p.trabajo, p.pieza].some((v) =>
             (v ?? "").toLowerCase().includes(t),
           );
-        const okOperario = !soloSusAreas || Boolean(t) || misAreas.includes(p.area_actual);
+        const okOperario =
+          !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
         return okArea && okTexto && okOperario;
       }),
     [pedidos, filtro, busca, soloSusAreas, misAreas],
@@ -285,7 +287,7 @@ function PedidosPage() {
                 contrato: form.contrato,
                 material: form.material,
                 peso_estimado: form.peso_estimado,
-                estado: "Diseño 3D",
+                estado: "Pedidos",
                 entrega: form.fecha_entrega,
                 importe: Number(form.importe) || 0,
                 fecha_ingreso: form.fecha_ingreso || hoy(),
@@ -581,13 +583,13 @@ function PedidosPage() {
                           Enviar a…
                         </option>
                         {p.ruta
-                          .filter((a) => a !== p.area_actual)
+                          .filter((a) => !areaCoincide(a, p.area_actual))
                           .map((a) => (
                             <option key={a} value={a}>
-                              {a}
+                              {normalizarArea(a)}
                             </option>
                           ))}
-                        {p.ruta.filter((a) => a !== p.area_actual).length === 0 ? (
+                        {p.ruta.filter((a) => !areaCoincide(a, p.area_actual)).length === 0 ? (
                           <option value="" disabled>
                             Sin áreas siguientes
                           </option>

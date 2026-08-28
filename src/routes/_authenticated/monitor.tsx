@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { AREAS } from "@/lib/auth";
+import { AREAS, areaCoincide } from "@/lib/auth";
 import { usePedidos } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
@@ -39,7 +39,7 @@ function MonitorPage() {
     >
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {AREAS.map((area) => {
-          const lista = pedidos.filter((p) => p.area_actual === area);
+          const lista = pedidos.filter((p) => areaCoincide(p.area_actual, area));
           const activa = abierta === area;
           return (
             <button
@@ -47,7 +47,9 @@ function MonitorPage() {
               type="button"
               onClick={() => setAbierta(activa ? null : area)}
               className={`rounded-2xl border p-6 text-left transition-colors ${
-                activa ? "border-gold bg-ink text-ink-foreground" : "border-border bg-card hover:bg-surface-muted"
+                activa
+                  ? "border-gold bg-ink text-ink-foreground"
+                  : "border-border bg-card hover:bg-surface-muted"
               }`}
             >
               <p className="text-[10px] uppercase tracking-wider opacity-60">{area}</p>

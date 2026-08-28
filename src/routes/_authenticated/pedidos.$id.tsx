@@ -3,7 +3,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { AREAS, useSesion } from "@/lib/auth";
+import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
@@ -269,10 +269,13 @@ function FichaPedido() {
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(urlSeguimiento)}`;
   const wa = telefonoWhatsapp
     ? `https://wa.me/${telefonoWhatsapp}?text=${encodeURIComponent(
-        `Hola ${pedido.cliente}, su pedido ${pedido.referencia} está en ${pedido.area_actual}.`,
+        `Hola ${pedido.cliente}, su pedido ${pedido.referencia} está en ${normalizarArea(pedido.area_actual)}.`,
       )}`
     : "";
   const rutaPedido = Array.isArray(pedido.ruta) ? pedido.ruta : [];
+  const puedeMover =
+    Boolean(sesion?.esAdmin) ||
+    (sesion?.areas ?? []).some((area) => areaCoincide(area, pedido.area_actual));
 
   return (
     <AppShell
@@ -296,7 +299,7 @@ function FichaPedido() {
                 ["Código del pedido", pedido.referencia],
                 ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
                 ["N° de contrato", pedido.contrato || "—"],
-                ["Área de proceso", pedido.area_actual],
+                ["Área de proceso", normalizarArea(pedido.area_actual)],
                 ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
                 ["Estado ventas", pedido.ventas_estado || "—"],
@@ -320,20 +323,20 @@ function FichaPedido() {
                     if (destino)
                       enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
                   }}
-                  disabled={enviar.isPending}
+                  disabled={enviar.isPending || !puedeMover}
                   className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
                 >
                   <option value="" disabled>
                     Selecciona el área destino…
                   </option>
                   {rutaPedido
-                    .filter((a) => a !== pedido.area_actual)
+                    .filter((a) => !areaCoincide(a, pedido.area_actual))
                     .map((a) => (
                       <option key={a} value={a}>
-                        {a}
+                        {normalizarArea(a)}
                       </option>
                     ))}
-                  {rutaPedido.filter((a) => a !== pedido.area_actual).length === 0 ? (
+                  {rutaPedido.filter((a) => !areaCoincide(a, pedido.area_actual)).length === 0 ? (
                     <option value="" disabled>
                       Sin áreas siguientes en la ruta
                     </option>

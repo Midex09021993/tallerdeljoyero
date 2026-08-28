@@ -70,35 +70,3 @@ CREATE TRIGGER pedidos_updated_at BEFORE UPDATE ON public.pedidos FOR EACH ROW E
 CREATE TRIGGER inventario_updated_at BEFORE UPDATE ON public.inventario FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER procesos_updated_at BEFORE UPDATE ON public.procesos FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER tareas_updated_at BEFORE UPDATE ON public.tareas_taller FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-
-INSERT INTO public.pedidos (referencia, pieza, cliente, material, estado, entrega, importe) VALUES
-('#4402','Solitario Diamante 1.2ct','Elena Sanz','Oro blanco 18k','Diseño 3D','24 May',3480),
-('#4398','Alianza grabada','Julián Ruiz','Oro blanco 18k','Taller / Engaste','Hoy',890),
-('#4395','Pendientes esmeralda','Sofía Marín','Oro amarillo 18k','Impresión 3D','28 May',1560),
-('#4391','Colgante hexagonal','Nuria Báez','Plata 925','Corte láser','26 May',420),
-('#4386','Anillo sello inicial','Jorge Prat','Platino 950','Espera material','02 Jun',2140),
-('#4380','Pulsera eslabón','Carmen Vidal','Plata 925','Entregado','09 May',610);
-
-INSERT INTO public.inventario (material, stock, unidad, minimo) VALUES
-('Oro 18k amarillo',242,'g',150),
-('Oro blanco 18k',168,'g',120),
-('Plata de ley 925',45,'g',200),
-('Platino 950',96,'g',60),
-('Resina castable',840,'ml',500),
-('Diamantes brillante',6.4,'ct',3);
-
-INSERT INTO public.procesos (fase, referencia, pieza, cliente, detalle, progreso) VALUES
-('diseno','#4402','Solitario Aurora','Elena Sanz','RhinoJewel · v3',72),
-('diseno','#4399','Pendiente gota','Rosa Cobo','Modelado orgánico',40),
-('diseno','#4404','Collar hilo fino','Lucía Prada','Boceto aprobado',15),
-('impresion','#4395','Cera sortija','Sofía Marín','Formlabs 3B+ · resina castable',68),
-('impresion','#4392','Soporte gata','Interno','Formlabs 3B+ (B)',25),
-('laser','#4391','Base 18k mate','Nuria Báez','Corte terminado',100),
-('laser','#4388','Malla cenefa','Marc Soler','Cortando · 0,4 mm',55),
-('laser','#4385','Placa grabada','Ana Ferrer','En cola',0);
-
-INSERT INTO public.tareas_taller (tarea, responsable, banco, estado) VALUES
-('Engaste solitario 0,52 ct','Marco V.','Banco 1','En curso'),
-('Pulido alianza grabada','Irene L.','Banco 2','En curso'),
-('Soldadura colgante hexagonal','Pau G.','Banco 3','Pendiente'),
-('Fundición al vacío · platino','Marco V.','Fundición','14:30 h');

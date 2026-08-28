@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { normalizarArea } from "@/lib/auth";
 
 export type Estado =
   | "Diseño 3D"
   | "Impresión 3D"
-  | "Corte láser"
-  | "Taller / Engaste"
+  | "Corte Láser"
+  | "Taller"
   | "Área ventas"
   | "Entregado"
   | "Espera material";
@@ -14,8 +15,8 @@ export type Estado =
 export const estados: Estado[] = [
   "Diseño 3D",
   "Impresión 3D",
-  "Corte láser",
-  "Taller / Engaste",
+  "Corte Láser",
+  "Taller",
   "Área ventas",
   "Entregado",
   "Espera material",
@@ -24,8 +25,8 @@ export const estados: Estado[] = [
 export const estadoClases: Record<string, string> = {
   "Diseño 3D": "bg-info-soft text-info",
   "Impresión 3D": "bg-accent text-foreground",
-  "Corte láser": "bg-surface-muted text-muted-foreground",
-  "Taller / Engaste": "bg-warning-soft text-warning",
+  "Corte Láser": "bg-surface-muted text-muted-foreground",
+  Taller: "bg-warning-soft text-warning",
   "Área ventas": "bg-success-soft text-success",
   Entregado: "bg-success-soft text-success",
   "Espera material": "bg-danger-soft text-danger",
@@ -103,24 +104,6 @@ export type MovimientoInventario = {
   motivo: string;
   area: string;
   created_at: string;
-};
-
-export type Proceso = {
-  id: string;
-  fase: string;
-  referencia: string;
-  pieza: string;
-  cliente: string;
-  detalle: string;
-  progreso: number;
-};
-
-export type Tarea = {
-  id: string;
-  tarea: string;
-  responsable: string;
-  banco: string;
-  estado: string;
 };
 
 export type PedidoNuevo = {
@@ -212,8 +195,10 @@ export function usePedidos() {
         trabajo: textoCampo(p, "trabajo"),
         fecha_ingreso: textoCampo(p, "fecha_ingreso"),
         fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
-        area_actual: textoCampo(p, "area_actual", "Pedidos"),
-        ruta: Array.isArray(p["ruta"]) ? p["ruta"].filter((area) => typeof area === "string") : [],
+        area_actual: normalizarArea(textoCampo(p, "area_actual", "Pedidos")),
+        ruta: Array.isArray(p["ruta"])
+          ? p["ruta"].filter((area) => typeof area === "string").map(normalizarArea)
+          : [],
         area_desde: textoCampo(
           p,
           "area_desde",
@@ -285,22 +270,23 @@ export function useMoverPedido() {
       direccion: "avanzar" | "devolver";
       usuarioId: string | null;
     }) => {
-      const secuencia = ["Pedidos", ...pedido.ruta, "Entregado"];
-      const i = secuencia.indexOf(pedido.area_actual);
+      const secuencia = ["Pedidos", ...pedido.ruta.map(normalizarArea), "Entregado"];
+      const areaActual = normalizarArea(pedido.area_actual);
+      const i = Math.max(0, secuencia.indexOf(areaActual));
       const destino =
         direccion === "avanzar"
           ? secuencia[Math.min(secuencia.length - 1, i + 1)]
           : secuencia[Math.max(0, i - 1)];
-      if (!destino || destino === pedido.area_actual) return;
+      if (!destino || destino === areaActual) return;
 
       const { error } = await supabase
         .from("pedidos")
-        .update({ area_actual: destino, area_desde: new Date().toISOString() })
+        .update({ area_actual: destino, estado: destino, area_desde: new Date().toISOString() })
         .eq("id", pedido.id);
       if (error) throw error;
       await supabase.from("pedido_movimientos").insert({
         pedido_id: pedido.id,
-        area_origen: pedido.area_actual,
+        area_origen: areaActual,
         area_destino: destino,
         accion: direccion,
         usuario_id: usuarioId,
@@ -324,15 +310,22 @@ export function useEnviarAArea() {
       usuarioId: string | null;
     }) => {
       if (!destino || destino === pedido.area_actual) return;
+      const destinoNormalizado = normalizarArea(destino);
+      const areaActual = normalizarArea(pedido.area_actual);
+      if (!destinoNormalizado || destinoNormalizado === areaActual) return;
       const { error } = await supabase
         .from("pedidos")
-        .update({ area_actual: destino, area_desde: new Date().toISOString() })
+        .update({
+          area_actual: destinoNormalizado,
+          estado: destinoNormalizado,
+          area_desde: new Date().toISOString(),
+        })
         .eq("id", pedido.id);
       if (error) throw error;
       await supabase.from("pedido_movimientos").insert({
         pedido_id: pedido.id,
-        area_origen: pedido.area_actual,
-        area_destino: destino,
+        area_origen: areaActual,
+        area_destino: destinoNormalizado,
         accion: "enviar",
         usuario_id: usuarioId,
       });
@@ -441,57 +434,6 @@ export function useActualizarStock() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
-  });
-}
-
-export function useProcesos(fase: string) {
-  return useQuery({
-    queryKey: ["procesos", fase],
-    queryFn: async (): Promise<Proceso[]> => {
-      const { data, error } = await supabase
-        .from("procesos")
-        .select("id, fase, referencia, pieza, cliente, detalle, progreso")
-        .eq("fase", fase)
-        .order("created_at");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-}
-
-export function useActualizarProceso(fase: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, progreso }: { id: string; progreso: number }) => {
-      const { error } = await supabase.from("procesos").update({ progreso }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["procesos", fase] }),
-  });
-}
-
-export function useTareas() {
-  return useQuery({
-    queryKey: ["tareas"],
-    queryFn: async (): Promise<Tarea[]> => {
-      const { data, error } = await supabase
-        .from("tareas_taller")
-        .select("id, tarea, responsable, banco, estado")
-        .order("created_at");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-}
-
-export function useActualizarTarea() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
-      const { error } = await supabase.from("tareas_taller").update({ estado }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tareas"] }),
   });
 }
 

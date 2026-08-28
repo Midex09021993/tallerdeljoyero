@@ -26,7 +26,15 @@ import {
   type Sede,
   type Usuario,
 } from "@/lib/taller-db";
-import { AREAS, correoDesdeUsuario, rolEtiqueta, useSesion, type Rol } from "@/lib/auth";
+import {
+  AREAS,
+  areaCoincide,
+  correoDesdeUsuario,
+  normalizarArea,
+  rolEtiqueta,
+  useSesion,
+  type Rol,
+} from "@/lib/auth";
 import { actualizarUsuario, borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
@@ -227,7 +235,7 @@ function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {AREAS.filter((a) => a !== "Entregado").map((area) => {
-        const lista = activos.filter((p) => p.area_actual === area);
+        const lista = activos.filter((p) => areaCoincide(p.area_actual, area));
         return (
           <Panel key={area} titulo={`${area} · ${lista.length}`}>
             <ul className="divide-y divide-border">
@@ -433,9 +441,9 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
                     <td className="px-6 py-3 text-sm">{p.cliente}</td>
                     <td className="px-6 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.area_actual] ?? "bg-surface-muted"}`}
+                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[normalizarArea(p.area_actual)] ?? "bg-surface-muted"}`}
                       >
-                        {p.area_actual}
+                        {normalizarArea(p.area_actual)}
                       </span>
                     </td>
                     <td className="px-6 py-3 text-right">
@@ -897,7 +905,7 @@ function ModuloAutomatizacion({
   const alertas = pedidos
     .filter((p) => !esEntregado(p))
     .map((p) => {
-      const cfg = porArea.find((c) => c.area === p.area_actual);
+      const cfg = porArea.find((c) => areaCoincide(c.area, p.area_actual));
       const horas = horasEn(p.area_desde);
       return cfg && cfg.alerta && horas > cfg.horas
         ? { pedido: p, horas, objetivo: cfg.horas }
@@ -954,7 +962,7 @@ function ModuloAutomatizacion({
           {alertas.map(({ pedido, horas, objetivo }) => (
             <li key={pedido.id} className="px-6 py-3">
               <p className="text-sm font-medium">
-                {pedido.referencia} · {pedido.area_actual}
+                {pedido.referencia} · {normalizarArea(pedido.area_actual)}
               </p>
               <p className="text-xs text-danger">
                 {Math.round(horas)} h en área (objetivo {objetivo} h)

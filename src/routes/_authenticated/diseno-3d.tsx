@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { SeguimientoArea } from "@/components/SeguimientoArea";
+import { PedidosArea } from "@/components/PedidosArea";
+import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
 import { VisorIframe } from "@/components/VisorIframe";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { areaCoincide } from "@/lib/auth";
 import { useArchivosPedidos, usePedidos, type ArchivoPedido, type Pedido } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/diseno-3d")({
@@ -41,6 +43,7 @@ const archivoValido = (archivo: ArchivoPedido | undefined): archivo is ArchivoPe
 function Diseno3D() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
   const { data: archivos = [], isLoading: cargandoArchivos } = useArchivosPedidos();
+  const { enTrabajo, pedidos: pedidosArea } = usePedidosDeArea("Diseño 3D");
   const [busca, setBusca] = useState("");
   const [modelo, setModelo] = useState<ArchivoPedido | null>(null);
   const navigate = useNavigate();
@@ -59,7 +62,7 @@ function Diseno3D() {
   /** Pedidos que están en Diseño 3D y aún no tienen modelo cargado. */
   const cola = useMemo(() => {
     return pedidos
-      .filter((p) => p.area_actual === "Diseño 3D")
+      .filter((p) => areaCoincide(p.area_actual, "Diseño 3D"))
       .filter((p) => !(archivosPorPedido.get(p.id) ?? []).some(esModelo));
   }, [pedidos, archivosPorPedido]);
 
@@ -129,12 +132,13 @@ function Diseno3D() {
       acciones={
         <>
           <StatCard etiqueta="En modelado" valor={String(cola.length)} />
-          <StatCard etiqueta="Pedidos atendidos" valor={String(atendidos.length)} />
+          <StatCard etiqueta="Asignados" valor={String(pedidosArea.length)} />
+          <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
           <StatCard etiqueta="Modelos STL" valor={String(totalModelos)} />
         </>
       }
     >
-      <SeguimientoArea area="Diseño 3D" />
+      <PedidosArea area="Diseño 3D" titulo="Pedidos asignados a Diseño 3D" />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
