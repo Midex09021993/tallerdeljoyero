@@ -2,6 +2,16 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AREAS, useSesion } from "@/lib/auth";
 import {
   CATEGORIAS_MATERIAL,
@@ -124,6 +134,7 @@ function Materiales({
   const crear = useCrearMaterial();
   const [abierto, setAbierto] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("Todas");
+  const [materialPorEliminar, setMaterialPorEliminar] = useState<MaterialItem | null>(null);
   const [nuevo, setNuevo] = useState({
     material: "",
     categoria: "Oro",
@@ -156,232 +167,267 @@ function Materiales({
   }
 
   return (
-    <div className="space-y-6">
-      {puedeGestionar ? (
-        <Panel titulo="Nuevo material">
-          <form onSubmit={crearMaterial} className="space-y-3 p-6">
-            <div className="grid gap-3 md:grid-cols-5">
-              <input
-                className={inputCls}
-                placeholder="Material (ej. Oro 18k)"
-                value={nuevo.material}
-                onChange={(e) => setNuevo({ ...nuevo, material: e.target.value })}
-              />
-              <select
-                className={inputCls}
-                value={nuevo.categoria}
-                onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}
-              >
-                {CATEGORIAS_MATERIAL.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <input
-                className={inputCls}
-                placeholder="Unidad (g, u, ml)"
-                value={nuevo.unidad}
-                onChange={(e) => setNuevo({ ...nuevo, unidad: e.target.value })}
-              />
-              <input
-                className={inputCls}
-                type="number"
-                step="0.01"
-                placeholder="Stock inicial"
-                value={nuevo.stock}
-                onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })}
-              />
-              <input
-                className={inputCls}
-                type="number"
-                step="0.01"
-                placeholder="Mínimo"
-                value={nuevo.minimo}
-                onChange={(e) => setNuevo({ ...nuevo, minimo: e.target.value })}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Áreas que pueden usar este material
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {AREAS.map((a) => {
-                  const activo = nuevo.areas.includes(a);
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() =>
-                        setNuevo({
-                          ...nuevo,
-                          areas: activo ? nuevo.areas.filter((x) => x !== a) : [...nuevo.areas, a],
-                        })
-                      }
-                      className={`rounded-full px-3 py-1 text-[11px] ${
-                        activo
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-surface-muted text-muted-foreground"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
+    <>
+      <div className="space-y-6">
+        {puedeGestionar ? (
+          <Panel titulo="Nuevo material">
+            <form onSubmit={crearMaterial} className="space-y-3 p-6">
+              <div className="grid gap-3 md:grid-cols-5">
+                <input
+                  className={inputCls}
+                  placeholder="Material (ej. Oro 18k)"
+                  value={nuevo.material}
+                  onChange={(e) => setNuevo({ ...nuevo, material: e.target.value })}
+                />
+                <select
+                  className={inputCls}
+                  value={nuevo.categoria}
+                  onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}
+                >
+                  {CATEGORIAS_MATERIAL.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className={inputCls}
+                  placeholder="Unidad (g, u, ml)"
+                  value={nuevo.unidad}
+                  onChange={(e) => setNuevo({ ...nuevo, unidad: e.target.value })}
+                />
+                <input
+                  className={inputCls}
+                  type="number"
+                  step="0.01"
+                  placeholder="Stock inicial"
+                  value={nuevo.stock}
+                  onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })}
+                />
+                <input
+                  className={inputCls}
+                  type="number"
+                  step="0.01"
+                  placeholder="Mínimo"
+                  value={nuevo.minimo}
+                  onChange={(e) => setNuevo({ ...nuevo, minimo: e.target.value })}
+                />
               </div>
-            </div>
-            <button
-              type="submit"
-              disabled={crear.isPending}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-            >
-              {crear.isPending ? "Agregando…" : "Agregar material"}
-            </button>
-          </form>
-        </Panel>
-      ) : null}
+              <div>
+                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Áreas que pueden usar este material
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {AREAS.map((a) => {
+                    const activo = nuevo.areas.includes(a);
+                    return (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() =>
+                          setNuevo({
+                            ...nuevo,
+                            areas: activo
+                              ? nuevo.areas.filter((x) => x !== a)
+                              : [...nuevo.areas, a],
+                          })
+                        }
+                        className={`rounded-full px-3 py-1 text-[11px] ${
+                          activo
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-surface-muted text-muted-foreground"
+                        }`}
+                      >
+                        {a}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={crear.isPending}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                {crear.isPending ? "Agregando…" : "Agregar material"}
+              </button>
+            </form>
+          </Panel>
+        ) : null}
 
-      <Panel titulo="Materiales">
-        <div className="flex flex-wrap gap-2 px-6 pt-4">
-          {["Todas", ...CATEGORIAS_MATERIAL].map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setFiltro(c)}
-              className={`rounded-full px-3 py-1 text-[11px] ${
-                filtro === c
-                  ? "bg-foreground text-background"
-                  : "bg-surface-muted text-muted-foreground"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-surface-muted">
-                {["Material", "Categoría", "Stock", "Mínimo", "Áreas", ""].map((h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {lista.flatMap((m) => {
-                const bajo = m.stock < m.minimo;
-                const fila = (
-                  <tr key={m.id} className="transition-colors hover:bg-surface-muted/60">
-                    <td className="px-6 py-4 text-sm font-medium">{m.material}</td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground">{m.categoria}</td>
-                    <td className="px-6 py-4 text-sm tabular-nums">
-                      <input
-                        type="number"
-                        step="0.01"
-                        defaultValue={m.stock}
-                        disabled={!puedeGestionar}
-                        onBlur={(e) => {
-                          const stock = Number(e.target.value);
-                          if (stock !== m.stock) actualizarStock.mutate({ id: m.id, stock });
-                        }}
-                        className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
-                      />
-                      <span className="ml-2 text-xs text-muted-foreground">{m.unidad}</span>
-                      {bajo ? (
-                        <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase text-danger">
-                          bajo
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="px-6 py-4 text-sm tabular-nums text-muted-foreground">
-                      <input
-                        type="number"
-                        step="0.01"
-                        defaultValue={m.minimo}
-                        disabled={!puedeGestionar}
-                        onBlur={(e) => {
-                          const minimo = Number(e.target.value);
-                          if (minimo !== m.minimo)
-                            actualizarMaterial.mutate({ id: m.id, cambios: { minimo } });
-                        }}
-                        className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground">
-                      {m.areas.length > 0 ? m.areas.join(", ") : "Sin asignar"}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {puedeGestionar ? (
+        <Panel titulo="Materiales">
+          <div className="flex flex-wrap gap-2 px-6 pt-4">
+            {["Todas", ...CATEGORIAS_MATERIAL].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setFiltro(c)}
+                className={`rounded-full px-3 py-1 text-[11px] ${
+                  filtro === c
+                    ? "bg-foreground text-background"
+                    : "bg-surface-muted text-muted-foreground"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-surface-muted">
+                  {["Material", "Categoría", "Stock", "Mínimo", "Áreas", ""].map((h) => (
+                    <th
+                      key={h}
+                      className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {lista.flatMap((m) => {
+                  const bajo = m.stock < m.minimo;
+                  const fila = (
+                    <tr key={m.id} className="transition-colors hover:bg-surface-muted/60">
+                      <td className="px-6 py-4 text-sm font-medium">{m.material}</td>
+                      <td className="px-6 py-4 text-xs text-muted-foreground">{m.categoria}</td>
+                      <td className="px-6 py-4 text-sm tabular-nums">
+                        <input
+                          type="number"
+                          step="0.01"
+                          defaultValue={m.stock}
+                          disabled={!puedeGestionar}
+                          onBlur={(e) => {
+                            const stock = Number(e.target.value);
+                            if (stock !== m.stock) actualizarStock.mutate({ id: m.id, stock });
+                          }}
+                          className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
+                        />
+                        <span className="ml-2 text-xs text-muted-foreground">{m.unidad}</span>
+                        {bajo ? (
+                          <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase text-danger">
+                            bajo
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="px-6 py-4 text-sm tabular-nums text-muted-foreground">
+                        <input
+                          type="number"
+                          step="0.01"
+                          defaultValue={m.minimo}
+                          disabled={!puedeGestionar}
+                          onBlur={(e) => {
+                            const minimo = Number(e.target.value);
+                            if (minimo !== m.minimo)
+                              actualizarMaterial.mutate({ id: m.id, cambios: { minimo } });
+                          }}
+                          className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-xs text-muted-foreground">
+                        {m.areas.length > 0 ? m.areas.join(", ") : "Sin asignar"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {puedeGestionar ? (
+                          <button
+                            type="button"
+                            onClick={() => setAbierto(abierto === m.id ? null : m.id)}
+                            className="rounded-lg border border-border px-3 py-1 text-xs"
+                          >
+                            {abierto === m.id ? "Cerrar" : "Áreas"}
+                          </button>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                  if (abierto !== m.id) return [fila];
+                  return [
+                    fila,
+                    <tr key={`${m.id}-areas`} className="bg-surface-muted/40">
+                      <td colSpan={6} className="px-6 py-4">
+                        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Asignar {m.material} a áreas
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {AREAS.map((a) => {
+                            const activo = m.areas.includes(a);
+                            return (
+                              <button
+                                key={a}
+                                type="button"
+                                onClick={() =>
+                                  asignar.mutate({ materialId: m.id, area: a, activo: !activo })
+                                }
+                                className={`rounded-full px-3 py-1 text-[11px] ${
+                                  activo
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-card text-muted-foreground border border-border"
+                                }`}
+                              >
+                                {a}
+                              </button>
+                            );
+                          })}
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setAbierto(abierto === m.id ? null : m.id)}
-                          className="rounded-lg border border-border px-3 py-1 text-xs"
+                          onClick={() => setMaterialPorEliminar(m)}
+                          className="mt-4 rounded-lg border border-danger px-3 py-1 text-xs text-danger"
                         >
-                          {abierto === m.id ? "Cerrar" : "Áreas"}
+                          Eliminar material
                         </button>
-                      ) : null}
+                      </td>
+                    </tr>,
+                  ];
+                })}
+                {lista.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
+                      Sin materiales registrados.
                     </td>
                   </tr>
-                );
-                if (abierto !== m.id) return [fila];
-                return [
-                  fila,
-                  <tr key={`${m.id}-areas`} className="bg-surface-muted/40">
-                    <td colSpan={6} className="px-6 py-4">
-                      <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Asignar {m.material} a áreas
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {AREAS.map((a) => {
-                          const activo = m.areas.includes(a);
-                          return (
-                            <button
-                              key={a}
-                              type="button"
-                              onClick={() =>
-                                asignar.mutate({ materialId: m.id, area: a, activo: !activo })
-                              }
-                              className={`rounded-full px-3 py-1 text-[11px] ${
-                                activo
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-card text-muted-foreground border border-border"
-                              }`}
-                            >
-                              {a}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`¿Eliminar el material ${m.material}?`)) borrar.mutate(m.id);
-                        }}
-                        className="mt-4 rounded-lg border border-danger px-3 py-1 text-xs text-danger"
-                      >
-                        Eliminar material
-                      </button>
-                    </td>
-                  </tr>,
-                ];
-              })}
-              {lista.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
-                    Sin materiales registrados.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </div>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
+      <AlertDialog
+        open={materialPorEliminar !== null}
+        onOpenChange={(open) => {
+          if (!open && !borrar.isPending) setMaterialPorEliminar(null);
+        }}
+      >
+        <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar material</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Deseas eliminar el material "{materialPorEliminar?.material}" del inventario?
+              <span className="mt-2 block font-medium text-destructive">
+                Esta acción no se puede deshacer.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={borrar.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!materialPorEliminar || borrar.isPending}
+              onClick={() => {
+                if (!materialPorEliminar) return;
+                borrar.mutate(materialPorEliminar.id, {
+                  onSettled: () => setMaterialPorEliminar(null),
+                });
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {borrar.isPending ? "Eliminando..." : "Eliminar material"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

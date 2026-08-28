@@ -6,6 +6,16 @@ import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FechaInput } from "@/components/FechaInput";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   SelectorSedeDueno,
   TODAS_LAS_SEDES,
   useSedeFiltroDueno,
@@ -383,6 +393,7 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
   const { data: gastos = [] } = useGastos();
   const crearGasto = useCrearGasto();
   const borrarGasto = useBorrarGasto();
+  const [gastoPorEliminar, setGastoPorEliminar] = useState<Gasto | null>(null);
   const [nuevo, setNuevo] = useState({
     concepto: "",
     categoria: "Material",
@@ -479,7 +490,7 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
                   <span className="text-sm tabular-nums">{eur.format(g.importe)}</span>
                   <button
                     type="button"
-                    onClick={() => borrarGasto.mutate(g.id)}
+                    onClick={() => setGastoPorEliminar(g)}
                     className="text-xs text-destructive hover:underline"
                   >
                     Quitar
@@ -489,6 +500,40 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
             ))}
           </ul>
         </Panel>
+
+        <AlertDialog
+          open={gastoPorEliminar !== null}
+          onOpenChange={(open) => {
+            if (!open && !borrarGasto.isPending) setGastoPorEliminar(null);
+          }}
+        >
+          <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar gasto</AlertDialogTitle>
+              <AlertDialogDescription>
+                ¿Deseas eliminar el gasto "{gastoPorEliminar?.concepto}"?
+                <span className="mt-2 block font-medium text-destructive">
+                  Esta acción no se puede deshacer.
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={borrarGasto.isPending}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!gastoPorEliminar || borrarGasto.isPending}
+                onClick={() => {
+                  if (!gastoPorEliminar) return;
+                  borrarGasto.mutate(gastoPorEliminar.id, {
+                    onSettled: () => setGastoPorEliminar(null),
+                  });
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {borrarGasto.isPending ? "Eliminando..." : "Eliminar gasto"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <Panel titulo="Ventas e importes por pedido">
           <div className="overflow-x-auto">
@@ -790,6 +835,10 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
   const { data: sedes = [] } = useSedes();
   const { data: usuarios = [] } = useUsuarios();
   const [importando, setImportando] = useState<string | null>(null);
+  const [importacionPendiente, setImportacionPendiente] = useState<{
+    archivo: File;
+    tipo: "pedidos" | "inventario";
+  } | null>(null);
 
   const pedidosVisibles =
     esDueno && sedePropia == null ? pedidos : pedidos.filter((p) => p.sede_id === sedePropia);
@@ -804,11 +853,12 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   async function importarArchivo(archivo: File | undefined, tipo: "pedidos" | "inventario") {
     if (!archivo) return;
-    const confirmado = confirm(
-      `Vas a importar ${archivo.name}. Antes de continuar, asegúrate de tener un respaldo descargado. ¿Continuar?`,
-    );
-    if (!confirmado) return;
+    setImportacionPendiente({ archivo, tipo });
+  }
 
+  async function confirmarImportacion() {
+    if (!importacionPendiente) return;
+    const { archivo, tipo } = importacionPendiente;
     setImportando(tipo);
     try {
       const registros = leerCsv(await archivo.text());
@@ -823,82 +873,117 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
       toast.error(err instanceof Error ? err.message : "No se pudo importar el archivo");
     } finally {
       setImportando(null);
+      setImportacionPendiente(null);
     }
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-      <Panel titulo="Descargar respaldo">
-        <div className="grid gap-3 p-5 sm:grid-cols-2">
-          <BotonRespaldo
-            titulo="Pedidos"
-            detalle={`${pedidosVisibles.length} registros`}
-            onClick={() =>
-              descargarCsv(nombreArchivo("pedidos"), generarCsv(COLUMNAS_PEDIDOS, pedidosVisibles))
-            }
-          />
-          <BotonRespaldo
-            titulo="Inventario"
-            detalle={`${inventarioVisible.length} registros`}
-            onClick={() =>
-              descargarCsv(
-                nombreArchivo("inventario"),
-                generarCsv(COLUMNAS_INVENTARIO, inventarioVisible),
-              )
-            }
-          />
-          <BotonRespaldo
-            titulo="Gastos"
-            detalle={`${gastosVisibles.length} registros`}
-            onClick={() =>
-              descargarCsv(nombreArchivo("gastos"), generarCsv(COLUMNAS_GASTOS, gastosVisibles))
-            }
-          />
-          <BotonRespaldo
-            titulo="Usuarios"
-            detalle={`${usuariosVisibles.length} registros`}
-            onClick={() =>
-              descargarCsv(
-                nombreArchivo("usuarios"),
-                generarCsv(COLUMNAS_USUARIOS, usuariosVisibles),
-              )
-            }
-          />
-          {esDueno ? (
+    <>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+        <Panel titulo="Descargar respaldo">
+          <div className="grid gap-3 p-5 sm:grid-cols-2">
             <BotonRespaldo
-              titulo="Sedes"
-              detalle={`${sedes.length} registros`}
+              titulo="Pedidos"
+              detalle={`${pedidosVisibles.length} registros`}
               onClick={() =>
-                descargarCsv(nombreArchivo("sedes"), generarCsv(COLUMNAS_SEDES, sedes))
+                descargarCsv(
+                  nombreArchivo("pedidos"),
+                  generarCsv(COLUMNAS_PEDIDOS, pedidosVisibles),
+                )
               }
             />
-          ) : null}
-        </div>
-      </Panel>
+            <BotonRespaldo
+              titulo="Inventario"
+              detalle={`${inventarioVisible.length} registros`}
+              onClick={() =>
+                descargarCsv(
+                  nombreArchivo("inventario"),
+                  generarCsv(COLUMNAS_INVENTARIO, inventarioVisible),
+                )
+              }
+            />
+            <BotonRespaldo
+              titulo="Gastos"
+              detalle={`${gastosVisibles.length} registros`}
+              onClick={() =>
+                descargarCsv(nombreArchivo("gastos"), generarCsv(COLUMNAS_GASTOS, gastosVisibles))
+              }
+            />
+            <BotonRespaldo
+              titulo="Usuarios"
+              detalle={`${usuariosVisibles.length} registros`}
+              onClick={() =>
+                descargarCsv(
+                  nombreArchivo("usuarios"),
+                  generarCsv(COLUMNAS_USUARIOS, usuariosVisibles),
+                )
+              }
+            />
+            {esDueno ? (
+              <BotonRespaldo
+                titulo="Sedes"
+                detalle={`${sedes.length} registros`}
+                onClick={() =>
+                  descargarCsv(nombreArchivo("sedes"), generarCsv(COLUMNAS_SEDES, sedes))
+                }
+              />
+            ) : null}
+          </div>
+        </Panel>
 
-      <Panel titulo="Subir respaldo">
-        <div className="space-y-4 p-5">
-          <p className="text-sm leading-6 text-muted-foreground">
-            Usa archivos CSV exportados desde esta sección. La importación actualiza registros con
-            el mismo ID y crea los que no existan.
-          </p>
-          <ImportadorCsv
-            titulo="Importar pedidos"
-            cargando={importando === "pedidos"}
-            onArchivo={(archivo) => void importarArchivo(archivo, "pedidos")}
-          />
-          <ImportadorCsv
-            titulo="Importar inventario"
-            cargando={importando === "inventario"}
-            onArchivo={(archivo) => void importarArchivo(archivo, "inventario")}
-          />
-          <p className="rounded-lg bg-warning-soft px-4 py-3 text-xs leading-5 text-warning">
-            Usuarios y sedes se descargan para auditoría. Para restaurarlos conviene revisarlos
-            antes, porque afectan accesos y permisos.
-          </p>
-        </div>
-      </Panel>
-    </div>
+        <Panel titulo="Subir respaldo">
+          <div className="space-y-4 p-5">
+            <p className="text-sm leading-6 text-muted-foreground">
+              Usa archivos CSV exportados desde esta sección. La importación actualiza registros con
+              el mismo ID y crea los que no existan.
+            </p>
+            <ImportadorCsv
+              titulo="Importar pedidos"
+              cargando={importando === "pedidos"}
+              onArchivo={(archivo) => void importarArchivo(archivo, "pedidos")}
+            />
+            <ImportadorCsv
+              titulo="Importar inventario"
+              cargando={importando === "inventario"}
+              onArchivo={(archivo) => void importarArchivo(archivo, "inventario")}
+            />
+            <p className="rounded-lg bg-warning-soft px-4 py-3 text-xs leading-5 text-warning">
+              Usuarios y sedes se descargan para auditoría. Para restaurarlos conviene revisarlos
+              antes, porque afectan accesos y permisos.
+            </p>
+          </div>
+        </Panel>
+      </div>
+      <AlertDialog
+        open={importacionPendiente !== null}
+        onOpenChange={(open) => {
+          if (!open && !importando) setImportacionPendiente(null);
+        }}
+      >
+        <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importar respaldo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a importar "{importacionPendiente?.archivo.name}". Antes de continuar, asegúrate
+              de tener un respaldo descargado.
+              <span className="mt-2 block font-medium text-destructive">
+                Esta acción puede modificar información existente.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(importando)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!importacionPendiente || Boolean(importando)}
+              onClick={() => void confirmarImportacion()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {importando ? "Importando..." : "Importar archivo"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -1087,6 +1172,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
   const [areas, setAreas] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
+  const [usuarioPorEliminar, setUsuarioPorEliminar] = useState<Usuario | null>(null);
 
   const rolesDisponibles: Rol[] = esDueno
     ? ["dueno", "gerente", "operario", "monitor", "cliente"]
@@ -1118,6 +1204,18 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
       toast.error(err instanceof Error ? err.message : "No se pudo crear el usuario");
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function confirmarEliminarUsuario() {
+    if (!usuarioPorEliminar) return;
+    try {
+      await borrar({ data: { id: usuarioPorEliminar.id } });
+      toast.success("Usuario eliminado");
+      qc.invalidateQueries({ queryKey: ["usuarios"] });
+      setUsuarioPorEliminar(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar");
     }
   }
 
@@ -1302,18 +1400,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                       {esDueno ? (
                         <button
                           type="button"
-                          onClick={async () => {
-                            if (!confirm(`¿Eliminar a ${u.nombre || "este usuario"}?`)) return;
-                            try {
-                              await borrar({ data: { id: u.id } });
-                              toast.success("Usuario eliminado");
-                              qc.invalidateQueries({ queryKey: ["usuarios"] });
-                            } catch (err) {
-                              toast.error(
-                                err instanceof Error ? err.message : "No se pudo eliminar",
-                              );
-                            }
-                          }}
+                          onClick={() => setUsuarioPorEliminar(u)}
                           className="text-xs text-destructive hover:underline"
                         >
                           Eliminar
@@ -1351,6 +1438,34 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           </table>
         </div>
       </Panel>
+      <AlertDialog
+        open={usuarioPorEliminar !== null}
+        onOpenChange={(open) => {
+          if (!open) setUsuarioPorEliminar(null);
+        }}
+      >
+        <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Deseas eliminar a "{usuarioPorEliminar?.nombre || "este usuario"}"?
+              <span className="mt-2 block font-medium text-destructive">
+                Esta acción no se puede deshacer.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!usuarioPorEliminar}
+              onClick={() => void confirmarEliminarUsuario()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar usuario
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

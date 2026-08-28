@@ -17,6 +17,16 @@ import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -42,6 +52,13 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 
 const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
 const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Área ventas");
+
+type ArchivoPorEliminar = {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  accion: string;
+};
 
 const regresosFicha = {
   operario: { etiqueta: "Mi trabajo", ruta: "/operario" },
@@ -203,6 +220,7 @@ function FichaPedido() {
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
   const [grupoDestino, setGrupoDestino] = useState("");
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
+  const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
   const regresoBase = regresoDesde(from);
   const regreso =
     sesion?.rolPrincipal === "operario" && regresoBase.ruta === "/pedidos"
@@ -252,6 +270,9 @@ function FichaPedido() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pedido-archivos", id] });
       qc.invalidateQueries({ queryKey: ["archivos-pedidos"] });
+    },
+    onSettled: () => {
+      setArchivoPorEliminar(null);
     },
   });
 
@@ -667,11 +688,14 @@ function FichaPedido() {
                           </label>
                           <button
                             type="button"
-                            onClick={() => {
-                              if (confirm(`¿Eliminar la vista ${vista}?`)) {
-                                borrarArchivo.mutate(img.id);
-                              }
-                            }}
+                            onClick={() =>
+                              setArchivoPorEliminar({
+                                id: img.id,
+                                titulo: "Eliminar referencia",
+                                descripcion: `¿Deseas eliminar la imagen de referencia "Vista ${vista}"?`,
+                                accion: "Eliminar imagen",
+                              })
+                            }
                             disabled={borrarArchivo.isPending}
                             className="border-l border-border px-3 py-2 text-muted-foreground hover:bg-card hover:text-danger disabled:opacity-60"
                           >
@@ -782,7 +806,14 @@ function FichaPedido() {
                               ) : null}
                               <button
                                 type="button"
-                                onClick={() => borrarArchivo.mutate(actual.id)}
+                                onClick={() =>
+                                  setArchivoPorEliminar({
+                                    id: actual.id,
+                                    titulo: "Eliminar archivo",
+                                    descripcion: `¿Deseas eliminar "${actual.nombre}" de este pedido?`,
+                                    accion: "Eliminar archivo",
+                                  })
+                                }
                                 className="text-xs text-muted-foreground hover:text-danger"
                               >
                                 Quitar
@@ -806,7 +837,14 @@ function FichaPedido() {
                                   </a>
                                   <button
                                     type="button"
-                                    onClick={() => borrarArchivo.mutate(v.id)}
+                                    onClick={() =>
+                                      setArchivoPorEliminar({
+                                        id: v.id,
+                                        titulo: "Eliminar versión",
+                                        descripcion: `¿Deseas eliminar la versión ${v.version} de "${v.nombre}"?`,
+                                        accion: "Eliminar versión",
+                                      })
+                                    }
                                     className="text-muted-foreground hover:text-danger"
                                   >
                                     Quitar
@@ -834,7 +872,18 @@ function FichaPedido() {
               return (
                 <ul className="mb-4 grid gap-3 sm:grid-cols-2">
                   {enlaces.map((a) => (
-                    <TarjetaEnlace key={a.id} a={a} onQuitar={(id) => borrarArchivo.mutate(id)} />
+                    <TarjetaEnlace
+                      key={a.id}
+                      a={a}
+                      onQuitar={() =>
+                        setArchivoPorEliminar({
+                          id: a.id,
+                          titulo: "Eliminar enlace",
+                          descripcion: `¿Deseas eliminar el enlace "${a.nombre}" de este pedido?`,
+                          accion: "Eliminar enlace",
+                        })
+                      }
+                    />
                   ))}
                 </ul>
               );
@@ -885,6 +934,38 @@ function FichaPedido() {
           <p className="mt-4 break-all text-[10px] text-muted-foreground">{urlSeguimiento}</p>
         </div>
       </div>
+      <AlertDialog
+        open={archivoPorEliminar !== null}
+        onOpenChange={(open) => {
+          if (!open && !borrarArchivo.isPending) setArchivoPorEliminar(null);
+        }}
+      >
+        <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{archivoPorEliminar?.titulo ?? "Eliminar archivo"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {archivoPorEliminar?.descripcion}
+              <span className="mt-2 block font-medium text-destructive">
+                Esta acción no se puede deshacer.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={borrarArchivo.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!archivoPorEliminar || borrarArchivo.isPending}
+              onClick={() => {
+                if (archivoPorEliminar) borrarArchivo.mutate(archivoPorEliminar.id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {borrarArchivo.isPending
+                ? "Eliminando..."
+                : (archivoPorEliminar?.accion ?? "Eliminar archivo")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
