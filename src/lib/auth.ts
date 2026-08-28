@@ -140,10 +140,7 @@ export function useSesion() {
 export function inicioSegunRol(s: Sesion): string {
   if (s.rolPrincipal === "monitor") return "/monitor";
   if (s.rolPrincipal === "cliente") return "/cliente";
-  if (s.rolPrincipal === "operario") {
-    const primera = s.areas.find((a) => areaRuta[a]);
-    return primera ? areaRuta[primera]! : "/pedidos";
-  }
+  if (s.rolPrincipal === "operario") return "/operario";
   return "/pedidos";
 }
 

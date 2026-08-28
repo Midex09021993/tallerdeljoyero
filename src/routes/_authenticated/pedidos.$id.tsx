@@ -37,6 +37,7 @@ const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
 const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
 
 const regresosFicha = {
+  operario: { etiqueta: "Mi trabajo", ruta: "/operario" },
   pedidos: { etiqueta: "Pedidos", ruta: "/pedidos" },
   "Diseño 3D": { etiqueta: "Diseño 3D", ruta: "/diseno-3d" },
   "diseno-3d": { etiqueta: "Diseño 3D", ruta: "/diseno-3d" },
@@ -184,8 +185,12 @@ function FichaPedido() {
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
   const [grupoDestino, setGrupoDestino] = useState("");
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
-  const regreso = regresoDesde(from);
-  const volver = () => void navigate({ to: regreso.ruta });
+  const regresoBase = regresoDesde(from);
+  const regreso =
+    sesion?.rolPrincipal === "operario" && regresoBase.ruta === "/pedidos"
+      ? regresosFicha.operario
+      : regresoBase;
+  const volver = () => void navigate({ to: regreso.ruta as never });
 
   const pedido = pedidos.find((p) => p.id === id);
 

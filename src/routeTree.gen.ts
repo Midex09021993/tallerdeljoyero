@@ -19,7 +19,9 @@ import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
+import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
@@ -75,9 +77,19 @@ const AuthenticatedMonitorRoute = AuthenticatedMonitorRouteImport.update({
   path: '/monitor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOperarioRoute = AuthenticatedOperarioRouteImport.update({
+  id: '/operario',
+  path: '/operario',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
@@ -112,7 +124,9 @@ export interface FileRoutesByFullPath {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inventario': typeof AuthenticatedInventarioRoute
   '/monitor': typeof AuthenticatedMonitorRoute
+  '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/ventas': typeof AuthenticatedVentasRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -128,6 +142,8 @@ export interface FileRoutesByTo {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inventario': typeof AuthenticatedInventarioRoute
   '/monitor': typeof AuthenticatedMonitorRoute
+  '/operario': typeof AuthenticatedOperarioRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/ventas': typeof AuthenticatedVentasRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -145,7 +161,9 @@ export interface FileRoutesById {
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
+  '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -163,7 +181,9 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inventario'
     | '/monitor'
+    | '/operario'
     | '/pedidos'
+    | '/perfil'
     | '/taller'
     | '/ventas'
     | '/pedidos/$id'
@@ -179,6 +199,8 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inventario'
     | '/monitor'
+    | '/operario'
+    | '/perfil'
     | '/taller'
     | '/ventas'
     | '/pedidos/$id'
@@ -195,7 +217,9 @@ export interface FileRouteTypes {
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inventario'
     | '/_authenticated/monitor'
+    | '/_authenticated/operario'
     | '/_authenticated/pedidos'
+    | '/_authenticated/perfil'
     | '/_authenticated/taller'
     | '/_authenticated/ventas'
     | '/_authenticated/pedidos/$id'
@@ -281,11 +305,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMonitorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/operario': {
+      id: '/_authenticated/operario'
+      path: '/operario'
+      fullPath: '/operario'
+      preLoaderRoute: typeof AuthenticatedOperarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedidos': {
       id: '/_authenticated/pedidos'
       path: '/pedidos'
       fullPath: '/pedidos'
       preLoaderRoute: typeof AuthenticatedPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/taller': {
@@ -339,7 +377,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
+  AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRoute
 }
@@ -351,7 +391,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
+  AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRoute,
 }

@@ -12,13 +12,16 @@ type Seccion = {
     | "/ventas"
     | "/inventario"
     | "/gestion"
-    | "/monitor";
+    | "/monitor"
+    | "/operario"
+    | "/perfil";
   label: string;
   area?: string;
   roles?: Rol[];
 };
 
 const secciones: Seccion[] = [
+  { to: "/operario", label: "Mi trabajo", roles: ["operario"] },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D" },
@@ -28,6 +31,7 @@ const secciones: Seccion[] = [
   { to: "/inventario", label: "Inventario", area: "Taller" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"] },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"] },
+  { to: "/perfil", label: "Perfil", roles: ["operario"] },
 ];
 
 function seccionesVisibles(
@@ -38,21 +42,19 @@ function seccionesVisibles(
   if (!roles) return [];
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
-  if (esAdmin) return secciones.filter((s) => s.to !== "/monitor");
+  if (esAdmin) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
   // Los operarios ven la pantalla de cada área que el dueño/gerente les asignó
-  // (además de Inventario). Si aún no tienen áreas, se les deja Taller.
+  // junto con su inicio rápido y perfil. Si aún no tienen áreas, solo ven el inicio.
   const asignadas = areas ?? [];
+  const inicio = secciones.filter((s) => s.to === "/operario");
   const porArea = secciones.filter(
     (s) =>
-      s.to !== "/inventario" &&
+      !["/inventario", "/operario", "/perfil"].includes(s.to) &&
       s.area != null &&
       asignadas.some((area) => areaCoincide(area, s.area)),
   );
-  const inventario = secciones.filter((s) => s.to === "/inventario");
-  if (porArea.length === 0) {
-    return secciones.filter((s) => s.to === "/taller" || s.to === "/inventario");
-  }
-  return [...porArea, ...inventario];
+  const perfil = secciones.filter((s) => s.to === "/perfil");
+  return [...inicio, ...porArea, ...perfil];
 }
 
 export function AppShell({
