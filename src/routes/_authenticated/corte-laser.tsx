@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
+import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/corte-laser")({
   head: () => ({
@@ -20,13 +21,20 @@ export const Route = createFileRoute("/_authenticated/corte-laser")({
 
 function CorteLaser() {
   const { pedidos, enTrabajo } = usePedidosDeArea("Corte Láser");
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede } = useSedeFiltroDueno();
 
   return (
     <AppShell
       titulo="Corte Láser"
-      subtitulo="Pedidos que requieren corte o grabado antes de continuar su ruta"
+      subtitulo={`Pedidos que requieren corte o grabado · ${etiquetaSede}`}
       acciones={
         <>
+          <SelectorSedeDueno
+            esDueno={esDueno}
+            sedes={sedes}
+            value={sedeFiltro}
+            onChange={setSedeFiltro}
+          />
           <StatCard etiqueta="Asignados" valor={String(pedidos.length)} />
           <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
         </>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
+import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema, useGuardarConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
@@ -94,6 +95,7 @@ function leerTolerancias(valor: unknown): Record<TipoTarro, number> {
 function TallerPage() {
   const { data: sesion } = useSesion();
   const { pedidos, enTrabajo } = usePedidosDeArea("Taller");
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede } = useSedeFiltroDueno();
   const { data: configYeso } = useConfigSistema(claveConfigYeso);
   const guardarConfig = useGuardarConfigSistema();
   const [diametro, setDiametro] = useState("");
@@ -104,7 +106,6 @@ function TallerPage() {
     liso: tiposTarro.liso.toleranciaInicial,
     perforado: tiposTarro.perforado.toleranciaInicial,
   });
-  const esDueno = Boolean(sesion?.esDueno);
 
   useEffect(() => {
     setTolerancias(leerTolerancias(configYeso?.valor));
@@ -126,9 +127,15 @@ function TallerPage() {
   return (
     <AppShell
       titulo="Taller"
-      subtitulo="Pedidos que requieren trabajo manual, engaste, pulido o fundición"
+      subtitulo={`Pedidos que requieren trabajo manual, engaste, pulido o fundición · ${etiquetaSede}`}
       acciones={
         <>
+          <SelectorSedeDueno
+            esDueno={esDueno}
+            sedes={sedes}
+            value={sedeFiltro}
+            onChange={setSedeFiltro}
+          />
           <StatCard etiqueta="Asignados" valor={String(pedidos.length)} />
           <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
         </>

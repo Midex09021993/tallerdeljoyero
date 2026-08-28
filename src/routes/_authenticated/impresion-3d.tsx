@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
+import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useInventario } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/impresion-3d")({
@@ -22,14 +23,24 @@ export const Route = createFileRoute("/_authenticated/impresion-3d")({
 function Impresion3D() {
   const { pedidos, enTrabajo } = usePedidosDeArea("Impresión 3D");
   const { data: inventario = [] } = useInventario();
-  const resina = inventario.find((m) => m.material.toLowerCase().includes("resina"));
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede, sedeSeleccionada } =
+    useSedeFiltroDueno();
+  const resina = inventario
+    .filter((m) => !sedeSeleccionada || m.sede_id == null || m.sede_id === sedeSeleccionada.id)
+    .find((m) => m.material.toLowerCase().includes("resina"));
 
   return (
     <AppShell
       titulo="Impresión 3D"
-      subtitulo="Pedidos que requieren impresión de resina antes de pasar al siguiente proceso"
+      subtitulo={`Pedidos que requieren impresión de resina · ${etiquetaSede}`}
       acciones={
         <>
+          <SelectorSedeDueno
+            esDueno={esDueno}
+            sedes={sedes}
+            value={sedeFiltro}
+            onChange={setSedeFiltro}
+          />
           <StatCard
             etiqueta="Resina 3D"
             valor={resina ? `${resina.stock} ${resina.unidad}` : "-"}

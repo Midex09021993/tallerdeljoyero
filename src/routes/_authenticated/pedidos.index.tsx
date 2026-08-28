@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FechaInput } from "@/components/FechaInput";
+import {
+  SelectorSedeDueno,
+  TODAS_LAS_SEDES,
+  useSedeFiltroDueno,
+} from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
 import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import {
@@ -144,6 +149,13 @@ function PedidosPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: sedes = [] } = useSedes();
+  const {
+    sedeFiltro,
+    setSedeFiltro,
+    sedes: sedesFiltro,
+    filtrarPedidos,
+    etiquetaSede,
+  } = useSedeFiltroDueno();
   const crear = useCrearPedido();
   const borrar = useBorrarPedido();
   const enviar = useEnviarAArea();
@@ -157,16 +169,19 @@ function PedidosPage() {
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
-  const sedePorDefecto = sedeId || sesion?.perfil.sede_id || sedes[0]?.id || "";
+  const sedeFiltradaParaCrear = sesion?.esDueno && sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : "";
+  const sedePorDefecto =
+    sedeId || sedeFiltradaParaCrear || sesion?.perfil.sede_id || sedes[0]?.id || "";
 
   // Los operarios solo ven los pedidos que están en sus áreas asignadas.
   // Al buscar por texto pueden encontrar cualquier pedido, aunque ya haya avanzado.
   const soloSusAreas = Boolean(sesion && !sesion.esAdmin && (sesion.areas?.length ?? 0) > 0);
   const misAreas = useMemo(() => sesion?.areas ?? [], [sesion?.areas]);
+  const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
 
   const lista = useMemo(
     () =>
-      pedidos.filter((p) => {
+      pedidosPorSede.filter((p) => {
         const okArea = filtro === "Todas" || areaCoincide(p.area_actual, filtro);
         const t = busca.trim().toLowerCase();
         const okTexto =
@@ -178,11 +193,11 @@ function PedidosPage() {
           !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
         return okArea && okTexto && okOperario;
       }),
-    [pedidos, filtro, busca, soloSusAreas, misAreas],
+    [pedidosPorSede, filtro, busca, soloSusAreas, misAreas],
   );
 
-  const activos = pedidos.filter((p) => p.area_actual !== "Entregado");
-  const entregados = pedidos.filter((p) => p.area_actual === "Entregado");
+  const activos = pedidosPorSede.filter((p) => p.area_actual !== "Entregado");
+  const entregados = pedidosPorSede.filter((p) => p.area_actual === "Entregado");
 
   const diasHastaEntrega = (fechaIso: string | null | undefined): number | null => {
     if (!fechaIso) return null;
@@ -223,7 +238,7 @@ function PedidosPage() {
       subtitulo={
         isLoading
           ? "Cargando…"
-          : `${pedidos.length} pedidos · ${sesion?.esDueno ? "todas las sedes" : (sesion?.sede?.nombre ?? "tu sede")}`
+          : `${pedidosPorSede.length} pedidos · ${sesion?.esDueno ? etiquetaSede : (sesion?.sede?.nombre ?? "tu sede")}`
       }
       acciones={
         <div className="flex flex-wrap items-stretch gap-3">
@@ -253,17 +268,30 @@ function PedidosPage() {
       <Panel
         titulo="Seguimiento general"
         accion={
-          puedeCrear ? (
-            <button
-              type="button"
-              onClick={() => setAbierto((v) => !v)}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-surface-muted"
-            >
-              {abierto ? "Cancelar" : "Nuevo pedido"}
-            </button>
-          ) : null
+          <div className="flex flex-wrap items-end gap-3">
+            <SelectorSedeDueno
+              esDueno={Boolean(sesion?.esDueno)}
+              sedes={sedesFiltro}
+              value={sedeFiltro}
+              onChange={setSedeFiltro}
+            />
+            {puedeCrear ? (
+              <button
+                type="button"
+                onClick={() => setAbierto((v) => !v)}
+                className="rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:bg-surface-muted"
+              >
+                {abierto ? "Cancelar" : "Nuevo pedido"}
+              </button>
+            ) : null}
+          </div>
         }
       >
+        {sesion?.esDueno ? (
+          <div className="border-b border-border bg-surface-muted/35 px-4 py-3 text-xs text-muted-foreground sm:px-6">
+            Mostrando: <span className="font-medium text-foreground">{etiquetaSede}</span>
+          </div>
+        ) : null}
         {abierto ? (
           <form
             className="border-b border-border bg-surface-muted/40 p-4 sm:p-6"

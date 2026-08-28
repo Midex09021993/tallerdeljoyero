@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, StatCard } from "@/components/AppShell";
+import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
 import { useActualizarPedido, usePedidos, type Pedido } from "@/lib/taller-db";
 
@@ -26,11 +27,14 @@ export const Route = createFileRoute("/_authenticated/ventas")({
 function VentasPage() {
   const navigate = useNavigate();
   const { data: pedidos = [] } = usePedidos();
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
+    useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
   const [busca, setBusca] = useState("");
   const [envioId, setEnvioId] = useState<string | null>(null);
 
-  const enVentas = pedidos.filter((p) => p.area_actual === "Área ventas");
+  const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
+  const enVentas = pedidosPorSede.filter((p) => p.area_actual === "Área ventas");
   const filtrados = useMemo(() => {
     const t = busca.trim().toLowerCase();
     if (!t) return enVentas;
@@ -55,7 +59,7 @@ function VentasPage() {
     (p) => !["En packing", "Enviado", "Entregado"].includes(p.ventas_estado),
   );
   const packing = filtrados.filter((p) => ["En packing", "Enviado"].includes(p.ventas_estado));
-  const cerrados = pedidos.filter(
+  const cerrados = pedidosPorSede.filter(
     (p) => p.area_actual === "Entregado" && ["Enviado", "Entregado"].includes(p.ventas_estado),
   );
 
@@ -64,9 +68,15 @@ function VentasPage() {
   return (
     <AppShell
       titulo="Área ventas"
-      subtitulo="Recepción comercial, packing, despacho y entrega al cliente"
+      subtitulo={`Recepción comercial, packing, despacho y entrega · ${etiquetaSede}`}
       acciones={
         <>
+          <SelectorSedeDueno
+            esDueno={esDueno}
+            sedes={sedes}
+            value={sedeFiltro}
+            onChange={setSedeFiltro}
+          />
           <StatCard etiqueta="En ventas" valor={String(enVentas.length)} />
           <StatCard etiqueta="En packing" valor={String(packing.length)} />
           <StatCard

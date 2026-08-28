@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { areaCoincide, useSesion } from "@/lib/auth";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { usePedidos, type Pedido } from "@/lib/taller-db";
 
 export function pedidoAsignadoAArea(pedido: Pedido, area: string) {
@@ -14,6 +15,7 @@ export function pedidoEnAreaActual(pedido: Pedido, area: string) {
 export function usePedidosDeArea(area: string) {
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: sesion } = useSesion();
+  const { filtrarPedidos } = useSedeFiltroDueno();
 
   const lista = useMemo(() => {
     const areasUsuario = sesion?.areas ?? [];
@@ -24,7 +26,7 @@ export function usePedidosDeArea(area: string) {
 
     if (operarioSinArea) return [];
 
-    return pedidos
+    return filtrarPedidos(pedidos)
       .filter((pedido) => pedido.area_actual !== "Entregado")
       .filter((pedido) => pedidoAsignadoAArea(pedido, area))
       .sort((a, b) => {
@@ -33,7 +35,7 @@ export function usePedidosDeArea(area: string) {
         if (aEnArea !== bEnArea) return aEnArea - bEnArea;
         return new Date(a.area_desde).getTime() - new Date(b.area_desde).getTime();
       });
-  }, [area, pedidos, sesion?.areas, sesion?.rolPrincipal]);
+  }, [area, filtrarPedidos, pedidos, sesion?.areas, sesion?.rolPrincipal]);
 
   return {
     pedidos: lista,

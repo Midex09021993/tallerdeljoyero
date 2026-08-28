@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PedidosArea } from "@/components/PedidosArea";
+import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
@@ -43,10 +44,13 @@ const archivoValido = (archivo: ArchivoPedido | undefined): archivo is ArchivoPe
 function Diseno3D() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
   const { data: archivos = [], isLoading: cargandoArchivos } = useArchivosPedidos();
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
+    useSedeFiltroDueno();
   const { enTrabajo, pedidos: pedidosArea } = usePedidosDeArea("Diseño 3D");
   const [busca, setBusca] = useState("");
   const [modelo, setModelo] = useState<ArchivoPedido | null>(null);
   const navigate = useNavigate();
+  const pedidosFiltrados = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
 
   /** Agrupa todos los archivos por pedido. */
   const archivosPorPedido = useMemo(() => {
@@ -61,10 +65,10 @@ function Diseno3D() {
 
   /** Pedidos que están en Diseño 3D y aún no tienen modelo cargado. */
   const cola = useMemo(() => {
-    return pedidos
+    return pedidosFiltrados
       .filter((p) => areaCoincide(p.area_actual, "Diseño 3D"))
       .filter((p) => !(archivosPorPedido.get(p.id) ?? []).some(esModelo));
-  }, [pedidos, archivosPorPedido]);
+  }, [pedidosFiltrados, archivosPorPedido]);
 
   /** Pedidos con al menos un modelo (STL/3MF/visor 3D). */
   const atendidos = useMemo(() => {
@@ -72,14 +76,14 @@ function Diseno3D() {
     const lista: Pedido[] = [];
     for (const a of archivos) {
       if (!esModelo(a) || vistos.has(a.pedido_id)) continue;
-      const pedido = pedidos.find((p) => p.id === a.pedido_id);
+      const pedido = pedidosFiltrados.find((p) => p.id === a.pedido_id);
       if (pedido) {
         vistos.add(a.pedido_id);
         lista.push(pedido);
       }
     }
     return lista;
-  }, [archivos, pedidos]);
+  }, [archivos, pedidosFiltrados]);
 
   /** Todas las versiones agrupadas por pedido + grupo, más recientes primero. */
   const porGrupo = useMemo(() => {
@@ -98,7 +102,9 @@ function Diseno3D() {
 
   /** Biblioteca compacta: una sola portada por pedido. */
   const bibliotecaPorPedido = useMemo(() => {
+    const pedidosVisibles = new Set(pedidosFiltrados.map((pedido) => pedido.id));
     return [...archivosPorPedido.values()]
+      .filter((lista) => lista[0]?.pedido_id && pedidosVisibles.has(lista[0].pedido_id))
       .map(
         (lista) =>
           [...lista].sort((a, b) => {
@@ -108,7 +114,7 @@ function Diseno3D() {
           })[0],
       )
       .filter(archivoValido);
-  }, [archivosPorPedido]);
+  }, [archivosPorPedido, pedidosFiltrados]);
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -128,9 +134,15 @@ function Diseno3D() {
   return (
     <AppShell
       titulo="Diseño 3D"
-      subtitulo="Modelado CAD y validación de piezas antes de impresión"
+      subtitulo={`Modelado CAD y validación de piezas · ${etiquetaSede}`}
       acciones={
         <>
+          <SelectorSedeDueno
+            esDueno={esDueno}
+            sedes={sedes}
+            value={sedeFiltro}
+            onChange={setSedeFiltro}
+          />
           <StatCard etiqueta="En modelado" valor={String(cola.length)} />
           <StatCard etiqueta="Asignados" valor={String(pedidosArea.length)} />
           <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />

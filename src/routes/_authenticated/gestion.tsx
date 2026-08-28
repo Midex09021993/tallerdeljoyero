@@ -5,6 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FechaInput } from "@/components/FechaInput";
+import {
+  SelectorSedeDueno,
+  TODAS_LAS_SEDES,
+  useSedeFiltroDueno,
+} from "@/hooks/use-sede-filtro-dueno";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
 import {
@@ -89,10 +94,14 @@ function horasEn(desde: string) {
 function GestionPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
+  const { sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const [modulo, setModulo] = useState<Modulo>("resumen");
 
   const esDueno = Boolean(sesion?.esDueno);
   const puedeUsuarios = Boolean(esDueno || sesion?.roles.includes("gerente"));
+  const pedidosGestion = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
+  const sedeActiva =
+    esDueno && sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : (sesion?.perfil.sede_id ?? null);
 
   const modulos: { id: Modulo; label: string; visible: boolean }[] = [
     { id: "resumen", label: "Resumen", visible: true },
@@ -108,7 +117,19 @@ function GestionPage() {
   return (
     <AppShell
       titulo="Gestión"
-      subtitulo={isLoading ? "Cargando…" : "Zona administrativa del taller"}
+      subtitulo={
+        isLoading
+          ? "Cargando…"
+          : `Zona administrativa · ${esDueno ? etiquetaSede : (sesion?.sede?.nombre ?? "tu sede")}`
+      }
+      acciones={
+        <SelectorSedeDueno
+          esDueno={esDueno}
+          sedes={sedes}
+          value={sedeFiltro}
+          onChange={setSedeFiltro}
+        />
+      }
     >
       <div className="flex flex-wrap gap-2">
         {modulos
@@ -129,17 +150,19 @@ function GestionPage() {
           ))}
       </div>
 
-      {modulo === "resumen" ? <ModuloResumen pedidos={pedidos} /> : null}
-      {modulo === "flujo" ? <ModuloFlujo pedidos={pedidos} /> : null}
-      {modulo === "entregados" ? <ModuloEntregados pedidos={pedidos} /> : null}
+      {modulo === "resumen" ? (
+        <ModuloResumen pedidos={pedidosGestion} sedeActiva={sedeActiva} />
+      ) : null}
+      {modulo === "flujo" ? <ModuloFlujo pedidos={pedidosGestion} /> : null}
+      {modulo === "entregados" ? <ModuloEntregados pedidos={pedidosGestion} /> : null}
       {modulo === "finanzas" ? (
-        <ModuloFinanzas pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} />
+        <ModuloFinanzas pedidos={pedidosGestion} sedePropia={sedeActiva} />
       ) : null}
       {modulo === "respaldo" && puedeUsuarios ? (
-        <ModuloRespaldo esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
+        <ModuloRespaldo esDueno={esDueno} sedePropia={sedeActiva} />
       ) : null}
       {modulo === "automatizacion" && puedeUsuarios ? (
-        <ModuloAutomatizacion pedidos={pedidos} sedePropia={sesion?.perfil.sede_id ?? null} />
+        <ModuloAutomatizacion pedidos={pedidosGestion} sedePropia={sedeActiva} />
       ) : null}
       {modulo === "usuarios" && puedeUsuarios ? (
         <ModuloUsuarios esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
@@ -151,10 +174,14 @@ function GestionPage() {
 
 /* ---------------- Resumen ---------------- */
 
-function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
+function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {
   const { data: materiales = [] } = useInventario();
   const { data: sedes = [] } = useSedes();
   const { data: gastos = [] } = useGastos();
+  const materialesVisibles = sedeActiva
+    ? materiales.filter((m) => m.sede_id == null || m.sede_id === sedeActiva)
+    : materiales;
+  const gastosVisibles = sedeActiva ? gastos.filter((g) => g.sede_id === sedeActiva) : gastos;
 
   const activos = pedidos.filter((p) => !esEntregado(p));
   const hoy = new Date().toISOString().slice(0, 10);
@@ -163,8 +190,10 @@ function ModuloResumen({ pedidos }: { pedidos: Pedido[] }) {
     (p) => esEntregado(p) && delMes(p.fecha_entrega ?? p.fecha_ingreso),
   );
   const ingresosMes = entregadosMes.reduce((a, p) => a + p.importe, 0);
-  const gastosMes = gastos.filter((g) => delMes(g.fecha)).reduce((a, g) => a + g.importe, 0);
-  const stockBajo = materiales.filter((m) => m.stock <= m.minimo);
+  const gastosMes = gastosVisibles
+    .filter((g) => delMes(g.fecha))
+    .reduce((a, g) => a + g.importe, 0);
+  const stockBajo = materialesVisibles.filter((m) => m.stock <= m.minimo);
 
   return (
     <div className="space-y-6">
@@ -323,7 +352,8 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
   const ventas = pedidos.filter(esEntregado);
   const ingresos = ventas.reduce((a, p) => a + p.importe, 0);
   const cartera = pedidos.reduce((a, p) => a + p.importe, 0);
-  const totalGastos = gastos.reduce((a, g) => a + g.importe, 0);
+  const gastosVisibles = sedePropia ? gastos.filter((g) => g.sede_id === sedePropia) : gastos;
+  const totalGastos = gastosVisibles.reduce((a, g) => a + g.importe, 0);
   const margen = ingresos - totalGastos;
 
   return (
@@ -396,7 +426,7 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
             </button>
           </form>
           <ul className="divide-y divide-border border-t border-border">
-            {gastos.slice(0, 10).map((g) => (
+            {gastosVisibles.slice(0, 10).map((g) => (
               <li key={g.id} className="flex items-center justify-between px-6 py-3">
                 <div>
                   <p className="text-sm">{g.concepto}</p>
@@ -720,12 +750,16 @@ function ModuloRespaldo({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
   const { data: usuarios = [] } = useUsuarios();
   const [importando, setImportando] = useState<string | null>(null);
 
-  const pedidosVisibles = esDueno ? pedidos : pedidos.filter((p) => p.sede_id === sedePropia);
-  const inventarioVisible = esDueno
-    ? inventario
-    : inventario.filter((m) => m.sede_id == null || m.sede_id === sedePropia);
-  const gastosVisibles = esDueno ? gastos : gastos.filter((g) => g.sede_id === sedePropia);
-  const usuariosVisibles = esDueno ? usuarios : usuarios.filter((u) => u.sede_id === sedePropia);
+  const pedidosVisibles =
+    esDueno && sedePropia == null ? pedidos : pedidos.filter((p) => p.sede_id === sedePropia);
+  const inventarioVisible =
+    esDueno && sedePropia == null
+      ? inventario
+      : inventario.filter((m) => m.sede_id == null || m.sede_id === sedePropia);
+  const gastosVisibles =
+    esDueno && sedePropia == null ? gastos : gastos.filter((g) => g.sede_id === sedePropia);
+  const usuariosVisibles =
+    esDueno && sedePropia == null ? usuarios : usuarios.filter((u) => u.sede_id === sedePropia);
 
   async function importarArchivo(archivo: File | undefined, tipo: "pedidos" | "inventario") {
     if (!archivo) return;
@@ -894,13 +928,16 @@ function ModuloAutomatizacion({
   const guardar = useGuardarConfigArea();
 
   const porArea = useMemo(() => {
-    const mapa = new Map(config.map((c) => [c.area, c]));
+    const configVisible = config.filter((c) =>
+      sedePropia == null ? c.sede_id == null : c.sede_id === sedePropia,
+    );
+    const mapa = new Map(configVisible.map((c) => [c.area, c]));
     return AREAS.filter((a) => a !== "Entregado").map((area) => ({
       area,
       horas: mapa.get(area)?.horas_objetivo ?? 48,
       alerta: mapa.get(area)?.alerta_activa ?? true,
     }));
-  }, [config]);
+  }, [config, sedePropia]);
 
   const alertas = pedidos
     .filter((p) => !esEntregado(p))
