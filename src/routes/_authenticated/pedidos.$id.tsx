@@ -87,6 +87,15 @@ function tiempoEnArea(desde: string) {
   return `${Math.floor(horas / 24)} días`;
 }
 
+function mostrarEstadoVentas(pedido: { estado: string; ventas_estado: string }) {
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+    return pedido.ventas_estado;
+  }
+  if (pedido.estado === "En Ventas") return "En Ventas";
+  return "Pendiente";
+}
+
 interface EnlaceArchivo {
   id: string;
   tipo: string;
@@ -319,15 +328,17 @@ function FichaPedido() {
       subtitulo={`${pedido.cliente}${pedido.sede_nombre ? ` · ${pedido.sede_nombre}` : ""}`}
       ocultarNavegacion={esFichaOperario}
     >
-      <div className="mb-6">
-        <button
-          type="button"
-          onClick={volver}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          ← Volver a {regreso.etiqueta}
-        </button>
-      </div>
+      {!esFichaOperario ? (
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={volver}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            ← Volver a {regreso.etiqueta}
+          </button>
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -341,7 +352,7 @@ function FichaPedido() {
                 ["Área de proceso", normalizarArea(pedido.area_actual)],
                 ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
-                ["Estado ventas", pedido.ventas_estado || "—"],
+                ["Estado ventas", mostrarEstadoVentas(pedido)],
                 ["Medio de envío", pedido.medio_envio || "—"],
                 ["Guía de envío", pedido.guia_envio || "—"],
               ].map(([k, v]) => (
@@ -390,6 +401,39 @@ function FichaPedido() {
                   ) : null}
                 </select>
               </label>
+            </div>
+          </Panel>
+
+          <Panel titulo="Seguimiento del pedido">
+            <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-6">
+              <div className="rounded-xl bg-surface-muted p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Estado general
+                </p>
+                <p
+                  className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
+                    estadoClases[pedido.estado] ?? "bg-card text-foreground"
+                  }`}
+                >
+                  {pedido.estado}
+                </p>
+              </div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Área actual
+                </p>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  {normalizarArea(pedido.area_actual)}
+                </p>
+              </div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Estado de ventas
+                </p>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  {mostrarEstadoVentas(pedido)}
+                </p>
+              </div>
             </div>
           </Panel>
 
@@ -525,6 +569,7 @@ function FichaPedido() {
                       ["Peso estimado", pedido.peso_estimado || "—"],
                       ["Packing", pedido.packing_estado || "Pendiente"],
                       ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
+                      ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
                       ["Recibe / contacto", pedido.receptor_envio || "—"],
                       ["Nota de ventas", pedido.notas_ventas || "—"],
                     ] as const

@@ -10,6 +10,7 @@ import {
   usePedidos,
   type Pedido,
 } from "@/lib/taller-db";
+import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/ventas")({
   head: () => ({
@@ -32,12 +33,14 @@ export const Route = createFileRoute("/_authenticated/ventas")({
 
 function VentasPage() {
   const navigate = useNavigate();
+  const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
   const [busca, setBusca] = useState("");
   const [envioId, setEnvioId] = useState<string | null>(null);
+  const [entregaId, setEntregaId] = useState<string | null>(null);
 
   const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
   const enVentas = pedidosPorSede.filter((p) => p.area_actual === "Área ventas");
@@ -61,39 +64,18 @@ function VentasPage() {
     );
   }, [busca, enVentas]);
 
-  const recibidos = filtrados.filter(
-    (p) =>
-      p.estado === "En Ventas" && !["En packing", "Enviado", "Entregado"].includes(p.ventas_estado),
-  );
-  const packing = filtrados.filter(
-    (p) => !esEstadoFinalPedido(p.estado) && ["En packing", "Enviado"].includes(p.ventas_estado),
-  );
-  const cerrados = pedidosPorSede.filter((p) => esEstadoFinalPedido(p.estado));
+  const pendientesEntrega = filtrados.filter((p) => {
+    const estado = estadoVenta(p);
+    return p.area_actual === "Área ventas" && ["En Ventas", "Listo para Entrega"].includes(estado);
+  });
+  const enviados = filtrados.filter((p) => estadoVenta(p) === "Enviado");
+  const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
 
   const abrirPedido = (id: string) =>
     navigate({ to: "/pedidos/$id", params: { id }, search: { from: "ventas" } });
 
-  return (
-    <AppShell
-      titulo="Área ventas"
-      subtitulo={`Recepción comercial, packing, despacho y entrega · ${etiquetaSede}`}
-      acciones={
-        <>
-          <SelectorSedeDueno
-            esDueno={esDueno}
-            sedes={sedes}
-            value={sedeFiltro}
-            onChange={setSedeFiltro}
-          />
-          <StatCard etiqueta="En ventas" valor={String(enVentas.length)} />
-          <StatCard etiqueta="En packing" valor={String(packing.length)} />
-          <StatCard
-            etiqueta="Enviados"
-            valor={String(packing.filter((p) => p.ventas_estado === "Enviado").length)}
-          />
-        </>
-      }
-    >
+  const contenido = (
+    <>
       <div className="mb-5">
         <input
           value={busca}
@@ -104,71 +86,115 @@ function VentasPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <SeccionVentas titulo="Trabajos recibidos" cantidad={recibidos.length}>
-          {recibidos.length === 0 ? (
-            <Vacio texto="No hay trabajos nuevos en ventas." />
+        <SeccionVentas titulo="Pendientes de entrega" cantidad={pendientesEntrega.length}>
+          {pendientesEntrega.length === 0 ? (
+            <Vacio texto="No hay pedidos pendientes de entrega." />
           ) : (
-            recibidos.map((pedido) => (
-              <PedidoVentaCard
-                key={pedido.id}
-                pedido={pedido}
-                accionPrincipal="Iniciar packing"
-                onAbrir={() => abrirPedido(pedido.id)}
-                onAccion={() =>
-                  actualizar.mutate({
-                    id: pedido.id,
-                    ventas_estado: "En packing",
-                    packing_estado: "Preparando",
-                    estado: "En Ventas",
-                  })
-                }
-              />
-            ))
+            pendientesEntrega.map((pedido) => {
+              const listo = estadoVenta(pedido) === "Listo para Entrega";
+              return (
+                <PedidoVentaCard
+                  key={pedido.id}
+                  pedido={pedido}
+                  accionPrincipal={listo ? "Registrar envío" : "Marcar listo"}
+                  {...(listo ? { accionSecundaria: "Entregado" } : {})}
+                  onAbrir={() => abrirPedido(pedido.id)}
+                  onAccion={() => {
+                    if (listo) {
+                      setEnvioId(pedido.id);
+                      setEntregaId(null);
+                    } else {
+                      actualizar.mutate({
+                        id: pedido.id,
+                        area_actual: "Área ventas",
+                        estado: "Listo para Entrega",
+                        ventas_estado: "Listo para Entrega",
+                        packing_estado: "Listo para entrega",
+                      });
+                    }
+                  }}
+                  onAccionSecundaria={() => {
+                    setEntregaId(pedido.id);
+                    setEnvioId(null);
+                  }}
+                >
+                  {envioId === pedido.id ? (
+                    <FormularioEnvio
+                      pedido={pedido}
+                      guardando={actualizar.isPending}
+                      onCancelar={() => setEnvioId(null)}
+                      onGuardar={(datos) =>
+                        actualizar.mutate(
+                          {
+                            id: pedido.id,
+                            area_actual: "Área ventas",
+                            estado: "Enviado",
+                            ventas_estado: "Enviado",
+                            packing_estado: "Despachado",
+                            ...datos,
+                          },
+                          { onSuccess: () => setEnvioId(null) },
+                        )
+                      }
+                    />
+                  ) : null}
+                  {entregaId === pedido.id ? (
+                    <FormularioEntrega
+                      pedido={pedido}
+                      guardando={actualizar.isPending}
+                      onCancelar={() => setEntregaId(null)}
+                      onGuardar={(datos) =>
+                        actualizar.mutate(
+                          {
+                            id: pedido.id,
+                            area_actual: "Área ventas",
+                            estado: "Entregado",
+                            ventas_estado: "Entregado",
+                            packing_estado: "Entregado al cliente",
+                            ...datos,
+                          },
+                          { onSuccess: () => setEntregaId(null) },
+                        )
+                      }
+                    />
+                  ) : null}
+                </PedidoVentaCard>
+              );
+            })
           )}
         </SeccionVentas>
 
-        <SeccionVentas titulo="Packing y envío" cantidad={packing.length}>
-          {packing.length === 0 ? (
-            <Vacio texto="Sin pedidos en preparación o envío." />
+        <SeccionVentas titulo="Enviados" cantidad={enviados.length}>
+          {enviados.length === 0 ? (
+            <Vacio texto="Sin pedidos enviados." />
           ) : (
-            packing.map((pedido) => (
+            enviados.map((pedido) => (
               <PedidoVentaCard
                 key={pedido.id}
                 pedido={pedido}
-                accionPrincipal={
-                  pedido.ventas_estado === "Enviado" ? "Marcar entregado" : "Registrar envío"
-                }
+                accionPrincipal="Marcar entregado"
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
-                  if (pedido.ventas_estado === "Enviado") {
-                    actualizar.mutate({
-                      id: pedido.id,
-                      area_actual: "Área ventas",
-                      estado: "Entregado",
-                      ventas_estado: "Entregado",
-                      packing_estado: "Entregado al cliente",
-                    });
-                  } else {
-                    setEnvioId(pedido.id);
-                  }
+                  setEntregaId(pedido.id);
+                  setEnvioId(null);
                 }}
               >
-                {envioId === pedido.id ? (
-                  <FormularioEnvio
+                {entregaId === pedido.id ? (
+                  <FormularioEntrega
                     pedido={pedido}
                     guardando={actualizar.isPending}
-                    onCancelar={() => setEnvioId(null)}
+                    onCancelar={() => setEntregaId(null)}
                     onGuardar={(datos) =>
                       actualizar.mutate(
                         {
                           id: pedido.id,
                           area_actual: "Área ventas",
-                          estado: "Enviado",
-                          ventas_estado: "Enviado",
-                          packing_estado: "Despachado",
+                          estado: "Entregado",
+                          ventas_estado: "Entregado",
+                          packing_estado: "Entregado al cliente",
                           ...datos,
                         },
-                        { onSuccess: () => setEnvioId(null) },
+                        { onSuccess: () => setEntregaId(null) },
                       )
                     }
                   />
@@ -178,11 +204,11 @@ function VentasPage() {
           )}
         </SeccionVentas>
 
-        <SeccionVentas titulo="Enviados / entregados" cantidad={cerrados.length}>
-          {cerrados.length === 0 ? (
+        <SeccionVentas titulo="Entregados" cantidad={entregados.length}>
+          {entregados.length === 0 ? (
             <Vacio texto="Todavía no hay entregas cerradas desde ventas." />
           ) : (
-            cerrados
+            entregados
               .slice(0, 12)
               .map((pedido) => (
                 <PedidoVentaCard
@@ -196,8 +222,54 @@ function VentasPage() {
           )}
         </SeccionVentas>
       </div>
+    </>
+  );
+
+  if (sesion?.rolPrincipal === "operario") {
+    return (
+      <main className="min-h-screen bg-background px-4 py-5 pb-8 text-foreground sm:px-6">
+        <header className="mb-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Cola de trabajo
+          </p>
+          <h1 className="mt-1 font-display text-3xl">Área ventas</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Entregas, envíos y cierre comercial.</p>
+        </header>
+        {contenido}
+      </main>
+    );
+  }
+
+  return (
+    <AppShell
+      titulo="Área ventas"
+      subtitulo={`Recepción comercial, packing, despacho y entrega · ${etiquetaSede}`}
+      acciones={
+        <>
+          <SelectorSedeDueno
+            esDueno={esDueno}
+            sedes={sedes}
+            value={sedeFiltro}
+            onChange={setSedeFiltro}
+          />
+          <StatCard etiqueta="Pendientes" valor={String(pendientesEntrega.length)} />
+          <StatCard etiqueta="Enviados" valor={String(enviados.length)} />
+          <StatCard etiqueta="Entregados" valor={String(entregados.length)} />
+        </>
+      }
+    >
+      {contenido}
     </AppShell>
   );
+}
+
+function estadoVenta(pedido: Pedido) {
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+    return pedido.ventas_estado;
+  }
+  if (esEstadoFinalPedido(pedido.estado)) return pedido.estado;
+  return "En Ventas";
 }
 
 function SeccionVentas({
@@ -229,16 +301,21 @@ function Vacio({ texto }: { texto: string }) {
 function PedidoVentaCard({
   pedido,
   accionPrincipal,
+  accionSecundaria,
   onAbrir,
   onAccion,
+  onAccionSecundaria,
   children,
 }: {
   pedido: Pedido;
   accionPrincipal: string;
+  accionSecundaria?: string;
   onAbrir: () => void;
   onAccion: () => void;
+  onAccionSecundaria?: () => void;
   children?: ReactNode;
 }) {
+  const estadoComercial = estadoVenta(pedido);
   return (
     <article className="px-4 py-4">
       <button type="button" onClick={onAbrir} className="block w-full text-left">
@@ -248,9 +325,9 @@ function PedidoVentaCard({
             <p className="mt-0.5 truncate text-sm text-muted-foreground">{pedido.cliente}</p>
           </div>
           <span
-            className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[pedido.estado] ?? "bg-success-soft text-success"}`}
+            className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[estadoComercial] ?? "bg-success-soft text-success"}`}
           >
-            {pedido.estado || "En Ventas"}
+            {estadoComercial}
           </span>
         </div>
         <p className="mt-3 line-clamp-2 text-sm text-foreground">
@@ -268,23 +345,36 @@ function PedidoVentaCard({
             </dd>
           </div>
           <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Medio</dt>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Envío</dt>
             <dd className="mt-0.5 truncate text-foreground">{pedido.medio_envio || "Pendiente"}</dd>
           </div>
           <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Guía</dt>
-            <dd className="mt-0.5 truncate text-foreground">{pedido.guia_envio || "Pendiente"}</dd>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Entregado
+            </dt>
+            <dd className="mt-0.5 truncate text-foreground">
+              {fmtFecha(pedido.fecha_entregado) ?? "Pendiente"}
+            </dd>
           </div>
         </dl>
       </button>
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onAccion}
-          className="flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground"
+          className="min-w-[140px] flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground"
         >
           {accionPrincipal}
         </button>
+        {accionSecundaria && onAccionSecundaria ? (
+          <button
+            type="button"
+            onClick={onAccionSecundaria}
+            className="min-w-[110px] flex-1 rounded-xl border border-success/25 bg-success-soft px-3 py-2.5 text-xs font-medium text-success"
+          >
+            {accionSecundaria}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={onAbrir}
@@ -387,6 +477,86 @@ function FormularioEnvio({
           type="button"
           onClick={onCancelar}
           className="rounded-lg border border-border px-4 py-2 text-xs font-medium"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function FormularioEntrega({
+  pedido,
+  guardando,
+  onCancelar,
+  onGuardar,
+}: {
+  pedido: Pedido;
+  guardando: boolean;
+  onCancelar: () => void;
+  onGuardar: (datos: {
+    fecha_entregado: string;
+    receptor_envio: string;
+    notas_ventas: string;
+  }) => void;
+}) {
+  return (
+    <form
+      className="mt-4 rounded-xl border border-success/20 bg-success-soft/40 p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        onGuardar({
+          fecha_entregado: String(
+            fd.get("fecha_entregado") || new Date().toISOString().slice(0, 10),
+          ),
+          receptor_envio: String(
+            fd.get("receptor_envio") || pedido.receptor_envio || pedido.cliente,
+          ),
+          notas_ventas: String(fd.get("notas_ventas") || pedido.notas_ventas || ""),
+        });
+      }}
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Fecha entregado
+          <input
+            name="fecha_entregado"
+            type="date"
+            defaultValue={pedido.fecha_entregado ?? new Date().toISOString().slice(0, 10)}
+            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
+          />
+        </label>
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Recibe / contacto
+          <input
+            name="receptor_envio"
+            defaultValue={pedido.receptor_envio || pedido.cliente}
+            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
+          />
+        </label>
+      </div>
+      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
+        Nota de entrega
+        <textarea
+          name="notas_ventas"
+          defaultValue={pedido.notas_ventas}
+          rows={3}
+          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
+        />
+      </label>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="submit"
+          disabled={guardando}
+          className="flex-1 rounded-lg bg-success px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+        >
+          {guardando ? "Guardando..." : "Confirmar entrega"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium"
         >
           Cancelar
         </button>

@@ -324,6 +324,7 @@ export type Database = {
           entrega: string;
           estado: string;
           fecha_entrega: string | null;
+          fecha_entregado: string | null;
           fecha_ingreso: string;
           fecha_envio: string | null;
           id: string;
@@ -358,6 +359,7 @@ export type Database = {
           entrega?: string;
           estado?: string;
           fecha_entrega?: string | null;
+          fecha_entregado?: string | null;
           fecha_ingreso?: string;
           fecha_envio?: string | null;
           id?: string;
@@ -392,6 +394,7 @@ export type Database = {
           entrega?: string;
           estado?: string;
           fecha_entrega?: string | null;
+          fecha_entregado?: string | null;
           fecha_ingreso?: string;
           fecha_envio?: string | null;
           id?: string;

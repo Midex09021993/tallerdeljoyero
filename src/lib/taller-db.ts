@@ -125,6 +125,7 @@ export type Pedido = {
   medio_envio: string;
   guia_envio: string;
   fecha_envio: string | null;
+  fecha_entregado: string | null;
   receptor_envio: string;
   notas_ventas: string;
 };
@@ -196,6 +197,7 @@ export type PedidoNuevo = {
   medio_envio?: string;
   guia_envio?: string;
   fecha_envio?: string | null;
+  fecha_entregado?: string | null;
   receptor_envio?: string;
   notas_ventas?: string;
 };
@@ -203,7 +205,7 @@ export type PedidoNuevo = {
 const CAMPOS_PEDIDO_BASE =
   "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
 
-const CAMPOS_PEDIDO = `${CAMPOS_PEDIDO_BASE}, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, receptor_envio, notas_ventas`;
+const CAMPOS_PEDIDO = `${CAMPOS_PEDIDO_BASE}, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas`;
 
 function esErrorCampoFaltante(error: { message?: string; code?: string }) {
   const mensaje = (error.message ?? "").toLowerCase();
@@ -283,6 +285,7 @@ export function usePedidos() {
         medio_envio: textoCampo(p, "medio_envio"),
         guia_envio: textoCampo(p, "guia_envio"),
         fecha_envio: typeof p["fecha_envio"] === "string" ? p["fecha_envio"] : null,
+        fecha_entregado: typeof p["fecha_entregado"] === "string" ? p["fecha_entregado"] : null,
         receptor_envio: textoCampo(p, "receptor_envio"),
         notas_ventas: textoCampo(p, "notas_ventas"),
       }));
