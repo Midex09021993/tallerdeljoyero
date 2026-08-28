@@ -154,7 +154,7 @@ export function esVistaMovilTablet() {
 export function inicioSegunRol(s: Sesion, opciones?: { movilTablet?: boolean }): string {
   if (s.rolPrincipal === "monitor") return "/monitor";
   if (s.rolPrincipal === "cliente") return "/cliente";
-  if (s.rolPrincipal === "operario") return "/operario";
+  if (s.rolPrincipal === "operario") return opciones?.movilTablet ? "/inicio" : "/operario";
   if (opciones?.movilTablet && s.esAdmin) return "/inicio";
   return "/pedidos";
 }
