@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { inicioSegunRol, useSesion } from "@/lib/auth";
+import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -28,7 +28,9 @@ function Entrada() {
 
   useEffect(() => {
     if (isLoading) return;
-    navigate({ to: sesion ? inicioSegunRol(sesion) : "/auth" });
+    navigate({
+      to: sesion ? inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) : "/auth",
+    });
   }, [isLoading, sesion, navigate]);
 
   return (

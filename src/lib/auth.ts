@@ -146,10 +146,16 @@ export function useSesion() {
   });
 }
 
-export function inicioSegunRol(s: Sesion): string {
+export function esVistaMovilTablet() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 1023px)").matches;
+}
+
+export function inicioSegunRol(s: Sesion, opciones?: { movilTablet?: boolean }): string {
   if (s.rolPrincipal === "monitor") return "/monitor";
   if (s.rolPrincipal === "cliente") return "/cliente";
   if (s.rolPrincipal === "operario") return "/operario";
+  if (opciones?.movilTablet && s.esAdmin) return "/inicio";
   return "/pedidos";
 }
 

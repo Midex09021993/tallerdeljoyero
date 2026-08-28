@@ -49,6 +49,10 @@ const secciones: Seccion[] = [
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound },
 ];
 
+export const modulosAdminMovil = secciones.filter(
+  (s) => !["/monitor", "/operario", "/perfil"].includes(s.to),
+);
+
 function seccionesVisibles(
   roles: Rol[] | undefined,
   areas: string[] | undefined,
@@ -89,7 +93,6 @@ export function AppShell({
   const cerrarSesion = useCerrarSesion();
   const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
-  const usarTarjetasMoviles = Boolean(sesion?.esAdmin);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -153,7 +156,7 @@ export function AppShell({
           ) : null}
         </header>
 
-        {!ocultarNavegacion ? (
+        {!ocultarNavegacion && !sesion?.esAdmin ? (
           <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -171,41 +174,18 @@ export function AppShell({
               </button>
             </div>
 
-            {usarTarjetasMoviles ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {visibles.map((s) => {
-                  const Icono = s.icono ?? LayoutGrid;
-                  return (
-                    <Link
-                      key={s.to}
-                      to={s.to}
-                      className="group flex min-h-[64px] items-center gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-sm transition active:scale-[0.98]"
-                      activeProps={{
-                        className: "border-transparent bg-ink text-gold-bright shadow-card",
-                      }}
-                    >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-muted text-muted-foreground transition-colors group-[.bg-ink]:bg-gold/15 group-[.bg-ink]:text-gold-bright">
-                        <Icono className="size-4" aria-hidden="true" />
-                      </span>
-                      <span className="min-w-0 text-sm font-semibold leading-tight">{s.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {visibles.map((s) => (
-                  <Link
-                    key={s.to}
-                    to={s.to}
-                    className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-                    activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
-                  >
-                    {s.label}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {visibles.map((s) => (
+                <Link
+                  key={s.to}
+                  to={s.to}
+                  className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+                  activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
+                >
+                  {s.label}
+                </Link>
+              ))}
+            </div>
           </nav>
         ) : null}
 

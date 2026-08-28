@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { correoDesdeUsuario, inicioSegunRol, useSesion } from "@/lib/auth";
+import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/auth")({
@@ -39,7 +39,7 @@ function LoginPage() {
   const modoAlta = Boolean(estado?.vacio);
 
   useEffect(() => {
-    if (sesion) navigate({ to: inicioSegunRol(sesion) });
+    if (sesion) navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
   }, [sesion, navigate]);
 
   async function entrar(e: React.FormEvent) {
