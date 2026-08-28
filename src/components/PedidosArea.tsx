@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { Panel } from "@/components/AppShell";
 import { usePedidosDeArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
-import { normalizarArea, useSesion } from "@/lib/auth";
+import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { useMoverPedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 
@@ -9,16 +10,35 @@ export function PedidosArea({
   area,
   titulo = "Pedidos del área",
   from,
+  variante = "completa",
 }: {
   area: string;
   titulo?: string;
   from?: string;
+  variante?: "completa" | "operario";
 }) {
   const { data: sesion } = useSesion();
   const mover = useMoverPedido();
   const navigate = useNavigate();
   const { pedidos, isLoading } = usePedidosDeArea(area);
   const origen = from ?? area;
+
+  if (variante === "operario") {
+    return (
+      <ListaTrabajosOperario
+        area={area}
+        pedidos={pedidos}
+        isLoading={isLoading}
+        onAbrir={(id) =>
+          void navigate({
+            to: "/pedidos/$id",
+            params: { id },
+            search: { from: origen },
+          })
+        }
+      />
+    );
+  }
 
   return (
     <Panel titulo={`${titulo} · ${pedidos.length}`}>
@@ -138,5 +158,152 @@ export function PedidosArea({
         })}
       </div>
     </Panel>
+  );
+}
+
+function estadoTrabajoArea(pedido: { area_actual: string; ruta: string[] }, area: string) {
+  if (areaCoincide(pedido.area_actual, area)) return "En trabajo";
+  const ruta = Array.isArray(pedido.ruta) ? pedido.ruta.map(normalizarArea) : [];
+  const indiceArea = ruta.findIndex((item) => areaCoincide(item, area));
+  const indiceActual = ruta.findIndex((item) => areaCoincide(item, pedido.area_actual));
+  if (indiceArea >= 0 && indiceActual > indiceArea) return "Terminado";
+  if (areaCoincide(pedido.area_actual, "Área ventas") && indiceArea >= 0) return "Terminado";
+  return "Asignado";
+}
+
+function clasesEstadoTrabajo(estado: string) {
+  if (estado === "En trabajo") return "bg-info-soft text-info";
+  if (estado === "Terminado") return "bg-success-soft text-success";
+  return "bg-surface-muted text-muted-foreground";
+}
+
+function ListaTrabajosOperario({
+  area,
+  pedidos,
+  isLoading,
+  onAbrir,
+}: {
+  area: string;
+  pedidos: ReturnType<typeof usePedidosDeArea>["pedidos"];
+  isLoading: boolean;
+  onAbrir: (id: string) => void;
+}) {
+  const pendientes = pedidos.filter((pedido) => estadoTrabajoArea(pedido, area) !== "Terminado");
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Lista de trabajos</h2>
+          <p className="text-sm text-muted-foreground">
+            {pendientes.length} pendiente{pendientes.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <Link
+          to="/operario"
+          className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+        >
+          Mis áreas
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-card">
+          Cargando trabajos...
+        </div>
+      ) : null}
+
+      {!isLoading && pedidos.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+          <p className="text-base font-semibold">Sin trabajos en {area}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Cuando se asigne un pedido a esta área aparecerá aquí.
+          </p>
+        </div>
+      ) : null}
+
+      <div className="space-y-3">
+        {pedidos.map((pedido) => {
+          const estado = estadoTrabajoArea(pedido, area);
+          const entrega = fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "-";
+          return (
+            <button
+              key={pedido.id}
+              type="button"
+              onClick={() => onAbrir(pedido.id)}
+              className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold focus-visible:border-gold focus-visible:outline-none"
+              aria-label={`Abrir pedido ${pedido.referencia}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-semibold text-foreground">
+                    {pedido.referencia}
+                  </p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    {pedido.cliente || "Sin cliente"}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${clasesEstadoTrabajo(
+                    estado,
+                  )}`}
+                >
+                  {estado}
+                </span>
+              </div>
+
+              <p className="mt-3 line-clamp-2 text-sm text-foreground">
+                {pedido.trabajo || pedido.pieza || "Sin trabajo definido"}
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-xl bg-surface-muted p-3">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground">Área</p>
+                  <p className="mt-1 truncate font-medium text-foreground">
+                    {normalizarArea(pedido.area_actual)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface-muted p-3">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Entrega
+                  </p>
+                  <p className="mt-1 truncate font-medium text-foreground">{entrega}</p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="truncate text-xs text-muted-foreground">
+                  {pedido.contrato ? `Contrato ${pedido.contrato}` : pedido.sede_nombre || ""}
+                </span>
+                <span className="rounded-full bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">
+                  Abrir
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export function AreaOperario({ area, children }: { area: string; children?: ReactNode }) {
+  return (
+    <main className="min-h-screen bg-background px-4 py-5 pb-8 text-foreground sm:px-6">
+      <header className="mb-5">
+        <Link
+          to="/operario"
+          className="mb-4 inline-flex rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+        >
+          ← Mis áreas
+        </Link>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Cola de trabajo
+        </p>
+        <h1 className="mt-1 font-display text-3xl">{area}</h1>
+      </header>
+      <PedidosArea area={area} from={area} variante="operario" />
+      {children ? <div className="mt-5">{children}</div> : null}
+    </main>
   );
 }

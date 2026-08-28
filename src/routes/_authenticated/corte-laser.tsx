@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PedidosArea } from "@/components/PedidosArea";
+import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/corte-laser")({
   head: () => ({
@@ -20,6 +21,12 @@ export const Route = createFileRoute("/_authenticated/corte-laser")({
 });
 
 function CorteLaser() {
+  const { data: sesion } = useSesion();
+  if (sesion?.rolPrincipal === "operario") return <AreaOperario area="Corte Láser" />;
+  return <CorteLaserCompleto />;
+}
+
+function CorteLaserCompleto() {
   const { pedidos, enTrabajo } = usePedidosDeArea("Corte Láser");
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede } = useSedeFiltroDueno();
 

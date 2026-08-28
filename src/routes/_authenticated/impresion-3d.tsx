@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PedidosArea } from "@/components/PedidosArea";
+import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useInventario } from "@/lib/taller-db";
+import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/impresion-3d")({
   head: () => ({
@@ -21,6 +22,12 @@ export const Route = createFileRoute("/_authenticated/impresion-3d")({
 });
 
 function Impresion3D() {
+  const { data: sesion } = useSesion();
+  if (sesion?.rolPrincipal === "operario") return <AreaOperario area="Impresión 3D" />;
+  return <Impresion3DCompleta />;
+}
+
+function Impresion3DCompleta() {
   const { pedidos, enTrabajo } = usePedidosDeArea("Impresión 3D");
   const { data: inventario = [] } = useInventario();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede, sedeSeleccionada } =

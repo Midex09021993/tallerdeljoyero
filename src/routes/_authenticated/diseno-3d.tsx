@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { PedidosArea } from "@/components/PedidosArea";
+import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
@@ -8,7 +8,7 @@ import { VisorSTL } from "@/components/VisorSTL";
 import { VisorIframe } from "@/components/VisorIframe";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { areaCoincide } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 import { useArchivosPedidos, usePedidos, type ArchivoPedido, type Pedido } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/diseno-3d")({
@@ -42,6 +42,12 @@ const archivoValido = (archivo: ArchivoPedido | undefined): archivo is ArchivoPe
   Boolean(archivo);
 
 function Diseno3D() {
+  const { data: sesion } = useSesion();
+  if (sesion?.rolPrincipal === "operario") return <AreaOperario area="Diseño 3D" />;
+  return <Diseno3DCompleto />;
+}
+
+function Diseno3DCompleto() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
   const { data: archivos = [], isLoading: cargandoArchivos } = useArchivosPedidos();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
