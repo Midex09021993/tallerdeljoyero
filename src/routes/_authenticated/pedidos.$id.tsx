@@ -190,6 +190,7 @@ function FichaPedido() {
     sesion?.rolPrincipal === "operario" && regresoBase.ruta === "/pedidos"
       ? regresosFicha.operario
       : regresoBase;
+  const esFichaOperario = sesion?.rolPrincipal === "operario";
   const volver = () => void navigate({ to: regreso.ruta as never });
 
   const pedido = pedidos.find((p) => p.id === id);
@@ -276,7 +277,7 @@ function FichaPedido() {
 
   if (isLoading) {
     return (
-      <AppShell titulo="Ficha del pedido" subtitulo="Cargando…">
+      <AppShell titulo="Ficha del pedido" subtitulo="Cargando…" ocultarNavegacion={esFichaOperario}>
         <p className="text-sm text-muted-foreground">Cargando pedido…</p>
       </AppShell>
     );
@@ -284,7 +285,7 @@ function FichaPedido() {
 
   if (!pedido) {
     return (
-      <AppShell titulo="Pedido no encontrado">
+      <AppShell titulo="Pedido no encontrado" ocultarNavegacion={esFichaOperario}>
         <p className="text-sm text-muted-foreground">
           Este pedido no existe o no pertenece a tu sede.{" "}
           <button type="button" onClick={volver} className="text-info hover:underline">
@@ -316,6 +317,7 @@ function FichaPedido() {
     <AppShell
       titulo={`${pedido.referencia} · ${pedido.trabajo || pedido.pieza}`}
       subtitulo={`${pedido.cliente}${pedido.sede_nombre ? ` · ${pedido.sede_nombre}` : ""}`}
+      ocultarNavegacion={esFichaOperario}
     >
       <div className="mb-6">
         <button

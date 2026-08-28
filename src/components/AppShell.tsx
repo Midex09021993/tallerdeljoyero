@@ -61,11 +61,13 @@ export function AppShell({
   titulo,
   subtitulo,
   acciones,
+  ocultarNavegacion = false,
   children,
 }: {
   titulo: string;
   subtitulo?: string;
   acciones?: ReactNode;
+  ocultarNavegacion?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -75,48 +77,50 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="hidden w-64 shrink-0 flex-col bg-ink text-ink-foreground md:flex">
-        <div className="p-8">
-          <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
-            {sesion?.sede?.nombre ?? "Portal del taller"}
-          </p>
-        </div>
-
-        <nav className="flex-1 space-y-1 px-4">
-          {visibles.map((s) => (
-            <Link
-              key={s.to}
-              to={s.to}
-              className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
-              activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
-            >
-              {s.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="border-t border-ink-foreground/5 p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/20 font-display italic text-gold">
-              {inicial}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
-              <p className="truncate text-[10px] text-ink-foreground/40">
-                {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
-              </p>
-            </div>
+      {!ocultarNavegacion ? (
+        <aside className="hidden w-64 shrink-0 flex-col bg-ink text-ink-foreground md:flex">
+          <div className="p-8">
+            <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
+              {sesion?.sede?.nombre ?? "Portal del taller"}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void cerrarSesion()}
-            className="w-full rounded-lg border border-ink-foreground/15 py-2 text-[10px] uppercase tracking-wider text-ink-foreground/60 transition-colors hover:text-ink-foreground"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
+
+          <nav className="flex-1 space-y-1 px-4">
+            {visibles.map((s) => (
+              <Link
+                key={s.to}
+                to={s.to}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
+                activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="border-t border-ink-foreground/5 p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/20 font-display italic text-gold">
+                {inicial}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
+                <p className="truncate text-[10px] text-ink-foreground/40">
+                  {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void cerrarSesion()}
+              className="w-full rounded-lg border border-ink-foreground/15 py-2 text-[10px] uppercase tracking-wider text-ink-foreground/60 transition-colors hover:text-ink-foreground"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </aside>
+      ) : null}
 
       <main className="min-w-0 flex-1 overflow-y-auto px-4 py-5 pb-8 sm:px-6 lg:p-10">
         <header className="mb-5 flex flex-wrap items-end justify-between gap-4 sm:mb-8 lg:mb-10">
@@ -131,36 +135,38 @@ export function AppShell({
           ) : null}
         </header>
 
-        <nav className="sticky top-0 z-20 -mx-4 mb-5 border-y border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {visibles.map((s) => (
-              <Link
-                key={s.to}
-                to={s.to}
-                className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
-                activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
-              >
-                {s.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
-              <p className="truncate text-[10px] text-muted-foreground">
-                {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
-              </p>
+        {!ocultarNavegacion ? (
+          <nav className="sticky top-0 z-20 -mx-4 mb-5 border-y border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {visibles.map((s) => (
+                <Link
+                  key={s.to}
+                  to={s.to}
+                  className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"
+                  activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
+                >
+                  {s.label}
+                </Link>
+              ))}
             </div>
-            <button
-              type="button"
-              onClick={() => void cerrarSesion()}
-              className="shrink-0 rounded-full border border-danger/25 bg-danger-soft px-3 py-2 text-xs font-semibold text-danger"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </nav>
+
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
+                <p className="truncate text-[10px] text-muted-foreground">
+                  {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void cerrarSesion()}
+                className="shrink-0 rounded-full border border-danger/25 bg-danger-soft px-3 py-2 text-xs font-semibold text-danger"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </nav>
+        ) : null}
 
         {children}
       </main>
