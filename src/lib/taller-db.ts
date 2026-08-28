@@ -153,49 +153,83 @@ export type PedidoNuevo = {
   notas_ventas?: string;
 };
 
-const CAMPOS_PEDIDO =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, receptor_envio, notas_ventas, sedes(nombre)";
+const CAMPOS_PEDIDO_BASE =
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+
+const CAMPOS_PEDIDO = `${CAMPOS_PEDIDO_BASE}, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, receptor_envio, notas_ventas`;
+
+function esErrorCampoFaltante(error: { message?: string; code?: string }) {
+  const mensaje = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "42703" ||
+    mensaje.includes("could not find") ||
+    mensaje.includes("schema cache") ||
+    mensaje.includes("column") ||
+    mensaje.includes("ventas_estado") ||
+    mensaje.includes("packing_estado")
+  );
+}
+
+function textoCampo(registro: Record<string, unknown>, campo: string, fallback = "") {
+  const valor = registro[campo];
+  return typeof valor === "string" ? valor : fallback;
+}
 
 export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
     queryFn: async (): Promise<Pedido[]> => {
-      const { data, error } = await supabase
+      const respuesta = await supabase
         .from("pedidos")
         .select(CAMPOS_PEDIDO)
         .order("created_at", { ascending: false });
+
+      const { data, error } =
+        respuesta.error && esErrorCampoFaltante(respuesta.error)
+          ? await supabase
+              .from("pedidos")
+              .select(CAMPOS_PEDIDO_BASE)
+              .order("created_at", { ascending: false })
+          : respuesta;
+
       if (error) throw error;
-      return (data ?? []).map(({ sedes, ...p }) => ({
+      return ((data ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...p }) => ({
         ...p,
-        referencia: p.referencia ?? "",
-        pieza: p.pieza ?? "",
-        cliente: p.cliente ?? "",
-        material: p.material ?? "",
-        estado: p.estado ?? "",
-        entrega: p.entrega ?? "",
-        importe: Number(p.importe) || 0,
+        id: textoCampo(p, "id"),
+        referencia: textoCampo(p, "referencia"),
+        pieza: textoCampo(p, "pieza"),
+        cliente: textoCampo(p, "cliente"),
+        material: textoCampo(p, "material"),
+        estado: textoCampo(p, "estado"),
+        entrega: textoCampo(p, "entrega"),
+        importe: Number(p["importe"]) || 0,
         sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
-        telefono: p.telefono ?? "",
-        origen: p.origen ?? "",
-        contrato: p.contrato ?? "",
-        trabajo: p.trabajo ?? "",
-        fecha_ingreso: p.fecha_ingreso ?? "",
-        fecha_entrega: p.fecha_entrega ?? null,
-        area_actual: p.area_actual ?? "Pedidos",
-        ruta: Array.isArray(p.ruta) ? p.ruta : [],
-        area_desde: p.area_desde ?? p.fecha_ingreso ?? new Date().toISOString(),
-        notas: p.notas ?? "",
-        talla: p.talla ?? "",
-        cantidad_piezas: Number(p.cantidad_piezas) || 1,
-        piedras: p.piedras ?? "",
-        peso_estimado: p.peso_estimado ?? "",
-        ventas_estado: p.ventas_estado ?? "Recibido en ventas",
-        packing_estado: p.packing_estado ?? "Pendiente",
-        medio_envio: p.medio_envio ?? "",
-        guia_envio: p.guia_envio ?? "",
-        fecha_envio: p.fecha_envio ?? null,
-        receptor_envio: p.receptor_envio ?? "",
-        notas_ventas: p.notas_ventas ?? "",
+        sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
+        telefono: textoCampo(p, "telefono"),
+        origen: textoCampo(p, "origen"),
+        contrato: textoCampo(p, "contrato"),
+        trabajo: textoCampo(p, "trabajo"),
+        fecha_ingreso: textoCampo(p, "fecha_ingreso"),
+        fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
+        area_actual: textoCampo(p, "area_actual", "Pedidos"),
+        ruta: Array.isArray(p["ruta"]) ? p["ruta"].filter((area) => typeof area === "string") : [],
+        area_desde: textoCampo(
+          p,
+          "area_desde",
+          textoCampo(p, "fecha_ingreso", new Date().toISOString()),
+        ),
+        notas: textoCampo(p, "notas"),
+        talla: textoCampo(p, "talla"),
+        cantidad_piezas: Number(p["cantidad_piezas"]) || 1,
+        piedras: textoCampo(p, "piedras"),
+        peso_estimado: textoCampo(p, "peso_estimado"),
+        ventas_estado: textoCampo(p, "ventas_estado", "Recibido en ventas"),
+        packing_estado: textoCampo(p, "packing_estado", "Pendiente"),
+        medio_envio: textoCampo(p, "medio_envio"),
+        guia_envio: textoCampo(p, "guia_envio"),
+        fecha_envio: typeof p["fecha_envio"] === "string" ? p["fecha_envio"] : null,
+        receptor_envio: textoCampo(p, "receptor_envio"),
+        notas_ventas: textoCampo(p, "notas_ventas"),
       }));
     },
   });
