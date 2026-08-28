@@ -33,10 +33,42 @@ type Seguimiento = {
   trabajo: string;
   cliente: string;
   area_actual: string;
+  estado: string;
+  ventas_estado: string | null;
   ruta: string[];
   fecha_entrega: string | null;
+  fecha_envio: string | null;
+  fecha_entregado: string | null;
   sede: string | null;
 };
+
+const ESTADOS_CLIENTE = [
+  "Recibido",
+  "Evaluación",
+  "En Producción",
+  "Área de Ventas",
+  "Listo para Entrega",
+  "Enviado",
+  "Entregado",
+] as const;
+
+function estadoCliente(pedido: Seguimiento) {
+  const estado = pedido.estado || "";
+  const ventas = pedido.ventas_estado || "";
+
+  if (estado === "Cancelado") return "Cancelado";
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(estado)) return estado;
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(ventas)) return ventas;
+  if (estado === "En Ventas" || pedido.area_actual === "Área ventas") return "Área de Ventas";
+  if (estado === "En Producción") return "En Producción";
+  if (estado === "Evaluación") return "Evaluación";
+  return "Recibido";
+}
+
+function areaCliente(area: string) {
+  if (area === "Área ventas") return "Área de Ventas";
+  return area;
+}
 
 function SeguimientoCliente() {
   const { ref } = Route.useSearch();
@@ -53,18 +85,19 @@ function SeguimientoCliente() {
   });
 
   const pedido = consulta.data ?? null;
-  const secuencia = pedido ? ["Pedidos", ...pedido.ruta, "Área ventas"] : [];
-  const indice = pedido ? secuencia.indexOf(pedido.area_actual) : -1;
-  const avance = secuencia.length > 1 ? Math.round((indice / (secuencia.length - 1)) * 100) : 0;
+  const estadoActual = pedido ? estadoCliente(pedido) : null;
+  const indice = estadoActual ? ESTADOS_CLIENTE.findIndex((estado) => estado === estadoActual) : -1;
+  const avance = indice >= 0 ? Math.round((indice / (ESTADOS_CLIENTE.length - 1)) * 100) : 0;
+  const mostrarAreaActual = pedido != null && estadoActual === "En Producción";
 
   return (
-    <main className="min-h-screen bg-surface px-6 py-16">
+    <main className="min-h-screen bg-surface px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto w-full max-w-xl">
         <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-gold">Aurum Lab</p>
         <h1 className="mb-6 font-display text-3xl">Seguimiento de tu pedido</h1>
 
         <form
-          className="flex gap-2"
+          className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(e) => {
             e.preventDefault();
             if (valor.trim()) consulta.mutate(valor.trim());
@@ -74,12 +107,12 @@ function SeguimientoCliente() {
             value={valor}
             onChange={(e) => setValor(e.target.value)}
             placeholder="Referencia o número de contrato"
-            className="flex-1 rounded-lg border border-border bg-card px-4 py-3 text-sm"
+            className="min-h-12 flex-1 rounded-lg border border-border bg-card px-4 py-3 text-base sm:text-sm"
           />
           <button
             type="submit"
             disabled={consulta.isPending}
-            className="rounded-lg bg-ink px-5 py-3 text-xs font-medium text-ink-foreground disabled:opacity-50"
+            className="min-h-12 rounded-lg bg-ink px-5 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:text-xs"
           >
             {consulta.isPending ? "Buscando…" : "Consultar"}
           </button>
@@ -99,6 +132,21 @@ function SeguimientoCliente() {
               {pedido.sede ? ` · ${pedido.sede}` : ""}
             </p>
 
+            <div className="mt-5 rounded-xl border border-border bg-surface/60 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Estado actual
+              </p>
+              <p className="mt-1 text-lg font-semibold">{estadoActual}</p>
+              {mostrarAreaActual ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Actualmente en:{" "}
+                  <span className="font-medium text-foreground">
+                    {areaCliente(pedido.area_actual)}
+                  </span>
+                </p>
+              ) : null}
+            </div>
+
             <div className="mt-6">
               <div className="mb-2 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
                 <span>Avance</span>
@@ -110,8 +158,8 @@ function SeguimientoCliente() {
             </div>
 
             <ol className="mt-6 space-y-2">
-              {secuencia.map((a, i) => (
-                <li key={a} className="flex items-center gap-3 text-sm">
+              {ESTADOS_CLIENTE.map((estado, i) => (
+                <li key={estado} className="flex items-center gap-3 text-sm">
                   <span
                     className={`grid size-6 place-items-center rounded-full text-[10px] font-semibold ${
                       i < indice
@@ -124,16 +172,26 @@ function SeguimientoCliente() {
                     {i < indice ? "✓" : i + 1}
                   </span>
                   <span className={i === indice ? "font-medium" : "text-muted-foreground"}>
-                    {a}
+                    {estado}
                   </span>
                 </li>
               ))}
             </ol>
 
-            <p className="mt-6 text-sm">
+            <section className="mt-6 rounded-xl border border-border bg-surface/60 p-4">
+              <h3 className="text-sm font-semibold">Información adicional</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Aquí se mostrarán certificados, guía de envío, observaciones o datos técnicos cuando
+                estén disponibles.
+              </p>
+            </section>
+
+            <div className="mt-6 border-t border-border pt-4 text-sm">
               <span className="text-muted-foreground">Fecha estimada de entrega: </span>
-              {fmtFecha(pedido.fecha_entrega) ?? "por confirmar"}
-            </p>
+              <span className="font-medium">
+                {fmtFecha(pedido.fecha_entrega) ?? "por confirmar"}
+              </span>
+            </div>
           </article>
         ) : null}
       </div>
