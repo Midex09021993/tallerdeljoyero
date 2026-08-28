@@ -23,7 +23,7 @@ export const Route = createFileRoute("/cliente")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    ...(typeof search['ref'] === "string" && search['ref'] ? { ref: search['ref'] as string } : {}),
+    ...(typeof search["ref"] === "string" && search["ref"] ? { ref: search["ref"] as string } : {}),
   }),
   component: SeguimientoCliente,
 });
@@ -53,7 +53,7 @@ function SeguimientoCliente() {
   });
 
   const pedido = consulta.data ?? null;
-  const secuencia = pedido ? ["Pedidos", ...pedido.ruta, "Entregado"] : [];
+  const secuencia = pedido ? ["Pedidos", ...pedido.ruta, "Área ventas"] : [];
   const indice = pedido ? secuencia.indexOf(pedido.area_actual) : -1;
   const avance = secuencia.length > 1 ? Math.round((indice / (secuencia.length - 1)) * 100) : 0;
 
@@ -123,7 +123,9 @@ function SeguimientoCliente() {
                   >
                     {i < indice ? "✓" : i + 1}
                   </span>
-                  <span className={i === indice ? "font-medium" : "text-muted-foreground"}>{a}</span>
+                  <span className={i === indice ? "font-medium" : "text-muted-foreground"}>
+                    {a}
+                  </span>
                 </li>
               ))}
             </ol>

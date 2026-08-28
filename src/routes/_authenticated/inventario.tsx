@@ -52,7 +52,9 @@ function InventarioPage() {
   return (
     <AppShell
       titulo="Inventario"
-      subtitulo={isLoading ? "Cargando…" : `${inventario.length} materiales · ${bajos.length} bajo mínimo`}
+      subtitulo={
+        isLoading ? "Cargando…" : `${inventario.length} materiales · ${bajos.length} bajo mínimo`
+      }
       acciones={
         <>
           <StatCard etiqueta="Materiales" valor={String(inventario.length)} />
@@ -84,17 +86,27 @@ function InventarioPage() {
       </div>
 
       {modulo === "materiales" ? (
-        <Materiales inventario={inventario} puedeGestionar={puedeGestionar} sedeId={sesion?.perfil.sede_id ?? null} />
+        <Materiales
+          inventario={inventario}
+          puedeGestionar={puedeGestionar}
+          sedeId={sesion?.perfil.sede_id ?? null}
+        />
       ) : null}
       {modulo === "bajo" ? <StockBajo bajos={bajos} /> : null}
       {modulo === "movimientos" ? (
-        <Movimientos inventario={inventario} areasUsuario={sesion?.areas ?? []} puedeTodo={puedeGestionar} />
+        <Movimientos
+          inventario={inventario}
+          areasUsuario={sesion?.areas ?? []}
+          puedeTodo={puedeGestionar}
+        />
       ) : null}
     </AppShell>
   );
 }
 
-type MaterialItem = ReturnType<typeof useInventario>["data"] extends (infer T)[] | undefined ? T : never;
+type MaterialItem = ReturnType<typeof useInventario>["data"] extends (infer T)[] | undefined
+  ? T
+  : never;
 
 function Materiales({
   inventario,
@@ -207,7 +219,9 @@ function Materiales({
                         })
                       }
                       className={`rounded-full px-3 py-1 text-[11px] ${
-                        activo ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"
+                        activo
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-surface-muted text-muted-foreground"
                       }`}
                     >
                       {a}
@@ -235,7 +249,9 @@ function Materiales({
               type="button"
               onClick={() => setFiltro(c)}
               className={`rounded-full px-3 py-1 text-[11px] ${
-                filtro === c ? "bg-foreground text-background" : "bg-surface-muted text-muted-foreground"
+                filtro === c
+                  ? "bg-foreground text-background"
+                  : "bg-surface-muted text-muted-foreground"
               }`}
             >
               {c}
@@ -392,7 +408,9 @@ function StockBajo({ bajos }: { bajos: MaterialItem[] }) {
           </div>
         ))}
         {bajos.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-muted-foreground">Todo el inventario está por encima del mínimo.</p>
+          <p className="px-6 py-8 text-sm text-muted-foreground">
+            Todo el inventario está por encima del mínimo.
+          </p>
         ) : null}
       </div>
     </Panel>
@@ -438,7 +456,9 @@ function Movimientos({
         area: form.area,
         motivo: form.motivo,
       });
-      toast.success(form.tipo === "consumo" ? "Consumo descontado del stock" : "Entrada registrada");
+      toast.success(
+        form.tipo === "consumo" ? "Consumo descontado del stock" : "Entrada registrada",
+      );
       setForm({ ...form, cantidad: "", motivo: "" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo registrar");
@@ -510,7 +530,10 @@ function Movimientos({
             <thead>
               <tr className="bg-surface-muted">
                 {["Fecha", "Material", "Área", "Tipo", "Cantidad", "Motivo"].map((h) => (
-                  <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th
+                    key={h}
+                    className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
+                  >
                     {h}
                   </th>
                 ))}
@@ -527,7 +550,9 @@ function Movimientos({
                   <td className="px-6 py-3 text-xs">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                        mv.tipo === "entrada" ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
+                        mv.tipo === "entrada"
+                          ? "bg-success-soft text-success"
+                          : "bg-warning-soft text-warning"
                       }`}
                     >
                       {mv.tipo}

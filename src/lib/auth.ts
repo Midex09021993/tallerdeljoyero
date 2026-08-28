@@ -17,11 +17,9 @@ export const AREAS = [
   "Diseño 3D",
   "Impresión 3D",
   "Casting",
+  "Corte Láser",
   "Taller",
   "Área ventas",
-  "Corte Láser",
-  "Terminado",
-  "Entregado",
 ] as const;
 
 export type Area = (typeof AREAS)[number];
@@ -31,6 +29,10 @@ export const areaAliases: Record<string, string> = {
   "Corte láser": "Corte Láser",
   "Corte Laser": "Corte Láser",
   "Taller / Engaste": "Taller",
+  Ventas: "Área ventas",
+  "Área de Ventas": "Área ventas",
+  Terminado: "Área ventas",
+  Entregado: "Área ventas",
 };
 
 export function normalizarArea(area: string | null | undefined) {

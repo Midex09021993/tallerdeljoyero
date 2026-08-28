@@ -96,7 +96,11 @@ export function VisorSTL({ url, className }: { url: string; className?: string }
   }, [url]);
 
   return (
-    <div className={className ?? "relative h-[420px] w-full rounded-xl border border-border bg-surface-muted"}>
+    <div
+      className={
+        className ?? "relative h-[420px] w-full rounded-xl border border-border bg-surface-muted"
+      }
+    >
       <div ref={contenedor} className="h-full w-full [&>canvas]:rounded-xl" />
       {cargando || error ? (
         <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">

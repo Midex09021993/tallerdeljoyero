@@ -3,7 +3,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
-import { useActualizarPedido, usePedidos, type Pedido } from "@/lib/taller-db";
+import {
+  esEstadoFinalPedido,
+  estadoClases,
+  useActualizarPedido,
+  usePedidos,
+  type Pedido,
+} from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/ventas")({
   head: () => ({
@@ -56,12 +62,13 @@ function VentasPage() {
   }, [busca, enVentas]);
 
   const recibidos = filtrados.filter(
-    (p) => !["En packing", "Enviado", "Entregado"].includes(p.ventas_estado),
+    (p) =>
+      p.estado === "En Ventas" && !["En packing", "Enviado", "Entregado"].includes(p.ventas_estado),
   );
-  const packing = filtrados.filter((p) => ["En packing", "Enviado"].includes(p.ventas_estado));
-  const cerrados = pedidosPorSede.filter(
-    (p) => p.area_actual === "Entregado" && ["Enviado", "Entregado"].includes(p.ventas_estado),
+  const packing = filtrados.filter(
+    (p) => !esEstadoFinalPedido(p.estado) && ["En packing", "Enviado"].includes(p.ventas_estado),
   );
+  const cerrados = pedidosPorSede.filter((p) => esEstadoFinalPedido(p.estado));
 
   const abrirPedido = (id: string) =>
     navigate({ to: "/pedidos/$id", params: { id }, search: { from: "ventas" } });
@@ -112,6 +119,7 @@ function VentasPage() {
                     id: pedido.id,
                     ventas_estado: "En packing",
                     packing_estado: "Preparando",
+                    estado: "En Ventas",
                   })
                 }
               />
@@ -135,7 +143,8 @@ function VentasPage() {
                   if (pedido.ventas_estado === "Enviado") {
                     actualizar.mutate({
                       id: pedido.id,
-                      area_actual: "Entregado",
+                      area_actual: "Área ventas",
+                      estado: "Entregado",
                       ventas_estado: "Entregado",
                       packing_estado: "Entregado al cliente",
                     });
@@ -153,6 +162,8 @@ function VentasPage() {
                       actualizar.mutate(
                         {
                           id: pedido.id,
+                          area_actual: "Área ventas",
+                          estado: "Enviado",
                           ventas_estado: "Enviado",
                           packing_estado: "Despachado",
                           ...datos,
@@ -236,8 +247,10 @@ function PedidoVentaCard({
             <p className="truncate text-sm font-semibold text-foreground">{pedido.referencia}</p>
             <p className="mt-0.5 truncate text-sm text-muted-foreground">{pedido.cliente}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-success-soft px-2 py-1 text-[10px] font-semibold uppercase text-success">
-            {pedido.ventas_estado || "Recibido"}
+          <span
+            className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[pedido.estado] ?? "bg-success-soft text-success"}`}
+          >
+            {pedido.estado || "En Ventas"}
           </span>
         </div>
         <p className="mt-3 line-clamp-2 text-sm text-foreground">

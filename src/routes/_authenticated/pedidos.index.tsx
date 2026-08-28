@@ -15,6 +15,7 @@ import {
   useEnviarAArea,
   usePedidos,
   useSedes,
+  esEstadoFinalPedido,
   type PedidoNuevo,
 } from "@/lib/taller-db";
 
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/")({
   component: PedidosPage,
 });
 
-const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
+const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Área ventas");
 
 const hoy = () => new Date().toISOString().slice(0, 10);
 
@@ -196,8 +197,8 @@ function PedidosPage() {
     [pedidosPorSede, filtro, busca, soloSusAreas, misAreas],
   );
 
-  const activos = pedidosPorSede.filter((p) => p.area_actual !== "Entregado");
-  const entregados = pedidosPorSede.filter((p) => p.area_actual === "Entregado");
+  const activos = pedidosPorSede.filter((p) => !esEstadoFinalPedido(p.estado));
+  const entregados = pedidosPorSede.filter((p) => p.estado === "Entregado");
 
   const diasHastaEntrega = (fechaIso: string | null | undefined): number | null => {
     if (!fechaIso) return null;
@@ -315,7 +316,7 @@ function PedidosPage() {
                 contrato: form.contrato,
                 material: form.material,
                 peso_estimado: form.peso_estimado,
-                estado: "Pedidos",
+                estado: "Recibido",
                 entrega: form.fecha_entrega,
                 importe: Number(form.importe) || 0,
                 fecha_ingreso: form.fecha_ingreso || hoy(),

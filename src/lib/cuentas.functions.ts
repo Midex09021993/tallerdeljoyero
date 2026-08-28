@@ -16,7 +16,8 @@ type NuevoUsuario = {
 
 function validar(input: NuevoUsuario): NuevoUsuario {
   if (!input.correo || !input.correo.includes("@")) throw new Error("Usuario o correo no válido");
-  if (!input.password || input.password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres");
+  if (!input.password || input.password.length < 6)
+    throw new Error("La contraseña debe tener al menos 6 caracteres");
   if (!input.nombre) throw new Error("El nombre es obligatorio");
   return input;
 }
@@ -36,7 +37,9 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
   .inputValidator(validar)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count } = await supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true });
+    const { count } = await supabaseAdmin
+      .from("user_roles")
+      .select("id", { count: "exact", head: true });
     if ((count ?? 0) > 0) throw new Error("El sistema ya tiene usuarios registrados");
 
     const { data: sede } = await supabaseAdmin
@@ -53,16 +56,14 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     });
     if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
 
-    await supabaseAdmin
-      .from("profiles")
-      .upsert({
-        id: creado.user.id,
-        nombre: data.nombre,
-        dni: data.dni,
-        telefono: data.telefono,
-        sede_id: sede?.id ?? null,
-        clave_visible: data.password,
-      });
+    await supabaseAdmin.from("profiles").upsert({
+      id: creado.user.id,
+      nombre: data.nombre,
+      dni: data.dni,
+      telefono: data.telefono,
+      sede_id: sede?.id ?? null,
+      clave_visible: data.password,
+    });
     await supabaseAdmin.from("user_roles").insert({ user_id: creado.user.id, role: "dueno" });
     return { ok: true };
   });
@@ -194,7 +195,9 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     await supabaseAdmin.from("user_areas").delete().eq("user_id", data.id);
     const areas = data.rol === "operario" ? data.areas : [];
     if (areas.length > 0) {
-      await supabaseAdmin.from("user_areas").insert(areas.map((area) => ({ user_id: data.id, area })));
+      await supabaseAdmin
+        .from("user_areas")
+        .insert(areas.map((area) => ({ user_id: data.id, area })));
     }
 
     // El acceso se hace con DNI → correo sintético, así que el correo de la
@@ -203,10 +206,10 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
     };
     if (data.dni) {
-      cambios['email'] = `${data.dni.replace(/\s+/g, "")}@taller.local`;
-      cambios['email_confirm'] = true;
+      cambios["email"] = `${data.dni.replace(/\s+/g, "")}@taller.local`;
+      cambios["email_confirm"] = true;
     }
-    if (data.password) cambios['password'] = data.password;
+    if (data.password) cambios["password"] = data.password;
 
     {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, cambios);

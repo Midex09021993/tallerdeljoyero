@@ -81,7 +81,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Aurum Lab — Taller de joyería" },
       {
         name: "description",
-        content: "Panel interno del taller de joyería Aurum Lab: pedidos, diseño e impresión 3D, corte láser, taller, inventario y gestión.",
+        content:
+          "Panel interno del taller de joyería Aurum Lab: pedidos, diseño e impresión 3D, corte láser, taller, inventario y gestión.",
       },
       { property: "og:title", content: "Aurum Lab — Taller de joyería" },
       {

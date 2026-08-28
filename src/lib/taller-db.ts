@@ -4,33 +4,96 @@ import type { Json } from "@/integrations/supabase/types";
 import { normalizarArea } from "@/lib/auth";
 
 export type Estado =
-  | "Diseño 3D"
-  | "Impresión 3D"
-  | "Corte Láser"
-  | "Taller"
-  | "Área ventas"
+  | "Recibido"
+  | "Evaluación"
+  | "En Producción"
+  | "En Ventas"
+  | "Listo para Entrega"
+  | "Enviado"
   | "Entregado"
-  | "Espera material";
+  | "Cancelado";
 
 export const estados: Estado[] = [
-  "Diseño 3D",
-  "Impresión 3D",
-  "Corte Láser",
-  "Taller",
-  "Área ventas",
+  "Recibido",
+  "Evaluación",
+  "En Producción",
+  "En Ventas",
+  "Listo para Entrega",
+  "Enviado",
   "Entregado",
-  "Espera material",
+  "Cancelado",
 ];
 
 export const estadoClases: Record<string, string> = {
-  "Diseño 3D": "bg-info-soft text-info",
-  "Impresión 3D": "bg-accent text-foreground",
-  "Corte Láser": "bg-surface-muted text-muted-foreground",
-  Taller: "bg-warning-soft text-warning",
-  "Área ventas": "bg-success-soft text-success",
+  Recibido: "bg-surface-muted text-muted-foreground",
+  Evaluación: "bg-info-soft text-info",
+  "En Producción": "bg-warning-soft text-warning",
+  "En Ventas": "bg-success-soft text-success",
+  "Listo para Entrega": "bg-accent text-foreground",
+  Enviado: "bg-info-soft text-info",
   Entregado: "bg-success-soft text-success",
-  "Espera material": "bg-danger-soft text-danger",
+  Cancelado: "bg-danger-soft text-danger",
 };
+
+const estadosObsoletosPorArea = new Set([
+  "Pedidos",
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Servicio láser",
+  "Corte láser",
+  "Corte Laser",
+  "Taller",
+  "Taller / Engaste",
+  "Área ventas",
+  "Área de Ventas",
+  "Ventas",
+  "Terminado",
+]);
+
+export function esEstadoPedido(valor: string | null | undefined): valor is Estado {
+  return estados.includes(valor as Estado);
+}
+
+export function esEstadoFinalPedido(valor: string | null | undefined) {
+  return valor === "Entregado" || valor === "Cancelado";
+}
+
+export function normalizarEstadoPedido(
+  estado: string | null | undefined,
+  areaActual: string | null | undefined,
+): Estado {
+  if (esEstadoPedido(estado)) return estado;
+  const area = normalizarArea(areaActual || estado || "");
+  if (estado === "Espera material") return "Evaluación";
+  if (estado === "En packing" || estado === "Recibido en ventas") return "En Ventas";
+  if (estado === "Despachado") return "Enviado";
+  if (estado === "Terminado") return "Entregado";
+  if (area === "Pedidos") return "Recibido";
+  if (area === "Área ventas") return "En Ventas";
+  if (estadosObsoletosPorArea.has(estado ?? "")) return "En Producción";
+  return "Recibido";
+}
+
+function areaOperativa(area: string | null | undefined) {
+  return normalizarArea(area || "Pedidos") || "Pedidos";
+}
+
+function estadoPorDestino(destino: string, direccion: "avanzar" | "devolver" | "enviar"): Estado {
+  const area = areaOperativa(destino);
+  if (area === "Pedidos") return direccion === "devolver" ? "Evaluación" : "Recibido";
+  if (area === "Área ventas") return "En Ventas";
+  return "En Producción";
+}
+
+function secuenciaPedido(pedido: Pedido) {
+  const ruta = (Array.isArray(pedido.ruta) ? pedido.ruta : [])
+    .map(areaOperativa)
+    .filter((area) => area !== "Pedidos" && area !== "Área ventas");
+  const unicas = [...new Set(ruta)];
+  return ["Pedidos", ...unicas, "Área ventas"];
+}
 
 export type Pedido = {
   id: string;
@@ -184,7 +247,10 @@ export function usePedidos() {
         pieza: textoCampo(p, "pieza"),
         cliente: textoCampo(p, "cliente"),
         material: textoCampo(p, "material"),
-        estado: textoCampo(p, "estado"),
+        estado: normalizarEstadoPedido(
+          textoCampo(p, "estado"),
+          textoCampo(p, "area_actual", "Pedidos"),
+        ),
         entrega: textoCampo(p, "entrega"),
         importe: Number(p["importe"]) || 0,
         sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
@@ -195,9 +261,12 @@ export function usePedidos() {
         trabajo: textoCampo(p, "trabajo"),
         fecha_ingreso: textoCampo(p, "fecha_ingreso"),
         fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
-        area_actual: normalizarArea(textoCampo(p, "area_actual", "Pedidos")),
+        area_actual: areaOperativa(textoCampo(p, "area_actual", "Pedidos")),
         ruta: Array.isArray(p["ruta"])
-          ? p["ruta"].filter((area) => typeof area === "string").map(normalizarArea)
+          ? p["ruta"]
+              .filter((area) => typeof area === "string")
+              .map(areaOperativa)
+              .filter((area) => area !== "Pedidos" && area !== "Área ventas")
           : [],
         area_desde: textoCampo(
           p,
@@ -270,8 +339,8 @@ export function useMoverPedido() {
       direccion: "avanzar" | "devolver";
       usuarioId: string | null;
     }) => {
-      const secuencia = ["Pedidos", ...pedido.ruta.map(normalizarArea), "Entregado"];
-      const areaActual = normalizarArea(pedido.area_actual);
+      const secuencia = secuenciaPedido(pedido);
+      const areaActual = areaOperativa(pedido.area_actual);
       const i = Math.max(0, secuencia.indexOf(areaActual));
       const destino =
         direccion === "avanzar"
@@ -281,7 +350,11 @@ export function useMoverPedido() {
 
       const { error } = await supabase
         .from("pedidos")
-        .update({ area_actual: destino, estado: destino, area_desde: new Date().toISOString() })
+        .update({
+          area_actual: destino,
+          estado: estadoPorDestino(destino, direccion),
+          area_desde: new Date().toISOString(),
+        })
         .eq("id", pedido.id);
       if (error) throw error;
       await supabase.from("pedido_movimientos").insert({
@@ -310,14 +383,14 @@ export function useEnviarAArea() {
       usuarioId: string | null;
     }) => {
       if (!destino || destino === pedido.area_actual) return;
-      const destinoNormalizado = normalizarArea(destino);
-      const areaActual = normalizarArea(pedido.area_actual);
+      const destinoNormalizado = areaOperativa(destino);
+      const areaActual = areaOperativa(pedido.area_actual);
       if (!destinoNormalizado || destinoNormalizado === areaActual) return;
       const { error } = await supabase
         .from("pedidos")
         .update({
           area_actual: destinoNormalizado,
-          estado: destinoNormalizado,
+          estado: estadoPorDestino(destinoNormalizado, "enviar"),
           area_desde: new Date().toISOString(),
         })
         .eq("id", pedido.id);

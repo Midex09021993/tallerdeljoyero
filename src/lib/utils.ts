@@ -22,6 +22,7 @@ export function isoDesdeDMA(texto: string): string | null {
   const anio = Number(m[3]);
   if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
   const d = new Date(Date.UTC(anio, mes - 1, dia));
-  if (d.getUTCFullYear() !== anio || d.getUTCMonth() !== mes - 1 || d.getUTCDate() !== dia) return null;
+  if (d.getUTCFullYear() !== anio || d.getUTCMonth() !== mes - 1 || d.getUTCDate() !== dia)
+    return null;
   return `${m[3]}-${m[2]}-${m[1]}`;
 }

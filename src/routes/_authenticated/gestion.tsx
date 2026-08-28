@@ -30,6 +30,7 @@ import {
   type Pedido,
   type Sede,
   type Usuario,
+  esEstadoFinalPedido,
 } from "@/lib/taller-db";
 import {
   AREAS,
@@ -79,7 +80,10 @@ type Modulo =
   | "sedes";
 
 function esEntregado(p: Pedido) {
-  return p.area_actual === "Entregado" || p.estado === "Entregado";
+  return p.estado === "Entregado";
+}
+function esActivo(p: Pedido) {
+  return !esEstadoFinalPedido(p.estado);
 }
 function delMes(fecha: string | null) {
   if (!fecha) return false;
@@ -184,7 +188,7 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
     : materiales;
   const gastosVisibles = sedeActiva ? gastos.filter((g) => g.sede_id === sedeActiva) : gastos;
 
-  const activos = pedidos.filter((p) => !esEntregado(p));
+  const activos = pedidos.filter(esActivo);
   const hoy = new Date().toISOString().slice(0, 10);
   const atrasados = activos.filter((p) => p.fecha_entrega && p.fecha_entrega < hoy);
   const entregadosMes = pedidos.filter(
@@ -274,10 +278,10 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
 
 function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
   const navigate = useNavigate();
-  const activos = pedidos.filter((p) => !esEntregado(p));
+  const activos = pedidos.filter(esActivo);
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {AREAS.filter((a) => a !== "Entregado").map((area) => {
+      {AREAS.map((area) => {
         const lista = activos.filter((p) => areaCoincide(p.area_actual, area));
         return (
           <Panel key={area} titulo={`${area} · ${lista.length}`}>
@@ -508,9 +512,9 @@ function ModuloFinanzas({ pedidos, sedePropia }: { pedidos: Pedido[]; sedePropia
                     <td className="px-6 py-3 text-sm">{p.cliente}</td>
                     <td className="px-6 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[normalizarArea(p.area_actual)] ?? "bg-surface-muted"}`}
+                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado] ?? "bg-surface-muted"}`}
                       >
-                        {normalizarArea(p.area_actual)}
+                        {p.estado}
                       </span>
                     </td>
                     <td className="px-6 py-3 text-right">
@@ -969,7 +973,7 @@ function ModuloAutomatizacion({
       sedePropia == null ? c.sede_id == null : c.sede_id === sedePropia,
     );
     const mapa = new Map(configVisible.map((c) => [c.area, c]));
-    return AREAS.filter((a) => a !== "Entregado").map((area) => ({
+    return AREAS.map((area) => ({
       area,
       horas: mapa.get(area)?.horas_objetivo ?? 48,
       alerta: mapa.get(area)?.alerta_activa ?? true,
@@ -977,7 +981,7 @@ function ModuloAutomatizacion({
   }, [config, sedePropia]);
 
   const alertas = pedidos
-    .filter((p) => !esEntregado(p))
+    .filter(esActivo)
     .map((p) => {
       const cfg = porArea.find((c) => areaCoincide(c.area, p.area_actual));
       const horas = horasEn(p.area_desde);

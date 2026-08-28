@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
-import { useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
+import { estadoClases, useActualizarPedido, useEnviarAArea, usePedidos } from "@/lib/taller-db";
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 });
 
 const VISTAS = ["Perspectiva", "Superior", "Frontal", "Derecha"] as const;
-const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Entregado");
+const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Área ventas");
 
 const regresosFicha = {
   operario: { etiqueta: "Mi trabajo", ruta: "/operario" },
@@ -335,6 +335,7 @@ function FichaPedido() {
                 ["Código del pedido", pedido.referencia],
                 ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
                 ["N° de contrato", pedido.contrato || "—"],
+                ["Estado general", pedido.estado || "—"],
                 ["Área de proceso", normalizarArea(pedido.area_actual)],
                 ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
@@ -344,7 +345,15 @@ function FichaPedido() {
               ].map(([k, v]) => (
                 <div key={k}>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
-                  <p className="mt-0.5 text-sm">{v}</p>
+                  {k === "Estado general" ? (
+                    <p
+                      className={`mt-1 inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[pedido.estado] ?? "bg-surface-muted"}`}
+                    >
+                      {v}
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-sm">{v}</p>
+                  )}
                 </div>
               ))}
             </div>
