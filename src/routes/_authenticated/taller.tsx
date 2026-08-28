@@ -179,7 +179,7 @@ function TallerPage() {
                     <input
                       type="number"
                       inputMode="decimal"
-                      step="1"
+                      step="0.01"
                       value={tolerancias[tipo]}
                       onChange={(e) => {
                         const valor = Number(e.target.value);
@@ -206,7 +206,7 @@ function TallerPage() {
                 type="number"
                 inputMode="decimal"
                 min="0"
-                step="0.1"
+                step="0.01"
                 value={diametro}
                 onChange={(e) => setDiametro(e.target.value)}
                 placeholder="Ej. 7.5"
@@ -221,7 +221,7 @@ function TallerPage() {
                 type="number"
                 inputMode="decimal"
                 min="0"
-                step="0.1"
+                step="0.01"
                 value={altura}
                 onChange={(e) => setAltura(e.target.value)}
                 placeholder="Ej. 10"
@@ -235,10 +235,10 @@ function TallerPage() {
               Volumen ajustado
             </p>
             <p className="mt-1 text-2xl font-semibold text-foreground">
-              {volumen > 0 ? `${formatearCantidad(volumen)} ml` : "Ingresa medidas"}
+              {volumen > 0 ? `${formatearCantidad(volumen, 4)} ml` : "Ingresa medidas"}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Base: {volumenBase > 0 ? `${formatearCantidad(volumenBase)} cm³` : "0 cm³"} ·{" "}
+              Base: {volumenBase > 0 ? `${formatearCantidad(volumenBase, 4)} cm³` : "0 cm³"} ·{" "}
               {tiposTarro[tipoTarro].etiqueta} {tolerancias[tipoTarro] >= 0 ? "+" : ""}
               {tolerancias[tipoTarro]}%
             </p>
@@ -280,7 +280,7 @@ function TallerPage() {
                         Agua
                       </dt>
                       <dd className="mt-1 text-xl font-semibold">
-                        {volumen > 0 ? formatearCantidad(agua, 2) : "0"} ml
+                        {volumen > 0 ? formatearCantidad(agua, 4) : "0"} ml
                       </dd>
                     </div>
                     <div className="rounded-lg bg-background p-3">
@@ -288,7 +288,7 @@ function TallerPage() {
                         Yeso
                       </dt>
                       <dd className="mt-1 text-xl font-semibold">
-                        {volumen > 0 ? formatearCantidad(yeso, 2) : "0"} g
+                        {volumen > 0 ? formatearCantidad(yeso, 4) : "0"} g
                       </dd>
                     </div>
                   </dl>
