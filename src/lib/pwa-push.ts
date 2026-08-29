@@ -121,7 +121,21 @@ function clasificarErrorEdge(status: number, payload?: unknown) {
 
 function normalizarRespuestaEdge(payload: unknown) {
   if (!payload || typeof payload !== "object") return "Respuesta vacía de la Edge Function";
-  const maybeError = payload as { error?: unknown; detail?: unknown; details?: unknown };
+  const maybeError = payload as {
+    error?: unknown;
+    detail?: unknown;
+    details?: unknown;
+    message?: unknown;
+    missing?: unknown;
+    empty?: unknown;
+  };
+  if (typeof maybeError.message === "string") return maybeError.message;
+  const missing = Array.isArray(maybeError.missing) ? maybeError.missing : [];
+  const empty = Array.isArray(maybeError.empty) ? maybeError.empty : [];
+  const missingNames = [...missing, ...empty].filter(
+    (item): item is string => typeof item === "string",
+  );
+  if (missingNames.length > 0) return `Falta configurar: ${missingNames.join(", ")}`;
   if (typeof maybeError.error === "string") return maybeError.error;
   if (typeof maybeError.detail === "string") return maybeError.detail;
   if (typeof maybeError.details === "string") return maybeError.details;

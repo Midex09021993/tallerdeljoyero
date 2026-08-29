@@ -29,24 +29,32 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
   const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-  const vapidSubject = Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@tallerdeljoyero.local";
-
-  const missingEnv = [
-    ...(!supabaseUrl ? ["SUPABASE_URL"] : []),
-    ...(!serviceRoleKey ? ["SUPABASE_SERVICE_ROLE_KEY"] : []),
-    ...(!vapidPublicKey ? ["VAPID_PUBLIC_KEY"] : []),
-    ...(!vapidPrivateKey ? ["VAPID_PRIVATE_KEY"] : []),
-  ];
+  const vapidSubject = Deno.env.get("VAPID_SUBJECT");
+  const envDiagnostic = diagnosticarEntornoPush({
+    SUPABASE_URL: supabaseUrl,
+    SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
+    VAPID_PUBLIC_KEY: vapidPublicKey,
+    VAPID_PRIVATE_KEY: vapidPrivateKey,
+    VAPID_SUBJECT: vapidSubject,
+  });
 
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
   if (!token) return json({ error: "Unauthorized", step: "auth_token" }, 401);
 
   if (!supabaseUrl || !serviceRoleKey) {
+    console.error("push_environment_error", {
+      step: "supabase_environment",
+      missing: envDiagnostic.missing,
+      empty: envDiagnostic.empty,
+      configured: envDiagnostic.configured,
+    });
     return json(
       {
         error: "Supabase environment is not configured",
         step: "environment",
-        missing: missingEnv,
+        missing: envDiagnostic.missing,
+        empty: envDiagnostic.empty,
+        configured: envDiagnostic.configured,
       },
       500,
     );
@@ -66,23 +74,40 @@ Deno.serve(async (req) => {
 
   const payload = (await req.json().catch(() => ({}))) as PedidoPayload;
   if (payload.diagnostico) {
+    console.info("push_environment_diagnostic", {
+      ok: envDiagnostic.ok,
+      missing: envDiagnostic.missing,
+      empty: envDiagnostic.empty,
+      configured: envDiagnostic.configured,
+    });
     return json({
-      ok: missingEnv.length === 0,
+      ok: envDiagnostic.ok,
       mode: "diagnostico",
       user_id: user.id,
-      vapid_public_configured: Boolean(vapidPublicKey),
-      vapid_private_configured: Boolean(vapidPrivateKey),
-      vapid_subject_configured: Boolean(vapidSubject),
-      missing: missingEnv,
+      missing: envDiagnostic.missing,
+      empty: envDiagnostic.empty,
+      configured: envDiagnostic.configured,
+      message: envDiagnostic.ok
+        ? "Push environment configured"
+        : `Falta configurar: ${[...envDiagnostic.missing, ...envDiagnostic.empty].join(", ")}`,
     });
   }
 
-  if (missingEnv.length > 0) {
+  if (!envDiagnostic.ok) {
+    console.error("push_environment_error", {
+      step: "vapid_environment",
+      missing: envDiagnostic.missing,
+      empty: envDiagnostic.empty,
+      configured: envDiagnostic.configured,
+    });
     return json(
       {
         error: "Push environment is not configured",
         step: "vapid_environment",
-        missing: missingEnv,
+        missing: envDiagnostic.missing,
+        empty: envDiagnostic.empty,
+        configured: envDiagnostic.configured,
+        message: `Falta configurar: ${[...envDiagnostic.missing, ...envDiagnostic.empty].join(", ")}`,
       },
       500,
     );
@@ -156,4 +181,35 @@ function json(payload: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "content-type": "application/json" },
   });
+}
+
+type EntornoPush = {
+  SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_SUBJECT?: string;
+};
+
+function diagnosticarEntornoPush(env: EntornoPush) {
+  const required = Object.keys(env) as Array<keyof EntornoPush>;
+  const missing: string[] = [];
+  const empty: string[] = [];
+  const configured: Record<string, boolean> = {};
+
+  for (const key of required) {
+    const value = env[key];
+    const exists = value !== undefined;
+    const hasValue = typeof value === "string" && value.trim().length > 0;
+    configured[key] = hasValue;
+    if (!exists) missing.push(key);
+    else if (!hasValue) empty.push(key);
+  }
+
+  return {
+    ok: missing.length === 0 && empty.length === 0,
+    missing,
+    empty,
+    configured,
+  };
 }
