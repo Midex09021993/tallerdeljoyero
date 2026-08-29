@@ -10,6 +10,7 @@ import {
   resumenFinancieroContrato,
   useActualizarPedido,
   useContratos,
+  useCrearContratoDesdePedido,
   usePagosContratos,
   usePedidos,
   useRegistrarPagoContrato,
@@ -49,6 +50,7 @@ function VentasPage() {
     useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
   const registrarPago = useRegistrarPagoContrato();
+  const crearContrato = useCrearContratoDesdePedido();
   const [busca, setBusca] = useState("");
   const [listoId, setListoId] = useState<string | null>(null);
   const [envioId, setEnvioId] = useState<string | null>(null);
@@ -129,6 +131,7 @@ function VentasPage() {
                   pagoAbierto={pagoId === pedido.id}
                   historialAbierto={historialPagosId === pedido.id}
                   guardandoPago={registrarPago.isPending}
+                  guardandoCrearContrato={crearContrato.isPending}
                   onToggleHistorial={() =>
                     setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
                   }
@@ -144,6 +147,7 @@ function VentasPage() {
                       { onSuccess: () => setPagoId(null) },
                     );
                   }}
+                  onCrearContrato={() => crearContrato.mutate(pedido)}
                   accionPrincipal={listo ? "Registrar envío" : "Marcar listo para entrega"}
                   {...(listo && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
                   onAbrir={() => abrirPedido(pedido.id)}
@@ -268,6 +272,7 @@ function VentasPage() {
                 pagoAbierto={pagoId === pedido.id}
                 historialAbierto={historialPagosId === pedido.id}
                 guardandoPago={registrarPago.isPending}
+                guardandoCrearContrato={crearContrato.isPending}
                 onToggleHistorial={() =>
                   setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
                 }
@@ -283,6 +288,7 @@ function VentasPage() {
                     { onSuccess: () => setPagoId(null) },
                   );
                 }}
+                onCrearContrato={() => crearContrato.mutate(pedido)}
                 accionPrincipal="Marcar entregado"
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
@@ -344,6 +350,7 @@ function VentasPage() {
                 pagoAbierto={pagoId === pedido.id}
                 historialAbierto={historialPagosId === pedido.id}
                 guardandoPago={registrarPago.isPending}
+                guardandoCrearContrato={crearContrato.isPending}
                 onToggleHistorial={() =>
                   setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
                 }
@@ -359,6 +366,7 @@ function VentasPage() {
                     { onSuccess: () => setPagoId(null) },
                   );
                 }}
+                onCrearContrato={() => crearContrato.mutate(pedido)}
                 accionPrincipal={esAdmin ? "Corregir entrega" : "Abrir"}
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
@@ -517,7 +525,6 @@ function resumenFinancieroPedido(
   return resumenFinancieroContrato(
     contrato,
     contrato ? (pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero)) : [],
-    pedido.importe,
   );
 }
 
@@ -559,6 +566,7 @@ function PedidoVentaCard({
   pagoAbierto,
   historialAbierto,
   guardandoPago,
+  guardandoCrearContrato,
   accionPrincipal,
   accionSecundaria,
   onAbrir,
@@ -567,6 +575,7 @@ function PedidoVentaCard({
   onToggleHistorial,
   onRegistrarPago,
   onGuardarPago,
+  onCrearContrato,
   children,
 }: {
   pedido: Pedido;
@@ -576,6 +585,7 @@ function PedidoVentaCard({
   pagoAbierto: boolean;
   historialAbierto: boolean;
   guardandoPago: boolean;
+  guardandoCrearContrato: boolean;
   accionPrincipal: string;
   accionSecundaria?: string;
   onAbrir: () => void;
@@ -584,10 +594,12 @@ function PedidoVentaCard({
   onToggleHistorial: () => void;
   onRegistrarPago: () => void;
   onGuardarPago: (datos: { fecha: string; concepto: string; monto: number }) => void;
+  onCrearContrato: () => void;
   children?: ReactNode;
 }) {
   const estadoComercial = estadoVenta(pedido);
   const tieneSaldo = resumenFinanciero.saldo > 0;
+  const tieneContratoFinanciero = resumenFinanciero.origen === "contrato";
   return (
     <article className="px-4 py-4">
       <button type="button" onClick={onAbrir} className="block w-full text-left">
@@ -635,64 +647,80 @@ function PedidoVentaCard({
             </dd>
           </div>
         </dl>
-        <div
-          className={`mt-3 rounded-xl border p-3 text-xs ${
-            tieneSaldo
-              ? "border-warning/25 bg-warning-soft text-warning"
-              : "border-success/20 bg-success-soft text-success"
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider">
-                Estado financiero
-              </p>
-              <p className="mt-1 font-semibold">{resumenFinanciero.estado}</p>
+        {tieneContratoFinanciero ? (
+          <div
+            className={`mt-3 rounded-xl border p-3 text-xs ${
+              tieneSaldo
+                ? "border-warning/25 bg-warning-soft text-warning"
+                : "border-success/20 bg-success-soft text-success"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider">
+                  Estado financiero
+                </p>
+                <p className="mt-1 font-semibold">{resumenFinanciero.estado}</p>
+              </div>
+              {tieneSaldo ? (
+                <p className="text-right font-semibold">
+                  Saldo pendiente: {formatCurrency(resumenFinanciero.saldo)}
+                </p>
+              ) : (
+                <p className="text-right font-semibold">Sin saldo pendiente</p>
+              )}
             </div>
-            {tieneSaldo ? (
-              <p className="text-right font-semibold">
-                Saldo pendiente: {formatCurrency(resumenFinanciero.saldo)}
-              </p>
-            ) : (
-              <p className="text-right font-semibold">Sin saldo pendiente</p>
-            )}
+            <dl className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+              <div>
+                <dt className="opacity-75">Total</dt>
+                <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.total)}</dd>
+              </div>
+              <div>
+                <dt className="opacity-75">Abonado</dt>
+                <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.abonado)}</dd>
+              </div>
+              <div>
+                <dt className="opacity-75">Saldo</dt>
+                <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.saldo)}</dd>
+              </div>
+            </dl>
           </div>
-          <dl className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
-            <div>
-              <dt className="opacity-75">Total</dt>
-              <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.total)}</dd>
-            </div>
-            <div>
-              <dt className="opacity-75">Abonado</dt>
-              <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.abonado)}</dd>
-            </div>
-            <div>
-              <dt className="opacity-75">Saldo</dt>
-              <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.saldo)}</dd>
-            </div>
-          </dl>
-          {resumenFinanciero.origen === "pedido" ? (
-            <p className="mt-2 text-[10px] opacity-75">
-              Sin contrato financiero enlazado; se usa el costo del pedido como referencia.
+        ) : (
+          <div className="mt-3 rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
+            <p className="font-semibold">Pedido sin contrato asociado.</p>
+            <p className="mt-1 opacity-80">
+              Crea o asocia el contrato antes de registrar pagos o consultar saldos.
             </p>
-          ) : null}
-        </div>
+          </div>
+        )}
       </button>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onToggleHistorial}
-          className="rounded-xl border border-border px-3 py-2 text-xs font-medium"
-        >
-          {historialAbierto ? "Ocultar historial de pagos" : "Ver historial de pagos"}
-        </button>
-        {puedeRegistrarPago && resumenFinanciero.origen === "contrato" ? (
+        {tieneContratoFinanciero ? (
+          <button
+            type="button"
+            onClick={onToggleHistorial}
+            className="rounded-xl border border-border px-3 py-2 text-xs font-medium"
+          >
+            {historialAbierto ? "Ocultar historial de pagos" : "Ver historial de pagos"}
+          </button>
+        ) : null}
+        {puedeRegistrarPago && tieneContratoFinanciero ? (
           <button
             type="button"
             onClick={onRegistrarPago}
             className="rounded-xl border border-success/25 bg-success-soft px-3 py-2 text-xs font-medium text-success"
           >
             Registrar pago
+          </button>
+        ) : null}
+        {puedeRegistrarPago && !tieneContratoFinanciero ? (
+          <button
+            type="button"
+            onClick={onCrearContrato}
+            disabled={guardandoCrearContrato || !pedido.contrato.trim()}
+            className="rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-xs font-medium text-warning disabled:opacity-50"
+          >
+            {guardandoCrearContrato ? "Creando..." : "Crear contrato"}
           </button>
         ) : null}
       </div>

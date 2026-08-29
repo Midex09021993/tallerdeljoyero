@@ -7,6 +7,7 @@ import { pedidoFormVacio, type PedidoFormState } from "@/lib/pedido-form";
 import {
   estadoClases,
   useContrato,
+  useCrearContratoDesdePedido,
   useCrearTrabajoContrato,
   usePagosContrato,
   usePedidosContrato,
@@ -65,6 +66,7 @@ function ContratoPage() {
   const { pedidos, isLoading: cargandoPedidos } = usePedidosContrato(contrato);
   const { data: pagos = [] } = usePagosContrato(contrato);
   const crearTrabajo = useCrearTrabajoContrato();
+  const crearContrato = useCrearContratoDesdePedido();
   const registrarPago = useRegistrarPagoContrato();
   const [modalAbierto, setModalAbierto] = useState(false);
   const [pagoAbierto, setPagoAbierto] = useState(false);
@@ -79,11 +81,11 @@ function ContratoPage() {
   }, [contrato, modalAbierto]);
 
   const resumen = useMemo(() => {
-    const totalTrabajos = pedidos.reduce((acc, pedido) => acc + Number(pedido.importe || 0), 0);
-    return resumenFinancieroContrato(contrato, pagos, totalTrabajos);
-  }, [contrato, pagos, pedidos]);
+    return resumenFinancieroContrato(contrato, pagos);
+  }, [contrato, pagos]);
 
   const puedeCrearTrabajo = Boolean(sesion?.esAdmin);
+  const contratoFinancieroReal = resumen.origen === "contrato";
 
   if (isLoading) {
     return (
@@ -202,12 +204,34 @@ function ContratoPage() {
             Resumen comercial
           </p>
           <div className="mt-4 space-y-4">
-            <Dato label="Total" valor={formatCurrency(resumen.total)} />
-            <Dato label="Abonado" valor={formatCurrency(resumen.abonado)} />
-            <Dato label="Saldo" valor={formatCurrency(resumen.saldo)} />
-            <Dato label="Estado financiero" valor={resumen.estado} />
+            {contratoFinancieroReal ? (
+              <>
+                <Dato label="Total" valor={formatCurrency(resumen.total)} />
+                <Dato label="Abonado" valor={formatCurrency(resumen.abonado)} />
+                <Dato label="Saldo" valor={formatCurrency(resumen.saldo)} />
+                <Dato label="Estado financiero" valor={resumen.estado} />
+              </>
+            ) : (
+              <div className="rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
+                <p className="font-semibold">Pedido sin contrato asociado.</p>
+                <p className="mt-1 opacity-80">
+                  Este número existe en pedidos antiguos, pero falta crear el registro financiero
+                  del contrato.
+                </p>
+                {puedeCrearTrabajo && pedidos[0] ? (
+                  <button
+                    type="button"
+                    onClick={() => crearContrato.mutate(pedidos[0]!)}
+                    disabled={crearContrato.isPending}
+                    className="mt-3 w-full rounded-lg bg-warning px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                  >
+                    {crearContrato.isPending ? "Creando..." : "Crear contrato"}
+                  </button>
+                ) : null}
+              </div>
+            )}
           </div>
-          {puedeCrearTrabajo && contrato ? (
+          {puedeCrearTrabajo && contratoFinancieroReal ? (
             <button
               type="button"
               onClick={() => setPagoAbierto((v) => !v)}
@@ -216,7 +240,7 @@ function ContratoPage() {
               {pagoAbierto ? "Ocultar pago" : "Registrar pago"}
             </button>
           ) : null}
-          {pagoAbierto && contrato ? (
+          {pagoAbierto && contratoFinancieroReal ? (
             <FormularioPagoContrato
               guardando={registrarPago.isPending}
               onCancelar={() => setPagoAbierto(false)}

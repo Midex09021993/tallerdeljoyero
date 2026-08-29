@@ -334,7 +334,7 @@ export type ResumenFinancieroContrato = {
   abonado: number;
   saldo: number;
   estado: EstadoFinanciero;
-  origen: "contrato" | "pedido";
+  origen: "contrato" | "sin_contrato";
 };
 
 export type Sede = {
@@ -633,20 +633,28 @@ export function calcularEstadoFinanciero(total: number, abonado: number): Estado
 }
 
 export function resumenFinancieroContrato(
-  contrato: Pick<Contrato, "total" | "abonado"> | null | undefined,
+  contrato: Pick<Contrato, "id" | "total" | "abonado"> | null | undefined,
   pagos: PagoContrato[] = [],
-  respaldoTotal = 0,
 ): ResumenFinancieroContrato {
-  const total = Number(contrato?.total) || Number(respaldoTotal) || 0;
+  if (!contrato || !esUuid(contrato.id)) {
+    return {
+      total: 0,
+      abonado: 0,
+      saldo: 0,
+      estado: "Pendiente",
+      origen: "sin_contrato",
+    };
+  }
+  const total = Number(contrato.total) || 0;
   const abonadoPagos = pagos.reduce((acc, pago) => acc + (Number(pago.monto) || 0), 0);
-  const abonado = pagos.length > 0 ? abonadoPagos : Number(contrato?.abonado) || 0;
+  const abonado = pagos.length > 0 ? abonadoPagos : Number(contrato.abonado) || 0;
   const saldo = Math.max(0, total - abonado);
   return {
     total,
     abonado,
     saldo,
     estado: calcularEstadoFinanciero(total, abonado),
-    origen: contrato ? "contrato" : "pedido",
+    origen: "contrato",
   };
 }
 
@@ -780,6 +788,66 @@ export function useRegistrarPagoContrato() {
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "No se pudo registrar el pago");
+    },
+  });
+}
+
+export function useCrearContratoDesdePedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (pedido: Pedido) => {
+      const numero = pedido.contrato.trim();
+      if (!numero) {
+        throw new Error("Este pedido no tiene número de contrato para asociar.");
+      }
+
+      const base: ContratoInsert = {
+        numero,
+        cliente: pedido.cliente,
+        telefono: pedido.telefono,
+        origen: pedido.origen,
+        total: pedido.importe,
+        abonado: 0,
+        sede_id: pedido.sede_id,
+        notas: "Contrato creado desde un pedido existente.",
+      };
+
+      const { data: existente, error: errorExistente } = await supabase
+        .from("contratos")
+        .select("id")
+        .eq("numero", numero)
+        .maybeSingle();
+
+      if (errorExistente) throw errorExistente;
+
+      let contratoId = existente?.id ?? null;
+      if (!contratoId) {
+        const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
+        if (error) throw error;
+        contratoId = data?.id ?? null;
+      }
+
+      if (!contratoId) {
+        throw new Error("No se pudo crear el contrato financiero.");
+      }
+
+      const { error: errorPedido } = await supabase
+        .from("pedidos")
+        .update({ contrato_id: contratoId })
+        .eq("contrato", numero);
+      if (errorPedido) throw errorPedido;
+
+      return contratoId;
+    },
+    onSuccess: (_contratoId, pedido) => {
+      toast.success(`Contrato ${pedido.contrato} creado y asociado`);
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      void qc.invalidateQueries({ queryKey: ["contrato", pedido.contrato] });
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "No se pudo crear el contrato");
     },
   });
 }
