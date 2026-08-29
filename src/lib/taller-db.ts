@@ -237,6 +237,10 @@ function prefijoContrato(numero: string) {
   return limpio.slice(-2) || "YA";
 }
 
+function prefijoContratoAutomatico() {
+  return `CTR-${new Date().getFullYear()}-`;
+}
+
 function esUuid(valor: string | null | undefined) {
   return Boolean(
     valor?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
@@ -251,6 +255,16 @@ export function siguienteReferenciaContrato(numeroContrato: string, refs: string
     return m ? Math.max(acc, Number(m[1])) : acc;
   }, 0);
   return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
+}
+
+function siguienteNumeroContrato(numeros: string[]) {
+  const prefijo = prefijoContratoAutomatico();
+  const re = new RegExp(`^${prefijo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)$`, "i");
+  const max = numeros.reduce((acc, numero) => {
+    const m = re.exec((numero ?? "").trim());
+    return m ? Math.max(acc, Number(m[1])) : acc;
+  }, 0);
+  return `${prefijo}${String(max + 1).padStart(4, "0")}`;
 }
 
 export type Pedido = {
@@ -552,9 +566,25 @@ export function usePedidos() {
   });
 }
 
+async function generarNumeroContratoAutomatico() {
+  const prefijo = prefijoContratoAutomatico();
+  const [contratos, pedidos] = await Promise.all([
+    supabase.from("contratos").select("numero").ilike("numero", `${prefijo}%`),
+    supabase.from("pedidos").select("contrato").ilike("contrato", `${prefijo}%`),
+  ]);
+
+  if (contratos.error && !esErrorCampoFaltante(contratos.error)) throw contratos.error;
+  if (pedidos.error && !esErrorCampoFaltante(pedidos.error)) throw pedidos.error;
+
+  return siguienteNumeroContrato([
+    ...((contratos.data ?? []) as Array<{ numero?: string }>).map((c) => c.numero ?? ""),
+    ...((pedidos.data ?? []) as Array<{ contrato?: string }>).map((p) => p.contrato ?? ""),
+  ]);
+}
+
 async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
-  const numero = pedido.contrato.trim();
-  if (pedido.contrato_id || !numero) return pedido.contrato_id ?? null;
+  const numero = pedido.contrato.trim() || (await generarNumeroContratoAutomatico());
+  if (pedido.contrato_id) return { id: pedido.contrato_id, numero, creado: false };
 
   const base: ContratoInsert = {
     numero,
@@ -574,17 +604,26 @@ async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
     .maybeSingle();
 
   if (existente.error) {
-    if (esErrorCampoFaltante(existente.error)) return null;
+    if (esErrorCampoFaltante(existente.error)) return { id: null, numero, creado: false };
     throw existente.error;
   }
-  if (existente.data?.id) return existente.data.id;
+  if (existente.data?.id) return { id: existente.data.id, numero, creado: false };
 
   const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
   if (error) {
-    if (esErrorCampoFaltante(error)) return null;
+    if (error.code === "23505") {
+      const relectura = await supabase
+        .from("contratos")
+        .select("id")
+        .eq("numero", numero)
+        .maybeSingle();
+      if (relectura.error) throw relectura.error;
+      if (relectura.data?.id) return { id: relectura.data.id, numero, creado: false };
+    }
+    if (esErrorCampoFaltante(error)) return { id: null, numero, creado: false };
     throw error;
   }
-  return data.id;
+  return { id: data.id, numero, creado: true };
 }
 
 export function useContratos() {
@@ -792,14 +831,33 @@ export function useRegistrarPagoContrato() {
   });
 }
 
+async function sumarImporteAContrato(contratoId: string | null | undefined, importe: number) {
+  if (!contratoId || !esUuid(contratoId) || importe <= 0) return;
+  const { data, error } = await supabase
+    .from("contratos")
+    .select("total")
+    .eq("id", contratoId)
+    .maybeSingle();
+  if (error) {
+    if (esErrorCampoFaltante(error)) return;
+    throw error;
+  }
+  const totalActual = Number((data as { total?: number } | null)?.total) || 0;
+  const { error: errorUpdate } = await supabase
+    .from("contratos")
+    .update({ total: totalActual + importe })
+    .eq("id", contratoId);
+  if (errorUpdate) {
+    if (esErrorCampoFaltante(errorUpdate)) return;
+    throw errorUpdate;
+  }
+}
+
 export function useCrearContratoDesdePedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: Pedido) => {
-      const numero = pedido.contrato.trim();
-      if (!numero) {
-        throw new Error("Este pedido no tiene número de documento comercial para asociar.");
-      }
+      const numero = pedido.contrato.trim() || `DOC-${pedido.referencia || Date.now()}`;
 
       const base: ContratoInsert = {
         numero,
@@ -833,16 +891,19 @@ export function useCrearContratoDesdePedido() {
 
       const { error: errorPedido } = await supabase
         .from("pedidos")
-        .update({ contrato_id: contratoId })
-        .eq("contrato", numero);
+        .update({ contrato: numero, contrato_id: contratoId })
+        .eq(
+          pedido.contrato.trim() ? "contrato" : "id",
+          pedido.contrato.trim() ? numero : pedido.id,
+        );
       if (errorPedido) throw errorPedido;
 
-      return contratoId;
+      return { contratoId, numero };
     },
-    onSuccess: (_contratoId, pedido) => {
-      toast.success(`Contrato ${pedido.contrato} creado y asociado`);
+    onSuccess: (resultado, pedido) => {
+      toast.success(`Contrato ${resultado.numero || pedido.contrato} creado y asociado`);
       void qc.invalidateQueries({ queryKey: ["contratos"] });
-      void qc.invalidateQueries({ queryKey: ["contrato", pedido.contrato] });
+      void qc.invalidateQueries({ queryKey: ["contrato", resultado.numero || pedido.contrato] });
       void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
       void qc.invalidateQueries({ queryKey: ["pedidos"] });
     },
@@ -955,8 +1016,12 @@ export function useCrearPedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: PedidoNuevo) => {
-      const contratoId = await asegurarContratoParaPedido(pedido);
-      const pedidoConContrato = contratoId ? { ...pedido, contrato_id: contratoId } : pedido;
+      const contrato = await asegurarContratoParaPedido(pedido);
+      const pedidoConContrato = {
+        ...pedido,
+        contrato: contrato.numero,
+        contrato_id: contrato.id,
+      };
       const respuesta = await supabase
         .from("pedidos")
         .insert(pedidoConContrato)
@@ -975,6 +1040,7 @@ export function useCrearPedido() {
               .single()
           : respuesta;
       if (error) throw error;
+      if (!contrato.creado) await sumarImporteAContrato(contrato.id, pedido.importe);
       return data;
     },
     onSuccess: (pedido) => {
@@ -1023,6 +1089,7 @@ export function useCrearTrabajoContrato() {
               .single()
           : respuesta;
       if (error) throw error;
+      await sumarImporteAContrato(esUuid(contrato.id) ? contrato.id : null, nuevo.importe);
       return data;
     },
     onSuccess: () => {
