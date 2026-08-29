@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
+  ChevronLeft,
   ClipboardList,
   Gauge,
   Hammer,
@@ -80,19 +81,41 @@ export function AppShell({
   titulo,
   subtitulo,
   acciones,
+  atrasMovil = { to: "/inicio" },
   ocultarNavegacion = false,
   children,
 }: {
   titulo: string;
   subtitulo?: string;
   acciones?: ReactNode;
+  atrasMovil?: false | { to?: string; onClick?: () => void };
   ocultarNavegacion?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
+  const navigate = useNavigate();
   const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
+  const mostrarAtrasMovil = atrasMovil !== false;
+
+  const volverMovil = () => {
+    if (atrasMovil && typeof atrasMovil === "object") {
+      if (atrasMovil.onClick) {
+        atrasMovil.onClick();
+        return;
+      }
+      if (atrasMovil.to) {
+        void navigate({ to: atrasMovil.to as never });
+        return;
+      }
+    }
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    void navigate({ to: "/inicio" });
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -143,10 +166,25 @@ export function AppShell({
 
       <main className="min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10">
         <header className="mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4">
-          <div>
-            <h1 className="mb-0.5 font-display text-2xl sm:text-3xl lg:mb-2">{titulo}</h1>
-            {subtitulo ? (
-              <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
+          <div className="flex w-full items-start justify-between gap-3 lg:w-auto">
+            <div className="min-w-0">
+              <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
+                {titulo}
+              </h1>
+              {subtitulo ? (
+                <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
+              ) : null}
+            </div>
+            {mostrarAtrasMovil ? (
+              <button
+                type="button"
+                onClick={volverMovil}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-card transition active:scale-[0.98] sm:hidden"
+                aria-label="Atrás"
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+                Atrás
+              </button>
             ) : null}
           </div>
           {acciones ? (

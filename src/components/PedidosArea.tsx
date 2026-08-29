@@ -345,10 +345,11 @@ export function AreaOperario({ area, children }: { area: string; children?: Reac
           <p className="mt-1 text-sm text-muted-foreground">Trabajos asignados</p>
         </div>
         <Link
-          to="/operario"
+          to="/inicio"
           className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
         >
-          Mis áreas
+          <span className="sm:hidden">← Atrás</span>
+          <span className="hidden sm:inline">Mis áreas</span>
         </Link>
       </header>
       <PedidosArea area={area} from={area} variante="operario" />

@@ -318,7 +318,12 @@ function FichaPedido() {
 
   if (isLoading) {
     return (
-      <AppShell titulo="Ficha del pedido" subtitulo="Cargando…" ocultarNavegacion={esFichaOperario}>
+      <AppShell
+        titulo="Ficha del pedido"
+        subtitulo="Cargando…"
+        ocultarNavegacion={esFichaOperario}
+        atrasMovil={{ to: regreso.ruta }}
+      >
         <p className="text-sm text-muted-foreground">Cargando pedido…</p>
       </AppShell>
     );
@@ -326,10 +331,18 @@ function FichaPedido() {
 
   if (!pedido) {
     return (
-      <AppShell titulo="Pedido no encontrado" ocultarNavegacion={esFichaOperario}>
+      <AppShell
+        titulo="Pedido no encontrado"
+        ocultarNavegacion={esFichaOperario}
+        atrasMovil={{ to: regreso.ruta }}
+      >
         <p className="text-sm text-muted-foreground">
           Este pedido no existe o no pertenece a tu sede.{" "}
-          <button type="button" onClick={volver} className="text-info hover:underline">
+          <button
+            type="button"
+            onClick={volver}
+            className="hidden text-info hover:underline sm:inline"
+          >
             Volver a {regreso.etiqueta}
           </button>
         </p>
@@ -365,13 +378,14 @@ function FichaPedido() {
       titulo={`${pedido.referencia} · ${pedido.trabajo || pedido.pieza}`}
       subtitulo={`${pedido.cliente}${pedido.sede_nombre ? ` · ${pedido.sede_nombre}` : ""}`}
       ocultarNavegacion={esFichaOperario}
+      atrasMovil={{ to: regreso.ruta }}
     >
       {!esFichaOperario ? (
         <div className="mb-6">
           <button
             type="button"
             onClick={volver}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+            className="hidden items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
           >
             ← Volver a {regreso.etiqueta}
           </button>

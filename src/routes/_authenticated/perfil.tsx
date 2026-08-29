@@ -18,10 +18,10 @@ function PerfilPage() {
     <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6">
       <button
         type="button"
-        onClick={() => void navigate({ to: "/operario" })}
+        onClick={() => void navigate({ to: "/inicio" })}
         className="mb-5 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground"
       >
-        ← Mi trabajo
+        ← Atrás
       </button>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
