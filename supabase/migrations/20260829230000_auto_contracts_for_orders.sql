@@ -1,45 +1,3 @@
-DO $$
-DECLARE
-  _year text := to_char(now(), 'YYYY');
-  _prefix text := 'CTR-' || to_char(now(), 'YYYY') || '-';
-  _max_num integer;
-BEGIN
-  SELECT COALESCE(MAX((regexp_match(numero, '^CTR-' || _year || '-([0-9]+)$'))[1]::integer), 0)
-  INTO _max_num
-  FROM public.contratos
-  WHERE numero ~ ('^CTR-' || _year || '-[0-9]+$');
-
-  WITH pendientes AS (
-    SELECT
-      p.*,
-      row_number() OVER (ORDER BY p.created_at, p.id) AS rn
-    FROM public.pedidos p
-    WHERE p.contrato_id IS NULL
-      AND trim(COALESCE(p.contrato, '')) = ''
-  ),
-  nuevos AS (
-    INSERT INTO public.contratos (numero, cliente, telefono, origen, total, abonado, sede_id, notas)
-    SELECT
-      _prefix || lpad((_max_num + pendientes.rn)::text, 4, '0') AS numero,
-      pendientes.cliente,
-      pendientes.telefono,
-      pendientes.origen,
-      COALESCE(pendientes.importe, 0) AS total,
-      0 AS abonado,
-      pendientes.sede_id,
-      'Documento comercial creado automáticamente para pedido histórico sin contrato.' AS notas
-    FROM pendientes
-    RETURNING id, numero
-  )
-  UPDATE public.pedidos p
-  SET
-    contrato = nuevos.numero,
-    contrato_id = nuevos.id
-  FROM pendientes
-  JOIN nuevos ON nuevos.numero = _prefix || lpad((_max_num + pendientes.rn)::text, 4, '0')
-  WHERE p.id = pendientes.id;
-END $$;
-
 WITH contratos_faltantes AS (
   INSERT INTO public.contratos (numero, cliente, telefono, origen, total, abonado, sede_id, notas)
   SELECT
@@ -69,3 +27,7 @@ FROM public.contratos c
 WHERE p.contrato_id IS NULL
   AND trim(COALESCE(p.contrato, '')) <> ''
   AND c.numero = trim(p.contrato);
+
+-- Importante:
+-- Los pedidos históricos sin N° Contrato se conservan sin contrato automático.
+-- La generación CTR-YYYY-0001 solo ocurre para pedidos nuevos desde la aplicación.
