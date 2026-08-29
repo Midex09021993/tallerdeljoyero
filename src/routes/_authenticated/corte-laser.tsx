@@ -34,6 +34,7 @@ function CorteLaserCompleto() {
     <AppShell
       titulo="Corte Láser"
       subtitulo={`Pedidos que requieren corte o grabado · ${etiquetaSede}`}
+      ocultarAccionesCelular
       acciones={
         <>
           <SelectorSedeDueno

@@ -78,7 +78,7 @@ function VentasPage() {
 
   const contenido = (
     <>
-      <div className="mb-5">
+      <div className="mb-5 max-sm:hidden">
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
@@ -251,6 +251,7 @@ function VentasPage() {
     <AppShell
       titulo="Área ventas"
       subtitulo={`Recepción comercial, packing, despacho y entrega · ${etiquetaSede}`}
+      ocultarAccionesCelular
       acciones={
         <>
           <SelectorSedeDueno

@@ -34,6 +34,7 @@ function CastingCompleto() {
     <AppShell
       titulo="Casting"
       subtitulo={`Pedidos que requieren casting o fundición · ${etiquetaSede}`}
+      ocultarAccionesCelular
       acciones={
         <>
           <SelectorSedeDueno

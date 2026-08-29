@@ -40,6 +40,7 @@ function Impresion3DCompleta() {
     <AppShell
       titulo="Impresión 3D"
       subtitulo={`Pedidos que requieren impresión de resina · ${etiquetaSede}`}
+      ocultarAccionesCelular
       acciones={
         <>
           <SelectorSedeDueno

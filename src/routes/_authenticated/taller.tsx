@@ -120,6 +120,7 @@ function TallerCompleto() {
     <AppShell
       titulo="Taller"
       subtitulo={`Pedidos que requieren trabajo manual, engaste, pulido o fundición · ${etiquetaSede}`}
+      ocultarAccionesCelular
       acciones={
         <>
           <SelectorSedeDueno
@@ -134,7 +135,9 @@ function TallerCompleto() {
       }
     >
       <PedidosArea area="Taller" titulo="Pedidos asignados a Taller" />
-      <CalculadoraYeso />
+      <div className="max-sm:hidden">
+        <CalculadoraYeso />
+      </div>
     </AppShell>
   );
 }

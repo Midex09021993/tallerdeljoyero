@@ -149,6 +149,7 @@ function Diseno3DCompleto() {
     <AppShell
       titulo="Diseño 3D"
       subtitulo={`Modelado CAD y validación de piezas · ${etiquetaSede}`}
+      ocultarAccionesCelular
       acciones={
         <>
           <SelectorSedeDueno
@@ -166,7 +167,7 @@ function Diseno3DCompleto() {
     >
       <PedidosArea area="Diseño 3D" titulo="Pedidos asignados a Diseño 3D" />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="hidden grid-cols-1 gap-6 sm:grid lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
           <ColaModelado
             items={cola}
@@ -242,6 +243,7 @@ function Diseno3DCompleto() {
       </div>
 
       <Panel
+        className="max-sm:hidden"
         titulo="Biblioteca de archivos"
         accion={
           <input

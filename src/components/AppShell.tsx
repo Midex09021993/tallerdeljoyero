@@ -85,6 +85,7 @@ export function AppShell({
   atrasMovil = { to: "/inicio" },
   ocultarNavegacion = false,
   encabezadoMovilCompacto = false,
+  ocultarAccionesCelular = false,
   children,
 }: {
   titulo: string;
@@ -93,6 +94,7 @@ export function AppShell({
   atrasMovil?: AtrasMovil;
   ocultarNavegacion?: boolean;
   encabezadoMovilCompacto?: boolean;
+  ocultarAccionesCelular?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -179,7 +181,7 @@ export function AppShell({
             <div
               className={`flex w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:flex-wrap lg:gap-4 ${
                 encabezadoMovilCompacto ? "max-lg:hidden" : ""
-              }`}
+              } ${ocultarAccionesCelular ? "max-sm:hidden" : ""}`}
             >
               {acciones}
             </div>
