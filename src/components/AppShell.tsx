@@ -162,10 +162,8 @@ export function AppShell({
               : ""
           }`}
         >
-          <div className="flex w-full items-start justify-between gap-2 lg:w-auto lg:flex-nowrap lg:justify-between lg:gap-3">
-            <div
-              className={`min-w-0 max-lg:flex-1 ${encabezadoMovilCompacto ? "max-lg:hidden" : ""}`}
-            >
+          <div className="flex w-full items-start justify-between gap-3 lg:w-auto">
+            <div className={`min-w-0 ${encabezadoMovilCompacto ? "max-lg:hidden" : ""}`}>
               <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
                 {titulo}
               </h1>
@@ -173,9 +171,7 @@ export function AppShell({
                 <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
               ) : null}
             </div>
-            {mostrarAtrasMovil ? (
-              <MobileBackButton atrasMovil={atrasMovil} className="max-lg:ml-auto" />
-            ) : null}
+            {mostrarAtrasMovil ? <MobileBackButton atrasMovil={atrasMovil} /> : null}
           </div>
           {acciones ? (
             <div

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { normalizarArea } from "@/lib/auth";
+import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
 
 export type Estado =
   | "Recibido"
@@ -323,10 +324,18 @@ export function useCrearPedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: PedidoNuevo) => {
-      const { error } = await supabase.from("pedidos").insert(pedido);
+      const { data, error } = await supabase
+        .from("pedidos")
+        .insert(pedido)
+        .select("id, referencia, cliente")
+        .single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+    onSuccess: (pedido) => {
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      if (pedido) void notificarNuevoPedidoADueno(pedido);
+    },
   });
 }
 

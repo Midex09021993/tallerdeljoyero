@@ -1,0 +1,19 @@
+{
+  "name": "Taller del Joyero",
+  "short_name": "Joyero",
+  "description": "ERP de producción para talleres de joyería.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

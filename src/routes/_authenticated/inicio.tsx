@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
+import { Bell, Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { modulosAdminMovil } from "@/components/AppShell";
 import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
@@ -13,6 +13,7 @@ import {
   useSesion,
 } from "@/lib/auth";
 import { pedidoEnEvaluacion, usePedidos, type Pedido } from "@/lib/taller-db";
+import { usePushDueno } from "@/lib/pwa-push";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
@@ -32,6 +33,7 @@ function InicioAdminMovil() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
   const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
+  const pushDueno = usePushDueno(sesion);
 
   useEffect(() => {
     if (isLoading || !sesion) return;
@@ -121,6 +123,49 @@ function InicioAdminMovil() {
             Pide a un administrador que asigne tus áreas de trabajo.
           </p>
         </div>
+      ) : null}
+
+      {sesion?.esDueno ? (
+        <section className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-card">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-ink text-gold">
+              <Bell className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Notificaciones del dueño</p>
+              <p className="mt-1 text-xs leading-snug text-muted-foreground">
+                Piloto: aviso push cuando se registre un nuevo pedido.
+              </p>
+              {pushDueno.estado === "sin-clave" ? (
+                <p className="mt-2 text-xs font-medium text-warning">
+                  Falta configurar la clave pública VAPID.
+                </p>
+              ) : null}
+              {pushDueno.estado === "no-soportado" ? (
+                <p className="mt-2 text-xs font-medium text-warning">
+                  Este navegador no soporta notificaciones push web.
+                </p>
+              ) : null}
+              {pushDueno.estado === "denegado" ? (
+                <p className="mt-2 text-xs font-medium text-danger">
+                  El permiso está bloqueado en el navegador.
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={pushDueno.cargando || pushDueno.estado === "activo"}
+            onClick={() => void pushDueno.activar()}
+            className="mt-3 w-full rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-gold transition active:scale-[0.99] disabled:opacity-60"
+          >
+            {pushDueno.estado === "activo"
+              ? "Notificaciones activas"
+              : pushDueno.cargando
+                ? "Activando..."
+                : "Activar notificaciones"}
+          </button>
+        </section>
       ) : null}
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
