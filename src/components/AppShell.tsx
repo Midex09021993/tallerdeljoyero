@@ -166,10 +166,16 @@ export function AppShell({
         </aside>
       ) : null}
 
-      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10">
+      <main
+        className={`min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10 ${
+          encabezadoMovilCompacto ? "max-sm:px-3 max-sm:py-2 max-sm:pb-5" : ""
+        }`}
+      >
         <header
           className={`mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4 ${
-            encabezadoMovilCompacto ? "max-sm:mb-3 max-sm:justify-end" : ""
+            encabezadoMovilCompacto
+              ? "max-sm:sticky max-sm:top-0 max-sm:z-30 max-sm:-mx-3 max-sm:mb-2 max-sm:justify-end max-sm:bg-background/95 max-sm:px-3 max-sm:py-2 max-sm:backdrop-blur"
+              : ""
           }`}
         >
           <div className="flex w-full items-start justify-between gap-3 lg:w-auto">
@@ -205,7 +211,11 @@ export function AppShell({
         </header>
 
         {!ocultarNavegacion && !sesion?.esAdmin ? (
-          <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
+          <nav
+            className={`sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden ${
+              encabezadoMovilCompacto ? "max-sm:hidden" : ""
+            }`}
+          >
             <div className="mb-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
