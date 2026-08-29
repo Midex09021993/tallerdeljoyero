@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { normalizarArea } from "@/lib/auth";
@@ -105,6 +106,19 @@ function primeraAreaProduccion(pedido: Pick<Pedido, "ruta">) {
   return (Array.isArray(pedido.ruta) ? pedido.ruta : [])
     .map(areaOperativa)
     .find((area) => area !== "Pedidos" && area !== "Área ventas");
+}
+
+function actualizarPedidoEnCache(
+  pedidos: Pedido[] | undefined,
+  id: string,
+  cambios: Partial<Pedido>,
+) {
+  if (!pedidos) return pedidos;
+  return pedidos.map((pedido) => (pedido.id === id ? { ...pedido, ...cambios } : pedido));
+}
+
+function invalidarPedidosActivos(qc: ReturnType<typeof useQueryClient>) {
+  return qc.invalidateQueries({ queryKey: ["pedidos"], refetchType: "active" });
 }
 
 export type Pedido = {
@@ -361,14 +375,16 @@ export function useMoverPedido() {
         direccion === "avanzar"
           ? secuencia[Math.min(secuencia.length - 1, i + 1)]
           : secuencia[Math.max(0, i - 1)];
-      if (!destino || destino === areaActual) return;
+      if (!destino || destino === areaActual) return null;
 
+      const ahora = new Date().toISOString();
+      const estado = estadoPorDestino(destino, direccion);
       const { error } = await supabase
         .from("pedidos")
         .update({
           area_actual: destino,
-          estado: estadoPorDestino(destino, direccion),
-          area_desde: new Date().toISOString(),
+          estado,
+          area_desde: ahora,
         })
         .eq("id", pedido.id);
       if (error) throw error;
@@ -379,8 +395,39 @@ export function useMoverPedido() {
         accion: direccion,
         usuario_id: usuarioId,
       });
+      return { pedido, destino, estado, area_desde: ahora };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+    onMutate: async ({ pedido, direccion }) => {
+      await qc.cancelQueries({ queryKey: ["pedidos"] });
+      const anterior = qc.getQueryData<Pedido[]>(["pedidos"]);
+      const secuencia = secuenciaPedido(pedido);
+      const areaActual = areaOperativa(pedido.area_actual);
+      const i = Math.max(0, secuencia.indexOf(areaActual));
+      const destino =
+        direccion === "avanzar"
+          ? secuencia[Math.min(secuencia.length - 1, i + 1)]
+          : secuencia[Math.max(0, i - 1)];
+      if (destino && destino !== areaActual) {
+        qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
+          actualizarPedidoEnCache(pedidos, pedido.id, {
+            area_actual: destino,
+            estado: estadoPorDestino(destino, direccion),
+            area_desde: new Date().toISOString(),
+          }),
+        );
+      }
+      return { anterior };
+    },
+    onError: (error, _variables, contexto) => {
+      if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      toast.error(error instanceof Error ? error.message : "No se pudo mover el pedido");
+    },
+    onSuccess: (resultado) => {
+      if (resultado) toast.success(`Pedido movido a ${normalizarArea(resultado.destino)}`);
+    },
+    onSettled: () => {
+      void invalidarPedidosActivos(qc);
+    },
   });
 }
 
@@ -393,12 +440,13 @@ export function useAutorizarProduccion() {
       if (!destino) throw new Error("El pedido no tiene áreas productivas asignadas.");
 
       const areaActual = areaOperativa(pedido.area_actual);
+      const ahora = new Date().toISOString();
       const { error } = await supabase
         .from("pedidos")
         .update({
           area_actual: destino,
           estado: "En Producción",
-          area_desde: new Date().toISOString(),
+          area_desde: ahora,
         })
         .eq("id", pedido.id);
       if (error) throw error;
@@ -410,8 +458,33 @@ export function useAutorizarProduccion() {
         accion: "autorizar_produccion",
         usuario_id: usuarioId,
       });
+      return { pedido, destino, area_desde: ahora };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+    onMutate: async ({ pedido }) => {
+      await qc.cancelQueries({ queryKey: ["pedidos"] });
+      const anterior = qc.getQueryData<Pedido[]>(["pedidos"]);
+      const destino = primeraAreaProduccion(pedido);
+      if (destino) {
+        qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
+          actualizarPedidoEnCache(pedidos, pedido.id, {
+            area_actual: destino,
+            estado: "En Producción",
+            area_desde: new Date().toISOString(),
+          }),
+        );
+      }
+      return { anterior };
+    },
+    onError: (error, _variables, contexto) => {
+      if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      toast.error(error instanceof Error ? error.message : "No se pudo autorizar producción");
+    },
+    onSuccess: (resultado) => {
+      toast.success(`Producción autorizada en ${normalizarArea(resultado.destino)}`);
+    },
+    onSettled: () => {
+      void invalidarPedidosActivos(qc);
+    },
   });
 }
 
@@ -450,16 +523,18 @@ export function useEnviarAArea() {
       destino: string;
       usuarioId: string | null;
     }) => {
-      if (!destino || destino === pedido.area_actual) return;
+      if (!destino || destino === pedido.area_actual) return null;
       const destinoNormalizado = areaOperativa(destino);
       const areaActual = areaOperativa(pedido.area_actual);
-      if (!destinoNormalizado || destinoNormalizado === areaActual) return;
+      if (!destinoNormalizado || destinoNormalizado === areaActual) return null;
+      const ahora = new Date().toISOString();
+      const estado = estadoPorDestino(destinoNormalizado, "enviar");
       const { error } = await supabase
         .from("pedidos")
         .update({
           area_actual: destinoNormalizado,
-          estado: estadoPorDestino(destinoNormalizado, "enviar"),
-          area_desde: new Date().toISOString(),
+          estado,
+          area_desde: ahora,
         })
         .eq("id", pedido.id);
       if (error) throw error;
@@ -470,8 +545,34 @@ export function useEnviarAArea() {
         accion: "mover",
         usuario_id: usuarioId,
       });
+      return { pedido, destino: destinoNormalizado, estado, area_desde: ahora };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+    onMutate: async ({ pedido, destino }) => {
+      await qc.cancelQueries({ queryKey: ["pedidos"] });
+      const anterior = qc.getQueryData<Pedido[]>(["pedidos"]);
+      const destinoNormalizado = areaOperativa(destino);
+      const areaActual = areaOperativa(pedido.area_actual);
+      if (destinoNormalizado && destinoNormalizado !== areaActual) {
+        qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
+          actualizarPedidoEnCache(pedidos, pedido.id, {
+            area_actual: destinoNormalizado,
+            estado: estadoPorDestino(destinoNormalizado, "enviar"),
+            area_desde: new Date().toISOString(),
+          }),
+        );
+      }
+      return { anterior };
+    },
+    onError: (error, _variables, contexto) => {
+      if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      toast.error(error instanceof Error ? error.message : "No se pudo mover el pedido");
+    },
+    onSuccess: (resultado) => {
+      if (resultado) toast.success(`Pedido movido a ${normalizarArea(resultado.destino)}`);
+    },
+    onSettled: () => {
+      void invalidarPedidosActivos(qc);
+    },
   });
 }
 
