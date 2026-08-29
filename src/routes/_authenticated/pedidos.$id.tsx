@@ -322,6 +322,7 @@ function FichaPedido() {
         titulo="Ficha del pedido"
         subtitulo="Cargando…"
         ocultarNavegacion={esFichaOperario}
+        encabezadoMovilCompacto
         atrasMovil={{ to: regreso.ruta }}
       >
         <p className="text-sm text-muted-foreground">Cargando pedido…</p>
@@ -334,6 +335,7 @@ function FichaPedido() {
       <AppShell
         titulo="Pedido no encontrado"
         ocultarNavegacion={esFichaOperario}
+        encabezadoMovilCompacto
         atrasMovil={{ to: regreso.ruta }}
       >
         <p className="text-sm text-muted-foreground">
@@ -378,6 +380,7 @@ function FichaPedido() {
       titulo={`${pedido.referencia} · ${pedido.trabajo || pedido.pieza}`}
       subtitulo={`${pedido.cliente}${pedido.sede_nombre ? ` · ${pedido.sede_nombre}` : ""}`}
       ocultarNavegacion={esFichaOperario}
+      encabezadoMovilCompacto
       atrasMovil={{ to: regreso.ruta }}
     >
       {!esFichaOperario ? (
@@ -392,8 +395,8 @@ function FichaPedido() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Panel titulo="Ficha rápida">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 p-6 lg:grid-cols-3">
               {[
@@ -499,38 +502,40 @@ function FichaPedido() {
             </div>
           </Panel>
 
-          <Panel titulo="Seguimiento del pedido">
-            <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-6">
-              <div className="rounded-xl bg-surface-muted p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Estado general
-                </p>
-                <p
-                  className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
-                    estadoClases[pedido.estado] ?? "bg-card text-foreground"
-                  }`}
-                >
-                  {pedido.estado}
-                </p>
+          <div className="hidden sm:block">
+            <Panel titulo="Seguimiento del pedido">
+              <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-6">
+                <div className="rounded-xl bg-surface-muted p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Estado general
+                  </p>
+                  <p
+                    className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
+                      estadoClases[pedido.estado] ?? "bg-card text-foreground"
+                    }`}
+                  >
+                    {pedido.estado}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface-muted p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Área actual
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-foreground">
+                    {normalizarArea(pedido.area_actual)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface-muted p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Estado de ventas
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-foreground">
+                    {mostrarEstadoVentas(pedido)}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-xl bg-surface-muted p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Área actual
-                </p>
-                <p className="mt-2 text-sm font-semibold text-foreground">
-                  {normalizarArea(pedido.area_actual)}
-                </p>
-              </div>
-              <div className="rounded-xl bg-surface-muted p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Estado de ventas
-                </p>
-                <p className="mt-2 text-sm font-semibold text-foreground">
-                  {mostrarEstadoVentas(pedido)}
-                </p>
-              </div>
-            </div>
-          </Panel>
+            </Panel>
+          </div>
 
           <Seccion titulo="Ficha técnica general">
             {editando && puedeEditar ? (

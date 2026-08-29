@@ -83,6 +83,7 @@ export function AppShell({
   acciones,
   atrasMovil = { to: "/inicio" },
   ocultarNavegacion = false,
+  encabezadoMovilCompacto = false,
   children,
 }: {
   titulo: string;
@@ -90,6 +91,7 @@ export function AppShell({
   acciones?: ReactNode;
   atrasMovil?: false | { to?: string; onClick?: () => void };
   ocultarNavegacion?: boolean;
+  encabezadoMovilCompacto?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -165,9 +167,13 @@ export function AppShell({
       ) : null}
 
       <main className="min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10">
-        <header className="mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4">
+        <header
+          className={`mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4 ${
+            encabezadoMovilCompacto ? "max-sm:mb-3 max-sm:justify-end" : ""
+          }`}
+        >
           <div className="flex w-full items-start justify-between gap-3 lg:w-auto">
-            <div className="min-w-0">
+            <div className={`min-w-0 ${encabezadoMovilCompacto ? "max-sm:hidden" : ""}`}>
               <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
                 {titulo}
               </h1>
@@ -188,7 +194,11 @@ export function AppShell({
             ) : null}
           </div>
           {acciones ? (
-            <div className="flex w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:flex-wrap lg:gap-4">
+            <div
+              className={`flex w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:flex-wrap lg:gap-4 ${
+                encabezadoMovilCompacto ? "max-sm:hidden" : ""
+              }`}
+            >
               {acciones}
             </div>
           ) : null}
