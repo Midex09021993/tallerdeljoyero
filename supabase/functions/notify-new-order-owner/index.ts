@@ -5,6 +5,7 @@ type PedidoPayload = {
   pedido_id?: string;
   referencia?: string;
   cliente?: string;
+  prueba?: boolean;
 };
 
 type PushSubscriptionRow = {
@@ -47,7 +48,7 @@ Deno.serve(async (req) => {
   if (!canCreate) return json({ error: "Forbidden" }, 403);
 
   const payload = (await req.json().catch(() => ({}))) as PedidoPayload;
-  if (!payload.pedido_id) return json({ error: "Missing pedido_id" }, 400);
+  if (!payload.pedido_id && !payload.prueba) return json({ error: "Missing pedido_id" }, 400);
 
   const { data: duenos, error: duenosError } = await supabase
     .from("user_roles")
@@ -68,8 +69,14 @@ Deno.serve(async (req) => {
 
   const body = JSON.stringify({
     title: "Taller del Joyero",
-    body: `Nuevo pedido registrado\n${payload.referencia ?? ""}\n${payload.cliente ?? ""}`.trim(),
-    url: payload.pedido_id ? `/pedidos/${payload.pedido_id}` : "/pedidos",
+    body: payload.prueba
+      ? "Notificaciones activadas correctamente."
+      : `Nuevo pedido registrado\n${payload.referencia ?? ""}\n${payload.cliente ?? ""}`.trim(),
+    url: payload.prueba
+      ? "/inicio"
+      : payload.pedido_id
+        ? `/pedidos/${payload.pedido_id}`
+        : "/pedidos",
   });
 
   let enviados = 0;

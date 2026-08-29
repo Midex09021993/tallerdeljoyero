@@ -13,7 +13,7 @@ import {
   useSesion,
 } from "@/lib/auth";
 import { pedidoEnEvaluacion, usePedidos, type Pedido } from "@/lib/taller-db";
-import { usePushDueno } from "@/lib/pwa-push";
+import { enviarPruebaNotificacionDueno, usePushDueno } from "@/lib/pwa-push";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
@@ -165,6 +165,15 @@ function InicioAdminMovil() {
                 ? "Activando..."
                 : "Activar notificaciones"}
           </button>
+          {pushDueno.estado === "activo" ? (
+            <button
+              type="button"
+              onClick={() => void enviarPruebaNotificacionDueno()}
+              className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition active:scale-[0.99]"
+            >
+              Enviar prueba
+            </button>
+          ) : null}
         </section>
       ) : null}
 

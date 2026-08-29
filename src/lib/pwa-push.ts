@@ -6,8 +6,16 @@ import type { Pedido } from "@/lib/taller-db";
 
 type EstadoPush = "no-soportado" | "sin-clave" | "pendiente" | "activo" | "denegado";
 
+// Public VAPID key for the owner push pilot. This key is intentionally public:
+// browsers need it to subscribe through PushManager. The matching private key
+// must be configured only as a Supabase Edge Function secret.
+const VAPID_PUBLIC_KEY_PILOTO =
+  "BDtyNNppu4FYnTbkMc_v4RTj__Y7SxKSIB15tlfc7logUjZrOWltTOz6MGmcgoQDtI9BBmyp2N55_vuHZGaBrSc";
+
 function vapidPublicKey() {
-  return import.meta.env["VITE_VAPID_PUBLIC_KEY"] as string | undefined;
+  return (
+    (import.meta.env["VITE_VAPID_PUBLIC_KEY"] as string | undefined) || VAPID_PUBLIC_KEY_PILOTO
+  );
 }
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -123,5 +131,26 @@ export async function notificarNuevoPedidoADueno(
     if (error) console.warn("[push] No se pudo enviar notificación", error.message);
   } catch (error) {
     console.warn("[push] No se pudo invocar la notificación", error);
+  }
+}
+
+export async function enviarPruebaNotificacionDueno() {
+  try {
+    const { data, error } = await supabase.functions.invoke("notify-new-order-owner", {
+      body: {
+        prueba: true,
+        pedido_id: "prueba",
+        referencia: "PRUEBA",
+        cliente: "Notificación de prueba",
+      },
+    });
+    if (error) throw error;
+    toast.success("Notificación de prueba enviada al Dueño");
+    return data;
+  } catch (error) {
+    const mensaje =
+      error instanceof Error ? error.message : "No se pudo enviar la notificación de prueba";
+    toast.error(mensaje);
+    throw error;
   }
 }
