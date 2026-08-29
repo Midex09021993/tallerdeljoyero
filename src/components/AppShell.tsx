@@ -150,18 +150,18 @@ export function AppShell({
 
       <main
         className={`min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10 ${
-          encabezadoMovilCompacto ? "max-sm:px-3 max-sm:py-2 max-sm:pb-5" : ""
+          encabezadoMovilCompacto ? "max-lg:px-3 max-lg:py-2 max-lg:pb-5" : ""
         }`}
       >
         <header
           className={`mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4 ${
             encabezadoMovilCompacto
-              ? "max-sm:sticky max-sm:top-0 max-sm:z-30 max-sm:-mx-3 max-sm:mb-2 max-sm:justify-end max-sm:bg-background/95 max-sm:px-3 max-sm:py-2 max-sm:backdrop-blur"
+              ? "max-lg:sticky max-lg:top-0 max-lg:z-30 max-lg:-mx-3 max-lg:mb-2 max-lg:justify-end max-lg:bg-background/95 max-lg:px-3 max-lg:py-2 max-lg:backdrop-blur"
               : ""
           }`}
         >
           <div className="flex w-full items-start justify-between gap-3 lg:w-auto">
-            <div className={`min-w-0 ${encabezadoMovilCompacto ? "max-sm:hidden" : ""}`}>
+            <div className={`min-w-0 ${encabezadoMovilCompacto ? "max-lg:hidden" : ""}`}>
               <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
                 {titulo}
               </h1>
@@ -174,7 +174,7 @@ export function AppShell({
           {acciones ? (
             <div
               className={`flex w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:flex-wrap lg:gap-4 ${
-                encabezadoMovilCompacto ? "max-sm:hidden" : ""
+                encabezadoMovilCompacto ? "max-lg:hidden" : ""
               }`}
             >
               {acciones}
@@ -185,7 +185,7 @@ export function AppShell({
         {!ocultarNavegacion && !sesion?.esAdmin ? (
           <nav
             className={`sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden ${
-              encabezadoMovilCompacto ? "max-sm:hidden" : ""
+              encabezadoMovilCompacto ? "max-lg:hidden" : ""
             }`}
           >
             <div className="mb-3 flex items-center justify-between gap-3">
@@ -252,7 +252,7 @@ export function MobileBackButton({
     <button
       type="button"
       onClick={volver}
-      className={`inline-flex shrink-0 items-center rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-card transition active:scale-[0.98] lg:hidden ${className}`}
+      className={`inline-flex shrink-0 items-center rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-card transition hover:text-foreground active:scale-[0.98] lg:hidden ${className}`}
       aria-label="Atrás"
     >
       ← Atrás

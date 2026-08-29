@@ -339,7 +339,7 @@ function ListaTrabajosMovil({
 export function AreaOperario({ area, children }: { area: string; children?: ReactNode }) {
   return (
     <main className="min-h-screen bg-background px-4 py-4 pb-8 text-foreground sm:px-6">
-      <header className="mb-4 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-30 -mx-4 mb-3 flex items-center justify-between gap-3 bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-4 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
         <div className="min-w-0">
           <h1 className="truncate font-display text-3xl">{area}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Trabajos asignados</p>

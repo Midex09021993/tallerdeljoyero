@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/herramientas")({
 function HerramientasPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-4 pb-8 text-foreground sm:px-6 lg:hidden">
-      <header className="mb-4 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-30 -mx-4 mb-3 flex items-center justify-between gap-3 bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="min-w-0">
           <h1 className="truncate font-display text-3xl">Herramientas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Utilidades del taller</p>

@@ -230,7 +230,7 @@ function VentasPage() {
   if (sesion?.rolPrincipal === "operario") {
     return (
       <main className="min-h-screen bg-background px-4 py-5 pb-8 text-foreground sm:px-6">
-        <header className="mb-5 flex items-start justify-between gap-3">
+        <header className="sticky top-0 z-30 -mx-4 mb-3 flex items-start justify-between gap-3 bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-5 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Cola de trabajo

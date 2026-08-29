@@ -16,7 +16,7 @@ function PerfilPage() {
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6">
-      <div className="mb-5 flex justify-end">
+      <div className="sticky top-0 z-30 -mx-4 mb-3 flex justify-end bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-5 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
         <MobileBackButton atrasMovil={{ to: "/inicio" }} />
       </div>
 
