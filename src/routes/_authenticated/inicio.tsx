@@ -232,6 +232,7 @@ const etiquetaPasoPush = {
   vapid: "Clave pública VAPID",
   "vapid-conversion": "Conversión VAPID",
   supabase: "Guardado en Supabase",
+  "edge-function": "Edge Function",
   completo: "Completado",
 } as const;
 

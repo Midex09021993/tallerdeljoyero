@@ -14,6 +14,7 @@ type PasoPush =
   | "vapid"
   | "vapid-conversion"
   | "supabase"
+  | "edge-function"
   | "completo";
 
 const PUSH_TIMEOUT_MS = 15_000;
@@ -24,9 +25,39 @@ const PUSH_TIMEOUT_MS = 15_000;
 const VAPID_PUBLIC_KEY_PILOTO =
   "BDtyNNppu4FYnTbkMc_v4RTj__Y7SxKSIB15tlfc7logUjZrOWltTOz6MGmcgoQDtI9BBmyp2N55_vuHZGaBrSc";
 
+type EdgeFunctionPayload = {
+  pedido_id?: string;
+  referencia?: string;
+  cliente?: string;
+  prueba?: boolean;
+  diagnostico?: boolean;
+};
+
+class PushDiagnosticoError extends Error {
+  constructor(
+    message: string,
+    readonly categoria: string,
+    readonly status?: number,
+    readonly detalle?: unknown,
+  ) {
+    super(message);
+    this.name = "PushDiagnosticoError";
+  }
+}
+
 function vapidPublicKey() {
   return (
     (import.meta.env["VITE_VAPID_PUBLIC_KEY"] as string | undefined) || VAPID_PUBLIC_KEY_PILOTO
+  );
+}
+
+function supabaseUrlPublica() {
+  return import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
+}
+
+function supabasePublishableKey() {
+  return (
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"]
   );
 }
 
@@ -62,6 +93,11 @@ function diagnosticoPushOk(paso: PasoPush, mensaje: string, extra?: unknown) {
 }
 
 function describirError(error: unknown) {
+  if (error instanceof PushDiagnosticoError) {
+    const partes = [error.message];
+    if (error.status) partes.push(`HTTP ${error.status}`);
+    return partes.join(" - ");
+  }
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
   if (error && typeof error === "object" && "message" in error) {
@@ -69,6 +105,27 @@ function describirError(error: unknown) {
     if (typeof mensaje === "string") return mensaje;
   }
   return "Error desconocido";
+}
+
+function clasificarErrorEdge(status: number, payload?: unknown) {
+  const texto = JSON.stringify(payload ?? {}).toLowerCase();
+  if (status === 0) return "Error de conexión";
+  if (status === 401) return "Error de autenticación";
+  if (status === 403) return "Error de permisos";
+  if (status === 404) return "Error Edge Function";
+  if (status >= 500 && texto.includes("vapid")) return "Error VAPID";
+  if (status >= 500 && texto.includes("environment")) return "Error de configuración";
+  if (status >= 500) return "Error Edge Function";
+  return "Error Edge Function";
+}
+
+function normalizarRespuestaEdge(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "Respuesta vacía de la Edge Function";
+  const maybeError = payload as { error?: unknown; detail?: unknown; details?: unknown };
+  if (typeof maybeError.error === "string") return maybeError.error;
+  if (typeof maybeError.detail === "string") return maybeError.detail;
+  if (typeof maybeError.details === "string") return maybeError.details;
+  return JSON.stringify(payload);
 }
 
 function withTimeout<T>(promise: Promise<T>, mensaje: string, timeoutMs = PUSH_TIMEOUT_MS) {
@@ -121,6 +178,104 @@ function resumenDiagnostico(resultado: unknown) {
     };
   }
   return undefined;
+}
+
+async function invocarEdgeFunctionPush(payload: EdgeFunctionPayload) {
+  const supabaseUrl = supabaseUrlPublica();
+  const publishableKey = supabasePublishableKey();
+
+  if (!supabaseUrl || !publishableKey) {
+    throw new PushDiagnosticoError(
+      "Faltan variables públicas de Supabase en el frontend.",
+      "Error de configuración",
+    );
+  }
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) {
+    throw new PushDiagnosticoError(
+      sessionError.message,
+      "Error de autenticación",
+      undefined,
+      sessionError,
+    );
+  }
+
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) {
+    throw new PushDiagnosticoError(
+      "No hay sesión activa para invocar la Edge Function.",
+      "Error de autenticación",
+    );
+  }
+
+  const url = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/notify-new-order-owner`;
+  diagnosticoPush("edge-function", "Invocando Edge Function", {
+    url,
+    diagnostico: Boolean(payload.diagnostico),
+    prueba: Boolean(payload.prueba),
+    hasAccessToken: Boolean(accessToken),
+  });
+
+  let response: Response;
+  try {
+    response = await withTimeout(
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          apikey: publishableKey,
+          authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      }),
+      "La Edge Function no respondió a tiempo.",
+    );
+  } catch (error) {
+    throw new PushDiagnosticoError(
+      "No se pudo conectar con la Edge Function. Puede ser despliegue faltante, URL incorrecta o CORS.",
+      "Error de conexión",
+      0,
+      error,
+    );
+  }
+
+  const raw = await response.text();
+  let data: unknown = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    data = raw;
+  }
+
+  diagnosticoPush("edge-function", "Respuesta Edge Function", {
+    status: response.status,
+    ok: response.ok,
+    data,
+  });
+
+  if (!response.ok) {
+    const categoria = clasificarErrorEdge(response.status, data);
+    throw new PushDiagnosticoError(normalizarRespuestaEdge(data), categoria, response.status, data);
+  }
+
+  if (
+    payload.diagnostico &&
+    data &&
+    typeof data === "object" &&
+    "ok" in data &&
+    (data as { ok?: unknown }).ok === false
+  ) {
+    throw new PushDiagnosticoError(
+      normalizarRespuestaEdge(data),
+      "Error VAPID",
+      response.status,
+      data,
+    );
+  }
+
+  diagnosticoPushOk("edge-function", "Edge Function respondió correctamente.", data);
+  return data;
 }
 
 async function obtenerRegistroServiceWorker() {
@@ -341,6 +496,14 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
       );
       if (resultadoGuardado.error) throw resultadoGuardado.error;
 
+      actualizarPaso("edge-function", "Validando Edge Function de notificaciones...");
+      await ejecutarPaso(
+        "edge-function",
+        "Validando Edge Function notify-new-order-owner",
+        "Edge Function validada.",
+        () => invocarEdgeFunctionPush({ diagnostico: true }),
+      );
+
       actualizarPaso("completo", "Notificaciones activadas correctamente.");
       diagnosticoPushOk("completo", "Confirmación de registro exitoso.");
       setEstado("activo");
@@ -368,43 +531,40 @@ const etiquetaErrorPaso: Partial<Record<PasoPush, string>> = {
   vapid: "Clave VAPID",
   "vapid-conversion": "Conversión VAPID",
   supabase: "Guardado en Supabase",
+  "edge-function": "Error Edge Function",
 };
 
 export async function notificarNuevoPedidoADueno(
   pedido: Pick<Pedido, "id" | "referencia" | "cliente">,
 ) {
   try {
-    const { error } = await supabase.functions.invoke("notify-new-order-owner", {
-      body: {
-        pedido_id: pedido.id,
-        referencia: pedido.referencia,
-        cliente: pedido.cliente,
-      },
+    await invocarEdgeFunctionPush({
+      pedido_id: pedido.id,
+      referencia: pedido.referencia,
+      cliente: pedido.cliente,
     });
-    if (error) console.warn("[push] No se pudo enviar notificación", error.message);
   } catch (error) {
-    console.warn("[push] No se pudo invocar la notificación", error);
+    console.warn("[push] No se pudo enviar notificación", {
+      mensaje: describirError(error),
+      error,
+    });
   }
 }
 
 export async function enviarPruebaNotificacionDueno() {
   try {
-    diagnosticoPush("supabase", "Invocando prueba de notificación");
-    const { data, error } = await supabase.functions.invoke("notify-new-order-owner", {
-      body: {
-        prueba: true,
-        pedido_id: "prueba",
-        referencia: "PRUEBA",
-        cliente: "Notificación de prueba",
-      },
+    diagnosticoPush("edge-function", "Invocando prueba de notificación");
+    const data = await invocarEdgeFunctionPush({
+      prueba: true,
+      pedido_id: "prueba",
+      referencia: "PRUEBA",
+      cliente: "Notificación de prueba",
     });
-    if (error) throw error;
-    diagnosticoPush("supabase", "Prueba de notificación enviada", data);
+    diagnosticoPush("edge-function", "Prueba de notificación enviada", data);
     toast.success("Notificación de prueba enviada al Dueño");
     return data;
   } catch (error) {
-    const mensaje =
-      error instanceof Error ? error.message : "No se pudo enviar la notificación de prueba";
+    const mensaje = describirError(error) || "No se pudo enviar la notificación de prueba";
     toast.error(mensaje);
     throw error;
   }
