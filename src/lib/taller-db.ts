@@ -236,6 +236,12 @@ function prefijoContrato(numero: string) {
   return limpio.slice(-2) || "YA";
 }
 
+function esUuid(valor: string | null | undefined) {
+  return Boolean(
+    valor?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
+  );
+}
+
 export function siguienteReferenciaContrato(numeroContrato: string, refs: string[]) {
   const prefijo = prefijoContrato(numeroContrato);
   const re = new RegExp(`^${prefijo}-(\\d+)$`, "i");
@@ -598,18 +604,19 @@ export function useContrato(id: string) {
   return useQuery({
     queryKey: ["contrato", id],
     queryFn: async (): Promise<Contrato | null> => {
+      const selector = esUuid(id) ? "id" : "numero";
       const { data, error } = await supabase
         .from("contratos")
         .select(
           "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)",
         )
-        .eq("id", id)
+        .eq(selector, id)
         .maybeSingle();
       if (error) {
-        if (esErrorCampoFaltante(error)) return null;
+        if (esErrorCampoFaltante(error)) return contratoDesdePedidos(id);
         throw error;
       }
-      if (!data) return null;
+      if (!data) return contratoDesdePedidos(id);
       const row = data as Record<string, unknown> & { sedes?: { nombre: string } | null };
       const total = Number(row["total"]) || 0;
       const abonado = Number(row["abonado"]) || 0;
@@ -630,6 +637,54 @@ export function useContrato(id: string) {
     },
     enabled: Boolean(id),
   });
+}
+
+async function contratoDesdePedidos(numeroContrato: string): Promise<Contrato | null> {
+  if (!numeroContrato || esUuid(numeroContrato)) return null;
+
+  const { data, error } = await supabase
+    .from("pedidos")
+    .select("contrato, cliente, telefono, origen, importe, sede_id, sedes(nombre), created_at")
+    .eq("contrato", numeroContrato);
+
+  if (error) {
+    if (esErrorCampoFaltante(error)) {
+      const { data: dataSinSede, error: errorSinSede } = await supabase
+        .from("pedidos")
+        .select("contrato, cliente, telefono, origen, importe, sede_id, created_at")
+        .eq("contrato", numeroContrato);
+      if (errorSinSede) throw errorSinSede;
+      return construirContratoTemporal(numeroContrato, dataSinSede ?? []);
+    }
+    throw error;
+  }
+
+  return construirContratoTemporal(numeroContrato, data ?? []);
+}
+
+function construirContratoTemporal(
+  numeroContrato: string,
+  pedidos: Array<Record<string, unknown>>,
+) {
+  if (pedidos.length === 0) return null;
+  const primero = pedidos[0]!;
+  const total = pedidos.reduce((acc, pedido) => acc + (Number(pedido["importe"]) || 0), 0);
+  return {
+    id: numeroContrato,
+    numero: numeroContrato,
+    cliente: textoCampo(primero, "cliente"),
+    telefono: textoCampo(primero, "telefono"),
+    origen: textoCampo(primero, "origen"),
+    total,
+    abonado: 0,
+    saldo: total,
+    sede_id: typeof primero["sede_id"] === "string" ? primero["sede_id"] : null,
+    sede_nombre:
+      ((primero["sedes"] as { nombre?: string } | null | undefined)?.nombre as
+        string | undefined) ?? null,
+    notas: "Contrato reconstruido desde pedidos existentes.",
+    created_at: textoCampo(primero, "created_at", new Date().toISOString()),
+  };
 }
 
 export function usePedidosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined) {
@@ -699,14 +754,25 @@ export function useCrearTrabajoContrato() {
         telefono: contrato.telefono,
         origen: contrato.origen,
         contrato: contrato.numero,
-        contrato_id: contrato.id,
+        contrato_id: esUuid(contrato.id) ? contrato.id : null,
         sede_id: contrato.sede_id,
       };
-      const { data, error } = await supabase
+      const respuesta = await supabase
         .from("pedidos")
         .insert(nuevo)
         .select("id, referencia, cliente")
         .single();
+
+      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = nuevo;
+      const { data, error } =
+        respuesta.error &&
+        (esErrorCampoFaltante(respuesta.error) || respuesta.error.code === "22P02")
+          ? await supabase
+              .from("pedidos")
+              .insert(sinContratoId)
+              .select("id, referencia, cliente")
+              .single()
+          : respuesta;
       if (error) throw error;
       return data;
     },
