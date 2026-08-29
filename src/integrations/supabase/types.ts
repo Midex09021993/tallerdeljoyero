@@ -675,11 +675,15 @@ export type Database = {
         Returns: {
           area_actual: string
           cliente: string
+          estado: string
           fecha_entrega: string
+          fecha_entregado: string
+          fecha_envio: string
           referencia: string
           ruta: string[]
           sede: string
           trabajo: string
+          ventas_estado: string
         }[]
       }
       ve_sede: {
