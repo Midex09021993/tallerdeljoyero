@@ -626,6 +626,85 @@ async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
   return { id: data.id, numero, creado: true };
 }
 
+async function asegurarContratoComercial({
+  numero,
+  cliente,
+  telefono,
+  origen,
+  importe,
+  sede_id,
+  notas,
+}: {
+  numero: string;
+  cliente: string;
+  telefono: string;
+  origen: string;
+  importe: number;
+  sede_id: string | null;
+  notas: string;
+}) {
+  const numeroLimpio = numero.trim();
+  if (!numeroLimpio) return { id: null, numero: "", creado: false };
+
+  const base: ContratoInsert = {
+    numero: numeroLimpio,
+    cliente,
+    telefono,
+    origen,
+    total: Math.max(0, importe),
+    abonado: 0,
+    sede_id,
+    notas,
+  };
+
+  const existente = await supabase
+    .from("contratos")
+    .select("id, cliente, telefono, origen, sede_id")
+    .eq("numero", numeroLimpio)
+    .maybeSingle();
+
+  if (existente.error) {
+    if (esErrorCampoFaltante(existente.error))
+      return { id: null, numero: numeroLimpio, creado: false };
+    throw existente.error;
+  }
+
+  if (existente.data?.id) {
+    const actualizacion: Partial<ContratoInsert> = {
+      cliente: textoCampo(existente.data as Record<string, unknown>, "cliente") || cliente,
+      telefono: textoCampo(existente.data as Record<string, unknown>, "telefono") || telefono,
+      origen: textoCampo(existente.data as Record<string, unknown>, "origen") || origen,
+      sede_id:
+        typeof (existente.data as Record<string, unknown>)["sede_id"] === "string"
+          ? ((existente.data as Record<string, unknown>)["sede_id"] as string)
+          : sede_id,
+    };
+    const { error } = await supabase
+      .from("contratos")
+      .update(actualizacion)
+      .eq("id", existente.data.id);
+    if (error && !esErrorCampoFaltante(error)) throw error;
+    return { id: existente.data.id, numero: numeroLimpio, creado: false };
+  }
+
+  const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
+  if (error) {
+    if (error.code === "23505") {
+      const relectura = await supabase
+        .from("contratos")
+        .select("id")
+        .eq("numero", numeroLimpio)
+        .maybeSingle();
+      if (relectura.error) throw relectura.error;
+      if (relectura.data?.id) return { id: relectura.data.id, numero: numeroLimpio, creado: false };
+    }
+    if (esErrorCampoFaltante(error)) return { id: null, numero: numeroLimpio, creado: false };
+    throw error;
+  }
+
+  return { id: data.id, numero: numeroLimpio, creado: true };
+}
+
 export function useContratos() {
   return useQuery({
     queryKey: ["contratos"],
@@ -853,52 +932,84 @@ async function sumarImporteAContrato(contratoId: string | null | undefined, impo
   }
 }
 
+async function recalcularTotalContrato(numero: string, contratoId: string | null | undefined) {
+  if (!numero.trim() || !contratoId || !esUuid(contratoId)) return;
+
+  const { data, error } = await supabase
+    .from("pedidos")
+    .select("importe")
+    .eq("contrato", numero.trim());
+
+  if (error) {
+    if (esErrorCampoFaltante(error)) return;
+    throw error;
+  }
+
+  const total = ((data ?? []) as Array<{ importe?: number }>).reduce(
+    (acc, pedido) => acc + (Number(pedido.importe) || 0),
+    0,
+  );
+
+  const { error: errorUpdate } = await supabase
+    .from("contratos")
+    .update({ total })
+    .eq("id", contratoId);
+
+  if (errorUpdate && !esErrorCampoFaltante(errorUpdate)) throw errorUpdate;
+}
+
+async function vincularPedidosPorNumeroContrato(numero: string, contratoId: string | null) {
+  if (!numero.trim() || !contratoId || !esUuid(contratoId)) return;
+  const { error } = await supabase
+    .from("pedidos")
+    .update({ contrato_id: contratoId })
+    .eq("contrato", numero.trim());
+
+  if (error && !esErrorCampoFaltante(error)) throw error;
+}
+
 export function useCrearContratoDesdePedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: Pedido) => {
       const numero = pedido.contrato.trim() || `DOC-${pedido.referencia || Date.now()}`;
-
-      const base: ContratoInsert = {
+      const contrato = await asegurarContratoComercial({
         numero,
         cliente: pedido.cliente,
         telefono: pedido.telefono,
         origen: pedido.origen,
-        total: pedido.importe,
-        abonado: 0,
+        importe: pedido.importe,
         sede_id: pedido.sede_id,
         notas: "Contrato creado desde un pedido existente.",
-      };
+      });
 
-      const { data: existente, error: errorExistente } = await supabase
-        .from("contratos")
-        .select("id")
-        .eq("numero", numero)
-        .maybeSingle();
-
-      if (errorExistente) throw errorExistente;
-
-      let contratoId = existente?.id ?? null;
-      if (!contratoId) {
-        const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
-        if (error) throw error;
-        contratoId = data?.id ?? null;
-      }
-
-      if (!contratoId) {
+      if (!contrato.id) {
         throw new Error("No se pudo crear el contrato financiero.");
       }
 
       const { error: errorPedido } = await supabase
         .from("pedidos")
-        .update({ contrato: numero, contrato_id: contratoId })
+        .update({ contrato: contrato.numero, contrato_id: contrato.id })
         .eq(
           pedido.contrato.trim() ? "contrato" : "id",
-          pedido.contrato.trim() ? numero : pedido.id,
+          pedido.contrato.trim() ? contrato.numero : pedido.id,
         );
-      if (errorPedido) throw errorPedido;
+      if (errorPedido) {
+        if (!esErrorCampoFaltante(errorPedido)) throw errorPedido;
+        const { error: errorCompat } = await supabase
+          .from("pedidos")
+          .update({ contrato: contrato.numero })
+          .eq(
+            pedido.contrato.trim() ? "contrato" : "id",
+            pedido.contrato.trim() ? contrato.numero : pedido.id,
+          );
+        if (errorCompat) throw errorCompat;
+      }
 
-      return { contratoId, numero };
+      await vincularPedidosPorNumeroContrato(contrato.numero, contrato.id);
+      await recalcularTotalContrato(contrato.numero, contrato.id);
+
+      return { contratoId: contrato.id, numero: contrato.numero };
     },
     onSuccess: (resultado, pedido) => {
       toast.success(`Contrato ${resultado.numero || pedido.contrato} creado y asociado`);
@@ -1106,10 +1217,63 @@ export function useActualizarPedido() {
       id,
       ...cambios
     }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
-      const { error } = await supabase.from("pedidos").update(cambios).eq("id", id);
+      let payload = cambios as PedidoUpdate;
+      let contratoVinculado: { id: string | null; numero: string } | null = null;
+
+      if (Object.prototype.hasOwnProperty.call(cambios, "contrato")) {
+        const numero = String(cambios.contrato ?? "").trim();
+
+        if (numero) {
+          const { data: pedidoActual, error: errorPedido } = await supabase
+            .from("pedidos")
+            .select("cliente, telefono, origen, importe, sede_id")
+            .eq("id", id)
+            .maybeSingle();
+          if (errorPedido) throw errorPedido;
+
+          const base = (pedidoActual ?? {}) as Record<string, unknown>;
+          const contrato = await asegurarContratoComercial({
+            numero,
+            cliente: String(cambios.cliente ?? base["cliente"] ?? ""),
+            telefono: String(cambios.telefono ?? base["telefono"] ?? ""),
+            origen: String(cambios.origen ?? base["origen"] ?? ""),
+            importe: Number(cambios.importe ?? base["importe"] ?? 0) || 0,
+            sede_id:
+              typeof (cambios.sede_id ?? base["sede_id"]) === "string"
+                ? String(cambios.sede_id ?? base["sede_id"])
+                : null,
+            notas: "Documento comercial creado o vinculado desde ficha técnica.",
+          });
+
+          payload = {
+            ...payload,
+            contrato: contrato.numero,
+            contrato_id: contrato.id,
+          } as PedidoUpdate;
+          contratoVinculado = { id: contrato.id, numero: contrato.numero };
+        } else {
+          payload = { ...payload, contrato: "", contrato_id: null } as PedidoUpdate;
+        }
+      }
+
+      const respuesta = await supabase.from("pedidos").update(payload).eq("id", id);
+      const { contrato_id: _contratoIdOmitido, ...payloadSinContratoId } = payload;
+      const { error } =
+        respuesta.error && esErrorCampoFaltante(respuesta.error) && "contrato_id" in payload
+          ? await supabase.from("pedidos").update(payloadSinContratoId).eq("id", id)
+          : respuesta;
       if (error) throw error;
+
+      if (contratoVinculado?.id) {
+        await vincularPedidosPorNumeroContrato(contratoVinculado.numero, contratoVinculado.id);
+        await recalcularTotalContrato(contratoVinculado.numero, contratoVinculado.id);
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+    },
   });
 }
 
