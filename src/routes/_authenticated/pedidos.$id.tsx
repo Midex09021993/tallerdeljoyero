@@ -430,14 +430,14 @@ function FichaPedido() {
                   )}
                 </div>
               ))}
-              {pedido.contrato_id ? (
+              {pedido.contrato_id || pedido.contrato ? (
                 <div className="col-span-2 lg:col-span-3">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                     Contrato asociado
                   </p>
                   <Link
                     to="/contratos/$id"
-                    params={{ id: pedido.contrato_id }}
+                    params={{ id: pedido.contrato_id || pedido.contrato }}
                     className="mt-1 inline-flex rounded-lg border border-border px-3 py-2 text-xs font-medium text-info transition-colors hover:bg-surface-muted hover:underline"
                   >
                     Ver contrato {pedido.contrato || "asociado"}
