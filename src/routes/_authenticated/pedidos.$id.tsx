@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import {
   estadoClases,
+  destinosMovimientoPedido,
   pedidoEnEvaluacion,
   useActualizarPedido,
   useAutorizarProduccion,
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
       {
         name: "description",
         content:
-          "Ficha rápida y ficha técnica del pedido: área actual, tiempo en área, avanzar o devolver, QR, WhatsApp y archivos de diseño.",
+          "Ficha rápida y ficha técnica del pedido: área actual, tiempo en área, movimiento entre áreas, QR, WhatsApp y archivos de diseño.",
       },
       { property: "og:title", content: "Ficha del pedido — Aurum Lab" },
       {
@@ -220,6 +221,7 @@ function FichaPedido() {
   const [enlace, setEnlace] = useState({ nombre: "", url: "" });
   const [grupoDestino, setGrupoDestino] = useState("");
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
+  const [destinoMovimiento, setDestinoMovimiento] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
   const regresoBase = regresoDesde(from);
   const regreso =
@@ -353,6 +355,10 @@ function FichaPedido() {
     (sesion?.areas ?? []).some((area) => areaCoincide(area, pedido.area_actual));
   const requiereAutorizacion = pedidoEnEvaluacion(pedido.estado);
   const puedeAutorizar = Boolean(sesion?.esAdmin) && requiereAutorizacion;
+  const destinosMovimiento = destinosMovimientoPedido(pedido, {
+    esAdmin: Boolean(sesion?.esAdmin),
+    areasUsuario: sesion?.areas ?? [],
+  });
 
   return (
     <AppShell
@@ -427,35 +433,50 @@ function FichaPedido() {
                   </button>
                 </div>
               ) : null}
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Mover a área
-                <select
-                  value=""
-                  onChange={(e) => {
-                    const destino = e.target.value;
-                    if (destino)
-                      enviar.mutate({ pedido, destino, usuarioId: sesion?.user.id ?? null });
-                  }}
-                  disabled={enviar.isPending || !puedeMover || requiereAutorizacion}
-                  className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
-                >
-                  <option value="" disabled>
-                    Selecciona el área destino…
-                  </option>
-                  {rutaPedido
-                    .filter((a) => !areaCoincide(a, pedido.area_actual))
-                    .map((a) => (
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Mover pedido
+                  <select
+                    value={destinoMovimiento}
+                    onChange={(e) => setDestinoMovimiento(e.target.value)}
+                    disabled={enviar.isPending || !puedeMover || requiereAutorizacion}
+                    className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
+                  >
+                    <option value="" disabled>
+                      Selecciona el área destino…
+                    </option>
+                    {destinosMovimiento.map((a) => (
                       <option key={a} value={a}>
                         {normalizarArea(a)}
                       </option>
                     ))}
-                  {rutaPedido.filter((a) => !areaCoincide(a, pedido.area_actual)).length === 0 ? (
-                    <option value="" disabled>
-                      Sin áreas siguientes en la ruta
-                    </option>
-                  ) : null}
-                </select>
-              </label>
+                    {destinosMovimiento.length === 0 ? (
+                      <option value="" disabled>
+                        Sin áreas disponibles
+                      </option>
+                    ) : null}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  disabled={
+                    enviar.isPending || !puedeMover || requiereAutorizacion || !destinoMovimiento
+                  }
+                  onClick={() => {
+                    enviar.mutate(
+                      {
+                        pedido,
+                        destino: destinoMovimiento,
+                        usuarioId: sesion?.user.id ?? null,
+                      },
+                      { onSuccess: () => setDestinoMovimiento("") },
+                    );
+                  }}
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-ink-foreground disabled:opacity-40"
+                >
+                  {enviar.isPending ? "Moviendo..." : "Confirmar movimiento"}
+                </button>
+              </div>
             </div>
           </Panel>
 

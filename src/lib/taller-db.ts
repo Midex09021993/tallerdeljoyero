@@ -415,7 +415,29 @@ export function useAutorizarProduccion() {
   });
 }
 
-/** Envía el pedido directamente a cualquier área, sin seguir la ruta. */
+export function destinosMovimientoPedido(
+  pedido: Pick<Pedido, "area_actual" | "ruta">,
+  opciones?: { esAdmin?: boolean; areasUsuario?: string[] },
+) {
+  const areaActual = areaOperativa(pedido.area_actual);
+  const rutaPedido = (Array.isArray(pedido.ruta) ? pedido.ruta : [])
+    .map(areaOperativa)
+    .filter((area) => area !== "Pedidos");
+  const destinosBase = opciones?.esAdmin
+    ? ["Pedidos", ...rutaPedido, "Área ventas"]
+    : [...rutaPedido, "Área ventas"];
+  const areasUsuario = (opciones?.areasUsuario ?? []).map(areaOperativa);
+  const permitidos = opciones?.esAdmin
+    ? destinosBase
+    : destinosBase.filter(
+        (area) =>
+          area === "Área ventas" || areasUsuario.length === 0 || areasUsuario.includes(area),
+      );
+
+  return [...new Set(permitidos)].filter((area) => area && area !== areaActual);
+}
+
+/** Mueve el pedido directamente a un área seleccionada. */
 export function useEnviarAArea() {
   const qc = useQueryClient();
   return useMutation({
@@ -445,7 +467,7 @@ export function useEnviarAArea() {
         pedido_id: pedido.id,
         area_origen: areaActual,
         area_destino: destinoNormalizado,
-        accion: "enviar",
+        accion: "mover",
         usuario_id: usuarioId,
       });
     },

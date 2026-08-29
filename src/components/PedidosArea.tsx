@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Panel } from "@/components/AppShell";
 import { usePedidosDeArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
-import { useMoverPedido } from "@/lib/taller-db";
+import { destinosMovimientoPedido, useEnviarAArea, type Pedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 
 export function PedidosArea({
@@ -18,7 +18,6 @@ export function PedidosArea({
   variante?: "completa" | "operario";
 }) {
   const { data: sesion } = useSesion();
-  const mover = useMoverPedido();
   const navigate = useNavigate();
   const { pedidos, isLoading } = usePedidosDeArea(area);
   const origen = from ?? area;
@@ -154,20 +153,7 @@ export function PedidosArea({
                       Ficha
                     </Link>
                     {enArea ? (
-                      <button
-                        type="button"
-                        disabled={mover.isPending}
-                        onClick={() =>
-                          mover.mutate({
-                            pedido,
-                            direccion: "avanzar",
-                            usuarioId: sesion?.user.id ?? null,
-                          })
-                        }
-                        className="flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
-                      >
-                        Avanzar
-                      </button>
+                      <MovimientoPedidoInline pedido={pedido} />
                     ) : (
                       <span className="flex-1 rounded-xl bg-surface-muted px-3 py-2.5 text-center text-xs font-medium text-muted-foreground">
                         Esperando llegada
@@ -181,6 +167,55 @@ export function PedidosArea({
         </Panel>
       </div>
     </>
+  );
+}
+
+function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
+  const { data: sesion } = useSesion();
+  const enviar = useEnviarAArea();
+  const [destino, setDestino] = useState("");
+  const destinos = destinosMovimientoPedido(pedido, {
+    esAdmin: Boolean(sesion?.esAdmin),
+    areasUsuario: sesion?.areas ?? [],
+  });
+
+  return (
+    <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto] gap-2">
+      <label className="sr-only" htmlFor={`mover-${pedido.id}`}>
+        Área destino
+      </label>
+      <select
+        id={`mover-${pedido.id}`}
+        value={destino}
+        onChange={(e) => setDestino(e.target.value)}
+        disabled={enviar.isPending}
+        className="min-w-0 rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground disabled:opacity-50"
+      >
+        <option value="">Mover pedido...</option>
+        {destinos.map((area) => (
+          <option key={area} value={area}>
+            {normalizarArea(area)}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        disabled={enviar.isPending || !destino}
+        onClick={() => {
+          enviar.mutate(
+            {
+              pedido,
+              destino,
+              usuarioId: sesion?.user.id ?? null,
+            },
+            { onSuccess: () => setDestino("") },
+          );
+        }}
+        className="rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+      >
+        Mover
+      </button>
+    </div>
   );
 }
 

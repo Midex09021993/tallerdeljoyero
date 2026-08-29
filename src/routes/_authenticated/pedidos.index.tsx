@@ -520,7 +520,7 @@ function PedidosPage() {
           <input
             placeholder={
               soloSusAreas
-                ? "Buscar en todos los pedidos (aunque ya avanzaron)…"
+                ? "Buscar en todos los pedidos (aunque ya se movieron)…"
                 : "Buscar cliente, contrato o referencia…"
             }
             value={busca}
@@ -571,7 +571,7 @@ function PedidosPage() {
         {soloSusAreas && !busca.trim() ? (
           <p className="px-6 pt-3 text-[11px] text-muted-foreground">
             Ves los pedidos que están en tus áreas: {misAreas.join(", ")}. Usa el buscador para
-            encontrar pedidos que ya avanzaron a otra área.
+            encontrar pedidos que ya se movieron a otra área.
           </p>
         ) : null}
 
