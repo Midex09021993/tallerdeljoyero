@@ -8,6 +8,56 @@ export type Database = {
   };
   public: {
     Tables: {
+      contratos: {
+        Row: {
+          abonado: number;
+          cliente: string;
+          created_at: string;
+          id: string;
+          notas: string;
+          numero: string;
+          origen: string;
+          sede_id: string | null;
+          telefono: string;
+          total: number;
+          updated_at: string;
+        };
+        Insert: {
+          abonado?: number;
+          cliente: string;
+          created_at?: string;
+          id?: string;
+          notas?: string;
+          numero: string;
+          origen?: string;
+          sede_id?: string | null;
+          telefono?: string;
+          total?: number;
+          updated_at?: string;
+        };
+        Update: {
+          abonado?: number;
+          cliente?: string;
+          created_at?: string;
+          id?: string;
+          notas?: string;
+          numero?: string;
+          origen?: string;
+          sede_id?: string | null;
+          telefono?: string;
+          total?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contratos_sede_id_fkey";
+            columns: ["sede_id"];
+            isOneToOne: false;
+            referencedRelation: "sedes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       config_areas: {
         Row: {
           alerta_activa: boolean;
@@ -320,6 +370,7 @@ export type Database = {
           cantidad_piezas: number;
           cliente: string;
           contrato: string;
+          contrato_id: string | null;
           created_at: string;
           entrega: string;
           estado: string;
@@ -366,6 +417,7 @@ export type Database = {
           cantidad_piezas?: number;
           cliente: string;
           contrato?: string;
+          contrato_id?: string | null;
           created_at?: string;
           entrega?: string;
           estado?: string;
@@ -412,6 +464,7 @@ export type Database = {
           cantidad_piezas?: number;
           cliente?: string;
           contrato?: string;
+          contrato_id?: string | null;
           created_at?: string;
           entrega?: string;
           estado?: string;
@@ -453,6 +506,13 @@ export type Database = {
           ventas_estado?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "pedidos_contrato_id_fkey";
+            columns: ["contrato_id"];
+            isOneToOne: false;
+            referencedRelation: "contratos";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "pedidos_sede_id_fkey";
             columns: ["sede_id"];

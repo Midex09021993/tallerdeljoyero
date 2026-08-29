@@ -6,6 +6,7 @@ import { normalizarArea } from "@/lib/auth";
 import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
 
 type PedidoUpdate = Database["public"]["Tables"]["pedidos"]["Update"];
+type ContratoInsert = Database["public"]["Tables"]["contratos"]["Insert"];
 
 export type Estado =
   | "Recibido"
@@ -230,6 +231,21 @@ function invalidarPedidosActivos(qc: ReturnType<typeof useQueryClient>) {
   return qc.invalidateQueries({ queryKey: ["pedidos"], refetchType: "active" });
 }
 
+function prefijoContrato(numero: string) {
+  const limpio = numero.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return limpio.slice(-2) || "YA";
+}
+
+export function siguienteReferenciaContrato(numeroContrato: string, refs: string[]) {
+  const prefijo = prefijoContrato(numeroContrato);
+  const re = new RegExp(`^${prefijo}-(\\d+)$`, "i");
+  const max = refs.reduce((acc, ref) => {
+    const m = re.exec((ref ?? "").trim());
+    return m ? Math.max(acc, Number(m[1])) : acc;
+  }, 0);
+  return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
+}
+
 export type Pedido = {
   id: string;
   referencia: string;
@@ -244,6 +260,7 @@ export type Pedido = {
   telefono: string;
   origen: string;
   contrato: string;
+  contrato_id: string | null;
   trabajo: string;
   fecha_ingreso: string;
   fecha_entrega: string | null;
@@ -274,6 +291,21 @@ export type Pedido = {
   ventas_actualizado_en: string | null;
   enviado_at: string | null;
   entregado_at: string | null;
+};
+
+export type Contrato = {
+  id: string;
+  numero: string;
+  cliente: string;
+  telefono: string;
+  origen: string;
+  total: number;
+  abonado: number;
+  saldo: number;
+  sede_id: string | null;
+  sede_nombre: string | null;
+  notas: string;
+  created_at: string;
 };
 
 export type Sede = {
@@ -328,6 +360,7 @@ export type PedidoNuevo = {
   telefono: string;
   origen: string;
   contrato: string;
+  contrato_id?: string | null;
   trabajo: string;
   fecha_ingreso: string;
   fecha_entrega: string | null;
@@ -360,7 +393,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
 
 const CAMPOS_PEDIDO_VENTAS =
   "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
@@ -375,7 +408,9 @@ function esErrorCampoFaltante(error: { message?: string; code?: string }) {
     mensaje.includes("schema cache") ||
     mensaje.includes("column") ||
     mensaje.includes("ventas_estado") ||
-    mensaje.includes("packing_estado")
+    mensaje.includes("packing_estado") ||
+    mensaje.includes("contrato_id") ||
+    mensaje.includes("contratos")
   );
 }
 
@@ -393,19 +428,30 @@ export function usePedidos() {
         .select(CAMPOS_PEDIDO)
         .order("created_at", { ascending: false });
 
-      const respuestaVentas =
+      const camposBaseCompat =
+        "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+
+      const respuestaContratos =
         respuesta.error && esErrorCampoFaltante(respuesta.error)
           ? await supabase
               .from("pedidos")
-              .select(`${CAMPOS_PEDIDO_BASE}, ${CAMPOS_PEDIDO_VENTAS}`)
+              .select(`${camposBaseCompat}, ${CAMPOS_PEDIDO_VENTAS}`)
               .order("created_at", { ascending: false })
           : respuesta;
+
+      const respuestaVentas =
+        respuestaContratos.error && esErrorCampoFaltante(respuestaContratos.error)
+          ? await supabase
+              .from("pedidos")
+              .select(`${camposBaseCompat}, ${CAMPOS_PEDIDO_VENTAS}`)
+              .order("created_at", { ascending: false })
+          : respuestaContratos;
 
       const { data, error } =
         respuestaVentas.error && esErrorCampoFaltante(respuestaVentas.error)
           ? await supabase
               .from("pedidos")
-              .select(CAMPOS_PEDIDO_BASE)
+              .select(camposBaseCompat)
               .order("created_at", { ascending: false })
           : respuestaVentas;
 
@@ -428,6 +474,7 @@ export function usePedidos() {
         telefono: textoCampo(p, "telefono"),
         origen: textoCampo(p, "origen"),
         contrato: textoCampo(p, "contrato"),
+        contrato_id: typeof p["contrato_id"] === "string" ? p["contrato_id"] : null,
         trabajo: textoCampo(p, "trabajo"),
         fecha_ingreso: textoCampo(p, "fecha_ingreso"),
         fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
@@ -476,21 +523,196 @@ export function usePedidos() {
   });
 }
 
+async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
+  const numero = pedido.contrato.trim();
+  if (pedido.contrato_id || !numero) return pedido.contrato_id ?? null;
+
+  const base: ContratoInsert = {
+    numero,
+    cliente: pedido.cliente,
+    telefono: pedido.telefono,
+    origen: pedido.origen,
+    total: pedido.importe,
+    abonado: 0,
+    sede_id: pedido.sede_id,
+    notas: "",
+  };
+
+  const existente = await supabase
+    .from("contratos")
+    .select("id")
+    .eq("numero", numero)
+    .maybeSingle();
+
+  if (existente.error) {
+    if (esErrorCampoFaltante(existente.error)) return null;
+    throw existente.error;
+  }
+  if (existente.data?.id) return existente.data.id;
+
+  const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
+  if (error) {
+    if (esErrorCampoFaltante(error)) return null;
+    throw error;
+  }
+  return data.id;
+}
+
+export function useContratos() {
+  return useQuery({
+    queryKey: ["contratos"],
+    queryFn: async (): Promise<Contrato[]> => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select(
+          "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)",
+        )
+        .order("created_at", { ascending: false });
+      if (error) {
+        if (esErrorCampoFaltante(error)) return [];
+        throw error;
+      }
+      return ((data ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...c }) => {
+        const total = Number(c["total"]) || 0;
+        const abonado = Number(c["abonado"]) || 0;
+        return {
+          id: textoCampo(c, "id"),
+          numero: textoCampo(c, "numero"),
+          cliente: textoCampo(c, "cliente"),
+          telefono: textoCampo(c, "telefono"),
+          origen: textoCampo(c, "origen"),
+          total,
+          abonado,
+          saldo: Math.max(0, total - abonado),
+          sede_id: typeof c["sede_id"] === "string" ? c["sede_id"] : null,
+          sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
+          notas: textoCampo(c, "notas"),
+          created_at: textoCampo(c, "created_at"),
+        };
+      });
+    },
+  });
+}
+
+export function useContrato(id: string) {
+  return useQuery({
+    queryKey: ["contrato", id],
+    queryFn: async (): Promise<Contrato | null> => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select(
+          "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)",
+        )
+        .eq("id", id)
+        .maybeSingle();
+      if (error) {
+        if (esErrorCampoFaltante(error)) return null;
+        throw error;
+      }
+      if (!data) return null;
+      const row = data as Record<string, unknown> & { sedes?: { nombre: string } | null };
+      const total = Number(row["total"]) || 0;
+      const abonado = Number(row["abonado"]) || 0;
+      return {
+        id: textoCampo(row, "id"),
+        numero: textoCampo(row, "numero"),
+        cliente: textoCampo(row, "cliente"),
+        telefono: textoCampo(row, "telefono"),
+        origen: textoCampo(row, "origen"),
+        total,
+        abonado,
+        saldo: Math.max(0, total - abonado),
+        sede_id: typeof row["sede_id"] === "string" ? row["sede_id"] : null,
+        sede_nombre: row.sedes?.nombre ?? null,
+        notas: textoCampo(row, "notas"),
+        created_at: textoCampo(row, "created_at"),
+      };
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function usePedidosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined) {
+  const { data: pedidos = [], isLoading } = usePedidos();
+  return {
+    isLoading,
+    pedidos: pedidos.filter((pedido) =>
+      contrato ? pedido.contrato_id === contrato.id || pedido.contrato === contrato.numero : false,
+    ),
+  };
+}
+
 export function useCrearPedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: PedidoNuevo) => {
-      const { data, error } = await supabase
+      const contratoId = await asegurarContratoParaPedido(pedido);
+      const pedidoConContrato = contratoId ? { ...pedido, contrato_id: contratoId } : pedido;
+      const respuesta = await supabase
         .from("pedidos")
-        .insert(pedido)
+        .insert(pedidoConContrato)
         .select("id, referencia, cliente")
         .single();
+
+      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = pedidoConContrato;
+      const { data, error } =
+        respuesta.error &&
+        esErrorCampoFaltante(respuesta.error) &&
+        "contrato_id" in pedidoConContrato
+          ? await supabase
+              .from("pedidos")
+              .insert(sinContratoId)
+              .select("id, referencia, cliente")
+              .single()
+          : respuesta;
       if (error) throw error;
       return data;
     },
     onSuccess: (pedido) => {
       void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
       if (pedido) void notificarNuevoPedidoADueno(pedido);
+    },
+  });
+}
+
+export function useCrearTrabajoContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      contrato,
+      pedido,
+      referenciasExistentes,
+    }: {
+      contrato: Contrato;
+      pedido: Omit<
+        PedidoNuevo,
+        "referencia" | "cliente" | "telefono" | "origen" | "contrato" | "contrato_id" | "sede_id"
+      >;
+      referenciasExistentes: string[];
+    }) => {
+      const referencia = siguienteReferenciaContrato(contrato.numero, referenciasExistentes);
+      const nuevo: PedidoNuevo = {
+        ...pedido,
+        referencia,
+        cliente: contrato.cliente,
+        telefono: contrato.telefono,
+        origen: contrato.origen,
+        contrato: contrato.numero,
+        contrato_id: contrato.id,
+        sede_id: contrato.sede_id,
+      };
+      const { data, error } = await supabase
+        .from("pedidos")
+        .insert(nuevo)
+        .select("id, referencia, cliente")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
     },
   });
 }

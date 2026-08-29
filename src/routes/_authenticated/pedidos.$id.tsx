@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -430,6 +430,20 @@ function FichaPedido() {
                   )}
                 </div>
               ))}
+              {pedido.contrato_id ? (
+                <div className="col-span-2 lg:col-span-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Contrato asociado
+                  </p>
+                  <Link
+                    to="/contratos/$id"
+                    params={{ id: pedido.contrato_id }}
+                    className="mt-1 inline-flex rounded-lg border border-border px-3 py-2 text-xs font-medium text-info transition-colors hover:bg-surface-muted hover:underline"
+                  >
+                    Ver contrato {pedido.contrato || "asociado"}
+                  </Link>
+                </div>
+              ) : null}
             </div>
 
             <div className="border-t border-border px-6 py-5">
