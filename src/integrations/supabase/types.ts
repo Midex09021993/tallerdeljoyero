@@ -58,6 +58,54 @@ export type Database = {
           },
         ];
       };
+      contrato_pagos: {
+        Row: {
+          concepto: string;
+          contrato_id: string;
+          contrato_numero: string;
+          created_at: string;
+          fecha: string;
+          id: string;
+          monto: number;
+          usuario_id: string | null;
+        };
+        Insert: {
+          concepto?: string;
+          contrato_id: string;
+          contrato_numero: string;
+          created_at?: string;
+          fecha?: string;
+          id?: string;
+          monto: number;
+          usuario_id?: string | null;
+        };
+        Update: {
+          concepto?: string;
+          contrato_id?: string;
+          contrato_numero?: string;
+          created_at?: string;
+          fecha?: string;
+          id?: string;
+          monto?: number;
+          usuario_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contrato_pagos_contrato_id_fkey";
+            columns: ["contrato_id"];
+            isOneToOne: false;
+            referencedRelation: "contratos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contrato_pagos_usuario_id_fkey";
+            columns: ["usuario_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       config_areas: {
         Row: {
           alerta_activa: boolean;

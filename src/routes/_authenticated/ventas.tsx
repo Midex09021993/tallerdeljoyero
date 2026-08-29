@@ -3,14 +3,20 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, MobileBackButton, StatCard } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
+import { areaCoincide } from "@/lib/auth";
 import {
   esEstadoFinalPedido,
   estadoClases,
+  resumenFinancieroContrato,
   useActualizarPedido,
   useContratos,
+  usePagosContratos,
   usePedidos,
+  useRegistrarPagoContrato,
   type Contrato,
+  type PagoContrato,
   type Pedido,
+  type ResumenFinancieroContrato,
 } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
@@ -38,14 +44,20 @@ function VentasPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
   const { data: contratos = [] } = useContratos();
+  const { data: pagos = [] } = usePagosContratos(contratos);
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
+  const registrarPago = useRegistrarPagoContrato();
   const [busca, setBusca] = useState("");
   const [listoId, setListoId] = useState<string | null>(null);
   const [envioId, setEnvioId] = useState<string | null>(null);
   const [entregaId, setEntregaId] = useState<string | null>(null);
+  const [pagoId, setPagoId] = useState<string | null>(null);
+  const [historialPagosId, setHistorialPagosId] = useState<string | null>(null);
   const esAdmin = Boolean(sesion?.esAdmin);
+  const puedeRegistrarPago =
+    esAdmin || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const usuarioId = sesion?.user.id ?? null;
 
   const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
@@ -79,6 +91,7 @@ function VentasPage() {
   const enviados = filtrados.filter((p) => estadoVenta(p) === "Enviado");
   const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
   const contratosPorClave = useMemo(() => crearIndiceContratos(contratos), [contratos]);
+  const pagosPorContrato = useMemo(() => crearIndicePagos(pagos), [pagos]);
 
   const abrirPedido = (id: string) =>
     navigate({ to: "/pedidos/$id", params: { id }, search: { from: "ventas" } });
@@ -106,7 +119,31 @@ function VentasPage() {
                 <PedidoVentaCard
                   key={pedido.id}
                   pedido={pedido}
-                  resumenFinanciero={resumenFinancieroPedido(pedido, contratosPorClave)}
+                  resumenFinanciero={resumenFinancieroPedido(
+                    pedido,
+                    contratosPorClave,
+                    pagosPorContrato,
+                  )}
+                  pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
+                  puedeRegistrarPago={puedeRegistrarPago}
+                  pagoAbierto={pagoId === pedido.id}
+                  historialAbierto={historialPagosId === pedido.id}
+                  guardandoPago={registrarPago.isPending}
+                  onToggleHistorial={() =>
+                    setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
+                  }
+                  onRegistrarPago={() => {
+                    setPagoId(pagoId === pedido.id ? null : pedido.id);
+                    setHistorialPagosId(pedido.id);
+                  }}
+                  onGuardarPago={(datos) => {
+                    const contrato = contratoPedido(pedido, contratosPorClave);
+                    if (!contrato) return;
+                    registrarPago.mutate(
+                      { contrato, usuarioId, ...datos },
+                      { onSuccess: () => setPagoId(null) },
+                    );
+                  }}
                   accionPrincipal={listo ? "Registrar envío" : "Marcar listo para entrega"}
                   {...(listo && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
                   onAbrir={() => abrirPedido(pedido.id)}
@@ -180,6 +217,11 @@ function VentasPage() {
                   {entregaId === pedido.id ? (
                     <FormularioEntrega
                       pedido={pedido}
+                      resumenFinanciero={resumenFinancieroPedido(
+                        pedido,
+                        contratosPorClave,
+                        pagosPorContrato,
+                      )}
                       guardando={actualizar.isPending}
                       onCancelar={() => setEntregaId(null)}
                       onGuardar={(datos) => {
@@ -216,7 +258,31 @@ function VentasPage() {
               <PedidoVentaCard
                 key={pedido.id}
                 pedido={pedido}
-                resumenFinanciero={resumenFinancieroPedido(pedido, contratosPorClave)}
+                resumenFinanciero={resumenFinancieroPedido(
+                  pedido,
+                  contratosPorClave,
+                  pagosPorContrato,
+                )}
+                pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
+                puedeRegistrarPago={puedeRegistrarPago}
+                pagoAbierto={pagoId === pedido.id}
+                historialAbierto={historialPagosId === pedido.id}
+                guardandoPago={registrarPago.isPending}
+                onToggleHistorial={() =>
+                  setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
+                }
+                onRegistrarPago={() => {
+                  setPagoId(pagoId === pedido.id ? null : pedido.id);
+                  setHistorialPagosId(pedido.id);
+                }}
+                onGuardarPago={(datos) => {
+                  const contrato = contratoPedido(pedido, contratosPorClave);
+                  if (!contrato) return;
+                  registrarPago.mutate(
+                    { contrato, usuarioId, ...datos },
+                    { onSuccess: () => setPagoId(null) },
+                  );
+                }}
                 accionPrincipal="Marcar entregado"
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
@@ -228,6 +294,11 @@ function VentasPage() {
                 {entregaId === pedido.id ? (
                   <FormularioEntrega
                     pedido={pedido}
+                    resumenFinanciero={resumenFinancieroPedido(
+                      pedido,
+                      contratosPorClave,
+                      pagosPorContrato,
+                    )}
                     guardando={actualizar.isPending}
                     onCancelar={() => setEntregaId(null)}
                     onGuardar={(datos) => {
@@ -263,7 +334,31 @@ function VentasPage() {
               <PedidoVentaCard
                 key={pedido.id}
                 pedido={pedido}
-                resumenFinanciero={resumenFinancieroPedido(pedido, contratosPorClave)}
+                resumenFinanciero={resumenFinancieroPedido(
+                  pedido,
+                  contratosPorClave,
+                  pagosPorContrato,
+                )}
+                pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
+                puedeRegistrarPago={puedeRegistrarPago}
+                pagoAbierto={pagoId === pedido.id}
+                historialAbierto={historialPagosId === pedido.id}
+                guardandoPago={registrarPago.isPending}
+                onToggleHistorial={() =>
+                  setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
+                }
+                onRegistrarPago={() => {
+                  setPagoId(pagoId === pedido.id ? null : pedido.id);
+                  setHistorialPagosId(pedido.id);
+                }}
+                onGuardarPago={(datos) => {
+                  const contrato = contratoPedido(pedido, contratosPorClave);
+                  if (!contrato) return;
+                  registrarPago.mutate(
+                    { contrato, usuarioId, ...datos },
+                    { onSuccess: () => setPagoId(null) },
+                  );
+                }}
                 accionPrincipal={esAdmin ? "Corregir entrega" : "Abrir"}
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
@@ -279,6 +374,11 @@ function VentasPage() {
                 {esAdmin && entregaId === pedido.id ? (
                   <FormularioEntrega
                     pedido={pedido}
+                    resumenFinanciero={resumenFinancieroPedido(
+                      pedido,
+                      contratosPorClave,
+                      pagosPorContrato,
+                    )}
                     guardando={actualizar.isPending}
                     onCancelar={() => setEntregaId(null)}
                     onGuardar={(datos) => {
@@ -369,14 +469,6 @@ function formatCurrency(valor: number) {
   }).format(valor);
 }
 
-type ResumenFinanciero = {
-  total: number;
-  abonado: number;
-  saldo: number;
-  estado: "Pendiente" | "Abonado parcial" | "Pagado";
-  origen: "contrato" | "pedido";
-};
-
 function crearIndiceContratos(contratos: Contrato[]) {
   const indice = new Map<string, Contrato>();
   contratos.forEach((contrato) => {
@@ -386,26 +478,47 @@ function crearIndiceContratos(contratos: Contrato[]) {
   return indice;
 }
 
+function crearIndicePagos(pagos: PagoContrato[]) {
+  const indice = new Map<string, PagoContrato[]>();
+  pagos.forEach((pago) => {
+    [pago.contrato_id, pago.contrato_numero].filter(Boolean).forEach((clave) => {
+      const lista = indice.get(clave) ?? [];
+      lista.push(pago);
+      indice.set(clave, lista);
+    });
+  });
+  return indice;
+}
+
+function contratoPedido(pedido: Pedido, contratosPorClave: Map<string, Contrato>) {
+  return (
+    (pedido.contrato_id ? contratosPorClave.get(pedido.contrato_id) : null) ??
+    (pedido.contrato ? contratosPorClave.get(pedido.contrato) : null) ??
+    null
+  );
+}
+
+function pagosPedido(
+  pedido: Pedido,
+  contratosPorClave: Map<string, Contrato>,
+  pagosPorContrato: Map<string, PagoContrato[]>,
+) {
+  const contrato = contratoPedido(pedido, contratosPorClave);
+  if (!contrato) return [];
+  return pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero) ?? [];
+}
+
 function resumenFinancieroPedido(
   pedido: Pedido,
   contratosPorClave: Map<string, Contrato>,
-): ResumenFinanciero {
-  const contrato =
-    (pedido.contrato_id ? contratosPorClave.get(pedido.contrato_id) : null) ??
-    (pedido.contrato ? contratosPorClave.get(pedido.contrato) : null);
-  const total = contrato ? Number(contrato.total) || 0 : Number(pedido.importe) || 0;
-  const abonado = contrato ? Number(contrato.abonado) || 0 : 0;
-  const saldo = Math.max(0, total - abonado);
-  const estado: ResumenFinanciero["estado"] =
-    saldo <= 0 && total > 0 ? "Pagado" : abonado > 0 ? "Abonado parcial" : "Pendiente";
-
-  return {
-    total,
-    abonado,
-    saldo,
-    estado,
-    origen: contrato ? "contrato" : "pedido",
-  };
+  pagosPorContrato: Map<string, PagoContrato[]>,
+): ResumenFinancieroContrato {
+  const contrato = contratoPedido(pedido, contratosPorClave);
+  return resumenFinancieroContrato(
+    contrato,
+    contrato ? (pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero)) : [],
+    pedido.importe,
+  );
 }
 
 function SeccionVentas({
@@ -441,20 +554,36 @@ function fechaHoy() {
 function PedidoVentaCard({
   pedido,
   resumenFinanciero,
+  pagos,
+  puedeRegistrarPago,
+  pagoAbierto,
+  historialAbierto,
+  guardandoPago,
   accionPrincipal,
   accionSecundaria,
   onAbrir,
   onAccion,
   onAccionSecundaria,
+  onToggleHistorial,
+  onRegistrarPago,
+  onGuardarPago,
   children,
 }: {
   pedido: Pedido;
-  resumenFinanciero: ResumenFinanciero;
+  resumenFinanciero: ResumenFinancieroContrato;
+  pagos: PagoContrato[];
+  puedeRegistrarPago: boolean;
+  pagoAbierto: boolean;
+  historialAbierto: boolean;
+  guardandoPago: boolean;
   accionPrincipal: string;
   accionSecundaria?: string;
   onAbrir: () => void;
   onAccion: () => void;
   onAccionSecundaria?: () => void;
+  onToggleHistorial: () => void;
+  onRegistrarPago: () => void;
+  onGuardarPago: (datos: { fecha: string; concepto: string; monto: number }) => void;
   children?: ReactNode;
 }) {
   const estadoComercial = estadoVenta(pedido);
@@ -549,6 +678,28 @@ function PedidoVentaCard({
           ) : null}
         </div>
       </button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onToggleHistorial}
+          className="rounded-xl border border-border px-3 py-2 text-xs font-medium"
+        >
+          {historialAbierto ? "Ocultar historial de pagos" : "Ver historial de pagos"}
+        </button>
+        {puedeRegistrarPago && resumenFinanciero.origen === "contrato" ? (
+          <button
+            type="button"
+            onClick={onRegistrarPago}
+            className="rounded-xl border border-success/25 bg-success-soft px-3 py-2 text-xs font-medium text-success"
+          >
+            Registrar pago
+          </button>
+        ) : null}
+      </div>
+      {historialAbierto ? <HistorialPagos pagos={pagos} /> : null}
+      {pagoAbierto ? (
+        <FormularioPagoVentas guardando={guardandoPago} onGuardar={onGuardarPago} />
+      ) : null}
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
@@ -743,11 +894,13 @@ function FormularioEnvio({
 
 function FormularioEntrega({
   pedido,
+  resumenFinanciero,
   guardando,
   onCancelar,
   onGuardar,
 }: {
   pedido: Pedido;
+  resumenFinanciero: ResumenFinancieroContrato;
   guardando: boolean;
   onCancelar: () => void;
   onGuardar: (datos: {
@@ -757,12 +910,16 @@ function FormularioEntrega({
     notas_entrega: string;
   }) => void;
 }) {
+  const requiereConfirmacionSaldo = resumenFinanciero.saldo > 0;
   return (
     <form
       className="mt-4 rounded-xl border border-success/20 bg-success-soft/40 p-3"
       onSubmit={(e) => {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
+        if (requiereConfirmacionSaldo && fd.get("confirmar_saldo") !== "on") {
+          return;
+        }
         onGuardar({
           fecha_entregado: String(
             fd.get("fecha_entregado") || new Date().toISOString().slice(0, 10),
@@ -803,6 +960,15 @@ function FormularioEntrega({
           className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
         />
       </label>
+      {requiereConfirmacionSaldo ? (
+        <label className="mt-3 flex items-start gap-2 rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
+          <input name="confirmar_saldo" type="checkbox" required className="mt-0.5" />
+          <span>
+            Existe un saldo pendiente de {formatCurrency(resumenFinanciero.saldo)}. Confirmo que
+            deseo registrar la entrega con saldo pendiente.
+          </span>
+        </label>
+      ) : null}
       <div className="mt-3 flex gap-2">
         <button
           type="submit"
@@ -819,6 +985,96 @@ function FormularioEntrega({
           Cancelar
         </button>
       </div>
+    </form>
+  );
+}
+
+function HistorialPagos({ pagos }: { pagos: PagoContrato[] }) {
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-card p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Historial de pagos
+      </p>
+      <div className="mt-3 space-y-2">
+        {pagos.length > 0 ? (
+          pagos.map((pago) => (
+            <div key={pago.id} className="grid grid-cols-[1fr_auto] gap-3 text-xs">
+              <div>
+                <p className="font-medium text-foreground">{fmtFecha(pago.fecha)}</p>
+                <p className="text-muted-foreground">{pago.concepto}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {pago.usuario_nombre || "Sin usuario registrado"}
+                </p>
+              </div>
+              <p className="font-semibold text-foreground">{formatCurrency(pago.monto)}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Este contrato todavía no tiene pagos registrados.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FormularioPagoVentas({
+  guardando,
+  onGuardar,
+}: {
+  guardando: boolean;
+  onGuardar: (datos: { fecha: string; concepto: string; monto: number }) => void;
+}) {
+  return (
+    <form
+      className="mt-3 rounded-xl border border-success/20 bg-success-soft/40 p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        onGuardar({
+          fecha: String(fd.get("fecha") || fechaHoy()),
+          concepto: String(fd.get("concepto") || "Abono"),
+          monto: Number(fd.get("monto")) || 0,
+        });
+      }}
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Fecha
+          <input
+            name="fecha"
+            type="date"
+            defaultValue={fechaHoy()}
+            className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+          />
+        </label>
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Concepto
+          <input
+            name="concepto"
+            defaultValue="Abono"
+            className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+          />
+        </label>
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Monto
+          <input
+            name="monto"
+            type="number"
+            min="0.01"
+            step="0.01"
+            className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+          />
+        </label>
+      </div>
+      <button
+        type="submit"
+        disabled={guardando}
+        className="mt-3 w-full rounded-lg bg-success px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+      >
+        {guardando ? "Guardando..." : "Guardar pago en contrato"}
+      </button>
     </form>
   );
 }

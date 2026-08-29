@@ -7,6 +7,7 @@ import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
 
 type PedidoUpdate = Database["public"]["Tables"]["pedidos"]["Update"];
 type ContratoInsert = Database["public"]["Tables"]["contratos"]["Insert"];
+type PagoContratoInsert = Database["public"]["Tables"]["contrato_pagos"]["Insert"];
 
 export type Estado =
   | "Recibido"
@@ -314,6 +315,28 @@ export type Contrato = {
   created_at: string;
 };
 
+export type EstadoFinanciero = "Pendiente" | "Pago parcial" | "Pagado";
+
+export type PagoContrato = {
+  id: string;
+  contrato_id: string;
+  contrato_numero: string;
+  fecha: string;
+  concepto: string;
+  monto: number;
+  usuario_id: string | null;
+  usuario_nombre: string | null;
+  created_at: string;
+};
+
+export type ResumenFinancieroContrato = {
+  total: number;
+  abonado: number;
+  saldo: number;
+  estado: EstadoFinanciero;
+  origen: "contrato" | "pedido";
+};
+
 export type Sede = {
   id: string;
   nombre: string;
@@ -567,6 +590,8 @@ async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
 export function useContratos() {
   return useQuery({
     queryKey: ["contratos"],
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato[]> => {
       const { data, error } = await supabase
         .from("contratos")
@@ -600,9 +625,170 @@ export function useContratos() {
   });
 }
 
+export function calcularEstadoFinanciero(total: number, abonado: number): EstadoFinanciero {
+  const saldo = Math.max(0, total - abonado);
+  if (total > 0 && saldo <= 0) return "Pagado";
+  if (abonado > 0 && saldo > 0) return "Pago parcial";
+  return "Pendiente";
+}
+
+export function resumenFinancieroContrato(
+  contrato: Pick<Contrato, "total" | "abonado"> | null | undefined,
+  pagos: PagoContrato[] = [],
+  respaldoTotal = 0,
+): ResumenFinancieroContrato {
+  const total = Number(contrato?.total) || Number(respaldoTotal) || 0;
+  const abonadoPagos = pagos.reduce((acc, pago) => acc + (Number(pago.monto) || 0), 0);
+  const abonado = pagos.length > 0 ? abonadoPagos : Number(contrato?.abonado) || 0;
+  const saldo = Math.max(0, total - abonado);
+  return {
+    total,
+    abonado,
+    saldo,
+    estado: calcularEstadoFinanciero(total, abonado),
+    origen: contrato ? "contrato" : "pedido",
+  };
+}
+
+function pagosDesdeRows(rows: Array<Record<string, unknown>>): PagoContrato[] {
+  return rows.map(({ profiles, ...p }) => ({
+    id: textoCampo(p, "id"),
+    contrato_id: textoCampo(p, "contrato_id"),
+    contrato_numero: textoCampo(p, "contrato_numero"),
+    fecha: textoCampo(p, "fecha"),
+    concepto: textoCampo(p, "concepto"),
+    monto: Number(p["monto"]) || 0,
+    usuario_id: typeof p["usuario_id"] === "string" ? p["usuario_id"] : null,
+    usuario_nombre:
+      ((profiles as { nombre?: string } | null | undefined)?.nombre as string | undefined) ?? null,
+    created_at: textoCampo(p, "created_at"),
+  }));
+}
+
+export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined) {
+  return useQuery({
+    queryKey: ["contrato_pagos", contrato?.id, contrato?.numero],
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    queryFn: async (): Promise<PagoContrato[]> => {
+      if (!contrato) return [];
+      const selector = esUuid(contrato.id) ? "contrato_id" : "contrato_numero";
+      const valor = esUuid(contrato.id) ? contrato.id : contrato.numero;
+      const { data, error } = await supabase
+        .from("contrato_pagos")
+        .select(
+          "id, contrato_id, contrato_numero, fecha, concepto, monto, usuario_id, created_at, profiles(nombre)",
+        )
+        .eq(selector, valor)
+        .order("fecha", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (error) {
+        if (esErrorCampoFaltante(error)) return [];
+        throw error;
+      }
+      return pagosDesdeRows((data ?? []) as Array<Record<string, unknown>>);
+    },
+    enabled: Boolean(contrato),
+  });
+}
+
+export function usePagosContratos(contratos: Pick<Contrato, "id" | "numero">[]) {
+  const ids = contratos.map((c) => c.id).filter(esUuid);
+  const numeros = contratos.map((c) => c.numero).filter(Boolean);
+  return useQuery({
+    queryKey: ["contrato_pagos", ids.slice().sort(), numeros.slice().sort()],
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    queryFn: async (): Promise<PagoContrato[]> => {
+      if (ids.length === 0 && numeros.length === 0) return [];
+      const consultas = await Promise.all([
+        ids.length > 0
+          ? supabase
+              .from("contrato_pagos")
+              .select(
+                "id, contrato_id, contrato_numero, fecha, concepto, monto, usuario_id, created_at, profiles(nombre)",
+              )
+              .in("contrato_id", ids)
+          : Promise.resolve({ data: [], error: null }),
+        numeros.length > 0
+          ? supabase
+              .from("contrato_pagos")
+              .select(
+                "id, contrato_id, contrato_numero, fecha, concepto, monto, usuario_id, created_at, profiles(nombre)",
+              )
+              .in("contrato_numero", numeros)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      const error = consultas.find((r) => r.error)?.error;
+      if (error) {
+        if (esErrorCampoFaltante(error)) return [];
+        throw error;
+      }
+      const porId = new Map<string, Record<string, unknown>>();
+      consultas.forEach((r) => {
+        ((r.data ?? []) as Array<Record<string, unknown>>).forEach((p) => {
+          const id = textoCampo(p, "id");
+          if (id) porId.set(id, p);
+        });
+      });
+      return pagosDesdeRows([...porId.values()]).sort(
+        (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+      );
+    },
+    enabled: contratos.length > 0,
+  });
+}
+
+export function useRegistrarPagoContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      contrato,
+      fecha,
+      concepto,
+      monto,
+      usuarioId,
+    }: {
+      contrato: Contrato;
+      fecha: string;
+      concepto: string;
+      monto: number;
+      usuarioId: string | null;
+    }) => {
+      if (monto <= 0) throw new Error("El monto del pago debe ser mayor que cero.");
+      if (!esUuid(contrato.id)) {
+        throw new Error("Este contrato todavía no existe en la tabla de contratos.");
+      }
+      const pago: PagoContratoInsert = {
+        contrato_id: contrato.id,
+        contrato_numero: contrato.numero,
+        fecha,
+        concepto,
+        monto,
+        usuario_id: usuarioId,
+      };
+      const { error } = await supabase.from("contrato_pagos").insert(pago);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      toast.success("Pago registrado en el contrato");
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      void qc.invalidateQueries({ queryKey: ["contrato", variables.contrato.id] });
+      void qc.invalidateQueries({ queryKey: ["contrato", variables.contrato.numero] });
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar el pago");
+    },
+  });
+}
+
 export function useContrato(id: string) {
   return useQuery({
     queryKey: ["contrato", id],
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato | null> => {
       const selector = esUuid(id) ? "id" : "numero";
       const { data, error } = await supabase

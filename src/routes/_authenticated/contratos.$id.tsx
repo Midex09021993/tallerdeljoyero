@@ -8,7 +8,10 @@ import {
   estadoClases,
   useContrato,
   useCrearTrabajoContrato,
+  usePagosContrato,
   usePedidosContrato,
+  useRegistrarPagoContrato,
+  resumenFinancieroContrato,
   type PedidoNuevo,
 } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
@@ -60,8 +63,11 @@ function ContratoPage() {
   const { data: sesion } = useSesion();
   const { data: contrato, isLoading } = useContrato(id);
   const { pedidos, isLoading: cargandoPedidos } = usePedidosContrato(contrato);
+  const { data: pagos = [] } = usePagosContrato(contrato);
   const crearTrabajo = useCrearTrabajoContrato();
+  const registrarPago = useRegistrarPagoContrato();
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [pagoAbierto, setPagoAbierto] = useState(false);
   const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
 
@@ -74,14 +80,8 @@ function ContratoPage() {
 
   const resumen = useMemo(() => {
     const totalTrabajos = pedidos.reduce((acc, pedido) => acc + Number(pedido.importe || 0), 0);
-    const total = contrato?.total && contrato.total > 0 ? contrato.total : totalTrabajos;
-    const abonado = contrato?.abonado ?? 0;
-    return {
-      total,
-      abonado,
-      saldo: Math.max(0, total - abonado),
-    };
-  }, [contrato?.abonado, contrato?.total, pedidos]);
+    return resumenFinancieroContrato(contrato, pagos, totalTrabajos);
+  }, [contrato, pagos, pedidos]);
 
   const puedeCrearTrabajo = Boolean(sesion?.esAdmin);
 
@@ -205,6 +205,59 @@ function ContratoPage() {
             <Dato label="Total" valor={formatCurrency(resumen.total)} />
             <Dato label="Abonado" valor={formatCurrency(resumen.abonado)} />
             <Dato label="Saldo" valor={formatCurrency(resumen.saldo)} />
+            <Dato label="Estado financiero" valor={resumen.estado} />
+          </div>
+          {puedeCrearTrabajo && contrato ? (
+            <button
+              type="button"
+              onClick={() => setPagoAbierto((v) => !v)}
+              className="mt-5 w-full rounded-xl bg-ink px-4 py-2.5 text-xs font-medium text-ink-foreground"
+            >
+              {pagoAbierto ? "Ocultar pago" : "Registrar pago"}
+            </button>
+          ) : null}
+          {pagoAbierto && contrato ? (
+            <FormularioPagoContrato
+              guardando={registrarPago.isPending}
+              onCancelar={() => setPagoAbierto(false)}
+              onGuardar={(datos) =>
+                registrarPago.mutate(
+                  {
+                    contrato,
+                    usuarioId: sesion?.user.id ?? null,
+                    ...datos,
+                  },
+                  { onSuccess: () => setPagoAbierto(false) },
+                )
+              }
+            />
+          ) : null}
+          <div className="mt-6 border-t border-border pt-5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Historial de pagos
+            </p>
+            <div className="mt-3 space-y-3">
+              {pagos.length > 0 ? (
+                pagos.map((pago) => (
+                  <div key={pago.id} className="rounded-xl bg-surface-muted p-3 text-xs">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-foreground">{pago.concepto}</p>
+                        <p className="mt-1 text-muted-foreground">{fmtFecha(pago.fecha)}</p>
+                        <p className="mt-1 text-muted-foreground">
+                          {pago.usuario_nombre || "Sin usuario registrado"}
+                        </p>
+                      </div>
+                      <p className="font-semibold text-foreground">{formatCurrency(pago.monto)}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Todavía no hay pagos registrados para este contrato.
+                </p>
+              )}
+            </div>
           </div>
         </aside>
       </div>
@@ -323,5 +376,74 @@ function Dato({ label, valor }: { label: string; valor: string }) {
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-medium text-foreground">{valor}</p>
     </div>
+  );
+}
+
+function FormularioPagoContrato({
+  guardando,
+  onCancelar,
+  onGuardar,
+}: {
+  guardando: boolean;
+  onCancelar: () => void;
+  onGuardar: (datos: { fecha: string; concepto: string; monto: number }) => void;
+}) {
+  return (
+    <form
+      className="mt-4 rounded-xl border border-border bg-surface-muted p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        onGuardar({
+          fecha: String(fd.get("fecha") || hoy()),
+          concepto: String(fd.get("concepto") || "Abono"),
+          monto: Number(fd.get("monto")) || 0,
+        });
+      }}
+    >
+      <label className="block text-[10px] uppercase tracking-wider text-muted-foreground">
+        Fecha
+        <input
+          name="fecha"
+          type="date"
+          defaultValue={hoy()}
+          className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+        />
+      </label>
+      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
+        Concepto
+        <input
+          name="concepto"
+          defaultValue="Abono"
+          className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+        />
+      </label>
+      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
+        Monto
+        <input
+          name="monto"
+          type="number"
+          min="0.01"
+          step="0.01"
+          className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+        />
+      </label>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="submit"
+          disabled={guardando}
+          className="flex-1 rounded-lg bg-success px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+        >
+          {guardando ? "Guardando..." : "Guardar pago"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
