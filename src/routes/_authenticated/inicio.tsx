@@ -151,6 +151,22 @@ function InicioAdminMovil() {
                   El permiso está bloqueado en el navegador.
                 </p>
               ) : null}
+              {pushDueno.mensaje ? (
+                <p
+                  className={`mt-2 rounded-xl px-3 py-2 text-xs font-medium ${
+                    pushDueno.estado === "error"
+                      ? "bg-danger-soft text-danger"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {pushDueno.mensaje}
+                </p>
+              ) : null}
+              {pushDueno.cargando && pushDueno.paso ? (
+                <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Paso actual: {etiquetaPasoPush[pushDueno.paso]}
+                </p>
+              ) : null}
             </div>
           </div>
           <button
@@ -206,6 +222,15 @@ function InicioAdminMovil() {
     </main>
   );
 }
+
+const etiquetaPasoPush = {
+  validando: "Validación",
+  permiso: "Permiso del navegador",
+  "service-worker": "Service worker",
+  "push-manager": "Suscripción PushManager",
+  supabase: "Guardado en Supabase",
+  completo: "Completado",
+} as const;
 
 const iconosArea: Record<string, typeof Hammer> = {
   "Diseño 3D": LayoutGrid,
