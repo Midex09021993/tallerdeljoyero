@@ -6,7 +6,15 @@ import type { Pedido } from "@/lib/taller-db";
 
 type EstadoPush = "no-soportado" | "sin-clave" | "pendiente" | "activo" | "denegado" | "error";
 type PasoPush =
-  "validando" | "permiso" | "service-worker" | "push-manager" | "supabase" | "completo";
+  | "validando"
+  | "notification-api"
+  | "permiso"
+  | "service-worker"
+  | "push-manager"
+  | "vapid"
+  | "vapid-conversion"
+  | "supabase"
+  | "completo";
 
 const PUSH_TIMEOUT_MS = 15_000;
 
@@ -43,6 +51,26 @@ function diagnosticoPushError(paso: PasoPush, mensaje: string, error?: unknown) 
   console.error(`[push:${paso}] ${mensaje}`, error);
 }
 
+function diagnosticoPushOk(paso: PasoPush, mensaje: string, extra?: unknown) {
+  if (extra === undefined) {
+    console.info(`✓ ${mensaje}`);
+    console.info(`[push:${paso}] OK`);
+    return;
+  }
+  console.info(`✓ ${mensaje}`, extra);
+  console.info(`[push:${paso}] OK`, extra);
+}
+
+function describirError(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const mensaje = (error as { message?: unknown }).message;
+    if (typeof mensaje === "string") return mensaje;
+  }
+  return "Error desconocido";
+}
+
 function withTimeout<T>(promise: Promise<T>, mensaje: string, timeoutMs = PUSH_TIMEOUT_MS) {
   return new Promise<T>((resolve, reject) => {
     const timer = window.setTimeout(() => reject(new Error(mensaje)), timeoutMs);
@@ -58,21 +86,64 @@ function withTimeout<T>(promise: Promise<T>, mensaje: string, timeoutMs = PUSH_T
   });
 }
 
+async function ejecutarPaso<T>(
+  paso: PasoPush,
+  mensajeInicio: string,
+  mensajeOk: string,
+  tarea: () => Promise<T>,
+  timeoutMs = PUSH_TIMEOUT_MS,
+) {
+  diagnosticoPush(paso, mensajeInicio);
+  try {
+    const resultado = await withTimeout(
+      tarea(),
+      `${mensajeInicio} excedió el tiempo de espera.`,
+      timeoutMs,
+    );
+    diagnosticoPushOk(paso, mensajeOk, resumenDiagnostico(resultado));
+    return resultado;
+  } catch (error) {
+    diagnosticoPushError(paso, `Falló: ${mensajeInicio}`, error);
+    throw error;
+  }
+}
+
+function resumenDiagnostico(resultado: unknown) {
+  if (!resultado || typeof resultado !== "object") return undefined;
+  if ("scope" in resultado) return { scope: (resultado as ServiceWorkerRegistration).scope };
+  if ("endpoint" in resultado) {
+    const subscription = resultado as PushSubscription;
+    const serializada = subscription.toJSON();
+    return {
+      endpoint: subscription.endpoint,
+      hasP256dh: Boolean(serializada.keys?.["p256dh"]),
+      hasAuth: Boolean(serializada.keys?.["auth"]),
+    };
+  }
+  return undefined;
+}
+
 async function obtenerRegistroServiceWorker() {
-  diagnosticoPush("service-worker", "Registrando service worker /sw.js");
-  const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-  diagnosticoPush("service-worker", "Service worker registrado", {
+  const registration = await ejecutarPaso(
+    "service-worker",
+    "Registrando Service Worker /sw.js",
+    "Service Worker registrado.",
+    () => navigator.serviceWorker.register("/sw.js", { scope: "/" }),
+  );
+
+  diagnosticoPush("service-worker", "Estado del registro", {
     scope: registration.scope,
     active: Boolean(registration.active),
     installing: Boolean(registration.installing),
     waiting: Boolean(registration.waiting),
   });
 
-  const ready = await withTimeout(
-    navigator.serviceWorker.ready,
-    "El service worker no quedó listo a tiempo. Cierra y vuelve a abrir la app instalada.",
+  const ready = await ejecutarPaso(
+    "service-worker",
+    "Esperando Service Worker listo",
+    "Service Worker listo.",
+    () => navigator.serviceWorker.ready,
   );
-  diagnosticoPush("service-worker", "Service worker listo", { scope: ready.scope });
   return ready;
 }
 
@@ -80,9 +151,16 @@ export function registrarServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
   const registrar = () => {
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => {
-      diagnosticoPushError("service-worker", "No se pudo registrar el service worker", error);
-    });
+    navigator.serviceWorker
+      .register("/sw.js", { scope: "/" })
+      .then((registration) =>
+        diagnosticoPushOk("service-worker", "Service Worker registrado.", {
+          scope: registration.scope,
+        }),
+      )
+      .catch((error) => {
+        diagnosticoPushError("service-worker", "No se pudo registrar el Service Worker", error);
+      });
   };
 
   if (document.readyState === "complete") {
@@ -105,6 +183,7 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
     if (!esDueno) return;
     if (typeof window === "undefined") return;
     if (
+      !window.isSecureContext ||
       !("serviceWorker" in navigator) ||
       !("PushManager" in window) ||
       !("Notification" in window)
@@ -132,10 +211,17 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
   async function activar() {
     if (!sesion?.esDueno || !clavePublica) return;
     if (
+      !window.isSecureContext ||
       !("serviceWorker" in navigator) ||
       !("PushManager" in window) ||
       !("Notification" in window)
     ) {
+      diagnosticoPushError("validando", "Navegador no compatible con push web", {
+        secureContext: window.isSecureContext,
+        hasNotificationApi: "Notification" in window,
+        hasServiceWorker: "serviceWorker" in navigator,
+        hasPushManager: "PushManager" in window,
+      });
       setEstado("no-soportado");
       setMensaje("Este navegador no soporta notificaciones push web.");
       return;
@@ -153,13 +239,28 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
     actualizarPaso("validando", "Validando compatibilidad del navegador...");
     try {
       diagnosticoPush("validando", "Iniciando activación de notificaciones", {
+        secureContext: window.isSecureContext,
+        hasNotificationApi: "Notification" in window,
+        hasServiceWorker: "serviceWorker" in navigator,
+        hasPushManager: "PushManager" in window,
         permission: Notification.permission,
         userId: sesion.user.id,
         hasVapidKey: Boolean(clavePublica),
       });
+      diagnosticoPushOk("validando", "Compatibilidad básica validada.");
+
+      actualizarPaso("notification-api", "Verificando Notification API...");
+      diagnosticoPushOk("notification-api", "Notification API disponible.", {
+        permission: Notification.permission,
+      });
 
       actualizarPaso("permiso", "Solicitando permiso de notificaciones...");
-      const permiso = await Notification.requestPermission();
+      const permiso = await ejecutarPaso(
+        "permiso",
+        "Solicitando permiso de notificaciones",
+        "Permiso concedido.",
+        () => Notification.requestPermission(),
+      );
       diagnosticoPush("permiso", "Resultado del permiso", permiso);
       if (permiso !== "granted") {
         setEstado(permiso === "denied" ? "denegado" : "pendiente");
@@ -174,15 +275,38 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
       actualizarPaso("service-worker", "Preparando service worker...");
       const registration = await obtenerRegistroServiceWorker();
 
+      actualizarPaso("vapid", "Leyendo clave pública VAPID...");
+      diagnosticoPush("vapid", "Clave pública VAPID cargada", {
+        source: import.meta.env["VITE_VAPID_PUBLIC_KEY"] ? "env" : "piloto",
+        length: clavePublica.length,
+      });
+      diagnosticoPushOk("vapid", "VAPID cargado.");
+
+      actualizarPaso("vapid-conversion", "Convirtiendo clave VAPID...");
+      const applicationServerKey = urlBase64ToUint8Array(clavePublica);
+      diagnosticoPushOk("vapid-conversion", "VAPID convertido a Uint8Array.", {
+        bytes: applicationServerKey.byteLength,
+      });
+
       actualizarPaso("push-manager", "Creando suscripción push...");
+      diagnosticoPushOk("push-manager", "PushManager disponible.");
+      const existente = await ejecutarPaso(
+        "push-manager",
+        "Buscando suscripción Push existente",
+        "Búsqueda de suscripción completada.",
+        () => registration.pushManager.getSubscription(),
+      );
       const subscription =
-        (await registration.pushManager.getSubscription()) ??
-        (await withTimeout(
-          registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(clavePublica),
-          }),
-          "PushManager no respondió a tiempo. Revisa permisos del navegador e intenta nuevamente.",
+        existente ??
+        (await ejecutarPaso(
+          "push-manager",
+          "Generando nueva suscripción Push",
+          "Suscripción generada.",
+          () =>
+            registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey,
+            }),
         ));
 
       const serializada = subscription.toJSON();
@@ -199,28 +323,33 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
       }
 
       actualizarPaso("supabase", "Guardando suscripción en Supabase...");
-      const { error } = await supabase.from("push_subscriptions").upsert(
-        {
-          user_id: sesion.user.id,
-          endpoint: subscription.endpoint,
-          p256dh,
-          auth,
-          user_agent: navigator.userAgent,
-        },
-        { onConflict: "endpoint" },
+      const resultadoGuardado = await ejecutarPaso(
+        "supabase",
+        "Guardando suscripción en Supabase",
+        "Suscripción guardada.",
+        async () =>
+          await supabase.from("push_subscriptions").upsert(
+            {
+              user_id: sesion.user.id,
+              endpoint: subscription.endpoint,
+              p256dh,
+              auth,
+              user_agent: navigator.userAgent,
+            },
+            { onConflict: "endpoint" },
+          ),
       );
-      if (error) throw error;
+      if (resultadoGuardado.error) throw resultadoGuardado.error;
 
-      diagnosticoPush("supabase", "Suscripción guardada correctamente");
       actualizarPaso("completo", "Notificaciones activadas correctamente.");
+      diagnosticoPushOk("completo", "Confirmación de registro exitoso.");
       setEstado("activo");
       toast.success("Notificaciones activadas para el Dueño");
     } catch (error) {
-      const mensajeError =
-        error instanceof Error ? error.message : "No se pudieron activar notificaciones";
+      const mensajeError = describirError(error) || "No se pudieron activar notificaciones";
       diagnosticoPushError(pasoActual, mensajeError, error);
       setEstado("error");
-      setMensaje(mensajeError);
+      setMensaje(`${etiquetaErrorPaso[pasoActual] ?? "Activación"}: ${mensajeError}`);
       toast.error(mensajeError);
     } finally {
       setCargando(false);
@@ -229,6 +358,17 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
 
   return { estado, cargando, paso, mensaje, activar };
 }
+
+const etiquetaErrorPaso: Partial<Record<PasoPush, string>> = {
+  validando: "Validación del navegador",
+  "notification-api": "Notification API",
+  permiso: "Permiso del navegador",
+  "service-worker": "Service Worker",
+  "push-manager": "PushManager",
+  vapid: "Clave VAPID",
+  "vapid-conversion": "Conversión VAPID",
+  supabase: "Guardado en Supabase",
+};
 
 export async function notificarNuevoPedidoADueno(
   pedido: Pick<Pedido, "id" | "referencia" | "cliente">,

@@ -225,9 +225,12 @@ function InicioAdminMovil() {
 
 const etiquetaPasoPush = {
   validando: "Validación",
+  "notification-api": "Notification API",
   permiso: "Permiso del navegador",
   "service-worker": "Service worker",
   "push-manager": "Suscripción PushManager",
+  vapid: "Clave pública VAPID",
+  "vapid-conversion": "Conversión VAPID",
   supabase: "Guardado en Supabase",
   completo: "Completado",
 } as const;
