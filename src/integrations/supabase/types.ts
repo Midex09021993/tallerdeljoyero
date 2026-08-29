@@ -52,6 +52,27 @@ export type Database = {
           },
         ]
       }
+      config_sistema: {
+        Row: {
+          clave: string
+          created_at: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          clave: string
+          created_at?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Update: {
+          clave?: string
+          created_at?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
       gastos: {
         Row: {
           categoria: string
@@ -309,15 +330,22 @@ export type Database = {
           entrega: string
           estado: string
           fecha_entrega: string | null
+          fecha_entregado: string | null
+          fecha_envio: string | null
           fecha_ingreso: string
+          guia_envio: string
           id: string
           importe: number
           material: string
+          medio_envio: string
           notas: string
+          notas_ventas: string
           origen: string
+          packing_estado: string
           peso_estimado: string
           piedras: string
           pieza: string
+          receptor_envio: string
           referencia: string
           ruta: string[]
           sede_id: string | null
@@ -325,6 +353,7 @@ export type Database = {
           telefono: string
           trabajo: string
           updated_at: string
+          ventas_estado: string
         }
         Insert: {
           area_actual?: string
@@ -336,15 +365,22 @@ export type Database = {
           entrega?: string
           estado?: string
           fecha_entrega?: string | null
+          fecha_entregado?: string | null
+          fecha_envio?: string | null
           fecha_ingreso?: string
+          guia_envio?: string
           id?: string
           importe?: number
           material: string
+          medio_envio?: string
           notas?: string
+          notas_ventas?: string
           origen?: string
+          packing_estado?: string
           peso_estimado?: string
           piedras?: string
           pieza: string
+          receptor_envio?: string
           referencia: string
           ruta?: string[]
           sede_id?: string | null
@@ -352,6 +388,7 @@ export type Database = {
           telefono?: string
           trabajo?: string
           updated_at?: string
+          ventas_estado?: string
         }
         Update: {
           area_actual?: string
@@ -363,15 +400,22 @@ export type Database = {
           entrega?: string
           estado?: string
           fecha_entrega?: string | null
+          fecha_entregado?: string | null
+          fecha_envio?: string | null
           fecha_ingreso?: string
+          guia_envio?: string
           id?: string
           importe?: number
           material?: string
+          medio_envio?: string
           notas?: string
+          notas_ventas?: string
           origen?: string
+          packing_estado?: string
           peso_estimado?: string
           piedras?: string
           pieza?: string
+          receptor_envio?: string
           referencia?: string
           ruta?: string[]
           sede_id?: string | null
@@ -379,6 +423,7 @@ export type Database = {
           telefono?: string
           trabajo?: string
           updated_at?: string
+          ventas_estado?: string
         }
         Relationships: [
           {
