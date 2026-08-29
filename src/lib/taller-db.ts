@@ -765,7 +765,7 @@ export function useRegistrarPagoContrato() {
     }) => {
       if (monto <= 0) throw new Error("El monto del pago debe ser mayor que cero.");
       if (!esUuid(contrato.id)) {
-        throw new Error("Este contrato todavía no existe en la tabla de contratos.");
+        throw new Error("No existe un documento comercial asociado.");
       }
       const pago: PagoContratoInsert = {
         contrato_id: contrato.id,
@@ -798,7 +798,7 @@ export function useCrearContratoDesdePedido() {
     mutationFn: async (pedido: Pedido) => {
       const numero = pedido.contrato.trim();
       if (!numero) {
-        throw new Error("Este pedido no tiene número de contrato para asociar.");
+        throw new Error("Este pedido no tiene número de documento comercial para asociar.");
       }
 
       const base: ContratoInsert = {

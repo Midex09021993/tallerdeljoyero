@@ -687,9 +687,9 @@ function PedidoVentaCard({
           </div>
         ) : (
           <div className="mt-3 rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
-            <p className="font-semibold">Pedido sin contrato asociado.</p>
+            <p className="font-semibold">No existe un documento comercial asociado.</p>
             <p className="mt-1 opacity-80">
-              Crea o asocia el contrato antes de registrar pagos o consultar saldos.
+              Crea o asocia un documento comercial antes de registrar pagos o consultar saldos.
             </p>
           </div>
         )}
@@ -714,14 +714,40 @@ function PedidoVentaCard({
           </button>
         ) : null}
         {puedeRegistrarPago && !tieneContratoFinanciero ? (
-          <button
-            type="button"
-            onClick={onCrearContrato}
-            disabled={guardandoCrearContrato || !pedido.contrato.trim()}
-            className="rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-xs font-medium text-warning disabled:opacity-50"
-          >
-            {guardandoCrearContrato ? "Creando..." : "Crear contrato"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onCrearContrato}
+              disabled={guardandoCrearContrato || !pedido.contrato.trim()}
+              className="rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-xs font-medium text-warning disabled:opacity-50"
+            >
+              {guardandoCrearContrato ? "Creando..." : "Crear contrato"}
+            </button>
+            <button
+              type="button"
+              disabled
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground opacity-60"
+              title="Disponible cuando se implemente documentos comerciales"
+            >
+              Asociar boleta
+            </button>
+            <button
+              type="button"
+              disabled
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground opacity-60"
+              title="Disponible cuando se implemente documentos comerciales"
+            >
+              Asociar factura
+            </button>
+            <button
+              type="button"
+              disabled
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground opacity-60"
+              title="Disponible cuando se implemente documentos comerciales"
+            >
+              Asociar documento comercial
+            </button>
+          </div>
         ) : null}
       </div>
       {historialAbierto ? <HistorialPagos pagos={pagos} /> : null}

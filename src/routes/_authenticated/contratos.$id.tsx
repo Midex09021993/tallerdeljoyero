@@ -213,10 +213,10 @@ function ContratoPage() {
               </>
             ) : (
               <div className="rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
-                <p className="font-semibold">Pedido sin contrato asociado.</p>
+                <p className="font-semibold">No existe un documento comercial asociado.</p>
                 <p className="mt-1 opacity-80">
-                  Este número existe en pedidos antiguos, pero falta crear el registro financiero
-                  del contrato.
+                  Este número existe en pedidos antiguos, pero falta crear o asociar el documento
+                  comercial financiero.
                 </p>
                 {puedeCrearTrabajo && pedidos[0] ? (
                   <button
@@ -228,6 +228,32 @@ function ContratoPage() {
                     {crearContrato.isPending ? "Creando..." : "Crear contrato"}
                   </button>
                 ) : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground opacity-60"
+                    title="Disponible cuando se implemente documentos comerciales"
+                  >
+                    Asociar boleta
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground opacity-60"
+                    title="Disponible cuando se implemente documentos comerciales"
+                  >
+                    Asociar factura
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground opacity-60"
+                    title="Disponible cuando se implemente documentos comerciales"
+                  >
+                    Asociar documento comercial
+                  </button>
+                </div>
               </div>
             )}
           </div>
