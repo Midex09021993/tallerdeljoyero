@@ -174,47 +174,69 @@ function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
   const { data: sesion } = useSesion();
   const enviar = useEnviarAArea();
   const [destino, setDestino] = useState("");
+  const [motivo, setMotivo] = useState("");
   const destinos = destinosMovimientoPedido(pedido, {
     esAdmin: Boolean(sesion?.esAdmin),
     areasUsuario: sesion?.areas ?? [],
   });
+  const reiniciaFlujo = areaCoincide(destino, "Pedidos");
 
   return (
-    <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto] gap-2">
-      <label className="sr-only" htmlFor={`mover-${pedido.id}`}>
-        Área destino
-      </label>
-      <select
-        id={`mover-${pedido.id}`}
-        value={destino}
-        onChange={(e) => setDestino(e.target.value)}
-        disabled={enviar.isPending}
-        className="min-w-0 rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground disabled:opacity-50"
-      >
-        <option value="">Mover pedido...</option>
-        {destinos.map((area) => (
-          <option key={area} value={area}>
-            {normalizarArea(area)}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        disabled={enviar.isPending || !destino}
-        onClick={() => {
-          enviar.mutate(
-            {
-              pedido,
-              destino,
-              usuarioId: sesion?.user.id ?? null,
-            },
-            { onSuccess: () => setDestino("") },
-          );
-        }}
-        className="rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
-      >
-        Mover
-      </button>
+    <div className="flex flex-1 flex-col gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <label className="sr-only" htmlFor={`mover-${pedido.id}`}>
+          Área destino
+        </label>
+        <select
+          id={`mover-${pedido.id}`}
+          value={destino}
+          onChange={(e) => {
+            setDestino(e.target.value);
+            if (!areaCoincide(e.target.value, "Pedidos")) setMotivo("");
+          }}
+          disabled={enviar.isPending}
+          className="min-w-0 rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground disabled:opacity-50"
+        >
+          <option value="">Mover pedido...</option>
+          {destinos.map((area) => (
+            <option key={area} value={area}>
+              {normalizarArea(area)}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={enviar.isPending || !destino || (reiniciaFlujo && !motivo.trim())}
+          onClick={() => {
+            enviar.mutate(
+              {
+                pedido,
+                destino,
+                usuarioId: sesion?.user.id ?? null,
+                motivo,
+              },
+              {
+                onSuccess: () => {
+                  setDestino("");
+                  setMotivo("");
+                },
+              },
+            );
+          }}
+          className="rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+        >
+          Mover
+        </button>
+      </div>
+      {reiniciaFlujo ? (
+        <input
+          value={motivo}
+          onChange={(e) => setMotivo(e.target.value)}
+          disabled={enviar.isPending}
+          placeholder="Motivo del retorno a Pedidos"
+          className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground disabled:opacity-50"
+        />
+      ) : null}
     </div>
   );
 }

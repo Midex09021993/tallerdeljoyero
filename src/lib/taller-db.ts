@@ -95,6 +95,47 @@ function estadoPorDestino(destino: string, direccion: "avanzar" | "devolver" | "
   return "En Producción";
 }
 
+function cambiosMovimientoDirecto(
+  destino: string,
+  ahora: string,
+): Partial<PedidoNuevo> & {
+  area_desde: string;
+} {
+  const area = areaOperativa(destino);
+  if (area !== "Pedidos") {
+    return {
+      area_actual: area,
+      estado: estadoPorDestino(area, "enviar"),
+      area_desde: ahora,
+    };
+  }
+
+  return {
+    area_actual: "Pedidos",
+    estado: "Recibido",
+    area_desde: ahora,
+    ventas_estado: "Recibido en ventas",
+    packing_estado: "Pendiente",
+    medio_envio: "",
+    guia_envio: "",
+    fecha_envio: null,
+    fecha_entregado: null,
+    fecha_listo_entrega: null,
+    listo_entrega_observaciones: "",
+    receptor_envio: "",
+    notas_ventas: "",
+    notas_envio: "",
+    notas_entrega: "",
+    usuario_listo_entrega: null,
+    usuario_envio: null,
+    usuario_entrega: null,
+    ventas_actualizado_por: null,
+    ventas_actualizado_en: null,
+    enviado_at: null,
+    entregado_at: null,
+  };
+}
+
 function secuenciaPedido(pedido: Pedido) {
   const ruta = (Array.isArray(pedido.ruta) ? pedido.ruta : [])
     .map(areaOperativa)
@@ -575,34 +616,39 @@ export function useEnviarAArea() {
       pedido,
       destino,
       usuarioId,
+      motivo,
     }: {
       pedido: Pedido;
       destino: string;
       usuarioId: string | null;
+      motivo?: string;
     }) => {
       if (!destino || destino === pedido.area_actual) return null;
       const destinoNormalizado = areaOperativa(destino);
       const areaActual = areaOperativa(pedido.area_actual);
       if (!destinoNormalizado || destinoNormalizado === areaActual) return null;
       const ahora = new Date().toISOString();
-      const estado = estadoPorDestino(destinoNormalizado, "enviar");
-      const { error } = await supabase
-        .from("pedidos")
-        .update({
-          area_actual: destinoNormalizado,
-          estado,
-          area_desde: ahora,
-        })
-        .eq("id", pedido.id);
+      const reiniciaFlujo = destinoNormalizado === "Pedidos";
+      const cambios = cambiosMovimientoDirecto(destinoNormalizado, ahora);
+      const { error } = await supabase.from("pedidos").update(cambios).eq("id", pedido.id);
       if (error) throw error;
       await supabase.from("pedido_movimientos").insert({
         pedido_id: pedido.id,
         area_origen: areaActual,
         area_destino: destinoNormalizado,
-        accion: "mover",
+        accion: reiniciaFlujo ? "reiniciar_flujo" : "mover",
         usuario_id: usuarioId,
+        nota: reiniciaFlujo
+          ? motivo?.trim() || "Retorno a Pedidos para reiniciar flujo operativo."
+          : motivo?.trim() || "",
       });
-      return { pedido, destino: destinoNormalizado, estado, area_desde: ahora };
+      return {
+        pedido,
+        destino: destinoNormalizado,
+        estado: cambios.estado ?? estadoPorDestino(destinoNormalizado, "enviar"),
+        area_desde: ahora,
+        reiniciaFlujo,
+      };
     },
     onMutate: async ({ pedido, destino }) => {
       await qc.cancelQueries({ queryKey: ["pedidos"] });
@@ -610,12 +656,10 @@ export function useEnviarAArea() {
       const destinoNormalizado = areaOperativa(destino);
       const areaActual = areaOperativa(pedido.area_actual);
       if (destinoNormalizado && destinoNormalizado !== areaActual) {
+        const ahora = new Date().toISOString();
+        const cambios = cambiosMovimientoDirecto(destinoNormalizado, ahora);
         qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
-          actualizarPedidoEnCache(pedidos, pedido.id, {
-            area_actual: destinoNormalizado,
-            estado: estadoPorDestino(destinoNormalizado, "enviar"),
-            area_desde: new Date().toISOString(),
-          }),
+          actualizarPedidoEnCache(pedidos, pedido.id, cambios as Partial<Pedido>),
         );
       }
       return { anterior };
@@ -625,7 +669,12 @@ export function useEnviarAArea() {
       toast.error(error instanceof Error ? error.message : "No se pudo mover el pedido");
     },
     onSuccess: (resultado) => {
-      if (resultado) toast.success(`Pedido movido a ${normalizarArea(resultado.destino)}`);
+      if (!resultado) return;
+      toast.success(
+        resultado.reiniciaFlujo
+          ? "Pedido devuelto a Pedidos y flujo reiniciado"
+          : `Pedido movido a ${normalizarArea(resultado.destino)}`,
+      );
     },
     onSettled: () => {
       void invalidarPedidosActivos(qc);

@@ -222,6 +222,7 @@ function FichaPedido() {
   const [grupoDestino, setGrupoDestino] = useState("");
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
   const [destinoMovimiento, setDestinoMovimiento] = useState("");
+  const [motivoRetornoPedidos, setMotivoRetornoPedidos] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
   const regresoBase = regresoDesde(from);
   const regreso =
@@ -374,6 +375,8 @@ function FichaPedido() {
     esAdmin: Boolean(sesion?.esAdmin),
     areasUsuario: sesion?.areas ?? [],
   });
+  const reiniciaFlujo = areaCoincide(destinoMovimiento, "Pedidos");
+  const motivoRequerido = reiniciaFlujo && !motivoRetornoPedidos.trim();
 
   return (
     <AppShell
@@ -458,7 +461,10 @@ function FichaPedido() {
                   Mover pedido
                   <select
                     value={destinoMovimiento}
-                    onChange={(e) => setDestinoMovimiento(e.target.value)}
+                    onChange={(e) => {
+                      setDestinoMovimiento(e.target.value);
+                      if (!areaCoincide(e.target.value, "Pedidos")) setMotivoRetornoPedidos("");
+                    }}
                     disabled={enviar.isPending || !puedeMover || requiereAutorizacion}
                     className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground disabled:opacity-40"
                   >
@@ -477,10 +483,27 @@ function FichaPedido() {
                     ) : null}
                   </select>
                 </label>
+                {reiniciaFlujo ? (
+                  <label className="sm:col-span-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Motivo del retorno a Pedidos
+                    <textarea
+                      value={motivoRetornoPedidos}
+                      onChange={(e) => setMotivoRetornoPedidos(e.target.value)}
+                      disabled={enviar.isPending}
+                      rows={3}
+                      placeholder="Ejemplo: Corrección solicitada por cliente."
+                      className="mt-1 block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm normal-case text-foreground placeholder:text-muted-foreground disabled:opacity-40"
+                    />
+                  </label>
+                ) : null}
                 <button
                   type="button"
                   disabled={
-                    enviar.isPending || !puedeMover || requiereAutorizacion || !destinoMovimiento
+                    enviar.isPending ||
+                    !puedeMover ||
+                    requiereAutorizacion ||
+                    !destinoMovimiento ||
+                    motivoRequerido
                   }
                   onClick={() => {
                     enviar.mutate(
@@ -488,11 +511,14 @@ function FichaPedido() {
                         pedido,
                         destino: destinoMovimiento,
                         usuarioId: sesion?.user.id ?? null,
+                        motivo: motivoRetornoPedidos,
                       },
                       {
                         onSuccess: () => {
                           setDestinoMovimiento("");
+                          setMotivoRetornoPedidos("");
                           if (esFichaOperario) volver();
+                          else volver();
                         },
                       },
                     );
