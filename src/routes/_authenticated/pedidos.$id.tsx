@@ -408,8 +408,11 @@ function FichaPedido() {
                 ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
                 ["Estado ventas", mostrarEstadoVentas(pedido)],
+                ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
                 ["Medio de envío", pedido.medio_envio || "—"],
                 ["Guía de envío", pedido.guia_envio || "—"],
+                ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
+                ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
               ].map(([k, v]) => (
                 <div key={k}>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
@@ -668,10 +671,20 @@ function FichaPedido() {
                       ["Material", pedido.material || "—"],
                       ["Peso estimado", pedido.peso_estimado || "—"],
                       ["Packing", pedido.packing_estado || "Pendiente"],
+                      ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
+                      [
+                        "Observación listo",
+                        pedido.listo_entrega_observaciones || "Sin observaciones.",
+                      ],
                       ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
                       ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
                       ["Recibe / contacto", pedido.receptor_envio || "—"],
-                      ["Nota de ventas", pedido.notas_ventas || "—"],
+                      ["Nota de envío", pedido.notas_envio || "—"],
+                      ["Nota de entrega", pedido.notas_entrega || pedido.notas_ventas || "—"],
+                      [
+                        "Última actualización ventas",
+                        fmtFecha(pedido.ventas_actualizado_en) ?? "—",
+                      ],
                     ] as const
                   ).map(([label, valor]) => (
                     <div key={label}>

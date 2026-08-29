@@ -39,8 +39,11 @@ function VentasPage() {
     useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
   const [busca, setBusca] = useState("");
+  const [listoId, setListoId] = useState<string | null>(null);
   const [envioId, setEnvioId] = useState<string | null>(null);
   const [entregaId, setEntregaId] = useState<string | null>(null);
+  const esAdmin = Boolean(sesion?.esAdmin);
+  const usuarioId = sesion?.user.id ?? null;
 
   const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
   const enVentas = pedidosPorSede.filter((p) => p.area_actual === "Área ventas");
@@ -94,38 +97,63 @@ function VentasPage() {
           ) : (
             pendientesEntrega.map((pedido) => {
               const listo = estadoVenta(pedido) === "Listo para Entrega";
+              const puedeEditarEntrega = esAdmin || estadoVenta(pedido) !== "Entregado";
               return (
                 <PedidoVentaCard
                   key={pedido.id}
                   pedido={pedido}
-                  accionPrincipal={listo ? "Registrar envío" : "Marcar listo"}
-                  {...(listo ? { accionSecundaria: "Entregado" } : {})}
+                  accionPrincipal={listo ? "Registrar envío" : "Marcar listo para entrega"}
+                  {...(listo && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
                   onAbrir={() => abrirPedido(pedido.id)}
                   onAccion={() => {
                     if (listo) {
                       setEnvioId(pedido.id);
                       setEntregaId(null);
+                      setListoId(null);
                     } else {
-                      actualizar.mutate({
-                        id: pedido.id,
-                        area_actual: "Área ventas",
-                        estado: "Listo para Entrega",
-                        ventas_estado: "Listo para Entrega",
-                        packing_estado: "Listo para entrega",
-                      });
+                      setListoId(pedido.id);
+                      setEnvioId(null);
+                      setEntregaId(null);
                     }
                   }}
                   onAccionSecundaria={() => {
                     setEntregaId(pedido.id);
                     setEnvioId(null);
+                    setListoId(null);
                   }}
                 >
+                  {listoId === pedido.id ? (
+                    <FormularioListoEntrega
+                      pedido={pedido}
+                      guardando={actualizar.isPending}
+                      onCancelar={() => setListoId(null)}
+                      onGuardar={(datos) => {
+                        const ahora = new Date().toISOString();
+                        actualizar.mutate(
+                          {
+                            id: pedido.id,
+                            area_actual: "Área ventas",
+                            estado: "Listo para Entrega",
+                            ventas_estado: "Listo para Entrega",
+                            packing_estado: "Listo para entrega",
+                            fecha_listo_entrega: datos.fecha_listo_entrega,
+                            listo_entrega_observaciones: datos.listo_entrega_observaciones,
+                            usuario_listo_entrega: usuarioId,
+                            ventas_actualizado_por: usuarioId,
+                            ventas_actualizado_en: ahora,
+                          },
+                          { onSuccess: () => setListoId(null) },
+                        );
+                      }}
+                    />
+                  ) : null}
                   {envioId === pedido.id ? (
                     <FormularioEnvio
                       pedido={pedido}
                       guardando={actualizar.isPending}
                       onCancelar={() => setEnvioId(null)}
-                      onGuardar={(datos) =>
+                      onGuardar={(datos) => {
+                        const ahora = new Date().toISOString();
                         actualizar.mutate(
                           {
                             id: pedido.id,
@@ -133,11 +161,15 @@ function VentasPage() {
                             estado: "Enviado",
                             ventas_estado: "Enviado",
                             packing_estado: "Despachado",
+                            usuario_envio: usuarioId,
+                            enviado_at: ahora,
+                            ventas_actualizado_por: usuarioId,
+                            ventas_actualizado_en: ahora,
                             ...datos,
                           },
                           { onSuccess: () => setEnvioId(null) },
-                        )
-                      }
+                        );
+                      }}
                     />
                   ) : null}
                   {entregaId === pedido.id ? (
@@ -145,7 +177,8 @@ function VentasPage() {
                       pedido={pedido}
                       guardando={actualizar.isPending}
                       onCancelar={() => setEntregaId(null)}
-                      onGuardar={(datos) =>
+                      onGuardar={(datos) => {
+                        const ahora = new Date().toISOString();
                         actualizar.mutate(
                           {
                             id: pedido.id,
@@ -153,11 +186,15 @@ function VentasPage() {
                             estado: "Entregado",
                             ventas_estado: "Entregado",
                             packing_estado: "Entregado al cliente",
+                            usuario_entrega: usuarioId,
+                            entregado_at: ahora,
+                            ventas_actualizado_por: usuarioId,
+                            ventas_actualizado_en: ahora,
                             ...datos,
                           },
                           { onSuccess: () => setEntregaId(null) },
-                        )
-                      }
+                        );
+                      }}
                     />
                   ) : null}
                 </PedidoVentaCard>
@@ -179,6 +216,7 @@ function VentasPage() {
                 onAccion={() => {
                   setEntregaId(pedido.id);
                   setEnvioId(null);
+                  setListoId(null);
                 }}
               >
                 {entregaId === pedido.id ? (
@@ -186,7 +224,8 @@ function VentasPage() {
                     pedido={pedido}
                     guardando={actualizar.isPending}
                     onCancelar={() => setEntregaId(null)}
-                    onGuardar={(datos) =>
+                    onGuardar={(datos) => {
+                      const ahora = new Date().toISOString();
                       actualizar.mutate(
                         {
                           id: pedido.id,
@@ -194,11 +233,15 @@ function VentasPage() {
                           estado: "Entregado",
                           ventas_estado: "Entregado",
                           packing_estado: "Entregado al cliente",
+                          usuario_entrega: usuarioId,
+                          entregado_at: ahora,
+                          ventas_actualizado_por: usuarioId,
+                          ventas_actualizado_en: ahora,
                           ...datos,
                         },
                         { onSuccess: () => setEntregaId(null) },
-                      )
-                    }
+                      );
+                    }}
                   />
                 ) : null}
               </PedidoVentaCard>
@@ -210,17 +253,48 @@ function VentasPage() {
           {entregados.length === 0 ? (
             <Vacio texto="Todavía no hay entregas cerradas desde ventas." />
           ) : (
-            entregados
-              .slice(0, 12)
-              .map((pedido) => (
-                <PedidoVentaCard
-                  key={pedido.id}
-                  pedido={pedido}
-                  accionPrincipal="Abrir"
-                  onAbrir={() => abrirPedido(pedido.id)}
-                  onAccion={() => abrirPedido(pedido.id)}
-                />
-              ))
+            entregados.slice(0, 12).map((pedido) => (
+              <PedidoVentaCard
+                key={pedido.id}
+                pedido={pedido}
+                accionPrincipal={esAdmin ? "Corregir entrega" : "Abrir"}
+                onAbrir={() => abrirPedido(pedido.id)}
+                onAccion={() => {
+                  if (esAdmin) {
+                    setEntregaId(pedido.id);
+                    setEnvioId(null);
+                    setListoId(null);
+                  } else {
+                    abrirPedido(pedido.id);
+                  }
+                }}
+              >
+                {esAdmin && entregaId === pedido.id ? (
+                  <FormularioEntrega
+                    pedido={pedido}
+                    guardando={actualizar.isPending}
+                    onCancelar={() => setEntregaId(null)}
+                    onGuardar={(datos) => {
+                      const ahora = new Date().toISOString();
+                      actualizar.mutate(
+                        {
+                          id: pedido.id,
+                          area_actual: "Área ventas",
+                          estado: "Entregado",
+                          ventas_estado: "Entregado",
+                          packing_estado: "Entregado al cliente",
+                          usuario_entrega: pedido.usuario_entrega || usuarioId,
+                          ventas_actualizado_por: usuarioId,
+                          ventas_actualizado_en: ahora,
+                          ...datos,
+                        },
+                        { onSuccess: () => setEntregaId(null) },
+                      );
+                    }}
+                  />
+                ) : null}
+              </PedidoVentaCard>
+            ))
           )}
         </SeccionVentas>
       </div>
@@ -306,6 +380,10 @@ function Vacio({ texto }: { texto: string }) {
   return <p className="px-4 py-8 text-sm text-muted-foreground">{texto}</p>;
 }
 
+function fechaHoy() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function PedidoVentaCard({
   pedido,
   accionPrincipal,
@@ -357,6 +435,12 @@ function PedidoVentaCard({
             <dd className="mt-0.5 truncate text-foreground">{pedido.medio_envio || "Pendiente"}</dd>
           </div>
           <div>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Listo</dt>
+            <dd className="mt-0.5 truncate text-foreground">
+              {fmtFecha(pedido.fecha_listo_entrega) ?? "Pendiente"}
+            </dd>
+          </div>
+          <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               Entregado
             </dt>
@@ -396,6 +480,69 @@ function PedidoVentaCard({
   );
 }
 
+function FormularioListoEntrega({
+  pedido,
+  guardando,
+  onCancelar,
+  onGuardar,
+}: {
+  pedido: Pedido;
+  guardando: boolean;
+  onCancelar: () => void;
+  onGuardar: (datos: { fecha_listo_entrega: string; listo_entrega_observaciones: string }) => void;
+}) {
+  return (
+    <form
+      className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/40 p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        onGuardar({
+          fecha_listo_entrega: String(fd.get("fecha_listo_entrega") || fechaHoy()),
+          listo_entrega_observaciones: String(fd.get("listo_entrega_observaciones") || ""),
+        });
+      }}
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Fecha listo para entrega
+          <input
+            name="fecha_listo_entrega"
+            type="date"
+            defaultValue={pedido.fecha_listo_entrega ?? fechaHoy()}
+            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
+          />
+        </label>
+      </div>
+      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
+        Observaciones
+        <textarea
+          name="listo_entrega_observaciones"
+          defaultValue={pedido.listo_entrega_observaciones}
+          rows={3}
+          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
+        />
+      </label>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="submit"
+          disabled={guardando}
+          className="flex-1 rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
+        >
+          {guardando ? "Guardando..." : "Confirmar listo"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function FormularioEnvio({
   pedido,
   guardando,
@@ -411,6 +558,7 @@ function FormularioEnvio({
     fecha_envio: string;
     receptor_envio: string;
     notas_ventas: string;
+    notas_envio: string;
   }) => void;
 }) {
   return (
@@ -425,6 +573,7 @@ function FormularioEnvio({
           fecha_envio: String(fd.get("fecha_envio") || new Date().toISOString().slice(0, 10)),
           receptor_envio: String(fd.get("receptor_envio") || ""),
           notas_ventas: String(fd.get("notas_ventas") || ""),
+          notas_envio: String(fd.get("notas_ventas") || ""),
         });
       }}
     >
@@ -468,7 +617,7 @@ function FormularioEnvio({
         Nota de ventas
         <textarea
           name="notas_ventas"
-          defaultValue={pedido.notas_ventas}
+          defaultValue={pedido.notas_envio || pedido.notas_ventas}
           rows={3}
           className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
         />
@@ -506,6 +655,7 @@ function FormularioEntrega({
     fecha_entregado: string;
     receptor_envio: string;
     notas_ventas: string;
+    notas_entrega: string;
   }) => void;
 }) {
   return (
@@ -522,6 +672,7 @@ function FormularioEntrega({
             fd.get("receptor_envio") || pedido.receptor_envio || pedido.cliente,
           ),
           notas_ventas: String(fd.get("notas_ventas") || pedido.notas_ventas || ""),
+          notas_entrega: String(fd.get("notas_ventas") || pedido.notas_entrega || ""),
         });
       }}
     >
@@ -548,7 +699,7 @@ function FormularioEntrega({
         Nota de entrega
         <textarea
           name="notas_ventas"
-          defaultValue={pedido.notas_ventas}
+          defaultValue={pedido.notas_entrega || pedido.notas_ventas}
           rows={3}
           className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
         />

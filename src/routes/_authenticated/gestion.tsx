@@ -616,8 +616,20 @@ const COLUMNAS_PEDIDOS = [
   "medio_envio",
   "guia_envio",
   "fecha_envio",
+  "fecha_listo_entrega",
+  "fecha_entregado",
   "receptor_envio",
   "notas_ventas",
+  "listo_entrega_observaciones",
+  "notas_envio",
+  "notas_entrega",
+  "usuario_listo_entrega",
+  "usuario_envio",
+  "usuario_entrega",
+  "ventas_actualizado_por",
+  "ventas_actualizado_en",
+  "enviado_at",
+  "entregado_at",
 ] as const;
 
 const COLUMNAS_INVENTARIO = [
@@ -736,7 +748,9 @@ function errorCampoOpcional(error: { message?: string; code?: string }) {
     error.code === "42703" ||
     mensaje.includes("schema cache") ||
     mensaje.includes("ventas_estado") ||
-    mensaje.includes("packing_estado")
+    mensaje.includes("packing_estado") ||
+    mensaje.includes("fecha_listo_entrega") ||
+    mensaje.includes("usuario_envio")
   );
 }
 
@@ -772,8 +786,20 @@ async function importarPedidosCsv(registros: CsvRegistro[]) {
       medio_envio: r["medio_envio"] ?? "",
       guia_envio: r["guia_envio"] ?? "",
       fecha_envio: nuloSiVacio(r["fecha_envio"] ?? ""),
+      fecha_listo_entrega: nuloSiVacio(r["fecha_listo_entrega"] ?? ""),
+      fecha_entregado: nuloSiVacio(r["fecha_entregado"] ?? ""),
       receptor_envio: r["receptor_envio"] ?? "",
       notas_ventas: r["notas_ventas"] ?? "",
+      listo_entrega_observaciones: r["listo_entrega_observaciones"] ?? "",
+      notas_envio: r["notas_envio"] ?? "",
+      notas_entrega: r["notas_entrega"] ?? "",
+      usuario_listo_entrega: nuloSiVacio(r["usuario_listo_entrega"] ?? ""),
+      usuario_envio: nuloSiVacio(r["usuario_envio"] ?? ""),
+      usuario_entrega: nuloSiVacio(r["usuario_entrega"] ?? ""),
+      ventas_actualizado_por: nuloSiVacio(r["ventas_actualizado_por"] ?? ""),
+      ventas_actualizado_en: nuloSiVacio(r["ventas_actualizado_en"] ?? ""),
+      enviado_at: nuloSiVacio(r["enviado_at"] ?? ""),
+      entregado_at: nuloSiVacio(r["entregado_at"] ?? ""),
     }));
 
   const base = filas.map(
@@ -783,8 +809,20 @@ async function importarPedidosCsv(registros: CsvRegistro[]) {
       medio_envio,
       guia_envio,
       fecha_envio,
+      fecha_listo_entrega,
+      fecha_entregado,
       receptor_envio,
       notas_ventas,
+      listo_entrega_observaciones,
+      notas_envio,
+      notas_entrega,
+      usuario_listo_entrega,
+      usuario_envio,
+      usuario_entrega,
+      ventas_actualizado_por,
+      ventas_actualizado_en,
+      enviado_at,
+      entregado_at,
       ...fila
     }) => fila,
   );

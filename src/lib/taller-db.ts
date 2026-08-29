@@ -153,8 +153,19 @@ export type Pedido = {
   guia_envio: string;
   fecha_envio: string | null;
   fecha_entregado: string | null;
+  fecha_listo_entrega: string | null;
+  listo_entrega_observaciones: string;
   receptor_envio: string;
   notas_ventas: string;
+  notas_envio: string;
+  notas_entrega: string;
+  usuario_listo_entrega: string | null;
+  usuario_envio: string | null;
+  usuario_entrega: string | null;
+  ventas_actualizado_por: string | null;
+  ventas_actualizado_en: string | null;
+  enviado_at: string | null;
+  entregado_at: string | null;
 };
 
 export type Sede = {
@@ -225,14 +236,28 @@ export type PedidoNuevo = {
   guia_envio?: string;
   fecha_envio?: string | null;
   fecha_entregado?: string | null;
+  fecha_listo_entrega?: string | null;
+  listo_entrega_observaciones?: string;
   receptor_envio?: string;
   notas_ventas?: string;
+  notas_envio?: string;
+  notas_entrega?: string;
+  usuario_listo_entrega?: string | null;
+  usuario_envio?: string | null;
+  usuario_entrega?: string | null;
+  ventas_actualizado_por?: string | null;
+  ventas_actualizado_en?: string | null;
+  enviado_at?: string | null;
+  entregado_at?: string | null;
 };
 
 const CAMPOS_PEDIDO_BASE =
   "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
 
-const CAMPOS_PEDIDO = `${CAMPOS_PEDIDO_BASE}, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas`;
+const CAMPOS_PEDIDO_VENTAS =
+  "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
+
+const CAMPOS_PEDIDO = `${CAMPOS_PEDIDO_BASE}, ${CAMPOS_PEDIDO_VENTAS}, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at`;
 
 function esErrorCampoFaltante(error: { message?: string; code?: string }) {
   const mensaje = (error.message ?? "").toLowerCase();
@@ -260,13 +285,21 @@ export function usePedidos() {
         .select(CAMPOS_PEDIDO)
         .order("created_at", { ascending: false });
 
-      const { data, error } =
+      const respuestaVentas =
         respuesta.error && esErrorCampoFaltante(respuesta.error)
+          ? await supabase
+              .from("pedidos")
+              .select(`${CAMPOS_PEDIDO_BASE}, ${CAMPOS_PEDIDO_VENTAS}`)
+              .order("created_at", { ascending: false })
+          : respuesta;
+
+      const { data, error } =
+        respuestaVentas.error && esErrorCampoFaltante(respuestaVentas.error)
           ? await supabase
               .from("pedidos")
               .select(CAMPOS_PEDIDO_BASE)
               .order("created_at", { ascending: false })
-          : respuesta;
+          : respuestaVentas;
 
       if (error) throw error;
       return ((data ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...p }) => ({
@@ -313,8 +346,23 @@ export function usePedidos() {
         guia_envio: textoCampo(p, "guia_envio"),
         fecha_envio: typeof p["fecha_envio"] === "string" ? p["fecha_envio"] : null,
         fecha_entregado: typeof p["fecha_entregado"] === "string" ? p["fecha_entregado"] : null,
+        fecha_listo_entrega:
+          typeof p["fecha_listo_entrega"] === "string" ? p["fecha_listo_entrega"] : null,
+        listo_entrega_observaciones: textoCampo(p, "listo_entrega_observaciones"),
         receptor_envio: textoCampo(p, "receptor_envio"),
         notas_ventas: textoCampo(p, "notas_ventas"),
+        notas_envio: textoCampo(p, "notas_envio"),
+        notas_entrega: textoCampo(p, "notas_entrega"),
+        usuario_listo_entrega:
+          typeof p["usuario_listo_entrega"] === "string" ? p["usuario_listo_entrega"] : null,
+        usuario_envio: typeof p["usuario_envio"] === "string" ? p["usuario_envio"] : null,
+        usuario_entrega: typeof p["usuario_entrega"] === "string" ? p["usuario_entrega"] : null,
+        ventas_actualizado_por:
+          typeof p["ventas_actualizado_por"] === "string" ? p["ventas_actualizado_por"] : null,
+        ventas_actualizado_en:
+          typeof p["ventas_actualizado_en"] === "string" ? p["ventas_actualizado_en"] : null,
+        enviado_at: typeof p["enviado_at"] === "string" ? p["enviado_at"] : null,
+        entregado_at: typeof p["entregado_at"] === "string" ? p["entregado_at"] : null,
       }));
     },
   });

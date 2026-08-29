@@ -39,6 +39,9 @@ type Seguimiento = {
   fecha_entrega: string | null;
   fecha_envio: string | null;
   fecha_entregado: string | null;
+  medio_envio: string | null;
+  guia_envio: string | null;
+  receptor_envio: string | null;
   sede: string | null;
 };
 
@@ -186,10 +189,47 @@ function SeguimientoCliente() {
 
             <section className="mt-6 rounded-xl border border-border bg-surface/60 p-4">
               <h3 className="text-sm font-semibold">Información adicional</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Aquí se mostrarán certificados, guía de envío, observaciones o datos técnicos cuando
-                estén disponibles.
-              </p>
+              {estadoActual === "Enviado" || estadoActual === "Entregado" ? (
+                <dl className="mt-3 grid gap-3 text-sm">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Medio de envío
+                    </dt>
+                    <dd className="mt-1 font-medium">{pedido.medio_envio || "Por confirmar"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Guía / comprobante
+                    </dt>
+                    <dd className="mt-1 font-medium">{pedido.guia_envio || "Por confirmar"}</dd>
+                  </div>
+                  {estadoActual === "Enviado" ? (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Fecha de envío
+                      </dt>
+                      <dd className="mt-1 font-medium">
+                        {fmtFecha(pedido.fecha_envio) ?? "Por confirmar"}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {estadoActual === "Entregado" ? (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Fecha de entrega
+                      </dt>
+                      <dd className="mt-1 font-medium">
+                        {fmtFecha(pedido.fecha_entregado) ?? "Por confirmar"}
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Aquí se mostrarán certificados, guía de envío, observaciones o datos técnicos
+                  cuando estén disponibles.
+                </p>
+              )}
             </section>
 
             <div className="mt-6 border-t border-border pt-4 text-sm">
