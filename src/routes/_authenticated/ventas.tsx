@@ -7,7 +7,9 @@ import {
   esEstadoFinalPedido,
   estadoClases,
   useActualizarPedido,
+  useContratos,
   usePedidos,
+  type Contrato,
   type Pedido,
 } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
@@ -35,6 +37,7 @@ function VentasPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
+  const { data: contratos = [] } = useContratos();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
@@ -75,6 +78,7 @@ function VentasPage() {
   });
   const enviados = filtrados.filter((p) => estadoVenta(p) === "Enviado");
   const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
+  const contratosPorClave = useMemo(() => crearIndiceContratos(contratos), [contratos]);
 
   const abrirPedido = (id: string) =>
     navigate({ to: "/pedidos/$id", params: { id }, search: { from: "ventas" } });
@@ -102,6 +106,7 @@ function VentasPage() {
                 <PedidoVentaCard
                   key={pedido.id}
                   pedido={pedido}
+                  resumenFinanciero={resumenFinancieroPedido(pedido, contratosPorClave)}
                   accionPrincipal={listo ? "Registrar envío" : "Marcar listo para entrega"}
                   {...(listo && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
                   onAbrir={() => abrirPedido(pedido.id)}
@@ -211,6 +216,7 @@ function VentasPage() {
               <PedidoVentaCard
                 key={pedido.id}
                 pedido={pedido}
+                resumenFinanciero={resumenFinancieroPedido(pedido, contratosPorClave)}
                 accionPrincipal="Marcar entregado"
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
@@ -257,6 +263,7 @@ function VentasPage() {
               <PedidoVentaCard
                 key={pedido.id}
                 pedido={pedido}
+                resumenFinanciero={resumenFinancieroPedido(pedido, contratosPorClave)}
                 accionPrincipal={esAdmin ? "Corregir entrega" : "Abrir"}
                 onAbrir={() => abrirPedido(pedido.id)}
                 onAccion={() => {
@@ -354,6 +361,53 @@ function estadoVenta(pedido: Pedido) {
   return "Área de Ventas";
 }
 
+function formatCurrency(valor: number) {
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+    maximumFractionDigits: 2,
+  }).format(valor);
+}
+
+type ResumenFinanciero = {
+  total: number;
+  abonado: number;
+  saldo: number;
+  estado: "Pendiente" | "Abonado parcial" | "Pagado";
+  origen: "contrato" | "pedido";
+};
+
+function crearIndiceContratos(contratos: Contrato[]) {
+  const indice = new Map<string, Contrato>();
+  contratos.forEach((contrato) => {
+    if (contrato.id) indice.set(contrato.id, contrato);
+    if (contrato.numero) indice.set(contrato.numero, contrato);
+  });
+  return indice;
+}
+
+function resumenFinancieroPedido(
+  pedido: Pedido,
+  contratosPorClave: Map<string, Contrato>,
+): ResumenFinanciero {
+  const contrato =
+    (pedido.contrato_id ? contratosPorClave.get(pedido.contrato_id) : null) ??
+    (pedido.contrato ? contratosPorClave.get(pedido.contrato) : null);
+  const total = contrato ? Number(contrato.total) || 0 : Number(pedido.importe) || 0;
+  const abonado = contrato ? Number(contrato.abonado) || 0 : 0;
+  const saldo = Math.max(0, total - abonado);
+  const estado: ResumenFinanciero["estado"] =
+    saldo <= 0 && total > 0 ? "Pagado" : abonado > 0 ? "Abonado parcial" : "Pendiente";
+
+  return {
+    total,
+    abonado,
+    saldo,
+    estado,
+    origen: contrato ? "contrato" : "pedido",
+  };
+}
+
 function SeccionVentas({
   titulo,
   cantidad,
@@ -386,6 +440,7 @@ function fechaHoy() {
 
 function PedidoVentaCard({
   pedido,
+  resumenFinanciero,
   accionPrincipal,
   accionSecundaria,
   onAbrir,
@@ -394,6 +449,7 @@ function PedidoVentaCard({
   children,
 }: {
   pedido: Pedido;
+  resumenFinanciero: ResumenFinanciero;
   accionPrincipal: string;
   accionSecundaria?: string;
   onAbrir: () => void;
@@ -402,6 +458,7 @@ function PedidoVentaCard({
   children?: ReactNode;
 }) {
   const estadoComercial = estadoVenta(pedido);
+  const tieneSaldo = resumenFinanciero.saldo > 0;
   return (
     <article className="px-4 py-4">
       <button type="button" onClick={onAbrir} className="block w-full text-left">
@@ -449,6 +506,48 @@ function PedidoVentaCard({
             </dd>
           </div>
         </dl>
+        <div
+          className={`mt-3 rounded-xl border p-3 text-xs ${
+            tieneSaldo
+              ? "border-warning/25 bg-warning-soft text-warning"
+              : "border-success/20 bg-success-soft text-success"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider">
+                Estado financiero
+              </p>
+              <p className="mt-1 font-semibold">{resumenFinanciero.estado}</p>
+            </div>
+            {tieneSaldo ? (
+              <p className="text-right font-semibold">
+                Saldo pendiente: {formatCurrency(resumenFinanciero.saldo)}
+              </p>
+            ) : (
+              <p className="text-right font-semibold">Sin saldo pendiente</p>
+            )}
+          </div>
+          <dl className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+            <div>
+              <dt className="opacity-75">Total</dt>
+              <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.total)}</dd>
+            </div>
+            <div>
+              <dt className="opacity-75">Abonado</dt>
+              <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.abonado)}</dd>
+            </div>
+            <div>
+              <dt className="opacity-75">Saldo</dt>
+              <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.saldo)}</dd>
+            </div>
+          </dl>
+          {resumenFinanciero.origen === "pedido" ? (
+            <p className="mt-2 text-[10px] opacity-75">
+              Sin contrato financiero enlazado; se usa el costo del pedido como referencia.
+            </p>
+          ) : null}
+        </div>
       </button>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
