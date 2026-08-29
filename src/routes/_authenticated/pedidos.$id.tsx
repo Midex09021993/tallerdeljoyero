@@ -469,7 +469,12 @@ function FichaPedido() {
                         destino: destinoMovimiento,
                         usuarioId: sesion?.user.id ?? null,
                       },
-                      { onSuccess: () => setDestinoMovimiento("") },
+                      {
+                        onSuccess: () => {
+                          setDestinoMovimiento("");
+                          if (esFichaOperario) volver();
+                        },
+                      },
                     );
                   }}
                   className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-ink-foreground disabled:opacity-40"
