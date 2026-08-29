@@ -97,7 +97,7 @@ function TallerPage() {
   if (sesion?.rolPrincipal === "operario") {
     return (
       <AreaOperario area="Taller">
-        <details className="rounded-2xl border border-border bg-card shadow-card">
+        <details className="hidden rounded-2xl border border-border bg-card shadow-card lg:block">
           <summary className="cursor-pointer px-4 py-4 text-sm font-semibold">
             Herramientas técnicas
           </summary>
@@ -139,7 +139,7 @@ function TallerCompleto() {
   );
 }
 
-function CalculadoraYeso() {
+export function CalculadoraYeso() {
   const { esDueno } = useSedeFiltroDueno();
   const { data: configYeso } = useConfigSistema(claveConfigYeso);
   const guardarConfig = useGuardarConfigSistema();

@@ -17,6 +17,7 @@ import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
+import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authenticated/herramientas'
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
@@ -68,6 +69,12 @@ const AuthenticatedGestionRoute = AuthenticatedGestionRouteImport.update({
   path: '/gestion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHerramientasRoute =
+  AuthenticatedHerramientasRouteImport.update({
+    id: '/herramientas',
+    path: '/herramientas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedImpresion3dRoute =
   AuthenticatedImpresion3dRouteImport.update({
     id: '/impresion-3d',
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
+  '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
@@ -154,6 +162,7 @@ export interface FileRoutesByTo {
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
+  '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
@@ -175,6 +184,7 @@ export interface FileRoutesById {
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
+  '/_authenticated/herramientas': typeof AuthenticatedHerramientasRoute
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/corte-laser'
     | '/diseno-3d'
     | '/gestion'
+    | '/herramientas'
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/corte-laser'
     | '/diseno-3d'
     | '/gestion'
+    | '/herramientas'
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
@@ -237,6 +249,7 @@ export interface FileRouteTypes {
     | '/_authenticated/corte-laser'
     | '/_authenticated/diseno-3d'
     | '/_authenticated/gestion'
+    | '/_authenticated/herramientas'
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inicio'
     | '/_authenticated/inventario'
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/gestion'
       fullPath: '/gestion'
       preLoaderRoute: typeof AuthenticatedGestionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/herramientas': {
+      id: '/_authenticated/herramientas'
+      path: '/herramientas'
+      fullPath: '/herramientas'
+      preLoaderRoute: typeof AuthenticatedHerramientasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/impresion-3d': {
@@ -413,6 +433,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
+  AuthenticatedHerramientasRoute: typeof AuthenticatedHerramientasRoute
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
@@ -429,6 +450,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
+  AuthenticatedHerramientasRoute: AuthenticatedHerramientasRoute,
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,

@@ -70,7 +70,7 @@ function InicioAdminMovil() {
 
     if (areasOperario.some((area) => areaCoincide(area, "Taller"))) {
       tarjetas.push({
-        to: "/taller",
+        to: "/herramientas",
         label: "Herramientas",
         icono: Wrench,
         subtitulo: "Calculadoras técnicas",
