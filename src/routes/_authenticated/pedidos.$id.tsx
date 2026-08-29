@@ -343,7 +343,7 @@ function FichaPedido() {
           <button
             type="button"
             onClick={volver}
-            className="hidden text-info hover:underline sm:inline"
+            className="hidden text-info hover:underline lg:inline"
           >
             Volver a {regreso.etiqueta}
           </button>
@@ -388,7 +388,7 @@ function FichaPedido() {
           <button
             type="button"
             onClick={volver}
-            className="hidden items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground lg:inline-flex"
           >
             ← Volver a {regreso.etiqueta}
           </button>

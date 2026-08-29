@@ -1,5 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
+import { MobileBackButton } from "@/components/AppShell";
 import { useCerrarSesion, useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
@@ -12,17 +13,12 @@ export const Route = createFileRoute("/_authenticated/perfil")({
 function PerfilPage() {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
-  const navigate = useNavigate();
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6">
-      <button
-        type="button"
-        onClick={() => void navigate({ to: "/inicio" })}
-        className="mb-5 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground"
-      >
-        ← Atrás
-      </button>
+      <div className="mb-5 flex justify-end">
+        <MobileBackButton atrasMovil={{ to: "/inicio" }} />
+      </div>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

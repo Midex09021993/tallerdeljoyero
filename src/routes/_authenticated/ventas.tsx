@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AppShell, StatCard } from "@/components/AppShell";
+import { AppShell, MobileBackButton, StatCard } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
 import {
@@ -240,13 +240,7 @@ function VentasPage() {
               Entregas, envíos y cierre comercial.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void navigate({ to: "/inicio" })}
-            className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground sm:hidden"
-          >
-            ← Atrás
-          </button>
+          <MobileBackButton atrasMovil={{ to: "/inicio" }} />
         </header>
         {contenido}
       </main>

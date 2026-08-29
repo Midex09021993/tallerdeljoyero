@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
-  ChevronLeft,
   ClipboardList,
   Gauge,
   Hammer,
@@ -34,6 +33,8 @@ type Seccion = {
   roles?: Rol[];
   icono?: typeof LayoutGrid;
 };
+
+type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard },
@@ -89,35 +90,16 @@ export function AppShell({
   titulo: string;
   subtitulo?: string;
   acciones?: ReactNode;
-  atrasMovil?: false | { to?: string; onClick?: () => void };
+  atrasMovil?: AtrasMovil;
   ocultarNavegacion?: boolean;
   encabezadoMovilCompacto?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
-  const navigate = useNavigate();
   const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
-
-  const volverMovil = () => {
-    if (atrasMovil && typeof atrasMovil === "object") {
-      if (atrasMovil.onClick) {
-        atrasMovil.onClick();
-        return;
-      }
-      if (atrasMovil.to) {
-        void navigate({ to: atrasMovil.to as never });
-        return;
-      }
-    }
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-    void navigate({ to: "/inicio" });
-  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -187,17 +169,7 @@ export function AppShell({
                 <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
               ) : null}
             </div>
-            {mostrarAtrasMovil ? (
-              <button
-                type="button"
-                onClick={volverMovil}
-                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-card transition active:scale-[0.98] sm:hidden"
-                aria-label="Atrás"
-              >
-                <ChevronLeft className="size-4" aria-hidden="true" />
-                Atrás
-              </button>
-            ) : null}
+            {mostrarAtrasMovil ? <MobileBackButton atrasMovil={atrasMovil} /> : null}
           </div>
           {acciones ? (
             <div
@@ -250,6 +222,41 @@ export function AppShell({
         {children}
       </main>
     </div>
+  );
+}
+
+export function MobileBackButton({
+  atrasMovil = { to: "/inicio" },
+  className = "",
+}: {
+  atrasMovil?: AtrasMovil;
+  className?: string;
+}) {
+  const navigate = useNavigate();
+
+  const volver = () => {
+    if (atrasMovil && typeof atrasMovil === "object" && atrasMovil.onClick) {
+      atrasMovil.onClick();
+      return;
+    }
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    const destino =
+      atrasMovil && typeof atrasMovil === "object" && atrasMovil.to ? atrasMovil.to : "/inicio";
+    void navigate({ to: destino as never });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={volver}
+      className={`inline-flex shrink-0 items-center rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-card transition active:scale-[0.98] lg:hidden ${className}`}
+      aria-label="Atrás"
+    >
+      ← Atrás
+    </button>
   );
 }
 

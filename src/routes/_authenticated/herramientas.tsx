@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { MobileBackButton } from "@/components/AppShell";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
@@ -22,12 +23,7 @@ function HerramientasPage() {
           <h1 className="truncate font-display text-3xl">Herramientas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Utilidades del taller</p>
         </div>
-        <Link
-          to="/inicio"
-          className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-        >
-          ← Atrás
-        </Link>
+        <MobileBackButton atrasMovil={{ to: "/inicio" }} />
       </header>
       <CalculadoraYeso />
     </main>
