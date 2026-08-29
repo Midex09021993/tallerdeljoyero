@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
-import { FechaInput } from "@/components/FechaInput";
-import { AREAS, normalizarArea, useSesion } from "@/lib/auth";
+import { PedidoFormCampos } from "@/components/PedidoFormCampos";
+import { normalizarArea, useSesion } from "@/lib/auth";
+import { pedidoFormVacio, type PedidoFormState } from "@/lib/pedido-form";
 import {
   estadoClases,
   useContrato,
@@ -25,17 +26,24 @@ export const Route = createFileRoute("/_authenticated/contratos/$id")({
   component: ContratoPage,
 });
 
-const AREAS_PRODUCTIVAS = AREAS.filter((area) => area !== "Pedidos" && area !== "Área ventas");
-
-const formularioVacio = {
-  nombre: "",
-  tipo: "",
-  descripcion: "",
-  fecha_entrega: "",
-};
-
 function hoy() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formularioContratoVacio(contrato?: {
+  cliente?: string;
+  telefono?: string;
+  origen?: string;
+  numero?: string;
+}): PedidoFormState {
+  return {
+    ...pedidoFormVacio,
+    cliente: contrato?.cliente ?? "",
+    telefono: contrato?.telefono ?? "",
+    origen: contrato?.origen ?? "",
+    contrato: contrato?.numero ?? "",
+    fecha_ingreso: hoy(),
+  };
 }
 
 function formatCurrency(valor: number) {
@@ -54,8 +62,15 @@ function ContratoPage() {
   const { pedidos, isLoading: cargandoPedidos } = usePedidosContrato(contrato);
   const crearTrabajo = useCrearTrabajoContrato();
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [form, setForm] = useState(formularioVacio);
+  const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (contrato && modalAbierto) {
+      setForm(formularioContratoVacio(contrato));
+      setRuta([]);
+    }
+  }, [contrato, modalAbierto]);
 
   const resumen = useMemo(() => {
     const totalTrabajos = pedidos.reduce((acc, pedido) => acc + Number(pedido.importe || 0), 0);
@@ -201,35 +216,31 @@ function ContratoPage() {
           aria-modal="true"
         >
           <form
-            className="w-full max-w-lg rounded-2xl border border-border bg-surface p-5 shadow-lg"
+            className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-border bg-surface p-5 shadow-lg"
             onSubmit={(e) => {
               e.preventDefault();
               if (ruta.length === 0) return;
-              const nuevo: Omit<
-                PedidoNuevo,
-                | "referencia"
-                | "cliente"
-                | "telefono"
-                | "origen"
-                | "contrato"
-                | "contrato_id"
-                | "sede_id"
-              > = {
-                pieza: form.nombre,
-                trabajo: form.nombre,
-                material: "",
+              const nuevo: Omit<PedidoNuevo, "referencia" | "contrato_id"> = {
+                pieza: form.trabajo,
+                trabajo: form.trabajo,
+                cliente: contrato.cliente,
+                telefono: form.telefono,
+                origen: form.origen,
+                contrato: contrato.numero,
+                material: form.material,
                 estado: "Recibido",
                 entrega: form.fecha_entrega,
-                importe: 0,
-                fecha_ingreso: hoy(),
+                importe: Number(form.importe) || 0,
+                fecha_ingreso: form.fecha_ingreso || hoy(),
                 fecha_entrega: form.fecha_entrega || null,
+                sede_id: contrato.sede_id,
                 area_actual: "Pedidos",
                 ruta,
-                notas: [form.tipo, form.descripcion].filter(Boolean).join(" · "),
-                talla: "",
-                cantidad_piezas: 1,
-                piedras: "",
-                peso_estimado: "",
+                notas: form.notas,
+                talla: form.talla,
+                cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
+                piedras: form.piedras,
+                peso_estimado: form.peso_estimado,
               };
               crearTrabajo.mutate(
                 {
@@ -239,7 +250,7 @@ function ContratoPage() {
                 },
                 {
                   onSuccess: () => {
-                    setForm(formularioVacio);
+                    setForm(formularioContratoVacio(contrato));
                     setRuta([]);
                     setModalAbierto(false);
                   },
@@ -263,74 +274,25 @@ function ContratoPage() {
               </button>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Nombre del trabajo
-                <input
-                  required
-                  value={form.nombre}
-                  onChange={(e) => setForm((actual) => ({ ...actual, nombre: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base normal-case text-foreground sm:py-2 sm:text-sm"
-                />
-              </label>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Tipo de trabajo
-                <input
-                  value={form.tipo}
-                  onChange={(e) => setForm((actual) => ({ ...actual, tipo: e.target.value }))}
-                  placeholder="Anillo, argolla, dije…"
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base normal-case text-foreground sm:py-2 sm:text-sm"
-                />
-              </label>
-              <label className="sm:col-span-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Descripción
-                <textarea
-                  rows={3}
-                  value={form.descripcion}
-                  onChange={(e) =>
-                    setForm((actual) => ({ ...actual, descripcion: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base normal-case text-foreground sm:py-2 sm:text-sm"
-                />
-              </label>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Fecha estimada de entrega
-                <FechaInput
-                  value={form.fecha_entrega}
-                  onChangeIso={(iso) => setForm((actual) => ({ ...actual, fecha_entrega: iso }))}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                />
-              </label>
+            <div className="mt-5">
+              <PedidoFormCampos
+                form={form}
+                onChange={setForm}
+                ruta={ruta}
+                onRutaChange={setRuta}
+                camposBloqueados={["cliente", "contrato"]}
+                sedeSelect={
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Sede
+                    <input
+                      value={contrato.sede_nombre || "Sin sede"}
+                      disabled
+                      className="mt-1 w-full rounded-lg border border-border bg-surface-muted px-3 py-3 text-base text-muted-foreground sm:py-2 sm:text-sm"
+                    />
+                  </label>
+                }
+              />
             </div>
-
-            <fieldset className="mt-5">
-              <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Áreas requeridas
-              </legend>
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                {AREAS_PRODUCTIVAS.map((area) => {
-                  const activa = ruta.includes(area);
-                  return (
-                    <button
-                      key={area}
-                      type="button"
-                      onClick={() =>
-                        setRuta((actual) =>
-                          activa
-                            ? actual.filter((x) => x !== area)
-                            : AREAS_PRODUCTIVAS.filter((x) => [...actual, area].includes(x)),
-                        )
-                      }
-                      className={`rounded-lg border px-3 py-2 text-xs transition-colors ${
-                        activa ? "border-transparent bg-ink text-gold-bright" : "border-border"
-                      }`}
-                    >
-                      {area}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
 
             <div className="mt-6 flex justify-end gap-2">
               <button
@@ -342,7 +304,7 @@ function ContratoPage() {
               </button>
               <button
                 type="submit"
-                disabled={crearTrabajo.isPending || !form.nombre.trim() || ruta.length === 0}
+                disabled={crearTrabajo.isPending || !form.trabajo.trim() || ruta.length === 0}
                 className="rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
               >
                 {crearTrabajo.isPending ? "Creando…" : "Crear trabajo"}

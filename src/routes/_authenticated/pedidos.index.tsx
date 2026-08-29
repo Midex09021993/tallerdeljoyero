@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { FechaInput } from "@/components/FechaInput";
+import { PedidoFormCampos } from "@/components/PedidoFormCampos";
 import {
   SelectorSedeDueno,
   TODAS_LAS_SEDES,
   useSedeFiltroDueno,
 } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
-import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
+import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
+import { pedidoFormVacio, type PedidoFormState } from "@/lib/pedido-form";
 import {
   useBorrarPedido,
   useAutorizarProduccion,
@@ -39,7 +40,6 @@ export const Route = createFileRoute("/_authenticated/pedidos/")({
   component: PedidosPage,
 });
 
-const RUTA_AREAS = AREAS.filter((a) => a !== "Pedidos" && a !== "Área ventas");
 const AREAS_SEGUIMIENTO = [
   "Diseño 3D",
   "Impresión 3D",
@@ -53,22 +53,7 @@ type FiltroEntrega = (typeof FILTROS_ENTREGA)[number];
 
 const hoy = () => new Date().toISOString().slice(0, 10);
 
-const vacio = {
-  cliente: "",
-  telefono: "",
-  origen: "",
-  contrato: "",
-  trabajo: "",
-  material: "",
-  peso_estimado: "",
-  importe: "0",
-  fecha_ingreso: hoy(),
-  fecha_entrega: "",
-  talla: "",
-  cantidad_piezas: "1",
-  piedras: "",
-  notas: "",
-};
+const nuevoPedidoVacio = (): PedidoFormState => ({ ...pedidoFormVacio, fecha_ingreso: hoy() });
 
 function areaClase(area: string) {
   const mapa: Record<string, string> = {
@@ -227,7 +212,7 @@ function PedidosPage() {
   const autorizar = useAutorizarProduccion();
 
   const [abierto, setAbierto] = useState(false);
-  const [form, setForm] = useState(vacio);
+  const [form, setForm] = useState<PedidoFormState>(() => nuevoPedidoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
   const [sedeId, setSedeId] = useState<string>("");
   const [filtroArea, setFiltroArea] = useState("Todas");
@@ -432,104 +417,35 @@ function PedidosPage() {
               };
               crear.mutate(nuevo, {
                 onSuccess: () => {
-                  setForm(vacio);
+                  setForm(nuevoPedidoVacio());
                   setRuta([]);
                   setAbierto(false);
                 },
               });
             }}
           >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {(
-                [
-                  ["cliente", "Cliente", "text"],
-                  ["telefono", "WhatsApp", "tel"],
-                  ["origen", "Origen / lugar", "text"],
-                  ["contrato", "N° contrato", "text"],
-                  ["trabajo", "Trabajo solicitado", "text"],
-                  ["material", "Material", "text"],
-                  ["peso_estimado", "Peso estimado (g)", "text"],
-                  ["importe", "Costo (S/)", "number"],
-                  ["talla", "Talla / medida", "text"],
-                  ["cantidad_piezas", "Cantidad de piezas", "number"],
-                  ["piedras", "Piedras / componentes", "text"],
-                  ["notas", "Notas generales", "text"],
-                  ["fecha_ingreso", "Fecha de ingreso", "date"],
-                  ["fecha_entrega", "Fecha de entrega", "date"],
-                ] as const
-              ).map(([campo, etiqueta, tipo]) => (
-                <label
-                  key={campo}
-                  className={`text-[10px] uppercase tracking-wider text-muted-foreground ${
-                    campo === "notas" ? "sm:col-span-2 lg:col-span-2" : ""
-                  }`}
-                >
-                  {etiqueta}
-                  {tipo === "date" ? (
-                    <FechaInput
-                      value={form[campo]}
-                      onChangeIso={(iso) => setForm((f) => ({ ...f, [campo]: iso }))}
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                    />
-                  ) : (
-                    <input
-                      type={tipo}
-                      min={campo === "cantidad_piezas" ? 1 : undefined}
-                      required={campo === "cliente" || campo === "trabajo"}
-                      value={form[campo]}
-                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                    />
-                  )}
+            <PedidoFormCampos
+              form={form}
+              onChange={setForm}
+              ruta={ruta}
+              onRutaChange={setRuta}
+              sedeSelect={
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Sede
+                  <select
+                    value={sedePorDefecto}
+                    onChange={(e) => setSedeId(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+                  >
+                    {sedes.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </label>
-              ))}
-
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Sede
-                <select
-                  value={sedePorDefecto}
-                  onChange={(e) => setSedeId(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                >
-                  {sedes.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <fieldset className="mt-5">
-              <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Ruta del pedido (marca sólo las áreas que necesita)
-              </legend>
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                {RUTA_AREAS.map((a) => {
-                  const activa = ruta.includes(a);
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() =>
-                        setRuta((r) =>
-                          activa
-                            ? r.filter((x) => x !== a)
-                            : RUTA_AREAS.filter((x) => [...r, a].includes(x)),
-                        )
-                      }
-                      className={`rounded-lg border px-3 py-2 text-xs transition-colors sm:rounded-full sm:py-1.5 ${
-                        activa
-                          ? "border-transparent bg-ink text-gold-bright"
-                          : "border-border bg-card"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
+              }
+            />
 
             <button
               type="submit"

@@ -740,10 +740,7 @@ export function useCrearTrabajoContrato() {
       referenciasExistentes,
     }: {
       contrato: Contrato;
-      pedido: Omit<
-        PedidoNuevo,
-        "referencia" | "cliente" | "telefono" | "origen" | "contrato" | "contrato_id" | "sede_id"
-      >;
+      pedido: Omit<PedidoNuevo, "referencia" | "contrato_id">;
       referenciasExistentes: string[];
     }) => {
       const referencia = siguienteReferenciaContrato(contrato.numero, referenciasExistentes);
@@ -751,8 +748,6 @@ export function useCrearTrabajoContrato() {
         ...pedido,
         referencia,
         cliente: contrato.cliente,
-        telefono: contrato.telefono,
-        origen: contrato.origen,
         contrato: contrato.numero,
         contrato_id: esUuid(contrato.id) ? contrato.id : null,
         sede_id: contrato.sede_id,
