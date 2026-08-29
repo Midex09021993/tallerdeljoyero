@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { normalizarArea } from "@/lib/auth";
 import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
+
+type PedidoUpdate = Database["public"]["Tables"]["pedidos"]["Update"];
 
 export type Estado =
   | "Recibido"
@@ -114,8 +116,8 @@ function cambiosMovimientoDirecto(
     area_actual: "Pedidos",
     estado: "Recibido",
     area_desde: ahora,
-    ventas_estado: "Recibido en ventas",
-    packing_estado: "Pendiente",
+    ventas_estado: "",
+    packing_estado: "",
     medio_envio: "",
     guia_envio: "",
     fecha_envio: null,
@@ -134,6 +136,71 @@ function cambiosMovimientoDirecto(
     enviado_at: null,
     entregado_at: null,
   };
+}
+
+const camposVentasTrazables = new Set([
+  "fecha_listo_entrega",
+  "listo_entrega_observaciones",
+  "notas_envio",
+  "notas_entrega",
+  "usuario_listo_entrega",
+  "usuario_envio",
+  "usuario_entrega",
+  "ventas_actualizado_por",
+  "ventas_actualizado_en",
+  "enviado_at",
+  "entregado_at",
+]);
+
+const camposVentasBase = new Set([
+  "ventas_estado",
+  "packing_estado",
+  "medio_envio",
+  "guia_envio",
+  "fecha_envio",
+  "fecha_entregado",
+  "receptor_envio",
+  "notas_ventas",
+]);
+
+function omitirCampos(objeto: PedidoUpdate, campos: Set<string>): PedidoUpdate {
+  return Object.fromEntries(Object.entries(objeto).filter(([campo]) => !campos.has(campo)));
+}
+
+function detalleErrorSupabase(error: { message?: string; code?: string; details?: string }) {
+  return [error.code, error.message, error.details].filter(Boolean).join(" · ");
+}
+
+async function actualizarPedidoConReinicioFlexible(
+  pedidoId: string,
+  cambios: Partial<PedidoNuevo> & { area_desde: string },
+) {
+  const intentos = [
+    cambios as PedidoUpdate,
+    omitirCampos(cambios as PedidoUpdate, camposVentasTrazables),
+    omitirCampos(omitirCampos(cambios as PedidoUpdate, camposVentasTrazables), camposVentasBase),
+  ];
+
+  let ultimoError: { message?: string; code?: string; details?: string } | null = null;
+
+  for (const payload of intentos) {
+    const { error } = await supabase.from("pedidos").update(payload).eq("id", pedidoId);
+    if (!error) return;
+    ultimoError = error;
+
+    if (!esErrorCampoFaltante(error)) {
+      throw new Error(`No se pudo reiniciar el flujo: ${detalleErrorSupabase(error)}`);
+    }
+
+    console.warn("[pedidos:reinicio-flujo] Reintentando sin columnas no disponibles", {
+      error: detalleErrorSupabase(error),
+      campos: Object.keys(payload),
+    });
+  }
+
+  if (ultimoError) {
+    throw new Error(`No se pudo reiniciar el flujo: ${detalleErrorSupabase(ultimoError)}`);
+  }
 }
 
 function secuenciaPedido(pedido: Pedido) {
@@ -630,8 +697,19 @@ export function useEnviarAArea() {
       const ahora = new Date().toISOString();
       const reiniciaFlujo = destinoNormalizado === "Pedidos";
       const cambios = cambiosMovimientoDirecto(destinoNormalizado, ahora);
-      const { error } = await supabase.from("pedidos").update(cambios).eq("id", pedido.id);
-      if (error) throw error;
+      if (reiniciaFlujo) {
+        await actualizarPedidoConReinicioFlexible(pedido.id, cambios);
+      } else {
+        const { error } = await supabase.from("pedidos").update(cambios).eq("id", pedido.id);
+        if (error) {
+          console.error("[pedidos:mover] Error al actualizar pedido", {
+            pedidoId: pedido.id,
+            destino: destinoNormalizado,
+            error: detalleErrorSupabase(error),
+          });
+          throw new Error(`No se pudo mover el pedido: ${detalleErrorSupabase(error)}`);
+        }
+      }
       await supabase.from("pedido_movimientos").insert({
         pedido_id: pedido.id,
         area_origen: areaActual,
@@ -666,6 +744,7 @@ export function useEnviarAArea() {
     },
     onError: (error, _variables, contexto) => {
       if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      console.error("[pedidos:mover] Movimiento fallido", error);
       toast.error(error instanceof Error ? error.message : "No se pudo mover el pedido");
     },
     onSuccess: (resultado) => {
