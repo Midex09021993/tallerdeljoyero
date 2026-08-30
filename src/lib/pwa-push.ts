@@ -370,7 +370,25 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
     }
     obtenerRegistroServiceWorker()
       .then((registration) => registration.pushManager.getSubscription())
-      .then((subscription) => setEstado(subscription ? "activo" : "pendiente"))
+      .then(async (subscription) => {
+        setEstado(subscription ? "activo" : "pendiente");
+        if (!subscription || !sesion?.user.id) return;
+        // Resincroniza la suscripción del dispositivo para que el backend siempre la tenga.
+        const serializada = subscription.toJSON();
+        const p256dh = serializada.keys?.["p256dh"] ?? "";
+        const auth = serializada.keys?.["auth"] ?? "";
+        if (!p256dh || !auth) return;
+        await supabase.from("push_subscriptions").upsert(
+          {
+            user_id: sesion.user.id,
+            endpoint: subscription.endpoint,
+            p256dh,
+            auth,
+            user_agent: navigator.userAgent,
+          },
+          { onConflict: "endpoint" },
+        );
+      })
       .catch((error) => {
         diagnosticoPushError("service-worker", "No se pudo verificar suscripción existente", error);
         setEstado("pendiente");
