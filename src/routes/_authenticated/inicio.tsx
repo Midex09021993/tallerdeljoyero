@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Bell, Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
+import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { modulosAdminMovil } from "@/components/AppShell";
+import { PushDuenoCard } from "@/components/PushDuenoCard";
 import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import {
   areaCoincide,
@@ -13,7 +14,6 @@ import {
   useSesion,
 } from "@/lib/auth";
 import { pedidoEnEvaluacion, usePedidos, type Pedido } from "@/lib/taller-db";
-import { enviarPruebaNotificacionDueno, usePushDueno } from "@/lib/pwa-push";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
@@ -33,7 +33,6 @@ function InicioAdminMovil() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
   const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
-  const pushDueno = usePushDueno(sesion);
 
   useEffect(() => {
     if (isLoading || !sesion) return;
@@ -156,19 +155,6 @@ function InicioAdminMovil() {
     </main>
   );
 }
-
-const etiquetaPasoPush = {
-  validando: "Validación",
-  "notification-api": "Notification API",
-  permiso: "Permiso del navegador",
-  "service-worker": "Service worker",
-  "push-manager": "Suscripción PushManager",
-  vapid: "Clave pública VAPID",
-  "vapid-conversion": "Conversión VAPID",
-  supabase: "Guardado en Supabase",
-  "edge-function": "Edge Function",
-  completo: "Completado",
-} as const;
 
 const iconosArea: Record<string, typeof Hammer> = {
   "Diseño 3D": LayoutGrid,

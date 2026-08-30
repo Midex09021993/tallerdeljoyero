@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
 import { MobileBackButton } from "@/components/AppShell";
+import { PushDuenoCard } from "@/components/PushDuenoCard";
 import { useCerrarSesion, useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
@@ -19,6 +20,8 @@ function PerfilPage() {
       <div className="sticky top-0 z-30 -mx-4 mb-3 flex justify-end bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-5 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
         <MobileBackButton atrasMovil={{ to: "/inicio" }} />
       </div>
+
+      <PushDuenoCard sesion={sesion} />
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
