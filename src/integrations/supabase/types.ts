@@ -73,6 +73,104 @@ export type Database = {
         }
         Relationships: []
       }
+      contrato_pagos: {
+        Row: {
+          concepto: string
+          contrato_id: string | null
+          contrato_numero: string
+          created_at: string
+          fecha: string
+          id: string
+          monto: number
+          usuario_id: string | null
+        }
+        Insert: {
+          concepto?: string
+          contrato_id?: string | null
+          contrato_numero?: string
+          created_at?: string
+          fecha?: string
+          id?: string
+          monto?: number
+          usuario_id?: string | null
+        }
+        Update: {
+          concepto?: string
+          contrato_id?: string | null
+          contrato_numero?: string
+          created_at?: string
+          fecha?: string
+          id?: string
+          monto?: number
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_pagos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_pagos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contratos: {
+        Row: {
+          abonado: number
+          cliente: string
+          created_at: string
+          id: string
+          notas: string
+          numero: string
+          origen: string
+          sede_id: string | null
+          telefono: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          abonado?: number
+          cliente?: string
+          created_at?: string
+          id?: string
+          notas?: string
+          numero: string
+          origen?: string
+          sede_id?: string | null
+          telefono?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          abonado?: number
+          cliente?: string
+          created_at?: string
+          id?: string
+          notas?: string
+          numero?: string
+          origen?: string
+          sede_id?: string | null
+          telefono?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gastos: {
         Row: {
           categoria: string
