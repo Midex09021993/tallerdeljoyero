@@ -23,7 +23,7 @@ const PUSH_TIMEOUT_MS = 15_000;
 // browsers need it to subscribe through PushManager. The matching private key
 // must be configured only as a Supabase Edge Function secret.
 const VAPID_PUBLIC_KEY_PILOTO =
-  "BFY8sRFrNwjbmIbfma4rsxvnysZmkcI8IRjXT6K3Jr7FFzTBhjJbeC2rSgiHTUlfwMrQ0Vn-i3OhrNc9KMLlCZ4";
+  "BOPRpDYHJXszF0OBl1sQ9VfA7ORwghRP6U8tPVlUBozZVRDis6GhKM8rCy1EHpV8VUk6O0lxw5mj9qSJu8CPRcs";
 
 type EdgeFunctionPayload = {
   pedido_id?: string;
