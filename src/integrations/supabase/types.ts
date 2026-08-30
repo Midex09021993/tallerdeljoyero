@@ -424,19 +424,26 @@ export type Database = {
           cantidad_piezas: number
           cliente: string
           contrato: string
+          contrato_id: string | null
           created_at: string
           entrega: string
+          entregado_at: string | null
+          enviado_at: string | null
           estado: string
           fecha_entrega: string | null
           fecha_entregado: string | null
           fecha_envio: string | null
           fecha_ingreso: string
+          fecha_listo_entrega: string | null
           guia_envio: string
           id: string
           importe: number
+          listo_entrega_observaciones: string | null
           material: string
           medio_envio: string
           notas: string
+          notas_entrega: string | null
+          notas_envio: string | null
           notas_ventas: string
           origen: string
           packing_estado: string
@@ -451,6 +458,11 @@ export type Database = {
           telefono: string
           trabajo: string
           updated_at: string
+          usuario_entrega: string | null
+          usuario_envio: string | null
+          usuario_listo_entrega: string | null
+          ventas_actualizado_en: string | null
+          ventas_actualizado_por: string | null
           ventas_estado: string
         }
         Insert: {
@@ -459,19 +471,26 @@ export type Database = {
           cantidad_piezas?: number
           cliente: string
           contrato?: string
+          contrato_id?: string | null
           created_at?: string
           entrega?: string
+          entregado_at?: string | null
+          enviado_at?: string | null
           estado?: string
           fecha_entrega?: string | null
           fecha_entregado?: string | null
           fecha_envio?: string | null
           fecha_ingreso?: string
+          fecha_listo_entrega?: string | null
           guia_envio?: string
           id?: string
           importe?: number
+          listo_entrega_observaciones?: string | null
           material: string
           medio_envio?: string
           notas?: string
+          notas_entrega?: string | null
+          notas_envio?: string | null
           notas_ventas?: string
           origen?: string
           packing_estado?: string
@@ -486,6 +505,11 @@ export type Database = {
           telefono?: string
           trabajo?: string
           updated_at?: string
+          usuario_entrega?: string | null
+          usuario_envio?: string | null
+          usuario_listo_entrega?: string | null
+          ventas_actualizado_en?: string | null
+          ventas_actualizado_por?: string | null
           ventas_estado?: string
         }
         Update: {
@@ -494,19 +518,26 @@ export type Database = {
           cantidad_piezas?: number
           cliente?: string
           contrato?: string
+          contrato_id?: string | null
           created_at?: string
           entrega?: string
+          entregado_at?: string | null
+          enviado_at?: string | null
           estado?: string
           fecha_entrega?: string | null
           fecha_entregado?: string | null
           fecha_envio?: string | null
           fecha_ingreso?: string
+          fecha_listo_entrega?: string | null
           guia_envio?: string
           id?: string
           importe?: number
+          listo_entrega_observaciones?: string | null
           material?: string
           medio_envio?: string
           notas?: string
+          notas_entrega?: string | null
+          notas_envio?: string | null
           notas_ventas?: string
           origen?: string
           packing_estado?: string
@@ -521,9 +552,21 @@ export type Database = {
           telefono?: string
           trabajo?: string
           updated_at?: string
+          usuario_entrega?: string | null
+          usuario_envio?: string | null
+          usuario_listo_entrega?: string | null
+          ventas_actualizado_en?: string | null
+          ventas_actualizado_por?: string | null
           ventas_estado?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pedidos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pedidos_sede_id_fkey"
             columns: ["sede_id"]
