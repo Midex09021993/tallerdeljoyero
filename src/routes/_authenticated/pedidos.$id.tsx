@@ -18,6 +18,8 @@ import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
+import { subirConProgreso } from "@/lib/subir-archivo";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -224,6 +226,9 @@ function FichaPedido() {
   const [destinoMovimiento, setDestinoMovimiento] = useState("");
   const [motivoRetornoPedidos, setMotivoRetornoPedidos] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
+  const [progreso, setProgreso] = useState<{ nombre: string; valor: number } | null>(null);
+  const [zonaActiva, setZonaActiva] = useState(false);
+
   const regresoBase = regresoDesde(from);
   const regreso =
     sesion?.rolPrincipal === "operario" && regresoBase.ruta === "/pedidos"
@@ -245,8 +250,14 @@ function FichaPedido() {
       grupo?: string | undefined;
     }) => {
       const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("pedidos").upload(ruta, file);
-      if (error) throw error;
+      setProgreso({ nombre: file.name, valor: 0 });
+      await subirConProgreso({
+        bucket: "pedidos",
+        ruta,
+        file,
+        onProgreso: (valor) => setProgreso({ nombre: file.name, valor }),
+      });
+
       const { data } = await supabase.storage
         .from("pedidos")
         .createSignedUrl(ruta, 60 * 60 * 24 * 365);
@@ -276,7 +287,9 @@ function FichaPedido() {
     },
     onSettled: () => {
       setArchivoPorEliminar(null);
+      setProgreso(null);
     },
+
   });
 
   const guardarEnlace = useMutation({
@@ -854,13 +867,64 @@ function FichaPedido() {
                         ))}
                       </select>
                     ) : null}
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-xs text-muted-foreground">
-                      {subir.isPending
-                        ? "Subiendo..."
-                        : "Subir archivo del trabajo (STL, 3MF, PDF, foto...)"}
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setZonaActiva(true);
+                      }}
+                      onDragLeave={() => setZonaActiva(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setZonaActiva(false);
+                        const file = e.dataTransfer.files?.[0];
+                        if (file && !subir.isPending)
+                          subir.mutate({
+                            file,
+                            tipo: "archivo",
+                            grupo: grupoDestino || undefined,
+                          });
+                      }}
+                      className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center text-xs transition-colors ${
+                        zonaActiva
+                          ? "border-info bg-info/10 text-info"
+                          : "border-border bg-surface-muted text-muted-foreground"
+                      }`}
+                    >
+                      {subir.isPending ? (
+                        <div className="w-full max-w-sm">
+                          <p className="mb-2 truncate font-medium text-foreground">
+                            Subiendo {progreso?.nombre ?? "archivo"}…
+                          </p>
+                          <div
+                            role="progressbar"
+                            aria-valuenow={progreso?.valor ?? 0}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            className="h-2 w-full overflow-hidden rounded-full bg-border"
+                          >
+                            <div
+                              className="h-full rounded-full bg-info transition-[width] duration-200"
+                              style={{ width: `${progreso?.valor ?? 0}%` }}
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {progreso?.valor ?? 0}%
+                            {(progreso?.valor ?? 0) >= 100 ? " · procesando…" : ""}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-2xl">⬆</span>
+                          <span className="font-medium text-foreground">
+                            Arrastra aquí tu archivo o haz clic para seleccionarlo
+                          </span>
+                          <span>STL, 3MF, OBJ, PDF, fotos… (archivos pesados soportados)</span>
+                        </>
+                      )}
                       <input
                         type="file"
                         className="hidden"
+                        disabled={subir.isPending}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file)
@@ -873,6 +937,12 @@ function FichaPedido() {
                         }}
                       />
                     </label>
+                    {subir.isError ? (
+                      <p className="text-xs text-danger">
+                        No se pudo subir el archivo. Inténtalo nuevamente.
+                      </p>
+                    ) : null}
+
                   </div>
                   <ul className="mb-4 space-y-2">
                     {entradas.map(([grupo, lista]) => {
