@@ -1203,9 +1203,10 @@ export function useCrearTrabajoContrato() {
       await sumarImporteAContrato(esUuid(contrato.id) ? contrato.id : null, nuevo.importe);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (pedido) => {
       void qc.invalidateQueries({ queryKey: ["pedidos"] });
       void qc.invalidateQueries({ queryKey: ["contratos"] });
+      if (pedido) void notificarNuevoPedidoADueno(pedido);
     },
   });
 }

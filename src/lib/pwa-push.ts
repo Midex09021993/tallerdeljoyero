@@ -393,7 +393,7 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
         diagnosticoPushError("service-worker", "No se pudo verificar suscripción existente", error);
         setEstado("pendiente");
       });
-  }, [clavePublica, esDueno]);
+  }, [clavePublica, esDueno, sesion?.user.id]);
 
   async function activar() {
     if (!sesion?.esDueno || !clavePublica) return;
