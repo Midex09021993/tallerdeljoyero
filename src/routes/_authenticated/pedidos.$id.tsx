@@ -245,8 +245,14 @@ function FichaPedido() {
       grupo?: string | undefined;
     }) => {
       const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("pedidos").upload(ruta, file);
-      if (error) throw error;
+      setProgreso({ nombre: file.name, valor: 0 });
+      await subirConProgreso({
+        bucket: "pedidos",
+        ruta,
+        file,
+        onProgreso: (valor) => setProgreso({ nombre: file.name, valor }),
+      });
+
       const { data } = await supabase.storage
         .from("pedidos")
         .createSignedUrl(ruta, 60 * 60 * 24 * 365);
