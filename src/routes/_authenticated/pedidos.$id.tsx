@@ -287,7 +287,9 @@ function FichaPedido() {
     },
     onSettled: () => {
       setArchivoPorEliminar(null);
+      setProgreso(null);
     },
+
   });
 
   const guardarEnlace = useMutation({
