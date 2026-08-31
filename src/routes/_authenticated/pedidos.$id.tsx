@@ -226,6 +226,9 @@ function FichaPedido() {
   const [destinoMovimiento, setDestinoMovimiento] = useState("");
   const [motivoRetornoPedidos, setMotivoRetornoPedidos] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
+  const [progreso, setProgreso] = useState<{ nombre: string; valor: number } | null>(null);
+  const [zonaActiva, setZonaActiva] = useState(false);
+
   const regresoBase = regresoDesde(from);
   const regreso =
     sesion?.rolPrincipal === "operario" && regresoBase.ruta === "/pedidos"
