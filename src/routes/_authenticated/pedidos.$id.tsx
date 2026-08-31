@@ -18,6 +18,8 @@ import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
+import { subirConProgreso } from "@/lib/subir-archivo";
+
 import {
   AlertDialog,
   AlertDialogAction,
