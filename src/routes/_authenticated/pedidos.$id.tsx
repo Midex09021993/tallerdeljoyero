@@ -249,7 +249,7 @@ function FichaPedido() {
       tipo: string;
       grupo?: string | undefined;
     }) => {
-      const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
+      const ruta = `${id}/${tipo}-${Date.now()}-${nombreSeguro(file.name)}`;
       setProgreso({ nombre: file.name, valor: 0 });
       await subirConProgreso({
         bucket: "pedidos",
