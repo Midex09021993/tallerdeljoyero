@@ -1,8 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
+/** Limpia el nombre para que Storage lo acepte (sin tildes ni caracteres raros). */
+export function nombreSeguro(nombre: string) {
+  return nombre
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/_+/g, "_")
+    .slice(-120);
+}
+
 /**
- * Sube un archivo a Storage con progreso real (XHR) para archivos pesados (STL/3MF).
- * Devuelve la ruta creada dentro del bucket.
+ * Sube un archivo a Storage con progreso real usando una URL firmada de subida
+ * (soporta archivos pesados como STL/3MF).
  */
 export async function subirConProgreso({
   bucket,
@@ -15,17 +25,14 @@ export async function subirConProgreso({
   file: File;
   onProgreso?: (porcentaje: number) => void;
 }): Promise<string> {
-  const base = import.meta.env["VITE_SUPABASE_URL"] as string;
-  const anon = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token ?? anon;
+  const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(ruta);
+  if (error || !data?.signedUrl) {
+    throw new Error(error?.message ?? "No se pudo preparar la subida.");
+  }
 
   await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${base}/storage/v1/object/${bucket}/${encodeURI(ruta)}`);
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.setRequestHeader("apikey", anon);
-    xhr.setRequestHeader("x-upsert", "false");
+    xhr.open("PUT", data.signedUrl);
     if (file.type) xhr.setRequestHeader("Content-Type", file.type);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgreso?.(Math.round((e.loaded / e.total) * 100));
@@ -35,7 +42,7 @@ export async function subirConProgreso({
         onProgreso?.(100);
         resolve();
       } else {
-        reject(new Error(`Error al subir (${xhr.status}): ${xhr.responseText}`));
+        reject(new Error(`Error ${xhr.status}: ${xhr.responseText || "subida rechazada"}`));
       }
     };
     xhr.onerror = () => reject(new Error("Fallo de red al subir el archivo."));

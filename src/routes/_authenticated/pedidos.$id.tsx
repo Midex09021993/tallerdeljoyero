@@ -18,7 +18,7 @@ import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
-import { subirConProgreso } from "@/lib/subir-archivo";
+import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 import {
   AlertDialog,
@@ -249,7 +249,7 @@ function FichaPedido() {
       tipo: string;
       grupo?: string | undefined;
     }) => {
-      const ruta = `${id}/${tipo}-${Date.now()}-${file.name}`;
+      const ruta = `${id}/${tipo}-${Date.now()}-${nombreSeguro(file.name)}`;
       setProgreso({ nombre: file.name, valor: 0 });
       await subirConProgreso({
         bucket: "pedidos",
@@ -939,7 +939,8 @@ function FichaPedido() {
                     </label>
                     {subir.isError ? (
                       <p className="text-xs text-danger">
-                        No se pudo subir el archivo. Inténtalo nuevamente.
+                        No se pudo subir:{" "}
+                        {subir.error instanceof Error ? subir.error.message : "error desconocido"}
                       </p>
                     ) : null}
 
