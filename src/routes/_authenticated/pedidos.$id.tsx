@@ -939,7 +939,8 @@ function FichaPedido() {
                     </label>
                     {subir.isError ? (
                       <p className="text-xs text-danger">
-                        No se pudo subir el archivo. Inténtalo nuevamente.
+                        No se pudo subir:{" "}
+                        {subir.error instanceof Error ? subir.error.message : "error desconocido"}
                       </p>
                     ) : null}
 
