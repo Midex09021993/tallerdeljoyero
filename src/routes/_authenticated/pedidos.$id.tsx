@@ -732,6 +732,36 @@ function FichaPedido() {
                     })}
                   </div>
                 </fieldset>
+                {(rutaEdit.some((a) => areaCoincide(a, "Corte Láser")) || tieneCorteLaser) && (
+                  <fieldset className="col-span-2 lg:col-span-3">
+                    <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Información de Corte Láser
+                    </legend>
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                      {(
+                        [
+                          ["corte_texto", "Texto a grabar o cortar", pedido.corte_texto],
+                          ["corte_tipografia", "Tipografía", pedido.corte_tipografia],
+                          ["corte_ubicacion", "Ubicación", pedido.corte_ubicacion],
+                          ["corte_observaciones", "Observaciones", pedido.corte_observaciones],
+                        ] as const
+                      ).map(([name, label, val]) => (
+                        <label
+                          key={name}
+                          className="text-[10px] uppercase tracking-wider text-muted-foreground"
+                        >
+                          {label}
+                          <input
+                            name={name}
+                            type="text"
+                            defaultValue={val}
+                            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-3">
                   <button
                     type="submit"
