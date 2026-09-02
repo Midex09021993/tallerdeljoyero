@@ -8,7 +8,7 @@ import {
   useSedeFiltroDueno,
 } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
-import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
+import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { pedidoFormVacio, type PedidoFormState } from "@/lib/pedido-form";
 import {
   useBorrarPedido,
@@ -713,18 +713,13 @@ function PedidosPage() {
                         <option value="" disabled>
                           Enviar a…
                         </option>
-                        {p.ruta
+                        {(sesion?.esAdmin ? [...AREAS] : p.ruta)
                           .filter((a) => !areaCoincide(a, p.area_actual))
                           .map((a) => (
                             <option key={a} value={a}>
                               {normalizarArea(a)}
                             </option>
                           ))}
-                        {p.ruta.filter((a) => !areaCoincide(a, p.area_actual)).length === 0 ? (
-                          <option value="" disabled>
-                            Sin áreas siguientes
-                          </option>
-                        ) : null}
                       </select>
                     </div>
                   </td>
