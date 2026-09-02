@@ -425,6 +425,10 @@ export type Database = {
           cliente: string
           contrato: string
           contrato_id: string | null
+          corte_observaciones: string
+          corte_texto: string
+          corte_tipografia: string
+          corte_ubicacion: string
           created_at: string
           entrega: string
           entregado_at: string | null
@@ -472,6 +476,10 @@ export type Database = {
           cliente: string
           contrato?: string
           contrato_id?: string | null
+          corte_observaciones?: string
+          corte_texto?: string
+          corte_tipografia?: string
+          corte_ubicacion?: string
           created_at?: string
           entrega?: string
           entregado_at?: string | null
@@ -519,6 +527,10 @@ export type Database = {
           cliente?: string
           contrato?: string
           contrato_id?: string | null
+          corte_observaciones?: string
+          corte_texto?: string
+          corte_tipografia?: string
+          corte_ubicacion?: string
           created_at?: string
           entrega?: string
           entregado_at?: string | null

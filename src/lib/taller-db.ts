@@ -293,6 +293,10 @@ export type Pedido = {
   cantidad_piezas: number;
   piedras: string;
   peso_estimado: string;
+  corte_texto: string;
+  corte_tipografia: string;
+  corte_ubicacion: string;
+  corte_observaciones: string;
   ventas_estado: string;
   packing_estado: string;
   medio_envio: string;
@@ -414,6 +418,10 @@ export type PedidoNuevo = {
   cantidad_piezas: number;
   piedras: string;
   peso_estimado: string;
+  corte_texto?: string;
+  corte_tipografia?: string;
+  corte_ubicacion?: string;
+  corte_observaciones?: string;
   ventas_estado?: string;
   packing_estado?: string;
   medio_envio?: string;
@@ -436,7 +444,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 const CAMPOS_PEDIDO_VENTAS =
   "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
@@ -538,6 +546,10 @@ export function usePedidos() {
         cantidad_piezas: Number(p["cantidad_piezas"]) || 1,
         piedras: textoCampo(p, "piedras"),
         peso_estimado: textoCampo(p, "peso_estimado"),
+        corte_texto: textoCampo(p, "corte_texto"),
+        corte_tipografia: textoCampo(p, "corte_tipografia"),
+        corte_ubicacion: textoCampo(p, "corte_ubicacion"),
+        corte_observaciones: textoCampo(p, "corte_observaciones"),
         ventas_estado: textoCampo(p, "ventas_estado", "Recibido en ventas"),
         packing_estado: textoCampo(p, "packing_estado", "Pendiente"),
         medio_envio: textoCampo(p, "medio_envio"),

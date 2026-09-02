@@ -414,6 +414,10 @@ function PedidosPage() {
                 talla: form.talla,
                 cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
                 piedras: form.piedras,
+                corte_texto: form.corte_texto,
+                corte_tipografia: form.corte_tipografia,
+                corte_ubicacion: form.corte_ubicacion,
+                corte_observaciones: form.corte_observaciones,
               };
               crear.mutate(nuevo, {
                 onSuccess: () => {

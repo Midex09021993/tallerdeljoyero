@@ -1,6 +1,14 @@
 import type React from "react";
 import { FechaInput } from "@/components/FechaInput";
+import { areaCoincide } from "@/lib/auth";
 import { RUTA_AREAS_PEDIDO, type PedidoFormState } from "@/lib/pedido-form";
+
+const CAMPOS_CORTE_LASER = [
+  ["corte_texto", "Texto a grabar o cortar"],
+  ["corte_tipografia", "Tipografía (opcional)"],
+  ["corte_ubicacion", "Ubicación (opcional)"],
+  ["corte_observaciones", "Observaciones"],
+] as const;
 
 const CAMPOS_PEDIDO = [
   ["cliente", "Cliente", "text"],
@@ -100,6 +108,31 @@ export function PedidoFormCampos({
           })}
         </div>
       </fieldset>
+
+      {ruta.some((area) => areaCoincide(area, "Corte Láser")) ? (
+        <fieldset className="mt-5">
+          <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Información de Corte Láser
+          </legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {CAMPOS_CORTE_LASER.map(([campo, etiqueta]) => (
+              <label
+                key={campo}
+                className="text-[10px] uppercase tracking-wider text-muted-foreground"
+              >
+                {etiqueta}
+                <input
+                  type="text"
+                  value={form[campo]}
+                  onChange={(e) => onChange({ ...form, [campo]: e.target.value })}
+                  disabled={bloqueados.has(campo)}
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground sm:py-2 sm:text-sm"
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
     </>
   );
 }

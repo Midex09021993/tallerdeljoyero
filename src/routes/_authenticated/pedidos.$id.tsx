@@ -390,6 +390,16 @@ function FichaPedido() {
   });
   const reiniciaFlujo = areaCoincide(destinoMovimiento, "Pedidos");
   const motivoRequerido = reiniciaFlujo && !motivoRetornoPedidos.trim();
+  const tieneCorteLaser =
+    rutaPedido.some((area) => areaCoincide(area, "Corte Láser")) ||
+    areaCoincide(pedido.area_actual, "Corte Láser") ||
+    Boolean(pedido.corte_texto || pedido.corte_observaciones);
+  const infoCorteLaser: Array<[string, string]> = [
+    ["Texto a grabar o cortar", pedido.corte_texto || "—"],
+    ["Tipografía", pedido.corte_tipografia || "—"],
+    ["Ubicación", pedido.corte_ubicacion || "—"],
+    ["Observaciones", pedido.corte_observaciones || "—"],
+  ];
 
   return (
     <AppShell
@@ -457,7 +467,25 @@ function FichaPedido() {
                   </Link>
                 </div>
               ) : null}
+              {tieneCorteLaser ? (
+                <div className="col-span-2 lg:col-span-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Información de Corte Láser
+                  </p>
+                  <dl className="mt-2 grid grid-cols-2 gap-3 rounded-xl border border-border bg-surface-muted p-3 lg:grid-cols-4">
+                    {infoCorteLaser.map(([label, valor]) => (
+                      <div key={label}>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {label}
+                        </dt>
+                        <dd className="mt-0.5 text-sm font-medium text-foreground">{valor}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : null}
             </div>
+
 
             <div className="border-t border-border px-6 py-5">
               {puedeAutorizar ? (
@@ -617,6 +645,14 @@ function FichaPedido() {
                       importe: Number(fd.get("importe")) || 0,
                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
                       notas: String(fd.get("notas")),
+                      corte_texto: String(fd.get("corte_texto") ?? pedido.corte_texto),
+                      corte_tipografia: String(
+                        fd.get("corte_tipografia") ?? pedido.corte_tipografia,
+                      ),
+                      corte_ubicacion: String(fd.get("corte_ubicacion") ?? pedido.corte_ubicacion),
+                      corte_observaciones: String(
+                        fd.get("corte_observaciones") ?? pedido.corte_observaciones,
+                      ),
                       ruta: rutaEdit.length > 0 ? rutaEdit : pedido.ruta,
                     },
                     { onSuccess: () => setEditando(false) },
@@ -696,6 +732,36 @@ function FichaPedido() {
                     })}
                   </div>
                 </fieldset>
+                {(rutaEdit.some((a) => areaCoincide(a, "Corte Láser")) || tieneCorteLaser) && (
+                  <fieldset className="col-span-2 lg:col-span-3">
+                    <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Información de Corte Láser
+                    </legend>
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                      {(
+                        [
+                          ["corte_texto", "Texto a grabar o cortar", pedido.corte_texto],
+                          ["corte_tipografia", "Tipografía", pedido.corte_tipografia],
+                          ["corte_ubicacion", "Ubicación", pedido.corte_ubicacion],
+                          ["corte_observaciones", "Observaciones", pedido.corte_observaciones],
+                        ] as const
+                      ).map(([name, label, val]) => (
+                        <label
+                          key={name}
+                          className="text-[10px] uppercase tracking-wider text-muted-foreground"
+                        >
+                          {label}
+                          <input
+                            name={name}
+                            type="text"
+                            defaultValue={val}
+                            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-3">
                   <button
                     type="submit"
@@ -748,6 +814,18 @@ function FichaPedido() {
                     </div>
                   ))}
                 </dl>
+                {tieneCorteLaser ? (
+                  <dl className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-border bg-surface-muted p-4 lg:grid-cols-4">
+                    {infoCorteLaser.map(([label, valor]) => (
+                      <div key={label}>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {label}
+                        </dt>
+                        <dd className="mt-1 text-sm font-medium text-foreground">{valor}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
                 {puedeEditar ? (
                   <button
                     type="button"

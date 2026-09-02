@@ -19,6 +19,10 @@ export const pedidoFormVacio = {
   cantidad_piezas: "1",
   piedras: "",
   notas: "",
+  corte_texto: "",
+  corte_tipografia: "",
+  corte_ubicacion: "",
+  corte_observaciones: "",
 };
 
 export type PedidoFormState = typeof pedidoFormVacio;
