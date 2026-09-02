@@ -457,7 +457,25 @@ function FichaPedido() {
                   </Link>
                 </div>
               ) : null}
+              {tieneCorteLaser ? (
+                <div className="col-span-2 lg:col-span-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Información de Corte Láser
+                  </p>
+                  <dl className="mt-2 grid grid-cols-2 gap-3 rounded-xl border border-border bg-surface-muted p-3 lg:grid-cols-4">
+                    {infoCorteLaser.map(([label, valor]) => (
+                      <div key={label}>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {label}
+                        </dt>
+                        <dd className="mt-0.5 text-sm font-medium text-foreground">{valor}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : null}
             </div>
+
 
             <div className="border-t border-border px-6 py-5">
               {puedeAutorizar ? (
