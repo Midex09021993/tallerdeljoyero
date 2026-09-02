@@ -390,6 +390,16 @@ function FichaPedido() {
   });
   const reiniciaFlujo = areaCoincide(destinoMovimiento, "Pedidos");
   const motivoRequerido = reiniciaFlujo && !motivoRetornoPedidos.trim();
+  const tieneCorteLaser =
+    rutaPedido.some((area) => areaCoincide(area, "Corte Láser")) ||
+    areaCoincide(pedido.area_actual, "Corte Láser") ||
+    Boolean(pedido.corte_texto || pedido.corte_observaciones);
+  const infoCorteLaser: Array<[string, string]> = [
+    ["Texto a grabar o cortar", pedido.corte_texto || "—"],
+    ["Tipografía", pedido.corte_tipografia || "—"],
+    ["Ubicación", pedido.corte_ubicacion || "—"],
+    ["Observaciones", pedido.corte_observaciones || "—"],
+  ];
 
   return (
     <AppShell
