@@ -814,6 +814,18 @@ function FichaPedido() {
                     </div>
                   ))}
                 </dl>
+                {tieneCorteLaser ? (
+                  <dl className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-border bg-surface-muted p-4 lg:grid-cols-4">
+                    {infoCorteLaser.map(([label, valor]) => (
+                      <div key={label}>
+                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {label}
+                        </dt>
+                        <dd className="mt-1 text-sm font-medium text-foreground">{valor}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
                 {puedeEditar ? (
                   <button
                     type="button"
