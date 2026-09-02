@@ -645,6 +645,14 @@ function FichaPedido() {
                       importe: Number(fd.get("importe")) || 0,
                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
                       notas: String(fd.get("notas")),
+                      corte_texto: String(fd.get("corte_texto") ?? pedido.corte_texto),
+                      corte_tipografia: String(
+                        fd.get("corte_tipografia") ?? pedido.corte_tipografia,
+                      ),
+                      corte_ubicacion: String(fd.get("corte_ubicacion") ?? pedido.corte_ubicacion),
+                      corte_observaciones: String(
+                        fd.get("corte_observaciones") ?? pedido.corte_observaciones,
+                      ),
                       ruta: rutaEdit.length > 0 ? rutaEdit : pedido.ruta,
                     },
                     { onSuccess: () => setEditando(false) },
