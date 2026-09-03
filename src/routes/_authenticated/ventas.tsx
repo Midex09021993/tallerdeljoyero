@@ -7,6 +7,7 @@ import { areaCoincide } from "@/lib/auth";
 import {
   esEstadoFinalPedido,
   estadoClases,
+  normalizarEstadoPedido,
   resumenFinancieroContrato,
   useActualizarPedido,
   useContratos,
