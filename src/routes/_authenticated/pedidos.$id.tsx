@@ -115,22 +115,12 @@ function tiempoEnArea(desde: string) {
   return `${Math.floor(horas / 24)} días`;
 }
 
-const ESTADOS_COMERCIALES = ["Listo para Entrega", "En Camino", "Enviado", "Entregado"];
-
 function mostrarEstadoVentas(pedido: { estado: string; ventas_estado: string }) {
-  if (ESTADOS_COMERCIALES.includes(pedido.estado)) {
-    return normalizarEstadoPedido(pedido.estado, "Área ventas");
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+    return pedido.ventas_estado;
   }
-  if (ESTADOS_COMERCIALES.includes(pedido.ventas_estado)) {
-    return normalizarEstadoPedido(pedido.ventas_estado, "Área ventas");
-  }
-  if (
-    pedido.estado === "Área de Ventas" ||
-    pedido.estado === "En Ventas" ||
-    pedido.estado === "Recibido en ventas"
-  ) {
-    return "Listo para Entrega";
-  }
+  if (pedido.estado === "Área de Ventas" || pedido.estado === "En Ventas") return "Área de Ventas";
   return "Pendiente";
 }
 

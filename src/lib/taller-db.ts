@@ -11,26 +11,32 @@ type PagoContratoInsert = Database["public"]["Tables"]["contrato_pagos"]["Insert
 
 export type Estado =
   | "Recibido"
+  | "Evaluación"
   | "En Producción"
+  | "Área de Ventas"
   | "Listo para Entrega"
-  | "En Camino"
+  | "Enviado"
   | "Entregado"
   | "Cancelado";
 
 export const estados: Estado[] = [
   "Recibido",
+  "Evaluación",
   "En Producción",
+  "Área de Ventas",
   "Listo para Entrega",
-  "En Camino",
+  "Enviado",
   "Entregado",
   "Cancelado",
 ];
 
 export const estadoClases: Record<string, string> = {
   Recibido: "bg-surface-muted text-muted-foreground",
+  Evaluación: "bg-info-soft text-info",
   "En Producción": "bg-warning-soft text-warning",
+  "Área de Ventas": "bg-success-soft text-success",
   "Listo para Entrega": "bg-accent text-foreground",
-  "En Camino": "bg-info-soft text-info",
+  Enviado: "bg-info-soft text-info",
   Entregado: "bg-success-soft text-success",
   Cancelado: "bg-danger-soft text-danger",
 };
@@ -60,7 +66,6 @@ export function esEstadoFinalPedido(valor: string | null | undefined) {
   return valor === "Entregado" || valor === "Cancelado";
 }
 
-/** Pedidos aún no lanzados a producción (estado inicial "Recibido"). */
 export function pedidoEnEvaluacion(valor: string | null | undefined) {
   return valor === "Recibido" || valor === "Evaluación";
 }
@@ -71,19 +76,14 @@ export function normalizarEstadoPedido(
 ): Estado {
   if (esEstadoPedido(estado)) return estado;
   const area = normalizarArea(areaActual || estado || "");
-  if (estado === "Evaluación" || estado === "Espera material") return "Recibido";
-  if (
-    estado === "Área de Ventas" ||
-    estado === "En Ventas" ||
-    estado === "En packing" ||
-    estado === "Recibido en ventas"
-  ) {
-    return "Listo para Entrega";
+  if (estado === "Espera material") return "Evaluación";
+  if (estado === "En Ventas" || estado === "En packing" || estado === "Recibido en ventas") {
+    return "Área de Ventas";
   }
-  if (estado === "Enviado" || estado === "Despachado") return "En Camino";
+  if (estado === "Despachado") return "Enviado";
   if (estado === "Terminado") return "Entregado";
   if (area === "Pedidos") return "Recibido";
-  if (area === "Área ventas") return "Listo para Entrega";
+  if (area === "Área ventas") return "Área de Ventas";
   if (estadosObsoletosPorArea.has(estado ?? "")) return "En Producción";
   return "Recibido";
 }
@@ -92,10 +92,10 @@ function areaOperativa(area: string | null | undefined) {
   return normalizarArea(area || "Pedidos") || "Pedidos";
 }
 
-function estadoPorDestino(destino: string, _direccion: "avanzar" | "devolver" | "enviar"): Estado {
+function estadoPorDestino(destino: string, direccion: "avanzar" | "devolver" | "enviar"): Estado {
   const area = areaOperativa(destino);
-  if (area === "Pedidos") return "Recibido";
-  if (area === "Área ventas") return "Listo para Entrega";
+  if (area === "Pedidos") return direccion === "devolver" ? "Evaluación" : "Recibido";
+  if (area === "Área ventas") return "Área de Ventas";
   return "En Producción";
 }
 
