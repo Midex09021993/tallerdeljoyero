@@ -144,6 +144,10 @@ function LoginPage() {
             Consulta tu pedido aquí
           </a>
         </p>
+
+        <p className="mt-4 text-center text-[10px] tracking-wider text-ink-foreground/25">
+          Desarrollado por Fadilab
+        </p>
       </div>
     </main>
   );
