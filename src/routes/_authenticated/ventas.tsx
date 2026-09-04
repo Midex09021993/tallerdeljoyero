@@ -87,10 +87,10 @@ function VentasPage() {
   const pendientesEntrega = filtrados.filter((p) => {
     const estado = estadoVenta(p);
     return (
-      p.area_actual === "Área ventas" && ["Área de Ventas", "Listo para Entrega"].includes(estado)
+      p.area_actual === "Área ventas" && ["Pendiente", "Listo para Entrega"].includes(estado)
     );
   });
-  const enviados = filtrados.filter((p) => estadoVenta(p) === "Enviado");
+  const enviados = filtrados.filter((p) => estadoVenta(p) === "En Camino");
   const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
   const contratosPorClave = useMemo(() => crearIndiceContratos(contratos), [contratos]);
   const pagosPorContrato = useMemo(() => crearIndicePagos(pagos), [pagos]);
@@ -204,8 +204,8 @@ function VentasPage() {
                           {
                             id: pedido.id,
                             area_actual: "Área ventas",
-                            estado: "Enviado",
-                            ventas_estado: "Enviado",
+                            estado: "En Camino",
+                            ventas_estado: "En Camino",
                             packing_estado: "Despachado",
                             usuario_envio: usuarioId,
                             enviado_at: ahora,
@@ -254,7 +254,7 @@ function VentasPage() {
           )}
         </SeccionVentas>
 
-        <SeccionVentas titulo="Enviados" cantidad={enviados.length}>
+        <SeccionVentas titulo="En camino" cantidad={enviados.length}>
           {enviados.length === 0 ? (
             <Vacio texto="Sin pedidos enviados." />
           ) : (
@@ -450,7 +450,7 @@ function VentasPage() {
             onChange={setSedeFiltro}
           />
           <StatCard etiqueta="Pendientes" valor={String(pendientesEntrega.length)} />
-          <StatCard etiqueta="Enviados" valor={String(enviados.length)} />
+          <StatCard etiqueta="En camino" valor={String(enviados.length)} />
           <StatCard etiqueta="Entregados" valor={String(entregados.length)} />
         </>
       }
@@ -461,12 +461,12 @@ function VentasPage() {
 }
 
 function estadoVenta(pedido: Pedido) {
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
   if (esEstadoFinalPedido(pedido.estado)) return pedido.estado;
-  return "Área de Ventas";
+  return "Pendiente";
 }
 
 function formatCurrency(valor: number) {
