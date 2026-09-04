@@ -99,7 +99,11 @@ function SeguimientoCliente() {
   const estadoActual = pedido ? estadoCliente(pedido) : null;
   const indice = estadoActual ? ESTADOS_CLIENTE.findIndex((estado) => estado === estadoActual) : -1;
   const avance = indice >= 0 ? Math.round((indice / (ESTADOS_CLIENTE.length - 1)) * 100) : 0;
-  const mostrarAreaActual = pedido != null && estadoActual === "En Producción";
+  const mostrarAreaActual =
+    pedido != null &&
+    estadoActual === "En Producción" &&
+    AREAS_PRODUCCION.some((a) => a === areaCliente(pedido.area_actual));
+
 
   return (
     <main className="min-h-screen bg-surface px-4 py-10 sm:px-6 sm:py-16">
