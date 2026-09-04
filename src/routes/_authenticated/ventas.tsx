@@ -376,7 +376,7 @@ function VentasPage() {
           />
           <StatCard etiqueta="Pendientes" valor={String(pendientesEntrega.length)} />
           <StatCard etiqueta="En camino" valor={String(enviados.length)} />
-          <StatCard etiqueta="Entregados" valor={String(entregados.length)} />
+          <StatCard etiqueta="Entregados (histórico)" valor={String(entregados.length)} />
         </>
       }
     >
