@@ -562,7 +562,7 @@ export function usePedidos() {
         corte_tipografia: textoCampo(p, "corte_tipografia"),
         corte_ubicacion: textoCampo(p, "corte_ubicacion"),
         corte_observaciones: textoCampo(p, "corte_observaciones"),
-        ventas_estado: textoCampo(p, "ventas_estado", "Recibido en ventas"),
+        ventas_estado: normalizarEstadoVentas(textoCampo(p, "ventas_estado")),
         packing_estado: textoCampo(p, "packing_estado", "Pendiente"),
         medio_envio: textoCampo(p, "medio_envio"),
         guia_envio: textoCampo(p, "guia_envio"),
