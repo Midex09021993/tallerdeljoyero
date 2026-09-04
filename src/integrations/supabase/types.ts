@@ -865,6 +865,9 @@ export type Database = {
           fecha_entrega: string
           fecha_entregado: string
           fecha_envio: string
+          guia_envio: string
+          medio_envio: string
+          receptor_envio: string
           referencia: string
           ruta: string[]
           sede: string
