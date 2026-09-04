@@ -87,10 +87,10 @@ function VentasPage() {
   const pendientesEntrega = filtrados.filter((p) => {
     const estado = estadoVenta(p);
     return (
-      p.area_actual === "Área ventas" && ["Área de Ventas", "Listo para Entrega"].includes(estado)
+      p.area_actual === "Área ventas" && ["Pendiente", "Listo para Entrega"].includes(estado)
     );
   });
-  const enviados = filtrados.filter((p) => estadoVenta(p) === "Enviado");
+  const enviados = filtrados.filter((p) => estadoVenta(p) === "En Camino");
   const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
   const contratosPorClave = useMemo(() => crearIndiceContratos(contratos), [contratos]);
   const pagosPorContrato = useMemo(() => crearIndicePagos(pagos), [pagos]);
@@ -204,8 +204,8 @@ function VentasPage() {
                           {
                             id: pedido.id,
                             area_actual: "Área ventas",
-                            estado: "Enviado",
-                            ventas_estado: "Enviado",
+                            estado: "En Camino",
+                            ventas_estado: "En Camino",
                             packing_estado: "Despachado",
                             usuario_envio: usuarioId,
                             enviado_at: ahora,
@@ -254,7 +254,7 @@ function VentasPage() {
           )}
         </SeccionVentas>
 
-        <SeccionVentas titulo="Enviados" cantidad={enviados.length}>
+        <SeccionVentas titulo="En camino" cantidad={enviados.length}>
           {enviados.length === 0 ? (
             <Vacio texto="Sin pedidos enviados." />
           ) : (
@@ -332,86 +332,11 @@ function VentasPage() {
           )}
         </SeccionVentas>
 
-        <SeccionVentas titulo="Entregados" cantidad={entregados.length}>
-          {entregados.length === 0 ? (
-            <Vacio texto="Todavía no hay entregas cerradas desde ventas." />
-          ) : (
-            entregados.slice(0, 12).map((pedido) => (
-              <PedidoVentaCard
-                key={pedido.id}
-                pedido={pedido}
-                resumenFinanciero={resumenFinancieroPedido(
-                  pedido,
-                  contratosPorClave,
-                  pagosPorContrato,
-                )}
-                pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
-                puedeRegistrarPago={puedeRegistrarPago}
-                pagoAbierto={pagoId === pedido.id}
-                historialAbierto={historialPagosId === pedido.id}
-                guardandoPago={registrarPago.isPending}
-                guardandoCrearContrato={crearContrato.isPending}
-                onToggleHistorial={() =>
-                  setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
-                }
-                onRegistrarPago={() => {
-                  setPagoId(pagoId === pedido.id ? null : pedido.id);
-                  setHistorialPagosId(pedido.id);
-                }}
-                onGuardarPago={(datos) => {
-                  const contrato = contratoPedido(pedido, contratosPorClave);
-                  if (!contrato) return;
-                  registrarPago.mutate(
-                    { contrato, usuarioId, ...datos },
-                    { onSuccess: () => setPagoId(null) },
-                  );
-                }}
-                onCrearContrato={() => crearContrato.mutate(pedido)}
-                accionPrincipal={esAdmin ? "Corregir entrega" : "Abrir"}
-                onAbrir={() => abrirPedido(pedido.id)}
-                onAccion={() => {
-                  if (esAdmin) {
-                    setEntregaId(pedido.id);
-                    setEnvioId(null);
-                    setListoId(null);
-                  } else {
-                    abrirPedido(pedido.id);
-                  }
-                }}
-              >
-                {esAdmin && entregaId === pedido.id ? (
-                  <FormularioEntrega
-                    pedido={pedido}
-                    resumenFinanciero={resumenFinancieroPedido(
-                      pedido,
-                      contratosPorClave,
-                      pagosPorContrato,
-                    )}
-                    guardando={actualizar.isPending}
-                    onCancelar={() => setEntregaId(null)}
-                    onGuardar={(datos) => {
-                      const ahora = new Date().toISOString();
-                      actualizar.mutate(
-                        {
-                          id: pedido.id,
-                          area_actual: "Área ventas",
-                          estado: "Entregado",
-                          ventas_estado: "Entregado",
-                          packing_estado: "Entregado al cliente",
-                          usuario_entrega: pedido.usuario_entrega || usuarioId,
-                          ventas_actualizado_por: usuarioId,
-                          ventas_actualizado_en: ahora,
-                          ...datos,
-                        },
-                        { onSuccess: () => setEntregaId(null) },
-                      );
-                    }}
-                  />
-                ) : null}
-              </PedidoVentaCard>
-            ))
-          )}
-        </SeccionVentas>
+        <p className="rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+          Los pedidos entregados salen del flujo de ventas y quedan archivados en Gestión →
+          Pedidos Entregados.
+        </p>
+
       </div>
     </>
   );
@@ -450,8 +375,8 @@ function VentasPage() {
             onChange={setSedeFiltro}
           />
           <StatCard etiqueta="Pendientes" valor={String(pendientesEntrega.length)} />
-          <StatCard etiqueta="Enviados" valor={String(enviados.length)} />
-          <StatCard etiqueta="Entregados" valor={String(entregados.length)} />
+          <StatCard etiqueta="En camino" valor={String(enviados.length)} />
+          <StatCard etiqueta="Entregados (histórico)" valor={String(entregados.length)} />
         </>
       }
     >
@@ -461,12 +386,12 @@ function VentasPage() {
 }
 
 function estadoVenta(pedido: Pedido) {
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
   if (esEstadoFinalPedido(pedido.estado)) return pedido.estado;
-  return "Área de Ventas";
+  return "Pendiente";
 }
 
 function formatCurrency(valor: number) {

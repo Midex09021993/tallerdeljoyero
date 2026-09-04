@@ -7,7 +7,7 @@ import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import {
   estadoClases,
   destinosMovimientoPedido,
-  pedidoEnEvaluacion,
+  pedidoEnRecepcion,
   useActualizarPedido,
   useAutorizarProduccion,
   useEnviarAArea,
@@ -116,13 +116,13 @@ function tiempoEnArea(desde: string) {
 }
 
 function mostrarEstadoVentas(pedido: { estado: string; ventas_estado: string }) {
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
-  if (pedido.estado === "Área de Ventas" || pedido.estado === "En Ventas") return "Área de Ventas";
   return "Pendiente";
 }
+
 
 interface EnlaceArchivo {
   id: string;
@@ -382,7 +382,7 @@ function FichaPedido() {
   const puedeMover =
     Boolean(sesion?.esAdmin) ||
     (sesion?.areas ?? []).some((area) => areaCoincide(area, pedido.area_actual));
-  const requiereAutorizacion = pedidoEnEvaluacion(pedido.estado);
+  const requiereAutorizacion = pedidoEnRecepcion(pedido.estado);
   const puedeAutorizar = Boolean(sesion?.esAdmin) && requiereAutorizacion;
   const destinosMovimiento = destinosMovimientoPedido(pedido, {
     esAdmin: Boolean(sesion?.esAdmin),

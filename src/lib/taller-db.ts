@@ -11,32 +11,35 @@ type PagoContratoInsert = Database["public"]["Tables"]["contrato_pagos"]["Insert
 
 export type Estado =
   | "Recibido"
-  | "Evaluación"
   | "En Producción"
-  | "Área de Ventas"
   | "Listo para Entrega"
-  | "Enviado"
+  | "En Camino"
   | "Entregado"
   | "Cancelado";
 
 export const estados: Estado[] = [
   "Recibido",
-  "Evaluación",
   "En Producción",
-  "Área de Ventas",
   "Listo para Entrega",
-  "Enviado",
+  "En Camino",
   "Entregado",
   "Cancelado",
 ];
 
+/** Estados que el cliente ve en el seguimiento público (sin "Cancelado"). */
+export const ESTADOS_FLUJO: Estado[] = [
+  "Recibido",
+  "En Producción",
+  "Listo para Entrega",
+  "En Camino",
+  "Entregado",
+];
+
 export const estadoClases: Record<string, string> = {
   Recibido: "bg-surface-muted text-muted-foreground",
-  Evaluación: "bg-info-soft text-info",
   "En Producción": "bg-warning-soft text-warning",
-  "Área de Ventas": "bg-success-soft text-success",
   "Listo para Entrega": "bg-accent text-foreground",
-  Enviado: "bg-info-soft text-info",
+  "En Camino": "bg-info-soft text-info",
   Entregado: "bg-success-soft text-success",
   Cancelado: "bg-danger-soft text-danger",
 };
@@ -52,10 +55,6 @@ const estadosObsoletosPorArea = new Set([
   "Corte Laser",
   "Taller",
   "Taller / Engaste",
-  "Área ventas",
-  "Área de Ventas",
-  "Ventas",
-  "Terminado",
 ]);
 
 export function esEstadoPedido(valor: string | null | undefined): valor is Estado {
@@ -66,38 +65,63 @@ export function esEstadoFinalPedido(valor: string | null | undefined) {
   return valor === "Entregado" || valor === "Cancelado";
 }
 
-export function pedidoEnEvaluacion(valor: string | null | undefined) {
-  return valor === "Recibido" || valor === "Evaluación";
+/** Pedido registrado que todavía no ha entrado a producción. */
+export function pedidoEnRecepcion(valor: string | null | undefined) {
+  return valor === "Recibido";
 }
 
+/**
+ * Normaliza estados antiguos al modelo oficial:
+ * Evaluación → Recibido · Área de Ventas → Listo para Entrega · Enviado → En Camino
+ */
 export function normalizarEstadoPedido(
   estado: string | null | undefined,
   areaActual: string | null | undefined,
 ): Estado {
   if (esEstadoPedido(estado)) return estado;
   const area = normalizarArea(areaActual || estado || "");
-  if (estado === "Espera material") return "Evaluación";
-  if (estado === "En Ventas" || estado === "En packing" || estado === "Recibido en ventas") {
-    return "Área de Ventas";
+  if (estado === "Evaluación" || estado === "Espera material") return "Recibido";
+  if (
+    estado === "Área de Ventas" ||
+    estado === "En Ventas" ||
+    estado === "En packing" ||
+    estado === "Recibido en ventas" ||
+    estado === "Terminado" ||
+    estado === "Área ventas" ||
+    estado === "Ventas"
+  ) {
+    return "Listo para Entrega";
   }
-  if (estado === "Despachado") return "Enviado";
-  if (estado === "Terminado") return "Entregado";
+  if (estado === "Enviado" || estado === "Despachado") return "En Camino";
   if (area === "Pedidos") return "Recibido";
-  if (area === "Área ventas") return "Área de Ventas";
+  if (area === "Área ventas") return "Listo para Entrega";
   if (estadosObsoletosPorArea.has(estado ?? "")) return "En Producción";
   return "Recibido";
 }
+
+/** Sub-estado interno del área de ventas, con los nombres oficiales nuevos. */
+export function normalizarEstadoVentas(valor: string | null | undefined) {
+  const v = (valor ?? "").trim();
+  if (!v) return "Pendiente";
+  if (["Área de Ventas", "En Ventas", "En packing", "Recibido en ventas", "Terminado"].includes(v)) {
+    return "Pendiente";
+  }
+  if (["Enviado", "Despachado"].includes(v)) return "En Camino";
+  return v;
+}
+
 
 function areaOperativa(area: string | null | undefined) {
   return normalizarArea(area || "Pedidos") || "Pedidos";
 }
 
-function estadoPorDestino(destino: string, direccion: "avanzar" | "devolver" | "enviar"): Estado {
+function estadoPorDestino(destino: string, _direccion: "avanzar" | "devolver" | "enviar"): Estado {
   const area = areaOperativa(destino);
-  if (area === "Pedidos") return direccion === "devolver" ? "Evaluación" : "Recibido";
-  if (area === "Área ventas") return "Área de Ventas";
+  if (area === "Pedidos") return "Recibido";
+  if (area === "Área ventas") return "Listo para Entrega";
   return "En Producción";
 }
+
 
 function cambiosMovimientoDirecto(
   destino: string,
@@ -550,7 +574,7 @@ export function usePedidos() {
         corte_tipografia: textoCampo(p, "corte_tipografia"),
         corte_ubicacion: textoCampo(p, "corte_ubicacion"),
         corte_observaciones: textoCampo(p, "corte_observaciones"),
-        ventas_estado: textoCampo(p, "ventas_estado", "Recibido en ventas"),
+        ventas_estado: normalizarEstadoVentas(textoCampo(p, "ventas_estado")),
         packing_estado: textoCampo(p, "packing_estado", "Pendiente"),
         medio_envio: textoCampo(p, "medio_envio"),
         guia_envio: textoCampo(p, "guia_envio"),

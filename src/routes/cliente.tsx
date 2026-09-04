@@ -47,11 +47,9 @@ type Seguimiento = {
 
 const ESTADOS_CLIENTE = [
   "Recibido",
-  "Evaluación",
   "En Producción",
-  "Área de Ventas",
   "Listo para Entrega",
-  "Enviado",
+  "En Camino",
   "Entregado",
 ] as const;
 
@@ -60,24 +58,28 @@ function estadoCliente(pedido: Seguimiento) {
   const ventas = pedido.ventas_estado || "";
 
   if (estado === "Cancelado") return "Cancelado";
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(estado)) return estado;
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(ventas)) return ventas;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(estado)) return estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(ventas)) return ventas;
+  if (["Enviado", "Despachado"].includes(estado) || ["Enviado", "Despachado"].includes(ventas)) {
+    return "En Camino";
+  }
   if (
-    estado === "Área de Ventas" ||
-    estado === "En Ventas" ||
+    ["Área de Ventas", "En Ventas", "Terminado", "En packing"].includes(estado) ||
     pedido.area_actual === "Área ventas"
   ) {
-    return "Área de Ventas";
+    return "Listo para Entrega";
   }
   if (estado === "En Producción") return "En Producción";
-  if (estado === "Evaluación") return "Evaluación";
   return "Recibido";
 }
 
+const AREAS_PRODUCCION = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
+
 function areaCliente(area: string) {
-  if (area === "Área ventas") return "Área de Ventas";
+  if (area === "Área ventas") return "Listo para Entrega";
   return area;
 }
+
 
 function SeguimientoCliente() {
   const { ref } = Route.useSearch();
@@ -97,7 +99,11 @@ function SeguimientoCliente() {
   const estadoActual = pedido ? estadoCliente(pedido) : null;
   const indice = estadoActual ? ESTADOS_CLIENTE.findIndex((estado) => estado === estadoActual) : -1;
   const avance = indice >= 0 ? Math.round((indice / (ESTADOS_CLIENTE.length - 1)) * 100) : 0;
-  const mostrarAreaActual = pedido != null && estadoActual === "En Producción";
+  const mostrarAreaActual =
+    pedido != null &&
+    estadoActual === "En Producción" &&
+    AREAS_PRODUCCION.some((a) => a === areaCliente(pedido.area_actual));
+
 
   return (
     <main className="min-h-screen bg-surface px-4 py-10 sm:px-6 sm:py-16">
@@ -189,7 +195,7 @@ function SeguimientoCliente() {
 
             <section className="mt-6 rounded-xl border border-border bg-surface/60 p-4">
               <h3 className="text-sm font-semibold">Información adicional</h3>
-              {estadoActual === "Enviado" || estadoActual === "Entregado" ? (
+              {estadoActual === "En Camino" || estadoActual === "Entregado" ? (
                 <dl className="mt-3 grid gap-3 text-sm">
                   <div>
                     <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -203,7 +209,7 @@ function SeguimientoCliente() {
                     </dt>
                     <dd className="mt-1 font-medium">{pedido.guia_envio || "Por confirmar"}</dd>
                   </div>
-                  {estadoActual === "Enviado" ? (
+                  {estadoActual === "En Camino" ? (
                     <div>
                       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Fecha de envío
