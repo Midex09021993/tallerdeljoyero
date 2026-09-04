@@ -47,11 +47,9 @@ type Seguimiento = {
 
 const ESTADOS_CLIENTE = [
   "Recibido",
-  "Evaluación",
   "En Producción",
-  "Área de Ventas",
   "Listo para Entrega",
-  "Enviado",
+  "En Camino",
   "Entregado",
 ] as const;
 
@@ -60,24 +58,28 @@ function estadoCliente(pedido: Seguimiento) {
   const ventas = pedido.ventas_estado || "";
 
   if (estado === "Cancelado") return "Cancelado";
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(estado)) return estado;
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(ventas)) return ventas;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(estado)) return estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(ventas)) return ventas;
+  if (["Enviado", "Despachado"].includes(estado) || ["Enviado", "Despachado"].includes(ventas)) {
+    return "En Camino";
+  }
   if (
-    estado === "Área de Ventas" ||
-    estado === "En Ventas" ||
+    ["Área de Ventas", "En Ventas", "Terminado", "En packing"].includes(estado) ||
     pedido.area_actual === "Área ventas"
   ) {
-    return "Área de Ventas";
+    return "Listo para Entrega";
   }
   if (estado === "En Producción") return "En Producción";
-  if (estado === "Evaluación") return "Evaluación";
   return "Recibido";
 }
 
+const AREAS_PRODUCCION = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
+
 function areaCliente(area: string) {
-  if (area === "Área ventas") return "Área de Ventas";
+  if (area === "Área ventas") return "Listo para Entrega";
   return area;
 }
+
 
 function SeguimientoCliente() {
   const { ref } = Route.useSearch();
