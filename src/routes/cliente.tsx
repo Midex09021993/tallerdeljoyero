@@ -195,7 +195,7 @@ function SeguimientoCliente() {
 
             <section className="mt-6 rounded-xl border border-border bg-surface/60 p-4">
               <h3 className="text-sm font-semibold">Información adicional</h3>
-              {estadoActual === "Enviado" || estadoActual === "Entregado" ? (
+              {estadoActual === "En Camino" || estadoActual === "Entregado" ? (
                 <dl className="mt-3 grid gap-3 text-sm">
                   <div>
                     <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -209,7 +209,7 @@ function SeguimientoCliente() {
                     </dt>
                     <dd className="mt-1 font-medium">{pedido.guia_envio || "Por confirmar"}</dd>
                   </div>
-                  {estadoActual === "Enviado" ? (
+                  {estadoActual === "En Camino" ? (
                     <div>
                       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Fecha de envío
