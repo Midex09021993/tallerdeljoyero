@@ -116,13 +116,13 @@ function tiempoEnArea(desde: string) {
 }
 
 function mostrarEstadoVentas(pedido: { estado: string; ventas_estado: string }) {
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.estado)) return pedido.estado;
-  if (["Listo para Entrega", "Enviado", "Entregado"].includes(pedido.ventas_estado)) {
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
-  if (pedido.estado === "Área de Ventas" || pedido.estado === "En Ventas") return "Área de Ventas";
   return "Pendiente";
 }
+
 
 interface EnlaceArchivo {
   id: string;
