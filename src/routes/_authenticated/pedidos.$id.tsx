@@ -7,7 +7,7 @@ import { AREAS, areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import {
   estadoClases,
   destinosMovimientoPedido,
-  pedidoEnEvaluacion,
+  pedidoEnRecepcion,
   useActualizarPedido,
   useAutorizarProduccion,
   useEnviarAArea,
@@ -382,7 +382,7 @@ function FichaPedido() {
   const puedeMover =
     Boolean(sesion?.esAdmin) ||
     (sesion?.areas ?? []).some((area) => areaCoincide(area, pedido.area_actual));
-  const requiereAutorizacion = pedidoEnEvaluacion(pedido.estado);
+  const requiereAutorizacion = pedidoEnRecepcion(pedido.estado);
   const puedeAutorizar = Boolean(sesion?.esAdmin) && requiereAutorizacion;
   const destinosMovimiento = destinosMovimientoPedido(pedido, {
     esAdmin: Boolean(sesion?.esAdmin),

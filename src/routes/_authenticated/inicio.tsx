@@ -13,7 +13,7 @@ import {
   useCerrarSesion,
   useSesion,
 } from "@/lib/auth";
-import { pedidoEnEvaluacion, usePedidos, type Pedido } from "@/lib/taller-db";
+import { pedidoEnRecepcion, usePedidos, type Pedido } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
@@ -56,7 +56,7 @@ function InicioAdminMovil() {
         (pedido) =>
           pedido.estado !== "Entregado" &&
           pedido.estado !== "Cancelado" &&
-          !pedidoEnEvaluacion(pedido.estado) &&
+          !pedidoEnRecepcion(pedido.estado) &&
           pedidoAsignadoAArea(pedido, area),
       );
       const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));

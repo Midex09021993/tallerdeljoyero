@@ -20,7 +20,7 @@ import {
   esEstadoFinalPedido,
   estadoClases,
   estados,
-  pedidoEnEvaluacion,
+  pedidoEnRecepcion,
   type PedidoNuevo,
 } from "@/lib/taller-db";
 
@@ -578,7 +578,7 @@ function PedidosPage() {
               </div>
               {puedeCrear ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {pedidoEnEvaluacion(p.estado) ? (
+                  {pedidoEnRecepcion(p.estado) ? (
                     <button
                       type="button"
                       disabled={autorizar.isPending || p.ruta.length === 0}
@@ -711,7 +711,7 @@ function PedidosPage() {
                               usuarioId: sesion?.user.id ?? null,
                             });
                         }}
-                        disabled={enviar.isPending || pedidoEnEvaluacion(p.estado)}
+                        disabled={enviar.isPending || pedidoEnRecepcion(p.estado)}
                         className="w-fit rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground disabled:opacity-40"
                       >
                         <option value="" disabled>
@@ -732,7 +732,7 @@ function PedidosPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
-                      {puedeCrear && pedidoEnEvaluacion(p.estado) ? (
+                      {puedeCrear && pedidoEnRecepcion(p.estado) ? (
                         <button
                           type="button"
                           disabled={autorizar.isPending || p.ruta.length === 0}
