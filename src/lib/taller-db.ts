@@ -99,6 +99,18 @@ export function normalizarEstadoPedido(
   return "Recibido";
 }
 
+/** Sub-estado interno del área de ventas, con los nombres oficiales nuevos. */
+export function normalizarEstadoVentas(valor: string | null | undefined) {
+  const v = (valor ?? "").trim();
+  if (!v) return "Pendiente";
+  if (["Área de Ventas", "En Ventas", "En packing", "Recibido en ventas", "Terminado"].includes(v)) {
+    return "Pendiente";
+  }
+  if (["Enviado", "Despachado"].includes(v)) return "En Camino";
+  return v;
+}
+
+
 function areaOperativa(area: string | null | undefined) {
   return normalizarArea(area || "Pedidos") || "Pedidos";
 }
