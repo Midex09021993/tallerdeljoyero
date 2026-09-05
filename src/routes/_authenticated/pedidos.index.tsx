@@ -73,7 +73,7 @@ function areaClase(area: string) {
 
 function etiquetaAreaSeguimiento(area: string) {
   const normalizada = normalizarArea(area);
-  return areaCoincide(normalizada, "Área ventas") ? "Área de Ventas" : normalizada;
+  return areaCoincide(normalizada, "Área ventas") ? "Área ventas" : normalizada;
 }
 
 function inicioDia(fecha = new Date()) {
