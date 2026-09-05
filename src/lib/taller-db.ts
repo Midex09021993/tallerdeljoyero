@@ -10,12 +10,7 @@ type ContratoInsert = Database["public"]["Tables"]["contratos"]["Insert"];
 type PagoContratoInsert = Database["public"]["Tables"]["contrato_pagos"]["Insert"];
 
 export type Estado =
-  | "Recibido"
-  | "En Producción"
-  | "Listo para Entrega"
-  | "En Camino"
-  | "Entregado"
-  | "Cancelado";
+  "Recibido" | "En Producción" | "Listo para Entrega" | "En Camino" | "Entregado" | "Cancelado";
 
 export const estados: Estado[] = [
   "Recibido",
@@ -103,13 +98,14 @@ export function normalizarEstadoPedido(
 export function normalizarEstadoVentas(valor: string | null | undefined) {
   const v = (valor ?? "").trim();
   if (!v) return "Pendiente";
-  if (["Área de Ventas", "En Ventas", "En packing", "Recibido en ventas", "Terminado"].includes(v)) {
+  if (
+    ["Área de Ventas", "En Ventas", "En packing", "Recibido en ventas", "Terminado"].includes(v)
+  ) {
     return "Pendiente";
   }
   if (["Enviado", "Despachado"].includes(v)) return "En Camino";
   return v;
 }
-
 
 function areaOperativa(area: string | null | undefined) {
   return normalizarArea(area || "Pedidos") || "Pedidos";
@@ -121,7 +117,6 @@ function estadoPorDestino(destino: string, _direccion: "avanzar" | "devolver" | 
   if (area === "Área ventas") return "Listo para Entrega";
   return "En Producción";
 }
-
 
 function cambiosMovimientoDirecto(
   destino: string,

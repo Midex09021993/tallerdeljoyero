@@ -116,13 +116,13 @@ function tiempoEnArea(desde: string) {
 }
 
 function mostrarEstadoVentas(pedido: { estado: string; ventas_estado: string }) {
-  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado))
+    return pedido.estado;
   if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
   return "Pendiente";
 }
-
 
 interface EnlaceArchivo {
   id: string;
@@ -289,7 +289,6 @@ function FichaPedido() {
       setArchivoPorEliminar(null);
       setProgreso(null);
     },
-
   });
 
   const guardarEnlace = useMutation({
@@ -485,7 +484,6 @@ function FichaPedido() {
                 </div>
               ) : null}
             </div>
-
 
             <div className="border-t border-border px-6 py-5">
               {puedeAutorizar ? (
@@ -1021,7 +1019,6 @@ function FichaPedido() {
                         {subir.error instanceof Error ? subir.error.message : "error desconocido"}
                       </p>
                     ) : null}
-
                   </div>
                   <ul className="mb-4 space-y-2">
                     {entradas.map(([grupo, lista]) => {

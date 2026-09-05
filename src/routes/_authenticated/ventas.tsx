@@ -86,9 +86,7 @@ function VentasPage() {
 
   const pendientesEntrega = filtrados.filter((p) => {
     const estado = estadoVenta(p);
-    return (
-      p.area_actual === "Área ventas" && ["Pendiente", "Listo para Entrega"].includes(estado)
-    );
+    return p.area_actual === "Área ventas" && ["Pendiente", "Listo para Entrega"].includes(estado);
   });
   const enviados = filtrados.filter((p) => estadoVenta(p) === "En Camino");
   const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
@@ -333,10 +331,9 @@ function VentasPage() {
         </SeccionVentas>
 
         <p className="rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-          Los pedidos entregados salen del flujo de ventas y quedan archivados en Gestión →
-          Pedidos Entregados.
+          Los pedidos entregados salen del flujo de ventas y quedan archivados en Gestión → Pedidos
+          Entregados.
         </p>
-
       </div>
     </>
   );
@@ -386,7 +383,8 @@ function VentasPage() {
 }
 
 function estadoVenta(pedido: Pedido) {
-  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado)) return pedido.estado;
+  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado))
+    return pedido.estado;
   if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
     return pedido.ventas_estado;
   }
