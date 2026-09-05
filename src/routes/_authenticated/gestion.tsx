@@ -327,21 +327,125 @@ function ModuloFlujo({ pedidos }: { pedidos: Pedido[] }) {
   );
 }
 
-/* ---------------- Entregados ---------------- */
+/* ---------------- Pedidos Entregados (archivo histórico) ---------------- */
+
+const MESES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
 
 function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
   const navigate = useNavigate();
-  const entregados = pedidos.filter(esEntregado);
+  const [cliente, setCliente] = useState("");
+  const [contrato, setContrato] = useState("");
+  const [fecha, setFecha] = useState("");
+  const [anio, setAnio] = useState("Todos");
+  const [mes, setMes] = useState("Todos");
+  const [estadoFinal, setEstadoFinal] = useState("Todos");
+
+  const archivo = useMemo(
+    () => pedidos.filter((p) => esEstadoFinalPedido(p.estado)),
+    [pedidos],
+  );
+
+  const anios = useMemo(() => {
+    const set = new Set<string>();
+    archivo.forEach((p) => {
+      const f = p.fecha_entregado ?? p.fecha_entrega;
+      if (f) set.add(String(new Date(f).getFullYear()));
+    });
+    return Array.from(set).sort().reverse();
+  }, [archivo]);
+
+  const lista = useMemo(() => {
+    const c = cliente.trim().toLowerCase();
+    const n = contrato.trim().toLowerCase();
+    return archivo.filter((p) => {
+      const entrega = p.fecha_entregado ?? p.fecha_entrega;
+      const d = entrega ? new Date(entrega) : null;
+      if (c && !(p.cliente ?? "").toLowerCase().includes(c)) return false;
+      if (n && !(p.contrato ?? "").toLowerCase().includes(n)) return false;
+      if (fecha && (entrega ?? "").slice(0, 10) !== fecha) return false;
+      if (anio !== "Todos" && (!d || String(d.getFullYear()) !== anio)) return false;
+      if (mes !== "Todos" && (!d || String(d.getMonth() + 1) !== mes)) return false;
+      if (estadoFinal !== "Todos" && p.estado !== estadoFinal) return false;
+      return true;
+    });
+  }, [archivo, cliente, contrato, fecha, anio, mes, estadoFinal]);
+
+  const claseInput =
+    "min-h-10 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-gold";
+
   return (
-    <Panel titulo={`Trabajos finalizados · ${entregados.length}`}>
+    <Panel titulo={`Pedidos Entregados · ${lista.length}`}>
+      <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-6">
+        <input
+          value={cliente}
+          onChange={(e) => setCliente(e.target.value)}
+          placeholder="Cliente"
+          className={claseInput}
+        />
+        <input
+          value={contrato}
+          onChange={(e) => setContrato(e.target.value)}
+          placeholder="Contrato"
+          className={claseInput}
+        />
+        <FechaInput value={fecha} onChange={setFecha} className={claseInput} />
+        <select value={anio} onChange={(e) => setAnio(e.target.value)} className={claseInput}>
+          <option value="Todos">Todos los años</option>
+          {anios.map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
+        <select value={mes} onChange={(e) => setMes(e.target.value)} className={claseInput}>
+          <option value="Todos">Todos los meses</option>
+          {MESES.map((m, i) => (
+            <option key={m} value={String(i + 1)}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <select
+          value={estadoFinal}
+          onChange={(e) => setEstadoFinal(e.target.value)}
+          className={claseInput}
+        >
+          <option value="Todos">Todos los estados</option>
+          <option value="Entregado">Entregado</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="bg-surface-muted">
-              {["Ref", "Cliente", "Trabajo", "Entrega", "Importe"].map((h, i) => (
+              {[
+                "Código",
+                "Cliente",
+                "Contrato",
+                "Creado",
+                "Entregado",
+                "Responsable",
+                "Estado final",
+                "Importe",
+              ].map((h, i) => (
                 <th
                   key={h}
-                  className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${i === 4 ? "text-right" : ""}`}
+                  className={`px-4 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${i === 7 ? "text-right" : ""}`}
                 >
                   {h}
                 </th>
@@ -349,7 +453,7 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {entregados.map((p) => (
+            {lista.map((p) => (
               <tr
                 key={p.id}
                 onClick={() =>
@@ -361,30 +465,46 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
                 }
                 className="cursor-pointer hover:bg-surface-muted/60"
               >
-                <td className="px-6 py-3 text-xs font-medium">{p.referencia}</td>
-                <td className="px-6 py-3 text-sm">{p.cliente}</td>
-                <td className="px-6 py-3 text-sm text-muted-foreground">{p.trabajo || p.pieza}</td>
-                <td className="px-6 py-3 text-xs text-muted-foreground">
-                  {fmtFecha(p.fecha_entrega) ?? "—"}
+                <td className="px-4 py-3 text-xs font-medium">{p.referencia}</td>
+                <td className="px-4 py-3 text-sm">{p.cliente}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{p.contrato || "—"}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {fmtFecha(p.fecha_ingreso) ?? "—"}
                 </td>
-                <td className="px-6 py-3 text-right text-sm tabular-nums">
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {fmtFecha(p.fecha_entregado ?? p.fecha_entrega) ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {p.receptor_envio || p.usuario_entrega || "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px] font-semibold uppercase">
+                    {p.estado}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right text-sm tabular-nums">
                   {eur.format(p.importe)}
                 </td>
               </tr>
             ))}
-            {entregados.length === 0 ? (
+            {lista.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-sm text-muted-foreground">
-                  Todavía no hay trabajos entregados.
+                <td colSpan={8} className="px-4 py-8 text-sm text-muted-foreground">
+                  No hay pedidos archivados con esos filtros.
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
       </div>
+      <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
+        Historial completo de producción, ventas, pagos, envíos y movimientos: abre cualquier
+        pedido para consultarlo.
+      </p>
     </Panel>
   );
 }
+
 
 /* ---------------- Finanzas ---------------- */
 
