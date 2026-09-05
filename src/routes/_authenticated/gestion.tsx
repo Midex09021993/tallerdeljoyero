@@ -120,7 +120,7 @@ function GestionPage() {
   const modulos: { id: Modulo; label: string; visible: boolean }[] = [
     { id: "resumen", label: "Resumen", visible: true },
     { id: "flujo", label: "Flujo", visible: true },
-    { id: "entregados", label: "Entregados", visible: true },
+    { id: "entregados", label: "Pedidos Entregados", visible: puedeUsuarios },
     { id: "finanzas", label: "Finanzas", visible: true },
     { id: "respaldo", label: "Respaldo", visible: puedeUsuarios },
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
@@ -401,7 +401,7 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
           placeholder="Contrato"
           className={claseInput}
         />
-        <FechaInput value={fecha} onChange={setFecha} className={claseInput} />
+        <FechaInput value={fecha} onChangeIso={setFecha} className={claseInput} />
         <select value={anio} onChange={(e) => setAnio(e.target.value)} className={claseInput}>
           <option value="Todos">Todos los años</option>
           {anios.map((a) => (
