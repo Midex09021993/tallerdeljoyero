@@ -80,7 +80,6 @@ function areaCliente(area: string) {
   return area;
 }
 
-
 function SeguimientoCliente() {
   const { ref } = Route.useSearch();
   const [valor, setValor] = useState(ref ?? "");
@@ -103,7 +102,6 @@ function SeguimientoCliente() {
     pedido != null &&
     estadoActual === "En Producción" &&
     AREAS_PRODUCCION.some((a) => a === areaCliente(pedido.area_actual));
-
 
   return (
     <main className="min-h-screen bg-surface px-4 py-10 sm:px-6 sm:py-16">

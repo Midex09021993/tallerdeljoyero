@@ -353,10 +353,7 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
   const [mes, setMes] = useState("Todos");
   const [estadoFinal, setEstadoFinal] = useState("Todos");
 
-  const archivo = useMemo(
-    () => pedidos.filter((p) => esEstadoFinalPedido(p.estado)),
-    [pedidos],
-  );
+  const archivo = useMemo(() => pedidos.filter((p) => esEstadoFinalPedido(p.estado)), [pedidos]);
 
   const anios = useMemo(() => {
     const set = new Set<string>();
@@ -498,13 +495,12 @@ function ModuloEntregados({ pedidos }: { pedidos: Pedido[] }) {
         </table>
       </div>
       <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        Historial completo de producción, ventas, pagos, envíos y movimientos: abre cualquier
-        pedido para consultarlo.
+        Historial completo de producción, ventas, pagos, envíos y movimientos: abre cualquier pedido
+        para consultarlo.
       </p>
     </Panel>
   );
 }
-
 
 /* ---------------- Finanzas ---------------- */
 
