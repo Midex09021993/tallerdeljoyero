@@ -856,6 +856,7 @@ export type Database = {
         Returns: boolean
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
+      normaliza_area: { Args: { _area: string }; Returns: string }
       seguimiento_pedido: {
         Args: { _ref: string }
         Returns: {
