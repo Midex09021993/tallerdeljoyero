@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import { MobileBackButton, Panel } from "@/components/AppShell";
+import { useEffect, useState, type ReactNode } from "react";
+import { AppShell, MobileBackButton, Panel } from "@/components/AppShell";
 import { usePedidosDeArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { destinosMovimientoPedido, useEnviarAArea, type Pedido } from "@/lib/taller-db";
@@ -358,10 +358,60 @@ function ListaTrabajosMovil({
   );
 }
 
+/** Escritorio = mismo umbral que la barra lateral del AppShell (lg). */
+function useEscritorio() {
+  const [escritorio, setEscritorio] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const aplicar = () => setEscritorio(mql.matches);
+    aplicar();
+    mql.addEventListener("change", aplicar);
+    return () => mql.removeEventListener("change", aplicar);
+  }, []);
+  return escritorio;
+}
+
 export function AreaOperario({ area, children }: { area: string; children?: ReactNode }) {
+  const { data: sesion, isLoading } = useSesion();
+  const navigate = useNavigate();
+  const escritorio = useEscritorio();
+
+  const asignadas = sesion?.areas ?? [];
+  const autorizado = asignadas.some((asignada) => areaCoincide(asignada, area));
+
+  useEffect(() => {
+    if (isLoading || !sesion) return;
+    if (sesion.rolPrincipal === "operario" && !autorizado) {
+      void navigate({ to: "/operario", replace: true });
+    }
+  }, [autorizado, isLoading, navigate, sesion]);
+
+  if (sesion && sesion.rolPrincipal === "operario" && !autorizado) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-background px-6 text-center text-foreground">
+        <div>
+          <h1 className="font-display text-2xl">Área no asignada</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Ya no tienes acceso a {area}. Te llevamos a tus áreas de trabajo.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (escritorio) {
+    // En PC el operario usa la misma estructura visual que dueño y gerente.
+    return (
+      <AppShell titulo={area} subtitulo="Trabajos asignados" atrasMovil={false}>
+        <PedidosArea area={area} from={area} />
+        {children ? <div className="mt-5">{children}</div> : null}
+      </AppShell>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background px-4 py-4 pb-8 text-foreground sm:px-6">
-      <header className="sticky top-0 z-30 -mx-4 mb-3 flex items-center justify-between gap-3 bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-4 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
+      <header className="sticky top-0 z-30 -mx-4 mb-3 flex items-center justify-between gap-3 bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="min-w-0">
           <h1 className="truncate font-display text-3xl">{area}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Trabajos asignados</p>

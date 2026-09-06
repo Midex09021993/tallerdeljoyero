@@ -81,10 +81,13 @@ export type Sesion = {
 export function useSesion() {
   return useQuery({
     queryKey: ["sesion"],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
+    // Los permisos (rol y áreas) deben reflejarse de inmediato tras un cambio
+    // hecho por el dueño o gerente: no se cachean.
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     retry: 1,
 
     queryFn: async (): Promise<Sesion | null> => {
