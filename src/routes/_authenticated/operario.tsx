@@ -3,8 +3,14 @@ import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "luci
 import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
-import { pedidoEnRecepcion, usePedidos, type Pedido } from "@/lib/taller-db";
+import {
+  esEstadoFinalPedido,
+  pedidoEnRecepcion,
+  usePedidos,
+  type Pedido,
+} from "@/lib/taller-db";
 import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/operario")({
   head: () => ({
