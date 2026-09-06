@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import { MobileBackButton, Panel } from "@/components/AppShell";
+import { useEffect, useState, type ReactNode } from "react";
+import { AppShell, MobileBackButton, Panel } from "@/components/AppShell";
 import { usePedidosDeArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { destinosMovimientoPedido, useEnviarAArea, type Pedido } from "@/lib/taller-db";
