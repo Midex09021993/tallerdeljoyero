@@ -114,7 +114,7 @@ function OperarioPage() {
           </div>
         ) : null}
 
-        {conteos.map(({ area, asignados, enTrabajo, urgentes }) => {
+        {conteos.map(({ area, programados, enTrabajo, urgentes }) => {
           const Icono = iconosArea[area] ?? Hammer;
           return (
             <button
