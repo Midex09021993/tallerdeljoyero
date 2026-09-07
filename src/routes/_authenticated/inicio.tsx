@@ -13,7 +13,7 @@ import {
   useCerrarSesion,
   useSesion,
 } from "@/lib/auth";
-import { pedidoEnRecepcion, usePedidos, type Pedido } from "@/lib/taller-db";
+import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidos, type Pedido } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
