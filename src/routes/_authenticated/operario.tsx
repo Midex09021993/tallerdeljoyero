@@ -132,11 +132,11 @@ function OperarioPage() {
               <h2 className="mt-4 text-xl font-semibold">{area}</h2>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="rounded-full bg-surface-muted px-3 py-1.5 text-muted-foreground">
-                  {asignados.length} pendientes
+                  {enTrabajo.length} pendiente{enTrabajo.length === 1 ? "" : "s"}
                 </span>
-                {enTrabajo.length > 0 ? (
+                {programados.length > 0 ? (
                   <span className="rounded-full bg-info-soft px-3 py-1.5 text-info">
-                    {enTrabajo.length} en área
+                    {programados.length} por llegar
                   </span>
                 ) : null}
                 {urgentes.length > 0 ? (
