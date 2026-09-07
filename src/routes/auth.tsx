@@ -78,42 +78,52 @@ function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen bg-background lg:grid-cols-2">
+    <main className="relative grid min-h-screen bg-ink lg:grid-cols-2">
+      {/* Soft ambient gradient — single visual identity */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-ink via-ink to-ink/[0.92]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,oklch(0.75_0.06_84/0.08),transparent_40%)]"
+      />
+
       {/* Left side — marketing */}
-      <section className="hidden flex-col justify-between px-16 py-16 lg:flex xl:px-24">
+      <section className="relative z-10 hidden flex-col justify-between border-r border-ink-foreground/10 px-16 py-16 lg:flex xl:px-24">
         <div>
           <p className="font-display text-3xl italic tracking-tight text-gold">AURUM LAB</p>
-          <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+          <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.25em] text-ink-foreground/55">
             Sistema del Taller de Joyería
           </p>
         </div>
 
         <div className="max-w-md">
-          <h1 className="font-display text-4xl font-medium leading-[1.15] text-foreground xl:text-5xl">
+          <h1 className="font-display text-4xl font-medium leading-[1.15] text-ink-foreground xl:text-5xl">
             Tus clientes.
             <br />
             Tus trabajos.
             <br />
             Tu crecimiento.
           </h1>
-          <p className="mt-8 text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-8 text-lg leading-relaxed text-ink-foreground/70">
             Todo conectado en un solo lugar.
           </p>
-          <p className="mt-3 text-base text-muted-foreground">Acceso seguro según tu rol.</p>
+          <p className="mt-3 text-base text-ink-foreground/70">Acceso seguro según tu rol.</p>
         </div>
 
         <div className="max-w-sm">
-          <p className="text-sm font-medium text-foreground">¿Deseas probar Aurum Lab?</p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm font-medium text-ink-foreground">¿Deseas probar Aurum Lab?</p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-foreground/70">
             Solicita tu acceso de prueba por WhatsApp:
             <br />
-            <span className="text-foreground">+51 948 727 973</span>
+            <span className="text-ink-foreground">+51 948 727 973</span>
           </p>
           <a
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground shadow-card transition hover:border-gold hover:text-gold"
+            className="mt-5 inline-flex items-center rounded-lg border border-ink-foreground/15 bg-ink-foreground/[0.04] px-5 py-2.5 text-sm font-medium text-ink-foreground shadow-card transition hover:border-gold hover:text-gold"
           >
             Solicitar acceso
           </a>
@@ -121,7 +131,7 @@ function LoginPage() {
       </section>
 
       {/* Right side — access form (unchanged structure) */}
-      <section className="grid min-h-screen place-items-center bg-ink px-4 py-12 text-ink-foreground">
+      <section className="relative z-10 grid min-h-screen place-items-center px-4 py-12 text-ink-foreground">
         <div className="w-full max-w-sm">
           <div className="mb-10 text-center">
             <p className="font-display text-4xl italic text-gold">Aurum Lab</p>
