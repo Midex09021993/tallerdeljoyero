@@ -67,24 +67,27 @@ function OperarioPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const navigate = useNavigate();
+  const { filtrarPedidos } = useSedeFiltroDueno();
 
   const areas = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
-  const conteos = useMemo(
-    () =>
-      areas.map((area) => {
-        const asignados = pedidos.filter(
-          (pedido) =>
-            pedido.estado !== "Entregado" &&
-            pedido.estado !== "Cancelado" &&
-            !pedidoEnRecepcion(pedido.estado) &&
-            pedidoAsignadoAArea(pedido, area),
-        );
-        const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));
-        const urgentes = asignados.filter(esUrgente);
-        return { area, asignados, enTrabajo, urgentes };
-      }),
-    [areas, pedidos],
-  );
+  const conteos = useMemo(() => {
+    // Misma base que la vista de cada área: solo trabajo activo en producción y de mi sede.
+    const activos = filtrarPedidos(pedidos).filter(
+      (pedido) =>
+        !esEstadoFinalPedido(pedido.estado) &&
+        !pedidoEnRecepcion(pedido.estado) &&
+        pedido.estado === "En Producción",
+    );
+
+    return areas.map((area) => {
+      const asignados = activos.filter((pedido) => pedidoAsignadoAArea(pedido, area));
+      // Pendientes = lo que está realmente en el área ahora.
+      const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));
+      const programados = asignados.filter((pedido) => !pedidoEnAreaActual(pedido, area));
+      const urgentes = enTrabajo.filter(esUrgente);
+      return { area, enTrabajo, programados, urgentes };
+    });
+  }, [areas, filtrarPedidos, pedidos]);
 
   const nombre = sesion?.perfil.nombre?.trim() || "Operario";
   const puedeHerramientas = areas.some((area) => areaCoincide(area, "Taller"));
@@ -111,7 +114,7 @@ function OperarioPage() {
           </div>
         ) : null}
 
-        {conteos.map(({ area, asignados, enTrabajo, urgentes }) => {
+        {conteos.map(({ area, programados, enTrabajo, urgentes }) => {
           const Icono = iconosArea[area] ?? Hammer;
           return (
             <button
@@ -129,11 +132,11 @@ function OperarioPage() {
               <h2 className="mt-4 text-xl font-semibold">{area}</h2>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="rounded-full bg-surface-muted px-3 py-1.5 text-muted-foreground">
-                  {asignados.length} pendientes
+                  {enTrabajo.length} pendiente{enTrabajo.length === 1 ? "" : "s"}
                 </span>
-                {enTrabajo.length > 0 ? (
+                {programados.length > 0 ? (
                   <span className="rounded-full bg-info-soft px-3 py-1.5 text-info">
-                    {enTrabajo.length} en área
+                    {programados.length} por llegar
                   </span>
                 ) : null}
                 {urgentes.length > 0 ? (
