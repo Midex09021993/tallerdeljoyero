@@ -52,15 +52,16 @@ function InicioAdminMovil() {
     if (!esOperario) return modulosAdminMovil.map((modulo) => ({ ...modulo, subtitulo: "" }));
 
     const tarjetas = areasOperario.map((area) => {
+      // Misma base que la vista del área: solo trabajo activo en producción.
       const asignados = pedidos.filter(
         (pedido) =>
-          pedido.estado !== "Entregado" &&
-          pedido.estado !== "Cancelado" &&
+          !esEstadoFinalPedido(pedido.estado) &&
           !pedidoEnRecepcion(pedido.estado) &&
+          pedido.estado === "En Producción" &&
           pedidoAsignadoAArea(pedido, area),
       );
       const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));
-      const urgentes = asignados.filter(esUrgente);
+      const urgentes = enTrabajo.filter(esUrgente);
       return {
         to: areaRuta[area],
         label: area,
