@@ -22,9 +22,6 @@ export const Route = createFileRoute("/auth")({
   component: LoginPage,
 });
 
-const WHATSAPP_URL =
-  "https://wa.me/51948727973?text=Hola%2C%20deseo%20solicitar%20acceso%20de%20prueba%20para%20Aurum%20Lab.";
-
 function LoginPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -78,134 +75,80 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-screen bg-ink lg:grid-cols-2">
-      {/* Soft ambient gradient — single visual identity */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-ink via-ink to-ink/[0.92]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,oklch(0.75_0.06_84/0.08),transparent_40%)]"
-      />
-
-      {/* Left side — marketing */}
-      <section className="relative z-10 hidden flex-col justify-between border-r border-ink-foreground/10 px-16 py-16 lg:flex xl:px-24">
-        <div>
-          <p className="font-display text-3xl italic tracking-tight text-gold">AURUM LAB</p>
-          <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.25em] text-ink-foreground/55">
-            Sistema del Taller de Joyería
+    <main className="grid min-h-screen place-items-center bg-ink px-4 py-12 text-ink-foreground">
+      <div className="w-full max-w-sm">
+        <div className="mb-10 text-center">
+          <p className="font-display text-4xl italic text-gold">Aurum Lab</p>
+          <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-ink-foreground/40">
+            Sistema del taller de joyería
           </p>
         </div>
 
-        <div className="max-w-md">
-          <h1 className="font-display text-4xl font-medium leading-[1.15] text-ink-foreground xl:text-5xl">
-            Tus clientes.
-            <br />
-            Tus trabajos.
-            <br />
-            Tu crecimiento.
+        <form
+          onSubmit={entrar}
+          className="rounded-2xl border border-ink-foreground/10 bg-ink-foreground/[0.03] p-8"
+        >
+          <h1 className="mb-6 text-sm font-medium">
+            {modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}
           </h1>
-          <p className="mt-8 text-lg leading-relaxed text-ink-foreground/70">
-            Todo conectado en un solo lugar.
-          </p>
-          <p className="mt-3 text-base text-ink-foreground/70">Acceso seguro según tu rol.</p>
-        </div>
 
-        <div className="max-w-sm">
-          <p className="text-sm font-medium text-ink-foreground">¿Deseas probar Aurum Lab?</p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-foreground/70">
-            Solicita tu acceso de prueba por WhatsApp:
-            <br />
-            <span className="text-ink-foreground">+51 948 727 973</span>
-          </p>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center rounded-lg border border-ink-foreground/15 bg-ink-foreground/[0.04] px-5 py-2.5 text-sm font-medium text-ink-foreground shadow-card transition hover:border-gold hover:text-gold"
-          >
-            Solicitar acceso
-          </a>
-        </div>
-      </section>
-
-      {/* Right side — access form (unchanged structure) */}
-      <section className="relative z-10 grid min-h-screen place-items-center px-4 py-12 text-ink-foreground">
-        <div className="w-full max-w-sm">
-          <div className="mb-10 text-center">
-            <p className="font-display text-4xl italic text-gold">Aurum Lab</p>
-            <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-ink-foreground/40">
-              Sistema del taller de joyería
-            </p>
-          </div>
-
-          <form
-            onSubmit={entrar}
-            className="rounded-2xl border border-ink-foreground/10 bg-ink-foreground/[0.03] p-8"
-          >
-            <h1 className="mb-6 text-sm font-medium">
-              {modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}
-            </h1>
-
-            {modoAlta ? (
-              <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-                Nombre completo
-                <input
-                  required
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-                />
-              </label>
-            ) : null}
-
+          {modoAlta ? (
             <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-              Usuario o DNI
+              Nombre completo
               <input
                 required
-                autoComplete="username"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
               />
             </label>
+          ) : null}
 
-            <label className="mb-6 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-              Contraseña
-              <input
-                required
-                type="password"
-                autoComplete={modoAlta ? "new-password" : "current-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-              />
-            </label>
+          <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
+            Usuario o DNI
+            <input
+              required
+              autoComplete="username"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
+            />
+          </label>
 
-            {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
+          <label className="mb-6 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
+            Contraseña
+            <input
+              required
+              type="password"
+              autoComplete={modoAlta ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
+            />
+          </label>
 
-            <button
-              type="submit"
-              disabled={cargando}
-              className="w-full rounded-lg bg-gold py-2.5 text-xs font-semibold uppercase tracking-wider text-ink disabled:opacity-50"
-            >
-              {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
-            </button>
-          </form>
+          {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
 
-          <p className="mt-6 text-center text-[11px] text-ink-foreground/35">
-            ¿Eres cliente?{" "}
-            <a href="/cliente" className="text-gold underline-offset-2 hover:underline">
-              Consulta tu pedido aquí
-            </a>
-          </p>
+          <button
+            type="submit"
+            disabled={cargando}
+            className="w-full rounded-lg bg-gold py-2.5 text-xs font-semibold uppercase tracking-wider text-ink disabled:opacity-50"
+          >
+            {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
+          </button>
+        </form>
 
-          <p className="mt-4 text-center text-[10px] tracking-wider text-ink-foreground/25">
-            Desarrollado por Fadilab
-          </p>
-        </div>
-      </section>
+        <p className="mt-6 text-center text-[11px] text-ink-foreground/35">
+          ¿Eres cliente?{" "}
+          <a href="/cliente" className="text-gold underline-offset-2 hover:underline">
+            Consulta tu pedido aquí
+          </a>
+        </p>
+
+        <p className="mt-4 text-center text-[10px] tracking-wider text-ink-foreground/25">
+          Desarrollado por Fadilab
+        </p>
+      </div>
     </main>
   );
 }
