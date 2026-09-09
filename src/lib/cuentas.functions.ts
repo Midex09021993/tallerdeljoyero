@@ -224,11 +224,12 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       .insert({ user_id: data.id, role: data.rol, sede_id: data.sede_id });
 
     await supabaseAdmin.from("user_areas").delete().eq("user_id", data.id);
-    const areas = data.rol === "operario" ? data.areas : [];
+    const areas = data.rol === "operario" ? normalizarAreas(data.areas) : [];
     if (areas.length > 0) {
-      await supabaseAdmin
+      const { error: errAreas } = await supabaseAdmin
         .from("user_areas")
         .insert(areas.map((area) => ({ user_id: data.id, area })));
+      if (errAreas) return { ok: false, error: `No se guardaron las áreas: ${errAreas.message}` };
     }
 
     // El acceso se hace con DNI → correo sintético, así que el correo de la
