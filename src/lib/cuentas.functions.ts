@@ -1,5 +1,34 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+const AREAS_VALIDAS = [
+  "Pedidos",
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Taller",
+  "Área ventas",
+];
+
+const ALIAS_AREAS: Record<string, string> = {
+  "Servicio láser": "Corte Láser",
+  "Corte láser": "Corte Láser",
+  "Corte Laser": "Corte Láser",
+  "Taller / Engaste": "Taller",
+  Ventas: "Área ventas",
+  "Área de Ventas": "Área ventas",
+  Terminado: "Área ventas",
+  Entregado: "Área ventas",
+};
+
+/** Deja sólo áreas válidas, con el nombre canónico y sin duplicados. */
+function normalizarAreas(areas: string[]): string[] {
+  const lista = (areas ?? [])
+    .map((a) => (a ?? "").trim())
+    .map((a) => ALIAS_AREAS[a] ?? a)
+    .filter((a) => AREAS_VALIDAS.includes(a));
+  return Array.from(new Set(lista));
+}
 
 type NuevoUsuario = {
   correo: string;
@@ -107,10 +136,12 @@ export const crearUsuario = createServerFn({ method: "POST" })
     await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: creado.user.id, role: data.rol, sede_id: data.sede_id });
-    if (data.areas.length > 0) {
-      await supabaseAdmin
+    const areasAlta = data.rol === "operario" ? normalizarAreas(data.areas) : [];
+    if (areasAlta.length > 0) {
+      const { error: errAreas } = await supabaseAdmin
         .from("user_areas")
-        .insert(data.areas.map((area) => ({ user_id: creado.user!.id, area })));
+        .insert(areasAlta.map((area) => ({ user_id: creado.user!.id, area })));
+      if (errAreas) throw new Error(`Usuario creado, pero no se guardaron las áreas: ${errAreas.message}`);
     }
     return { ok: true, id: creado.user.id };
   });
@@ -193,11 +224,12 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       .insert({ user_id: data.id, role: data.rol, sede_id: data.sede_id });
 
     await supabaseAdmin.from("user_areas").delete().eq("user_id", data.id);
-    const areas = data.rol === "operario" ? data.areas : [];
+    const areas = data.rol === "operario" ? normalizarAreas(data.areas) : [];
     if (areas.length > 0) {
-      await supabaseAdmin
+      const { error: errAreas } = await supabaseAdmin
         .from("user_areas")
         .insert(areas.map((area) => ({ user_id: data.id, area })));
+      if (errAreas) return { ok: false, error: `No se guardaron las áreas: ${errAreas.message}` };
     }
 
     // El acceso se hace con DNI → correo sintético, así que el correo de la
