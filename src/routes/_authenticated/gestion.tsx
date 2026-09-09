@@ -1555,15 +1555,13 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                       >
                         {editando === u.id ? "Cerrar" : "Editar"}
                       </button>
-                      {esDueno ? (
-                        <button
-                          type="button"
-                          onClick={() => setUsuarioPorEliminar(u)}
-                          className="text-xs text-destructive hover:underline"
-                        >
-                          Eliminar
-                        </button>
-                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setUsuarioPorEliminar(u)}
+                        className="text-xs text-destructive hover:underline"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))
