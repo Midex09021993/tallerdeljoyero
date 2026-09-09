@@ -1318,7 +1318,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     password: "",
     dni: "",
     telefono: "",
-    rol: "gerente" as Rol,
+    rol: (esDueno ? "gerente" : "operario") as Rol,
     sede_id: sedePropia ?? "",
     acceso_desde: "",
     acceso_hasta: "",
