@@ -146,17 +146,40 @@ export const crearUsuario = createServerFn({ method: "POST" })
     return { ok: true, id: creado.user.id };
   });
 
-/** Baja de un usuario (sólo dueño). */
+/** Baja de un usuario: el dueño a cualquiera; el gerente sólo a personal de su sede. */
 export const borrarUsuario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const { data: esDueno } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "dueno",
-    });
-    if (!esDueno) throw new Error("Sólo un dueño puede eliminar usuarios");
     if (data.id === context.userId) throw new Error("No puedes eliminar tu propia cuenta");
+
+    const { data: misRolesRaw } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    const misRoles = (misRolesRaw ?? []).map((r) => r.role);
+    const esDueno = misRoles.includes("dueno");
+    const esGerente = misRoles.includes("gerente");
+    if (!esDueno && !esGerente) throw new Error("No tienes permiso para eliminar usuarios");
+
+    if (!esDueno) {
+      const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+      const { data: rolesDestino } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.id);
+      const destino = (rolesDestino ?? []).map((r) => r.role);
+      if (destino.includes("dueno") || destino.includes("gerente")) {
+        throw new Error("No puedes eliminar a un dueño ni a otro gerente");
+      }
+      const [{ data: yo }, { data: otro }] = await Promise.all([
+        admin.from("profiles").select("sede_id").eq("id", context.userId).maybeSingle(),
+        admin.from("profiles").select("sede_id").eq("id", data.id).maybeSingle(),
+      ]);
+      if (!yo?.sede_id || yo.sede_id !== otro?.sede_id) {
+        throw new Error("Sólo puedes eliminar usuarios de tu sede");
+      }
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
     if (error) throw new Error(error.message);
