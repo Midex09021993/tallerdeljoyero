@@ -1334,6 +1334,10 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
+    if (form.rol === "operario" && areas.length === 0) {
+      toast.error("Elige al menos un área de trabajo para el operario");
+      return;
+    }
     setGuardando(true);
     try {
       await crear({
