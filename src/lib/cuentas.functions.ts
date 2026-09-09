@@ -1,5 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AREAS, normalizarArea } from "@/lib/auth";
+
+/** Deja sólo áreas válidas, con el nombre canónico y sin duplicados. */
+function normalizarAreas(areas: string[]): string[] {
+  const validas = new Set<string>(AREAS);
+  return Array.from(
+    new Set((areas ?? []).map((a) => normalizarArea(a)).filter((a) => validas.has(a))),
+  );
+}
 
 type NuevoUsuario = {
   correo: string;
