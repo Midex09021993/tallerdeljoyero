@@ -107,10 +107,12 @@ export const crearUsuario = createServerFn({ method: "POST" })
     await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: creado.user.id, role: data.rol, sede_id: data.sede_id });
-    if (data.areas.length > 0) {
-      await supabaseAdmin
+    const areasAlta = data.rol === "operario" ? normalizarAreas(data.areas) : [];
+    if (areasAlta.length > 0) {
+      const { error: errAreas } = await supabaseAdmin
         .from("user_areas")
-        .insert(data.areas.map((area) => ({ user_id: creado.user!.id, area })));
+        .insert(areasAlta.map((area) => ({ user_id: creado.user!.id, area })));
+      if (errAreas) throw new Error(`Usuario creado, pero no se guardaron las áreas: ${errAreas.message}`);
     }
     return { ok: true, id: creado.user.id };
   });
