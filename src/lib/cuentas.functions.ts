@@ -1,13 +1,33 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { AREAS, normalizarArea } from "@/lib/auth";
+const AREAS_VALIDAS = [
+  "Pedidos",
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Taller",
+  "Área ventas",
+];
+
+const ALIAS_AREAS: Record<string, string> = {
+  "Servicio láser": "Corte Láser",
+  "Corte láser": "Corte Láser",
+  "Corte Laser": "Corte Láser",
+  "Taller / Engaste": "Taller",
+  Ventas: "Área ventas",
+  "Área de Ventas": "Área ventas",
+  Terminado: "Área ventas",
+  Entregado: "Área ventas",
+};
 
 /** Deja sólo áreas válidas, con el nombre canónico y sin duplicados. */
 function normalizarAreas(areas: string[]): string[] {
-  const validas = new Set<string>(AREAS);
-  return Array.from(
-    new Set((areas ?? []).map((a) => normalizarArea(a)).filter((a) => validas.has(a))),
-  );
+  const lista = (areas ?? [])
+    .map((a) => (a ?? "").trim())
+    .map((a) => ALIAS_AREAS[a] ?? a)
+    .filter((a) => AREAS_VALIDAS.includes(a));
+  return Array.from(new Set(lista));
 }
 
 type NuevoUsuario = {
