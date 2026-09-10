@@ -143,19 +143,19 @@ export function PedidosArea({
                     </dl>
                   </button>
 
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-4 flex items-center gap-3">
                     <Link
                       to="/pedidos/$id"
                       params={{ id: pedido.id }}
                       search={{ from: origen }}
-                      className="rounded-xl border border-border px-3 py-2.5 text-xs font-medium"
+                      className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border px-5 text-xs font-medium"
                     >
                       Ficha
                     </Link>
                     {enArea ? (
                       <MovimientoPedidoInline pedido={pedido} />
                     ) : (
-                      <span className="flex-1 rounded-xl bg-surface-muted px-3 py-2.5 text-center text-xs font-medium text-muted-foreground">
+                      <span className="inline-flex h-10 shrink-0 items-center rounded-full bg-surface-muted px-4 text-xs font-medium text-muted-foreground">
                         Esperando llegada
                       </span>
                     )}
