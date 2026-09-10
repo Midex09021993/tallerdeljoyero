@@ -1764,7 +1764,7 @@ export function useConfigSistema(clave: string) {
         .maybeSingle();
       if (error) {
         const mensaje = (error.message ?? "").toLowerCase();
-        if (error.code === "42P01" || mensaje.includes("config_sistema")) return null;
+        if (error.code === "42P01" || error.code === "42501" || mensaje.includes("config_sistema") || mensaje.includes("permission")) return null;
         throw error;
       }
       return (data as ConfigSistema | null) ?? null;
