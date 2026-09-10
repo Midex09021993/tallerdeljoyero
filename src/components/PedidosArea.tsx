@@ -143,7 +143,7 @@ export function PedidosArea({
                     </dl>
                   </button>
 
-                  <div className="mt-4 flex items-center gap-3">
+                  <div className="mt-4 flex items-start gap-3">
                     <Link
                       to="/pedidos/$id"
                       params={{ id: pedido.id }}
@@ -195,7 +195,7 @@ function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
             if (!areaCoincide(e.target.value, "Pedidos")) setMotivo("");
           }}
           disabled={enviar.isPending}
-          className="min-w-0 rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground disabled:opacity-50"
+          className="h-10 min-w-0 rounded-xl border border-border bg-card px-3 text-xs text-foreground disabled:opacity-50"
         >
           <option value="">Mover pedido...</option>
           {destinos.map((area) => (
@@ -223,7 +223,7 @@ function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
               },
             );
           }}
-          className="rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+          className="h-10 shrink-0 rounded-xl bg-ink px-5 text-xs font-medium text-ink-foreground disabled:opacity-50"
         >
           Mover
         </button>
