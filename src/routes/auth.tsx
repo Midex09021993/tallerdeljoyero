@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
+import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/auth")({
@@ -207,6 +208,8 @@ function LoginPage() {
           </section>
         </div>
       </div>
+
+      <HerramientasFlotantes />
     </main>
   );
 }
