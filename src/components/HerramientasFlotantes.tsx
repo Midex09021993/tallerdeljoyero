@@ -41,10 +41,10 @@ export function HerramientasFlotantes() {
       {/* Panel desplegable */}
       <div
         className={`overflow-hidden border-y border-l border-ink-foreground/15 bg-ink/95 shadow-2xl backdrop-blur transition-all duration-300 ease-out ${
-          abierto ? "w-[min(92vw,380px)] opacity-100" : "w-0 opacity-0"
+          abierto ? "w-[min(94vw,440px)] opacity-100" : "w-0 opacity-0"
         }`}
       >
-        <div className="max-h-[80vh] w-[min(92vw,380px)] overflow-y-auto rounded-l-2xl p-4">
+        <div className="max-h-[80vh] w-[min(94vw,440px)] overflow-y-auto rounded-l-2xl p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
               Herramientas
