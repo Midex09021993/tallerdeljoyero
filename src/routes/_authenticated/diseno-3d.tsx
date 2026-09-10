@@ -167,7 +167,7 @@ function Diseno3DCompleto() {
     >
       <PedidosArea area="Diseño 3D" titulo="Pedidos asignados a Diseño 3D" />
 
-      <div className="hidden grid-cols-1 gap-6 sm:grid lg:grid-cols-3">
+      <div className="hidden grid-cols-1 gap-8 sm:grid lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
           <ColaModelado
             items={cola}
