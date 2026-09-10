@@ -243,7 +243,7 @@ function Diseno3DCompleto() {
       </div>
 
       <Panel
-        className="max-sm:hidden"
+        className="mt-2 max-sm:hidden"
         titulo="Biblioteca de archivos"
         accion={
           <input
