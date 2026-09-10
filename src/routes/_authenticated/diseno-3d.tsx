@@ -179,7 +179,7 @@ function Diseno3DCompleto() {
         </Panel>
 
         <Panel titulo="Modelos atendidos" className="lg:col-span-2">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto p-2">
             {cargandoPedidos || cargandoArchivos ? (
               <p className="p-6 text-sm text-muted-foreground">Cargando…</p>
             ) : atendidos.length === 0 ? (
