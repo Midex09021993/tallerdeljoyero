@@ -259,7 +259,7 @@ function Diseno3DCompleto() {
         ) : filtrados.length === 0 ? (
           <p className="p-6 text-sm text-muted-foreground">No hay archivos que coincidan.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 p-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-5 p-6 md:grid-cols-3 lg:grid-cols-4">
             {filtrados.map((a) => {
               const totalPedido = archivosPorPedido.get(a.pedido_id)?.length ?? 1;
               return (
