@@ -165,9 +165,11 @@ function Diseno3DCompleto() {
         </>
       }
     >
-      <PedidosArea area="Diseño 3D" titulo="Pedidos asignados a Diseño 3D" />
+      <div className="mb-2">
+        <PedidosArea area="Diseño 3D" titulo="Pedidos asignados a Diseño 3D" />
+      </div>
 
-      <div className="hidden grid-cols-1 gap-6 sm:grid lg:grid-cols-3">
+      <div className="hidden grid-cols-1 gap-8 sm:grid lg:grid-cols-3">
         <Panel titulo="Cola de modelado" className="lg:col-span-1">
           <ColaModelado
             items={cola}
@@ -179,7 +181,7 @@ function Diseno3DCompleto() {
         </Panel>
 
         <Panel titulo="Modelos atendidos" className="lg:col-span-2">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto p-2">
             {cargandoPedidos || cargandoArchivos ? (
               <p className="p-6 text-sm text-muted-foreground">Cargando…</p>
             ) : atendidos.length === 0 ? (
@@ -243,7 +245,7 @@ function Diseno3DCompleto() {
       </div>
 
       <Panel
-        className="max-sm:hidden"
+        className="mt-2 max-sm:hidden"
         titulo="Biblioteca de archivos"
         accion={
           <input
@@ -259,7 +261,7 @@ function Diseno3DCompleto() {
         ) : filtrados.length === 0 ? (
           <p className="p-6 text-sm text-muted-foreground">No hay archivos que coincidan.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 p-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-5 p-6 md:grid-cols-3 lg:grid-cols-4">
             {filtrados.map((a) => {
               const totalPedido = archivosPorPedido.get(a.pedido_id)?.length ?? 1;
               return (
