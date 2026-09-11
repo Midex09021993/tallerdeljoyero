@@ -142,7 +142,7 @@ function TallerCompleto() {
   );
 }
 
-export function CalculadoraYeso() {
+export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
   const { esDueno } = useSedeFiltroDueno();
   const { data: configYeso } = useConfigSistema(claveConfigYeso);
   const guardarConfig = useGuardarConfigSistema();
