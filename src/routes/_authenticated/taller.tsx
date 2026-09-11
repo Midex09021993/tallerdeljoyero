@@ -327,19 +327,19 @@ export function CalculadoraYeso() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {proporcionesYeso.map((p) => {
             const { agua, yeso } = calcularMezcla(volumen, p.agua, p.yeso);
             return (
               <article
                 key={`${p.agua}-${p.yeso}`}
-                className={`rounded-2xl border p-5 ${
+                className={`rounded-2xl border p-5 lg:p-7 ${
                   p.recomendada ? "border-gold bg-accent shadow-card" : "border-border bg-card"
                 }`}
               >
-                <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="mb-6 flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xl font-semibold">
+                    <p className="text-2xl font-semibold">
                       {p.agua}/{p.yeso}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -352,21 +352,21 @@ export function CalculadoraYeso() {
                     ) : null}
                   </div>
                 </div>
-                <dl className="space-y-4">
-                  <div className="rounded-xl bg-background p-4">
-                    <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <dl className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className="rounded-xl bg-background p-4 lg:p-5">
+                    <dt className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Agua
                     </dt>
-                    <dd className="whitespace-nowrap text-2xl font-semibold leading-none">
+                    <dd className="whitespace-nowrap text-3xl font-semibold leading-none lg:text-4xl">
                       {volumen > 0 ? formatearEntero(agua) : "0"}{" "}
                       <span className="ml-1 text-base font-medium text-muted-foreground">ml</span>
                     </dd>
                   </div>
-                  <div className="rounded-xl bg-background p-4">
-                    <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="rounded-xl bg-background p-4 lg:p-5">
+                    <dt className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Yeso
                     </dt>
-                    <dd className="whitespace-nowrap text-2xl font-semibold leading-none">
+                    <dd className="whitespace-nowrap text-3xl font-semibold leading-none lg:text-4xl">
                       {volumen > 0 ? formatearEntero(yeso) : "0"}{" "}
                       <span className="ml-1 text-base font-medium text-muted-foreground">g</span>
                     </dd>
