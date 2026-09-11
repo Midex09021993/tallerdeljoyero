@@ -313,11 +313,11 @@ export function CalculadoraYeso() {
           </label>
         </div>
 
-        <div className="rounded-xl border border-border bg-surface-muted p-4">
+        <div className="rounded-xl border border-border bg-surface-muted p-5 lg:rounded-2xl lg:p-6">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Volumen ajustado
           </p>
-          <p className="mt-1 text-2xl font-semibold text-foreground">
+          <p className="mt-1 text-3xl font-semibold text-foreground">
             {volumen > 0 ? `${formatearEntero(volumen)} ml` : "Ingresa medidas"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
