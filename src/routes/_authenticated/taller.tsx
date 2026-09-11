@@ -194,7 +194,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
         </div>
       }
     >
-      <div className="space-y-6 p-5 sm:p-6 lg:p-8">
+      <div className={`space-y-6 p-5 ${compacto ? "" : "sm:p-6 lg:p-8"}`}>
         <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-muted p-1">
           {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
             <button
