@@ -327,48 +327,60 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+        <div
+          className={
+            compacto
+              ? "grid grid-cols-1 gap-4"
+              : "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8"
+          }
+        >
           {proporcionesYeso.map((p) => {
             const { agua, yeso } = calcularMezcla(volumen, p.agua, p.yeso);
             return (
               <article
                 key={`${p.agua}-${p.yeso}`}
-                className={`rounded-2xl border p-5 lg:p-7 ${
+                className={`rounded-2xl border p-5 ${compacto ? "" : "lg:p-7"} ${
                   p.recomendada ? "border-gold bg-accent shadow-card" : "border-border bg-card"
                 }`}
               >
-                <div className="mb-6 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-2xl font-semibold">
-                      {p.agua}/{p.yeso}
+                <div className={compacto ? "mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1" : "mb-6"}>
+                  <p className="text-2xl font-semibold">
+                    {p.agua}/{p.yeso}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.agua}% agua / {p.yeso}% yeso
+                  </p>
+                  {p.recomendada ? (
+                    <p className="w-full text-[10px] font-semibold uppercase tracking-wider text-gold">
+                      Recomendada para joyería
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {p.agua}% agua / {p.yeso}% yeso
-                    </p>
-                    {p.recomendada ? (
-                      <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-gold">
-                        Recomendada para joyería
-                      </p>
-                    ) : null}
-                  </div>
+                  ) : null}
                 </div>
-                <dl className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <div className="rounded-xl bg-background p-4 lg:p-5">
-                    <dt className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <dl className={`grid gap-3 ${compacto ? "grid-cols-2" : "grid-cols-1 gap-4 lg:grid-cols-2"}`}>
+                  <div className={`rounded-xl bg-background p-4 ${compacto ? "" : "lg:p-5"}`}>
+                    <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Agua
                     </dt>
-                    <dd className="whitespace-nowrap text-3xl font-semibold leading-none lg:text-4xl">
+                    <dd
+                      className={`whitespace-nowrap font-semibold leading-none ${
+                        compacto ? "text-2xl" : "text-3xl lg:text-4xl"
+                      }`}
+                    >
                       {volumen > 0 ? formatearEntero(agua) : "0"}{" "}
-                      <span className="ml-1 text-base font-medium text-muted-foreground">ml</span>
+                      <span className="ml-1 text-sm font-medium text-muted-foreground">ml</span>
                     </dd>
                   </div>
-                  <div className="rounded-xl bg-background p-4 lg:p-5">
-                    <dt className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className={`rounded-xl bg-background p-4 ${compacto ? "" : "lg:p-5"}`}>
+                    <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Yeso
                     </dt>
-                    <dd className="whitespace-nowrap text-3xl font-semibold leading-none lg:text-4xl">
+                    <dd
+                      className={`whitespace-nowrap font-semibold leading-none ${
+                        compacto ? "text-2xl" : "text-3xl lg:text-4xl"
+                      }`}
+                    >
                       {volumen > 0 ? formatearEntero(yeso) : "0"}{" "}
-                      <span className="ml-1 text-base font-medium text-muted-foreground">g</span>
+                      <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
                     </dd>
                   </div>
                 </dl>
