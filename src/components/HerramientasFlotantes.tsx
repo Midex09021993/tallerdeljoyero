@@ -90,8 +90,8 @@ export function HerramientasFlotantes() {
           </nav>
 
           {activa === "yeso" ? (
-            <div className="mt-4 rounded-xl bg-background p-2 text-foreground">
-              <CalculadoraYeso />
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <CalculadoraYeso compacto />
             </div>
           ) : null}
         </div>
