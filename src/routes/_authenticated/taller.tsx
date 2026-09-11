@@ -280,7 +280,7 @@ export function CalculadoraYeso() {
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
           <label className="space-y-2">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Diámetro del cilindro (cm)
