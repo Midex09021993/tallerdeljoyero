@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { MobileBackButton } from "@/components/AppShell";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
