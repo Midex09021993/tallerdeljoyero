@@ -178,29 +178,9 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
         <div className="space-y-4">
           <div
             className={`grid gap-4 ${
-              compacto ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4 lg:gap-5"
+              compacto ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:gap-5"
             }`}
           >
-            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Pureza inicial
-              </p>
-              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                {formatearNumero(resultado.purezaInicial)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{kiNum}/24</p>
-            </article>
-
-            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Pureza final
-              </p>
-              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                {formatearNumero(resultado.purezaFinal)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{kfNum}/24</p>
-            </article>
-
             <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
                 Aleación a agregar
