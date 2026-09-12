@@ -85,10 +85,12 @@
 
   --gold: oklch(0.712 0.083 84);
   --gold-bright: oklch(0.836 0.077 84);
+  --gold-deep: oklch(0.52 0.088 82);
   --ink: oklch(0.223 0.006 250);
   --ink-foreground: oklch(0.985 0.002 95);
   --surface: oklch(1 0 0);
   --surface-muted: oklch(0.972 0.003 250);
+  --surface-sunken: oklch(0.958 0.005 90);
 
   --primary: oklch(0.712 0.083 84);
   --primary-foreground: oklch(0.223 0.006 250);
