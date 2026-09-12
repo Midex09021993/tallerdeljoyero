@@ -1233,20 +1233,28 @@ function FichaPedido() {
           </Seccion>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card">
-          <p className="mb-4 text-[10px] uppercase tracking-wider text-muted-foreground">
-            QR de seguimiento
-          </p>
-          {urlSeguimiento ? (
-            <img
-              src={qr}
-              alt={`Código QR de seguimiento del pedido ${pedido.referencia}`}
-              width={220}
-              height={220}
-              className="mx-auto rounded-xl border border-border bg-white p-2"
-            />
-          ) : null}
-          <p className="mt-4 break-all text-[10px] text-muted-foreground">{urlSeguimiento}</p>
+        <div className="h-fit overflow-hidden rounded-2xl border border-gold/25 bg-surface-sunken shadow-raised">
+          <div className="flex items-center gap-3 border-b border-gold/20 px-5 py-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+              QR de seguimiento
+            </p>
+          </div>
+          <div className="p-5 text-center">
+            {urlSeguimiento ? (
+              <img
+                src={qr}
+                alt={`Código QR de seguimiento del pedido ${pedido.referencia}`}
+                width={220}
+                height={220}
+                className="mx-auto rounded-xl border border-border bg-card p-3 shadow-card"
+              />
+            ) : null}
+            <p className="mt-4 text-xs font-medium text-foreground">
+              Escanea para ver el avance del pedido
+            </p>
+            <p className="mt-1 break-all text-[10px] text-muted-foreground">{urlSeguimiento}</p>
+          </div>
         </div>
       </div>
       <AlertDialog
