@@ -95,6 +95,11 @@ export function HerramientasFlotantes() {
               <CalculadoraYeso compacto />
             </div>
           ) : null}
+          {activa === "oro" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <CalculadoraAleacionOro compacto />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
