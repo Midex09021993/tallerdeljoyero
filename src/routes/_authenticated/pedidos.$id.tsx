@@ -139,14 +139,19 @@ function BloqueDatos({ titulo, datos }: { titulo: string; datos: Array<[string, 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(false);
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
       <button
         type="button"
         onClick={() => setAbierta((v) => !v)}
-        className="flex w-full items-center justify-between px-6 py-4 text-left"
+        className="flex w-full items-center justify-between bg-surface-sunken px-6 py-4 text-left transition-colors hover:bg-accent/60"
       >
-        <h2 className="text-sm font-medium">{titulo}</h2>
-        <span className="text-xs text-muted-foreground">{abierta ? "−" : "+"}</span>
+        <span className="flex items-center gap-3">
+          <span className="h-4 w-px bg-gold" />
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+            {titulo}
+          </h2>
+        </span>
+        <span className="text-sm font-semibold text-gold-deep">{abierta ? "−" : "+"}</span>
       </button>
       {abierta ? <div className="border-t border-border p-6">{children}</div> : null}
     </section>
