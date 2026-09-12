@@ -41,10 +41,12 @@
   --color-ring-offset-background: var(--background);
   --color-gold: var(--gold);
   --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-info: var(--info);
@@ -54,6 +56,9 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --shadow-card: 0 1px 2px oklch(0.2 0.01 80 / 0.05), 0 8px 24px -16px oklch(0.2 0.01 80 / 0.25);
+  --shadow-raised:
+    0 1px 2px oklch(0.2 0.01 80 / 0.06), 0 12px 30px -18px oklch(0.2 0.01 80 / 0.35);
+  --shadow-inset-soft: inset 0 1px 0 oklch(1 0 0 / 0.7);
   --color-chart-1: var(--gold);
   --color-chart-2: var(--info);
   --color-chart-3: var(--success);
@@ -83,10 +88,12 @@
 
   --gold: oklch(0.712 0.083 84);
   --gold-bright: oklch(0.836 0.077 84);
+  --gold-deep: oklch(0.52 0.088 82);
   --ink: oklch(0.223 0.006 250);
   --ink-foreground: oklch(0.985 0.002 95);
   --surface: oklch(1 0 0);
   --surface-muted: oklch(0.972 0.003 250);
+  --surface-sunken: oklch(0.958 0.005 90);
 
   --primary: oklch(0.712 0.083 84);
   --primary-foreground: oklch(0.223 0.006 250);

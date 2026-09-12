@@ -88,17 +88,70 @@ function regresoDesde(origen: string | undefined): RegresoFicha {
   return regresosFicha[origen as keyof typeof regresosFicha] ?? regresosFicha.pedidos;
 }
 
+function DatoClave({
+  etiqueta,
+  valor,
+  destacado = false,
+}: {
+  etiqueta: string;
+  valor: string;
+  destacado?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        {etiqueta}
+      </p>
+      <p
+        className={`mt-1.5 truncate text-base font-semibold ${
+          destacado ? "text-gold-deep" : "text-foreground"
+        }`}
+      >
+        {valor}
+      </p>
+    </div>
+  );
+}
+
+function BloqueDatos({ titulo, datos }: { titulo: string; datos: Array<[string, string]> }) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+          {titulo}
+        </h3>
+        <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" />
+      </div>
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border shadow-card lg:grid-cols-3">
+        {datos.map(([etiqueta, valor]) => (
+          <div key={etiqueta} className="bg-surface-sunken px-4 py-3">
+            <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {etiqueta}
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-foreground">{valor}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(false);
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
       <button
         type="button"
         onClick={() => setAbierta((v) => !v)}
-        className="flex w-full items-center justify-between px-6 py-4 text-left"
+        className="flex w-full items-center justify-between bg-surface-sunken px-6 py-4 text-left transition-colors hover:bg-accent/60"
       >
-        <h2 className="text-sm font-medium">{titulo}</h2>
-        <span className="text-xs text-muted-foreground">{abierta ? "−" : "+"}</span>
+        <span className="flex items-center gap-3">
+          <span className="h-4 w-px bg-gold" />
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+            {titulo}
+          </h2>
+        </span>
+        <span className="text-sm font-semibold text-gold-deep">{abierta ? "−" : "+"}</span>
       </button>
       {abierta ? <div className="border-t border-border p-6">{children}</div> : null}
     </section>
@@ -423,69 +476,92 @@ function FichaPedido() {
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Panel titulo="Ficha rápida">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 p-6 lg:grid-cols-3">
-              {[
-                ["Código del pedido", pedido.referencia],
-                ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
-                ["N° de contrato", pedido.contrato || "—"],
-                ["Estado general", pedido.estado || "—"],
-                ["Área de proceso", normalizarArea(pedido.area_actual)],
-                ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
-                ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
-                ["Estado ventas", mostrarEstadoVentas(pedido)],
-                ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
-                ["Medio de envío", pedido.medio_envio || "—"],
-                ["Guía de envío", pedido.guia_envio || "—"],
-                ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
-                ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
-                  {k === "Estado general" ? (
-                    <p
-                      className={`mt-1 inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[pedido.estado] ?? "bg-surface-muted"}`}
-                    >
-                      {v}
+            <div className="space-y-6 p-5 lg:p-6">
+              <div className="rounded-2xl border border-gold/30 bg-surface-sunken p-5 shadow-raised">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                      Código del pedido
                     </p>
-                  ) : (
-                    <p className="mt-0.5 text-sm">{v}</p>
-                  )}
+                    <p className="mt-1 font-display text-3xl leading-tight text-foreground">
+                      {pedido.referencia}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-muted-foreground">
+                      {pedido.trabajo || pedido.pieza || "—"}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/40 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] shadow-card ${
+                      estadoClases[pedido.estado] ?? "bg-accent text-foreground"
+                    }`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {pedido.estado || "—"}
+                  </span>
                 </div>
-              ))}
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <DatoClave
+                    etiqueta="Área actual"
+                    valor={normalizarArea(pedido.area_actual)}
+                    destacado
+                  />
+                  <DatoClave
+                    etiqueta="Fecha de entrega"
+                    valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"}
+                    destacado
+                  />
+                  <DatoClave etiqueta="N° de contrato" valor={pedido.contrato || "—"} />
+                </div>
+              </div>
+
+              <BloqueDatos
+                titulo="Información general"
+                datos={[
+                  ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
+                  ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
+                  ["Taller", pedido.sede_nombre || "—"],
+                ]}
+              />
+
+              <BloqueDatos
+                titulo="Información de ventas y envío"
+                datos={[
+                  ["Estado ventas", mostrarEstadoVentas(pedido)],
+                  ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
+                  ["Medio de envío", pedido.medio_envio || "—"],
+                  ["Guía de envío", pedido.guia_envio || "—"],
+                  ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
+                  ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
+                ]}
+              />
+
+              {tieneCorteLaser ? (
+                <BloqueDatos titulo="Información de corte láser" datos={infoCorteLaser} />
+              ) : null}
+
               {pedido.contrato_id || pedido.contrato ? (
-                <div className="col-span-2 lg:col-span-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Contrato asociado
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/25 bg-accent/50 px-4 py-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      Contrato asociado
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-foreground">
+                      {pedido.contrato || "Contrato del pedido"}
+                    </p>
+                  </div>
                   <Link
                     to="/contratos/$id"
                     params={{ id: pedido.contrato_id || pedido.contrato }}
-                    className="mt-1 inline-flex rounded-lg border border-border px-3 py-2 text-xs font-medium text-info transition-colors hover:bg-surface-muted hover:underline"
+                    className="inline-flex items-center rounded-lg border border-gold/40 bg-card px-4 py-2 text-xs font-semibold text-gold-deep shadow-card transition-colors hover:bg-surface-sunken"
                   >
-                    Ver contrato {pedido.contrato || "asociado"}
+                    Ver contrato
                   </Link>
-                </div>
-              ) : null}
-              {tieneCorteLaser ? (
-                <div className="col-span-2 lg:col-span-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Información de Corte Láser
-                  </p>
-                  <dl className="mt-2 grid grid-cols-2 gap-3 rounded-xl border border-border bg-surface-muted p-3 lg:grid-cols-4">
-                    {infoCorteLaser.map(([label, valor]) => (
-                      <div key={label}>
-                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          {label}
-                        </dt>
-                        <dd className="mt-0.5 text-sm font-medium text-foreground">{valor}</dd>
-                      </div>
-                    ))}
-                  </dl>
                 </div>
               ) : null}
             </div>
 
-            <div className="border-t border-border px-6 py-5">
+            <div className="border-t-2 border-gold/25 bg-surface-sunken px-6 py-5">
               {puedeAutorizar ? (
                 <div className="mb-4 rounded-xl border border-warning/20 bg-warning-soft p-4">
                   <p className="text-sm font-semibold text-warning">
@@ -587,7 +663,7 @@ function FichaPedido() {
           <div className="hidden sm:block">
             <Panel titulo="Seguimiento del pedido">
               <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-6">
-                <div className="rounded-xl bg-surface-muted p-4">
+                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Estado general
                   </p>
@@ -599,7 +675,7 @@ function FichaPedido() {
                     {pedido.estado}
                   </p>
                 </div>
-                <div className="rounded-xl bg-surface-muted p-4">
+                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Área actual
                   </p>
@@ -607,7 +683,7 @@ function FichaPedido() {
                     {normalizarArea(pedido.area_actual)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-surface-muted p-4">
+                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Estado de ventas
                   </p>
@@ -1162,20 +1238,28 @@ function FichaPedido() {
           </Seccion>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card">
-          <p className="mb-4 text-[10px] uppercase tracking-wider text-muted-foreground">
-            QR de seguimiento
-          </p>
-          {urlSeguimiento ? (
-            <img
-              src={qr}
-              alt={`Código QR de seguimiento del pedido ${pedido.referencia}`}
-              width={220}
-              height={220}
-              className="mx-auto rounded-xl border border-border bg-white p-2"
-            />
-          ) : null}
-          <p className="mt-4 break-all text-[10px] text-muted-foreground">{urlSeguimiento}</p>
+        <div className="h-fit overflow-hidden rounded-2xl border border-gold/25 bg-surface-sunken shadow-raised">
+          <div className="flex items-center gap-3 border-b border-gold/20 px-5 py-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+              QR de seguimiento
+            </p>
+          </div>
+          <div className="p-5 text-center">
+            {urlSeguimiento ? (
+              <img
+                src={qr}
+                alt={`Código QR de seguimiento del pedido ${pedido.referencia}`}
+                width={220}
+                height={220}
+                className="mx-auto rounded-xl border border-border bg-card p-3 shadow-card"
+              />
+            ) : null}
+            <p className="mt-4 text-xs font-medium text-foreground">
+              Escanea para ver el avance del pedido
+            </p>
+            <p className="mt-1 break-all text-[10px] text-muted-foreground">{urlSeguimiento}</p>
+          </div>
         </div>
       </div>
       <AlertDialog
