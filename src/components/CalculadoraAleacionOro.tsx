@@ -49,7 +49,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:gap-5">
+      <div className={`grid grid-cols-1 gap-4 ${compacto ? "" : "sm:grid-cols-3 lg:gap-5"}`}>
         <label className="space-y-2">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Masa de oro (g)
