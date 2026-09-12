@@ -13,10 +13,48 @@ function clampQuilataje(valor: number) {
   return Math.max(0, Math.min(24, valor));
 }
 
+type ColorAleacion = "amarillo" | "blanco" | "rosa";
+
+type MetalReceta = { nombre: string; porcentaje: number };
+
+/**
+ * Recetas de aleación por color (porcentajes sobre la aleación total).
+ * La receta de oro amarillo queda preparada como estructura configurable.
+ */
+const RECETAS: Record<
+  ColorAleacion,
+  { etiqueta: string; metales: MetalReceta[] }
+> = {
+  amarillo: {
+    etiqueta: "Amarillo",
+    // Receta configurable: ajustar porcentajes según la fórmula del taller.
+    metales: [
+      { nombre: "Plata", porcentaje: 0.5 },
+      { nombre: "Cobre", porcentaje: 0.5 },
+    ],
+  },
+  blanco: {
+    etiqueta: "Blanco",
+    metales: [
+      { nombre: "Cobre", porcentaje: 0.4 },
+      { nombre: "Níquel", porcentaje: 0.4 },
+      { nombre: "Zinc", porcentaje: 0.2 },
+    ],
+  },
+  rosa: {
+    etiqueta: "Rosa",
+    metales: [
+      { nombre: "Cobre", porcentaje: 0.89 },
+      { nombre: "Plata", porcentaje: 0.11 },
+    ],
+  },
+};
+
 export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolean }) {
   const [masa, setMasa] = useState("");
   const [inicial, setInicial] = useState("24");
   const [final, setFinal] = useState("18");
+  const [color, setColor] = useState<ColorAleacion>("rosa");
 
   const masaNum = Number(masa);
   const kiNum = clampQuilataje(Number(inicial));
@@ -32,13 +70,22 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
     const aleacion = masaNum * ((pi - pf) / pf);
     const total = masaNum + aleacion;
 
+    const receta = RECETAS[color];
+    const metales = receta.metales.map((m) => ({
+      nombre: `${m.nombre} de liga`,
+      gramos: aleacion * m.porcentaje,
+      porcentaje: m.porcentaje,
+    }));
+
     return {
       purezaInicial: pi,
       purezaFinal: pf,
       aleacion,
       total,
+      metales,
+      colorEtiqueta: receta.etiqueta,
     };
-  }, [kiNum, kfNum, masaNum]);
+  }, [kiNum, kfNum, masaNum, color]);
 
   return (
     <div className={`space-y-5 ${compacto ? "p-1" : "p-5 sm:p-6 lg:p-8"}`}>
@@ -101,51 +148,124 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
         </label>
       </div>
 
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Color de aleación
+        </legend>
+        <div className={`grid gap-2 ${compacto ? "grid-cols-3" : "grid-cols-3 sm:max-w-md"}`}>
+          {(Object.keys(RECETAS) as ColorAleacion[]).map((c) => {
+            const seleccionado = color === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setColor(c)}
+                aria-pressed={seleccionado}
+                className={`h-11 rounded-xl border text-sm font-medium transition ${
+                  seleccionado
+                    ? "border-gold bg-accent text-foreground shadow-card"
+                    : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
+                }`}
+              >
+                {RECETAS[c].etiqueta}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+
       {resultado ? (
-        <div
-          className={`grid gap-4 ${
-            compacto ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5"
-          }`}
-        >
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Pureza inicial
-            </p>
-            <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-              {formatearNumero(resultado.purezaInicial)}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{kiNum}/24</p>
-          </article>
+        <div className="space-y-4">
+          <div
+            className={`grid gap-4 ${
+              compacto ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4 lg:gap-5"
+            }`}
+          >
+            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Pureza inicial
+              </p>
+              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                {formatearNumero(resultado.purezaInicial)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{kiNum}/24</p>
+            </article>
 
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Pureza final
-            </p>
-            <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-              {formatearNumero(resultado.purezaFinal)}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{kfNum}/24</p>
-          </article>
+            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Pureza final
+              </p>
+              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                {formatearNumero(resultado.purezaFinal)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{kfNum}/24</p>
+            </article>
 
-          <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
-              Aleación a agregar
-            </p>
-            <p className="mt-2 text-3xl font-semibold leading-none text-foreground">
-              {formatearNumero(resultado.aleacion)}{" "}
-              <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
-            </p>
-          </article>
+            <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
+                Aleación a agregar
+              </p>
+              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                {formatearNumero(resultado.aleacion)}{" "}
+                <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
+              </p>
+            </article>
 
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Masa total final
+            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Masa total final
+              </p>
+              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                {formatearNumero(resultado.total)}{" "}
+                <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
+              </p>
+            </article>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
+              Composición de la aleación · Oro {resultado.colorEtiqueta}
             </p>
-            <p className="mt-2 text-3xl font-semibold leading-none text-foreground">
-              {formatearNumero(resultado.total)}{" "}
-              <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
-            </p>
-          </article>
+            <div
+              className={`grid gap-4 ${
+                compacto
+                  ? "grid-cols-1"
+                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5"
+              }`}
+            >
+              {resultado.metales.map((m) => (
+                <article
+                  key={m.nombre}
+                  className="rounded-2xl border border-border bg-card p-4 shadow-card"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {m.nombre}
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                    {formatearNumero(m.gramos)}{" "}
+                    <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {formatearNumero(m.porcentaje * 100, 0)}% de la aleación
+                  </p>
+                </article>
+              ))}
+
+              <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
+                  Oro {kfNum}K {resultado.colorEtiqueta} resultante
+                </p>
+                <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                  {formatearNumero(resultado.total)}{" "}
+                  <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatearNumero(masaNum)} g de oro + {formatearNumero(resultado.aleacion)} g de
+                  aleación
+                </p>
+              </article>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-center">
