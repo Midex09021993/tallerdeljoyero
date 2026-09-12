@@ -26,7 +26,10 @@ function HerramientasPage() {
         </div>
         <MobileBackButton atrasMovil={{ to: "/inicio" }} />
       </header>
-      <CalculadoraYeso />
+      <div className="space-y-6">
+        <CalculadoraYeso />
+        <CalculadoraAleacionOro />
+      </div>
     </main>
   );
 }
