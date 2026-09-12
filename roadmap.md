@@ -1,3 +1,3 @@
 
 ## Correo
-- [ ] Configurar el envío de correos para notify.tallerdeljoyero.com
+- [x] Envío de correos configurado para notify.tallerdeljoyero.com (esperando verificación DNS)
