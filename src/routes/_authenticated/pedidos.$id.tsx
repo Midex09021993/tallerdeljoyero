@@ -88,6 +88,54 @@ function regresoDesde(origen: string | undefined): RegresoFicha {
   return regresosFicha[origen as keyof typeof regresosFicha] ?? regresosFicha.pedidos;
 }
 
+function DatoClave({
+  etiqueta,
+  valor,
+  destacado = false,
+}: {
+  etiqueta: string;
+  valor: string;
+  destacado?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        {etiqueta}
+      </p>
+      <p
+        className={`mt-1.5 truncate text-base font-semibold ${
+          destacado ? "text-gold-deep" : "text-foreground"
+        }`}
+      >
+        {valor}
+      </p>
+    </div>
+  );
+}
+
+function BloqueDatos({ titulo, datos }: { titulo: string; datos: Array<[string, string]> }) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+          {titulo}
+        </h3>
+        <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" />
+      </div>
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border shadow-card lg:grid-cols-3">
+        {datos.map(([etiqueta, valor]) => (
+          <div key={etiqueta} className="bg-surface-sunken px-4 py-3">
+            <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {etiqueta}
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-foreground">{valor}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   const [abierta, setAbierta] = useState(false);
   return (
