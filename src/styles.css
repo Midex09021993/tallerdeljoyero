@@ -41,10 +41,12 @@
   --color-ring-offset-background: var(--background);
   --color-gold: var(--gold);
   --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-info: var(--info);
