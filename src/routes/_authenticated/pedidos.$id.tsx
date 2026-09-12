@@ -423,64 +423,87 @@ function FichaPedido() {
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Panel titulo="Ficha rápida">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 p-6 lg:grid-cols-3">
-              {[
-                ["Código del pedido", pedido.referencia],
-                ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
-                ["N° de contrato", pedido.contrato || "—"],
-                ["Estado general", pedido.estado || "—"],
-                ["Área de proceso", normalizarArea(pedido.area_actual)],
-                ["Fecha de entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
-                ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
-                ["Estado ventas", mostrarEstadoVentas(pedido)],
-                ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
-                ["Medio de envío", pedido.medio_envio || "—"],
-                ["Guía de envío", pedido.guia_envio || "—"],
-                ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
-                ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
-                  {k === "Estado general" ? (
-                    <p
-                      className={`mt-1 inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[pedido.estado] ?? "bg-surface-muted"}`}
-                    >
-                      {v}
+            <div className="space-y-6 p-5 lg:p-6">
+              <div className="rounded-2xl border border-gold/30 bg-surface-sunken p-5 shadow-raised">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                      Código del pedido
                     </p>
-                  ) : (
-                    <p className="mt-0.5 text-sm">{v}</p>
-                  )}
+                    <p className="mt-1 font-display text-3xl leading-tight text-foreground">
+                      {pedido.referencia}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-muted-foreground">
+                      {pedido.trabajo || pedido.pieza || "—"}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/40 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] shadow-card ${
+                      estadoClases[pedido.estado] ?? "bg-accent text-foreground"
+                    }`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {pedido.estado || "—"}
+                  </span>
                 </div>
-              ))}
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <DatoClave
+                    etiqueta="Área actual"
+                    valor={normalizarArea(pedido.area_actual)}
+                    destacado
+                  />
+                  <DatoClave
+                    etiqueta="Fecha de entrega"
+                    valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"}
+                    destacado
+                  />
+                  <DatoClave etiqueta="N° de contrato" valor={pedido.contrato || "—"} />
+                </div>
+              </div>
+
+              <BloqueDatos
+                titulo="Información general"
+                datos={[
+                  ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
+                  ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
+                  ["Taller", pedido.sede_nombre || "—"],
+                ]}
+              />
+
+              <BloqueDatos
+                titulo="Información de ventas y envío"
+                datos={[
+                  ["Estado ventas", mostrarEstadoVentas(pedido)],
+                  ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
+                  ["Medio de envío", pedido.medio_envio || "—"],
+                  ["Guía de envío", pedido.guia_envio || "—"],
+                  ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
+                  ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
+                ]}
+              />
+
+              {tieneCorteLaser ? (
+                <BloqueDatos titulo="Información de corte láser" datos={infoCorteLaser} />
+              ) : null}
+
               {pedido.contrato_id || pedido.contrato ? (
-                <div className="col-span-2 lg:col-span-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Contrato asociado
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/25 bg-accent/50 px-4 py-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      Contrato asociado
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-foreground">
+                      {pedido.contrato || "Contrato del pedido"}
+                    </p>
+                  </div>
                   <Link
                     to="/contratos/$id"
                     params={{ id: pedido.contrato_id || pedido.contrato }}
-                    className="mt-1 inline-flex rounded-lg border border-border px-3 py-2 text-xs font-medium text-info transition-colors hover:bg-surface-muted hover:underline"
+                    className="inline-flex items-center rounded-lg border border-gold/40 bg-card px-4 py-2 text-xs font-semibold text-gold-deep shadow-card transition-colors hover:bg-surface-sunken"
                   >
-                    Ver contrato {pedido.contrato || "asociado"}
+                    Ver contrato
                   </Link>
-                </div>
-              ) : null}
-              {tieneCorteLaser ? (
-                <div className="col-span-2 lg:col-span-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Información de Corte Láser
-                  </p>
-                  <dl className="mt-2 grid grid-cols-2 gap-3 rounded-xl border border-border bg-surface-muted p-3 lg:grid-cols-4">
-                    {infoCorteLaser.map(([label, valor]) => (
-                      <div key={label}>
-                        <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          {label}
-                        </dt>
-                        <dd className="mt-0.5 text-sm font-medium text-foreground">{valor}</dd>
-                      </div>
-                    ))}
-                  </dl>
                 </div>
               ) : null}
             </div>
