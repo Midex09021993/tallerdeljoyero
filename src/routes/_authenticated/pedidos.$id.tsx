@@ -561,7 +561,7 @@ function FichaPedido() {
               ) : null}
             </div>
 
-            <div className="border-t border-border px-6 py-5">
+            <div className="border-t-2 border-gold/25 bg-surface-sunken px-6 py-5">
               {puedeAutorizar ? (
                 <div className="mb-4 rounded-xl border border-warning/20 bg-warning-soft p-4">
                   <p className="text-sm font-semibold text-warning">
@@ -663,7 +663,7 @@ function FichaPedido() {
           <div className="hidden sm:block">
             <Panel titulo="Seguimiento del pedido">
               <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-6">
-                <div className="rounded-xl bg-surface-muted p-4">
+                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Estado general
                   </p>
@@ -675,7 +675,7 @@ function FichaPedido() {
                     {pedido.estado}
                   </p>
                 </div>
-                <div className="rounded-xl bg-surface-muted p-4">
+                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Área actual
                   </p>
@@ -683,7 +683,7 @@ function FichaPedido() {
                     {normalizarArea(pedido.area_actual)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-surface-muted p-4">
+                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Estado de ventas
                   </p>
