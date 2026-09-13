@@ -14,6 +14,7 @@ type Herramienta = {
 const HERRAMIENTAS: Herramienta[] = [
   { id: "yeso", nombre: "Calculadora Yeso/Agua", icono: Droplets, disponible: true },
   { id: "oro", nombre: "Calculadora de Aleación de Oro", icono: Gem, disponible: true },
+  { id: "peso3d", nombre: "Visualizador y Peso 3D", icono: Boxes, disponible: true },
   { id: "volumen", nombre: "Calculadora de Volumen", icono: Calculator, disponible: false },
   { id: "peso", nombre: "Calculadora de Peso", icono: Scale, disponible: false },
   { id: "medidas", nombre: "Conversor de Medidas", icono: Ruler, disponible: false },
@@ -99,6 +100,11 @@ export function HerramientasFlotantes() {
           {activa === "oro" ? (
             <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
               <CalculadoraAleacionOro compacto />
+            </div>
+          ) : null}
+          {activa === "peso3d" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <VisorPesoJoyeria compacto />
             </div>
           ) : null}
         </div>

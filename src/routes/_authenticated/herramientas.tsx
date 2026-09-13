@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { MobileBackButton } from "@/components/AppShell";
+import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
@@ -29,6 +30,7 @@ function HerramientasPage() {
       <div className="space-y-6">
         <CalculadoraYeso />
         <CalculadoraAleacionOro />
+        <VisorPesoJoyeria />
       </div>
     </main>
   );
