@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Calculator, ChevronLeft, Droplets, Gem, Ruler, Scale, Wrench } from "lucide-react";
+import { Boxes, Calculator, ChevronLeft, Droplets, Gem, Ruler, Scale, Wrench } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
+import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
 type Herramienta = {
