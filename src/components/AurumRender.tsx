@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
-import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints } from "../lib/aurum-material-engine";
+import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile } from "../lib/aurum-material-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -365,7 +365,7 @@ export function AurumRender() {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
           const presetId = g.id as string;
           const motorPreset = getAurumGemPreset(presetId);
-          return applyAurumGemPreset(nuevo, motorPreset, thickness);
+          applyAurumGemPreset(nuevo, motorPreset, thickness);\n          applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));\n          return nuevo;
         };
         target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
         crearInclusiones(target,g);
