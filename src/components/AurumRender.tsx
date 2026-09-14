@@ -441,7 +441,18 @@ export function AurumRender() {
         const objetivos:any[] = [];
         modelo.traverse((x:any) => { if (x.isMesh && x.visible) objetivos.push(x); });
         const impacto = raycaster.intersectObjects(objetivos, false)[0];
-        if (impacto?.object?.uuid) seleccionarMalla(impacto.object);
+        if (impacto?.object?.uuid) {
+          seleccionarMalla(impacto.object);
+        } else {
+          // Clic en espacio vacío = quitar selección y devolver la biblioteca
+          // a su estado neutro. El último material elegido no queda "pegado".
+          parteActiva = null;
+          setParteSeleccionada(null);
+          setParteSeleccionadaNombre(null);
+          setParteSeleccionadaCapa(null);
+          setParteSeleccionadaCategoria("otro");
+          limpiarResaltado();
+        }
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
