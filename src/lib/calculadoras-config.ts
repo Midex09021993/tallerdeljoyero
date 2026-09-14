@@ -5,6 +5,7 @@ export const CLAVES_CALCULADORAS = {
   visualizador: "calculadora_visualizador_3d",
   aleacion: "calculadora_aleacion_oro",
   yeso: "calculadora_yeso",
+  tallasAnillo: "conversor_tallas_anillo",
 } as const;
 
 export type ConfigVisualizador3D = {
@@ -159,4 +160,65 @@ export function useConfiguracionesCalculadoras() {
     }),
     [visualizador.data, aleacion.data, yeso.data, visualizador.isLoading, aleacion.isLoading, yeso.isLoading],
   );
+}
+export type TallaAnillo = {
+  diametroMm: number;
+  europea: number;
+  americana: number | null;
+};
+
+export type ConfigTallasAnillo = {
+  tabla: TallaAnillo[];
+};
+
+export const DEFAULT_CONFIG_TALLAS_ANILLO: ConfigTallasAnillo = {
+  tabla: [
+    { diametroMm: 14.6, europea: 6, americana: null },
+    { diametroMm: 15.0, europea: 7, americana: 4 },
+    { diametroMm: 15.3, europea: 8, americana: null },
+    { diametroMm: 15.6, europea: 9, americana: 5 },
+    { diametroMm: 15.9, europea: 10, americana: null },
+    { diametroMm: 16.2, europea: 11, americana: null },
+    { diametroMm: 16.5, europea: 12, americana: 6 },
+    { diametroMm: 16.8, europea: 13, americana: null },
+    { diametroMm: 17.2, europea: 14, americana: 7 },
+    { diametroMm: 17.5, europea: 15, americana: null },
+    { diametroMm: 17.8, europea: 16, americana: null },
+    { diametroMm: 18.1, europea: 17, americana: 8 },
+    { diametroMm: 18.4, europea: 18, americana: null },
+    { diametroMm: 18.8, europea: 19, americana: null },
+    { diametroMm: 19.1, europea: 20, americana: 9 },
+    { diametroMm: 19.4, europea: 21, americana: null },
+    { diametroMm: 19.7, europea: 22, americana: 10 },
+    { diametroMm: 20.0, europea: 23, americana: null },
+    { diametroMm: 20.3, europea: 24, americana: null },
+    { diametroMm: 20.6, europea: 25, americana: 11 },
+    { diametroMm: 21.0, europea: 26, americana: null },
+    { diametroMm: 21.3, europea: 27, americana: 12 },
+    { diametroMm: 21.6, europea: 28, americana: null },
+    { diametroMm: 22.0, europea: 29, americana: null },
+    { diametroMm: 22.3, europea: 30, americana: 13 },
+    { diametroMm: 22.6, europea: 31, americana: null },
+    { diametroMm: 22.9, europea: 32, americana: null },
+    { diametroMm: 23.2, europea: 33, americana: 14 },
+    { diametroMm: 23.5, europea: 34, americana: null },
+    { diametroMm: 23.9, europea: 35, americana: 15 },
+  ],
+};
+
+
+export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
+  const root = objeto(valor);
+  const filas = lista(root.tabla)
+    .map((item) => {
+      const o = objeto(item);
+      const diametroMm = numero(o.diametroMm, NaN);
+      const europea = numero(o.europea, NaN);
+      const americana = o.americana == null || o.americana === "" ? null : numero(o.americana, NaN);
+      if (!Number.isFinite(diametroMm) || !Number.isFinite(europea) || (americana !== null && !Number.isFinite(americana))) return null;
+      return { diametroMm, europea, americana };
+    })
+    .filter((item): item is TallaAnillo => item !== null)
+    .sort((a, b) => a.diametroMm - b.diametroMm);
+  return { tabla: filas.length ? filas : DEFAULT_CONFIG_TALLAS_ANILLO.tabla };
 }
