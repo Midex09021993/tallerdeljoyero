@@ -46,7 +46,7 @@ export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("oro18a"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
+  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
   const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [panel, setPanel] = useState<"materiales"|"escenas">("materiales");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
