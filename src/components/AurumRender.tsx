@@ -272,9 +272,7 @@ export function AurumRender() {
       const controles = new OrbitControls(camara,renderer.domElement);
       controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true; controles.enableRotate = true; controles.autoRotate = false; controles.autoRotateSpeed = 0.65;
       controles.minDistance = .15; controles.maxDistance = 100;
-      controles.addEventListener("change", () => {
-        }
-      });
+
 
       let modelo:any = null;
       let suelo:any = null;
