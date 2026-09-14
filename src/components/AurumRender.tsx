@@ -86,6 +86,55 @@ const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
   return "otro";
 };
 
+const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; onClick:()=>void }) => {
+  const hex = "#" + g.color.toString(16).padStart(6,"0");
+  const light = g.id==="diamante" || g.id==="moissanita" ? "#ffffff" : "#ffffff";
+  const gradId = "gem-grad-" + g.id;
+  return <button
+    type="button"
+    title={g.nombre}
+    aria-label={g.nombre}
+    onClick={onClick}
+    className={"group rounded-xl p-1.5 transition "+(selected?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.045]")}
+  >
+    <div className="relative mx-auto aspect-square w-full max-w-[68px]">
+      <svg viewBox="0 0 100 100" className="h-full w-full overflow-visible drop-shadow-[0_5px_10px_rgba(0,0,0,.35)]" aria-hidden="true">
+        <defs>
+          <radialGradient id={gradId} cx="32%" cy="25%" r="78%">
+            <stop offset="0%" stopColor={light} stopOpacity=".98"/>
+            <stop offset="22%" stopColor={hex} stopOpacity=".95"/>
+            <stop offset="66%" stopColor={hex}/>
+            <stop offset="100%" stopColor="#050609" stopOpacity=".72"/>
+          </radialGradient>
+          <clipPath id={"gem-clip-"+g.id}><circle cx="50" cy="50" r="45"/></clipPath>
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="#090b0e" stroke="rgba(255,255,255,.18)" strokeWidth="2"/>
+        <circle cx="50" cy="50" r="45" fill={"url(#"+gradId+")"}/>
+        <g clipPath={"url(#gem-clip-"+g.id+")"} stroke="#fff" strokeOpacity=".22" strokeWidth=".8">
+          <polygon points="50,6 73,18 92,40 82,70 59,92 34,86 10,65 8,39 27,17" fill={hex} fillOpacity=".45"/>
+          <polygon points="50,6 50,50 73,18" fill="#fff" fillOpacity=".24"/>
+          <polygon points="50,50 73,18 92,40" fill="#fff" fillOpacity=".08"/>
+          <polygon points="50,50 92,40 82,70" fill="#000" fillOpacity=".16"/>
+          <polygon points="50,50 82,70 59,92" fill="#fff" fillOpacity=".10"/>
+          <polygon points="50,50 59,92 34,86" fill="#000" fillOpacity=".18"/>
+          <polygon points="50,50 34,86 10,65" fill="#fff" fillOpacity=".08"/>
+          <polygon points="50,50 10,65 8,39" fill="#000" fillOpacity=".12"/>
+          <polygon points="50,50 8,39 27,17" fill="#fff" fillOpacity=".10"/>
+          <polygon points="50,50 27,17 50,6" fill="#fff" fillOpacity=".34"/>
+          <polygon points="35,20 50,12 62,21 53,38 37,34" fill="#fff" fillOpacity=".16" strokeOpacity=".28"/>
+          <polygon points="37,34 53,38 50,50 31,43" fill="#000" fillOpacity=".14"/>
+          <polygon points="53,38 68,29 78,43 50,50" fill="#fff" fillOpacity=".10"/>
+        </g>
+        <circle cx="36" cy="27" r="8" fill="#fff" opacity=".28"/>
+        <circle cx="32" cy="23" r="3" fill="#fff" opacity=".7"/>
+        <circle cx="67" cy="73" r="2.2" fill="#fff" opacity=".5"/>
+      </svg>
+      {selected&&<span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-gold text-[9px] font-bold text-black">✓</span>}
+    </div>
+    <span className="mt-1.5 block truncate text-center text-[9px] font-medium text-white/70 group-hover:text-white">{g.nombre}</span>
+  </button>;
+};
+
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
@@ -94,6 +143,8 @@ export function AurumRender() {
   const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
+  const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
+  const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
 
   useEffect(() => {
     let vivo = true;
@@ -507,25 +558,46 @@ export function AurumRender() {
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           {panel==="materiales"&&<div>
-            <div className="mb-3 flex rounded-xl border border-white/10 bg-white/[.02] p-1">
-              <button type="button" onClick={()=>setPanel("materiales")} className="flex-1 rounded-lg bg-gold/10 py-2 text-[9px] font-semibold uppercase tracking-wider text-gold">Metales</button>
-              <button type="button" onClick={()=>setGemaId("diamante")} className="flex-1 rounded-lg py-2 text-[9px] font-semibold uppercase tracking-wider text-white/45 hover:text-white">Gemas</button>
+            <div className="mb-4">
+              <p className="text-xs font-semibold">Biblioteca de materiales</p>
+              <p className="mt-1 text-[10px] text-white/35">{parteSeleccionada?(`Aplicar a: ${parteSeleccionadaNombre||"componente"}`):"Selecciona una parte del modelo para personalizarla"}</p>
             </div>
-            <div className="mb-4"><p className="text-xs font-semibold">Biblioteca de materiales</p><p className="mt-1 text-[10px] text-white/35">{parteSeleccionada?`Aplicar a la parte seleccionada${parteSeleccionadaCategoria==="metal"?" · Metal":parteSeleccionadaCategoria==="gema"?" · Gema":""}`:"Aplicar a toda la pieza"}</p></div>
-            <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
-              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
-              <div className="grid grid-cols-4 gap-2">{MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre} onClick={()=>{setMaterialId(m.id); apiRef.current?.material(m)}} className={"rounded-xl p-2 transition "+(materialId===m.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
-                <span className="mx-auto block size-11 rounded-full border border-white/15 shadow-[inset_2px_2px_5px_rgba(255,255,255,.28),inset_-3px_-3px_7px_rgba(0,0,0,.35),0_3px_10px_rgba(0,0,0,.3)]" style={{background:"radial-gradient(circle at 32% 28%, #ffffffaa 0%, #"+m.color.toString(16).padStart(6,"0")+" 38%, #00000055 100%)"}}/>
-                <span className="mt-1.5 block truncate text-center text-[9px] font-medium text-white/65">{m.nombre}</span>
-              </button>)}</div>
-            </div>)}</div>
-            <div className="mt-6 border-t border-white/10 pt-5">
-              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">Gemas</p>
-              <div className="grid grid-cols-4 gap-2">{GEMAS.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre} onClick={()=>{setGemaId(g.id); const cfg=GEMAS.find(x=>x.id===g.id); if(cfg && parteSeleccionadaCategoria==="gema") apiRef.current?.gema(cfg);}} className={"rounded-xl p-2 transition "+(gemaId===g.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
-                <span className="mx-auto block size-11 rounded-full border border-white/15 shadow-[inset_2px_2px_5px_rgba(255,255,255,.3),inset_-3px_-3px_7px_rgba(0,0,0,.35),0_3px_10px_rgba(0,0,0,.3)]" style={{background:"radial-gradient(circle at 32% 28%, #ffffffaa 0%, #"+g.color.toString(16).padStart(6,"0")+" 38%, #00000066 100%)"}}/>
-                <span className="mt-1.5 block truncate text-center text-[9px] font-medium text-white/65">{g.nombre}</span>
-              </button>)}</div>
+            <div className="mb-4 flex rounded-xl border border-white/10 bg-white/[.025] p-1">
+              <button type="button" onClick={()=>setBibliotecaTipo("metales")} className={"flex-1 rounded-lg py-2.5 text-[9px] font-semibold uppercase tracking-[.12em] transition "+(bibliotecaTipo==="metales"?"bg-gold/10 text-gold shadow-sm":"text-white/40 hover:text-white")}>
+                Metales
+              </button>
+              <button type="button" onClick={()=>setBibliotecaTipo("gemas")} className={"flex-1 rounded-lg py-2.5 text-[9px] font-semibold uppercase tracking-[.12em] transition "+(bibliotecaTipo==="gemas"?"bg-gold/10 text-gold shadow-sm":"text-white/40 hover:text-white")}>
+                Gemas
+              </button>
             </div>
+
+            {bibliotecaTipo==="metales"&&<div className="space-y-5">
+              {(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
+                <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre} onClick={()=>{setMaterialId(m.id); apiRef.current?.material(m)}} className={"group rounded-xl p-1.5 transition "+(materialId===m.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
+                    <span className="mx-auto block size-12 rounded-full border border-white/15 shadow-[inset_3px_3px_7px_rgba(255,255,255,.3),inset_-4px_-4px_8px_rgba(0,0,0,.38),0_4px_12px_rgba(0,0,0,.28)]" style={{background:"radial-gradient(circle at 30% 24%,#fff 0%,#"+m.color.toString(16).padStart(6,"0")+" 28%,#"+m.color.toString(16).padStart(6,"0")+" 62%,#08090a 100%)"}}/>
+                    <span className="mt-1.5 block truncate text-center text-[8px] font-medium text-white/65 group-hover:text-white">{m.nombre}</span>
+                  </button>)}
+                </div>
+              </div>)}
+            </div>}
+
+            {bibliotecaTipo==="gemas"&&<div>
+              <div className="mb-3 rounded-xl border border-white/8 bg-white/[.018] px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Gem className="size-3.5 text-gold"/>
+                  <div>
+                    <p className="text-[10px] font-semibold text-white/75">Biblioteca de Gemas</p>
+                    <p className="text-[9px] text-white/35">{parteSeleccionada?(`Selecciona una gema para ${parteSeleccionadaNombre||"la pieza"}`):"Selecciona primero una piedra en el modelo"}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {GEMAS.map(g=><GemSwatch key={g.id} g={g} selected={gemaId===g.id} onClick={()=>{setGemaId(g.id); if(parteSeleccionadaCategoria==="gema") apiRef.current?.gema(g);}}/>)}
+              </div>
+              <p className="mt-4 text-center text-[8px] uppercase tracking-[.14em] text-white/20">Materiales ópticos · PBR · Refracción</p>
+            </div>}
           </div>}
           {panel==="escenas"&&<div><div className="mb-4"><p className="text-xs font-semibold">Escenarios</p><p className="mt-1 text-[10px] text-white/35">Entornos de presentación comercial</p></div><div className="grid grid-cols-2 gap-2">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-white/10 hover:border-gold/40")}><div className={"h-14 "+e.clase}/><div className="p-2 text-[9px] font-semibold text-white/70">{e.nombre}</div></button>)}</div></div>}
           {panel==="iluminacion"&&<div><div className="mb-4"><p className="text-xs font-semibold">Iluminación</p><p className="mt-1 text-[10px] text-white/35">Presets de estudio para joyería</p></div><div className="space-y-2">{ILUMINACIONES.map(l=><button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-xl border p-3 text-left transition "+(iluminacionId===l.id?"border-gold bg-gold/10":"border-white/10 hover:border-gold/40")}><span><span className="block text-[10px] font-semibold text-white/80">{l.nombre}</span><span className="text-[9px] text-white/30">{l.descripcion}</span></span><span className="size-7 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff,transparent_38%),radial-gradient(circle,#c9a45d,#28201a)]"/></button>)}</div></div>}
