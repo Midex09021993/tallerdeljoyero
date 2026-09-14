@@ -9,6 +9,7 @@ type MaterialId =
   | "platino_pulido" | "platino_mate";
 type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
 type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
+type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
 type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino";
 type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
@@ -41,13 +42,19 @@ const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string }[] = [
 const VISTAS: { id: VistaId; nombre: string }[] = [
   { id: "perspectiva", nombre: "Perspectiva" }, { id: "frontal", nombre: "Frontal" }, { id: "superior", nombre: "Superior" }, { id: "lateral", nombre: "Lateral" },
 ];
+const ILUMINACIONES: { id: IluminacionId; nombre: string; descripcion: string }[] = [
+  { id: "studioSoft", nombre: "Studio Soft", descripcion: "Suave" },
+  { id: "studioHard", nombre: "Studio Hard", descripcion: "Contraste" },
+  { id: "jewelry", nombre: "Jewelry", descripcion: "Detalle" },
+  { id: "luxury", nombre: "Luxury", descripcion: "Dramática" },
+];
 
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [panel, setPanel] = useState<"materiales"|"escenas">("materiales");
+  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
 
@@ -85,6 +92,15 @@ export function AurumRender() {
       rim.position.set(2,4,-5); escena.add(rim);
       const top = new THREE.PointLight(0xffffff,3,30);
       top.position.set(0,5,1); escena.add(top);
+      const aplicarIluminacion = (id:IluminacionId) => {
+        const presets:any = {
+          studioSoft: {key:4.5,fill:3.8,rim:3.5,top:2.2,exposure:1.5},
+          studioHard: {key:7,fill:2.2,rim:6,top:2.8,exposure:1.55},
+          jewelry: {key:6,fill:4.5,rim:5.5,top:3.5,exposure:1.65},
+          luxury: {key:5,fill:2.5,rim:7,top:2.5,exposure:1.6},
+        }[id];
+        key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure;
+      };
 
       const controles = new OrbitControls(camara,renderer.domElement);
       controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true;
@@ -231,6 +247,7 @@ export function AurumRender() {
         cargar,
         material:aplicarMaterial,
         escenario:aplicarEscenario,
+        iluminacion:aplicarIluminacion,
         reset:encuadrar,
         capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
         limpiar:quitar,
@@ -249,61 +266,69 @@ export function AurumRender() {
   },[]);
   useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
+  useEffect(()=>apiRef.current?.iluminacion(iluminacionId),[iluminacionId]);
   useEffect(()=>apiRef.current?.vista(vista),[vista]);
 
   const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{const r=await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setTamanoGlb(r?.size??null);setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null);setTamanoGlb(null)}finally{setCargando(false);setPaso(null)}},[]);
   const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setTamanoGlb(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
-  return <div className="space-y-4">
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-ink px-5 py-4 text-ink-foreground sm:px-7">
-        <div className="flex items-center gap-3"><Gem className="size-5 text-gold"/><div><div className="font-display text-2xl italic text-gold">AURUM RENDER</div><div className="text-[10px] uppercase tracking-[.22em] text-ink-foreground/45">Jewelry 3D Studio · Fase 1</div></div></div>
-        <button type="button" onClick={()=>fileRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 text-xs font-semibold text-gold hover:bg-gold/15"><Upload className="size-4"/> {archivo?"Cambiar modelo":"Cargar modelo"}</button>
+  return <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0c0e]/95 px-4 backdrop-blur-xl">
+      <div className="flex min-w-0 items-center gap-3">
+        <Gem className="size-5 shrink-0 text-gold"/>
+        <div className="min-w-0"><div className="font-display text-xl italic leading-none text-gold">AURUM RENDER</div><div className="mt-1 text-[8px] uppercase tracking-[.24em] text-white/35">Jewelry Visualization Studio</div></div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={()=>fileRef.current?.click()} className="inline-flex h-9 items-center gap-2 rounded-lg border border-gold/35 bg-gold/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-gold hover:bg-gold/15"><Upload className="size-3.5"/> {archivo?"Cambiar modelo":"Cargar modelo"}</button>
         <input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)void cargarArchivo(f)}}/>
-      </header>
-      <div className="relative bg-[#090b0e]">
-        <div ref={visorRef} className="relative min-h-[560px] lg:min-h-[720px]">
-          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Arrastra tu modelo 3D aquí</h2><p className="mt-2 text-sm text-white/45">STL · OBJ · GLB · FBX · Rhino 3DM</p></div></div>}
-          {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-white/10 bg-black/60 px-6 py-4 text-sm text-white/80">{paso||"Preparando visualización..."}</div></div>}
-          {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/70 px-4 py-2 text-xs text-red-200">{error}</div>}
-          {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[70%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs text-white/65 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· Interno GLB{tamanoGlb?` · ${(tamanoGlb/1024/1024).toFixed(1)} MB`:""}</span></div>}
-          <div className="absolute right-5 top-5 z-20 flex gap-2">
-            <button type="button" title="Auto centrar" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><Maximize2 className="size-4"/></button>
-            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><Expand className="size-4"/></button>
-            {archivo&&<button type="button" title="Quitar modelo" onClick={limpiar} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><X className="size-4"/></button>}
+      </div>
+    </header>
+    <div className="flex min-h-0 flex-1">
+      <main className="relative min-w-0 flex-1 bg-[#090b0e]">
+        <div ref={visorRef} className="absolute inset-0">
+          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><p className="mt-4 text-[9px] uppercase tracking-[.2em] text-white/25">Rotar · Zoom · Pan</p></div></div>}
+          {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-gold/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-gold"/>{paso||"Preparando visualización..."}</div></div>}
+          {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
+          {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[60%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] text-white/55 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· GLB interno</span></div>}
+          <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-xl border border-white/10 bg-[#0b0c0e]/80 p-1 shadow-2xl backdrop-blur-xl">
+            {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
           </div>
-          {archivo&&<div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-2xl border border-white/10 bg-black/55 p-1 backdrop-blur">
-            {VISTAS.map(v=><button key={v.id} type="button" onClick={()=>setVista(v.id)} className={"rounded-xl px-3 py-2 text-[10px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/55 hover:text-white")}>{v.nombre}</button>)}
+          <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/35 backdrop-blur lg:block">AURUM RENDER · Tiempo real</div>
+        </div>
+      </main>
+      <aside className="flex w-[320px] shrink-0 flex-col border-l border-white/10 bg-[#0d0f11]/96 shadow-2xl backdrop-blur-xl xl:w-[350px]">
+        <div className="grid shrink-0 grid-cols-3 border-b border-white/10">
+          <button type="button" onClick={()=>setPanel("materiales")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="materiales"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Materiales</button>
+          <button type="button" onClick={()=>setPanel("escenas")} className={"flex flex-col items-center gap-1 border-x border-white/10 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="escenas"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><ImageIcon className="size-4"/>Escenarios</button>
+          <button type="button" onClick={()=>setPanel("iluminacion")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="iluminacion"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Luz</button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          {panel==="materiales"&&<div>
+            <div className="mb-4"><p className="text-xs font-semibold">Biblioteca de materiales</p><p className="mt-1 text-[10px] text-white/35">Selecciona un acabado</p></div>
+            <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
+              <div className="grid grid-cols-4 gap-2">{MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre} onClick={()=>setMaterialId(m.id)} className={"rounded-xl p-2 transition "+(materialId===m.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
+                <span className="mx-auto block size-11 rounded-full border border-white/15 shadow-[inset_2px_2px_5px_rgba(255,255,255,.28),inset_-3px_-3px_7px_rgba(0,0,0,.35),0_3px_10px_rgba(0,0,0,.3)]" style={{background:"radial-gradient(circle at 32% 28%, #ffffffaa 0%, #"+m.color.toString(16).padStart(6,"0")+" 38%, #00000055 100%)"}}/>
+                <span className="mt-1.5 block truncate text-center text-[9px] font-medium text-white/65">{m.nombre}</span>
+              </button>)}</div>
+            </div>)}</div>
           </div>}
-          <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/40 backdrop-blur md:block">Rotar · Zoom · Pan</div>
+          {panel==="escenas"&&<div><div className="mb-4"><p className="text-xs font-semibold">Escenarios</p><p className="mt-1 text-[10px] text-white/35">Entornos de presentación comercial</p></div><div className="grid grid-cols-2 gap-2">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-white/10 hover:border-gold/40")}><div className={"h-14 "+e.clase}/><div className="p-2 text-[9px] font-semibold text-white/70">{e.nombre}</div></button>)}</div></div>}
+          {panel==="iluminacion"&&<div><div className="mb-4"><p className="text-xs font-semibold">Iluminación</p><p className="mt-1 text-[10px] text-white/35">Presets de estudio para joyería</p></div><div className="space-y-2">{ILUMINACIONES.map(l=><button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-xl border p-3 text-left transition "+(iluminacionId===l.id?"border-gold bg-gold/10":"border-white/10 hover:border-gold/40")}><span><span className="block text-[10px] font-semibold text-white/80">{l.nombre}</span><span className="text-[9px] text-white/30">{l.descripcion}</span></span><span className="size-7 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff,transparent_38%),radial-gradient(circle,#c9a45d,#28201a)]"/></button>)}</div></div>}
         </div>
-      </div>
-      <div className="grid border-t border-border lg:grid-cols-[1fr_auto]">
-        <div className="flex overflow-x-auto">
-          <button type="button" onClick={()=>setPanel("materiales")} className={"flex items-center gap-2 border-r border-border px-5 py-4 text-xs font-semibold "+(panel==="materiales"?"text-gold":"text-muted-foreground")}><Sparkles className="size-4"/> Materiales</button>
-          <button type="button" onClick={()=>setPanel("escenas")} className={"flex items-center gap-2 border-r border-border px-5 py-4 text-xs font-semibold "+(panel==="escenas"?"text-gold":"text-muted-foreground")}><ImageIcon className="size-4"/> Escenarios</button>
-          <button type="button" onClick={()=>apiRef.current?.reset()} className="flex items-center gap-2 px-5 py-4 text-xs font-semibold text-muted-foreground hover:text-foreground"><RotateCcw className="size-4"/> Reset</button>
+        <div className="shrink-0 border-t border-white/10 p-3">
+          <p className="mb-2 px-1 text-[8px] font-semibold uppercase tracking-[.18em] text-white/25">Herramientas</p>
+          <div className="grid grid-cols-5 gap-1">
+            <button type="button" title="Configuración" onClick={()=>setPanel("iluminacion")} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><SlidersHorizontal className="size-4"/></button>
+            <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><RotateCcw className="size-4"/></button>
+            <button type="button" title="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Maximize2 className="size-4"/></button>
+            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Expand className="size-4"/></button>
+            <button type="button" title="Capturar imagen" onClick={capturarImagen} className="grid h-10 place-items-center rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"><Camera className="size-4"/></button>
+          </div>
+          {captura&&<button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-gold text-[10px] font-semibold uppercase tracking-wider text-black"><Download className="size-3.5"/> Descargar PNG</button>}
         </div>
-        <div className="flex items-center gap-2 p-2 sm:p-3">
-          <button type="button" onClick={capturarImagen} className="inline-flex h-10 items-center gap-2 rounded-xl border border-input px-3 text-xs font-semibold hover:border-gold"><Camera className="size-4"/> Capturar</button>
-          {captura&&<button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground"><Download className="size-4"/> Descargar PNG</button>}
-        </div>
-      </div>
-      <div className="border-t border-border bg-background p-5 sm:p-6">
-        {panel==="materiales"?<div>
-  <div className="mb-5 flex items-center justify-between"><div><p className="text-sm font-semibold">Biblioteca de materiales</p><p className="text-[11px] text-muted-foreground">Selecciona un metal y acabado para actualizar la pieza en tiempo real</p></div><SlidersHorizontal className="size-4 text-muted-foreground"/></div>
-  <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
-    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">{grupo}</p>
-    <div className="flex flex-wrap gap-3">{MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>setMaterialId(m.id)} className={"group min-w-[82px] rounded-2xl border px-2 py-3 transition "+(materialId===m.id?"border-gold bg-accent shadow-[0_0_0_1px_hsl(var(--gold)/.25)]":"border-input hover:border-gold/50")}>
-      <span className="mx-auto block size-12 rounded-full border border-white/20 shadow-[inset_2px_2px_5px_rgba(255,255,255,.28),inset_-3px_-3px_7px_rgba(0,0,0,.28),0_2px_8px_rgba(0,0,0,.2)]" style={{background:"radial-gradient(circle at 32% 28%, #ffffffaa 0%, #"+m.color.toString(16).padStart(6,"0")+" 38%, #00000055 100%)"}}/>
-      <span className="mt-2 block text-center text-[10px] font-semibold leading-tight">{m.nombre}</span>
-    </button>)}</div>
-  </div>)}</div>
-</div>
-        :<div><div className="mb-4"><p className="text-sm font-semibold">Escenarios de presentación</p><p className="text-[11px] text-muted-foreground">Ambientes para mostrar la pieza en distintos contextos comerciales</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-input hover:border-gold/50")}><div className={"h-16 "+e.clase}/><div className="flex items-center justify-between p-3 text-[11px] font-semibold">{e.nombre}<ChevronDown className="size-3 text-muted-foreground"/></div></button>)}</div></div>}
-      </div>
-    </section>
-    <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground"><Grid3X3 className="size-3.5"/> Conversión · Entrada → GLB interno → WebGL · Rhino 3DM + PBR + render avanzado</div>
+      </aside>
+    </div>
   </div>;
 }
