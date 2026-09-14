@@ -175,32 +175,16 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       </fieldset>
 
       {resultado ? (
-        <div className="space-y-4">
-          <div
-            className={`grid gap-4 ${
-              compacto ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:gap-5"
-            }`}
-          >
-            <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
-                Aleación a agregar
-              </p>
-              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                {formatearNumero(resultado.aleacion)}{" "}
-                <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
-              </p>
-            </article>
-
-            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Masa total final
-              </p>
-              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                {formatearNumero(resultado.total)}{" "}
-                <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
-              </p>
-            </article>
-          </div>
+        <div className="space-y-5">
+          <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
+              Aleación a agregar
+            </p>
+            <p className="mt-2 text-3xl font-semibold leading-none text-foreground">
+              {formatearNumero(resultado.aleacion)}{" "}
+              <span className="ml-1 text-base font-medium text-muted-foreground">g</span>
+            </p>
+          </article>
 
           <div className="space-y-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
@@ -210,7 +194,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
               className={`grid gap-4 ${
                 compacto
                   ? "grid-cols-1"
-                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5"
+                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5"
               }`}
             >
               {resultado.metales.map((m) => (
@@ -230,22 +214,27 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                   </p>
                 </article>
               ))}
-
-              <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
-                  Oro {kfNum}K {resultado.colorEtiqueta} resultante
-                </p>
-                <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                  {formatearNumero(resultado.total)}{" "}
-                  <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatearNumero(masaNum)} g de oro + {formatearNumero(resultado.aleacion)} g de
-                  aleación
-                </p>
-              </article>
             </div>
           </div>
+
+          <article className="relative overflow-hidden rounded-2xl border border-gold bg-gradient-to-br from-gold/15 to-gold/5 p-5 shadow-card">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
+              Resultado final
+            </p>
+            <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+              <span className="text-3xl font-semibold text-foreground">
+                {formatearNumero(resultado.total)} g
+              </span>
+              <span className="text-sm font-medium text-muted-foreground">
+                Oro {kfNum}K {resultado.colorEtiqueta}
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {formatearNumero(masaNum)} g de oro + {formatearNumero(resultado.aleacion)} g de
+              aleación
+            </p>
+          </article>
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-center">
