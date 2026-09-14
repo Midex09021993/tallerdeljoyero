@@ -34,8 +34,8 @@ export const applyAurumGem = (material:any,preset:AurumGemPreset,thickness:numbe
   material.thickness=Math.max(.015,thickness);
   material.ior=Math.min(2.333,Math.max(1.01,preset.ior));
   material.specularIntensity=1;
-  material.clearcoat=family==="Diamante"?.26:.18;
-  material.clearcoatRoughness=family==="Diamante"?.012:.02;
+  material.clearcoat=family==="Diamante" ? .26 : .18;
+  material.clearcoatRoughness=family==="Diamante" ? .012 : .02;
   material.envMapIntensity=preset.envMapIntensity;
   material.attenuationColor?.setHex(preset.attenuationColor);
   material.attenuationDistance=preset.attenuationDistance;
