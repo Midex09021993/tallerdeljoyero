@@ -1,18 +1,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
-type MaterialId = "oro18a" | "oro18b" | "oro18r" | "plata950" | "platino";
+type MaterialId =
+  | "oro18a_pulido" | "oro18a_satinado" | "oro18a_mate" | "oro18a_cepillado"
+  | "oro18b_rodinado" | "oro18b_pulido" | "oro18b_mate"
+  | "oro18r_pulido" | "oro18r_satinado" | "oro18r_mate"
+  | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
+  | "platino_pulido" | "platino_mate";
 type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
 type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 
-type MaterialConfig = { id: MaterialId; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
+type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino";
+type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
 const MATERIALES: MaterialConfig[] = [
-  { id: "oro18a", nombre: "Oro 18K Amarillo", color: 0xd7ad48, metalness: 1, roughness: .17, envMapIntensity: 2.5, clearcoat: .4 },
-  { id: "oro18b", nombre: "Oro 18K Blanco", color: 0xe0e3e6, metalness: 1, roughness: .13, envMapIntensity: 2.65, clearcoat: .35 },
-  { id: "oro18r", nombre: "Oro 18K Rosa", color: 0xd9937e, metalness: 1, roughness: .18, envMapIntensity: 2.45, clearcoat: .4 },
-  { id: "plata950", nombre: "Plata 950", color: 0xc4c9ce, metalness: 1, roughness: .15, envMapIntensity: 2.7, clearcoat: .28 },
-  { id: "platino", nombre: "Platino", color: 0xb9bec3, metalness: 1, roughness: .2, envMapIntensity: 2.55, clearcoat: .25 },
+  { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55 },
+  { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 2.35, clearcoat: .25 },
+  { id: "oro18a_mate", grupo: "Oro Amarillo", nombre: "Mate", color: 0xc7a45a, metalness: 1, roughness: .52, envMapIntensity: 1.8, clearcoat: .08 },
+  { id: "oro18a_cepillado", grupo: "Oro Amarillo", nombre: "Cepillado", color: 0xcfa94e, metalness: 1, roughness: .38, envMapIntensity: 2.15, clearcoat: .12 },
+  { id: "oro18b_rodinado", grupo: "Oro Blanco", nombre: "Rodinado", color: 0xe9edf2, metalness: 1, roughness: .09, envMapIntensity: 3, clearcoat: .6 },
+  { id: "oro18b_pulido", grupo: "Oro Blanco", nombre: "Pulido", color: 0xdfe3e8, metalness: 1, roughness: .13, envMapIntensity: 2.7, clearcoat: .45 },
+  { id: "oro18b_mate", grupo: "Oro Blanco", nombre: "Mate", color: 0xcbd0d5, metalness: 1, roughness: .5, envMapIntensity: 1.75, clearcoat: .08 },
+  { id: "oro18r_pulido", grupo: "Oro Rosa", nombre: "Pulido", color: 0xd9937e, metalness: 1, roughness: .12, envMapIntensity: 2.75, clearcoat: .5 },
+  { id: "oro18r_satinado", grupo: "Oro Rosa", nombre: "Satinado", color: 0xd58f7b, metalness: 1, roughness: .29, envMapIntensity: 2.3, clearcoat: .25 },
+  { id: "oro18r_mate", grupo: "Oro Rosa", nombre: "Mate", color: 0xc98573, metalness: 1, roughness: .5, envMapIntensity: 1.8, clearcoat: .08 },
+  { id: "plata925_pulida", grupo: "Plata", nombre: "Plata 925 Pulida", color: 0xd7dbe0, metalness: 1, roughness: .1, envMapIntensity: 2.9, clearcoat: .45 },
+  { id: "plata950_pulida", grupo: "Plata", nombre: "Plata 950 Pulida", color: 0xcfd4d9, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .4 },
+  { id: "plata970_pulida", grupo: "Plata", nombre: "Plata 970 Pulida", color: 0xe0e3e6, metalness: 1, roughness: .1, envMapIntensity: 2.9, clearcoat: .45 },
+  { id: "plata_envejecida", grupo: "Plata", nombre: "Plata Envejecida", color: 0x777c82, metalness: .92, roughness: .4, envMapIntensity: 1.65, clearcoat: .08 },
+  { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc5cbd0, metalness: 1, roughness: .1, envMapIntensity: 2.85, clearcoat: .48 },
+  { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.8, clearcoat: .08 },
 ];
+
 const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string }[] = [
   { id: "oscuro", nombre: "Estudio Oscuro", clase: "bg-[#090b0e]" },
   { id: "claro", nombre: "Estudio Claro", clase: "bg-[#e7e5e0]" },
@@ -75,6 +93,9 @@ export function AurumRender() {
       let modelo:any = null;
       let suelo:any = null;
       let glbInterno:Blob|null = null;
+      const material = new THREE.MeshPhysicalMaterial({
+        color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55, clearcoatRoughness: .08
+      });
 
       const dispose = (o:any) => o?.traverse((x:any) => {
         if (x.geometry) x.geometry.dispose();
@@ -87,6 +108,13 @@ export function AurumRender() {
         glbInterno = null;
       };
       const aplicarMaterial = (m:MaterialConfig) => {
+        material.color.setHex(m.color);
+        material.metalness = m.metalness;
+        material.roughness = m.roughness;
+        material.envMapIntensity = m.envMapIntensity;
+        material.clearcoat = m.clearcoat;
+        material.clearcoatRoughness = Math.min(.35, Math.max(.03, m.roughness * .45));
+        material.needsUpdate = true;
         if (!modelo) return;
         modelo.traverse((x:any) => {
           if (x.isMesh) {
@@ -95,11 +123,7 @@ export function AurumRender() {
             x.receiveShadow = true;
           }
         });
-        material.color.setHex(m.color);
-        material.roughness = m.roughness;
-        material.envMapIntensity = m.envMapIntensity;
-        material.clearcoat = m.clearcoat;
-        material.needsUpdate = true;
+
       };
       const aplicarEscenario = (id:EscenarioId) => {
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
@@ -222,7 +246,7 @@ export function AurumRender() {
 
   const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{const r=await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setTamanoGlb(r?.size??null);setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null);setTamanoGlb(null)}finally{setCargando(false);setPaso(null)}},[]);
   const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setTamanoGlb(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
-  const captura=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
+  const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
   return <div className="space-y-4">
     <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -255,12 +279,21 @@ export function AurumRender() {
           <button type="button" onClick={()=>apiRef.current?.reset()} className="flex items-center gap-2 px-5 py-4 text-xs font-semibold text-muted-foreground hover:text-foreground"><RotateCcw className="size-4"/> Reset</button>
         </div>
         <div className="flex items-center gap-2 p-2 sm:p-3">
-          <button type="button" onClick={captura} className="inline-flex h-10 items-center gap-2 rounded-xl border border-input px-3 text-xs font-semibold hover:border-gold"><Camera className="size-4"/> Capturar</button>
+          <button type="button" onClick={capturarImagen} className="inline-flex h-10 items-center gap-2 rounded-xl border border-input px-3 text-xs font-semibold hover:border-gold"><Camera className="size-4"/> Capturar</button>
           {captura&&<button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground"><Download className="size-4"/> Descargar PNG</button>}
         </div>
       </div>
       <div className="border-t border-border bg-background p-5 sm:p-6">
-        {panel==="materiales"?<div><div className="mb-4 flex items-center justify-between"><div><p className="text-sm font-semibold">Materiales PBR</p><p className="text-[11px] text-muted-foreground">Acabados premium para presentación de joyería</p></div><SlidersHorizontal className="size-4 text-muted-foreground"/></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-5">{MATERIALES.map(m=><button key={m.id} type="button" onClick={()=>setMaterialId(m.id)} className={"group rounded-2xl border p-3 text-left transition "+(materialId===m.id?"border-gold bg-accent":"border-input hover:border-gold/50")}><span className="mx-auto block size-10 rounded-full border border-black/10 shadow-inner" style={{background:"#"+m.color.toString(16).padStart(6,"0")}}/><span className="mt-2 block text-center text-[11px] font-semibold leading-tight">{m.nombre}</span></button>)}</div></div>
+        {panel==="materiales"?<div>
+  <div className="mb-5 flex items-center justify-between"><div><p className="text-sm font-semibold">Biblioteca de materiales</p><p className="text-[11px] text-muted-foreground">Selecciona un metal y acabado para actualizar la pieza en tiempo real</p></div><SlidersHorizontal className="size-4 text-muted-foreground"/></div>
+  <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
+    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">{grupo}</p>
+    <div className="flex flex-wrap gap-3">{MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>setMaterialId(m.id)} className={"group min-w-[82px] rounded-2xl border px-2 py-3 transition "+(materialId===m.id?"border-gold bg-accent shadow-[0_0_0_1px_hsl(var(--gold)/.25)]":"border-input hover:border-gold/50")}>
+      <span className="mx-auto block size-12 rounded-full border border-white/20 shadow-[inset_2px_2px_5px_rgba(255,255,255,.28),inset_-3px_-3px_7px_rgba(0,0,0,.28),0_2px_8px_rgba(0,0,0,.2)]" style={{background:"radial-gradient(circle at 32% 28%, #ffffffaa 0%, #"+m.color.toString(16).padStart(6,"0")+" 38%, #00000055 100%)"}}/>
+      <span className="mt-2 block text-center text-[10px] font-semibold leading-tight">{m.nombre}</span>
+    </button>)}</div>
+  </div>)}</div>
+</div>
         :<div><div className="mb-4"><p className="text-sm font-semibold">Escenarios de presentación</p><p className="text-[11px] text-muted-foreground">Ambientes para mostrar la pieza en distintos contextos comerciales</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-input hover:border-gold/50")}><div className={"h-16 "+e.clase}/><div className="flex items-center justify-between p-3 text-[11px] font-semibold">{e.nombre}<ChevronDown className="size-3 text-muted-foreground"/></div></button>)}</div></div>}
       </div>
     </section>
