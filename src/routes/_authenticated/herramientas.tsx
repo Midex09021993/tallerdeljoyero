@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { MobileBackButton } from "@/components/AppShell";
+import { Gem } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
@@ -29,6 +30,11 @@ function HerramientasPage() {
         <MobileBackButton atrasMovil={{ to: "/inicio" }} />
       </header>
       <div className="space-y-6">
+        <Link to="/aurum-render" className="flex items-center gap-3 rounded-2xl border border-gold/30 bg-ink px-4 py-4 text-ink-foreground shadow-card transition hover:border-gold">
+          <Gem className="size-5 text-gold" aria-hidden="true" />
+          <span className="flex-1"><span className="block font-display text-lg italic text-gold">AURUM RENDER</span><span className="block text-xs text-ink-foreground/50">Visualizador profesional de joyería 3D</span></span>
+          <span className="text-gold">→</span>
+        </Link>
         <CalculadoraYeso />
         <CalculadoraAleacionOro />
         <VisorPesoJoyeria />
