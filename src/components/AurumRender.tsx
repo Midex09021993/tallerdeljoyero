@@ -634,7 +634,7 @@ export function AurumRender() {
       const animate=()=>{
         frame=requestAnimationFrame(animate);
         controles.update();
-        else renderer.render(escena,camara);
+        renderer.render(escena,camara);
       };
       animate();
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
