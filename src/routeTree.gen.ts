@@ -233,7 +233,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/aurum-render'
-    | '/aurum-render'
     | '/casting'
     | '/corte-laser'
     | '/diseno-3d'
@@ -255,6 +254,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aurum-render'
     | '/auth'
     | '/cliente'
     | '/casting'
