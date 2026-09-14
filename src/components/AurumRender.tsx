@@ -205,7 +205,7 @@ export function AurumRender() {
         if (ext==="stl") {
           const {STLLoader}=await import("three/examples/jsm/loaders/STLLoader.js");
           const geo=new STLLoader().parse(buffer); geo.computeVertexNormals();
-          return new THREE.Mesh(geo, material);
+          return new THREE.Mesh(geo, crearMaterial(MATERIALES[0]));
         }
         if (ext==="obj") {
           const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
