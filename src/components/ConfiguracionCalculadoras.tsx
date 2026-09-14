@@ -185,6 +185,92 @@ export function ConfiguracionCalculadoras() {
   }
 
 
+  const [abierta, setAbierta] = useState<string | null>(null);
+
+  async function guardarSeccion(clave: string, valor: unknown, nombre: string) {
+    try {
+      await guardar.mutateAsync({ clave, valor });
+      toast.success(`${nombre} guardada`);
+    } catch {
+      toast.error(`No se pudo guardar ${nombre.toLowerCase()}`);
+    }
+  }
+
+  async function restaurarSeccion(clave: string, valor: unknown, setter: (v: any) => void, nombre: string) {
+    setter(clonar(valor));
+    try {
+      await guardar.mutateAsync({ clave, valor });
+      toast.success(`${nombre} restaurada`);
+    } catch {
+      toast.error(`No se pudo restaurar ${nombre.toLowerCase()}`);
+    }
+  }
+
+  function AccordionSection({
+    id,
+    titulo,
+    descripcion,
+    children,
+    onGuardar,
+    onRestaurar,
+  }: {
+    id: string;
+    titulo: string;
+    descripcion: string;
+    children: React.ReactNode;
+    onGuardar: () => void;
+    onRestaurar: () => void;
+  }) {
+    const estaAbierta = abierta === id;
+    return (
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <button
+          type="button"
+          aria-expanded={estaAbierta}
+          onClick={() => setAbierta(estaAbierta ? null : id)}
+          className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-accent/40"
+        >
+          <span className="min-w-0">
+            <span className="flex items-center gap-3">
+              <span className="text-lg leading-none text-gold">{estaAbierta ? "▼" : "▶"}</span>
+              <span className="text-base font-semibold">{titulo}</span>
+            </span>
+            <span className="mt-1 block pl-8 text-xs text-muted-foreground">{descripcion}</span>
+          </span>
+          <span className="shrink-0 rounded-full bg-accent px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground">
+            {estaAbierta ? "Abierta" : "Abrir"}
+          </span>
+        </button>
+
+        {estaAbierta ? (
+          <div className="border-t border-border">
+            {children}
+            <div className="flex flex-wrap justify-end gap-3 border-t border-border bg-muted/20 p-4">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onRestaurar(); }}
+                disabled={guardando}
+                className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold transition hover:border-gold disabled:opacity-60"
+              >
+                <RotateCcw className="size-4" aria-hidden="true" />
+                Restaurar valores predeterminados
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onGuardar(); }}
+                disabled={guardando}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                <Save className="size-4" aria-hidden="true" />
+                {guardando ? "Guardando…" : "Guardar valores"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Panel
@@ -199,90 +285,58 @@ export function ConfiguracionCalculadoras() {
         <div className="space-y-2 p-6">
           <p className="text-sm font-medium">Parámetros técnicos centralizados</p>
           <p className="text-xs text-muted-foreground">
-            Estos valores afectan a todas las calculadoras actuales y futuras. Los usuarios finales
-            no tienen controles para modificarlos.
+            Abre únicamente la calculadora que quieras configurar. Las demás permanecen cerradas.
           </p>
         </div>
       </Panel>
 
-      <Panel titulo="Visualizador 3D">
+      <AccordionSection
+        id="visualizador"
+        titulo="Visualizador 3D"
+        descripcion="Densidades, empuje y factor de seguridad"
+        onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.visualizador, cfgVisualizador, "Visualizador 3D")}
+        onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.visualizador, DEFAULT_CONFIG_VISUALIZADOR, setCfgVisualizador, "Visualizador 3D")}
+      >
         <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
           {metalesVisualizador.map(([id, etiqueta]) => (
             <label key={id} className="space-y-1.5">
               <span className="text-xs font-medium">{etiqueta}</span>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={inputCls}
-                  value={cfgVisualizador.densidades[id]}
-                  onChange={(e) => actualizarDensidad(id, e.target.value)}
-                />
+                <input type="number" min="0" step="0.01" className={inputCls} value={cfgVisualizador.densidades[id]} onChange={(e) => actualizarDensidad(id, e.target.value)} />
                 <span className="text-xs text-muted-foreground">g/cm³</span>
               </div>
             </label>
           ))}
           <label className="space-y-1.5">
             <span className="text-xs font-medium">Factor de empuje por defecto</span>
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              className={inputCls}
-              value={cfgVisualizador.factorEmpuje}
-              onChange={(e) =>
-                setCfgVisualizador((a) => ({ ...a, factorEmpuje: Number(e.target.value) || 0 }))
-              }
-            />
+            <input type="number" min="0" step="0.1" className={inputCls} value={cfgVisualizador.factorEmpuje} onChange={(e) => setCfgVisualizador((a) => ({ ...a, factorEmpuje: Number(e.target.value) || 0 }))} />
           </label>
           <label className="space-y-1.5">
             <span className="text-xs font-medium">Factor de seguridad</span>
-            <input
-              type="number"
-              min="0.01"
-              step="0.01"
-              className={inputCls}
-              value={cfgVisualizador.factorSeguridad}
-              onChange={(e) =>
-                setCfgVisualizador((a) => ({ ...a, factorSeguridad: Number(e.target.value) || 1 }))
-              }
-            />
+            <input type="number" min="0.01" step="0.01" className={inputCls} value={cfgVisualizador.factorSeguridad} onChange={(e) => setCfgVisualizador((a) => ({ ...a, factorSeguridad: Number(e.target.value) || 1 }))} />
           </label>
         </div>
-      </Panel>
+      </AccordionSection>
 
-      <Panel titulo="Calculadora de Aleación">
+      <AccordionSection
+        id="aleacion"
+        titulo="Calculadora de Aleación"
+        descripcion="Recetas de oro amarillo, blanco y rosa"
+        onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.aleacion, cfgAleacion, "Calculadora de Aleación")}
+        onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.aleacion, DEFAULT_CONFIG_ALEACION, setCfgAleacion, "Calculadora de Aleación")}
+      >
         <div className="space-y-6 p-6">
           {coloresAleacion.map(([color, etiqueta]) => (
             <section key={color} className="rounded-xl border border-border p-4">
               <h3 className="mb-4 text-sm font-semibold">{etiqueta}</h3>
               <div className="grid gap-3 sm:grid-cols-3">
                 {[0, 1, 2].map((index) => {
-                  const metal = cfgAleacion.recetas[color].metales[index] ?? {
-                    nombre: "",
-                    porcentaje: 0,
-                  };
+                  const metal = cfgAleacion.recetas[color].metales[index] ?? { nombre: "", porcentaje: 0 };
                   return (
                     <div key={index} className="space-y-2">
-                      <input
-                        className={inputCls}
-                        placeholder={index === 0 ? "Metal" : "Metal opcional"}
-                        value={metal.nombre}
-                        onChange={(e) => actualizarReceta(color, index, "nombre", e.target.value)}
-                      />
+                      <input className={inputCls} placeholder={index === 0 ? "Metal" : "Metal opcional"} value={metal.nombre} onChange={(e) => actualizarReceta(color, index, "nombre", e.target.value)} />
                       <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          className={inputCls}
-                          value={metal.porcentaje * 100}
-                          onChange={(e) =>
-                            actualizarReceta(color, index, "porcentaje", e.target.value)
-                          }
-                        />
+                        <input type="number" min="0" max="100" step="0.1" className={inputCls} value={metal.porcentaje * 100} onChange={(e) => actualizarReceta(color, index, "porcentaje", e.target.value)} />
                         <span className="text-xs text-muted-foreground">%</span>
                       </div>
                     </div>
@@ -293,21 +347,18 @@ export function ConfiguracionCalculadoras() {
           ))}
           <label className="block max-w-xs space-y-1.5">
             <span className="text-xs font-medium">Factor de cálculo</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              className={inputCls}
-              value={cfgAleacion.factorCalculo}
-              onChange={(e) =>
-                setCfgAleacion((a) => ({ ...a, factorCalculo: Number(e.target.value) || 0 }))
-              }
-            />
+            <input type="number" min="0" step="0.01" className={inputCls} value={cfgAleacion.factorCalculo} onChange={(e) => setCfgAleacion((a) => ({ ...a, factorCalculo: Number(e.target.value) || 0 }))} />
           </label>
         </div>
-      </Panel>
+      </AccordionSection>
 
-      <Panel titulo="Calculadora Yeso / Agua">
+      <AccordionSection
+        id="yeso"
+        titulo="Calculadora Yeso / Agua"
+        descripcion="Relaciones de mezcla y factores de corrección"
+        onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.yeso, cfgYeso, "Calculadora Yeso / Agua")}
+        onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.yeso, DEFAULT_CONFIG_YESO, setCfgYeso, "Calculadora Yeso / Agua")}
+      >
         <div className="space-y-6 p-6">
           <section>
             <h3 className="mb-3 text-sm font-semibold">Relaciones de mezcla</h3>
@@ -317,101 +368,47 @@ export function ConfiguracionCalculadoras() {
                   <div className="grid grid-cols-2 gap-2">
                     <label className="space-y-1">
                       <span className="text-[11px] text-muted-foreground">Agua %</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        className={inputCls}
-                        value={p.agua}
-                        onChange={(e) => actualizarProporcion(index, "agua", e.target.value)}
-                      />
+                      <input type="number" min="0" max="100" step="0.1" className={inputCls} value={p.agua} onChange={(e) => actualizarProporcion(index, "agua", e.target.value)} />
                     </label>
                     <label className="space-y-1">
                       <span className="text-[11px] text-muted-foreground">Yeso %</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        className={inputCls}
-                        value={p.yeso}
-                        onChange={(e) => actualizarProporcion(index, "yeso", e.target.value)}
-                      />
+                      <input type="number" min="0" max="100" step="0.1" className={inputCls} value={p.yeso} onChange={(e) => actualizarProporcion(index, "yeso", e.target.value)} />
                     </label>
                   </div>
                   <label className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={p.recomendada}
-                      onChange={(e) =>
-                        setCfgYeso((actual) => ({
-                          ...actual,
-                          proporciones: actual.proporciones.map((item, i) =>
-                            i === index ? { ...item, recomendada: e.target.checked } : item,
-                          ),
-                        }))
-                      }
-                    />
+                    <input type="checkbox" checked={p.recomendada} onChange={(e) => setCfgYeso((actual) => ({ ...actual, proporciones: actual.proporciones.map((item, i) => i === index ? { ...item, recomendada: e.target.checked } : item) }))} />
                     Recomendada
                   </label>
                 </div>
               ))}
             </div>
           </section>
-
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="space-y-1.5">
               <span className="text-xs font-medium">Volumen por gramo de yeso</span>
-              <input
-                type="number"
-                min="0.0001"
-                step="0.0001"
-                className={inputCls}
-                value={cfgYeso.volumenPorGramo}
-                onChange={(e) =>
-                  setCfgYeso((a) => ({ ...a, volumenPorGramo: Number(e.target.value) || 0.0001 }))
-                }
-              />
+              <input type="number" min="0.0001" step="0.0001" className={inputCls} value={cfgYeso.volumenPorGramo} onChange={(e) => setCfgYeso((a) => ({ ...a, volumenPorGramo: Number(e.target.value) || 0.0001 }))} />
             </label>
             <label className="space-y-1.5">
               <span className="text-xs font-medium">Factor de corrección</span>
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                className={inputCls}
-                value={cfgYeso.factorCorreccion}
-                onChange={(e) =>
-                  setCfgYeso((a) => ({ ...a, factorCorreccion: Number(e.target.value) || 1 }))
-                }
-              />
+              <input type="number" min="0.01" step="0.01" className={inputCls} value={cfgYeso.factorCorreccion} onChange={(e) => setCfgYeso((a) => ({ ...a, factorCorreccion: Number(e.target.value) || 1 }))} />
             </label>
             {tiposTarro.map(([tipo, etiqueta]) => (
               <label key={tipo} className="space-y-1.5">
                 <span className="text-xs font-medium">Tolerancia {etiqueta} (%)</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  className={inputCls}
-                  value={cfgYeso.tolerancias[tipo]}
-                  onChange={(e) =>
-                    setCfgYeso((a) => ({
-                      ...a,
-                      tolerancias: {
-                        ...a.tolerancias,
-                        [tipo]: Number(e.target.value) || 0,
-                      },
-                    }))
-                  }
-                />
+                <input type="number" step="0.1" className={inputCls} value={cfgYeso.tolerancias[tipo]} onChange={(e) => setCfgYeso((a) => ({ ...a, tolerancias: { ...a.tolerancias, [tipo]: Number(e.target.value) || 0 } }))} />
               </label>
             ))}
           </div>
         </div>
-      </Panel>
+      </AccordionSection>
 
-      <Panel titulo="Conversor de Tallas de Anillo">
+      <AccordionSection
+        id="tallas"
+        titulo="Conversor de Tallas"
+        descripcion="Tabla de equivalencias de diámetro, Europa y USA"
+        onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.tallasAnillo, cfgTallas, "Conversor de Tallas")}
+        onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.tallasAnillo, DEFAULT_CONFIG_TALLAS_ANILLO, setCfgTallas, "Conversor de Tallas")}
+      >
         <div className="space-y-4 p-6">
           <p className="text-xs text-muted-foreground">Tabla maestra de equivalencias del taller. Puedes agregar, editar o eliminar filas sin modificar código.</p>
           <div className="overflow-x-auto rounded-xl border border-border">
@@ -433,28 +430,20 @@ export function ConfiguracionCalculadoras() {
           </div>
           <button type="button" onClick={agregarTalla} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:border-primary">+ Agregar fila</button>
         </div>
-      </Panel>
+      </AccordionSection>
 
-      <div className="sticky bottom-4 z-20 flex flex-wrap justify-end gap-3 rounded-2xl border border-border bg-card/95 p-4 shadow-card backdrop-blur">
-        <button
-          type="button"
-          onClick={() => void restaurarValores()}
-          disabled={guardando}
-          className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold transition hover:border-gold disabled:opacity-60"
-        >
-          <RotateCcw className="size-4" aria-hidden="true" />
-          Restaurar valores predeterminados
-        </button>
-        <button
-          type="button"
-          onClick={() => void guardarValores()}
-          disabled={guardando}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-        >
-          <Save className="size-4" aria-hidden="true" />
-          {guardando ? "Guardando…" : "Guardar valores"}
-        </button>
-      </div>
+      <AccordionSection
+        id="peso-stl"
+        titulo="Calculadora de Peso STL"
+        descripcion="Preparada para futuras configuraciones"
+        onGuardar={() => toast.info("La configuración de Peso STL estará disponible cuando la calculadora sea implementada.")}
+        onRestaurar={() => toast.info("La configuración de Peso STL estará disponible cuando la calculadora sea implementada.")}
+      >
+        <div className="p-6 text-sm text-muted-foreground">
+          Esta sección está preparada para recibir los parámetros técnicos de la futura Calculadora de Peso STL.
+        </div>
+      </AccordionSection>
     </div>
   );
+
 }
