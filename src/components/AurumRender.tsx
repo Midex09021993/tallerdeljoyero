@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
 import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
-import { getAurumScenePreset, getAurumRenderQuality } from "../lib/aurum-scene-engine";
+import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -317,6 +317,37 @@ export function AurumRender() {
 
 
       let modelo:any = null;
+      let hdriGround:any = null;
+      let hdriGroundTexture:any = null;
+      const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
+
+      const crearHdriGround = () => {
+        if (!hdriGroundTexture || !hdriGroundConfig.enabled) return;
+        if (hdriGround) { escena.remove(hdriGround); hdriGround.geometry?.dispose?.(); }
+        const r=Math.max(5,hdriGroundConfig.worldRadius);
+        const geo=new THREE.SphereGeometry(r,64,32,0,Math.PI*2,0,Math.PI*.5);
+        const mat=new THREE.MeshBasicMaterial({
+          map:hdriGroundTexture,
+          side:THREE.BackSide,
+          transparent:true,
+          opacity:hdriGroundConfig.opacity,
+          depthWrite:false
+        });
+        hdriGround=new THREE.Mesh(geo,mat);
+        hdriGround.position.set(hdriGroundConfig.originX,hdriGroundConfig.originY+hdriGroundConfig.tripodHeight,hdriGroundConfig.originZ);
+        hdriGround.rotation.x=Math.PI;
+        hdriGround.renderOrder=-10;
+        escena.add(hdriGround);
+      };
+
+      const actualizarHdriGround=()=>{
+        if(!hdriGroundConfig.enabled){
+          if(hdriGround){escena.remove(hdriGround);hdriGround=null;}
+          return;
+        }
+        crearHdriGround();
+      };
+
       let suelo:any = null;
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
@@ -603,6 +634,10 @@ export function AurumRender() {
         material:aplicarMaterial,
         gema:aplicarGema,
         escenario:aplicarEscenario,
+        hdriGround:(config:any={})=>{
+          Object.assign(hdriGroundConfig,config);
+          actualizarHdriGround();
+        },
         iluminacion:aplicarIluminacion,
         reset:()=>{ controles.autoRotate=false; setAutoRotando(false); encuadrar(); },
          autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; setAutoRotando(activo); },
