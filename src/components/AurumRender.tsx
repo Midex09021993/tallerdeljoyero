@@ -246,7 +246,7 @@ export function AurumRender() {
             const anterior = entorno;
             entorno = hdrEnvironment;
             escena.environment = entorno;
-            escena.environmentIntensity = 0.72;
+            escena.environmentIntensity = 0.36;
             escena.environmentRotation.y = id === "luxury" ? Math.PI * .42 : id === "studioHard" ? Math.PI * .08 : Math.PI * .16;
             anterior?.dispose?.();
           } catch {
@@ -268,10 +268,10 @@ export function AurumRender() {
       top.position.set(0,5,1); escena.add(top);
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft: {key:1.45,fill:0.65,rim:1.55,top:0.5,exposure:0.84,environment:0.55},
-          studioHard: {key:2.0,fill:0.45,rim:2.0,top:0.65,exposure:0.86,environment:0.58},
-          jewelry: {key:1.85,fill:0.78,rim:1.9,top:0.65,exposure:0.84,environment:0.62},
-          luxury: {key:1.7,fill:0.48,rim:2.1,top:0.55,exposure:0.85,environment:0.58},
+          studioSoft: {key:1.15,fill:0.4,rim:1.1,top:0.35,exposure:0.70,environment:0.36},
+          studioHard: {key:1.5,fill:0.3,rim:1.4,top:0.45,exposure:0.72,environment:0.4},
+          jewelry: {key:1.35,fill:0.45,rim:1.25,top:0.4,exposure:0.68,environment:0.38},
+          luxury: {key:1.3,fill:0.32,rim:1.5,top:0.4,exposure:0.70,environment:0.4},
         }[id];
         key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
         cargarHDRI(id);
