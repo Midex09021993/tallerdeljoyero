@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Calculator } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
