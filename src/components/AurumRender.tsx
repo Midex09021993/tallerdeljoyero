@@ -547,7 +547,6 @@ export function AurumRender() {
           }
         });
         modelo=interno;
-        setPartes(obtenerPartes(modelo));
         setParteSeleccionada(null);
         setParteSeleccionadaNombre(null); setParteSeleccionadaCapa(null); setParteSeleccionadaCategoria("otro");
         parteActiva=null;
@@ -568,7 +567,7 @@ export function AurumRender() {
         reset:()=>{ controles.autoRotate=false; setAutoRotando(false); encuadrar(); },
          autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; setAutoRotando(activo); },
         capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
-        limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setPartes([]);setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
+        limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
     partes:()=>modelo?obtenerPartes(modelo):[],
     seleccionarParte:(id:string)=>{
           if (!id) { parteActiva=null; setParteSeleccionada(null); setParteSeleccionadaNombre(null); limpiarResaltado(); return; }
