@@ -237,6 +237,36 @@ export function AurumRender() {
         jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_04_1k.hdr",
         luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
       };
+      let entornoGema:any = null;
+      const gemEnvironmentUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr";
+      const aplicarEntornoGema = () => {
+        if (!modelo || !entornoGema) return;
+        modelo.traverse((x:any) => {
+          if (!x.isMesh || !x.material) return;
+          const aplicar=(m:any)=>{
+            if (!m?.userData?.aurumOpticalProfile) return m;
+            m.envMap=entornoGema;
+            const familia=m.userData.aurumOpticalProfile;
+            m.envMapIntensity = familia==="Diamante" ? 1.55 : familia==="Esmeralda" ? 1.15 : 1.25;
+            m.needsUpdate=true;
+            return m;
+          };
+          x.material=Array.isArray(x.material)?x.material.map(aplicar):aplicar(x.material);
+        });
+      };
+      const cargarEntornoGema = () => {
+        new RGBELoader().load(gemEnvironmentUrl,(hdrTexture:any)=>{
+          if (!vivo) { hdrTexture.dispose?.(); return; }
+          try {
+            const nuevo=pmrem.fromEquirectangular(hdrTexture).texture;
+            hdrTexture.dispose?.();
+            const anterior=entornoGema;
+            entornoGema=nuevo;
+            anterior?.dispose?.();
+            aplicarEntornoGema();
+          } catch { hdrTexture.dispose?.(); }
+        },undefined,()=>{});
+      };
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId) => {
         const requestId = ++hdrRequestId;
@@ -371,6 +401,7 @@ export function AurumRender() {
         };
         target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
         crearInclusiones(target,g);
+        aplicarEntornoGema();
       };
 
       const aplicarMaterial = (m:MaterialConfig) => {
@@ -546,7 +577,7 @@ export function AurumRender() {
             const m=new THREE.MeshPhysicalMaterial();
             const gemaBox = new THREE.Box3().setFromObject(x); const gemaSize = gemaBox.getSize(new THREE.Vector3());
             applyAurumGem(m, gemPresetFromConfig(g), Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*.85, g.familia);
-            x.material=m; crearInclusiones(x,g);
+            x.material=m; crearInclusiones(x,g); aplicarEntornoGema();
           } else if (meta?.categoria==="metal") {
             const m=MATERIALES[0];
             const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
