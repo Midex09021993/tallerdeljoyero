@@ -204,6 +204,9 @@ export function AurumRender() {
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
+      const { EffectComposer } = await import("three/examples/jsm/postprocessing/EffectComposer.js");
+      const { RenderPass } = await import("three/examples/jsm/postprocessing/RenderPass.js");
+      const { SSAOPass } = await import("three/examples/jsm/postprocessing/SSAOPass.js");
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       const escena = new THREE.Scene();
       const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
@@ -227,6 +230,22 @@ export function AurumRender() {
       renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
+      let composer:any = null;
+      let ssaoPass:any = null;
+      try {
+        composer = new EffectComposer(renderer);
+        const renderPass = new RenderPass(escena, camara);
+        composer.addPass(renderPass);
+        ssaoPass = new SSAOPass(escena, camara, 1, 1);
+        ssaoPass.kernelRadius = ssaoConfig.radius;
+        ssaoPass.minDistance = ssaoConfig.bias;
+        ssaoPass.maxDistance = Math.max(.01, ssaoConfig.radius * 2.5);
+        ssaoPass.enabled = ssaoConfig.enabled;
+        composer.addPass(ssaoPass);
+      } catch {
+        composer = null;
+        ssaoPass = null;
+      }
 
       const pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
@@ -696,7 +715,7 @@ export function AurumRender() {
         iluminacion:aplicarIluminacion,
         reset:()=>{ controles.autoRotate=false; setAutoRotando(false); encuadrar(); },
          autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; setAutoRotando(activo); },
-        capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
+        capturar:()=>{composer?.render();return renderer.domElement.toDataURL("image/png")},
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
     partes:()=>modelo?obtenerPartes(modelo):[],
     seleccionarParte:(id:string)=>{
@@ -763,7 +782,7 @@ export function AurumRender() {
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
-      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false)};
+      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false);composer?.setSize(w,h);ssaoPass?.setSize?.(w,h)};
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       let frame=0;
