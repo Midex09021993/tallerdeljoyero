@@ -106,3 +106,67 @@ export const generateAurumInclusionPoints=(config:AurumInclusionConfig,count=48)
   }
   return points;
 };
+
+
+/**
+ * AURUM OPTICAL ENGINE v1.0
+ * Presets de óptica y corte. La geometría original del archivo no se reemplaza:
+ * estos parámetros permiten preparar el material y el postprocesado para la
+ * respuesta óptica de cada familia de gema.
+ */
+export type AurumOpticalProfile = {
+  ior:number;
+  transmission:number;
+  dispersion:number;
+  absorptionDistance:number;
+  internalReflection:number;
+  facetContrast:number;
+  brilliance:number;
+  fire:number;
+};
+
+export const AURUM_OPTICAL_PROFILES:Record<string,AurumOpticalProfile>={
+  Diamante:{ior:2.417,transmission:1,dispersion:.035,absorptionDistance:100,internalReflection:.98,facetContrast:1,brilliance:1,fire:1},
+  Moissanita:{ior:2.65,transmission:1,dispersion:.104,absorptionDistance:80,internalReflection:.99,facetContrast:1,brilliance:.98,fire:1.18},
+  Esmeralda:{ior:1.577,transmission:.92,dispersion:.012,absorptionDistance:15,internalReflection:.82,facetContrast:.88,brilliance:.78,fire:.45},
+  Rubí:{ior:1.762,transmission:.90,dispersion:.014,absorptionDistance:13,internalReflection:.86,facetContrast:.92,brilliance:.84,fire:.52},
+  Zafiro:{ior:1.77,transmission:.91,dispersion:.012,absorptionDistance:15,internalReflection:.87,facetContrast:.92,brilliance:.82,fire:.48}
+};
+
+export const getAurumOpticalProfile=(familia:string):AurumOpticalProfile=>
+  AURUM_OPTICAL_PROFILES[familia]??AURUM_OPTICAL_PROFILES.Diamante;
+
+export type AurumFacetProfile={
+  cut:string;
+  crownAngle:number;
+  pavilionAngle:number;
+  tableRatio:number;
+  facetContrast:number;
+};
+
+export const AURUM_FACET_PROFILES:Record<string,AurumFacetProfile>={
+  brillante:{cut:"Brillante",crownAngle:34,pavilionAngle:40.75,tableRatio:.57,facetContrast:1},
+  esmeralda:{cut:"Esmeralda",crownAngle:33,pavilionAngle:38,tableRatio:.68,facetContrast:.88},
+  oval:{cut:"Oval",crownAngle:34,pavilionAngle:40,tableRatio:.60,facetContrast:.94},
+  cushion:{cut:"Cushion",crownAngle:35,pavilionAngle:40,tableRatio:.62,facetContrast:.92},
+  princesa:{cut:"Princesa",crownAngle:36,pavilionAngle:40,tableRatio:.72,facetContrast:.96}
+};
+
+export const getAurumFacetProfile=(cut:string="brillante")=>
+  AURUM_FACET_PROFILES[cut]??AURUM_FACET_PROFILES.brillante;
+
+/**
+ * Ajusta propiedades ópticas del material sin alterar la geometría del modelo.
+ * Esto permite probar el pipeline óptico de forma segura con los archivos actuales.
+ */
+export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)=>{
+  if(!material)return material;
+  material.ior=Math.min(2.65,Math.max(1.01,profile.ior));
+  material.transmission=Math.max(0,Math.min(1,profile.transmission));
+  material.dispersion=Math.max(0,profile.dispersion);
+  material.thickness=Math.max(.015,material.thickness??.5);
+  material.attenuationDistance=Math.max(.1,profile.absorptionDistance);
+  material.userData={...(material.userData??{}),aurumOpticalProfile:profile};
+  material.needsUpdate=true;
+  return material;
+};
