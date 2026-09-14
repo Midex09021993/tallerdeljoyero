@@ -55,7 +55,7 @@ export function AurumRender() {
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
+  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
 
@@ -110,6 +110,8 @@ export function AurumRender() {
       let modelo:any = null;
       let suelo:any = null;
       let glbInterno:Blob|null = null;
+      let parteActiva:any = null;
+      let resaltado:any = null;
       const material = new THREE.MeshPhysicalMaterial({
         color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55, clearcoatRoughness: .08
       });
@@ -142,11 +144,14 @@ export function AurumRender() {
           if (!x.isMesh) return;
           x.castShadow = true;
           x.receiveShadow = true;
-          if (x.uuid === parteSeleccionada) {
-            const nuevo = material.clone();
-            configurarMaterial(nuevo, m);
-            x.material = nuevo;
-          } else if (!parteSeleccionada) {
+          if (parteActiva && x.uuid === parteActiva.uuid) {
+            const aplicar = (base:any) => {
+              const nuevo = base?.clone ? base.clone() : material.clone();
+              configurarMaterial(nuevo, m);
+              return nuevo;
+            };
+            x.material = Array.isArray(x.material) ? x.material.map((base:any)=>aplicar(base)) : aplicar(x.material);
+          } else if (!parteActiva) {
             x.material = material;
           }
         });
@@ -259,6 +264,9 @@ export function AurumRender() {
         modelo=interno;
         setPartes(obtenerPartes(modelo));
         setParteSeleccionada(null);
+        setParteSeleccionadaNombre(null);
+        parteActiva=null;
+        limpiarResaltado();
         glbInterno=new Blob([glb],{type:"model/gltf-binary"});
         escena.add(modelo);
         aplicarMaterial(materialActivo);
@@ -276,12 +284,41 @@ export function AurumRender() {
         iluminacion:aplicarIluminacion,
         reset:encuadrar,
         capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
-        limpiar:()=>{quitar();setPartes([]);setParteSeleccionada(null);},
+        limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setPartes([]);setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
     partes:()=>modelo?obtenerPartes(modelo):[],
-    seleccionarParte:(id:string)=>{setParteSeleccionada(id||null);},
+    seleccionarParte:(id:string)=>{
+          if (!id) { parteActiva=null; setParteSeleccionada(null); setParteSeleccionadaNombre(null); limpiarResaltado(); return; }
+          let encontrado:any=null;
+          modelo?.traverse((x:any)=>{if(x.uuid===id) encontrado=x;});
+          if(encontrado) seleccionarMalla(encontrado);
+        },
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:camaraVista,
         glbSize:()=>glbInterno?.size??0,
+      };
+      const limpiarResaltado = () => {
+        if (!resaltado) return;
+        escena.remove(resaltado);
+        resaltado.geometry?.dispose?.();
+        resaltado.material?.dispose?.();
+        resaltado = null;
+      };
+      const seleccionarMalla = (obj:any) => {
+        if (!obj?.isMesh) return;
+        parteActiva = obj;
+        const nombre = (typeof obj.name === "string" && obj.name.trim()) ? obj.name.trim() : "Componente seleccionado";
+        setParteSeleccionada(obj.uuid);
+        setParteSeleccionadaNombre(nombre);
+        limpiarResaltado();
+        if (obj.geometry) {
+          const edges = new THREE.EdgesGeometry(obj.geometry, 18);
+          resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
+          resaltado.renderOrder = 20;
+          resaltado.position.copy(obj.getWorldPosition(new THREE.Vector3()));
+          resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
+          resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
+          escena.add(resaltado);
+        }
       };
       const seleccionarPorClick = (event: MouseEvent) => {
         if (!modelo || cargando) return;
@@ -295,17 +332,16 @@ export function AurumRender() {
         const objetivos:any[] = [];
         modelo.traverse((x:any) => { if (x.isMesh && x.visible) objetivos.push(x); });
         const impacto = raycaster.intersectObjects(objetivos, false)[0];
-        if (impacto?.object?.uuid) {
-          setParteSeleccionada(impacto.object.uuid);
-        }
+        if (impacto?.object?.uuid) seleccionarMalla(impacto.object);
       };
+      renderer.domElement.addEventListener("click", seleccionarPorClick);
 
       const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false)};
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       let frame=0;
       const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)}; animate();
-      cleanup=()=>{cancelAnimationFrame(frame);renderer.domElement.removeEventListener("click", seleccionarPorClick);obs.disconnect();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
+      cleanup=()=>{cancelAnimationFrame(frame);renderer.domElement.removeEventListener("click", seleccionarPorClick);obs.disconnect();limpiarResaltado();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;cleanup()};
   },[]);
@@ -335,7 +371,7 @@ export function AurumRender() {
           {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><p className="mt-4 text-[9px] uppercase tracking-[.2em] text-white/25">Rotar · Zoom · Pan</p></div></div>}
           {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-gold/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-gold"/>{paso||"Preparando visualización..."}</div></div>}
           {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-          {parteSeleccionada&&<div className="absolute left-5 top-16 z-20 rounded-full border border-gold/40 bg-black/65 px-3 py-2 text-[10px] font-medium text-gold backdrop-blur-xl">Parte seleccionada · ahora elige un material</div>}
+          {parteSeleccionada&&<div className="absolute left-5 top-16 z-20 max-w-[70%] rounded-xl border border-[#ff8a5b]/60 bg-black/75 px-3 py-2 text-[10px] font-medium text-white shadow-xl backdrop-blur-xl"><span className="text-[#ff8a5b]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<span className="ml-2 text-white/40">· elige un material</span></div>}
           {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[60%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] text-white/55 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· GLB interno</span></div>}
           <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-xl border border-white/10 bg-[#0b0c0e]/80 p-1 shadow-2xl backdrop-blur-xl">
             {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
