@@ -131,9 +131,9 @@ export function ConfiguracionCalculadoras() {
     setCfgAleacion((actual) => {
       const metales = [...actual.recetas[color].metales];
       while (metales.length <= index) metales.push({ nombre: "", porcentaje: 0 });
-      const actual = metales[index] ?? { nombre: "", porcentaje: 0 };
+      const metalActual = metales[index] ?? { nombre: "", porcentaje: 0 };
       metales[index] = {
-        ...actual,
+        ...metalActual,
         [campo]: campo === "porcentaje" ? (Number(valor) || 0) / 100 : valor,
       };
       return { ...actual, recetas: { ...actual.recetas, [color]: { metales } } };
