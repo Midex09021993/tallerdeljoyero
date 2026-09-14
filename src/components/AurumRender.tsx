@@ -147,7 +147,7 @@ export function AurumRender() {
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string|null>(null), [autoRotando, setAutoRotando] = useState(false), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
+  const [captura, setCaptura] = useState<string|null>(null), [autoRotando, setAutoRotando] = useState(false), [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería"), [categoriaProyecto, setCategoriaProyecto] = useState("Anillo"), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
@@ -548,6 +548,38 @@ export function AurumRender() {
       </div>
     </header>
     <div className="flex min-h-0 flex-1">
+      <aside className="hidden w-[250px] shrink-0 flex-col border-r border-white/10 bg-[#0b0d0f]/96 shadow-2xl backdrop-blur-xl lg:flex">
+        <div className="border-b border-white/10 px-4 py-3">
+          <p className="text-[9px] font-semibold uppercase tracking-[.18em] text-white/35">Configuración del proyecto</p>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[.025]">
+            <div className="relative aspect-[4/3] overflow-hidden bg-[#17191c]">
+              {captura ? <img src={captura} alt="Vista previa del proyecto" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><div className="grid size-14 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold"><Gem className="size-6"/></div></div>}
+              {archivo && <span className="absolute bottom-2 left-2 rounded-md border border-white/10 bg-black/65 px-2 py-1 text-[8px] text-white/60 backdrop-blur">Vista 3D</span>}
+            </div>
+            <button type="button" onClick={capturarImagen} disabled={!archivo} className="flex h-9 w-full items-center justify-center gap-2 border-t border-white/10 text-[9px] font-semibold uppercase tracking-wider text-white/55 transition hover:bg-gold/10 hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"><Camera className="size-3.5"/> Actualizar vista</button>
+          </div>
+          <div className="mt-4">
+            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[.15em] text-white/35">Nombre del diseño</label>
+            <input value={nombreProyecto} onChange={e=>setNombreProyecto(e.target.value)} className="h-10 w-full rounded-lg border border-white/10 bg-white/[.025] px-3 text-xs text-white outline-none transition placeholder:text-white/20 focus:border-gold/50" placeholder="Nombre del diseño"/>
+          </div>
+          <div className="mt-3">
+            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[.15em] text-white/35">Tipo de joya</label>
+            <select value={categoriaProyecto} onChange={e=>setCategoriaProyecto(e.target.value)} className="h-10 w-full rounded-lg border border-white/10 bg-[#121417] px-3 text-xs text-white outline-none focus:border-gold/50">
+              {["Anillo","Arete","Collar","Pulsera","Dije","Brazalete","Otro"].map(v=><option key={v}>{v}</option>)}
+            </select>
+          </div>
+          <div className="mt-3">
+            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[.15em] text-white/35">Archivo</label>
+            <div className="rounded-lg border border-white/10 bg-white/[.02] px-3 py-2.5 text-[9px] text-white/45">{archivo || "Ningún modelo cargado"}</div>
+          </div>
+          <div className="mt-5 rounded-xl border border-gold/10 bg-gold/[.035] p-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[.15em] text-gold/75">Presentación</p>
+            <p className="mt-1.5 text-[9px] leading-relaxed text-white/35">Prepara la pieza para visualizarla, cambiar materiales y presentar distintas opciones.</p>
+          </div>
+        </div>
+      </aside>
       <main className="relative min-w-0 flex-1 bg-[#090b0e]">
         <div ref={visorRef} className="absolute inset-0">
           {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><p className="mt-4 text-[9px] uppercase tracking-[.2em] text-white/25">Rotar · Zoom · Pan</p></div></div>}
