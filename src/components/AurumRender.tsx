@@ -175,7 +175,6 @@ export function AurumRender() {
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro");
-  const [captura, setCaptura] = useState<string|null>(null), [autoRotando, setAutoRotando] = useState(false), [modoRenderPro, setModoRenderPro] = useState(false), [renderProCargando, setRenderProCargando] = useState(false), [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería"), [categoriaProyecto, setCategoriaProyecto] = useState("Anillo"), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
@@ -195,47 +194,8 @@ export function AurumRender() {
       const escena = new THREE.Scene();
       const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
       const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance" });
-      // Render Pro: path tracing GPU opcional, cargado solo cuando el usuario lo activa.
-      let pathTracer:any = null;
-      let renderProActivo = false;
-      let renderProRequest = 0;
-      const sincronizarPathTracer = () => {
-        if (!pathTracer || !renderProActivo || !modelo) return;
-        try { pathTracer.setScene(escena, camara); pathTracer.reset(); } catch (e) { console.warn("[AURUM RENDER] sincronización Render Pro", e); }
-      };
-      const activarRenderPro = async (activo:boolean) => {
-        renderProActivo = activo;
-        if (!activo) { pathTracer?.reset?.(); renderer.render(escena, camara); return; }
-        if (!modelo) { renderProActivo=false; setModoRenderPro(false); setError("Carga primero un modelo para activar Render Pro."); return; }
-        const request=++renderProRequest;
-        setRenderProCargando(true);
-        try {
-          if (!pathTracer) {
-            const { WebGLPathTracer } = await import("three-gpu-pathtracer");
-            if (!vivo || request!==renderProRequest) return;
-            pathTracer=new WebGLPathTracer(renderer);
-            pathTracer.bounces=8;
-            pathTracer.minSamples=2;
-            pathTracer.renderDelay=0;
-            pathTracer.fadeDuration=250;
-            pathTracer.dynamicLowRes=true;
-            pathTracer.lowResScale=.18;
-            pathTracer.renderScale=.92;
-            pathTracer.rasterizeScene=false;
-            pathTracer.setScene(escena,camara);
-          } else sincronizarPathTracer();
-          controles.autoRotate=false;
-          setAutoRotando(false);
-          if (vivo && request===renderProRequest) { setModoRenderPro(true); setError(null); }
-        } catch (e:any) {
-          renderProActivo=false;
-          setModoRenderPro(false);
-          setError("Render Pro no está disponible en este navegador/equipo. El visor seguirá funcionando en tiempo real.");
-          console.error("[AURUM RENDER] Render Pro",e);
-        } finally {
-          if (vivo && request===renderProRequest) setRenderProCargando(false);
-        }
-      };
+      // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
+      // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       renderer.setPixelRatio(Math.min(devicePixelRatio,2));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -312,8 +272,6 @@ export function AurumRender() {
       controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true; controles.enableRotate = true; controles.autoRotate = false; controles.autoRotateSpeed = 0.65;
       controles.minDistance = .15; controles.maxDistance = 100;
       controles.addEventListener("change", () => {
-        if (pathTracer && renderProActivo) {
-          try { pathTracer.updateCamera(); pathTracer.reset(); } catch {}
         }
       });
 
@@ -417,8 +375,6 @@ export function AurumRender() {
             x.material = material;
           }
         });
-        pathTracer?.updateMaterials?.();
-        pathTracer?.reset?.();
       };
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
@@ -438,7 +394,6 @@ export function AurumRender() {
           suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xc9c7c2:0x15181c);
           suelo.material.roughness = id==="marmol"?.24:id==="claro"?.42:.3;
         }
-        aplicarIluminacion(cfg.iluminacion);\n        pathTracer?.updateEnvironment?.();\n        pathTracer?.updateLights?.();\n        pathTracer?.reset?.();
       };
        const encuadrar = () => {
         if (!modelo) return;
@@ -593,11 +548,9 @@ export function AurumRender() {
         glbInterno=new Blob([glb],{type:"model/gltf-binary"});
         escena.add(modelo);
         if (ext!=="3dm") aplicarMaterial(materialActivo);
-        encuadrar();\n        if (pathTracer && renderProActivo) sincronizarPathTracer();\n        return {size:glb.byteLength, ext};
       };
       const camaraVista=(id:VistaId)=>{
         const p:any={perspectiva:[3.5,2.4,4.6],frontal:[0,0,5],superior:[0,5,.001],lateral:[5,0,0]}[id];
-        camara.position.set(...p); controles.target.set(0,0,0); controles.update();\n        if (pathTracer && renderProActivo) { pathTracer.updateCamera(); pathTracer.reset(); }
       };
       apiRef.current={
         cargar,
@@ -618,7 +571,6 @@ export function AurumRender() {
         },
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:camaraVista,
-        glbSize:()=>glbInterno?.size??0,\n        renderPro:(activo:boolean)=>activarRenderPro(activo),
       };
       const limpiarResaltado = () => {
         if (!resaltado) return;
@@ -683,16 +635,13 @@ export function AurumRender() {
       const animate=()=>{
         frame=requestAnimationFrame(animate);
         controles.update();
-        if (renderProActivo && pathTracer) pathTracer.renderSample();
         else renderer.render(escena,camara);
       };
       animate();
-      cleanup=()=>{cancelAnimationFrame(frame);renderer.domElement.removeEventListener("click", seleccionarPorClick);obs.disconnect();limpiarResaltado();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();pathTracer?.dispose?.();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;cleanup()};
   },[]);
   useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
-  useEffect(()=>{ apiRef.current?.renderPro?.(modoRenderPro); },[modoRenderPro]);
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
   useEffect(()=>apiRef.current?.iluminacion(iluminacionId),[iluminacionId]);
   useEffect(()=>apiRef.current?.vista(vista),[vista]);
@@ -756,8 +705,6 @@ export function AurumRender() {
             {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
           </div>
           <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/35 backdrop-blur lg:block">AURUM RENDER · Tiempo real</div>
-          {modoRenderPro&&<div className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2 -translate-y-10 rounded-full border border-gold/30 bg-black/70 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[.16em] text-gold backdrop-blur">RENDER PRO · PATH TRACING GPU</div>}
-          {renderProCargando&&<div className="absolute top-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-gold/25 bg-black/65 px-3 py-1.5 text-[9px] uppercase tracking-[.14em] text-gold backdrop-blur">Preparando motor de render...</div>}
           <div className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
             <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/10 bg-white/90 p-1.5 shadow-[0_12px_35px_rgba(0,0,0,.18)] backdrop-blur-xl">
               <button type="button" title="Configuración" aria-label="Configuración" onClick={()=>setPanel("iluminacion")} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><SlidersHorizontal className="size-[18px]"/></button>
@@ -767,7 +714,6 @@ export function AurumRender() {
               <button type="button" title="Pantalla completa" aria-label="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Expand className="size-[18px]"/></button>
               <div className="my-0.5 h-px w-6 bg-black/10"/>
               <div className="my-0.5 h-px w-6 bg-black/10"/>
-              <button type="button" title={modoRenderPro?"Desactivar Render Pro":"Activar Render Pro"} aria-label={modoRenderPro?"Desactivar Render Pro":"Activar Render Pro"} onClick={()=>setModoRenderPro(v=>!v)} disabled={renderProCargando} className={"grid size-10 place-items-center rounded-xl transition "+(modoRenderPro?"bg-gold text-black":"text-black/70 hover:bg-black/5 hover:text-black")}><Sparkles className={"size-[18px] "+(renderProCargando?"animate-pulse":"")}/></button>
               <button type="button" title="Capturar imagen" aria-label="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-gold transition hover:bg-gold/10"><Camera className="size-[18px]"/></button>
             </div>
           </div>
