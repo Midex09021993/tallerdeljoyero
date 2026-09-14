@@ -14,7 +14,9 @@ export type ConfigVisualizador3D = {
     oro18b: number;
     oro18r: number;
     oro14: number;
+    plata925: number;
     plata950: number;
+    plata970: number;
     platino: number;
   };
   factorEmpuje: number;
@@ -38,7 +40,7 @@ export type ConfigYeso = {
 };
 
 export const DEFAULT_CONFIG_VISUALIZADOR: ConfigVisualizador3D = {
-  densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.1, plata950: 10.4, platino: 21.4 },
+  densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.1, plata925: 10.36, plata950: 10.40, plata970: 10.43, platino: 21.4 },
   factorEmpuje: 10,
   factorSeguridad: 1,
 };
@@ -99,7 +101,9 @@ export function leerConfigVisualizador(valor: unknown): ConfigVisualizador3D {
       oro18b: numero(densidades.oro18b, d.oro18b),
       oro18r: numero(densidades.oro18r, d.oro18r),
       oro14: numero(densidades.oro14, d.oro14),
+      plata925: numero(densidades.plata925, d.plata925),
       plata950: numero(densidades.plata950, d.plata950),
+      plata970: numero(densidades.plata970, d.plata970),
       platino: numero(densidades.platino, d.platino),
     },
     factorEmpuje: numero(root.factorEmpuje, DEFAULT_CONFIG_VISUALIZADOR.factorEmpuje),
