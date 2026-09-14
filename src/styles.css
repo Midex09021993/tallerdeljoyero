@@ -47,6 +47,8 @@
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-surface-sunken: var(--surface-sunken);
+  --color-viewer: var(--viewer);
+  --color-viewer-foreground: var(--viewer-foreground);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-info: var(--info);
@@ -94,6 +96,8 @@
   --surface: oklch(1 0 0);
   --surface-muted: oklch(0.972 0.003 250);
   --surface-sunken: oklch(0.958 0.005 90);
+  --viewer: oklch(0.17 0.006 250);
+  --viewer-foreground: oklch(0.985 0.002 95);
 
   --primary: oklch(0.712 0.083 84);
   --primary-foreground: oklch(0.223 0.006 250);

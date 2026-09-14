@@ -394,24 +394,24 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       </div>
 
       {/* Visor */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-[#0d0f12] shadow-card">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-viewer shadow-card">
         <div
           ref={contenedor}
           className={compacto ? "h-64 w-full" : "h-[420px] w-full"}
         />
         {!nombreArchivo && !cargando ? (
-          <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-white/50">
+          <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-viewer-foreground/50">
             {error ?? "Sube un archivo STL, OBJ, GLB o FBX para visualizarlo."}
           </p>
         ) : null}
         {cargando ? (
-          <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-white/70">
+          <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-viewer-foreground/70">
             Procesando modelo…
           </p>
         ) : null}
         {nombreArchivo ? (
           <div className="absolute left-3 top-3 flex items-center gap-2">
-            <span className="max-w-[60vw] truncate rounded-full bg-black/50 px-3 py-1 text-[11px] text-white/80 backdrop-blur">
+            <span className="max-w-[60vw] truncate rounded-full bg-viewer/70 px-3 py-1 text-[11px] text-viewer-foreground/80 backdrop-blur">
               {nombreArchivo}
             </span>
           </div>
@@ -420,7 +420,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           <button
             type="button"
             onClick={() => api.current?.reset()}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition hover:text-gold"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-viewer/70 text-viewer-foreground/80 backdrop-blur transition hover:text-gold"
             aria-label="Reencuadrar cámara"
           >
             <RotateCcw className="size-4" aria-hidden="true" />
@@ -429,7 +429,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
             <button
               type="button"
               onClick={limpiar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition hover:text-danger"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-viewer/70 text-viewer-foreground/80 backdrop-blur transition hover:text-danger"
               aria-label="Quitar modelo"
             >
               <Trash2 className="size-4" aria-hidden="true" />
