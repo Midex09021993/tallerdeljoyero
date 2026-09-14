@@ -94,6 +94,9 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       const { OrbitControls } = await import(
         "three/examples/jsm/controls/OrbitControls.js"
       );
+      const { RoomEnvironment } = await import(
+        "three/examples/jsm/environments/RoomEnvironment.js"
+      );
       const nodo = contenedor.current;
       if (!vivo || !nodo) return;
 
@@ -104,20 +107,32 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       const render = new THREE.WebGLRenderer({ antialias: true });
       render.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       render.toneMapping = THREE.ACESFilmicToneMapping;
+      render.toneMappingExposure = 1.45;
+      render.shadowMap.enabled = true;
+      render.shadowMap.type = THREE.PCFSoftShadowMap;
       nodo.appendChild(render.domElement);
       render.domElement.style.width = "100%";
       render.domElement.style.height = "100%";
       render.domElement.style.display = "block";
 
-      escena.add(new THREE.HemisphereLight(0xffffff, 0x2a2622, 1.1));
-      const key = new THREE.DirectionalLight(0xffffff, 2.4);
-      key.position.set(1, 1.4, 1.2);
+      const pmrem = new THREE.PMREMGenerator(render);
+      const entorno = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      escena.environment = entorno;
+
+      escena.add(new THREE.AmbientLight(0xfff8e8, 1.35));
+      escena.add(new THREE.HemisphereLight(0xf5f7ff, 0x332a24, 1.8));
+
+      const key = new THREE.DirectionalLight(0xfff4d6, 5.2);
+      key.position.set(2.5, 3.5, 4);
+      key.castShadow = true;
+      key.shadow.mapSize.set(1024, 1024);
+      key.shadow.bias = -0.0002;
       escena.add(key);
-      const fill = new THREE.DirectionalLight(0xbfd4ff, 1.1);
-      fill.position.set(-1.2, 0.4, -1);
+      const fill = new THREE.DirectionalLight(0xcbdcff, 3.1);
+      fill.position.set(-3.5, 1.5, 2.2);
       escena.add(fill);
-      const rim = new THREE.DirectionalLight(0xffe6b0, 1.4);
-      rim.position.set(0, -1, -1.4);
+      const rim = new THREE.DirectionalLight(0xffdf9e, 4.2);
+      rim.position.set(1.2, 2.6, -4);
       escena.add(rim);
 
       const controles = new OrbitControls(camara, render.domElement);
@@ -131,19 +146,30 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
         color: METALES[0]!.color,
         metalness: METALES[0]!.metalness,
         roughness: METALES[0]!.roughness,
+        envMapIntensity: 1.8,
       });
+
+      const sueloMaterial = new THREE.ShadowMaterial({
+        color: 0x000000,
+        opacity: 0.28,
+        transparent: true,
+      });
+      const suelo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), sueloMaterial);
+      suelo.rotation.x = -Math.PI / 2;
+      suelo.receiveShadow = true;
+      suelo.visible = false;
+      escena.add(suelo);
 
       const ajustarCamara = () => {
         if (!modelo) return;
         const caja = new THREE.Box3().setFromObject(modelo);
-        const centro = caja.getCenter(new THREE.Vector3());
         const tamano = caja.getSize(new THREE.Vector3());
         const radio = Math.max(tamano.x, tamano.y, tamano.z) || 1;
-        modelo.position.sub(centro);
         controles.target.set(0, 0, 0);
         camara.near = radio / 500;
         camara.far = radio * 200;
         camara.position.set(radio * 1.2, radio * 0.9, radio * 1.6);
+        render.toneMappingExposure = radio > 500 ? 1.6 : 1.45;
         camara.updateProjectionMatrix();
         controles.update();
       };
@@ -160,6 +186,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
         escena.remove(modelo);
         liberar(modelo);
         modelo = null;
+        suelo.visible = false;
       };
 
       /** Volumen firmado por suma de tetraedros, en unidades del archivo. */
@@ -243,6 +270,23 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           aplicarMaterialA(objeto);
           const grupo = new THREE.Group();
           grupo.add(objeto);
+          const cajaInicial = new THREE.Box3().setFromObject(grupo);
+          const centro = cajaInicial.getCenter(new THREE.Vector3());
+          grupo.position.sub(centro);
+          grupo.updateMatrixWorld(true);
+          const cajaCentrada = new THREE.Box3().setFromObject(grupo);
+          const tamano = cajaCentrada.getSize(new THREE.Vector3());
+          const extension = Math.max(tamano.x, tamano.z, tamano.y) * 2.2;
+          suelo.scale.set(extension, extension, 1);
+          suelo.position.y = cajaCentrada.min.y - Math.max(tamano.y * 0.025, 0.01);
+          suelo.visible = true;
+          objeto.traverse((hijo) => {
+            const malla = hijo as import("three").Mesh;
+            if (malla.isMesh) {
+              malla.castShadow = true;
+              malla.receiveShadow = true;
+            }
+          });
           modelo = grupo;
           escena.add(grupo);
           ajustarCamara();
@@ -276,6 +320,10 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
         quitarModelo();
         controles.dispose();
         material.dispose();
+        suelo.geometry.dispose();
+        sueloMaterial.dispose();
+        entorno.dispose();
+        pmrem.dispose();
         render.dispose();
         render.domElement.remove();
         api.current = null;
