@@ -189,6 +189,11 @@ export function AurumRender() {
       const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
+      const { EffectComposer } = await import("three/examples/jsm/postprocessing/EffectComposer.js");
+      const { RenderPass } = await import("three/examples/jsm/postprocessing/RenderPass.js");
+      const { GTAOPass } = await import("three/examples/jsm/postprocessing/GTAOPass.js");
+      const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
+      const { OutputPass } = await import("three/examples/jsm/postprocessing/OutputPass.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
       const nodo = visorRef.current;
       if (!vivo || !nodo) return;
@@ -206,6 +211,29 @@ export function AurumRender() {
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
+
+      // Pipeline de presentación: AO de alta calidad para contacto/volumen,
+      // bloom muy sutil para highlights y OutputPass para cerrar correctamente
+      // tone mapping + conversión de color al mostrar el resultado.
+      const composer = new EffectComposer(renderer);
+      const renderPass = new RenderPass(escena, camara);
+      const gtaoPass = new GTAOPass(escena, camara, nodo.clientWidth || 900, nodo.clientHeight || 600);
+      gtaoPass.output = GTAOPass.OUTPUT.Denoise;
+      gtaoPass.blendIntensity = .72;
+      gtaoPass.pdSamples = 12;
+      gtaoPass.pdRings = 2;
+      gtaoPass.pdRadiusExponent = 1.5;
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(nodo.clientWidth || 900, nodo.clientHeight || 600),
+        .075,
+        .22,
+        .92
+      );
+      const outputPass = new OutputPass();
+      composer.addPass(renderPass);
+      composer.addPass(gtaoPass);
+      composer.addPass(bloomPass);
+      composer.addPass(outputPass);
 
       const pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
@@ -610,12 +638,12 @@ export function AurumRender() {
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
-      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false)};
+      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false);composer.setSize(w,h);gtaoPass.setSize(w,h);bloomPass.setSize(w,h)};
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       let frame=0;
-      const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)}; animate();
-      cleanup=()=>{cancelAnimationFrame(frame);renderer.domElement.removeEventListener("click", seleccionarPorClick);obs.disconnect();limpiarResaltado();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
+      const animate=()=>{frame=requestAnimationFrame(animate);controles.update();composer.render()}; animate();
+      cleanup=()=>{cancelAnimationFrame(frame);renderer.domElement.removeEventListener("click", seleccionarPorClick);obs.disconnect();limpiarResaltado();quitar();controles.dispose();material.dispose();entorno.dispose();gtaoPass.dispose();bloomPass.dispose();composer.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;cleanup()};
   },[]);
