@@ -131,8 +131,9 @@ export function ConfiguracionCalculadoras() {
     setCfgAleacion((actual) => {
       const metales = [...actual.recetas[color].metales];
       while (metales.length <= index) metales.push({ nombre: "", porcentaje: 0 });
+      const actual = metales[index] ?? { nombre: "", porcentaje: 0 };
       metales[index] = {
-        ...metales[index],
+        ...actual,
         [campo]: campo === "porcentaje" ? (Number(valor) || 0) / 100 : valor,
       };
       return { ...actual, recetas: { ...actual.recetas, [color]: { metales } } };
@@ -142,7 +143,8 @@ export function ConfiguracionCalculadoras() {
   function actualizarProporcion(index: number, campo: "agua" | "yeso", valor: string) {
     setCfgYeso((actual) => {
       const proporciones = [...actual.proporciones];
-      proporciones[index] = { ...proporciones[index], [campo]: Number(valor) || 0 };
+      const actual = proporciones[index] ?? { agua: 0, yeso: 0, recomendada: false };
+      proporciones[index] = { ...actual, [campo]: Number(valor) || 0 };
       return { ...actual, proporciones };
     });
   }
