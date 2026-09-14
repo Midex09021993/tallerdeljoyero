@@ -313,7 +313,8 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
           </label>
         </div>
 
-        <div className="rounded-xl border border-border bg-surface-muted p-5 lg:rounded-2xl lg:p-6">
+        {esDueno ? (
+          <div className="rounded-xl border border-border bg-surface-muted p-5 lg:rounded-2xl lg:p-6">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Volumen ajustado
           </p>
