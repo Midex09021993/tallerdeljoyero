@@ -143,8 +143,8 @@ export function ConfiguracionCalculadoras() {
   function actualizarProporcion(index: number, campo: "agua" | "yeso", valor: string) {
     setCfgYeso((actual) => {
       const proporciones = [...actual.proporciones];
-      const actual = proporciones[index] ?? { agua: 0, yeso: 0, recomendada: false };
-      proporciones[index] = { ...actual, [campo]: Number(valor) || 0 };
+      const proporcionActual = proporciones[index] ?? { agua: 0, yeso: 0, recomendada: false };
+      proporciones[index] = { ...proporcionActual, [campo]: Number(valor) || 0 };
       return { ...actual, proporciones };
     });
   }
