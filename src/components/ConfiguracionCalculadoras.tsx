@@ -28,7 +28,9 @@ const metalesVisualizador = [
   ["oro18b", "Densidad Oro 18K Blanco"],
   ["oro18r", "Densidad Oro 18K Rosa"],
   ["oro14", "Densidad Oro 14K"],
+  ["plata925", "Densidad Plata 925"],
   ["plata950", "Densidad Plata 950"],
+  ["plata970", "Densidad Plata 970"],
   ["platino", "Densidad Platino"],
 ] as const;
 
