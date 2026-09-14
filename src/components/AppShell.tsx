@@ -10,6 +10,7 @@ import {
   PackageCheck,
   Scissors,
   UserRound,
+  Gem,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
@@ -27,7 +28,8 @@ type Seccion = {
     | "/gestion"
     | "/monitor"
     | "/operario"
-    | "/perfil";
+    | "/perfil"
+    | "/aurum-render";
   label: string;
   area?: string;
   roles?: Rol[];
@@ -40,6 +42,7 @@ const secciones: Seccion[] = [
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid },
+  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes },
   { to: "/casting", label: "Casting", area: "Casting", icono: Landmark },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors },
