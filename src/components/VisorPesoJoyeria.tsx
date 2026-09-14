@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Boxes, RotateCcw, Trash2, Upload } from "lucide-react";
+import { CLAVES_CALCULADORAS, DEFAULT_CONFIG_VISUALIZADOR, leerConfigVisualizador } from "@/lib/calculadoras-config";
+import { useConfigSistema } from "@/lib/taller-db";
 
 /* ------------------------------------------------------------------ */
 /* Metales y densidades (g/cm³) — editables desde Ajustes             */
@@ -38,8 +40,6 @@ const UNIDADES: { id: string; etiqueta: string; aCm: number }[] = [
   { id: "in", etiqueta: "Pulgadas", aCm: 2.54 },
 ];
 
-const EMPUJES_RAPIDOS = [5, 10, 15, 20];
-
 function num(valor: number, decimales = 2) {
   return new Intl.NumberFormat("es-PE", {
     minimumFractionDigits: decimales,
@@ -69,15 +69,15 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
 
   const [metalId, setMetalId] = useState<MetalId>("oro18a");
   const [unidad, setUnidad] = useState("mm");
-  const [empuje, setEmpuje] = useState("10");
-  const [densidades, setDensidades] = useState<Record<MetalId, number>>(() =>
-    METALES.reduce(
-      (acc, m) => ({ ...acc, [m.id]: m.densidad }),
-      {} as Record<MetalId, number>,
-    ),
-  );
-  const [factor, setFactor] = useState("1");
-  const [ajustesAbiertos, setAjustesAbiertos] = useState(false);
+  const { data: configVisualizador } = useConfigSistema(CLAVES_CALCULADORAS.visualizador);
+  const configuracion = leerConfigVisualizador(configVisualizador?.valor);
+  const [densidades, setDensidades] = useState<Record<MetalId, number>>(() => ({
+    ...DEFAULT_CONFIG_VISUALIZADOR.densidades,
+  }));
+
+  useEffect(() => {
+    setDensidades(configuracion.densidades);
+  }, [configVisualizador]);
 
   const metal = useMemo(
     () => METALES.find((m) => m.id === metalId) ?? METALES[0]!,
@@ -370,9 +370,9 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
 
   /* -------- Cálculo de peso -------- */
   const escala = UNIDADES.find((u) => u.id === unidad)?.aCm ?? 0.1;
-  const factorNum = Number(factor) > 0 ? Number(factor) : 1;
+  const factorNum = configuracion.factorSeguridad > 0 ? configuracion.factorSeguridad : 1;
   const densidad = densidades[metalId];
-  const empujeNum = Number.isFinite(Number(empuje)) ? Number(empuje) : 0;
+  const empujeNum = Math.max(0, configuracion.factorEmpuje);
 
   const volumenCm3 =
     volumenUnidades != null ? volumenUnidades * escala ** 3 : null;
@@ -516,40 +516,6 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
         </div>
       </fieldset>
 
-      {/* Empuje */}
-      <fieldset className="space-y-2">
-        <legend className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Empuje (%)
-        </legend>
-        <div className="flex flex-wrap items-center gap-2">
-          {EMPUJES_RAPIDOS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setEmpuje(String(v))}
-              aria-pressed={empuje === String(v)}
-              className={`h-10 min-w-14 rounded-xl border px-3 text-sm font-medium transition ${
-                empuje === String(v)
-                  ? "border-gold bg-accent text-foreground"
-                  : "border-input bg-background text-muted-foreground hover:border-gold/60"
-              }`}
-            >
-              {v}%
-            </button>
-          ))}
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.5"
-            value={empuje}
-            onChange={(e) => setEmpuje(e.target.value)}
-            className={`${inputCls} max-w-28`}
-            aria-label="Empuje personalizado en porcentaje"
-          />
-        </div>
-      </fieldset>
-
       {/* Resultados */}
       {pesoFinal != null && volumenCm3 != null && pesoTeorico != null ? (
         <div
@@ -600,75 +566,6 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           </p>
         </div>
       )}
-
-      {/* Ajustes */}
-      <div className="rounded-2xl border border-border bg-card">
-        <button
-          type="button"
-          onClick={() => setAjustesAbiertos((v) => !v)}
-          aria-expanded={ajustesAbiertos}
-          className="flex w-full items-center justify-between px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-        >
-          Ajustes de cálculo
-          <span className="text-gold">{ajustesAbiertos ? "−" : "+"}</span>
-        </button>
-        {ajustesAbiertos ? (
-          <div className="space-y-4 border-t border-border p-4">
-            <div className={`grid gap-3 ${compacto ? "grid-cols-1" : "sm:grid-cols-3"}`}>
-              {METALES.map((m) => (
-                <label key={m.id} className="space-y-1.5">
-                  <span className="text-[11px] text-muted-foreground">
-                    {m.nombre} (g/cm³)
-                  </span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.1"
-                    value={densidades[m.id]}
-                    onChange={(e) =>
-                      setDensidades((prev) => ({
-                        ...prev,
-                        [m.id]: Number(e.target.value),
-                      }))
-                    }
-                    className={inputCls}
-                  />
-                </label>
-              ))}
-            </div>
-            <label className="block space-y-1.5">
-              <span className="text-[11px] text-muted-foreground">
-                Factor de cálculo (corrección global)
-              </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0.1"
-                step="0.01"
-                value={factor}
-                onChange={(e) => setFactor(e.target.value)}
-                className={`${inputCls} sm:max-w-40`}
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setDensidades(
-                  METALES.reduce(
-                    (acc, m) => ({ ...acc, [m.id]: m.densidad }),
-                    {} as Record<MetalId, number>,
-                  ),
-                );
-                setFactor("1");
-              }}
-              className="text-xs font-medium text-gold underline-offset-4 hover:underline"
-            >
-              Restaurar valores por defecto
-            </button>
-          </div>
-        ) : null}
-      </div>
 
       <p className="text-[11px] text-muted-foreground">
         Los archivos se procesan solo en tu navegador: no se guardan en el servidor y se
