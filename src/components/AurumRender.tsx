@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
-import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile } from "../lib/aurum-material-engine";
+import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality } from "../lib/aurum-scene-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
@@ -367,7 +367,7 @@ export function AurumRender() {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
           const presetId = g.id as string;
           const motorPreset = getAurumGemPreset(presetId);
-          applyAurumGemPreset(nuevo, motorPreset, thickness);\n          applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));\n          return nuevo;
+          applyAurumGemPreset(nuevo, motorPreset, thickness);\n          applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));\n          if (motorPreset.familia==="Diamante") applyAurumDiamondOptics(nuevo);\n          return nuevo;
         };
         target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
         crearInclusiones(target,g);
