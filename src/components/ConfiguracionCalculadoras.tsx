@@ -258,8 +258,8 @@ export function ConfiguracionCalculadoras() {
 
       <AccordionSection
         id="visualizador"
-        titulo="Visualizador 3D"
-        descripcion="Densidades, empuje y factor de seguridad"
+        titulo="Visualizador y Peso 3D"
+        descripcion="Densidades de metales, empuje y factor de seguridad"
         onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.visualizador, cfgVisualizador, "Visualizador 3D")}
         onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.visualizador, DEFAULT_CONFIG_VISUALIZADOR, setCfgVisualizador, "Visualizador 3D")}
       >
