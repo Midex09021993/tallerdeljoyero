@@ -129,11 +129,11 @@ export function ConfiguracionCalculadoras() {
   function actualizarTalla(index: number, campo: "diametroMm" | "europea" | "americana", valor: string) {
     setCfgTallas((actual) => ({
       ...actual,
-      tabla: actual.tabla.map((fila, i) =>
-        i === index
-          ? { ...fila, [campo]: valor === "" && campo === "americana" ? null : Number(valor) || 0 }
-          : fila,
-      ),
+      tabla: actual.tabla.map((fila, i) => {
+        if (i !== index) return fila;
+        if (campo === "americana") return { ...fila, americana: valor.trim() || null };
+        return { ...fila, [campo]: Number(valor) || 0 };
+      }),
     }));
   }
 
@@ -374,7 +374,7 @@ export function ConfiguracionCalculadoras() {
         onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.tallasAnillo, DEFAULT_CONFIG_TALLAS_ANILLO, setCfgTallas, "Conversor de Tallas")}
       >
         <div className="space-y-4 p-6">
-          <p className="text-xs text-muted-foreground">Tabla maestra de equivalencias del taller. Puedes agregar, editar o eliminar filas sin modificar código.</p>
+          <p className="text-xs text-muted-foreground">Tabla maestra de equivalencias del taller. Usa el formato tradicional de joyería para USA: 6, 6 1/4, 6 1/2, 6 3/4.</p>
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full min-w-[620px] text-sm">
               <thead className="bg-surface-muted text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -385,7 +385,7 @@ export function ConfiguracionCalculadoras() {
                   <tr key={index}>
                     <td className="px-3 py-2"><input type="number" step="0.1" className={inputCls} value={fila.diametroMm} onChange={(e) => actualizarTalla(index, "diametroMm", e.target.value)} /></td>
                     <td className="px-3 py-2"><input type="number" step="1" className={inputCls} value={fila.europea} onChange={(e) => actualizarTalla(index, "europea", e.target.value)} /></td>
-                    <td className="px-3 py-2"><input type="number" step="0.5" className={inputCls} placeholder="—" value={fila.americana ?? ""} onChange={(e) => actualizarTalla(index, "americana", e.target.value)} /></td>
+                    <td className="px-3 py-2"><input type="text" inputMode="text" className={inputCls} placeholder="Ej. 6 1/2" value={fila.americana ?? ""} onChange={(e) => actualizarTalla(index, "americana", e.target.value)} /></td>
                     <td className="px-3 py-2 text-right"><button type="button" onClick={() => eliminarTalla(index)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-destructive hover:border-destructive">Eliminar</button></td>
                   </tr>
                 ))}
