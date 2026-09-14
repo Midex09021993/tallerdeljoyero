@@ -7,9 +7,12 @@ import {
   DEFAULT_CONFIG_ALEACION,
   DEFAULT_CONFIG_VISUALIZADOR,
   DEFAULT_CONFIG_YESO,
+  DEFAULT_CONFIG_TALLAS_ANILLO,
   leerConfigAleacion,
   leerConfigVisualizador,
   leerConfigYeso,
+  leerConfigTallasAnillo,
+  type ConfigTallasAnillo,
   type ConfigAleacion,
   type ConfigVisualizador3D,
   type ConfigYeso,
@@ -49,6 +52,7 @@ export function ConfiguracionCalculadoras() {
   const visualizador = useConfigSistema(CLAVES_CALCULADORAS.visualizador);
   const aleacion = useConfigSistema(CLAVES_CALCULADORAS.aleacion);
   const yeso = useConfigSistema(CLAVES_CALCULADORAS.yeso);
+  const tallasAnillo = useConfigSistema(CLAVES_CALCULADORAS.tallasAnillo);
   const guardar = useGuardarConfigSistema();
 
   const esDueno = Boolean(sesion?.esDueno);
@@ -57,6 +61,7 @@ export function ConfiguracionCalculadoras() {
   );
   const [cfgAleacion, setCfgAleacion] = useState<ConfigAleacion>(clonar(DEFAULT_CONFIG_ALEACION));
   const [cfgYeso, setCfgYeso] = useState<ConfigYeso>(clonar(DEFAULT_CONFIG_YESO));
+  const [cfgTallas, setCfgTallas] = useState<ConfigTallasAnillo>(clonar(DEFAULT_CONFIG_TALLAS_ANILLO));
 
   useEffect(() => {
     if (visualizador.data) setCfgVisualizador(leerConfigVisualizador(visualizador.data.valor));
@@ -69,6 +74,10 @@ export function ConfiguracionCalculadoras() {
   useEffect(() => {
     if (yeso.data) setCfgYeso(leerConfigYeso(yeso.data.valor));
   }, [yeso.data]);
+
+  useEffect(() => {
+    if (tallasAnillo.data) setCfgTallas(leerConfigTallasAnillo(tallasAnillo.data.valor));
+  }, [tallasAnillo.data]);
 
   if (!esDueno) {
     return (
@@ -89,6 +98,7 @@ export function ConfiguracionCalculadoras() {
         guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.visualizador, valor: cfgVisualizador }),
         guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.aleacion, valor: cfgAleacion }),
         guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.yeso, valor: cfgYeso }),
+        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.tallasAnillo, valor: cfgTallas }),
       ]);
       toast.success("Configuración de calculadoras guardada");
     } catch {
@@ -100,14 +110,17 @@ export function ConfiguracionCalculadoras() {
     const visualizadorDefault = clonar(DEFAULT_CONFIG_VISUALIZADOR);
     const aleacionDefault = clonar(DEFAULT_CONFIG_ALEACION);
     const yesoDefault = clonar(DEFAULT_CONFIG_YESO);
+    const tallasDefault = clonar(DEFAULT_CONFIG_TALLAS_ANILLO);
     setCfgVisualizador(visualizadorDefault);
     setCfgAleacion(aleacionDefault);
     setCfgYeso(yesoDefault);
+    setCfgTallas(tallasDefault);
     try {
       await Promise.all([
         guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.visualizador, valor: visualizadorDefault }),
         guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.aleacion, valor: aleacionDefault }),
         guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.yeso, valor: yesoDefault }),
+        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.tallasAnillo, valor: tallasDefault }),
       ]);
       toast.success("Valores predeterminados restaurados");
     } catch {
@@ -148,6 +161,29 @@ export function ConfiguracionCalculadoras() {
       return { ...actual, proporciones };
     });
   }
+
+  function actualizarTalla(index: number, campo: "diametroMm" | "europea" | "americana", valor: string) {
+    setCfgTallas((actual) => ({
+      ...actual,
+      tabla: actual.tabla.map((fila, i) =>
+        i === index
+          ? { ...fila, [campo]: valor === "" && campo === "americana" ? null : Number(valor) || 0 }
+          : fila,
+      ),
+    }));
+  }
+
+  function agregarTalla() {
+    setCfgTallas((actual) => ({
+      ...actual,
+      tabla: [...actual.tabla, { diametroMm: 0, europea: 0, americana: null }],
+    }));
+  }
+
+  function eliminarTalla(index: number) {
+    setCfgTallas((actual) => ({ ...actual, tabla: actual.tabla.filter((_, i) => i !== index) }));
+  }
+
 
   return (
     <div className="space-y-6">
@@ -372,6 +408,30 @@ export function ConfiguracionCalculadoras() {
               </label>
             ))}
           </div>
+        </div>
+      </Panel>
+
+      <Panel titulo="Conversor de Tallas de Anillo">
+        <div className="space-y-4 p-6">
+          <p className="text-xs text-muted-foreground">Tabla maestra de equivalencias del taller. Puedes agregar, editar o eliminar filas sin modificar código.</p>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-[620px] text-sm">
+              <thead className="bg-surface-muted text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr><th className="px-3 py-3">Diámetro (mm)</th><th className="px-3 py-3">Europa</th><th className="px-3 py-3">USA</th><th className="px-3 py-3 text-right">Acción</th></tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {cfgTallas.tabla.map((fila, index) => (
+                  <tr key={index}>
+                    <td className="px-3 py-2"><input type="number" step="0.1" className={inputCls} value={fila.diametroMm} onChange={(e) => actualizarTalla(index, "diametroMm", e.target.value)} /></td>
+                    <td className="px-3 py-2"><input type="number" step="1" className={inputCls} value={fila.europea} onChange={(e) => actualizarTalla(index, "europea", e.target.value)} /></td>
+                    <td className="px-3 py-2"><input type="number" step="0.5" className={inputCls} placeholder="—" value={fila.americana ?? ""} onChange={(e) => actualizarTalla(index, "americana", e.target.value)} /></td>
+                    <td className="px-3 py-2 text-right"><button type="button" onClick={() => eliminarTalla(index)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-destructive hover:border-destructive">Eliminar</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <button type="button" onClick={agregarTalla} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:border-primary">+ Agregar fila</button>
         </div>
       </Panel>
 
