@@ -47,12 +47,12 @@ const MATERIALES: MaterialConfig[] = [
   { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.8, clearcoat: .08 },
 ];
 
-const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string }[] = [
-  { id: "oscuro", nombre: "Estudio Oscuro", clase: "bg-[#090b0e]" },
-  { id: "claro", nombre: "Estudio Claro", clase: "bg-[#e7e5e0]" },
-  { id: "luxury", nombre: "Luxury", clase: "bg-[#21150c]" },
-  { id: "marmol", nombre: "Mármol", clase: "bg-[#cfccc5]" },
-  { id: "transparente", nombre: "Transparente", clase: "bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
+const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId }[] = [
+  { id: "oscuro", nombre: "Estudio Oscuro", descripcion:"Contraste elegante", iluminacion:"jewelry", clase: "bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
+  { id: "claro", nombre: "Estudio Claro", descripcion:"Luz limpia de estudio", iluminacion:"studioSoft", clase: "bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
+  { id: "luxury", nombre: "Luxury", descripcion:"Presentación cálida", iluminacion:"luxury", clase: "bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
+  { id: "marmol", nombre: "Mármol", descripcion:"Superficie premium", iluminacion:"studioSoft", clase: "bg-[linear-gradient(125deg,#f2f0eb,#bdbab3_42%,#e5e3de_44%,#c5c2bc_68%,#f0eee9)]" },
+  { id: "transparente", nombre: "Transparente", descripcion:"Fondo sin entorno", iluminacion:"studioSoft", clase: "bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
 ];
 const VISTAS: { id: VistaId; nombre: string }[] = [
   { id: "perspectiva", nombre: "Perspectiva" }, { id: "frontal", nombre: "Frontal" }, { id: "superior", nombre: "Superior" }, { id: "lateral", nombre: "Lateral" },
@@ -266,18 +266,21 @@ export function AurumRender() {
         });
       };
       const aplicarEscenario = (id:EscenarioId) => {
+        const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
-          escena.background = new THREE.Color(({oscuro:0x090b0e,claro:0xe7e5e0,luxury:0x21150c,marmol:0xcfccc5} as any)[id]);
+          const fondos:any={oscuro:0x090b0e,claro:0xe7e5e0,luxury:0x21150c,marmol:0xcfccc5};
+          escena.background = new THREE.Color(fondos[id]);
         }
         if (suelo) {
           suelo.visible = id!=="transparente";
-          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:0x15181c);
-          suelo.material.roughness = id==="marmol"?.25:.3;
+          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xd8d6d1:0x15181c);
+          suelo.material.roughness = id==="marmol"?.24:id==="claro"?.38:.3;
         }
+        aplicarIluminacion(cfg.iluminacion);
       };
-      const encuadrar = () => {
+       const encuadrar = () => {
         if (!modelo) return;
         modelo.updateMatrixWorld(true);
         const b = new THREE.Box3().setFromObject(modelo);
@@ -553,7 +556,7 @@ export function AurumRender() {
       <aside className="flex w-[320px] shrink-0 flex-col border-l border-white/10 bg-[#0d0f11]/96 shadow-2xl backdrop-blur-xl xl:w-[350px]">
         <div className="grid shrink-0 grid-cols-3 border-b border-white/10">
           <button type="button" onClick={()=>setPanel("materiales")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="materiales"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Materiales</button>
-          <button type="button" onClick={()=>setPanel("escenas")} className={"flex flex-col items-center gap-1 border-x border-white/10 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="escenas"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><ImageIcon className="size-4"/>Escenarios</button>
+          <button type="button" onClick={()=>setPanel("escenas")} className={"flex flex-col items-center gap-1 border-x border-white/10 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="escenas"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><ImageIcon className="size-4"/>Ambiente</button>
           <button type="button" onClick={()=>setPanel("iluminacion")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="iluminacion"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Luz</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
@@ -599,8 +602,34 @@ export function AurumRender() {
               <p className="mt-4 text-center text-[8px] uppercase tracking-[.14em] text-white/20">Materiales ópticos · PBR · Refracción</p>
             </div>}
           </div>}
-          {panel==="escenas"&&<div><div className="mb-4"><p className="text-xs font-semibold">Escenarios</p><p className="mt-1 text-[10px] text-white/35">Entornos de presentación comercial</p></div><div className="grid grid-cols-2 gap-2">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-white/10 hover:border-gold/40")}><div className={"h-14 "+e.clase}/><div className="p-2 text-[9px] font-semibold text-white/70">{e.nombre}</div></button>)}</div></div>}
-          {panel==="iluminacion"&&<div><div className="mb-4"><p className="text-xs font-semibold">Iluminación</p><p className="mt-1 text-[10px] text-white/35">Presets de estudio para joyería</p></div><div className="space-y-2">{ILUMINACIONES.map(l=><button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-xl border p-3 text-left transition "+(iluminacionId===l.id?"border-gold bg-gold/10":"border-white/10 hover:border-gold/40")}><span><span className="block text-[10px] font-semibold text-white/80">{l.nombre}</span><span className="text-[9px] text-white/30">{l.descripcion}</span></span><span className="size-7 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff,transparent_38%),radial-gradient(circle,#c9a45d,#28201a)]"/></button>)}</div></div>}
+          {panel==="escenas"&&<div>
+             <div className="mb-4">
+               <p className="text-xs font-semibold">Ambiente</p>
+               <p className="mt-1 text-[10px] text-white/35">Presentación visual de la joya</p>
+             </div>
+             <div className="grid grid-cols-2 gap-2.5">
+               {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id);setIluminacionId(e.iluminacion)}} className={"group overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold/80 bg-gold/[.04]":"border-white/10 hover:border-gold/40")}>
+                 <div className={"relative h-24 overflow-hidden "+e.clase}>
+                   {e.id!=="transparente"&&<><span className="absolute left-[18%] top-3 h-8 w-8 rounded-full bg-white/20 blur-xl"/><span className="absolute right-[18%] bottom-2 h-10 w-16 rounded-full bg-black/25 blur-lg"/></>}
+                   {escenarioId===e.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-gold text-[10px] font-bold text-black">✓</span>}
+                 </div>
+                 <div className="p-2.5">
+                   <div className="text-[10px] font-semibold text-white/80 group-hover:text-white">{e.nombre}</div>
+                   <div className="mt-0.5 text-[8px] text-white/30">{e.descripcion}</div>
+                 </div>
+               </button>)}
+             </div>
+             <div className="mt-4 rounded-xl border border-white/8 bg-white/[.02] p-3">
+               <div className="flex items-center justify-between">
+                 <span className="text-[8px] uppercase tracking-[.16em] text-white/30">Ambiente activo</span>
+                 <span className="text-[9px] font-semibold text-gold">{ESCENARIOS.find(e=>e.id===escenarioId)?.nombre}</span>
+               </div>
+               <div className="mt-2 flex items-center gap-2 text-[8px] text-white/30">
+                 <span className="size-1.5 rounded-full bg-gold"/> Entorno · Iluminación · Reflejos
+               </div>
+             </div>
+           </div>}
+           {panel==="iluminacion"&&<div><div className="mb-4"><p className="text-xs font-semibold">Iluminación</p><p className="mt-1 text-[10px] text-white/35">Presets de estudio para joyería</p></div><div className="space-y-2">{ILUMINACIONES.map(l=><button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-xl border p-3 text-left transition "+(iluminacionId===l.id?"border-gold bg-gold/10":"border-white/10 hover:border-gold/40")}><span><span className="block text-[10px] font-semibold text-white/80">{l.nombre}</span><span className="text-[9px] text-white/30">{l.descripcion}</span></span><span className="size-7 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff,transparent_38%),radial-gradient(circle,#c9a45d,#28201a)]"/></button>)}</div></div>}
         </div>
         <div className="shrink-0 border-t border-white/10 p-3">
           <p className="mb-2 px-1 text-[8px] font-semibold uppercase tracking-[.18em] text-white/25">Herramientas</p>
