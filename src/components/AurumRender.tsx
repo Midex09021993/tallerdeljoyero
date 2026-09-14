@@ -27,7 +27,7 @@ type GemaConfig = {
   attenuationColor:number; attenuationDistance:number; dispersion:number; iridescence:number;
   inclusionStyle:"ninguna"|"diamante"|"silk"|"velos"; inclusionStrength:number;
 };
-type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
+type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number; anisotropy?: number; anisotropyRotation?: number };
 type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
 const GEMAS: GemaConfig[] = [
   // Perfil óptico propio de AURUM RENDER. El diamante real tiene RI ~2.42 y
@@ -57,20 +57,20 @@ const GEMAS: GemaConfig[] = [
 ];
 
 const MATERIALES: MaterialConfig[] = [
-  { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55 },
-  { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 2.35, clearcoat: .25 },
-  { id: "oro18a_mate", grupo: "Oro Amarillo", nombre: "Mate", color: 0xc7a45a, metalness: 1, roughness: .52, envMapIntensity: 1.8, clearcoat: .08 },
-  { id: "oro18a_cepillado", grupo: "Oro Amarillo", nombre: "Cepillado", color: 0xcfa94e, metalness: 1, roughness: .38, envMapIntensity: 2.15, clearcoat: .12 },
-  { id: "oro18b_rodinado", grupo: "Oro Blanco", nombre: "Rodinado", color: 0xe9edf2, metalness: 1, roughness: .09, envMapIntensity: 3, clearcoat: .6 },
-  { id: "oro18b_pulido", grupo: "Oro Blanco", nombre: "Pulido", color: 0xdfe3e8, metalness: 1, roughness: .13, envMapIntensity: 2.7, clearcoat: .45 },
+  { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55, anisotropy: .05 },
+  { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 2.35, clearcoat: .25, anisotropy: .2 },
+  { id: "oro18a_mate", grupo: "Oro Amarillo", nombre: "Mate", color: 0xc7a45a, metalness: 1, roughness: .52, envMapIntensity: 1.8, clearcoat: .08, anisotropy: .35 },
+  { id: "oro18a_cepillado", grupo: "Oro Amarillo", nombre: "Cepillado", color: 0xcfa94e, metalness: 1, roughness: .38, envMapIntensity: 2.15, clearcoat: .12, anisotropy: .72, anisotropyRotation: .18 },
+  { id: "oro18b_rodinado", grupo: "Oro Blanco", nombre: "Rodinado", color: 0xe9edf2, metalness: 1, roughness: .09, envMapIntensity: 3, clearcoat: .6, anisotropy: .04 },
+  { id: "oro18b_pulido", grupo: "Oro Blanco", nombre: "Pulido", color: 0xdfe3e8, metalness: 1, roughness: .13, envMapIntensity: 2.7, clearcoat: .45, anisotropy: .05 },
   { id: "oro18b_mate", grupo: "Oro Blanco", nombre: "Mate", color: 0xcbd0d5, metalness: 1, roughness: .5, envMapIntensity: 1.75, clearcoat: .08 },
-  { id: "oro18r_pulido", grupo: "Oro Rosa", nombre: "Pulido", color: 0xd9937e, metalness: 1, roughness: .12, envMapIntensity: 2.75, clearcoat: .5 },
-  { id: "oro18r_satinado", grupo: "Oro Rosa", nombre: "Satinado", color: 0xd58f7b, metalness: 1, roughness: .29, envMapIntensity: 2.3, clearcoat: .25 },
+  { id: "oro18r_pulido", grupo: "Oro Rosa", nombre: "Pulido", color: 0xd9937e, metalness: 1, roughness: .12, envMapIntensity: 2.75, clearcoat: .5, anisotropy: .05 },
+  { id: "oro18r_satinado", grupo: "Oro Rosa", nombre: "Satinado", color: 0xd58f7b, metalness: 1, roughness: .29, envMapIntensity: 2.3, clearcoat: .25, anisotropy: .18 },
   { id: "oro18r_mate", grupo: "Oro Rosa", nombre: "Mate", color: 0xc98573, metalness: 1, roughness: .5, envMapIntensity: 1.8, clearcoat: .08 },
   { id: "plata925_pulida", grupo: "Plata", nombre: "Plata 925 Pulida", color: 0xd7dbe0, metalness: 1, roughness: .1, envMapIntensity: 2.9, clearcoat: .45 },
   { id: "plata950_pulida", grupo: "Plata", nombre: "Plata 950 Pulida", color: 0xcfd4d9, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .4 },
   { id: "plata970_pulida", grupo: "Plata", nombre: "Plata 970 Pulida", color: 0xe0e3e6, metalness: 1, roughness: .1, envMapIntensity: 2.9, clearcoat: .45 },
-  { id: "plata_envejecida", grupo: "Plata", nombre: "Plata Envejecida", color: 0x777c82, metalness: .92, roughness: .4, envMapIntensity: 1.65, clearcoat: .08 },
+  { id: "plata_envejecida", grupo: "Plata", nombre: "Plata Envejecida", color: 0x777c82, metalness: .92, roughness: .4, envMapIntensity: 1.65, clearcoat: .08, anisotropy: .08 },
   { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc5cbd0, metalness: 1, roughness: .1, envMapIntensity: 2.85, clearcoat: .48 },
   { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.8, clearcoat: .08 },
   // Materiales especiales para presentaciones profesionales y configuraciones premium.
@@ -214,26 +214,39 @@ export function AurumRender() {
       escena.environment = entorno;
       escena.environmentIntensity = 0.72;
       escena.environmentRotation.y = Math.PI * 0.16;
-      // HDRI fotográfico de estudio para reflejos reales en metales y gemas.
-      // Si el recurso remoto falla, se mantiene RoomEnvironment como fallback.
-      const hdrStudioUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr";
-      new RGBELoader().load(hdrStudioUrl, (hdrTexture:any) => {
-        if (!vivo) { hdrTexture.dispose?.(); return; }
-        try {
-          const hdrEnvironment = pmrem.fromEquirectangular(hdrTexture).texture;
-          hdrTexture.dispose?.();
-          if (!vivo) { hdrEnvironment.dispose?.(); return; }
-          const anterior = entorno;
-          entorno = hdrEnvironment;
-          escena.environment = entorno;
-          escena.environmentIntensity = 0.78;
-          anterior?.dispose?.();
-        } catch {
-          hdrTexture.dispose?.();
-        }
-      }, undefined, () => {
-        // Fallback silencioso: el visor sigue funcionando aunque no haya red.
-      });
+      // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
+      // los metales tengan reflejos largos y limpios y las gemas reciban luces
+      // especulares naturales. RoomEnvironment permanece como fallback offline.
+      const hdrUrls: Record<IluminacionId,string> = {
+        studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
+        studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
+        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_04_1k.hdr",
+        luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
+      };
+      let hdrRequestId = 0;
+      const cargarHDRI = (id:IluminacionId) => {
+        const requestId = ++hdrRequestId;
+        const url = hdrUrls[id] || hdrUrls.jewelry;
+        new RGBELoader().load(url, (hdrTexture:any) => {
+          if (!vivo || requestId !== hdrRequestId) { hdrTexture.dispose?.(); return; }
+          try {
+            const hdrEnvironment = pmrem.fromEquirectangular(hdrTexture).texture;
+            hdrTexture.dispose?.();
+            if (!vivo || requestId !== hdrRequestId) { hdrEnvironment.dispose?.(); return; }
+            const anterior = entorno;
+            entorno = hdrEnvironment;
+            escena.environment = entorno;
+            escena.environmentIntensity = 0.72;
+            escena.environmentRotation.y = id === "luxury" ? Math.PI * .42 : id === "studioHard" ? Math.PI * .08 : Math.PI * .16;
+            anterior?.dispose?.();
+          } catch {
+            hdrTexture.dispose?.();
+          }
+        }, undefined, () => {
+          // Fallback silencioso: RoomEnvironment mantiene el visor funcional sin red.
+        });
+      };
+      cargarHDRI("jewelry");
       escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,1.15));
       const key = new THREE.DirectionalLight(0xffefc8,2.2);
       key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
@@ -251,6 +264,7 @@ export function AurumRender() {
           luxury: {key:2.2,fill:0.7,rim:3.2,top:0.8,exposure:0.98,environment:0.7},
         }[id];
         key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
+        cargarHDRI(id);
       };
 
       const controles = new OrbitControls(camara,renderer.domElement);
@@ -282,7 +296,12 @@ export function AurumRender() {
         mat.roughness = m.roughness;
         mat.envMapIntensity = m.envMapIntensity;
         mat.clearcoat = m.clearcoat;
-        mat.clearcoatRoughness = Math.min(.35, Math.max(.03, m.roughness * .45));
+        mat.clearcoatRoughness = Math.min(.35, Math.max(.025, m.roughness * .42));
+        // Anisotropía: clave para reproducir cepillados y satinados de joyería.
+        mat.anisotropy = Math.max(0, Math.min(1, m.anisotropy ?? 0));
+        mat.anisotropyRotation = m.anisotropyRotation ?? 0;
+        mat.specularIntensity = m.metalness > .9 ? 1 : .8;
+        mat.specularColor?.setHex(0xffffff);
         mat.emissive?.setHex(0x000000);
         mat.emissiveIntensity = 0;
         mat.needsUpdate = true;
