@@ -532,16 +532,6 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           </article>
           <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Densidad utilizada
-            </p>
-            <p className="mt-2 text-xl font-semibold leading-none">
-              {num(densidad, 2)}{" "}
-              <span className="text-sm font-medium text-muted-foreground">g/cm³</span>
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{metal.nombre}</p>
-          </article>
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Peso teórico
             </p>
             <p className="mt-2 text-xl font-semibold leading-none">
@@ -551,7 +541,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           </article>
           <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
-              Peso final (+{num(empujeNum, 0)}%)
+              Peso final
             </p>
             <p className="mt-2 text-2xl font-semibold leading-none">
               {num(pesoFinal)}{" "}
