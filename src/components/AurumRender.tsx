@@ -279,7 +279,7 @@ export function AurumRender() {
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       let frame=0;
       const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)}; animate();
-      cleanup=()=>{cancelAnimationFrame(frame);obs.disconnect();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
+      cleanup=()=>{cancelAnimationFrame(frame);renderer.domElement.removeEventListener("click", seleccionarPorClick);obs.disconnect();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;cleanup()};
   },[]);
@@ -323,21 +323,6 @@ export function AurumRender() {
           <button type="button" onClick={()=>setPanel("iluminacion")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="iluminacion"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Luz</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          {archivo&&<div className="mb-4 rounded-2xl border border-white/10 bg-white/[.025] p-3">
-            <div className="mb-3 flex items-center gap-2">
-              <Box className="size-4 text-gold"/>
-              <div><p className="text-xs font-semibold">Estructura del modelo</p><p className="text-[9px] text-white/30">Selecciona una parte para trabajar con ella</p></div>
-            </div>
-            <div className="space-y-1">
-              <button type="button" onClick={()=>{setParteSeleccionada(null);apiRef.current?.seleccionarParte("");}} className={"flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] transition "+(!parteSeleccionada?"bg-gold/10 text-gold":"text-white/60 hover:bg-white/[.04]")}>
-                <Box className="size-3.5"/><span className="truncate">Toda la pieza</span>
-              </button>
-              {partes.map((parte)=><button key={parte.id} type="button" onClick={()=>apiRef.current?.seleccionarParte(parte.id)} className={"flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] transition "+(parteSeleccionada===parte.id?"bg-gold/10 text-gold ring-1 ring-gold/30":"text-white/60 hover:bg-white/[.04]")} style={{paddingLeft: (10 + parte.nivel*12) + "px"}}>
-                <span className="size-1.5 shrink-0 rounded-full bg-white/25"/>
-                <span className="truncate">{parte.nombre}</span>
-              </button>)}
-            </div>
-          </div>}
           {panel==="materiales"&&<div>
             <div className="mb-4"><p className="text-xs font-semibold">Biblioteca de materiales</p><p className="mt-1 text-[10px] text-white/35">Selecciona un acabado</p></div>
             <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
