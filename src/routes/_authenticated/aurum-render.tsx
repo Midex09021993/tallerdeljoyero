@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AurumRender } from "@/components/AurumRender";
-import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/aurum-render")({
   head: () => ({
@@ -17,12 +16,8 @@ export const Route = createFileRoute("/_authenticated/aurum-render")({
 
 function AurumRenderPage() {
   return (
-    <AppShell
-      titulo="AURUM RENDER"
-      subtitulo="Visualización profesional de joyería 3D"
-      atrasMovil={{ to: "/herramientas" }}
-    >
+    <main className="fixed inset-0 z-50 overflow-auto bg-[#050608]">
       <AurumRender />
-    </AppShell>
+    </main>
   );
 }
