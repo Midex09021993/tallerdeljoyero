@@ -7,7 +7,7 @@ import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
-import { CLAVES_CALCULADORAS, DEFAULT_CONFIG_YESO, leerConfigYeso } from "@/lib/calculadoras-config";
+import { CLAVES_CALCULADORAS, leerConfigYeso } from "@/lib/calculadoras-config";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
@@ -23,12 +23,6 @@ export const Route = createFileRoute("/_authenticated/taller")({
   }),
   component: TallerPage,
 });
-
-const proporcionesYeso = [
-  { agua: 38, yeso: 62, recomendada: false },
-  { agua: 40, yeso: 60, recomendada: true },
-  { agua: 42, yeso: 58, recomendada: false },
-];
 
 const tiposTarro = {
   liso: {
@@ -58,9 +52,15 @@ function formatearEntero(valor: number) {
   }).format(Math.round(valor));
 }
 
-function calcularMezcla(volumen: number, partesAgua: number, partesYeso: number) {
+function calcularMezcla(
+  volumen: number,
+  partesAgua: number,
+  partesYeso: number,
+  volumenPorGramo: number,
+  factorCorreccion: number,
+) {
   const ratioAguaSobreYeso = partesAgua / 100;
-  const yeso = volumen / (volumenPorGramoYeso + ratioAguaSobreYeso);
+  const yeso = volumen / (volumenPorGramo * factorCorreccion + ratioAguaSobreYeso);
   const agua = yeso * ratioAguaSobreYeso;
   return { agua, yeso };
 }
@@ -145,6 +145,10 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
             <Calculator className="size-3" aria-hidden="true" />
             Joyería 40/60
           </span>
+        </div>
+      }
+    >
+      <div className={`space-y-6 p-5 ${compacto ? "" : "sm:p-6 lg:p-8"}`}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
           <label className="space-y-2">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -188,8 +192,8 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³` : "0 cm³"} ·{" "}
-              {tiposTarro[tipoTarro].etiqueta} {tolerancias[tipoTarro] >= 0 ? "+" : ""}
-              {formatearCantidad(tolerancias[tipoTarro], 2)}%
+              {tiposTarro[tipoTarro].etiqueta} {configuracion.tolerancias[tipoTarro] >= 0 ? "+" : ""}
+              {formatearCantidad(configuracion.tolerancias[tipoTarro], 2)}%
             </p>
           </div>
         ) : null}
@@ -200,8 +204,8 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
               : "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8"
           }
         >
-          {proporcionesYeso.map((p) => {
-            const { agua, yeso } = calcularMezcla(volumen, p.agua, p.yeso);
+          {configuracion.proporciones.map((p) => {
+            const { agua, yeso } = calcularMezcla(volumen, p.agua, p.yeso, configuracion.volumenPorGramo, configuracion.factorCorreccion);
             return (
               <article
                 key={`${p.agua}-${p.yeso}`}
