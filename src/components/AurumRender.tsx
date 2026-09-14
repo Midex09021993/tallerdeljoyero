@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
+import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
   | "oro18a_pulido" | "oro18a_satinado" | "oro18a_mate" | "oro18a_cepillado"
@@ -140,7 +140,7 @@ export function AurumRender() {
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
+  const [captura, setCaptura] = useState<string|null>(null), [autoRotando, setAutoRotando] = useState(false), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
@@ -191,7 +191,7 @@ export function AurumRender() {
       };
 
       const controles = new OrbitControls(camara,renderer.domElement);
-      controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true;
+      controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true; controles.enableRotate = true; controles.autoRotate = false; controles.autoRotateSpeed = 0.65;
       controles.minDistance = .15; controles.maxDistance = 100;
 
       let modelo:any = null;
@@ -440,7 +440,8 @@ export function AurumRender() {
         gema:aplicarGema,
         escenario:aplicarEscenario,
         iluminacion:aplicarIluminacion,
-        reset:encuadrar,
+        reset:()=>{ controles.autoRotate=false; setAutoRotando(false); encuadrar(); },
+         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; setAutoRotando(activo); },
         capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setPartes([]);setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
     partes:()=>modelo?obtenerPartes(modelo):[],
@@ -636,7 +637,8 @@ export function AurumRender() {
           <div className="grid grid-cols-5 gap-1">
             <button type="button" title="Configuración" onClick={()=>setPanel("iluminacion")} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><SlidersHorizontal className="size-4"/></button>
             <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><RotateCcw className="size-4"/></button>
-            <button type="button" title="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Maximize2 className="size-4"/></button>
+            <button type="button" title={autoRotando?"Detener giro":"Girar cámara lentamente"} onClick={()=>apiRef.current?.autoRotar(!autoRotando)} className={"grid h-10 place-items-center rounded-lg border transition "+(autoRotando?"border-gold bg-gold/10 text-gold":"border-white/10 text-white/45 hover:border-gold/40 hover:text-gold")}><RotateCw className={"size-4 "+(autoRotando?"animate-spin":"")}/></button>
+             <button type="button" title="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Maximize2 className="size-4"/></button>
             <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Expand className="size-4"/></button>
             <button type="button" title="Capturar imagen" onClick={capturarImagen} className="grid h-10 place-items-center rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"><Camera className="size-4"/></button>
           </div>
