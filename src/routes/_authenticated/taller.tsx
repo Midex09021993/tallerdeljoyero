@@ -344,19 +344,21 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
                   p.recomendada ? "border-gold bg-accent shadow-card" : "border-border bg-card"
                 }`}
               >
-                <div className={compacto ? "mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1" : "mb-6"}>
-                  <p className="text-2xl font-semibold">
-                    {p.agua}/{p.yeso}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.agua}% agua / {p.yeso}% yeso
-                  </p>
-                  {p.recomendada ? (
-                    <p className="w-full text-[10px] font-semibold uppercase tracking-wider text-gold">
-                      Recomendada para joyería
+                {esDueno ? (
+                  <div className={compacto ? "mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1" : "mb-6"}>
+                    <p className="text-2xl font-semibold">
+                      {p.agua}/{p.yeso}
                     </p>
-                  ) : null}
-                </div>
+                    <p className="text-xs text-muted-foreground">
+                      {p.agua}% agua / {p.yeso}% yeso
+                    </p>
+                    {p.recomendada ? (
+                      <p className="w-full text-[10px] font-semibold uppercase tracking-wider text-gold">
+                        Recomendada para joyería
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
                 <dl className={`grid gap-3 ${compacto ? "grid-cols-2" : "grid-cols-1 gap-4 lg:grid-cols-2"}`}>
                   <div className={`rounded-xl bg-background p-4 ${compacto ? "" : "lg:p-5"}`}>
                     <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
