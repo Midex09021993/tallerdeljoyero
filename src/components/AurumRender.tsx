@@ -193,7 +193,7 @@ export function AurumRender() {
       if (!vivo || !nodo) return;
       const escena = new THREE.Scene();
       const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
-      const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance", precision:"highp" });
+      const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance" });
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
@@ -202,7 +202,7 @@ export function AurumRender() {
       renderer.toneMappingExposure = 0.98;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
-      renderer.transmissionResolutionScale = 0.65;
+      (renderer as any).transmissionResolutionScale = 0.65;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.shadowMap.autoUpdate = true;
