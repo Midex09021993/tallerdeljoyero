@@ -4,6 +4,7 @@ import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, gen
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
+import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
@@ -212,6 +213,7 @@ export function AurumRender() {
       const renderQuality = getAurumRenderQuality("balanced");
       const shadowConfig=getAurumShadowConfig();
       const postConfig=getAurumPostConfig();
+      const ssaoConfig=getAurumSsaoConfig();
       renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
