@@ -123,7 +123,7 @@ const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
 
 const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; onClick:()=>void }) => {
   const hex = "#" + g.color.toString(16).padStart(6,"0");
-  const light = g.id==="diamante" || g.id==="moissanita" ? "#ffffff" : "#ffffff";
+  const light = g.familia==="Diamante" || g.familia==="Moissanita" ? "#ffffff" : "#ffffff";
   const gradId = "gem-grad-" + g.id;
   return <button
     type="button"
@@ -174,7 +174,7 @@ export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro");
+  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro");
   const [captura, setCaptura] = useState<string|null>(null), [autoRotando, setAutoRotando] = useState(false), [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería"), [categoriaProyecto, setCategoriaProyecto] = useState("Anillo"), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
@@ -203,7 +203,7 @@ export function AurumRender() {
       renderer.setPixelRatio(Math.min(devicePixelRatio,2));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.55;
+      renderer.toneMappingExposure = 0.98;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       renderer.transmissionResolutionScale = 1;
@@ -240,7 +240,7 @@ export function AurumRender() {
       const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
       let entorno = fallbackEnvironment;
       escena.environment = entorno;
-      escena.environmentIntensity = 1.05;
+      escena.environmentIntensity = 0.72;
       escena.environmentRotation.y = Math.PI * 0.16;
       // HDRI fotográfico de estudio para reflejos reales en metales y gemas.
       // Si el recurso remoto falla, se mantiene RoomEnvironment como fallback.
@@ -254,7 +254,7 @@ export function AurumRender() {
           const anterior = entorno;
           entorno = hdrEnvironment;
           escena.environment = entorno;
-          escena.environmentIntensity = 1.15;
+          escena.environmentIntensity = 0.78;
           anterior?.dispose?.();
         } catch {
           hdrTexture.dispose?.();
@@ -262,21 +262,21 @@ export function AurumRender() {
       }, undefined, () => {
         // Fallback silencioso: el visor sigue funcionando aunque no haya red.
       });
-      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,2.5));
-      const key = new THREE.DirectionalLight(0xffefc8,6);
+      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,1.15));
+      const key = new THREE.DirectionalLight(0xffefc8,2.2);
       key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
-      const fill = new THREE.DirectionalLight(0xdbe7ff,4);
+      const fill = new THREE.DirectionalLight(0xdbe7ff,1.1);
       fill.position.set(-5,3,4); escena.add(fill);
-      const rim = new THREE.DirectionalLight(0xffd49a,5);
+      const rim = new THREE.DirectionalLight(0xffd49a,2.0);
       rim.position.set(2,4,-5); escena.add(rim);
-      const top = new THREE.PointLight(0xffffff,3,30);
+      const top = new THREE.PointLight(0xffffff,0.8,30);
       top.position.set(0,5,1); escena.add(top);
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft: {key:3.8,fill:3.2,rim:3.0,top:1.8,exposure:1.45,environment:1.05},
-          studioHard: {key:5.8,fill:1.8,rim:5.2,top:2.4,exposure:1.52,environment:1.12},
-          jewelry: {key:4.8,fill:3.6,rim:5.0,top:2.8,exposure:1.58,environment:1.2},
-          luxury: {key:4.2,fill:2.1,rim:6.2,top:2.2,exposure:1.55,environment:1.08},
+          studioSoft: {key:1.9,fill:0.9,rim:2.1,top:0.7,exposure:0.92,environment:0.62},
+          studioHard: {key:2.8,fill:0.65,rim:3.0,top:0.9,exposure:0.98,environment:0.68},
+          jewelry: {key:2.5,fill:1.15,rim:2.8,top:1.0,exposure:1.0,environment:0.78},
+          luxury: {key:2.2,fill:0.7,rim:3.2,top:0.8,exposure:0.98,environment:0.7},
         }[id];
         key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
       };
@@ -385,19 +385,19 @@ export function AurumRender() {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
         if (!suelo) {
-          suelo = new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:0xd8d6d1,metalness:.02,roughness:.34}));
+          suelo = new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:0xc9c7c2,metalness:.02,roughness:.4}));
           suelo.rotation.x=-Math.PI/2; suelo.position.y=-0.02; suelo.receiveShadow=true; escena.add(suelo);
         }
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
-          const fondos:any={oscuro:0x090b0e,claro:0xe7e5e0,luxury:0x21150c,marmol:0xcfccc5};
+          const fondos:any={oscuro:0x090b0e,claro:0xd8d6d0,luxury:0x21150c,marmol:0xc9c6bf};
           escena.background = new THREE.Color(fondos[id]);
         }
         if (suelo) {
           suelo.visible = id!=="transparente";
-          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xd8d6d1:0x15181c);
-          suelo.material.roughness = id==="marmol"?.24:id==="claro"?.38:.3;
+          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xc9c7c2:0x15181c);
+          suelo.material.roughness = id==="marmol"?.24:id==="claro"?.42:.3;
         }
         aplicarIluminacion(cfg.iluminacion);
       };
@@ -698,117 +698,3 @@ export function AurumRender() {
             <p className="text-[9px] font-semibold uppercase tracking-[.15em] text-gold/75">Presentación</p>
             <p className="mt-1.5 text-[9px] leading-relaxed text-white/35">Prepara la pieza para visualizarla, cambiar materiales y presentar distintas opciones.</p>
           </div>
-        </div>
-      </aside>
-      <main className="relative min-w-0 flex-1 bg-[#090b0e]">
-        <div ref={visorRef} className="absolute inset-0">
-          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><p className="mt-4 text-[9px] uppercase tracking-[.2em] text-white/25">Rotar · Zoom · Pan</p></div></div>}
-          {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-gold/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-gold"/>{paso||"Preparando visualización..."}</div></div>}
-          {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-          {parteSeleccionada&&<div className="absolute left-5 top-16 z-20 max-w-[75%] rounded-xl border border-[#ff8a5b]/60 bg-black/75 px-3 py-2 text-[10px] font-medium text-white shadow-xl backdrop-blur-xl"><div><span className="text-[#ff8a5b]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}</div>{parteSeleccionadaCapa&&<div className="mt-1 text-white/50">Capa Rhino: <span className="text-white/80">{parteSeleccionadaCapa}</span> · {parteSeleccionadaCategoria==="metal"?"Metal":parteSeleccionadaCategoria==="gema"?"Gema":"Otro"}</div>}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
-          {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[60%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] text-white/55 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· GLB interno</span></div>}
-          <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-xl border border-white/10 bg-[#0b0c0e]/80 p-1 shadow-2xl backdrop-blur-xl">
-            {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
-          </div>
-          <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/35 backdrop-blur lg:block">AURUM RENDER · Tiempo real</div>
-          <div className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
-            <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/10 bg-white/90 p-1.5 shadow-[0_12px_35px_rgba(0,0,0,.18)] backdrop-blur-xl">
-              <button type="button" title="Configuración" aria-label="Configuración" onClick={()=>setPanel("iluminacion")} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><SlidersHorizontal className="size-[18px]"/></button>
-              <button type="button" title="Reiniciar cámara" aria-label="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><RotateCcw className="size-[18px]"/></button>
-              <button type="button" title={autoRotando?"Detener giro":"Girar cámara lentamente"} aria-label={autoRotando?"Detener giro":"Girar cámara lentamente"} onClick={()=>apiRef.current?.autoRotar(!autoRotando)} className={"grid size-10 place-items-center rounded-xl transition "+(autoRotando?"bg-gold/20 text-black":"text-black/70 hover:bg-black/5 hover:text-black")}><RotateCw className={"size-[18px] "+(autoRotando?"animate-spin":"")}/></button>
-              <button type="button" title="Zoom Extents" aria-label="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Maximize2 className="size-[18px]"/></button>
-              <button type="button" title="Pantalla completa" aria-label="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Expand className="size-[18px]"/></button>
-              <div className="my-0.5 h-px w-6 bg-black/10"/>
-              <button type="button" title="Capturar imagen" aria-label="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-gold transition hover:bg-gold/10"><Camera className="size-[18px]"/></button>
-            </div>
-          </div>
-        </div>
-      </main>
-      <aside className="flex w-[320px] shrink-0 flex-col border-l border-white/10 bg-[#0d0f11]/96 shadow-2xl backdrop-blur-xl xl:w-[350px]">
-        <div className="grid shrink-0 grid-cols-3 border-b border-white/10">
-          <button type="button" onClick={()=>setPanel("materiales")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="materiales"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Materiales</button>
-          <button type="button" onClick={()=>setPanel("escenas")} className={"flex flex-col items-center gap-1 border-x border-white/10 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="escenas"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><ImageIcon className="size-4"/>Ambiente</button>
-          <button type="button" onClick={()=>setPanel("iluminacion")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="iluminacion"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Luz</button>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          {panel==="materiales"&&<div>
-            <div className="mb-4">
-              <p className="text-xs font-semibold">Biblioteca de materiales</p>
-              <p className="mt-1 text-[10px] text-white/35">{parteSeleccionada?(`Aplicar a: ${parteSeleccionadaNombre||"componente"}`):"Selecciona una parte del modelo para personalizarla"}</p>
-            </div>
-            <div className="mb-4 flex rounded-xl border border-white/10 bg-white/[.025] p-1">
-              <button type="button" onClick={()=>setBibliotecaTipo("metales")} className={"flex-1 rounded-lg py-2.5 text-[9px] font-semibold uppercase tracking-[.12em] transition "+(bibliotecaTipo==="metales"?"bg-gold/10 text-gold shadow-sm":"text-white/40 hover:text-white")}>
-                Metales
-              </button>
-              <button type="button" onClick={()=>setBibliotecaTipo("gemas")} className={"flex-1 rounded-lg py-2.5 text-[9px] font-semibold uppercase tracking-[.12em] transition "+(bibliotecaTipo==="gemas"?"bg-gold/10 text-gold shadow-sm":"text-white/40 hover:text-white")}>
-                Gemas
-              </button>
-            </div>
-
-            {bibliotecaTipo==="metales"&&<div className="space-y-5">
-              {(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino","Especiales"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
-                <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre} onClick={()=>{setMaterialId(m.id); apiRef.current?.material(m)}} className={"group rounded-xl p-1.5 transition "+(materialId===m.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
-                    <span className="mx-auto block size-12 rounded-full border border-white/15 shadow-[inset_3px_3px_7px_rgba(255,255,255,.3),inset_-4px_-4px_8px_rgba(0,0,0,.38),0_4px_12px_rgba(0,0,0,.28)]" style={{background:"radial-gradient(circle at 30% 24%,#fff 0%,#"+m.color.toString(16).padStart(6,"0")+" 28%,#"+m.color.toString(16).padStart(6,"0")+" 62%,#08090a 100%)"}}/>
-                    <span className="mt-1.5 block truncate text-center text-[8px] font-medium text-white/65 group-hover:text-white">{m.nombre}</span>
-                  </button>)}
-                </div>
-              </div>)}
-            </div>}
-
-            {bibliotecaTipo==="gemas"&&<div>
-              <div className="mb-3 rounded-xl border border-white/8 bg-white/[.018] px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  <Gem className="size-3.5 text-gold"/>
-                  <div>
-                    <p className="text-[10px] font-semibold text-white/75">Biblioteca de Gemas</p>
-                    <p className="text-[9px] text-white/35">{parteSeleccionada?(`Selecciona una gema para ${parteSeleccionadaNombre||"la pieza"}`):"Selecciona primero una piedra en el modelo"}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {Array.from(new Set(GEMAS.map(g=>g.familia))).map(familia=><div key={familia}>
-                  <p className="mb-2 text-[8px] font-semibold uppercase tracking-[.18em] text-white/30">{familia}</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {GEMAS.filter(g=>g.familia===familia).map(g=><GemSwatch key={g.id} g={g} selected={gemaId===g.id} onClick={()=>{setGemaId(g.id); if(parteSeleccionadaCategoria==="gema") apiRef.current?.gema(g);}}/>)}
-                  </div>
-                </div>)}
-              </div>
-              <div className="mt-4 rounded-xl border border-gold/10 bg-gold/[.03] p-3 text-[8px] leading-relaxed text-white/35"><span className="text-gold/75">Óptica avanzada:</span> transmisión, refracción, dispersión cromática, absorción interna y perfiles naturales con inclusiones visuales sutiles.</div>
-            </div>}
-          </div>}
-          {panel==="escenas"&&<div>
-             <div className="mb-4">
-               <p className="text-xs font-semibold">Ambiente</p>
-               <p className="mt-1 text-[10px] text-white/35">Presentación visual de la joya</p>
-             </div>
-             <div className="grid grid-cols-2 gap-2.5">
-               {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id);setIluminacionId(e.iluminacion)}} className={"group overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold/80 bg-gold/[.04]":"border-white/10 hover:border-gold/40")}>
-                 <div className={"relative h-24 overflow-hidden "+e.clase}>
-                   {e.id!=="transparente"&&<><span className="absolute left-[18%] top-3 h-8 w-8 rounded-full bg-white/20 blur-xl"/><span className="absolute right-[18%] bottom-2 h-10 w-16 rounded-full bg-black/25 blur-lg"/></>}
-                   {escenarioId===e.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-gold text-[10px] font-bold text-black">✓</span>}
-                 </div>
-                 <div className="p-2.5">
-                   <div className="text-[10px] font-semibold text-white/80 group-hover:text-white">{e.nombre}</div>
-                   <div className="mt-0.5 text-[8px] text-white/30">{e.descripcion}</div>
-                 </div>
-               </button>)}
-             </div>
-             <div className="mt-4 rounded-xl border border-white/8 bg-white/[.02] p-3">
-               <div className="flex items-center justify-between">
-                 <span className="text-[8px] uppercase tracking-[.16em] text-white/30">Ambiente activo</span>
-                 <span className="text-[9px] font-semibold text-gold">{ESCENARIOS.find(e=>e.id===escenarioId)?.nombre}</span>
-               </div>
-               <div className="mt-2 flex items-center gap-2 text-[8px] text-white/30">
-                 <span className="size-1.5 rounded-full bg-gold"/> Entorno · Iluminación · Reflejos
-               </div>
-             </div>
-           </div>}
-           {panel==="iluminacion"&&<div><div className="mb-4"><p className="text-xs font-semibold">Iluminación</p><p className="mt-1 text-[10px] text-white/35">Presets de estudio para joyería</p></div><div className="space-y-2">{ILUMINACIONES.map(l=><button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-xl border p-3 text-left transition "+(iluminacionId===l.id?"border-gold bg-gold/10":"border-white/10 hover:border-gold/40")}><span><span className="block text-[10px] font-semibold text-white/80">{l.nombre}</span><span className="text-[9px] text-white/30">{l.descripcion}</span></span><span className="size-7 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff,transparent_38%),radial-gradient(circle,#c9a45d,#28201a)]"/></button>)}</div></div>}
-        </div>
-        {captura&&<div className="shrink-0 border-t border-white/10 p-3"><button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-gold text-[10px] font-semibold uppercase tracking-wider text-black"><Download className="size-3.5"/> Descargar PNG</button></div>}
-      </aside>
-    </div>
-  </div>;
-}
