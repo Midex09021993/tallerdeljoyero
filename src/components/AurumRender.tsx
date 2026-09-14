@@ -288,7 +288,7 @@ export function AurumRender() {
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       let frame=0;
       const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)}; animate();
-      cleanup=()=>{cancelAnimationFrame(frame);obs.disconnect();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
+      cleanup=()=>{cancelAnimationFrame(frame);obs.disconnect();quitar();controles.dispose();materialesCache.forEach((m:any)=>m.dispose?.());entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;cleanup()};
   },[]);
