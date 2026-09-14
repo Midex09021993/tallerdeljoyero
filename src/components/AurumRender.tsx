@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Expand, Gem, Maximize2, RotateCcw, Upload, X } from "lucide-react";
+import { Camera, Download, Expand, Gem, Maximize2, RotateCcw, Upload, X } from "lucide-react";
 
 type MaterialId = "oro18a" | "oro18b" | "oro18r" | "plata950" | "platino";
 type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
@@ -40,7 +40,7 @@ export function AurumRender() {
     material: (config: MaterialConfig) => void;
     escenario: (id: EscenarioId) => void;
     reset: () => void;
-    capturar: () => void;
+    capturar: () => string;
     limpiar: () => void;
     fullscreen: () => Promise<void>;
   } | null>(null);
@@ -50,6 +50,7 @@ export function AurumRender() {
   const [error, setError] = useState<string | null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a");
   const [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
+  const [captura, setCaptura] = useState<string | null>(null);
 
   const materialActivo = MATERIALES.find((m) => m.id === materialId) ?? MATERIALES[0]!;
 
@@ -104,9 +105,8 @@ export function AurumRender() {
       rim.position.set(2, 4, -5);
       escena.add(rim);
 
-      const top = new THREE.RectAreaLight(0xffffff, 5, 4, 2);
-      top.position.set(0, 5, 0);
-      top.lookAt(0, 0, 0);
+      const top = new THREE.PointLight(0xffffff, 2.8, 30);
+      top.position.set(0, 5, 1);
       escena.add(top);
 
       const controles = new OrbitControls(camara, renderer.domElement);
@@ -198,8 +198,10 @@ export function AurumRender() {
         const tamano = caja.getSize(new THREE.Vector3());
         const maxDim = Math.max(tamano.x, tamano.y, tamano.z) || 1;
 
+        modelo.position.set(0, 0, 0);
+        modelo.scale.setScalar(1);
         modelo.position.sub(centro);
-        modelo.scale.multiplyScalar(2.5 / maxDim);
+        modelo.scale.setScalar(2.5 / maxDim);
         modelo.updateMatrixWorld(true);
 
         const cajaFinal = new THREE.Box3().setFromObject(modelo);
@@ -269,11 +271,7 @@ export function AurumRender() {
 
       const capturar = () => {
         renderer.render(escena, camara);
-        const data = renderer.domElement.toDataURL("image/png");
-        const enlace = document.createElement("a");
-        enlace.href = data;
-        enlace.download = "aurum-render-" + Date.now() + ".png";
-        enlace.click();
+        return renderer.domElement.toDataURL("image/png");
       };
 
       apiRef.current = {
