@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Search, Ruler } from "lucide-react";
-import { CLAVES_CALCULADORAS, leerConfigTallasAnillo, type TallaAnillo } from "@/lib/calculadoras-config";
+import { CLAVES_CALCULADORAS, leerConfigTallasAnillo, formatearTallaAmericana, type TallaAnillo } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
 
 type ModoBusqueda = "diametro" | "europea" | "americana";
@@ -8,11 +8,15 @@ type ModoBusqueda = "diametro" | "europea" | "americana";
 const modos: { id: ModoBusqueda; label: string; placeholder: string }[] = [
   { id: "diametro", label: "Diámetro interno", placeholder: "Ej. 18,1 mm" },
   { id: "europea", label: "Talla europea", placeholder: "Ej. 17" },
-  { id: "americana", label: "Talla americana (USA)", placeholder: "Ej. 8" },
+  { id: "americana", label: "Talla americana (USA)", placeholder: "Ej. 6 1/2" },
 ];
 
 function normalizar(valor: string) {
   return Number(valor.replace(",", ".").trim());
+}
+
+function normalizarAmericana(valor: string) {
+  return formatearTallaAmericana(valor);
 }
 
 function diferencia(a: number, b: number) {
@@ -27,10 +31,17 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
 
   const resultado = useMemo(() => {
     if (!valor.trim()) return null;
+    const tabla = configuracion.tabla;
+    if (!tabla.length) return null;
+
+    if (modo === "americana") {
+      const buscado = normalizarAmericana(valor);
+      if (!buscado) return null;
+      return tabla.find((f) => f.americana === buscado) ?? null;
+    }
+
     const buscado = normalizar(valor);
     if (!Number.isFinite(buscado)) return null;
-
-    const tabla = configuracion.tabla;
     if (!tabla.length) return null;
 
     if (modo === "diametro") {
@@ -42,13 +53,10 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
     if (modo === "europea") {
       return tabla.find((f) => f.europea === buscado) ?? null;
     }
-    return tabla.find((f) => f.americana === buscado) ?? null;
+    return null;
   }, [configuracion, modo, valor]);
 
-  const mostrar = (fila: TallaAnillo | null) => {
-    if (!fila) return "—";
-    return fila.americana == null ? "—" : Number.isInteger(fila.americana) ? fila.americana : fila.americana.toFixed(1);
-  };
+  const mostrar = (fila: TallaAnillo | null) => fila?.americana ?? "—";
 
   return (
     <section className={`overflow-hidden rounded-2xl border border-border bg-card shadow-card ${compacto ? "" : "max-w-2xl"}`}>
@@ -82,7 +90,7 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <input
               type="text"
-              inputMode="decimal"
+              inputMode={modo === "americana" ? "text" : "decimal"}
               className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary"
               placeholder={modos.find((m) => m.id === modo)?.placeholder}
               value={valor}
