@@ -12,8 +12,9 @@ type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
 type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino";
+type CategoriaParte = "metal" | "gema" | "otro";
 type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
-type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number };
+type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
 const MATERIALES: MaterialConfig[] = [
   { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55 },
   { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 2.35, clearcoat: .25 },
@@ -50,12 +51,34 @@ const ILUMINACIONES: { id: IluminacionId; nombre: string; descripcion: string }[
   { id: "luxury", nombre: "Luxury", descripcion: "Dramática" },
 ];
 
+const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
+const colorRhinoHex = (c:any): string | undefined => {
+  if (!c) return undefined;
+  const r = Number(c.r ?? c.R), g = Number(c.g ?? c.G), b = Number(c.b ?? c.B);
+  if (![r,g,b].every(Number.isFinite)) return undefined;
+  return "#" + [r,g,b].map(n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,"0")).join("");
+};
+const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
+  const n = normalizarTexto(nombre);
+  if (/(piedra|gema|diamante|zafiro|rubi|rubí|esmeralda|moissanita|citrino|amatista|topacio)/.test(n)) return "gema";
+  if (/(metal|oro|plata|platino|metalico|metálico)/.test(n)) return "metal";
+  if (color) {
+    const m = color.match(/^#([0-9a-f]{6})$/i);
+    if (m) {
+      const x=parseInt(m[1],16), rr=(x>>16)&255, gg=(x>>8)&255, bb=x&255;
+      if (gg > rr*1.15 && gg > bb*1.15 && gg > 90) return "metal";
+      if (bb > rr*1.15 && bb > gg*1.05 && bb > 90) return "gema";
+    }
+  }
+  return "otro";
+};
+
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
+  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
 
@@ -235,14 +258,22 @@ export function AurumRender() {
 
       const obtenerPartes = (objeto:any):ParteModelo[] => {
         const resultado:ParteModelo[] = [];
+        const layers = Array.isArray(objeto?.userData?.layers) ? objeto.userData.layers : [];
         objeto.traverse((x:any) => {
           if (x === objeto) return;
           const esMalla = !!x.isMesh;
           const tieneHijos = Array.isArray(x.children) && x.children.length > 0;
           if (!esMalla && !tieneHijos) return;
           const nombre = (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : (esMalla ? "Malla" : "Componente");
+          const attrs = x.userData?.attributes || {};
+          const meta = x.userData?.aurumRhino;
+          const layerIndex = Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1;
+          const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
+          const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
+          const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
+          const categoria = meta?.categoria ?? clasificarCapa(capa || "", colorCapa);
           const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== objeto ? 1 : 0));
-          resultado.push({ id: x.uuid, nombre, tipo: esMalla ? "malla" : "grupo", nivel });
+          resultado.push({ id: x.uuid, nombre, tipo: esMalla ? "malla" : "grupo", nivel, capa, colorCapa, categoria });
         });
         return resultado;
       };
@@ -254,17 +285,32 @@ export function AurumRender() {
         }
         informar("Procesando archivo...");
         const objeto = await parsearEntrada(file,ext);
+        // Rhino 3DM conserva las capas en userData del objeto raíz y el layerIndex
+        // en userData.attributes de cada objeto. Capturamos esa información antes
+        // de convertir a GLB para que no se pierda durante la conversión.
+        const metadataCapas = ext==="3dm"
+          ? obtenerPartes(objeto).filter(p=>p.tipo==="malla").map(p=>({nombre:p.nombre,capa:p.capa,colorCapa:p.colorCapa,categoria:p.categoria}))
+          : [];
         informar("Convirtiendo a GLB...");
         const glb = await convertirAGlb(objeto);
         informar("Preparando visualización...");
         const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
         const interno=(await new GLTFLoader().parseAsync(glb,"")).scene;
+        if (metadataCapas.length) {
+          let i=0;
+          interno.traverse((x:any)=>{
+            if (!x.isMesh) return;
+            const meta=metadataCapas[i++];
+            if (!meta) return;
+            x.userData = {...x.userData, aurumRhino: meta};
+          });
+        }
         quitar();
         interno.traverse((x:any)=>{if(x.isMesh){x.material=material;x.castShadow=true;x.receiveShadow=true;}});
         modelo=interno;
         setPartes(obtenerPartes(modelo));
         setParteSeleccionada(null);
-        setParteSeleccionadaNombre(null);
+        setParteSeleccionadaNombre(null); setParteSeleccionadaCapa(null); setParteSeleccionadaCategoria("otro");
         parteActiva=null;
         limpiarResaltado();
         glbInterno=new Blob([glb],{type:"model/gltf-binary"});
@@ -307,8 +353,13 @@ export function AurumRender() {
         if (!obj?.isMesh) return;
         parteActiva = obj;
         const nombre = (typeof obj.name === "string" && obj.name.trim()) ? obj.name.trim() : "Componente seleccionado";
+        const meta = obj.userData?.aurumRhino || {};
+        const capa = meta.capa || obj.userData?.attributes?.layerName || null;
+        const categoria = (meta.categoria || clasificarCapa(capa || "", meta.colorCapa)) as CategoriaParte;
         setParteSeleccionada(obj.uuid);
         setParteSeleccionadaNombre(nombre);
+        setParteSeleccionadaCapa(capa);
+        setParteSeleccionadaCategoria(categoria);
         limpiarResaltado();
         if (obj.geometry) {
           const edges = new THREE.EdgesGeometry(obj.geometry, 18);
@@ -371,7 +422,7 @@ export function AurumRender() {
           {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><p className="mt-4 text-[9px] uppercase tracking-[.2em] text-white/25">Rotar · Zoom · Pan</p></div></div>}
           {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-gold/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-gold"/>{paso||"Preparando visualización..."}</div></div>}
           {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-          {parteSeleccionada&&<div className="absolute left-5 top-16 z-20 max-w-[70%] rounded-xl border border-[#ff8a5b]/60 bg-black/75 px-3 py-2 text-[10px] font-medium text-white shadow-xl backdrop-blur-xl"><span className="text-[#ff8a5b]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<span className="ml-2 text-white/40">· elige un material</span></div>}
+          {parteSeleccionada&&<div className="absolute left-5 top-16 z-20 max-w-[75%] rounded-xl border border-[#ff8a5b]/60 bg-black/75 px-3 py-2 text-[10px] font-medium text-white shadow-xl backdrop-blur-xl"><div><span className="text-[#ff8a5b]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}</div>{parteSeleccionadaCapa&&<div className="mt-1 text-white/50">Capa Rhino: <span className="text-white/80">{parteSeleccionadaCapa}</span> · {parteSeleccionadaCategoria==="metal"?"Metal":parteSeleccionadaCategoria==="gema"?"Gema":"Otro"}</div>}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
           {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[60%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] text-white/55 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· GLB interno</span></div>}
           <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-xl border border-white/10 bg-[#0b0c0e]/80 p-1 shadow-2xl backdrop-blur-xl">
             {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
@@ -387,7 +438,7 @@ export function AurumRender() {
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           {panel==="materiales"&&<div>
-            <div className="mb-4"><p className="text-xs font-semibold">Biblioteca de materiales</p><p className="mt-1 text-[10px] text-white/35">{parteSeleccionada?"Aplicar a la parte seleccionada":"Aplicar a toda la pieza"}</p></div>
+            <div className="mb-4"><p className="text-xs font-semibold">Biblioteca de materiales</p><p className="mt-1 text-[10px] text-white/35">{parteSeleccionada?`Aplicar a la parte seleccionada${parteSeleccionadaCategoria==="metal"?" · Metal":parteSeleccionadaCategoria==="gema"?" · Gema":""}`:"Aplicar a toda la pieza"}</p></div>
             <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
               <p className="mb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
               <div className="grid grid-cols-4 gap-2">{MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre} onClick={()=>setMaterialId(m.id)} className={"rounded-xl p-2 transition "+(materialId===m.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
