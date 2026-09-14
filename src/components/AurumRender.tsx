@@ -10,6 +10,9 @@ type MaterialId =
 type GemaId = "diamante" | "zafiro" | "rubi" | "esmeralda" | "moissanita" | "citrino" | "amatista" | "topacio";
 type AssetId = MaterialId | GemaId;
 type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino";
+type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
+type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
+type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 type AssetConfig = { id: AssetId; grupo: "Metal" | "Gema"; categoria: string; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number; transmission?: number; ior?: number; thickness?: number; };
 const MATERIALES: AssetConfig[] = [
   { id: "oro18a_pulido", grupo: "Metal", categoria: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55 },
