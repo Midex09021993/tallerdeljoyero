@@ -487,11 +487,34 @@ export function AurumRender() {
                   <RotateCcw className="size-4" aria-hidden="true" />
                   Restablecer
                 </button>
-                <button type="button" onClick={() => apiRef.current?.capturar()} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:brightness-105">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const data = apiRef.current?.capturar();
+                    if (data) setCaptura(data);
+                  }}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:brightness-105"
+                >
                   <Camera className="size-4" aria-hidden="true" />
-                  Capturar PNG
+                  Capturar
                 </button>
               </div>
+
+              {captura ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const enlace = document.createElement("a");
+                    enlace.href = captura;
+                    enlace.download = "aurum-render-" + Date.now() + ".png";
+                    enlace.click();
+                  }}
+                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-gold bg-accent px-3 text-xs font-semibold text-foreground hover:brightness-105"
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  Descargar PNG
+                </button>
+              ) : null}
 
               <div className="rounded-xl border border-border bg-surface-muted p-4">
                 <p className="text-xs font-semibold">Controles del visor</p>
