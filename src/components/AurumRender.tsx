@@ -320,6 +320,29 @@ export function AurumRender() {
       let hdriGround:any = null;
       let hdriGroundTexture:any = null;
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
+      const [sceneStudioOpen,setSceneStudioOpen]=useState(false);
+      const [sceneStudio,setSceneStudio]=useState({
+        hdriGround:false, worldRadius:40, tripodHeight:1.2,
+        originX:0, originY:0, originZ:0, opacity:1,
+        environmentIntensity:1, exposure:.62, ground:true, shadows:true
+      });
+      const actualizarSceneStudio=(patch:any)=>{
+        setSceneStudio((prev:any)=>{
+          const next={...prev,...patch};
+          Object.assign(hdriGroundConfig,{
+            enabled:next.hdriGround, worldRadius:next.worldRadius,
+            tripodHeight:next.tripodHeight, originX:next.originX,
+            originY:next.originY, originZ:next.originZ, opacity:next.opacity
+          });
+          escena.environmentIntensity=next.environmentIntensity;
+          renderer.toneMappingExposure=next.exposure;
+          if(suelo) suelo.visible=next.ground;
+          renderer.shadowMap.enabled=next.shadows;
+          actualizarHdriGround();
+          return next;
+        });
+      };
+
 
       const crearHdriGround = () => {
         if (!hdriGroundTexture || !hdriGroundConfig.enabled) return;
@@ -528,7 +551,8 @@ export function AurumRender() {
           const loader = new Rhino3dmLoader();
           loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
           loader.setWorkerLimit(2);
-          return await new Promise<any>((resolve, reject) => {
+          return await new Promise<any>
+        {sceneStudioOpen && sceneStudioPanel}((resolve, reject) => {
             loader.parse(buffer, resolve, reject);
           });
         }
@@ -730,7 +754,8 @@ export function AurumRender() {
   const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setTamanoGlb(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
-  return <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
+  return <button title="AURUM Scene Studio" onClick={()=>setSceneStudioOpen((v:boolean)=>!v)} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
+        <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0c0e]/95 px-4 backdrop-blur-xl">
       <div className="flex min-w-0 items-center gap-3">
         <Gem className="size-5 shrink-0 text-gold"/>
