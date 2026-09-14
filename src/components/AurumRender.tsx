@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
 import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile } from "../lib/aurum-material-engine";
+import { getAurumScenePreset, getAurumRenderQuality } from "../lib/aurum-scene-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -205,14 +206,15 @@ export function AurumRender() {
       const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance" });
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
-      renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+      const renderQuality = getAurumRenderQuality("balanced");
+      renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
       renderer.toneMappingExposure = 0.64;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
-      (renderer as any).transmissionResolutionScale = 0.65;
+      (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.shadowMap.autoUpdate = true;
@@ -392,6 +394,10 @@ export function AurumRender() {
       };
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
+        const scenePreset = getAurumScenePreset(id);
+        renderer.toneMappingExposure = scenePreset.exposure;
+        escena.environmentIntensity = scenePreset.environmentIntensity;
+        escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
         // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
         if (!suelo) {
           suelo = new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:0xc9c7c2,metalness:.02,roughness:.4}));
@@ -403,9 +409,11 @@ export function AurumRender() {
           const fondos:any={oscuro:0x090b0e,claro:0xc4c5c7,luxury:0x21150c,marmol:0xc9c6bf};
           escena.background = new THREE.Color(fondos[id]);
         }
-        if (suelo) {          suelo.visible = id!=="transparente";
-          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xb9babe:0x15181c);
-          suelo.material.roughness = id==="marmol"?.24:id==="claro"?.42:.3;
+        if (suelo) {
+          suelo.visible = scenePreset.groundVisible;
+          suelo.material.color.setHex(scenePreset.ground);
+          suelo.material.roughness = scenePreset.groundRoughness;
+          suelo.material.metalness = scenePreset.groundMetalness;
         }
       };
        const encuadrar = () => {
