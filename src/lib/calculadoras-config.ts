@@ -164,7 +164,7 @@ export function useConfiguracionesCalculadoras() {
 export type TallaAnillo = {
   diametroMm: number;
   europea: number;
-  americana: number | null;
+  americana: string | null;
 };
 
 export type ConfigTallasAnillo = {
@@ -174,38 +174,99 @@ export type ConfigTallasAnillo = {
 export const DEFAULT_CONFIG_TALLAS_ANILLO: ConfigTallasAnillo = {
   tabla: [
     { diametroMm: 14.6, europea: 6, americana: null },
-    { diametroMm: 15.0, europea: 7, americana: 4 },
+    { diametroMm: 15.0, europea: 7, americana: "4" },
     { diametroMm: 15.3, europea: 8, americana: null },
-    { diametroMm: 15.6, europea: 9, americana: 5 },
+    { diametroMm: 15.6, europea: 9, americana: "5" },
     { diametroMm: 15.9, europea: 10, americana: null },
     { diametroMm: 16.2, europea: 11, americana: null },
-    { diametroMm: 16.5, europea: 12, americana: 6 },
+    { diametroMm: 16.5, europea: 12, americana: "6" },
     { diametroMm: 16.8, europea: 13, americana: null },
-    { diametroMm: 17.2, europea: 14, americana: 7 },
+    { diametroMm: 17.2, europea: 14, americana: "7" },
     { diametroMm: 17.5, europea: 15, americana: null },
     { diametroMm: 17.8, europea: 16, americana: null },
-    { diametroMm: 18.1, europea: 17, americana: 8 },
+    { diametroMm: 18.1, europea: 17, americana: "8" },
     { diametroMm: 18.4, europea: 18, americana: null },
     { diametroMm: 18.8, europea: 19, americana: null },
-    { diametroMm: 19.1, europea: 20, americana: 9 },
+    { diametroMm: 19.1, europea: 20, americana: "9" },
     { diametroMm: 19.4, europea: 21, americana: null },
-    { diametroMm: 19.7, europea: 22, americana: 10 },
+    { diametroMm: 19.7, europea: 22, americana: "10" },
     { diametroMm: 20.0, europea: 23, americana: null },
     { diametroMm: 20.3, europea: 24, americana: null },
-    { diametroMm: 20.6, europea: 25, americana: 11 },
+    { diametroMm: 20.6, europea: 25, americana: "11" },
     { diametroMm: 21.0, europea: 26, americana: null },
-    { diametroMm: 21.3, europea: 27, americana: 12 },
+    { diametroMm: 21.3, europea: 27, americana: "12" },
     { diametroMm: 21.6, europea: 28, americana: null },
     { diametroMm: 22.0, europea: 29, americana: null },
-    { diametroMm: 22.3, europea: 30, americana: 13 },
+    { diametroMm: 22.3, europea: 30, americana: "13" },
     { diametroMm: 22.6, europea: 31, americana: null },
     { diametroMm: 22.9, europea: 32, americana: null },
-    { diametroMm: 23.2, europea: 33, americana: 14 },
+    { diametroMm: 23.2, europea: 33, americana: "14" },
     { diametroMm: 23.5, europea: 34, americana: null },
-    { diametroMm: 23.9, europea: 35, americana: 15 },
+    { diametroMm: 23.9, europea: 35, americana: "15" },
+
+    { diametroMm: 15.04, europea: 7, americana: "4 1/4" },
+    { diametroMm: 15.27, europea: 8, americana: "4 1/2" },
+    { diametroMm: 15.53, europea: 9, americana: "4 3/4" },
+    { diametroMm: 15.90, europea: 10, americana: "5 1/4" },
+    { diametroMm: 16.10, europea: 11, americana: "5 1/2" },
+    { diametroMm: 16.30, europea: 11, americana: "5 3/4" },
+    { diametroMm: 16.71, europea: 13, americana: "6 1/4" },
+    { diametroMm: 16.92, europea: 13, americana: "6 1/2" },
+    { diametroMm: 17.13, europea: 14, americana: "6 3/4" },
+    { diametroMm: 17.45, europea: 15, americana: "7 1/4" },
+    { diametroMm: 17.75, europea: 16, americana: "7 1/2" },
+    { diametroMm: 17.97, europea: 17, americana: "7 3/4" },
+    { diametroMm: 18.35, europea: 18, americana: "8 1/4" },
+    { diametroMm: 18.53, europea: 18, americana: "8 1/2" },
+    { diametroMm: 18.69, europea: 19, americana: "8 3/4" },
+    { diametroMm: 19.22, europea: 20, americana: "9 1/4" },
+    { diametroMm: 19.41, europea: 21, americana: "9 1/2" },
+    { diametroMm: 19.62, europea: 22, americana: "9 3/4" },
+    { diametroMm: 20.02, europea: 23, americana: "10 1/4" },
+    { diametroMm: 20.20, europea: 24, americana: "10 1/2" },
+    { diametroMm: 20.44, europea: 24, americana: "10 3/4" },
+    { diametroMm: 20.85, europea: 26, americana: "11 1/4" },
+    { diametroMm: 21.08, europea: 26, americana: "11 1/2" },
+    { diametroMm: 21.24, europea: 27, americana: "11 3/4" },
+    { diametroMm: 21.69, europea: 28, americana: "12 1/4" },
+    { diametroMm: 21.89, europea: 29, americana: "12 1/2" },
+    { diametroMm: 22.10, europea: 29, americana: "12 3/4" },
+    { diametroMm: 22.40, europea: 30, americana: "13 1/4" },
+    { diametroMm: 22.60, europea: 31, americana: "13 1/2" },
+    { diametroMm: 22.80, europea: 32, americana: "13 3/4" },
+    { diametroMm: 23.20, europea: 33, americana: "14 1/4" },
+    { diametroMm: 23.40, europea: 34, americana: "14 1/2" },
+    { diametroMm: 23.60, europea: 34, americana: "14 3/4" },
+    { diametroMm: 24.00, europea: 35, americana: "15 1/4" },
+    { diametroMm: 24.20, europea: 35, americana: "15 1/2" },
+    { diametroMm: 24.40, europea: 35, americana: "15 3/4" },
   ],
 };
 
+function normalizarTallaAmericana(valor: unknown): number | null {
+  if (typeof valor === "number" && Number.isFinite(valor)) return valor;
+  if (typeof valor !== "string") return null;
+  const texto = valor.trim().replace(/½/g, "1/2").replace(/¼/g, "1/4").replace(/¾/g, "3/4").replace(/,/g, ".");
+  if (!texto) return null;
+  const fraccion = texto.match(/^(\d+(?:\.\d+)?)\s+(1\/4|1\/2|3\/4)$/);
+  if (fraccion) {
+    const base = Number(fraccion[1]);
+    const extra = fraccion[2] === "1/4" ? 0.25 : fraccion[2] === "1/2" ? 0.5 : 0.75;
+    return Number.isFinite(base) ? base + extra : null;
+  }
+  const numeroDecimal = Number(texto);
+  return Number.isFinite(numeroDecimal) ? numeroDecimal : null;
+}
+
+export function formatearTallaAmericana(valor: unknown): string | null {
+  const numero = normalizarTallaAmericana(valor);
+  if (numero === null) return null;
+  const entero = Math.floor(numero);
+  const fraccion = Math.round((numero - entero) * 4);
+  if (fraccion === 0) return String(entero);
+  const texto = fraccion === 1 ? "1/4" : fraccion === 2 ? "1/2" : "3/4";
+  return `${entero} ${texto}`;
+}
 
 export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
   const root = objeto(valor);
@@ -214,8 +275,8 @@ export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
       const o = objeto(item);
       const diametroMm = numero(o.diametroMm, NaN);
       const europea = numero(o.europea, NaN);
-      const americana = o.americana == null || o.americana === "" ? null : numero(o.americana, NaN);
-      if (!Number.isFinite(diametroMm) || !Number.isFinite(europea) || (americana !== null && !Number.isFinite(americana))) return null;
+      const americana = formatearTallaAmericana(o.americana);
+      if (!Number.isFinite(diametroMm) || !Number.isFinite(europea)) return null;
       return { diametroMm, europea, americana };
     })
     .filter((item): item is TallaAnillo => item !== null)
