@@ -98,7 +98,6 @@ const ILUMINACIONES: { id: IluminacionId; nombre: string; descripcion: string }[
   { id: "jewelry", nombre: "Jewelry", descripcion: "Detalle" },
   { id: "luxury", nombre: "Luxury", descripcion: "Dramática" },
 ];
-
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
   if (!c) return undefined;
@@ -183,6 +182,7 @@ export function AurumRender() {
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [autoRotando, setAutoRotando] = useState(false);
+  const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
@@ -197,8 +197,7 @@ export function AurumRender() {
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
-      const nodo = visorRef.current;
-      if (!vivo || !nodo) return;
+      const nodo = visorRef.current;      if (!vivo || !nodo) return;
       const escena = new THREE.Scene();
       const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
       const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance" });
@@ -297,8 +296,7 @@ export function AurumRender() {
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {
-        if (modelo) { escena.remove(modelo); dispose(modelo); modelo=null; }
+      const quitar = () => {        if (modelo) { escena.remove(modelo); dispose(modelo); modelo=null; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
         glbInterno = null;
       };
@@ -397,8 +395,7 @@ export function AurumRender() {
           const fondos:any={oscuro:0x090b0e,claro:0xc4c5c7,luxury:0x21150c,marmol:0xc9c6bf};
           escena.background = new THREE.Color(fondos[id]);
         }
-        if (suelo) {
-          suelo.visible = id!=="transparente";
+        if (suelo) {          suelo.visible = id!=="transparente";
           suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xb9babe:0x15181c);
           suelo.material.roughness = id==="marmol"?.24:id==="claro"?.42:.3;
         }
@@ -497,8 +494,7 @@ export function AurumRender() {
         }
         informar("Procesando archivo...");
         const objeto = await parsearEntrada(file,ext);
-        // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js
-        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
+        // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
         // la orientación "de pie" con la que el modelo fue diseñado en Rhino.
         if (ext==="3dm") {
           objeto.rotation.x = -Math.PI / 2;
@@ -597,8 +593,7 @@ export function AurumRender() {
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
         setParteSeleccionadaCategoria(categoria);
-        limpiarResaltado();
-        if (obj.geometry) {
+        limpiarResaltado();        if (obj.geometry) {
           const edges = new THREE.EdgesGeometry(obj.geometry, 18);
           resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
           resaltado.renderOrder = 20;
@@ -697,8 +692,7 @@ export function AurumRender() {
           </div>
           <div className="mt-5 rounded-xl border border-gold/10 bg-gold/[.035] p-3">
             <p className="text-[9px] font-semibold uppercase tracking-[.15em] text-gold/75">Presentación</p>
-            <p className="mt-1.5 text-[9px] leading-relaxed text-white/35">Prepara la pieza para visualizarla, cambiar materiales y presentar distintas opciones.</p>
-          </div>
+            <p className="mt-1.5 text-[9px] leading-relaxed text-white/35">Prepara la pieza para visualizarla, cambiar materiales y presentar distintas opciones.</p>          </div>
         </div>
       </aside>
       <main className="relative min-w-0 flex-1 bg-[#090b0e]">
@@ -797,8 +791,7 @@ export function AurumRender() {
                  </div>
                </button>)}
              </div>
-             <div className="mt-4 rounded-xl border border-white/8 bg-white/[.02] p-3">
-               <div className="flex items-center justify-between">
+             <div className="mt-4 rounded-xl border border-white/8 bg-white/[.02] p-3">               <div className="flex items-center justify-between">
                  <span className="text-[8px] uppercase tracking-[.16em] text-white/30">Ambiente activo</span>
                  <span className="text-[9px] font-semibold text-gold">{ESCENARIOS.find(e=>e.id===escenarioId)?.nombre}</span>
                </div>
