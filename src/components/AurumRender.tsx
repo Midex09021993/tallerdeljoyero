@@ -591,6 +591,17 @@ export function AurumRender() {
             {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
           </div>
           <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/35 backdrop-blur lg:block">AURUM RENDER · Tiempo real</div>
+          <div className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+            <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/10 bg-white/90 p-1.5 shadow-[0_12px_35px_rgba(0,0,0,.18)] backdrop-blur-xl">
+              <button type="button" title="Configuración" aria-label="Configuración" onClick={()=>setPanel("iluminacion")} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><SlidersHorizontal className="size-[18px]"/></button>
+              <button type="button" title="Reiniciar cámara" aria-label="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><RotateCcw className="size-[18px]"/></button>
+              <button type="button" title={autoRotando?"Detener giro":"Girar cámara lentamente"} aria-label={autoRotando?"Detener giro":"Girar cámara lentamente"} onClick={()=>apiRef.current?.autoRotar(!autoRotando)} className={"grid size-10 place-items-center rounded-xl transition "+(autoRotando?"bg-gold/20 text-black":"text-black/70 hover:bg-black/5 hover:text-black")}><RotateCw className={"size-[18px] "+(autoRotando?"animate-spin":"")}/></button>
+              <button type="button" title="Zoom Extents" aria-label="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Maximize2 className="size-[18px]"/></button>
+              <button type="button" title="Pantalla completa" aria-label="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Expand className="size-[18px]"/></button>
+              <div className="my-0.5 h-px w-6 bg-black/10"/>
+              <button type="button" title="Capturar imagen" aria-label="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-gold transition hover:bg-gold/10"><Camera className="size-[18px]"/></button>
+            </div>
+          </div>
         </div>
       </main>
       <aside className="flex w-[320px] shrink-0 flex-col border-l border-white/10 bg-[#0d0f11]/96 shadow-2xl backdrop-blur-xl xl:w-[350px]">
@@ -671,18 +682,7 @@ export function AurumRender() {
            </div>}
            {panel==="iluminacion"&&<div><div className="mb-4"><p className="text-xs font-semibold">Iluminación</p><p className="mt-1 text-[10px] text-white/35">Presets de estudio para joyería</p></div><div className="space-y-2">{ILUMINACIONES.map(l=><button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-xl border p-3 text-left transition "+(iluminacionId===l.id?"border-gold bg-gold/10":"border-white/10 hover:border-gold/40")}><span><span className="block text-[10px] font-semibold text-white/80">{l.nombre}</span><span className="text-[9px] text-white/30">{l.descripcion}</span></span><span className="size-7 rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff,transparent_38%),radial-gradient(circle,#c9a45d,#28201a)]"/></button>)}</div></div>}
         </div>
-        <div className="shrink-0 border-t border-white/10 p-3">
-          <p className="mb-2 px-1 text-[8px] font-semibold uppercase tracking-[.18em] text-white/25">Herramientas</p>
-          <div className="grid grid-cols-5 gap-1">
-            <button type="button" title="Configuración" onClick={()=>setPanel("iluminacion")} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><SlidersHorizontal className="size-4"/></button>
-            <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><RotateCcw className="size-4"/></button>
-            <button type="button" title={autoRotando?"Detener giro":"Girar cámara lentamente"} onClick={()=>apiRef.current?.autoRotar(!autoRotando)} className={"grid h-10 place-items-center rounded-lg border transition "+(autoRotando?"border-gold bg-gold/10 text-gold":"border-white/10 text-white/45 hover:border-gold/40 hover:text-gold")}><RotateCw className={"size-4 "+(autoRotando?"animate-spin":"")}/></button>
-             <button type="button" title="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Maximize2 className="size-4"/></button>
-            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid h-10 place-items-center rounded-lg border border-white/10 text-white/45 hover:border-gold/40 hover:text-gold"><Expand className="size-4"/></button>
-            <button type="button" title="Capturar imagen" onClick={capturarImagen} className="grid h-10 place-items-center rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/15"><Camera className="size-4"/></button>
-          </div>
-          {captura&&<button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-gold text-[10px] font-semibold uppercase tracking-wider text-black"><Download className="size-3.5"/> Descargar PNG</button>}
-        </div>
+        {captura&&<div className="shrink-0 border-t border-white/10 p-3"><button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-gold text-[10px] font-semibold uppercase tracking-wider text-black"><Download className="size-3.5"/> Descargar PNG</button></div>}
       </aside>
     </div>
   </div>;
