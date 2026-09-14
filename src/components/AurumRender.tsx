@@ -285,6 +285,13 @@ export function AurumRender() {
         }
         informar("Procesando archivo...");
         const objeto = await parsearEntrada(file,ext);
+        // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js
+        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
+        // la orientación "de pie" con la que el modelo fue diseñado en Rhino.
+        if (ext==="3dm") {
+          objeto.rotation.x = -Math.PI / 2;
+          objeto.updateMatrixWorld(true);
+        }
         // Rhino 3DM conserva las capas en userData del objeto raíz y el layerIndex
         // en userData.attributes de cada objeto. Capturamos esa información antes
         // de convertir a GLB para que no se pierda durante la conversión.
