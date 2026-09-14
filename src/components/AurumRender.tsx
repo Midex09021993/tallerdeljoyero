@@ -206,8 +206,9 @@ export function AurumRender() {
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.82;
+      renderer.toneMapping = THREE.AgXToneMapping;
+      // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
+      renderer.toneMappingExposure = 0.74;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = 0.65;
@@ -222,7 +223,7 @@ export function AurumRender() {
       const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
       let entorno = fallbackEnvironment;
       escena.environment = entorno;
-      escena.environmentIntensity = 0.58;
+      escena.environmentIntensity = 0.20;
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
@@ -246,7 +247,7 @@ export function AurumRender() {
             const anterior = entorno;
             entorno = hdrEnvironment;
             escena.environment = entorno;
-            escena.environmentIntensity = 0.36;
+            escena.environmentIntensity = 0.18;
             escena.environmentRotation.y = id === "luxury" ? Math.PI * .42 : id === "studioHard" ? Math.PI * .08 : Math.PI * .16;
             anterior?.dispose?.();
           } catch {
@@ -257,21 +258,21 @@ export function AurumRender() {
         });
       };
       cargarHDRI("jewelry");
-      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,0.72));
-      const key = new THREE.DirectionalLight(0xffefc8,1.45);
+      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,0.28));
+      const key = new THREE.DirectionalLight(0xffefc8,0.70);
       key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
-      const fill = new THREE.DirectionalLight(0xdbe7ff,0.65);
+      const fill = new THREE.DirectionalLight(0xdbe7ff,0.22);
       fill.position.set(-5,3,4); escena.add(fill);
-      const rim = new THREE.DirectionalLight(0xffd49a,1.25);
+      const rim = new THREE.DirectionalLight(0xffd49a,0.45);
       rim.position.set(2,4,-5); escena.add(rim);
-      const top = new THREE.PointLight(0xffffff,0.8,30);
+      const top = new THREE.PointLight(0xffffff,0.15,30);
       top.position.set(0,5,1); escena.add(top);
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft: {key:1.15,fill:0.4,rim:1.1,top:0.35,exposure:0.70,environment:0.36},
-          studioHard: {key:1.5,fill:0.3,rim:1.4,top:0.45,exposure:0.72,environment:0.4},
-          jewelry: {key:1.35,fill:0.45,rim:1.25,top:0.4,exposure:0.68,environment:0.38},
-          luxury: {key:1.3,fill:0.32,rim:1.5,top:0.4,exposure:0.70,environment:0.4},
+          studioSoft: {key:0.55,fill:0.18,rim:0.42,top:0.12,exposure:0.72,environment:0.18},
+          studioHard: {key:0.72,fill:0.16,rim:0.52,top:0.14,exposure:0.74,environment:0.20},
+          jewelry: {key:0.68,fill:0.20,rim:0.48,top:0.14,exposure:0.74,environment:0.20},
+          luxury: {key:0.64,fill:0.15,rim:0.58,top:0.14,exposure:0.72,environment:0.20},
         }[id];
         key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
         cargarHDRI(id);
@@ -393,12 +394,12 @@ export function AurumRender() {
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
-          const fondos:any={oscuro:0x090b0e,claro:0xd8d6d0,luxury:0x21150c,marmol:0xc9c6bf};
+          const fondos:any={oscuro:0x090b0e,claro:0xc4c5c7,luxury:0x21150c,marmol:0xc9c6bf};
           escena.background = new THREE.Color(fondos[id]);
         }
         if (suelo) {
           suelo.visible = id!=="transparente";
-          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xc9c7c2:0x15181c);
+          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:id==="claro"?0xb9babe:0x15181c);
           suelo.material.roughness = id==="marmol"?.24:id==="claro"?.42:.3;
         }
       };
