@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Boxes, Calculator, ChevronLeft, Droplets, Gem, Ruler, Scale, Wrench } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
+import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
@@ -18,6 +19,7 @@ const HERRAMIENTAS: Herramienta[] = [
   { id: "volumen", nombre: "Calculadora de Volumen", icono: Calculator, disponible: false },
   { id: "peso", nombre: "Calculadora de Peso", icono: Scale, disponible: false },
   { id: "medidas", nombre: "Conversor de Medidas", icono: Ruler, disponible: false },
+  { id: "tallas", nombre: "Conversor de Tallas de Anillo", icono: Ruler, disponible: true },
 ];
 
 /** Menú lateral flotante de herramientas públicas para la pantalla de acceso. */
@@ -100,6 +102,11 @@ export function HerramientasFlotantes() {
           {activa === "oro" ? (
             <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
               <CalculadoraAleacionOro compacto />
+            </div>
+          ) : null}
+          {activa === "tallas" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <ConversorTallasAnillo compacto />
             </div>
           ) : null}
           {activa === "peso3d" ? (
