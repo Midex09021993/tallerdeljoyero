@@ -56,7 +56,7 @@ const MATERIALES: MaterialConfig[] = [
 
 const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId }[] = [
   { id: "oscuro", nombre: "Estudio Oscuro", descripcion:"Contraste elegante", iluminacion:"jewelry", clase: "bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
-  { id: "claro", nombre: "Estudio Claro", descripcion:"Luz limpia de estudio", iluminacion:"studioSoft", clase: "bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
+  { id: "claro", nombre: "Estudio Claro", descripcion:"Luz de joyería profesional", iluminacion:"jewelry", clase: "bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
   { id: "luxury", nombre: "Luxury", descripcion:"Presentación cálida", iluminacion:"luxury", clase: "bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
   { id: "marmol", nombre: "Mármol", descripcion:"Superficie premium", iluminacion:"studioSoft", clase: "bg-[linear-gradient(125deg,#f2f0eb,#bdbab3_42%,#e5e3de_44%,#c5c2bc_68%,#f0eee9)]" },
   { id: "transparente", nombre: "Transparente", descripcion:"Fondo sin entorno", iluminacion:"studioSoft", clase: "bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
@@ -146,7 +146,7 @@ export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
+  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro");
   const [captura, setCaptura] = useState<string|null>(null), [autoRotando, setAutoRotando] = useState(false), [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería"), [categoriaProyecto, setCategoriaProyecto] = useState("Anillo"), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string|null>(null), [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string|null>(null), [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<CategoriaParte>("otro"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
@@ -274,6 +274,11 @@ export function AurumRender() {
       };
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
+        // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
+        if (!suelo) {
+          suelo = new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:0xd8d6d1,metalness:.02,roughness:.34}));
+          suelo.rotation.x=-Math.PI/2; suelo.position.y=-0.02; suelo.receiveShadow=true; escena.add(suelo);
+        }
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
