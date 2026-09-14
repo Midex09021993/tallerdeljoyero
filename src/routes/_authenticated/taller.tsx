@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calculator, Settings2 } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
-import { useConfigSistema, useGuardarConfigSistema } from "@/lib/taller-db";
+import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
+import { CLAVES_CALCULADORAS, DEFAULT_CONFIG_YESO, leerConfigYeso } from "@/lib/calculadoras-config";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
@@ -45,9 +45,6 @@ const tiposTarro = {
 
 type TipoTarro = keyof typeof tiposTarro;
 
-const volumenPorGramoYeso = 0.4238;
-const claveConfigYeso = "calculadora_yeso";
-
 function formatearCantidad(valor: number, decimales = 1) {
   return new Intl.NumberFormat("es-PE", {
     maximumFractionDigits: decimales,
@@ -66,30 +63,6 @@ function calcularMezcla(volumen: number, partesAgua: number, partesYeso: number)
   const yeso = volumen / (volumenPorGramoYeso + ratioAguaSobreYeso);
   const agua = yeso * ratioAguaSobreYeso;
   return { agua, yeso };
-}
-
-function leerTolerancias(valor: unknown): Record<TipoTarro, number> {
-  if (valor == null || typeof valor !== "object" || Array.isArray(valor)) {
-    return {
-      liso: tiposTarro.liso.toleranciaInicial,
-      perforado: tiposTarro.perforado.toleranciaInicial,
-    };
-  }
-  const tolerancias = (valor as Record<string, unknown>)["tolerancias"];
-  if (tolerancias == null || typeof tolerancias !== "object" || Array.isArray(tolerancias)) {
-    return {
-      liso: tiposTarro.liso.toleranciaInicial,
-      perforado: tiposTarro.perforado.toleranciaInicial,
-    };
-  }
-  const datos = tolerancias as Record<string, unknown>;
-  return {
-    liso: typeof datos["liso"] === "number" ? datos["liso"] : tiposTarro.liso.toleranciaInicial,
-    perforado:
-      typeof datos["perforado"] === "number"
-        ? datos["perforado"]
-        : tiposTarro.perforado.toleranciaInicial,
-  };
 }
 
 function TallerPage() {
@@ -144,20 +117,11 @@ function TallerCompleto() {
 
 export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
   const { esDueno } = useSedeFiltroDueno();
-  const { data: configYeso } = useConfigSistema(claveConfigYeso);
-  const guardarConfig = useGuardarConfigSistema();
+  const { data: configYeso } = useConfigSistema(CLAVES_CALCULADORAS.yeso);
+  const configuracion = leerConfigYeso(configYeso?.valor);
   const [diametro, setDiametro] = useState("");
   const [altura, setAltura] = useState("");
   const [tipoTarro, setTipoTarro] = useState<TipoTarro>("liso");
-  const [mostrarAjustes, setMostrarAjustes] = useState(false);
-  const [tolerancias, setTolerancias] = useState<Record<TipoTarro, number>>({
-    liso: tiposTarro.liso.toleranciaInicial,
-    perforado: tiposTarro.perforado.toleranciaInicial,
-  });
-
-  useEffect(() => {
-    setTolerancias(leerTolerancias(configYeso?.valor));
-  }, [configYeso]);
 
   const volumenBase = useMemo(() => {
     const d = Number(diametro);
@@ -169,8 +133,8 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
 
   const volumen = useMemo(() => {
     if (volumenBase <= 0) return 0;
-    return volumenBase * (1 + tolerancias[tipoTarro] / 100);
-  }, [tipoTarro, tolerancias, volumenBase]);
+    return volumenBase * (1 + configuracion.tolerancias[tipoTarro] / 100);
+  }, [tipoTarro, configuracion.tolerancias, volumenBase]);
 
   return (
     <Panel
@@ -181,105 +145,6 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
             <Calculator className="size-3" aria-hidden="true" />
             Joyería 40/60
           </span>
-          {esDueno ? (
-            <button
-              type="button"
-              onClick={() => setMostrarAjustes((actual) => !actual)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:border-gold hover:text-foreground"
-              aria-label="Ajustar tolerancias"
-            >
-              <Settings2 className="size-4" aria-hidden="true" />
-            </button>
-          ) : null}
-        </div>
-      }
-    >
-      <div className={`space-y-6 p-5 ${compacto ? "" : "sm:p-6 lg:p-8"}`}>
-        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-muted p-1">
-          {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
-            <button
-              key={tipo}
-              type="button"
-              onClick={() => setTipoTarro(tipo)}
-              className={`rounded-xl px-3 py-3 text-sm font-semibold transition ${
-                tipoTarro === tipo
-                  ? "bg-background text-foreground shadow-card"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tiposTarro[tipo].etiqueta}
-            </button>
-          ))}
-        </div>
-
-        {esDueno && mostrarAjustes ? (
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Tolerancias</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Ajusta el porcentaje si tus tarros reales consumen más o menos mezcla.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setTolerancias({
-                    liso: tiposTarro.liso.toleranciaInicial,
-                    perforado: tiposTarro.perforado.toleranciaInicial,
-                  })
-                }
-                className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:border-gold hover:text-foreground"
-              >
-                Reset
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
-                <label key={tipo} className="space-y-2">
-                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {tiposTarro[tipo].etiqueta} (%)
-                  </span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    value={tolerancias[tipo]}
-                    onChange={(e) => {
-                      const valor = Number(e.target.value);
-                      setTolerancias((actual) => ({
-                        ...actual,
-                        [tipo]: Number.isFinite(valor) ? valor : 0,
-                      }));
-                    }}
-                    className="h-12 w-full rounded-xl border border-input bg-background px-4 text-base outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20"
-                  />
-                  <p className="text-xs text-muted-foreground">{tiposTarro[tipo].ayuda}</p>
-                </label>
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={guardarConfig.isPending}
-              onClick={() =>
-                guardarConfig.mutate(
-                  {
-                    clave: claveConfigYeso,
-                    valor: { tolerancias },
-                  },
-                  {
-                    onSuccess: () => toast.success("Tolerancias actualizadas"),
-                    onError: () => toast.error("No se pudieron guardar las tolerancias"),
-                  },
-                )
-              }
-              className="mt-4 h-11 w-full rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
-            >
-              {guardarConfig.isPending ? "Guardando..." : "Guardar ajustes"}
-            </button>
-          </div>
-        ) : null}
-
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
           <label className="space-y-2">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
