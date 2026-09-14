@@ -11,7 +11,7 @@ type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
 type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
-type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino";
+type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino" | "Especiales";
 type CategoriaParte = "metal" | "gema" | "otro";
 type GemaId = "diamante" | "zafiro" | "rubi" | "esmeralda" | "moissanita" | "citrino" | "amatista" | "topacio";
 type GemaConfig = { id:GemaId; nombre:string; color:number; transmission:number; ior:number; roughness:number; envMapIntensity:number };
@@ -45,6 +45,13 @@ const MATERIALES: MaterialConfig[] = [
   { id: "plata_envejecida", grupo: "Plata", nombre: "Plata Envejecida", color: 0x777c82, metalness: .92, roughness: .4, envMapIntensity: 1.65, clearcoat: .08 },
   { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc5cbd0, metalness: 1, roughness: .1, envMapIntensity: 2.85, clearcoat: .48 },
   { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.8, clearcoat: .08 },
+  // Materiales especiales para presentaciones profesionales y configuraciones premium.
+  { id: "oro24_pulido", grupo: "Especiales", nombre: "Oro 24K Pulido", color: 0xf2c94c, metalness: 1, roughness: .075, envMapIntensity: 3.25, clearcoat: .65 },
+  { id: "oro18_champan", grupo: "Especiales", nombre: "Oro Champán", color: 0xd9b978, metalness: 1, roughness: .13, envMapIntensity: 2.8, clearcoat: .5 },
+  { id: "oro18_verde", grupo: "Especiales", nombre: "Oro Verde", color: 0xb9bd72, metalness: 1, roughness: .14, envMapIntensity: 2.65, clearcoat: .48 },
+  { id: "paladio_pulido", grupo: "Especiales", nombre: "Paladio Pulido", color: 0xd4d8dc, metalness: 1, roughness: .09, envMapIntensity: 3.05, clearcoat: .58 },
+  { id: "rodio_negro", grupo: "Especiales", nombre: "Rodio Negro", color: 0x252a30, metalness: 1, roughness: .12, envMapIntensity: 2.5, clearcoat: .52 },
+  { id: "titanio_pulido", grupo: "Especiales", nombre: "Titanio Pulido", color: 0x8d959d, metalness: .96, roughness: .16, envMapIntensity: 2.35, clearcoat: .38 },
 ];
 
 const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId }[] = [
@@ -576,7 +583,7 @@ export function AurumRender() {
             </div>
 
             {bibliotecaTipo==="metales"&&<div className="space-y-5">
-              {(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
+              {(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino","Especiales"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
                 <p className="mb-2.5 text-[9px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {MATERIALES.filter(m=>m.grupo===grupo).map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre} onClick={()=>{setMaterialId(m.id); apiRef.current?.material(m)}} className={"group rounded-xl p-1.5 transition "+(materialId===m.id?"bg-gold/10 ring-1 ring-gold":"hover:bg-white/[.04]")}>
