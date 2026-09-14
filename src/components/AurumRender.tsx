@@ -75,9 +75,9 @@ export function AurumRender() {
     let cleanup = () => {};
     (async () => {
       const THREE = await import("three");
-      const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
-      const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
-      const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
+      const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+      const { RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js");
+      const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js");
       const nodo = visorRef.current;
       if (!vivo || !nodo) return;
       const escena = new THREE.Scene();
@@ -206,24 +206,24 @@ export function AurumRender() {
       const parsearEntrada = async (file:File, ext:string) => {
         const buffer = await file.arrayBuffer();
         if (ext==="stl") {
-          const {STLLoader}=await import("three/examples/jsm/loaders/STLLoader.js");
+          const {STLLoader}=await import("three/addons/loaders/STLLoader.js");
           const geo=new STLLoader().parse(buffer); geo.computeVertexNormals();
           return new THREE.Mesh(geo, crearMaterial(MATERIALES[0]));
         }
         if (ext==="obj") {
-          const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
+          const {OBJLoader}=await import("three/addons/loaders/OBJLoader.js");
           return new OBJLoader().parse(new TextDecoder().decode(buffer));
         }
         if (ext==="fbx") {
-          const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");
+          const {FBXLoader}=await import("three/addons/loaders/FBXLoader.js");
           return new FBXLoader().parse(buffer,"");
         }
         if (ext==="glb") {
-          const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
+          const {GLTFLoader}=await import("three/addons/loaders/GLTFLoader.js");
           return (await new GLTFLoader().parseAsync(buffer,"")).scene;
         }
         if (ext==="3dm") {
-          const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
+          const { Rhino3dmLoader } = await import("three/addons/loaders/3DMLoader.js");
           const loader = new Rhino3dmLoader();
           loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
           loader.setWorkerLimit(2);
@@ -252,7 +252,7 @@ export function AurumRender() {
         informar("Convirtiendo a GLB...");
         const glb = await convertirAGlb(objeto);
         informar("Preparando visualización...");
-        const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
+        const {GLTFLoader}=await import("three/addons/loaders/GLTFLoader.js");
         const interno=(await new GLTFLoader().parseAsync(glb,"")).scene;
         quitar();
         interno.traverse((x:any)=>{if(x.isMesh){x.userData.aurumId=`mesh-${Math.random().toString(36).slice(2,9)}`;x.material=crearMaterial(MATERIALES[0]);x.castShadow=true;x.receiveShadow=true;}});
