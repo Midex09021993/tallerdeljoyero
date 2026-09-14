@@ -1,540 +1,116 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Download, Expand, Gem, Maximize2, RotateCcw, Upload, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId = "oro18a" | "oro18b" | "oro18r" | "plata950" | "platino";
 type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
+type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 
-type MaterialConfig = {
-  id: MaterialId;
-  nombre: string;
-  color: number;
-  metalness: number;
-  roughness: number;
-  envMapIntensity: number;
-  clearcoat: number;
-};
-
+type MaterialConfig = { id: MaterialId; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
 const MATERIALES: MaterialConfig[] = [
-  { id: "oro18a", nombre: "Oro 18K Amarillo", color: 0xd7ad48, metalness: 1, roughness: 0.2, envMapIntensity: 2.15, clearcoat: 0.35 },
-  { id: "oro18b", nombre: "Oro 18K Blanco", color: 0xdfe3e7, metalness: 1, roughness: 0.16, envMapIntensity: 2.35, clearcoat: 0.28 },
-  { id: "oro18r", nombre: "Oro 18K Rosa", color: 0xd99078, metalness: 1, roughness: 0.21, envMapIntensity: 2.1, clearcoat: 0.35 },
-  { id: "plata950", nombre: "Plata 950", color: 0xbfc5ca, metalness: 1, roughness: 0.18, envMapIntensity: 2.4, clearcoat: 0.2 },
-  { id: "platino", nombre: "Platino", color: 0xb7bdc2, metalness: 1, roughness: 0.24, envMapIntensity: 2.25, clearcoat: 0.18 },
+  { id: "oro18a", nombre: "Oro 18K Amarillo", color: 0xd7ad48, metalness: 1, roughness: .17, envMapIntensity: 2.5, clearcoat: .4 },
+  { id: "oro18b", nombre: "Oro 18K Blanco", color: 0xe0e3e6, metalness: 1, roughness: .13, envMapIntensity: 2.65, clearcoat: .35 },
+  { id: "oro18r", nombre: "Oro 18K Rosa", color: 0xd9937e, metalness: 1, roughness: .18, envMapIntensity: 2.45, clearcoat: .4 },
+  { id: "plata950", nombre: "Plata 950", color: 0xc4c9ce, metalness: 1, roughness: .15, envMapIntensity: 2.7, clearcoat: .28 },
+  { id: "platino", nombre: "Platino", color: 0xb9bec3, metalness: 1, roughness: .2, envMapIntensity: 2.55, clearcoat: .25 },
 ];
-
-const ESCENARIOS: { id: EscenarioId; nombre: string }[] = [
-  { id: "oscuro", nombre: "Estudio Oscuro" },
-  { id: "claro", nombre: "Estudio Claro" },
-  { id: "luxury", nombre: "Luxury" },
-  { id: "marmol", nombre: "Mármol" },
-  { id: "transparente", nombre: "Transparente" },
+const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string }[] = [
+  { id: "oscuro", nombre: "Estudio Oscuro", clase: "bg-[#090b0e]" },
+  { id: "claro", nombre: "Estudio Claro", clase: "bg-[#e7e5e0]" },
+  { id: "luxury", nombre: "Luxury", clase: "bg-[#21150c]" },
+  { id: "marmol", nombre: "Mármol", clase: "bg-[#cfccc5]" },
+  { id: "transparente", nombre: "Transparente", clase: "bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
 ];
-
-const EXTENSIONES = ".stl,.obj,.glb,.fbx";
+const VISTAS: { id: VistaId; nombre: string }[] = [
+  { id: "perspectiva", nombre: "Perspectiva" }, { id: "frontal", nombre: "Frontal" }, { id: "superior", nombre: "Superior" }, { id: "lateral", nombre: "Lateral" },
+];
 
 export function AurumRender() {
-  const visorRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const apiRef = useRef<{
-    cargar: (file: File) => Promise<void>;
-    material: (config: MaterialConfig) => void;
-    escenario: (id: EscenarioId) => void;
-    reset: () => void;
-    capturar: () => string;
-    limpiar: () => void;
-    fullscreen: () => Promise<void>;
-  } | null>(null);
+  const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
+  const apiRef = useRef<any>(null);
+  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null);
+  const [materialId, setMaterialId] = useState<MaterialId>("oro18a"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
+  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [panel, setPanel] = useState<"materiales"|"escenas">("materiales");
 
-  const [archivo, setArchivo] = useState<string | null>(null);
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("oro18a");
-  const [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string | null>(null);
-
-  const materialActivo = MATERIALES.find((m) => m.id === materialId) ?? MATERIALES[0]!;
+  const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
 
   useEffect(() => {
-    let vivo = true;
-    let cleanup = () => {};
+    let vivo=true, cleanup=()=>{};
+    (async()=>{
+      const THREE=await import("three"), {OrbitControls}=await import("three/examples/jsm/controls/OrbitControls.js"), {RoomEnvironment}=await import("three/examples/jsm/environments/RoomEnvironment.js");
+      const nodo=visorRef.current; if(!vivo||!nodo)return;
+      const escena=new THREE.Scene(), camara=new THREE.PerspectiveCamera(38,1,.001,1000);
+      const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:"high-performance"});
+      renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.55; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.domElement.className="block h-full w-full"; nodo.appendChild(renderer.domElement);
+      const pmrem=new THREE.PMREMGenerator(renderer), entorno=pmrem.fromScene(new RoomEnvironment(),.04).texture; escena.environment=entorno;
+      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,2.5));
+      const key=new THREE.DirectionalLight(0xffefc8,6); key.position.set(4,6,5); key.castShadow=true; key.shadow.mapSize.set(1024,1024); escena.add(key);
+      const fill=new THREE.DirectionalLight(0xdbe7ff,4); fill.position.set(-5,3,4); escena.add(fill);
+      const rim=new THREE.DirectionalLight(0xffd49a,5); rim.position.set(2,4,-5); escena.add(rim);
+      const top=new THREE.PointLight(0xffffff,3,30); top.position.set(0,5,1); escena.add(top);
+      const controles=new OrbitControls(camara,renderer.domElement); controles.enableDamping=true; controles.dampingFactor=.07; controles.enablePan=true; controles.minDistance=.15; controles.maxDistance=100;
+      let modelo:any=null, suelo:any=null;
+      const material=new THREE.MeshPhysicalMaterial({color:MATERIALES[0].color,metalness:1,roughness:.17,envMapIntensity:2.5,clearcoat:.4,clearcoatRoughness:.12});
+      const dispose=(o:any)=>o?.traverse((x:any)=>{if(x.geometry)x.geometry.dispose()});
+      const quitar=()=>{if(modelo){escena.remove(modelo);dispose(modelo);modelo=null} if(suelo){escena.remove(suelo);suelo.geometry.dispose();suelo.material.dispose();suelo=null}};
+      const aplicarMaterial=(m:MaterialConfig)=>{material.color.setHex(m.color);material.roughness=m.roughness;material.envMapIntensity=m.envMapIntensity;material.clearcoat=m.clearcoat;material.needsUpdate=true};
+      const aplicarEscenario=(id:EscenarioId)=>{if(id==="transparente"){escena.background=null;renderer.setClearColor(0,0)}else{renderer.setClearColor(0,1);escena.background=new THREE.Color(({oscuro:0x090b0e,claro:0xe7e5e0,luxury:0x21150c,marmol:0xcfccc5} as any)[id])} if(suelo){suelo.visible=id!=="transparente";suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:0x15181c);suelo.material.roughness=id==="marmol"?.25:.3}};
+      const encuadrar=()=>{if(!modelo)return;modelo.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(modelo),center=b.getCenter(new THREE.Vector3()),size=b.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z)||1;modelo.position.set(0,0,0);modelo.scale.setScalar(2.6/max);modelo.position.sub(center);modelo.updateMatrixWorld(true);const bf=new THREE.Box3().setFromObject(modelo),h=bf.getSize(new THREE.Vector3()).y||1;if(!suelo){suelo=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x15181c,metalness:.05,roughness:.3}));suelo.rotation.x=-Math.PI/2;suelo.receiveShadow=true;escena.add(suelo)}suelo.position.y=bf.min.y-Math.max(h*.035,.015);aplicarEscenario(escenarioId);camara.position.set(3.5,2.4,4.6);controles.target.set(0,0,0);controles.update()};
+      const cargar=async(file:File)=>{const ext=file.name.split(".").pop()?.toLowerCase();if(!ext||!["stl","obj","glb","fbx"].includes(ext))throw new Error("Formato no compatible. Usa STL, OBJ, GLB o FBX.");const buffer=await file.arrayBuffer();let objeto:any;if(ext==="stl"){const {STLLoader}=await import("three/examples/jsm/loaders/STLLoader.js");const geo=new STLLoader().parse(buffer);geo.computeVertexNormals();objeto=new THREE.Mesh(geo,material)}else if(ext==="obj"){const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");objeto=new OBJLoader().parse(new TextDecoder().decode(buffer))}else if(ext==="glb"){const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");objeto=(await new GLTFLoader().parseAsync(buffer,"")).scene}else{const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");objeto=new FBXLoader().parse(buffer,"")}quitar();objeto.traverse((x:any)=>{if(x.isMesh){x.material=material;x.castShadow=true;x.receiveShadow=true}});modelo=objeto;escena.add(modelo);aplicarMaterial(materialActivo);encuadrar()};
+      const camaraVista=(id:VistaId)=>{const p:any={perspectiva:[3.5,2.4,4.6],frontal:[0,0,5],superior:[0,5,.001],lateral:[5,0,0]}[id];camara.position.set(...p);controles.target.set(0,0,0);controles.update()};
+      apiRef.current={cargar,material:aplicarMaterial,escenario:aplicarEscenario,reset:encuadrar,capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},limpiar:quitar,fullscreen:()=>nodo.requestFullscreen?.(),vista:camaraVista};
+      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false)}; resize(); const obs=new ResizeObserver(resize);obs.observe(nodo);let frame=0;const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)};animate();
+      cleanup=()=>{cancelAnimationFrame(frame);obs.disconnect();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
+    })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
+    return()=>{vivo=false;cleanup()};
+  },[]);
+  useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
+  useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
+  useEffect(()=>apiRef.current?.vista(vista),[vista]);
 
-    (async () => {
-      const THREE = await import("three");
-      const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
-      const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
-      const nodo = visorRef.current;
-      if (!vivo || !nodo) return;
+  const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);try{await apiRef.current?.cargar(file);setArchivo(file.name);setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo cargar el modelo");setArchivo(null)}finally{setCargando(false)}},[]);
+  const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setCaptura(null);if(fileRef.current)fileRef.current.value=""};
+  const captura=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
-      const escena = new THREE.Scene();
-      const camara = new THREE.PerspectiveCamera(38, 1, 0.001, 1000);
-      camara.position.set(3.2, 2.3, 4.2);
-
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        preserveDrawingBuffer: true,
-        powerPreference: "high-performance",
-      });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.45;
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.domElement.className = "block h-full w-full";
-      nodo.appendChild(renderer.domElement);
-
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      const entorno = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-      escena.environment = entorno;
-
-      escena.add(new THREE.HemisphereLight(0xfff8e8, 0x332a24, 2.2));
-
-      const key = new THREE.DirectionalLight(0xfff1cc, 5.5);
-      key.position.set(4, 6, 5);
-      key.castShadow = true;
-      key.shadow.mapSize.set(1024, 1024);
-      key.shadow.bias = -0.0002;
-      escena.add(key);
-
-      const fill = new THREE.DirectionalLight(0xdbe7ff, 3.5);
-      fill.position.set(-5, 2.5, 3);
-      escena.add(fill);
-
-      const rim = new THREE.DirectionalLight(0xffd99a, 4.5);
-      rim.position.set(2, 4, -5);
-      escena.add(rim);
-
-      const top = new THREE.PointLight(0xffffff, 2.8, 30);
-      top.position.set(0, 5, 1);
-      escena.add(top);
-
-      const controles = new OrbitControls(camara, renderer.domElement);
-      controles.enableDamping = true;
-      controles.dampingFactor = 0.075;
-      controles.enablePan = true;
-      controles.minDistance = 0.15;
-      controles.maxDistance = 100;
-      controles.target.set(0, 0, 0);
-
-      let modelo: import("three").Object3D | null = null;
-      let suelo: import("three").Mesh | null = null;
-      const material = new THREE.MeshPhysicalMaterial({
-        color: MATERIALES[0]!.color,
-        metalness: 1,
-        roughness: MATERIALES[0]!.roughness,
-        envMapIntensity: MATERIALES[0]!.envMapIntensity,
-        clearcoat: MATERIALES[0]!.clearcoat,
-        clearcoatRoughness: 0.18,
-      });
-
-      const disposeObject = (obj: import("three").Object3D) => {
-        obj.traverse((child) => {
-          const mesh = child as import("three").Mesh;
-          if (mesh.geometry) mesh.geometry.dispose();
-        });
-      };
-
-      const quitar = () => {
-        if (modelo) {
-          escena.remove(modelo);
-          disposeObject(modelo);
-          modelo = null;
-        }
-        if (suelo) {
-          escena.remove(suelo);
-          suelo.geometry.dispose();
-          (suelo.material as import("three").Material).dispose();
-          suelo = null;
-        }
-      };
-
-      const aplicarMaterial = (config: MaterialConfig) => {
-        material.color.setHex(config.color);
-        material.metalness = config.metalness;
-        material.roughness = config.roughness;
-        material.envMapIntensity = config.envMapIntensity;
-        material.clearcoat = config.clearcoat;
-        material.needsUpdate = true;
-      };
-
-      const aplicarEscenario = (id: EscenarioId) => {
-        const transparent = id === "transparente";
-        renderer.setClearColor(0x000000, transparent ? 0 : 1);
-
-        if (transparent) {
-          escena.background = null;
-        } else {
-          const backgrounds: Record<Exclude<EscenarioId, "transparente">, number> = {
-            oscuro: 0x0b0d10,
-            claro: 0xe9e7e2,
-            luxury: 0x17100a,
-            marmol: 0xd5d2cc,
-          };
-          escena.background = new THREE.Color(backgrounds[id]);
-        }
-
-        if (suelo) {
-          suelo.visible = !transparent && (id === "marmol" || id === "luxury" || id === "oscuro");
-          const sueloMat = suelo.material as import("three").MeshStandardMaterial;
-          if (id === "marmol") {
-            sueloMat.color.setHex(0xc8c5bf);
-            sueloMat.roughness = 0.28;
-          } else if (id === "luxury") {
-            sueloMat.color.setHex(0x20150c);
-            sueloMat.roughness = 0.24;
-          } else {
-            sueloMat.color.setHex(0x15181c);
-            sueloMat.roughness = 0.32;
-          }
-        }
-      };
-
-      const encuadrar = () => {
-        if (!modelo) return;
-        modelo.updateMatrixWorld(true);
-        const caja = new THREE.Box3().setFromObject(modelo);
-        const centro = caja.getCenter(new THREE.Vector3());
-        const tamano = caja.getSize(new THREE.Vector3());
-        const maxDim = Math.max(tamano.x, tamano.y, tamano.z) || 1;
-
-        modelo.position.set(0, 0, 0);
-        modelo.scale.setScalar(1);
-        modelo.position.sub(centro);
-        modelo.scale.setScalar(2.5 / maxDim);
-        modelo.updateMatrixWorld(true);
-
-        const cajaFinal = new THREE.Box3().setFromObject(modelo);
-        const alto = cajaFinal.getSize(new THREE.Vector3()).y || 1;
-
-        if (!suelo) {
-          suelo = new THREE.Mesh(
-            new THREE.PlaneGeometry(20, 20),
-            new THREE.MeshStandardMaterial({ color: 0x15181c, metalness: 0.05, roughness: 0.3 }),
-          );
-          suelo.rotation.x = -Math.PI / 2;
-          suelo.receiveShadow = true;
-          escena.add(suelo);
-        }
-
-        suelo.position.y = cajaFinal.min.y - Math.max(alto * 0.035, 0.015);
-        aplicarEscenario(escenarioId);
-
-        camara.near = 0.01;
-        camara.far = 100;
-        camara.position.set(3.5, 2.4, 4.6);
-        controles.target.set(0, 0, 0);
-        controles.update();
-        camara.updateProjectionMatrix();
-      };
-
-      const cargar = async (file: File) => {
-        const ext = file.name.split(".").pop()?.toLowerCase();
-        if (!ext || !["stl", "obj", "glb", "fbx"].includes(ext)) {
-          throw new Error("Formato no compatible. AURUM RENDER admite STL, OBJ, GLB y FBX.");
-        }
-
-        const buffer = await file.arrayBuffer();
-        let objeto: import("three").Object3D;
-
-        if (ext === "stl") {
-          const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js");
-          const geo = new STLLoader().parse(buffer);
-          geo.computeVertexNormals();
-          objeto = new THREE.Mesh(geo, material);
-        } else if (ext === "obj") {
-          const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js");
-          objeto = new OBJLoader().parse(new TextDecoder().decode(buffer));
-        } else if (ext === "glb") {
-          const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-          const gltf = await new GLTFLoader().parseAsync(buffer, "");
-          objeto = gltf.scene;
-        } else {
-          const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js");
-          objeto = new FBXLoader().parse(buffer, "");
-        }
-
-        quitar();
-        objeto.traverse((child) => {
-          const mesh = child as import("three").Mesh;
-          if (!mesh.isMesh) return;
-          mesh.material = material;
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-        });
-
-        modelo = objeto;
-        escena.add(modelo);
-        aplicarMaterial(materialActivo);
-        encuadrar();
-      };
-
-      const capturar = () => {
-        renderer.render(escena, camara);
-        return renderer.domElement.toDataURL("image/png");
-      };
-
-      apiRef.current = {
-        cargar,
-        material: aplicarMaterial,
-        escenario: aplicarEscenario,
-        reset: encuadrar,
-        capturar,
-        limpiar: quitar,
-        fullscreen: async () => {
-          await nodo.requestFullscreen?.();
-        },
-      };
-
-      const resize = () => {
-        const width = nodo.clientWidth || 900;
-        const height = nodo.clientHeight || 600;
-        camara.aspect = width / height;
-        camara.updateProjectionMatrix();
-        renderer.setSize(width, height, false);
-      };
-
-      resize();
-      const observer = new ResizeObserver(resize);
-      observer.observe(nodo);
-
-      let frame = 0;
-      const animate = () => {
-        frame = requestAnimationFrame(animate);
-        controles.update();
-        renderer.render(escena, camara);
-      };
-      animate();
-
-      cleanup = () => {
-        cancelAnimationFrame(frame);
-        observer.disconnect();
-        quitar();
-        controles.dispose();
-        material.dispose();
-        entorno.dispose();
-        pmrem.dispose();
-        renderer.dispose();
-        renderer.domElement.remove();
-        apiRef.current = null;
-      };
-    })().catch((e) => {
-      if (vivo) setError(e instanceof Error ? e.message : "No se pudo iniciar AURUM RENDER.");
-    });
-
-    return () => {
-      vivo = false;
-      cleanup();
-    };
-  }, []);
-
-  useEffect(() => {
-    apiRef.current?.material(materialActivo);
-  }, [materialActivo]);
-
-  useEffect(() => {
-    apiRef.current?.escenario(escenarioId);
-  }, [escenarioId]);
-
-  const cargarArchivo = useCallback(async (file: File) => {
-    setCargando(true);
-    setError(null);
-    try {
-      await apiRef.current?.cargar(file);
-      setArchivo(file.name);
-    } catch (e) {
-      setArchivo(null);
-      setError(e instanceof Error ? e.message : "No se pudo cargar el modelo.");
-    } finally {
-      setCargando(false);
-    }
-  }, []);
-
-  const limpiar = () => {
-    apiRef.current?.limpiar();
-    setArchivo(null);
-    setError(null);
-    if (fileRef.current) fileRef.current.value = "";
-  };
-
-  return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-        <div className="border-b border-border bg-ink px-5 py-5 text-ink-foreground sm:px-7">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <Gem className="size-5 text-gold" aria-hidden="true" />
-                <p className="font-display text-2xl italic text-gold">AURUM RENDER</p>
-              </div>
-              <p className="mt-2 max-w-2xl text-sm text-ink-foreground/60">
-                Visualización profesional de joyería 3D en tiempo real. Carga tu modelo,
-                prueba materiales y presenta la pieza en distintos escenarios.
-              </p>
-            </div>
-            <div className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
-              Fase 1
-            </div>
+  return <div className="space-y-4">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-ink px-5 py-4 text-ink-foreground sm:px-7">
+        <div className="flex items-center gap-3"><Gem className="size-5 text-gold"/><div><div className="font-display text-2xl italic text-gold">AURUM RENDER</div><div className="text-[10px] uppercase tracking-[.22em] text-ink-foreground/45">Jewelry 3D Studio · Fase 1</div></div></div>
+        <button type="button" onClick={()=>fileRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 text-xs font-semibold text-gold hover:bg-gold/15"><Upload className="size-4"/> {archivo?"Cambiar modelo":"Cargar modelo"}</button>
+        <input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)void cargarArchivo(f)}}/>
+      </header>
+      <div className="relative bg-[#090b0e]">
+        <div ref={visorRef} className="relative min-h-[560px] lg:min-h-[720px]">
+          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Arrastra tu modelo 3D aquí</h2><p className="mt-2 text-sm text-white/45">STL · OBJ · GLB · FBX</p></div></div>}
+          {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-white/10 bg-black/60 px-6 py-4 text-sm text-white/80">Procesando modelo…</div></div>}
+          {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/70 px-4 py-2 text-xs text-red-200">{error}</div>}
+          {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[55%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs text-white/65 backdrop-blur">{archivo}</div>}
+          <div className="absolute right-5 top-5 z-20 flex gap-2">
+            <button type="button" title="Auto centrar" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><Maximize2 className="size-4"/></button>
+            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><Expand className="size-4"/></button>
+            {archivo&&<button type="button" title="Quitar modelo" onClick={limpiar} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><X className="size-4"/></button>}
           </div>
+          {archivo&&<div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-2xl border border-white/10 bg-black/55 p-1 backdrop-blur">
+            {VISTAS.map(v=><button key={v.id} type="button" onClick={()=>setVista(v.id)} className={"rounded-xl px-3 py-2 text-[10px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/55 hover:text-white")}>{v.nombre}</button>)}
+          </div>}
+          <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/40 backdrop-blur md:block">Rotar · Zoom · Pan</div>
         </div>
-
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div ref={visorRef} className="relative min-h-[520px] overflow-hidden bg-[#0b0d10] lg:min-h-[680px]">
-            {!archivo && !cargando ? (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-8 text-center">
-                <div className="max-w-md">
-                  <div className="mx-auto grid size-16 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold">
-                    <Upload className="size-7" aria-hidden="true" />
-                  </div>
-                  <h2 className="mt-5 text-lg font-semibold text-white">Carga una pieza 3D</h2>
-                  <p className="mt-2 text-sm text-white/50">
-                    STL, OBJ, GLB o FBX. El modelo se procesa localmente en tu navegador.
-                  </p>
-                  {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
-                </div>
-              </div>
-            ) : null}
-
-            {cargando ? (
-              <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-black/20 backdrop-blur-[2px]">
-                <p className="rounded-full border border-white/10 bg-black/50 px-4 py-2 text-sm text-white/80">
-                  Procesando modelo…
-                </p>
-              </div>
-            ) : null}
-
-            {archivo ? (
-              <div className="absolute left-4 top-4 z-20 flex max-w-[65%] items-center gap-2">
-                <span className="truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs text-white/80 backdrop-blur">
-                  {archivo}
-                </span>
-              </div>
-            ) : null}
-
-            <div className="absolute right-4 top-4 z-20 flex gap-2">
-              <button type="button" onClick={() => apiRef.current?.reset()} title="Auto centrar y escalar" className="grid size-9 place-items-center rounded-full border border-white/10 bg-black/45 text-white/80 backdrop-blur transition hover:text-gold">
-                <Maximize2 className="size-4" aria-hidden="true" />
-              </button>
-              <button type="button" onClick={() => apiRef.current?.fullscreen()} title="Pantalla completa" className="grid size-9 place-items-center rounded-full border border-white/10 bg-black/45 text-white/80 backdrop-blur transition hover:text-gold">
-                <Expand className="size-4" aria-hidden="true" />
-              </button>
-              {archivo ? (
-                <button type="button" onClick={limpiar} title="Quitar modelo" className="grid size-9 place-items-center rounded-full border border-white/10 bg-black/45 text-white/80 backdrop-blur transition hover:text-gold">
-                  <X className="size-4" aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
-
-            <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-white/45 backdrop-blur">
-              Arrastra para rotar · rueda para zoom · botón central para pan
-            </div>
-          </div>
-
-          <aside className="border-t border-border bg-background p-5 lg:border-l lg:border-t-0 lg:p-6">
-            <div className="space-y-6">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Modelo</p>
-                <button type="button" onClick={() => fileRef.current?.click()} className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:brightness-105">
-                  <Upload className="size-4" aria-hidden="true" />
-                  {archivo ? "Cambiar modelo" : "Cargar modelo 3D"}
-                </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept={EXTENSIONES}
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void cargarArchivo(file);
-                  }}
-                />
-                <p className="mt-2 text-[11px] text-muted-foreground">STL · OBJ · GLB · FBX</p>
-              </div>
-
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Material PBR</p>
-                <div className="mt-3 space-y-2">
-                  {MATERIALES.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setMaterialId(m.id)}
-                      aria-pressed={materialId === m.id}
-                      className={"flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs font-medium transition " + (materialId === m.id ? "border-gold bg-accent text-foreground" : "border-input bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground")}
-                    >
-                      <span className="size-4 shrink-0 rounded-full border border-black/10" style={{ background: "#" + m.color.toString(16).padStart(6, "0") }} />
-                      {m.nombre}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Escenario</p>
-                <select
-                  value={escenarioId}
-                  onChange={(event) => setEscenarioId(event.target.value as EscenarioId)}
-                  className="mt-3 h-11 w-full rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
-                >
-                  {ESCENARIOS.map((escenario) => (
-                    <option key={escenario.id} value={escenario.id}>{escenario.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => apiRef.current?.reset()} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-input bg-card px-3 text-xs font-semibold hover:border-gold">
-                  <RotateCcw className="size-4" aria-hidden="true" />
-                  Restablecer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const data = apiRef.current?.capturar();
-                    if (data) setCaptura(data);
-                  }}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:brightness-105"
-                >
-                  <Camera className="size-4" aria-hidden="true" />
-                  Capturar
-                </button>
-              </div>
-
-              {captura ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const enlace = document.createElement("a");
-                    enlace.href = captura;
-                    enlace.download = "aurum-render-" + Date.now() + ".png";
-                    enlace.click();
-                  }}
-                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-gold bg-accent px-3 text-xs font-semibold text-foreground hover:brightness-105"
-                >
-                  <Download className="size-4" aria-hidden="true" />
-                  Descargar PNG
-                </button>
-              ) : null}
-
-              <div className="rounded-xl border border-border bg-surface-muted p-4">
-                <p className="text-xs font-semibold">Controles del visor</p>
-                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
-                  <li>• Rotación libre y zoom</li>
-                  <li>• Pan y auto centrado</li>
-                  <li>• Auto escala de la pieza</li>
-                  <li>• Pantalla completa</li>
-                  <li>• Captura PNG con transparencia cuando se selecciona ese escenario</li>
-                </ul>
-              </div>
-            </div>
-          </aside>
+      </div>
+      <div className="grid border-t border-border lg:grid-cols-[1fr_auto]">
+        <div className="flex overflow-x-auto">
+          <button type="button" onClick={()=>setPanel("materiales")} className={"flex items-center gap-2 border-r border-border px-5 py-4 text-xs font-semibold "+(panel==="materiales"?"text-gold":"text-muted-foreground")}><Sparkles className="size-4"/> Materiales</button>
+          <button type="button" onClick={()=>setPanel("escenas")} className={"flex items-center gap-2 border-r border-border px-5 py-4 text-xs font-semibold "+(panel==="escenas"?"text-gold":"text-muted-foreground")}><ImageIcon className="size-4"/> Escenarios</button>
+          <button type="button" onClick={()=>apiRef.current?.reset()} className="flex items-center gap-2 px-5 py-4 text-xs font-semibold text-muted-foreground hover:text-foreground"><RotateCcw className="size-4"/> Reset</button>
         </div>
-      </section>
-
-      <p className="text-[11px] text-muted-foreground">
-        AURUM RENDER Fase 1 se concentra exclusivamente en visualización. No calcula
-        costos, precios ni cotizaciones. Los modelos se procesan en memoria dentro del navegador.
-      </p>
-    </div>
-  );
+        <div className="flex items-center gap-2 p-2 sm:p-3">
+          <button type="button" onClick={captura} className="inline-flex h-10 items-center gap-2 rounded-xl border border-input px-3 text-xs font-semibold hover:border-gold"><Camera className="size-4"/> Capturar</button>
+          {captura&&<button type="button" onClick={()=>{const a=document.createElement("a");a.href=captura;a.download="aurum-render-"+Date.now()+".png";a.click()}} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground"><Download className="size-4"/> Descargar PNG</button>}
+        </div>
+      </div>
+      <div className="border-t border-border bg-background p-5 sm:p-6">
+        {panel==="materiales"?<div><div className="mb-4 flex items-center justify-between"><div><p className="text-sm font-semibold">Materiales PBR</p><p className="text-[11px] text-muted-foreground">Acabados premium para presentación de joyería</p></div><SlidersHorizontal className="size-4 text-muted-foreground"/></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-5">{MATERIALES.map(m=><button key={m.id} type="button" onClick={()=>setMaterialId(m.id)} className={"group rounded-2xl border p-3 text-left transition "+(materialId===m.id?"border-gold bg-accent":"border-input hover:border-gold/50")}><span className="mx-auto block size-10 rounded-full border border-black/10 shadow-inner" style={{background:"#"+m.color.toString(16).padStart(6,"0")}}/><span className="mt-2 block text-center text-[11px] font-semibold leading-tight">{m.nombre}</span></button>)}</div></div>
+        :<div><div className="mb-4"><p className="text-sm font-semibold">Escenarios de presentación</p><p className="text-[11px] text-muted-foreground">Ambientes para mostrar la pieza en distintos contextos comerciales</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-input hover:border-gold/50")}><div className={"h-16 "+e.clase}/><div className="flex items-center justify-between p-3 text-[11px] font-semibold">{e.nombre}<ChevronDown className="size-3 text-muted-foreground"/></div></button>)}</div></div>}
+      </div>
+    </section>
+    <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground"><Grid3X3 className="size-3.5"/> Procesamiento local en navegador · Sin costos, precios ni cotizaciones en Fase 1</div>
+  </div>;
 }
