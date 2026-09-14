@@ -1,0 +1,24 @@
+/**
+ * AURUM POST PROCESSING ENGINE v1.0
+ * Primera capa: tone mapping y exposición controlada.
+ * Preparado para añadir AA/SSAO/SSR/Bloom sin alterar el render base.
+ */
+export type AurumPostConfig={
+  toneMapping:"ACES"|"AgX"|"Neutral";
+  exposure:number;
+  contrast:number;
+  saturation:number;
+  bloom:boolean;
+  bloomIntensity:number;
+  bloomThreshold:number;
+  ssao:boolean;
+  ssaoIntensity:number;
+  ssr:boolean;
+  temporalAA:boolean;
+};
+export const AURUM_POST_CONFIG:AurumPostConfig={
+  toneMapping:"ACES", exposure:.62, contrast:1, saturation:1,
+  bloom:false, bloomIntensity:.08, bloomThreshold:1.35,
+  ssao:false, ssaoIntensity:.22, ssr:false, temporalAA:false
+};
+export const getAurumPostConfig=()=>({...AURUM_POST_CONFIG});
