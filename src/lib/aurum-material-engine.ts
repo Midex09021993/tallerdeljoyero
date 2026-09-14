@@ -170,3 +170,29 @@ export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)
   material.needsUpdate=true;
   return material;
 };
+
+
+export type AurumDiamondOpticalConfig = {
+  refractionStrength:number; dispersionStrength:number; internalReflection:number;
+  brilliance:number; fire:number; facetContrast:number; environmentBoost:number;
+};
+
+export const AURUM_DIAMOND_OPTICAL_CONFIG:AurumDiamondOpticalConfig={
+  refractionStrength:1, dispersionStrength:1, internalReflection:.98,
+  brilliance:1, fire:1, facetContrast:1, environmentBoost:1
+};
+
+export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_CONFIG)=>{
+  if(!material)return material;
+  material.transmission=1;
+  material.ior=2.417;
+  material.dispersion=.035*config.dispersionStrength;
+  material.roughness=.010;
+  material.clearcoat=.26;
+  material.clearcoatRoughness=.010;
+  material.envMapIntensity=1.9*config.environmentBoost;
+  material.attenuationDistance=100;
+  material.userData={...(material.userData??{}),aurumDiamondOptics:config};
+  material.needsUpdate=true;
+  return material;
+};
