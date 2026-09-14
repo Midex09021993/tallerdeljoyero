@@ -3,6 +3,7 @@ import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromCon
 import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
+import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
@@ -210,6 +211,7 @@ export function AurumRender() {
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       const renderQuality = getAurumRenderQuality("balanced");
       const shadowConfig=getAurumShadowConfig();
+      const postConfig=getAurumPostConfig();
       renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
@@ -506,7 +508,7 @@ export function AurumRender() {
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         const scenePreset = getAurumScenePreset(id);
-        renderer.toneMappingExposure = scenePreset.exposure;
+        renderer.toneMappingExposure = scenePreset.exposure * postConfig.exposure / .62;
         escena.environmentIntensity = scenePreset.environmentIntensity;
         escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
         // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
