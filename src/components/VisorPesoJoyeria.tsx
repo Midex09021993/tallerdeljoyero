@@ -12,7 +12,9 @@ export type MetalId =
   | "oro18b"
   | "oro18r"
   | "oro14"
+  | "plata925"
   | "plata950"
+  | "plata970"
   | "platino";
 
 type Metal = {
@@ -30,7 +32,9 @@ const METALES: Metal[] = [
   { id: "oro18b", nombre: "Oro 18K Blanco", densidad: 15.8, color: 0xe8e8ea, metalness: 1, roughness: 0.15 },
   { id: "oro18r", nombre: "Oro 18K Rosa", densidad: 15.3, color: 0xe0a380, metalness: 1, roughness: 0.24 },
   { id: "oro14", nombre: "Oro 14K", densidad: 13.1, color: 0xdcb865, metalness: 1, roughness: 0.26 },
+  { id: "plata925", nombre: "Plata 925", densidad: 10.36, color: 0xcfd2d6, metalness: 1, roughness: 0.22 },
   { id: "plata950", nombre: "Plata 950", densidad: 10.4, color: 0xd8dade, metalness: 1, roughness: 0.2 },
+  { id: "plata970", nombre: "Plata 970", densidad: 10.43, color: 0xe2e4e6, metalness: 1, roughness: 0.18 },
   { id: "platino", nombre: "Platino", densidad: 21.4, color: 0xcfd3d6, metalness: 1, roughness: 0.3 },
 ];
 
@@ -378,8 +382,9 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
     volumenUnidades != null ? volumenUnidades * escala ** 3 : null;
   const pesoTeorico =
     volumenCm3 != null ? volumenCm3 * densidad * factorNum : null;
-  const pesoFinal =
+  const pesoConEmpuje =
     pesoTeorico != null ? pesoTeorico * (1 + empujeNum / 100) : null;
+  const pesoFinal = pesoConEmpuje;
 
   const inputCls =
     "h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20";
@@ -517,7 +522,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       </fieldset>
 
       {/* Resultados */}
-      {pesoFinal != null && volumenCm3 != null && pesoTeorico != null ? (
+      {pesoFinal != null && volumenCm3 != null && pesoTeorico != null && pesoConEmpuje != null ? (
         <div
           className={`grid gap-4 ${compacto ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-4"}`}
         >
@@ -536,6 +541,15 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
             </p>
             <p className="mt-2 text-xl font-semibold leading-none">
               {num(pesoTeorico)}{" "}
+              <span className="text-sm font-medium text-muted-foreground">g</span>
+            </p>
+          </article>
+          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Peso con empuje
+            </p>
+            <p className="mt-2 text-xl font-semibold leading-none">
+              {num(pesoConEmpuje)}{" "}
               <span className="text-sm font-medium text-muted-foreground">g</span>
             </p>
           </article>
