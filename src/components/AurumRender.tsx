@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
+import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
   | "oro18a_pulido" | "oro18a_satinado" | "oro18a_mate" | "oro18a_cepillado"
@@ -13,6 +13,7 @@ type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
 type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino";
 type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
+type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number };
 const MATERIALES: MaterialConfig[] = [
   { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 2.8, clearcoat: .55 },
   { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 2.35, clearcoat: .25 },
@@ -54,7 +55,7 @@ export function AurumRender() {
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
-  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
+  const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [partes, setPartes] = useState<ParteModelo[]>([]), [parteSeleccionada, setParteSeleccionada] = useState<string|null>(null), [panel, setPanel] = useState<"materiales"|"escenas"|"iluminacion">("materiales"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
 
@@ -218,6 +219,20 @@ export function AurumRender() {
         },(e:any)=>reject(e),{binary:true,onlyVisible:true,trs:false});
       });
 
+      const obtenerPartes = (objeto:any):ParteModelo[] => {
+        const resultado:ParteModelo[] = [];
+        objeto.traverse((x:any) => {
+          if (x === objeto) return;
+          const esMalla = !!x.isMesh;
+          const tieneHijos = Array.isArray(x.children) && x.children.length > 0;
+          if (!esMalla && !tieneHijos) return;
+          const nombre = (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : (esMalla ? "Malla" : "Componente");
+          const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== objeto ? 1 : 0));
+          resultado.push({ id: x.uuid, nombre, tipo: esMalla ? "malla" : "grupo", nivel });
+        });
+        return resultado;
+      };
+
       const cargar = async(file:File, informar:(paso:string)=>void) => {
         const ext=file.name.split(".").pop()?.toLowerCase();
         if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
@@ -233,6 +248,8 @@ export function AurumRender() {
         quitar();
         interno.traverse((x:any)=>{if(x.isMesh){x.material=material;x.castShadow=true;x.receiveShadow=true;}});
         modelo=interno;
+        setPartes(obtenerPartes(modelo));
+        setParteSeleccionada(null);
         glbInterno=new Blob([glb],{type:"model/gltf-binary"});
         escena.add(modelo);
         aplicarMaterial(materialActivo);
@@ -250,7 +267,9 @@ export function AurumRender() {
         iluminacion:aplicarIluminacion,
         reset:encuadrar,
         capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
-        limpiar:quitar,
+        limpiar:()=>{quitar();setPartes([]);setParteSeleccionada(null);},
+    partes:()=>modelo?obtenerPartes(modelo):[],
+    seleccionarParte:(id:string)=>{setParteSeleccionada(id);},
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:camaraVista,
         glbSize:()=>glbInterno?.size??0,
@@ -304,6 +323,21 @@ export function AurumRender() {
           <button type="button" onClick={()=>setPanel("iluminacion")} className={"flex flex-col items-center gap-1 px-2 py-3 text-[9px] uppercase tracking-wider "+(panel==="iluminacion"?"bg-gold/10 text-gold":"text-white/35 hover:text-white")}><Sparkles className="size-4"/>Luz</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          {archivo&&<div className="mb-4 rounded-2xl border border-white/10 bg-white/[.025] p-3">
+            <div className="mb-3 flex items-center gap-2">
+              <Box className="size-4 text-gold"/>
+              <div><p className="text-xs font-semibold">Estructura del modelo</p><p className="text-[9px] text-white/30">Selecciona una parte para trabajar con ella</p></div>
+            </div>
+            <div className="space-y-1">
+              <button type="button" onClick={()=>{setParteSeleccionada(null);apiRef.current?.seleccionarParte("");}} className={"flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] transition "+(!parteSeleccionada?"bg-gold/10 text-gold":"text-white/60 hover:bg-white/[.04]")}>
+                <Box className="size-3.5"/><span className="truncate">Toda la pieza</span>
+              </button>
+              {partes.map((parte)=><button key={parte.id} type="button" onClick={()=>apiRef.current?.seleccionarParte(parte.id)} className={"flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] transition "+(parteSeleccionada===parte.id?"bg-gold/10 text-gold ring-1 ring-gold/30":"text-white/60 hover:bg-white/[.04]")} style={{paddingLeft: (10 + parte.nivel*12) + "px"}}>
+                <span className="size-1.5 shrink-0 rounded-full bg-white/25"/>
+                <span className="truncate">{parte.nombre}</span>
+              </button>)}
+            </div>
+          </div>}
           {panel==="materiales"&&<div>
             <div className="mb-4"><p className="text-xs font-semibold">Biblioteca de materiales</p><p className="mt-1 text-[10px] text-white/35">Selecciona un acabado</p></div>
             <div className="space-y-5">{(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino"] as MaterialGrupo[]).map(grupo=><div key={grupo}>
