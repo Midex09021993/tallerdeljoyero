@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
 import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
+import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
@@ -208,6 +209,7 @@ export function AurumRender() {
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       const renderQuality = getAurumRenderQuality("balanced");
+      const shadowConfig=getAurumShadowConfig();
       renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
@@ -324,6 +326,13 @@ export function AurumRender() {
       const [lightingStudio,setLightingStudio]=useState({...AURUM_LIGHTING_DEFAULT});
       const [lightingOpen,setLightingOpen]=useState(false);
       const lucesAurum:any={};
+      const configurarSombrasAurum=(L:any)=>{
+        if(!L?.castShadow) return;
+        L.shadow.mapSize.set(shadowConfig.mapSize,shadowConfig.mapSize);
+        L.shadow.bias=shadowConfig.bias;
+        L.shadow.normalBias=shadowConfig.normalBias;
+        L.shadow.radius=shadowConfig.contact?shadowConfig.contactScale:1;
+      };
       const crearLucesAurum=()=>{
         const mk=(tipo:string,color:number,cast:boolean)=>{
           const L=tipo==="spot"?new THREE.SpotLight(color,1,30,Math.PI*.45,.7,.8):new THREE.PointLight(color,1,30,2);
@@ -331,7 +340,7 @@ export function AurumRender() {
         };
         if(!lucesAurum.key){lucesAurum.key=mk("spot",0xffffff,true);lucesAurum.fill=mk("spot",0xffffff,true);lucesAurum.rim=mk("spot",0xffffff,true);lucesAurum.gem=mk("point",0xffffff,false);}
         const aplicar=(L:any,cfg:any)=>{L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
-        aplicar(lucesAurum.key,lightingStudio.key); aplicar(lucesAurum.fill,lightingStudio.fill); aplicar(lucesAurum.rim,lightingStudio.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
+        aplicar(lucesAurum.key,lightingStudio.key); configurarSombrasAurum(lucesAurum.key); aplicar(lucesAurum.fill,lightingStudio.fill); configurarSombrasAurum(lucesAurum.fill); aplicar(lucesAurum.rim,lightingStudio.rim); configurarSombrasAurum(lucesAurum.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
       };
       const actualizarLucesAurum=(patch:any)=>{
         setLightingStudio((prev:any)=>{const n={...prev,...patch}; Object.assign(lightingStudio,n); return n;});
