@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
+import { getAurumGemPreset, applyAurumGemPreset } from "../lib/aurum-material-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -336,16 +337,9 @@ export function AurumRender() {
         const thickness = Math.max(0.015, Math.min(size.x,size.y,size.z) * 0.85);
         const aplicar = (base:any) => {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
-          nuevo.color.setHex(g.color); nuevo.metalness=0; nuevo.roughness=g.roughness;
-          nuevo.transmission=g.transmission; nuevo.thickness=thickness; nuevo.ior=Math.min(2.333,Math.max(1.01,g.ior));
-          nuevo.specularIntensity=1;
-          nuevo.clearcoat=g.familia==="Diamante" ? .26 : .18;
-          nuevo.clearcoatRoughness=g.familia==="Diamante" ? .012 : .02;
-          nuevo.envMapIntensity=g.envMapIntensity;
-          nuevo.attenuationColor?.setHex(g.attenuationColor); nuevo.attenuationDistance=g.attenuationDistance;
-          nuevo.dispersion=Math.max(0,g.dispersion); nuevo.iridescence=g.iridescence; nuevo.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior));
-          // La transmisión física funciona mejor con opacity=1 y sin transparent sorting.
-          nuevo.transparent=false; nuevo.opacity=1; nuevo.needsUpdate=true; return nuevo;
+          const presetId = g.id as string;
+          const motorPreset = getAurumGemPreset(presetId);
+          return applyAurumGemPreset(nuevo, motorPreset, thickness);
         };
         target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
         crearInclusiones(target,g);
