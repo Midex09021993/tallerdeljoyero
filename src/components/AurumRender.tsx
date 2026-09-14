@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
 import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
+import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -320,6 +321,22 @@ export function AurumRender() {
       let hdriGround:any = null;
       let hdriGroundTexture:any = null;
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
+      const [lightingStudio,setLightingStudio]=useState({...AURUM_LIGHTING_DEFAULT});
+      const [lightingOpen,setLightingOpen]=useState(false);
+      const lucesAurum:any={};
+      const crearLucesAurum=()=>{
+        const mk=(tipo:string,color:number,cast:boolean)=>{
+          const L=tipo==="spot"?new THREE.SpotLight(color,1,30,Math.PI*.45,.7,.8):new THREE.PointLight(color,1,30,2);
+          L.castShadow=cast; escena.add(L); return L;
+        };
+        if(!lucesAurum.key){lucesAurum.key=mk("spot",0xffffff,true);lucesAurum.fill=mk("spot",0xffffff,true);lucesAurum.rim=mk("spot",0xffffff,true);lucesAurum.gem=mk("point",0xffffff,false);}
+        const aplicar=(L:any,cfg:any)=>{L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
+        aplicar(lucesAurum.key,lightingStudio.key); aplicar(lucesAurum.fill,lightingStudio.fill); aplicar(lucesAurum.rim,lightingStudio.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
+      };
+      const actualizarLucesAurum=(patch:any)=>{
+        setLightingStudio((prev:any)=>{const n={...prev,...patch}; Object.assign(lightingStudio,n); return n;});
+      };
+
       const [sceneStudioOpen,setSceneStudioOpen]=useState(false);
       const [sceneStudio,setSceneStudio]=useState({
         hdriGround:false, worldRadius:40, tripodHeight:1.2,
@@ -552,6 +569,7 @@ export function AurumRender() {
           loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
           loader.setWorkerLimit(2);
           return await new Promise<any>
+        {lightingOpen && lightingPanel}
         {sceneStudioOpen && sceneStudioPanel}((resolve, reject) => {
             loader.parse(buffer, resolve, reject);
           });
@@ -820,4 +838,18 @@ export function AurumRender() {
               <div className="my-0.5 h-px w-6 bg-black/10"/>
               <button type="button" title="Capturar imagen" aria-label="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-gold transition hover:bg-gold/10"><Camera className="size-[18px]"/></button>
             </div>
-          </div>
+          </div>      const lightingPanel=(
+        <div style={{position:"absolute",right:16,top:330,zIndex:30,width:270,padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:10}}>AURUM LIGHTING STUDIO</div>
+          
+          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Key <input type="checkbox" checked={lightingStudio.key.enabled} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,enabled:e.target.checked}})}/></label>
+          <label style={{display:"block",fontSize:11}}>Key intensity<input style={{width:"100%"}} type="range" min="0" max="4" step=".05" value={lightingStudio.key.intensity} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,intensity:+e.target.value}})}/></label>
+          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Fill <input type="checkbox" checked={lightingStudio.fill.enabled} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,enabled:e.target.checked}})}/></label>
+          <label style={{display:"block",fontSize:11}}>Fill intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.fill.intensity} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,intensity:+e.target.value}})}/></label>
+          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Rim <input type="checkbox" checked={lightingStudio.rim.enabled} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,enabled:e.target.checked}})}/></label>
+          <label style={{display:"block",fontSize:11}}>Rim intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
+          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Gem Light <input type="checkbox" checked={lightingStudio.gem.enabled} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,enabled:e.target.checked}})}/></label>
+          <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
+        </div>
+      );
+
