@@ -52,6 +52,7 @@ import {
   type Rol,
 } from "@/lib/auth";
 import { actualizarUsuario, borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
+import { ConfiguracionCalculadoras } from "@/components/ConfiguracionCalculadoras";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -87,7 +88,8 @@ type Modulo =
   | "respaldo"
   | "automatizacion"
   | "usuarios"
-  | "sedes";
+  | "sedes"
+  | "calculadoras";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -126,6 +128,7 @@ function GestionPage() {
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
     { id: "sedes", label: "Sedes", visible: esDueno },
+    { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
   ];
 
   return (
@@ -182,6 +185,7 @@ function GestionPage() {
         <ModuloUsuarios esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
       ) : null}
       {modulo === "sedes" && esDueno ? <ModuloSedes /> : null}
+      {modulo === "calculadoras" && esDueno ? <ConfiguracionCalculadoras /> : null}
     </AppShell>
   );
 }
