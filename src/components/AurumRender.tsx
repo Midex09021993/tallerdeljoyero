@@ -204,7 +204,8 @@ export function AurumRender() {
       // en un render pesado en equipos normales.
       renderer.transmissionResolutionScale = 0.65;
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;\n      renderer.shadowMap.autoUpdate = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
 
