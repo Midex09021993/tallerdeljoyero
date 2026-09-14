@@ -13,19 +13,44 @@ type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
 type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino" | "Especiales";
 type CategoriaParte = "metal" | "gema" | "otro";
-type GemaId = "diamante" | "zafiro" | "rubi" | "esmeralda" | "moissanita" | "citrino" | "amatista" | "topacio";
-type GemaConfig = { id:GemaId; nombre:string; color:number; transmission:number; ior:number; roughness:number; envMapIntensity:number };
+type GemaId =
+  | "diamante_natural" | "diamante_vs" | "diamante_inclusiones"
+  | "zafiro_azul" | "zafiro_intenso" | "zafiro_inclusiones"
+  | "rubi_natural" | "rubi_sangre_pichon" | "rubi_inclusiones"
+  | "esmeralda_1" | "esmeralda_2" | "esmeralda_3" | "esmeralda_inclusiones"
+  | "moissanita_blanca" | "moissanita_brillante"
+  | "citrino_natural" | "citrino_intenso"
+  | "amatista_natural" | "amatista_intensa"
+  | "topacio_azul" | "topacio_imperial";
+type GemaConfig = {
+  id:GemaId; familia:string; nombre:string; color:number; transmission:number; ior:number; roughness:number; envMapIntensity:number;
+  attenuationColor:number; attenuationDistance:number; dispersion:number; iridescence:number;
+  inclusionStyle:"ninguna"|"diamante"|"silk"|"velos"; inclusionStrength:number;
+};
 type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
 type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
 const GEMAS: GemaConfig[] = [
-  { id:"diamante", nombre:"Diamante", color:0xf7fbff, transmission:.92, ior:2.42, roughness:.04, envMapIntensity:4.2 },
-  { id:"zafiro", nombre:"Zafiro", color:0x2563eb, transmission:.72, ior:1.77, roughness:.06, envMapIntensity:3.2 },
-  { id:"rubi", nombre:"Rubí", color:0xd51f35, transmission:.72, ior:1.77, roughness:.06, envMapIntensity:3.2 },
-  { id:"esmeralda", nombre:"Esmeralda", color:0x16834b, transmission:.68, ior:1.58, roughness:.07, envMapIntensity:3.0 },
-  { id:"moissanita", nombre:"Moissanita", color:0xeef7ff, transmission:.9, ior:2.65, roughness:.035, envMapIntensity:4.0 },
-  { id:"citrino", nombre:"Citrino", color:0xe3a51a, transmission:.7, ior:1.54, roughness:.07, envMapIntensity:2.8 },
-  { id:"amatista", nombre:"Amatista", color:0x8b5cf6, transmission:.7, ior:1.55, roughness:.07, envMapIntensity:2.8 },
-  { id:"topacio", nombre:"Topacio", color:0x67d4ef, transmission:.78, ior:1.63, roughness:.055, envMapIntensity:3.0 },
+  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xf7fbff, transmission:.96, ior:2.42, roughness:.018, envMapIntensity:5.2, attenuationColor:0xf8fbff, attenuationDistance:8, dispersion:.72, iridescence:.03, inclusionStyle:"diamante", inclusionStrength:.12 },
+  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xf4f8ff, transmission:.965, ior:2.42, roughness:.014, envMapIntensity:5.5, attenuationColor:0xf7fbff, attenuationDistance:12, dispersion:.8, iridescence:.025, inclusionStyle:"diamante", inclusionStrength:.06 },
+  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xf0f5ff, transmission:.94, ior:2.42, roughness:.028, envMapIntensity:4.8, attenuationColor:0xf3f7ff, attenuationDistance:6, dispersion:.68, iridescence:.035, inclusionStyle:"diamante", inclusionStrength:.28 },
+  { id:"zafiro_azul", familia:"Zafiro", nombre:"Zafiro Azul Natural", color:0x174a9e, transmission:.9, ior:1.77, roughness:.025, envMapIntensity:4.1, attenuationColor:0x123d91, attenuationDistance:2.4, dispersion:.12, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.08 },
+  { id:"zafiro_intenso", familia:"Zafiro", nombre:"Zafiro Azul Intenso", color:0x0d2f78, transmission:.86, ior:1.77, roughness:.03, envMapIntensity:4.3, attenuationColor:0x08265f, attenuationDistance:1.55, dispersion:.1, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.05 },
+  { id:"zafiro_inclusiones", familia:"Zafiro", nombre:"Zafiro · Inclusiones", color:0x194a96, transmission:.88, ior:1.77, roughness:.035, envMapIntensity:3.9, attenuationColor:0x123a82, attenuationDistance:2, dispersion:.1, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.24 },
+  { id:"rubi_natural", familia:"Rubí", nombre:"Rubí Natural", color:0x9e1020, transmission:.88, ior:1.77, roughness:.028, envMapIntensity:4.1, attenuationColor:0x65070f, attenuationDistance:2.2, dispersion:.11, iridescence:.012, inclusionStyle:"silk", inclusionStrength:.1 },
+  { id:"rubi_sangre_pichon", familia:"Rubí", nombre:"Rubí · Sangre de Pichón", color:0x8f0b18, transmission:.9, ior:1.77, roughness:.022, envMapIntensity:4.5, attenuationColor:0x57040b, attenuationDistance:2.7, dispersion:.12, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.06 },
+  { id:"rubi_inclusiones", familia:"Rubí", nombre:"Rubí · Inclusiones", color:0x86101b, transmission:.86, ior:1.77, roughness:.038, envMapIntensity:3.8, attenuationColor:0x4f050c, attenuationDistance:1.8, dispersion:.1, iridescence:.012, inclusionStyle:"silk", inclusionStrength:.26 },
+  { id:"esmeralda_1", familia:"Esmeralda", nombre:"Esmeralda · Calidad 1", color:0x087c4a, transmission:.83, ior:1.58, roughness:.032, envMapIntensity:4.2, attenuationColor:0x075a36, attenuationDistance:1.8, dispersion:.08, iridescence:.008, inclusionStyle:"velos", inclusionStrength:.08 },
+  { id:"esmeralda_2", familia:"Esmeralda", nombre:"Esmeralda · Calidad 2", color:0x087047, transmission:.78, ior:1.58, roughness:.045, envMapIntensity:3.9, attenuationColor:0x064b31, attenuationDistance:1.35, dispersion:.07, iridescence:.006, inclusionStyle:"velos", inclusionStrength:.16 },
+  { id:"esmeralda_3", familia:"Esmeralda", nombre:"Esmeralda · Calidad 3", color:0x075b3d, transmission:.72, ior:1.58, roughness:.06, envMapIntensity:3.6, attenuationColor:0x043c29, attenuationDistance:1, dispersion:.06, iridescence:.005, inclusionStyle:"velos", inclusionStrength:.24 },
+  { id:"esmeralda_inclusiones", familia:"Esmeralda", nombre:"Esmeralda · Inclusiones", color:0x075f3e, transmission:.75, ior:1.58, roughness:.052, envMapIntensity:3.7, attenuationColor:0x043e29, attenuationDistance:1.1, dispersion:.065, iridescence:.006, inclusionStyle:"velos", inclusionStrength:.34 },
+  { id:"moissanita_blanca", familia:"Moissanita", nombre:"Moissanita Blanca", color:0xf4f8ff, transmission:.96, ior:2.65, roughness:.016, envMapIntensity:5.1, attenuationColor:0xf6faff, attenuationDistance:10, dispersion:.9, iridescence:.06, inclusionStyle:"diamante", inclusionStrength:.04 },
+  { id:"moissanita_brillante", familia:"Moissanita", nombre:"Moissanita · Brillante", color:0xeaf3ff, transmission:.955, ior:2.65, roughness:.012, envMapIntensity:5.5, attenuationColor:0xf2f8ff, attenuationDistance:12, dispersion:1, iridescence:.08, inclusionStyle:"diamante", inclusionStrength:.02 },
+  { id:"citrino_natural", familia:"Citrino", nombre:"Citrino Natural", color:0xd49a22, transmission:.86, ior:1.54, roughness:.035, envMapIntensity:3.7, attenuationColor:0xa96d0c, attenuationDistance:2.5, dispersion:.045, iridescence:.005, inclusionStyle:"velos", inclusionStrength:.08 },
+  { id:"citrino_intenso", familia:"Citrino", nombre:"Citrino Intenso", color:0xb8780b, transmission:.8, ior:1.54, roughness:.045, envMapIntensity:3.6, attenuationColor:0x8b5307, attenuationDistance:1.7, dispersion:.04, iridescence:.004, inclusionStyle:"velos", inclusionStrength:.14 },
+  { id:"amatista_natural", familia:"Amatista", nombre:"Amatista Natural", color:0x7650b9, transmission:.86, ior:1.55, roughness:.035, envMapIntensity:3.8, attenuationColor:0x57358f, attenuationDistance:2.3, dispersion:.045, iridescence:.005, inclusionStyle:"velos", inclusionStrength:.08 },
+  { id:"amatista_intensa", familia:"Amatista", nombre:"Amatista Intensa", color:0x5b319c, transmission:.8, ior:1.55, roughness:.045, envMapIntensity:3.6, attenuationColor:0x3f2076, attenuationDistance:1.7, dispersion:.04, iridescence:.004, inclusionStyle:"velos", inclusionStrength:.13 },
+  { id:"topacio_azul", familia:"Topacio", nombre:"Topacio Azul", color:0x65b9e8, transmission:.92, ior:1.63, roughness:.025, envMapIntensity:4.2, attenuationColor:0x4d9acb, attenuationDistance:3.5, dispersion:.055, iridescence:.008, inclusionStyle:"velos", inclusionStrength:.05 },
+  { id:"topacio_imperial", familia:"Topacio", nombre:"Topacio Imperial", color:0xd79b4b, transmission:.88, ior:1.63, roughness:.032, envMapIntensity:4, attenuationColor:0xa96722, attenuationDistance:2.5, dispersion:.05, iridescence:.006, inclusionStyle:"velos", inclusionStrength:.08 },
 ];
 
 const MATERIALES: MaterialConfig[] = [
@@ -231,26 +256,44 @@ export function AurumRender() {
         mat.emissiveIntensity = 0;
         mat.needsUpdate = true;
       };
+      const limpiarInclusiones = (target:any) => {
+        const quitar:any[] = [];
+        target?.traverse?.((child:any) => { if (child.userData?.aurumInternalInclusion) quitar.push(child); });
+        quitar.forEach((child:any) => { child.parent?.remove(child); child.geometry?.dispose?.(); child.material?.dispose?.(); });
+      };
+      const crearInclusiones = (target:any, g:GemaConfig) => {
+        limpiarInclusiones(target);
+        if (!g.inclusionStrength || g.inclusionStyle==="ninguna") return;
+        const box = new THREE.Box3().setFromObject(target);
+        const size = box.getSize(new THREE.Vector3());
+        const minSize = Math.max(Math.min(size.x,size.y,size.z), 0.001);
+        const count = Math.max(2, Math.min(7, Math.round(2 + g.inclusionStrength * 14)));
+        for (let i=0;i<count;i++) {
+          const inclusionMaterial = new THREE.MeshPhysicalMaterial({
+            color: g.inclusionStyle==="diamante" ? 0x5b6470 : 0x26331f,
+            metalness: 0, roughness: .2, transmission: .15, transparent: true,
+            opacity: Math.min(.58, .18 + g.inclusionStrength), envMapIntensity: 1.8, depthWrite: false
+          });
+          const inclusion = new THREE.Mesh(new THREE.IcosahedronGeometry(minSize * (.008 + g.inclusionStrength*.014), 1), inclusionMaterial);
+          inclusion.position.set((Math.random()-.5)*size.x*.32,(Math.random()-.5)*size.y*.32,(Math.random()-.5)*size.z*.32);
+          inclusion.scale.set(g.inclusionStyle==="silk"?2.8:1.35,g.inclusionStyle==="velos"?.55:.8,.45);
+          inclusion.rotation.set(Math.random()*2,Math.random()*2,Math.random()*2);
+          inclusion.userData.aurumInternalInclusion=true; inclusion.renderOrder=15; target.add(inclusion);
+        }
+      };
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const aplicar = (base:any) => {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
-          nuevo.color.setHex(g.color);
-          nuevo.metalness = 0;
-          nuevo.roughness = g.roughness;
-          nuevo.transmission = g.transmission;
-          nuevo.thickness = 0.35;
-          nuevo.ior = g.ior;
-          nuevo.clearcoat = .35;
-          nuevo.clearcoatRoughness = .04;
-          nuevo.envMapIntensity = g.envMapIntensity;
-          nuevo.transparent = g.transmission < .9;
-          nuevo.opacity = 1;
-          nuevo.needsUpdate = true;
-          return nuevo;
+          nuevo.color.setHex(g.color); nuevo.metalness=0; nuevo.roughness=g.roughness;
+          nuevo.transmission=g.transmission; nuevo.thickness=.55; nuevo.ior=g.ior;
+          nuevo.clearcoat=.28; nuevo.clearcoatRoughness=.025; nuevo.envMapIntensity=g.envMapIntensity;
+          nuevo.attenuationColor?.setHex(g.attenuationColor); nuevo.attenuationDistance=g.attenuationDistance;
+          nuevo.dispersion=g.dispersion; nuevo.iridescence=g.iridescence; nuevo.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior));
+          nuevo.transparent=g.transmission<.995; nuevo.opacity=1; nuevo.needsUpdate=true; return nuevo;
         };
-        const target = objetivo || parteActiva;
-        if (!target) return;
-        target.material = Array.isArray(target.material) ? target.material.map((base:any)=>aplicar(base)) : aplicar(target.material);
+        const target=objetivo||parteActiva; if(!target) return;
+        target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
+        crearInclusiones(target,g);
       };
 
       const aplicarMaterial = (m:MaterialConfig) => {
@@ -421,7 +464,7 @@ export function AurumRender() {
           if (meta?.categoria==="gema") {
             const g=GEMAS[0];
             const m=new THREE.MeshPhysicalMaterial();
-            m.color.setHex(g.color); m.metalness=0; m.roughness=g.roughness; m.transmission=g.transmission; m.thickness=.35; m.ior=g.ior; m.clearcoat=.35; m.clearcoatRoughness=.04; m.envMapIntensity=g.envMapIntensity; m.transparent=g.transmission<.9; x.material=m;
+            m.color.setHex(g.color); m.metalness=0; m.roughness=g.roughness; m.transmission=g.transmission; m.thickness=.55; m.ior=g.ior; m.clearcoat=.28; m.clearcoatRoughness=.025; m.envMapIntensity=g.envMapIntensity; m.attenuationColor.setHex(g.attenuationColor); m.attenuationDistance=g.attenuationDistance; m.dispersion=g.dispersion; m.iridescence=g.iridescence; m.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior)); m.transparent=g.transmission<.995; x.material=m; crearInclusiones(x,g);
           } else if (meta?.categoria==="metal") {
             const m=MATERIALES[0];
             const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
@@ -506,7 +549,7 @@ export function AurumRender() {
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(pointer, camara);
         const objetivos:any[] = [];
-        modelo.traverse((x:any) => { if (x.isMesh && x.visible) objetivos.push(x); });
+        modelo.traverse((x:any) => { if (x.isMesh && x.visible && !x.userData?.aurumInternalInclusion) objetivos.push(x); });
         const impacto = raycaster.intersectObjects(objetivos, false)[0];
         if (impacto?.object?.uuid) {
           seleccionarMalla(impacto.object);
@@ -652,10 +695,15 @@ export function AurumRender() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {GEMAS.map(g=><GemSwatch key={g.id} g={g} selected={gemaId===g.id} onClick={()=>{setGemaId(g.id); if(parteSeleccionadaCategoria==="gema") apiRef.current?.gema(g);}}/>)}
+              <div className="space-y-4">
+                {Array.from(new Set(GEMAS.map(g=>g.familia))).map(familia=><div key={familia}>
+                  <p className="mb-2 text-[8px] font-semibold uppercase tracking-[.18em] text-white/30">{familia}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {GEMAS.filter(g=>g.familia===familia).map(g=><GemSwatch key={g.id} g={g} selected={gemaId===g.id} onClick={()=>{setGemaId(g.id); if(parteSeleccionadaCategoria==="gema") apiRef.current?.gema(g);}}/>)}
+                  </div>
+                </div>)}
               </div>
-              <p className="mt-4 text-center text-[8px] uppercase tracking-[.14em] text-white/20">Materiales ópticos · PBR · Refracción</p>
+              <div className="mt-4 rounded-xl border border-gold/10 bg-gold/[.03] p-3 text-[8px] leading-relaxed text-white/35"><span className="text-gold/75">Óptica avanzada:</span> transmisión, refracción, dispersión cromática, absorción interna y perfiles naturales con inclusiones visuales sutiles.</div>
             </div>}
           </div>}
           {panel==="escenas"&&<div>
