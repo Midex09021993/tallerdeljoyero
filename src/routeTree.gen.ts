@@ -158,7 +158,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
-  '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -180,6 +179,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/casting': typeof AuthenticatedCastingRoute
