@@ -315,19 +315,19 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
 
         {esDueno ? (
           <div className="rounded-xl border border-border bg-surface-muted p-5 lg:rounded-2xl lg:p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Volumen ajustado
-          </p>
-          <p className="mt-1 text-3xl font-semibold text-foreground">
-            {volumen > 0 ? `${formatearEntero(volumen)} ml` : "Ingresa medidas"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³` : "0 cm³"} ·{" "}
-            {tiposTarro[tipoTarro].etiqueta} {tolerancias[tipoTarro] >= 0 ? "+" : ""}
-            {formatearCantidad(tolerancias[tipoTarro], 2)}%
-          </p>
-        </div>
-
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Volumen ajustado
+            </p>
+            <p className="mt-1 text-3xl font-semibold text-foreground">
+              {volumen > 0 ? `${formatearEntero(volumen)} ml` : "Ingresa medidas"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³` : "0 cm³"} ·{" "}
+              {tiposTarro[tipoTarro].etiqueta} {tolerancias[tipoTarro] >= 0 ? "+" : ""}
+              {formatearCantidad(tolerancias[tipoTarro], 2)}%
+            </p>
+          </div>
+        ) : null}
         <div
           className={
             compacto
