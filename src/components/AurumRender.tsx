@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -301,20 +302,7 @@ export function AurumRender() {
         glbInterno = null;
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
-        mat.color.setHex(m.color);
-        mat.metalness = m.metalness;
-        mat.roughness = m.roughness;
-        mat.envMapIntensity = m.envMapIntensity;
-        mat.clearcoat = m.clearcoat;
-        mat.clearcoatRoughness = Math.min(.35, Math.max(.025, m.roughness * .42));
-        // Anisotropía: clave para reproducir cepillados y satinados de joyería.
-        mat.anisotropy = Math.max(0, Math.min(1, m.anisotropy ?? 0));
-        mat.anisotropyRotation = m.anisotropyRotation ?? 0;
-        mat.specularIntensity = m.metalness > .9 ? 1 : .8;
-        mat.specularColor?.setHex(0xffffff);
-        mat.emissive?.setHex(0x000000);
-        mat.emissiveIntensity = 0;
-        mat.needsUpdate = true;
+        applyAurumMetal(mat, metalPresetFromConfig(m));
       };
       const limpiarInclusiones = (target:any) => {
         const quitar:any[] = [];
@@ -528,13 +516,9 @@ export function AurumRender() {
           if (meta?.categoria==="gema") {
             const g=GEMAS[0];
             const m=new THREE.MeshPhysicalMaterial();
-            m.color.setHex(g.color); m.metalness=0; m.roughness=g.roughness; m.transmission=g.transmission;
             const gemaBox = new THREE.Box3().setFromObject(x); const gemaSize = gemaBox.getSize(new THREE.Vector3());
-            m.thickness=Math.max(0.015, Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*0.85); m.ior=Math.min(2.333,Math.max(1.01,g.ior));
-            m.specularIntensity=1;
-            m.clearcoat=g.familia==="Diamante" ? .26 : .18; m.clearcoatRoughness=g.familia==="Diamante" ? .012 : .02;
-            m.envMapIntensity=g.envMapIntensity; m.attenuationColor.setHex(g.attenuationColor); m.attenuationDistance=g.attenuationDistance;
-            m.dispersion=Math.max(0,g.dispersion); m.iridescence=g.iridescence; m.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior)); m.transparent=false; m.opacity=1; x.material=m; crearInclusiones(x,g);
+            applyAurumGem(m, gemPresetFromConfig(g), Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*.85, g.familia);
+            x.material=m; crearInclusiones(x,g);
           } else if (meta?.categoria==="metal") {
             const m=MATERIALES[0];
             const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
