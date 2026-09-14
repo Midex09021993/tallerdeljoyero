@@ -182,6 +182,7 @@ export function AurumRender() {
   const [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string | null>(null);
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
+  const [autoRotando, setAutoRotando] = useState(false);
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
