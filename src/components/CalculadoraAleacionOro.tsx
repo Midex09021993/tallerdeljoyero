@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Gem } from "lucide-react";
+import { CLAVES_CALCULADORAS, leerConfigAleacion } from "@/lib/calculadoras-config";
+import { useConfigSistema } from "@/lib/taller-db";
 
 function formatearNumero(valor: number, decimales = 2) {
   return new Intl.NumberFormat("es-PE", {
@@ -17,40 +19,15 @@ type ColorAleacion = "amarillo" | "blanco" | "rosa";
 
 type MetalReceta = { nombre: string; porcentaje: number };
 
-/**
- * Recetas de aleación por color (porcentajes sobre la aleación total).
- * La receta de oro amarillo queda preparada como estructura configurable.
- */
-const RECETAS: Record<
-  ColorAleacion,
-  { etiqueta: string; metales: MetalReceta[] }
-> = {
-  amarillo: {
-    etiqueta: "Amarillo",
-    // Receta configurable: ajustar porcentajes según la fórmula del taller.
-    metales: [
-      { nombre: "Plata", porcentaje: 0.5 },
-      { nombre: "Cobre", porcentaje: 0.5 },
-    ],
-  },
-  blanco: {
-    etiqueta: "Blanco",
-    metales: [
-      { nombre: "Cobre", porcentaje: 0.4 },
-      { nombre: "Níquel", porcentaje: 0.4 },
-      { nombre: "Zinc", porcentaje: 0.2 },
-    ],
-  },
-  rosa: {
-    etiqueta: "Rosa",
-    metales: [
-      { nombre: "Cobre", porcentaje: 0.89 },
-      { nombre: "Plata", porcentaje: 0.11 },
-    ],
-  },
+const ETIQUETAS_COLOR: Record<ColorAleacion, string> = {
+  amarillo: "Amarillo",
+  blanco: "Blanco",
+  rosa: "Rosa",
 };
 
 export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolean }) {
+  const { data: configAleacion } = useConfigSistema(CLAVES_CALCULADORAS.aleacion);
+  const configuracion = leerConfigAleacion(configAleacion?.valor);
   const [masa, setMasa] = useState("");
   const [inicial, setInicial] = useState("24");
   const [final, setFinal] = useState("18");
@@ -67,10 +44,10 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
 
     const pi = kiNum / 24;
     const pf = kfNum / 24;
-    const aleacion = masaNum * ((pi - pf) / pf);
+    const aleacion = masaNum * ((pi - pf) / pf) * Math.max(0, configuracion.factorCalculo);
     const total = masaNum + aleacion;
 
-    const receta = RECETAS[color];
+    const receta = configuracion.recetas[color];
     const metales = receta.metales.map((m) => ({
       nombre: `${m.nombre} de liga`,
       gramos: aleacion * m.porcentaje,
@@ -83,9 +60,8 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       aleacion,
       total,
       metales,
-      colorEtiqueta: receta.etiqueta,
     };
-  }, [kiNum, kfNum, masaNum, color]);
+  }, [kiNum, kfNum, masaNum, color, configuracion]);
 
   return (
     <div className={`space-y-5 ${compacto ? "p-1" : "p-5 sm:p-6 lg:p-8"}`}>
@@ -153,7 +129,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
           Color de aleación
         </legend>
         <div className={`grid gap-2 ${compacto ? "grid-cols-3" : "grid-cols-3 sm:max-w-md"}`}>
-          {(Object.keys(RECETAS) as ColorAleacion[]).map((c) => {
+          {(Object.keys(ETIQUETAS_COLOR) as ColorAleacion[]).map((c) => {
             const seleccionado = color === c;
             return (
               <button
@@ -167,7 +143,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                     : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
                 }`}
               >
-                {RECETAS[c].etiqueta}
+                {ETIQUETAS_COLOR[c]}
               </button>
             );
           })}
@@ -188,7 +164,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
 
           <div className="space-y-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
-              Composición de la aleación · Oro {resultado.colorEtiqueta}
+              Composición de la aleación · Oro {ETIQUETAS_COLOR[color]}
             </p>
             <div
               className={`grid gap-4 ${
