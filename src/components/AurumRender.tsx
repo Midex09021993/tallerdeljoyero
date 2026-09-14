@@ -27,38 +27,191 @@ const VISTAS: { id: VistaId; nombre: string }[] = [
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const apiRef = useRef<any>(null);
-  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null);
+  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a"), [escenarioId, setEscenarioId] = useState<EscenarioId>("oscuro");
   const [captura, setCaptura] = useState<string|null>(null), [vista, setVista] = useState<VistaId>("perspectiva"), [panel, setPanel] = useState<"materiales"|"escenas">("materiales");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
 
   useEffect(() => {
-    let vivo=true, cleanup=()=>{};
-    (async()=>{
-      const THREE=await import("three"), {OrbitControls}=await import("three/examples/jsm/controls/OrbitControls.js"), {RoomEnvironment}=await import("three/examples/jsm/environments/RoomEnvironment.js");
-      const nodo=visorRef.current; if(!vivo||!nodo)return;
-      const escena=new THREE.Scene(), camara=new THREE.PerspectiveCamera(38,1,.001,1000);
-      const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:"high-performance"});
-      renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.55; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.domElement.className="block h-full w-full"; nodo.appendChild(renderer.domElement);
-      const pmrem=new THREE.PMREMGenerator(renderer), entorno=pmrem.fromScene(new RoomEnvironment(),.04).texture; escena.environment=entorno;
+    let vivo = true;
+    let cleanup = () => {};
+    (async () => {
+      const THREE = await import("three");
+      const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
+      const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
+      const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
+      const nodo = visorRef.current;
+      if (!vivo || !nodo) return;
+      const escena = new THREE.Scene();
+      const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance" });
+      renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.55;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.domElement.className = "block h-full w-full";
+      nodo.appendChild(renderer.domElement);
+
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const entorno = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+      escena.environment = entorno;
       escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,2.5));
-      const key=new THREE.DirectionalLight(0xffefc8,6); key.position.set(4,6,5); key.castShadow=true; key.shadow.mapSize.set(1024,1024); escena.add(key);
-      const fill=new THREE.DirectionalLight(0xdbe7ff,4); fill.position.set(-5,3,4); escena.add(fill);
-      const rim=new THREE.DirectionalLight(0xffd49a,5); rim.position.set(2,4,-5); escena.add(rim);
-      const top=new THREE.PointLight(0xffffff,3,30); top.position.set(0,5,1); escena.add(top);
-      const controles=new OrbitControls(camara,renderer.domElement); controles.enableDamping=true; controles.dampingFactor=.07; controles.enablePan=true; controles.minDistance=.15; controles.maxDistance=100;
-      let modelo:any=null, suelo:any=null;
-      const material=new THREE.MeshPhysicalMaterial({color:MATERIALES[0].color,metalness:1,roughness:.17,envMapIntensity:2.5,clearcoat:.4,clearcoatRoughness:.12});
-      const dispose=(o:any)=>o?.traverse((x:any)=>{if(x.geometry)x.geometry.dispose()});
-      const quitar=()=>{if(modelo){escena.remove(modelo);dispose(modelo);modelo=null} if(suelo){escena.remove(suelo);suelo.geometry.dispose();suelo.material.dispose();suelo=null}};
-      const aplicarMaterial=(m:MaterialConfig)=>{material.color.setHex(m.color);material.roughness=m.roughness;material.envMapIntensity=m.envMapIntensity;material.clearcoat=m.clearcoat;material.needsUpdate=true};
-      const aplicarEscenario=(id:EscenarioId)=>{if(id==="transparente"){escena.background=null;renderer.setClearColor(0,0)}else{renderer.setClearColor(0,1);escena.background=new THREE.Color(({oscuro:0x090b0e,claro:0xe7e5e0,luxury:0x21150c,marmol:0xcfccc5} as any)[id])} if(suelo){suelo.visible=id!=="transparente";suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:0x15181c);suelo.material.roughness=id==="marmol"?.25:.3}};
-      const encuadrar=()=>{if(!modelo)return;modelo.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(modelo),center=b.getCenter(new THREE.Vector3()),size=b.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z)||1;modelo.position.set(0,0,0);modelo.scale.setScalar(2.6/max);modelo.position.sub(center);modelo.updateMatrixWorld(true);const bf=new THREE.Box3().setFromObject(modelo),h=bf.getSize(new THREE.Vector3()).y||1;if(!suelo){suelo=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x15181c,metalness:.05,roughness:.3}));suelo.rotation.x=-Math.PI/2;suelo.receiveShadow=true;escena.add(suelo)}suelo.position.y=bf.min.y-Math.max(h*.035,.015);aplicarEscenario(escenarioId);camara.position.set(3.5,2.4,4.6);controles.target.set(0,0,0);controles.update()};
-      const cargar=async(file:File)=>{const ext=file.name.split(".").pop()?.toLowerCase();if(!ext||!["stl","obj","glb","fbx"].includes(ext))throw new Error("Formato no compatible. Usa STL, OBJ, GLB o FBX.");const buffer=await file.arrayBuffer();let objeto:any;if(ext==="stl"){const {STLLoader}=await import("three/examples/jsm/loaders/STLLoader.js");const geo=new STLLoader().parse(buffer);geo.computeVertexNormals();objeto=new THREE.Mesh(geo,material)}else if(ext==="obj"){const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");objeto=new OBJLoader().parse(new TextDecoder().decode(buffer))}else if(ext==="glb"){const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");objeto=(await new GLTFLoader().parseAsync(buffer,"")).scene}else{const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");objeto=new FBXLoader().parse(buffer,"")}quitar();objeto.traverse((x:any)=>{if(x.isMesh){x.material=material;x.castShadow=true;x.receiveShadow=true}});modelo=objeto;escena.add(modelo);aplicarMaterial(materialActivo);encuadrar()};
-      const camaraVista=(id:VistaId)=>{const p:any={perspectiva:[3.5,2.4,4.6],frontal:[0,0,5],superior:[0,5,.001],lateral:[5,0,0]}[id];camara.position.set(...p);controles.target.set(0,0,0);controles.update()};
-      apiRef.current={cargar,material:aplicarMaterial,escenario:aplicarEscenario,reset:encuadrar,capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},limpiar:quitar,fullscreen:()=>nodo.requestFullscreen?.(),vista:camaraVista};
-      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false)}; resize(); const obs=new ResizeObserver(resize);obs.observe(nodo);let frame=0;const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)};animate();
+      const key = new THREE.DirectionalLight(0xffefc8,6);
+      key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
+      const fill = new THREE.DirectionalLight(0xdbe7ff,4);
+      fill.position.set(-5,3,4); escena.add(fill);
+      const rim = new THREE.DirectionalLight(0xffd49a,5);
+      rim.position.set(2,4,-5); escena.add(rim);
+      const top = new THREE.PointLight(0xffffff,3,30);
+      top.position.set(0,5,1); escena.add(top);
+
+      const controles = new OrbitControls(camara,renderer.domElement);
+      controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true;
+      controles.minDistance = .15; controles.maxDistance = 100;
+
+      let modelo:any = null;
+      let suelo:any = null;
+      let glbInterno:Blob|null = null;
+
+      const dispose = (o:any) => o?.traverse((x:any) => {
+        if (x.geometry) x.geometry.dispose();
+        if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
+        else x.material?.dispose?.();
+      });
+      const quitar = () => {
+        if (modelo) { escena.remove(modelo); dispose(modelo); modelo=null; }
+        if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
+        glbInterno = null;
+      };
+      const aplicarMaterial = (m:MaterialConfig) => {
+        if (!modelo) return;
+        modelo.traverse((x:any) => {
+          if (x.isMesh) {
+            x.material = material;
+            x.castShadow = true;
+            x.receiveShadow = true;
+          }
+        });
+        material.color.setHex(m.color);
+        material.roughness = m.roughness;
+        material.envMapIntensity = m.envMapIntensity;
+        material.clearcoat = m.clearcoat;
+        material.needsUpdate = true;
+      };
+      const aplicarEscenario = (id:EscenarioId) => {
+        if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
+        else {
+          renderer.setClearColor(0,1);
+          escena.background = new THREE.Color(({oscuro:0x090b0e,claro:0xe7e5e0,luxury:0x21150c,marmol:0xcfccc5} as any)[id]);
+        }
+        if (suelo) {
+          suelo.visible = id!=="transparente";
+          suelo.material.color.setHex(id==="marmol"?0xc5c2bc:id==="luxury"?0x20140b:0x15181c);
+          suelo.material.roughness = id==="marmol"?.25:.3;
+        }
+      };
+      const encuadrar = () => {
+        if (!modelo) return;
+        modelo.updateMatrixWorld(true);
+        const b = new THREE.Box3().setFromObject(modelo);
+        const center = b.getCenter(new THREE.Vector3());
+        const size = b.getSize(new THREE.Vector3());
+        const max = Math.max(size.x,size.y,size.z)||1;
+        modelo.position.set(0,0,0);
+        modelo.scale.setScalar(2.6/max);
+        modelo.position.sub(center);
+        modelo.updateMatrixWorld(true);
+        const bf = new THREE.Box3().setFromObject(modelo);
+        const h = bf.getSize(new THREE.Vector3()).y||1;
+        if (!suelo) {
+          suelo = new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x15181c,metalness:.05,roughness:.3}));
+          suelo.rotation.x=-Math.PI/2; suelo.receiveShadow=true; escena.add(suelo);
+        }
+        suelo.position.y = bf.min.y-Math.max(h*.035,.015);
+        aplicarEscenario(escenarioId);
+        camara.position.set(3.5,2.4,4.6);
+        controles.target.set(0,0,0); controles.update();
+      };
+
+      // Adaptadores de entrada: cada formato produce un Object3D común.
+      // A partir de aquí, AURUM RENDER trabaja exclusivamente con GLB interno.
+      const parsearEntrada = async (file:File, ext:string) => {
+        const buffer = await file.arrayBuffer();
+        if (ext==="stl") {
+          const {STLLoader}=await import("three/examples/jsm/loaders/STLLoader.js");
+          const geo=new STLLoader().parse(buffer); geo.computeVertexNormals();
+          return new THREE.Mesh(geo, material);
+        }
+        if (ext==="obj") {
+          const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
+          return new OBJLoader().parse(new TextDecoder().decode(buffer));
+        }
+        if (ext==="fbx") {
+          const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");
+          return new FBXLoader().parse(buffer,"");
+        }
+        if (ext==="glb") {
+          const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
+          return (await new GLTFLoader().parseAsync(buffer,"")).scene;
+        }
+        if (ext==="3dm") {
+          throw new Error("El adaptador Rhino 3DM está preparado en la arquitectura, pero su conversión aún requiere habilitar el módulo Rhino en el navegador.");
+        }
+        throw new Error("Formato no compatible.");
+      };
+
+      const convertirAGlb = (objeto:any) => new Promise<ArrayBuffer>((resolve,reject) => {
+        const exportador = new GLTFExporter();
+        exportador.parse(objeto,(resultado:any) => {
+          if (resultado instanceof ArrayBuffer) resolve(resultado);
+          else reject(new Error("No se pudo generar el GLB interno."));
+        },(e:any)=>reject(e),{binary:true,onlyVisible:true,trs:false});
+      });
+
+      const cargar = async(file:File, informar:(paso:string)=>void) => {
+        const ext=file.name.split(".").pop()?.toLowerCase();
+        if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
+          throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
+        }
+        informar("Procesando archivo...");
+        const objeto = await parsearEntrada(file,ext);
+        informar("Convirtiendo a GLB...");
+        const glb = await convertirAGlb(objeto);
+        informar("Preparando visualización...");
+        const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
+        const interno=(await new GLTFLoader().parseAsync(glb,"")).scene;
+        quitar();
+        interno.traverse((x:any)=>{if(x.isMesh){x.material=material;x.castShadow=true;x.receiveShadow=true;}});
+        modelo=interno;
+        glbInterno=new Blob([glb],{type:"model/gltf-binary"});
+        escena.add(modelo);
+        aplicarMaterial(materialActivo);
+        encuadrar();
+        return {size:glb.byteLength, ext};
+      };
+      const camaraVista=(id:VistaId)=>{
+        const p:any={perspectiva:[3.5,2.4,4.6],frontal:[0,0,5],superior:[0,5,.001],lateral:[5,0,0]}[id];
+        camara.position.set(...p); controles.target.set(0,0,0); controles.update();
+      };
+      apiRef.current={
+        cargar,
+        material:aplicarMaterial,
+        escenario:aplicarEscenario,
+        reset:encuadrar,
+        capturar:()=>{renderer.render(escena,camara);return renderer.domElement.toDataURL("image/png")},
+        limpiar:quitar,
+        fullscreen:()=>nodo.requestFullscreen?.(),
+        vista:camaraVista,
+        glbSize:()=>glbInterno?.size??0,
+      };
+      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false)};
+      resize();
+      const obs=new ResizeObserver(resize); obs.observe(nodo);
+      let frame=0;
+      const animate=()=>{frame=requestAnimationFrame(animate);controles.update();renderer.render(escena,camara)}; animate();
       cleanup=()=>{cancelAnimationFrame(frame);obs.disconnect();quitar();controles.dispose();material.dispose();entorno.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();apiRef.current=null};
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;cleanup()};
@@ -67,8 +220,8 @@ export function AurumRender() {
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
   useEffect(()=>apiRef.current?.vista(vista),[vista]);
 
-  const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);try{await apiRef.current?.cargar(file);setArchivo(file.name);setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo cargar el modelo");setArchivo(null)}finally{setCargando(false)}},[]);
-  const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setCaptura(null);if(fileRef.current)fileRef.current.value=""};
+  const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{const r=await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setTamanoGlb(r?.size??null);setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null);setTamanoGlb(null)}finally{setCargando(false);setPaso(null)}},[]);
+  const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setTamanoGlb(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const captura=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
   return <div className="space-y-4">
@@ -76,14 +229,14 @@ export function AurumRender() {
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-ink px-5 py-4 text-ink-foreground sm:px-7">
         <div className="flex items-center gap-3"><Gem className="size-5 text-gold"/><div><div className="font-display text-2xl italic text-gold">AURUM RENDER</div><div className="text-[10px] uppercase tracking-[.22em] text-ink-foreground/45">Jewelry 3D Studio · Fase 1</div></div></div>
         <button type="button" onClick={()=>fileRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 text-xs font-semibold text-gold hover:bg-gold/15"><Upload className="size-4"/> {archivo?"Cambiar modelo":"Cargar modelo"}</button>
-        <input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)void cargarArchivo(f)}}/>
+        <input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)void cargarArchivo(f)}}/>
       </header>
       <div className="relative bg-[#090b0e]">
         <div ref={visorRef} className="relative min-h-[560px] lg:min-h-[720px]">
-          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Arrastra tu modelo 3D aquí</h2><p className="mt-2 text-sm text-white/45">STL · OBJ · GLB · FBX</p></div></div>}
-          {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-white/10 bg-black/60 px-6 py-4 text-sm text-white/80">Procesando modelo…</div></div>}
+          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Arrastra tu modelo 3D aquí</h2><p className="mt-2 text-sm text-white/45">STL · OBJ · GLB · FBX · 3DM</p></div></div>}
+          {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-white/10 bg-black/60 px-6 py-4 text-sm text-white/80">{paso||"Preparando visualización..."}</div></div>}
           {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/70 px-4 py-2 text-xs text-red-200">{error}</div>}
-          {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[55%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs text-white/65 backdrop-blur">{archivo}</div>}
+          {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[70%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs text-white/65 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· Interno GLB{tamanoGlb?` · ${(tamanoGlb/1024/1024).toFixed(1)} MB`:""}</span></div>}
           <div className="absolute right-5 top-5 z-20 flex gap-2">
             <button type="button" title="Auto centrar" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><Maximize2 className="size-4"/></button>
             <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-full border border-white/10 bg-black/45 text-white/75 backdrop-blur hover:text-gold"><Expand className="size-4"/></button>
@@ -111,6 +264,6 @@ export function AurumRender() {
         :<div><div className="mb-4"><p className="text-sm font-semibold">Escenarios de presentación</p><p className="text-[11px] text-muted-foreground">Ambientes para mostrar la pieza en distintos contextos comerciales</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-input hover:border-gold/50")}><div className={"h-16 "+e.clase}/><div className="flex items-center justify-between p-3 text-[11px] font-semibold">{e.nombre}<ChevronDown className="size-3 text-muted-foreground"/></div></button>)}</div></div>}
       </div>
     </section>
-    <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground"><Grid3X3 className="size-3.5"/> Procesamiento local en navegador · Sin costos, precios ni cotizaciones en Fase 1</div>
+    <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground"><Grid3X3 className="size-3.5"/> Conversión local · Entrada → GLB interno → WebGL · Preparado para Rhino 3DM, PBR y render avanzado</div>
   </div>;
 }
