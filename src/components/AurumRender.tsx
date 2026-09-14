@@ -30,9 +30,12 @@ type GemaConfig = {
 type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number };
 type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
 const GEMAS: GemaConfig[] = [
-  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xf7fbff, transmission:.96, ior:2.42, roughness:.018, envMapIntensity:5.2, attenuationColor:0xf8fbff, attenuationDistance:8, dispersion:.72, iridescence:.03, inclusionStyle:"diamante", inclusionStrength:.12 },
-  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xf4f8ff, transmission:.965, ior:2.42, roughness:.014, envMapIntensity:5.5, attenuationColor:0xf7fbff, attenuationDistance:12, dispersion:.8, iridescence:.025, inclusionStyle:"diamante", inclusionStrength:.06 },
-  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xf0f5ff, transmission:.94, ior:2.42, roughness:.028, envMapIntensity:4.8, attenuationColor:0xf3f7ff, attenuationDistance:6, dispersion:.68, iridescence:.035, inclusionStyle:"diamante", inclusionStrength:.28 },
+  // Perfil óptico propio de AURUM RENDER. El diamante real tiene RI ~2.42 y
+  // dispersión ~0.044; MeshPhysicalMaterial limita IOR a 2.333, por lo que
+  // usamos el máximo soportado y una dispersión contenida para evitar arcoíris artificiales.
+  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xfafcff, transmission:.985, ior:2.333, roughness:.009, envMapIntensity:5.4, attenuationColor:0xf9fcff, attenuationDistance:22, dispersion:.22, iridescence:.008, inclusionStyle:"diamante", inclusionStrength:.08 },
+  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xfcfdff, transmission:.99, ior:2.333, roughness:.006, envMapIntensity:5.8, attenuationColor:0xfbfdff, attenuationDistance:32, dispersion:.24, iridescence:.006, inclusionStyle:"diamante", inclusionStrength:.035 },
+  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xf5f9ff, transmission:.975, ior:2.333, roughness:.014, envMapIntensity:5.0, attenuationColor:0xf2f7ff, attenuationDistance:13, dispersion:.20, iridescence:.01, inclusionStyle:"diamante", inclusionStrength:.22 },
   { id:"zafiro_azul", familia:"Zafiro", nombre:"Zafiro Azul Natural", color:0x174a9e, transmission:.9, ior:1.77, roughness:.025, envMapIntensity:4.1, attenuationColor:0x123d91, attenuationDistance:2.4, dispersion:.12, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.08 },
   { id:"zafiro_intenso", familia:"Zafiro", nombre:"Zafiro Azul Intenso", color:0x0d2f78, transmission:.86, ior:1.77, roughness:.03, envMapIntensity:4.3, attenuationColor:0x08265f, attenuationDistance:1.55, dispersion:.1, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.05 },
   { id:"zafiro_inclusiones", familia:"Zafiro", nombre:"Zafiro · Inclusiones", color:0x194a96, transmission:.88, ior:1.77, roughness:.035, envMapIntensity:3.9, attenuationColor:0x123a82, attenuationDistance:2, dispersion:.1, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.24 },
@@ -196,6 +199,9 @@ export function AurumRender() {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.55;
+      // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
+      // en un render pesado en equipos normales.
+      renderer.transmissionResolutionScale = 1;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.domElement.className = "block h-full w-full";
@@ -315,7 +321,10 @@ export function AurumRender() {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
           nuevo.color.setHex(g.color); nuevo.metalness=0; nuevo.roughness=g.roughness;
           nuevo.transmission=g.transmission; nuevo.thickness=thickness; nuevo.ior=Math.min(2.333,Math.max(1.01,g.ior));
-          nuevo.clearcoat=.18; nuevo.clearcoatRoughness=.02; nuevo.envMapIntensity=g.envMapIntensity;
+          nuevo.specularIntensity=1;
+          nuevo.clearcoat=g.familia==="Diamante" ? .26 : .18;
+          nuevo.clearcoatRoughness=g.familia==="Diamante" ? .012 : .02;
+          nuevo.envMapIntensity=g.envMapIntensity;
           nuevo.attenuationColor?.setHex(g.attenuationColor); nuevo.attenuationDistance=g.attenuationDistance;
           nuevo.dispersion=Math.max(0,g.dispersion); nuevo.iridescence=g.iridescence; nuevo.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior));
           // La transmisión física funciona mejor con opacity=1 y sin transparent sorting.
@@ -496,7 +505,10 @@ export function AurumRender() {
             m.color.setHex(g.color); m.metalness=0; m.roughness=g.roughness; m.transmission=g.transmission;
             const gemaBox = new THREE.Box3().setFromObject(x); const gemaSize = gemaBox.getSize(new THREE.Vector3());
             m.thickness=Math.max(0.015, Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*0.85); m.ior=Math.min(2.333,Math.max(1.01,g.ior));
-            m.clearcoat=.18; m.clearcoatRoughness=.02; m.envMapIntensity=g.envMapIntensity; m.attenuationColor.setHex(g.attenuationColor); m.attenuationDistance=g.attenuationDistance; m.dispersion=Math.max(0,g.dispersion); m.iridescence=g.iridescence; m.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior)); m.transparent=false; m.opacity=1; x.material=m; crearInclusiones(x,g);
+            m.specularIntensity=1;
+            m.clearcoat=g.familia==="Diamante" ? .26 : .18; m.clearcoatRoughness=g.familia==="Diamante" ? .012 : .02;
+            m.envMapIntensity=g.envMapIntensity; m.attenuationColor.setHex(g.attenuationColor); m.attenuationDistance=g.attenuationDistance;
+            m.dispersion=Math.max(0,g.dispersion); m.iridescence=g.iridescence; m.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior)); m.transparent=false; m.opacity=1; x.material=m; crearInclusiones(x,g);
           } else if (meta?.categoria==="metal") {
             const m=MATERIALES[0];
             const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
