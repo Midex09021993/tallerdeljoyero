@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { RotateCcw, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
@@ -92,42 +92,6 @@ export function ConfiguracionCalculadoras() {
 
   const guardando = guardar.isPending;
 
-  async function guardarValores() {
-    try {
-      await Promise.all([
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.visualizador, valor: cfgVisualizador }),
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.aleacion, valor: cfgAleacion }),
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.yeso, valor: cfgYeso }),
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.tallasAnillo, valor: cfgTallas }),
-      ]);
-      toast.success("Configuración de calculadoras guardada");
-    } catch {
-      toast.error("No se pudieron guardar todos los valores");
-    }
-  }
-
-  async function restaurarValores() {
-    const visualizadorDefault = clonar(DEFAULT_CONFIG_VISUALIZADOR);
-    const aleacionDefault = clonar(DEFAULT_CONFIG_ALEACION);
-    const yesoDefault = clonar(DEFAULT_CONFIG_YESO);
-    const tallasDefault = clonar(DEFAULT_CONFIG_TALLAS_ANILLO);
-    setCfgVisualizador(visualizadorDefault);
-    setCfgAleacion(aleacionDefault);
-    setCfgYeso(yesoDefault);
-    setCfgTallas(tallasDefault);
-    try {
-      await Promise.all([
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.visualizador, valor: visualizadorDefault }),
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.aleacion, valor: aleacionDefault }),
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.yeso, valor: yesoDefault }),
-        guardar.mutateAsync({ clave: CLAVES_CALCULADORAS.tallasAnillo, valor: tallasDefault }),
-      ]);
-      toast.success("Valores predeterminados restaurados");
-    } catch {
-      toast.error("No se pudieron restaurar todos los valores");
-    }
-  }
-
   function actualizarDensidad(id: keyof ConfigVisualizador3D["densidades"], valor: string) {
     setCfgVisualizador((actual) => ({
       ...actual,
@@ -217,7 +181,7 @@ export function ConfiguracionCalculadoras() {
     id: string;
     titulo: string;
     descripcion: string;
-    children: React.ReactNode;
+    children: ReactNode;
     onGuardar: () => void;
     onRestaurar: () => void;
   }) {
