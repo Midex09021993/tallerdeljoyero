@@ -207,7 +207,7 @@ export function AurumRender() {
       renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.98;
+      renderer.toneMappingExposure = 0.82;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = 0.65;
@@ -222,7 +222,7 @@ export function AurumRender() {
       const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
       let entorno = fallbackEnvironment;
       escena.environment = entorno;
-      escena.environmentIntensity = 0.72;
+      escena.environmentIntensity = 0.58;
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
@@ -257,21 +257,21 @@ export function AurumRender() {
         });
       };
       cargarHDRI("jewelry");
-      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,1.15));
-      const key = new THREE.DirectionalLight(0xffefc8,2.2);
+      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,0.72));
+      const key = new THREE.DirectionalLight(0xffefc8,1.45);
       key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
-      const fill = new THREE.DirectionalLight(0xdbe7ff,1.1);
+      const fill = new THREE.DirectionalLight(0xdbe7ff,0.65);
       fill.position.set(-5,3,4); escena.add(fill);
-      const rim = new THREE.DirectionalLight(0xffd49a,2.0);
+      const rim = new THREE.DirectionalLight(0xffd49a,1.25);
       rim.position.set(2,4,-5); escena.add(rim);
       const top = new THREE.PointLight(0xffffff,0.8,30);
       top.position.set(0,5,1); escena.add(top);
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft: {key:1.9,fill:0.9,rim:2.1,top:0.7,exposure:0.92,environment:0.62},
-          studioHard: {key:2.8,fill:0.65,rim:3.0,top:0.9,exposure:0.98,environment:0.68},
-          jewelry: {key:2.5,fill:1.15,rim:2.8,top:1.0,exposure:1.0,environment:0.78},
-          luxury: {key:2.2,fill:0.7,rim:3.2,top:0.8,exposure:0.98,environment:0.7},
+          studioSoft: {key:1.45,fill:0.65,rim:1.55,top:0.5,exposure:0.84,environment:0.55},
+          studioHard: {key:2.0,fill:0.45,rim:2.0,top:0.65,exposure:0.86,environment:0.58},
+          jewelry: {key:1.85,fill:0.78,rim:1.9,top:0.65,exposure:0.84,environment:0.62},
+          luxury: {key:1.7,fill:0.48,rim:2.1,top:0.55,exposure:0.85,environment:0.58},
         }[id];
         key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
         cargarHDRI(id);
