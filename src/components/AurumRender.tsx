@@ -206,9 +206,11 @@ export function AurumRender() {
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.AgXToneMapping;
-      // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
-      renderer.toneMappingExposure = 0.74;
+      // AgX está disponible en versiones modernas de Three.js; usamos ACES como
+      // respaldo para evitar que una versión/caché antigua deje el visor en blanco.
+      renderer.toneMapping = (THREE as any).AgXToneMapping ?? THREE.ACESFilmicToneMapping;
+      // Exposición conservadora para metales pulidos y HDRI de estudio.
+      renderer.toneMappingExposure = 0.58;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = 0.65;
