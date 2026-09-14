@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
+import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { MobileBackButton } from "@/components/AppShell";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
@@ -31,6 +32,7 @@ function HerramientasPage() {
         <CalculadoraYeso />
         <CalculadoraAleacionOro />
         <VisorPesoJoyeria />
+        <ConversorTallasAnillo />
       </div>
     </main>
   );
