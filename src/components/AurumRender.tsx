@@ -161,7 +161,8 @@ export function AurumRender() {
       };
 
       // Adaptadores de entrada: cada formato produce un Object3D común.
-      // A partir de aquí, AURUM RENDER trabaja exclusivamente con GLB interno.
+      // Rhino 3DM se decodifica con Rhino3dmLoader/WebAssembly y después
+      // sigue exactamente el mismo flujo: Object3D -> GLB interno -> WebGL.
       const parsearEntrada = async (file:File, ext:string) => {
         const buffer = await file.arrayBuffer();
         if (ext==="stl") {
@@ -182,7 +183,13 @@ export function AurumRender() {
           return (await new GLTFLoader().parseAsync(buffer,"")).scene;
         }
         if (ext==="3dm") {
-          throw new Error("El adaptador Rhino 3DM está preparado en la arquitectura, pero su conversión aún requiere habilitar el módulo Rhino en el navegador.");
+          const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
+          const loader = new Rhino3dmLoader();
+          loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
+          loader.setWorkerLimit(2);
+          return await new Promise<any>((resolve, reject) => {
+            loader.parse(buffer, resolve, reject);
+          });
         }
         throw new Error("Formato no compatible.");
       };
@@ -257,7 +264,7 @@ export function AurumRender() {
       </header>
       <div className="relative bg-[#090b0e]">
         <div ref={visorRef} className="relative min-h-[560px] lg:min-h-[720px]">
-          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Arrastra tu modelo 3D aquí</h2><p className="mt-2 text-sm text-white/45">STL · OBJ · GLB · FBX · 3DM</p></div></div>}
+          {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-gold/20 bg-gold/10 text-gold"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Arrastra tu modelo 3D aquí</h2><p className="mt-2 text-sm text-white/45">STL · OBJ · GLB · FBX · Rhino 3DM</p></div></div>}
           {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-white/10 bg-black/60 px-6 py-4 text-sm text-white/80">{paso||"Preparando visualización..."}</div></div>}
           {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/70 px-4 py-2 text-xs text-red-200">{error}</div>}
           {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[70%] truncate rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs text-white/65 backdrop-blur">{archivo} <span className="ml-2 text-gold/80">· Interno GLB{tamanoGlb?` · ${(tamanoGlb/1024/1024).toFixed(1)} MB`:""}</span></div>}
@@ -297,6 +304,6 @@ export function AurumRender() {
         :<div><div className="mb-4"><p className="text-sm font-semibold">Escenarios de presentación</p><p className="text-[11px] text-muted-foreground">Ambientes para mostrar la pieza en distintos contextos comerciales</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"overflow-hidden rounded-2xl border text-left transition "+(escenarioId===e.id?"border-gold ring-1 ring-gold":"border-input hover:border-gold/50")}><div className={"h-16 "+e.clase}/><div className="flex items-center justify-between p-3 text-[11px] font-semibold">{e.nombre}<ChevronDown className="size-3 text-muted-foreground"/></div></button>)}</div></div>}
       </div>
     </section>
-    <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground"><Grid3X3 className="size-3.5"/> Conversión local · Entrada → GLB interno → WebGL · Preparado para Rhino 3DM, PBR y render avanzado</div>
+    <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground"><Grid3X3 className="size-3.5"/> Conversión · Entrada → GLB interno → WebGL · Rhino 3DM + PBR + render avanzado</div>
   </div>;
 }
