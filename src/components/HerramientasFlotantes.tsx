@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Boxes, Calculator, ChevronLeft, Droplets, Gem, Ruler, Scale, Wrench } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
@@ -13,6 +14,7 @@ type Herramienta = {
 };
 
 const HERRAMIENTAS: Herramienta[] = [
+  { id: "aurum-render", nombre: "AURUM RENDER · Estudio 3D", icono: Gem, disponible: true },
   { id: "yeso", nombre: "Calculadora Yeso/Agua", icono: Droplets, disponible: true },
   { id: "oro", nombre: "Calculadora de Aleación de Oro", icono: Gem, disponible: true },
   { id: "peso3d", nombre: "Visualizador y Peso 3D", icono: Boxes, disponible: true },
@@ -24,6 +26,7 @@ const HERRAMIENTAS: Herramienta[] = [
 
 /** Menú lateral flotante de herramientas públicas para la pantalla de acceso. */
 export function HerramientasFlotantes() {
+  const navigate = useNavigate();
   const [abierto, setAbierto] = useState(false);
   const [activa, setActiva] = useState<string>("yeso");
 
@@ -73,7 +76,13 @@ export function HerramientasFlotantes() {
                   key={h.id}
                   type="button"
                   disabled={!h.disponible}
-                  onClick={() => setActiva(h.id)}
+                  onClick={() => {
+                    if (h.id === "aurum-render") {
+                      navigate({ to: "/aurum-render-public" });
+                      return;
+                    }
+                    setActiva(h.id);
+                  }}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs transition ${
                     seleccionada
                       ? "bg-gold/15 text-gold"
