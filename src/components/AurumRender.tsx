@@ -178,6 +178,10 @@ export function AurumRender() {
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const [captura, setCaptura] = useState<string | null>(null);
+  const [parteSeleccionada, setParteSeleccionada] = useState<string | null>(null);
+  const [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string | null>(null);
+  const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
+  const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
