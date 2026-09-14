@@ -185,6 +185,7 @@ export function AurumRender() {
       const THREE = await import("three");
       const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
+      const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
       const nodo = visorRef.current;
       if (!vivo || !nodo) return;
@@ -201,8 +202,32 @@ export function AurumRender() {
       nodo.appendChild(renderer.domElement);
 
       const pmrem = new THREE.PMREMGenerator(renderer);
-      const entorno = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+      pmrem.compileEquirectangularShader();
+      const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+      let entorno = fallbackEnvironment;
       escena.environment = entorno;
+      escena.environmentIntensity = 1.05;
+      escena.environmentRotation.y = Math.PI * 0.16;
+      // HDRI fotográfico de estudio para reflejos reales en metales y gemas.
+      // Si el recurso remoto falla, se mantiene RoomEnvironment como fallback.
+      const hdrStudioUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr";
+      new RGBELoader().load(hdrStudioUrl, (hdrTexture:any) => {
+        if (!vivo) { hdrTexture.dispose?.(); return; }
+        try {
+          const hdrEnvironment = pmrem.fromEquirectangular(hdrTexture).texture;
+          hdrTexture.dispose?.();
+          if (!vivo) { hdrEnvironment.dispose?.(); return; }
+          const anterior = entorno;
+          entorno = hdrEnvironment;
+          escena.environment = entorno;
+          escena.environmentIntensity = 1.15;
+          anterior?.dispose?.();
+        } catch {
+          hdrTexture.dispose?.();
+        }
+      }, undefined, () => {
+        // Fallback silencioso: el visor sigue funcionando aunque no haya red.
+      });
       escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,2.5));
       const key = new THREE.DirectionalLight(0xffefc8,6);
       key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
@@ -214,12 +239,12 @@ export function AurumRender() {
       top.position.set(0,5,1); escena.add(top);
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft: {key:4.5,fill:3.8,rim:3.5,top:2.2,exposure:1.5},
-          studioHard: {key:7,fill:2.2,rim:6,top:2.8,exposure:1.55},
-          jewelry: {key:6,fill:4.5,rim:5.5,top:3.5,exposure:1.65},
-          luxury: {key:5,fill:2.5,rim:7,top:2.5,exposure:1.6},
+          studioSoft: {key:3.8,fill:3.2,rim:3.0,top:1.8,exposure:1.45,environment:1.05},
+          studioHard: {key:5.8,fill:1.8,rim:5.2,top:2.4,exposure:1.52,environment:1.12},
+          jewelry: {key:4.8,fill:3.6,rim:5.0,top:2.8,exposure:1.58,environment:1.2},
+          luxury: {key:4.2,fill:2.1,rim:6.2,top:2.2,exposure:1.55,environment:1.08},
         }[id];
-        key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure;
+        key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
       };
 
       const controles = new OrbitControls(camara,renderer.domElement);
@@ -282,16 +307,20 @@ export function AurumRender() {
         }
       };
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
+        const target=objetivo||parteActiva; if(!target) return;
+        const box = new THREE.Box3().setFromObject(target);
+        const size = box.getSize(new THREE.Vector3());
+        const thickness = Math.max(0.015, Math.min(size.x,size.y,size.z) * 0.85);
         const aplicar = (base:any) => {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
           nuevo.color.setHex(g.color); nuevo.metalness=0; nuevo.roughness=g.roughness;
-          nuevo.transmission=g.transmission; nuevo.thickness=.55; nuevo.ior=g.ior;
-          nuevo.clearcoat=.28; nuevo.clearcoatRoughness=.025; nuevo.envMapIntensity=g.envMapIntensity;
+          nuevo.transmission=g.transmission; nuevo.thickness=thickness; nuevo.ior=Math.min(2.333,Math.max(1.01,g.ior));
+          nuevo.clearcoat=.18; nuevo.clearcoatRoughness=.02; nuevo.envMapIntensity=g.envMapIntensity;
           nuevo.attenuationColor?.setHex(g.attenuationColor); nuevo.attenuationDistance=g.attenuationDistance;
-          nuevo.dispersion=g.dispersion; nuevo.iridescence=g.iridescence; nuevo.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior));
-          nuevo.transparent=g.transmission<.995; nuevo.opacity=1; nuevo.needsUpdate=true; return nuevo;
+          nuevo.dispersion=Math.max(0,g.dispersion); nuevo.iridescence=g.iridescence; nuevo.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior));
+          // La transmisión física funciona mejor con opacity=1 y sin transparent sorting.
+          nuevo.transparent=false; nuevo.opacity=1; nuevo.needsUpdate=true; return nuevo;
         };
-        const target=objetivo||parteActiva; if(!target) return;
         target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
         crearInclusiones(target,g);
       };
@@ -464,7 +493,10 @@ export function AurumRender() {
           if (meta?.categoria==="gema") {
             const g=GEMAS[0];
             const m=new THREE.MeshPhysicalMaterial();
-            m.color.setHex(g.color); m.metalness=0; m.roughness=g.roughness; m.transmission=g.transmission; m.thickness=.55; m.ior=g.ior; m.clearcoat=.28; m.clearcoatRoughness=.025; m.envMapIntensity=g.envMapIntensity; m.attenuationColor.setHex(g.attenuationColor); m.attenuationDistance=g.attenuationDistance; m.dispersion=g.dispersion; m.iridescence=g.iridescence; m.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior)); m.transparent=g.transmission<.995; x.material=m; crearInclusiones(x,g);
+            m.color.setHex(g.color); m.metalness=0; m.roughness=g.roughness; m.transmission=g.transmission;
+            const gemaBox = new THREE.Box3().setFromObject(x); const gemaSize = gemaBox.getSize(new THREE.Vector3());
+            m.thickness=Math.max(0.015, Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*0.85); m.ior=Math.min(2.333,Math.max(1.01,g.ior));
+            m.clearcoat=.18; m.clearcoatRoughness=.02; m.envMapIntensity=g.envMapIntensity; m.attenuationColor.setHex(g.attenuationColor); m.attenuationDistance=g.attenuationDistance; m.dispersion=Math.max(0,g.dispersion); m.iridescence=g.iridescence; m.iridescenceIOR=Math.min(2.333,Math.max(1.01,g.ior)); m.transparent=false; m.opacity=1; x.material=m; crearInclusiones(x,g);
           } else if (meta?.categoria==="metal") {
             const m=MATERIALES[0];
             const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
