@@ -28,6 +28,7 @@ export type ConfigAleacion = {
     amarillo: { metales: { nombre: string; porcentaje: number }[] };
     blanco: { metales: { nombre: string; porcentaje: number }[] };
     rosa: { metales: { nombre: string; porcentaje: number }[] };
+    naranja: { metales: { nombre: string; porcentaje: number }[] };
   };
   factorCalculo: number;
 };
@@ -50,6 +51,7 @@ export const DEFAULT_CONFIG_ALEACION: ConfigAleacion = {
     amarillo: { metales: [{ nombre: "Plata", porcentaje: 0.5 }, { nombre: "Cobre", porcentaje: 0.5 }] },
     blanco: { metales: [{ nombre: "Cobre", porcentaje: 0.4 }, { nombre: "Níquel", porcentaje: 0.4 }, { nombre: "Zinc", porcentaje: 0.2 }] },
     rosa: { metales: [{ nombre: "Cobre", porcentaje: 0.89 }, { nombre: "Plata", porcentaje: 0.11 }] },
+    naranja: { metales: [{ nombre: "Cobre", porcentaje: 1 }] },
   },
   factorCalculo: 1,
 };
@@ -120,6 +122,7 @@ export function leerConfigAleacion(valor: unknown): ConfigAleacion {
       amarillo: { metales: leerMetales(objeto(recetas.amarillo).metales, d.amarillo.metales) },
       blanco: { metales: leerMetales(objeto(recetas.blanco).metales, d.blanco.metales) },
       rosa: { metales: leerMetales(objeto(recetas.rosa).metales, d.rosa.metales) },
+      naranja: { metales: leerMetales(objeto(recetas.naranja).metales, d.naranja.metales) },
     },
     factorCalculo: numero(root.factorCalculo, DEFAULT_CONFIG_ALEACION.factorCalculo),
   };
