@@ -203,7 +203,7 @@ function LoginPage() {
             </p>
 
             <p className="mt-4 text-center text-[10px] tracking-wider text-ink-foreground/25">
-              Desarrollado por Fadilab
+              Desarrollado por Fadilab EIRL
             </p>
           </section>
         </div>
