@@ -16,7 +16,7 @@ type MaterialId =
   | "platino_pulido" | "platino_mate"
   | "oro24_pulido" | "oro18_champan" | "oro18_verde"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
-type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
+type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara";
 type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
@@ -97,6 +97,10 @@ const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:
   { id: "luxury", nombre: "Luxury", descripcion:"Presentación cálida", iluminacion:"luxury", clase: "bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
   { id: "marmol", nombre: "Mármol", descripcion:"Superficie premium", iluminacion:"studioSoft", clase: "bg-[linear-gradient(125deg,#f2f0eb,#bdbab3_42%,#e5e3de_44%,#c5c2bc_68%,#f0eee9)]" },
   { id: "transparente", nombre: "Transparente", descripcion:"Fondo sin entorno", iluminacion:"studioSoft", clase: "bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
+  { id: "producto", nombre: "Producto", descripcion:"High-key de estudio", iluminacion:"studioSoft", clase:"bg-[radial-gradient(circle_at_50%_28%,#ffffff_0%,#f4f3f0_58%,#dedbd5_100%)]" },
+  { id: "galeria", nombre: "Galería", descripcion:"Contraste controlado", iluminacion:"studioHard", clase:"bg-[radial-gradient(circle_at_50%_30%,#34363b_0%,#18191c_55%,#0d0e10_100%)]" },
+  { id: "oroCalido", nombre: "Oro Cálido", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#76532a_0%,#302216_48%,#17100a_100%)]" },
+  { id: "gemaClara", nombre: "Gema Clara", descripcion:"Realce de piedras", iluminacion:"studioSoft", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e7edf2_58%,#cfd9e1_100%)]" },
 ];
 const VISTAS: { id: VistaId; nombre: string }[] = [
   { id: "perspectiva", nombre: "Perspectiva" }, { id: "frontal", nombre: "Frontal" }, { id: "superior", nombre: "Superior" }, { id: "lateral", nombre: "Lateral" },
@@ -619,7 +623,7 @@ export function AurumRender() {
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
-          const fondos:any={oscuro:0x090b0e,claro:0xc4c5c7,luxury:0x21150c,marmol:0xc9c6bf};
+          const fondos:any={oscuro:0x090b0e,claro:0xe9e9e7,luxury:0x21150c,marmol:0xc9c6bf,producto:0xf4f3f0,galeria:0x18191c,oroCalido:0x302216,gemaClara:0xe7edf2};
           escena.background = new THREE.Color(fondos[id]);
         }
         if (suelo) {
