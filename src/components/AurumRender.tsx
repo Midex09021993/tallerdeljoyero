@@ -297,7 +297,7 @@ export function AurumRender() {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
-      renderer.toneMappingExposure = jewelryBasicRender ? 0.78 : 0.64;
+      renderer.toneMappingExposure = jewelryBasicRender ? 0.88 : 0.64;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
@@ -328,7 +328,7 @@ export function AurumRender() {
       const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
       let entorno = fallbackEnvironment;
       escena.environment = entorno;
-      escena.environmentIntensity = jewelryBasicRender ? 0.22 : 0.11;
+      escena.environmentIntensity = jewelryBasicRender ? 0.30 : 0.11;
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
@@ -433,7 +433,7 @@ export function AurumRender() {
         const presets:any = {
           studioSoft:{key:.32,fill:.10,rim:.18,gem:.08,exposure:.78,environment:.22},
           studioHard:{key:.42,fill:.09,rim:.22,gem:.08,exposure:.80,environment:.24},
-          jewelry:{key:1.05,fill:.42,rim:.28,gem:.45,exposure:1.02,environment:.42},
+          jewelry:{key:.62,fill:.24,rim:.16,gem:.30,exposure:.88,environment:.30},
           luxury:{key:.36,fill:.08,rim:.24,gem:.08,exposure:.76,environment:.20},
         }[id];
         if(!presets) return;
