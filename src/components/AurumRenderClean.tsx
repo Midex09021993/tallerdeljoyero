@@ -94,7 +94,7 @@ export function AurumRenderClean() {
         <div className="space-y-3 text-xs text-white/60">
           {panel==="vista" && <div className="space-y-2">
             {(["perspectiva","frontal","superior","lateral"] as const).map(mode=><button key={mode} onClick={()=>setViewMode(mode)} className={`w-full rounded-lg border border-white/10 px-3 py-2 text-left capitalize ${view===mode?"bg-white/10 text-white":"bg-white/5 hover:bg-white/10"}`}>{mode}</button>)}
-          </div>
+          </div>}
           {panel==="escena" && <p>Configuración de escena. La conectaremos en el siguiente paso.</p>}
           {panel==="luz" && <p>Controles de iluminación. Se conectarán sin tocar el motor estable.</p>}
           {panel==="materiales" && <p>Materiales de joyería. Se conectarán después.</p>}
