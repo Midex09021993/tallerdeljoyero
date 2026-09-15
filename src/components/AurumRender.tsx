@@ -823,19 +823,6 @@ export function AurumRender() {
       <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
     </div>
   );
-    const sceneStudioPanel=(
-    <div className="absolute right-16 top-16 z-30 w-[250px] rounded-2xl border border-white/10 bg-[#0b0d0f]/95 p-3 text-white shadow-2xl backdrop-blur-xl">
-      <div className="mb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/35">Escena</div>
-      <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-[10px] text-white/70 hover:bg-white/5">
-        <span>Ground</span>
-        <input type="checkbox" checked={groundVisible} onChange={e=>{const v=e.target.checked;setGroundVisible(v);apiRef.current?.sceneStudio?.({ground:v});}} />
-      </label>
-      <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-[10px] text-white/70 hover:bg-white/5">
-        <span>Sombras</span>
-        <input type="checkbox" checked={shadowsVisible} onChange={e=>{const v=e.target.checked;setShadowsVisible(v);apiRef.current?.sceneStudio?.({shadows:v});}} />
-      </label>
-    </div>
-  );
   return (<>
     <button title="AURUM Scene Studio" onClick={()=>setSceneStudioOpen((v:boolean)=>!v)} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
         <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
