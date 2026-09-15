@@ -336,7 +336,7 @@ export function AurumRender() {
       const hdrUrls: Record<IluminacionId,string> = {
         studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
         studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_04_1k.hdr",
+        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
         luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
       };
       let entornoGema:any = null;
@@ -433,7 +433,7 @@ export function AurumRender() {
         const presets:any = {
           studioSoft:{key:.32,fill:.10,rim:.18,gem:.08,exposure:.78,environment:.22},
           studioHard:{key:.42,fill:.09,rim:.22,gem:.08,exposure:.80,environment:.24},
-          jewelry:{key:.38,fill:.11,rim:.20,gem:.08,exposure:.64,environment:.11},
+          jewelry:{key:1.05,fill:.42,rim:.28,gem:.45,exposure:1.02,environment:.42},
           luxury:{key:.36,fill:.08,rim:.24,gem:.08,exposure:.76,environment:.20},
         }[id];
         if(!presets) return;
