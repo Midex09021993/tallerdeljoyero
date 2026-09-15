@@ -149,6 +149,29 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
       }
     >
       <div className={`space-y-6 p-5 ${compacto ? "" : "sm:p-6 lg:p-8"}`}>
+        <div className="space-y-2">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Tipo de tarro
+          </span>
+          <div className="grid grid-cols-2 gap-3" role="group" aria-label="Tipo de tarro">
+            {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                onClick={() => setTipoTarro(tipo)}
+                aria-pressed={tipoTarro === tipo}
+                className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${
+                  tipoTarro === tipo
+                    ? "border-gold bg-accent text-foreground shadow-sm"
+                    : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
+                }`}
+              >
+                {tiposTarro[tipo].etiqueta}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
           <label className="space-y-2">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
