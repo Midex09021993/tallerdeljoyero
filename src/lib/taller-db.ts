@@ -291,6 +291,7 @@ export type Pedido = {
   referencia: string;
   pieza: string;
   cliente: string;
+  cliente_id: string | null;
   material: string;
   estado: string;
   entrega: string;
@@ -382,6 +383,87 @@ export type Sede = {
   activa: boolean;
 };
 
+export type Cliente = {
+  id: string;
+  nombre: string;
+  documento: string;
+  telefono: string;
+  whatsapp: string;
+  email: string;
+  direccion: string;
+  ciudad: string;
+  notas: string;
+  sede_id: string | null;
+  activo: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export function useClientes() {
+  return useQuery({
+    queryKey: ["clientes"],
+    queryFn: async (): Promise<Cliente[]> => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id, nombre, documento, telefono, whatsapp, email, direccion, ciudad, notas, sede_id, activo, created_at, updated_at")
+        .eq("activo", true)
+        .order("nombre", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as Cliente[];
+    },
+  });
+}
+
+export function useCrearCliente() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (cliente: Omit<Cliente, "id" | "created_at" | "updated_at" | "activo">) => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .insert({ ...cliente, activo: true })
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Cliente;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["clientes"] });
+    },
+  });
+}
+
+export function useActualizarCliente() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...cambios }: Partial<Cliente> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .update(cambios)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Cliente;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["clientes"] });
+    },
+  });
+}
+
+export function useBorrarCliente() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("clientes").update({ activo: false }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["clientes"] });
+    },
+  });
+}
+
 export type Material = {
   id: string;
   material: string;
@@ -418,6 +500,7 @@ export type PedidoNuevo = {
   referencia: string;
   pieza: string;
   cliente: string;
+  cliente_id?: string | null;
   material: string;
   estado: string;
   entrega: string;
@@ -463,7 +546,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
+  "id, referencia, pieza, cliente, cliente_id, material, estado, importe, sede_id, telefono, origen, contrato, contrato_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 const CAMPOS_PEDIDO_VENTAS =
   "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
@@ -532,6 +615,7 @@ export function usePedidos() {
         referencia: textoCampo(p, "referencia"),
         pieza: textoCampo(p, "pieza"),
         cliente: textoCampo(p, "cliente"),
+        cliente_id: typeof p["cliente_id"] === "string" ? p["cliente_id"] : null,
         material: textoCampo(p, "material"),
         estado: normalizarEstadoPedido(
           textoCampo(p, "estado"),
