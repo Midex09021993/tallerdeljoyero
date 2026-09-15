@@ -904,6 +904,16 @@ export function AurumRender() {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             {panel==="materiales"&&<>
+              <div className="mb-3 rounded-lg border border-white/10 bg-white/[.025] px-2.5 py-2">
+                <div className="text-[8px] font-semibold uppercase tracking-[.18em] text-white/30">Configurador de materiales</div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="size-5 shrink-0 rounded-full border border-white/20" style={{background:hexColor(MATERIALES.find(m=>m.id===materialId)?.color || "#b8a15a")}}/>
+                  <div className="min-w-0">
+                    <div className="truncate text-[10px] font-medium text-white/80">{MATERIALES.find(m=>m.id===materialId)?.nombre || "Material"}</div>
+                    <div className="text-[8px] text-white/35">{GEMAS.find(g=>g.id===gemaId)?.nombre || "Sin gema seleccionada"}</div>
+                  </div>
+                </div>
+              </div>
               <div className="mb-3 flex gap-1 rounded-lg border border-white/10 bg-white/[.02] p-1">
                 {([["metales","Metales"],["gemas","Gemas"]] as const).map(([id,nombre])=>(
                   <button key={id} type="button" onClick={()=>setBibliotecaTipo(id)} className={"flex-1 rounded-md px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition "+(bibliotecaTipo===id?"bg-gold text-black":"text-white/45 hover:text-white")}>{nombre}</button>
