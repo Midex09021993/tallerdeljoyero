@@ -346,8 +346,7 @@ export function AurumRender() {
       let hdriGround:any = null;
       let hdriGroundTexture:any = null;
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
-      const [lightingStudio,setLightingStudio]=useState({...AURUM_LIGHTING_DEFAULT});
-      const [lightingOpen,setLightingOpen]=useState(false);
+      const lightingStudio:any={...AURUM_LIGHTING_DEFAULT};
       const lucesAurum:any={};
       const configurarSombrasAurum=(L:any)=>{
         if(!L?.castShadow) return;
