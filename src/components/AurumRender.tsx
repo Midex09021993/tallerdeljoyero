@@ -904,18 +904,83 @@ export function AurumRender() {
               <div className="my-0.5 h-px w-6 bg-black/10"/>
               <button type="button" title="Capturar imagen" aria-label="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-gold transition hover:bg-gold/10"><Camera className="size-[18px]"/></button>
             </div>
-          </div>      const lightingPanel=(
-        <div style={{position:"absolute",right:16,top:330,zIndex:30,width:270,padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:10}}>AURUM LIGHTING STUDIO</div>
-          
-          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Key <input type="checkbox" checked={lightingStudio.key.enabled} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,enabled:e.target.checked}})}/></label>
-          <label style={{display:"block",fontSize:11}}>Key intensity<input style={{width:"100%"}} type="range" min="0" max="4" step=".05" value={lightingStudio.key.intensity} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,intensity:+e.target.value}})}/></label>
-          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Fill <input type="checkbox" checked={lightingStudio.fill.enabled} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,enabled:e.target.checked}})}/></label>
-          <label style={{display:"block",fontSize:11}}>Fill intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.fill.intensity} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,intensity:+e.target.value}})}/></label>
-          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Rim <input type="checkbox" checked={lightingStudio.rim.enabled} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,enabled:e.target.checked}})}/></label>
-          <label style={{display:"block",fontSize:11}}>Rim intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
-          <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Gem Light <input type="checkbox" checked={lightingStudio.gem.enabled} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,enabled:e.target.checked}})}/></label>
-          <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
+          </div>
+          {lightingOpen && lightingPanel}
+          {sceneStudioOpen && sceneStudioPanel}
         </div>
-      );
+        <aside className="absolute bottom-5 right-16 top-16 z-20 hidden w-[250px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d0f]/92 shadow-2xl backdrop-blur-xl lg:flex">
+          <div className="flex shrink-0 border-b border-white/10">
+            {([["materiales","Materiales"],["escenas","Escenas"],["iluminacion","Iluminación"]] as const).map(([id,nombre])=>(
+              <button key={id} type="button" onClick={()=>setPanel(id)} className={"flex-1 px-2 py-2.5 text-[8px] font-semibold uppercase tracking-[.14em] transition "+(panel===id?"bg-gold/15 text-gold":"text-white/40 hover:text-white/70")}>{nombre}</button>
+            ))}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            {panel==="materiales"&&<>
+              <div className="mb-3 flex gap-1 rounded-lg border border-white/10 bg-white/[.02] p-1">
+                {([["metales","Metales"],["gemas","Gemas"]] as const).map(([id,nombre])=>(
+                  <button key={id} type="button" onClick={()=>setBibliotecaTipo(id)} className={"flex-1 rounded-md px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition "+(bibliotecaTipo===id?"bg-gold text-black":"text-white/45 hover:text-white")}>{nombre}</button>
+                ))}
+              </div>
+              {bibliotecaTipo==="metales"&&(
+                <div className="space-y-3">
+                  {(["Oro Amarillo","Oro Blanco","Oro Rosa","Plata","Platino","Especiales"] as MaterialGrupo[]).map(grupo=>{
+                    const items=MATERIALES.filter(m=>m.grupo===grupo);
+                    if(!items.length) return null;
+                    return (
+                      <div key={grupo}>
+                        <p className="mb-1.5 text-[8px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {items.map(m=>(
+                            <button key={m.id} type="button" onClick={()=>setMaterialId(m.id)} className={"flex items-center gap-2 rounded-lg border px-2 py-2 text-left transition "+(materialId===m.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
+                              <span className="size-4 shrink-0 rounded-full border border-white/20" style={{background:hexColor(m.color)}}/>
+                              <span className="truncate text-[9px] text-white/70">{m.nombre}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {bibliotecaTipo==="gemas"&&(
+                <div className="grid grid-cols-2 gap-1.5">
+                  {GEMAS.map(g=>(
+                    <button key={g.id} type="button" onClick={()=>{setGemaId(g.id);apiRef.current?.gema(g)}} className={"flex items-center gap-2 rounded-lg border px-2 py-2 text-left transition "+(gemaId===g.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
+                      <span className="size-4 shrink-0 rounded-full border border-white/20" style={{background:hexColor(g.color)}}/>
+                      <span className="truncate text-[9px] text-white/70">{g.nombre}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>}
+            {panel==="escenas"&&(
+              <div className="space-y-1.5">
+                {ESCENARIOS.map(e=>(
+                  <button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition "+(escenarioId===e.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
+                    <span className={"size-7 shrink-0 rounded-md border border-white/15 "+e.clase}/>
+                    <span className="min-w-0"><span className="block truncate text-[10px] text-white/80">{e.nombre}</span><span className="block truncate text-[8px] text-white/35">{e.descripcion}</span></span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {panel==="iluminacion"&&(
+              <div className="space-y-1.5">
+                {ILUMINACIONES.map(l=>(
+                  <button key={l.id} type="button" onClick={()=>setIluminacionId(l.id)} className={"flex w-full items-center justify-between rounded-lg border px-2.5 py-2 text-left transition "+(iluminacionId===l.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
+                    <span className="text-[10px] text-white/80">{l.nombre}</span>
+                    <span className="text-[8px] text-white/35">{l.descripcion}</span>
+                  </button>
+                ))}
+                <button type="button" onClick={()=>setLightingOpen(true)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-gold/35 bg-gold/10 px-2.5 py-2 text-[9px] font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/15">
+                  <SlidersHorizontal className="size-3.5"/> Lighting Studio
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+      </main>
+    </div>
+  </div>
+</>);
+}
 
