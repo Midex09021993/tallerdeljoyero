@@ -185,7 +185,6 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
-  const [sceneStudioOpen, setSceneStudioOpen] = useState(false);
   const lightingStudio:any = useMemo(() => ({...AURUM_LIGHTING_DEFAULT}), []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
@@ -903,7 +902,7 @@ export function AurumRender() {
     </div>
   );
   return (<>
-    <button title="AURUM Scene Studio" onClick={()=>setSceneStudioOpen((v:boolean)=>!v)} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
+    <button title="AURUM Scene Studio" onClick={()=>setPanel("escenas")} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
         <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0c0e]/95 px-4 backdrop-blur-xl">
       <div className="flex min-w-0 items-center gap-3">
@@ -970,7 +969,6 @@ export function AurumRender() {
             </div>
           </div>
           {lightingOpen && lightingPanel}
-          {sceneStudioOpen && sceneStudioPanel}
         </div>
         <aside className="absolute bottom-0 right-0 top-0 z-20 hidden w-[250px] flex-col overflow-hidden rounded-l-2xl rounded-r-none border border-white/10 bg-[#0b0d0f]/92 shadow-2xl backdrop-blur-xl lg:flex">
           <div className="flex shrink-0 border-b border-white/10">
