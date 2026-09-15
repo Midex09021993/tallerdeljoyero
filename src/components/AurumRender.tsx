@@ -823,21 +823,19 @@ export function AurumRender() {
       <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
     </div>
   );
-  const sceneStudioPanel=(
-    <div style={{position:"absolute",right:16,top:70,zIndex:30,width:270,padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-        <div style={{fontWeight:700,fontSize:14}}>AURUM SCENE STUDIO</div>
-        <button type="button" aria-label="Cerrar" onClick={()=>setSceneStudioOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer"}}><X className="size-4"/></button>
-      </div>
-      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Suelo HDRi <input type="checkbox" checked={sceneStudio.hdriGround} onChange={e=>actualizarSceneStudio({hdriGround:e.target.checked})}/></label>
-      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Suelo visible <input type="checkbox" checked={sceneStudio.ground} onChange={e=>actualizarSceneStudio({ground:e.target.checked})}/></label>
-      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Sombras <input type="checkbox" checked={sceneStudio.shadows} onChange={e=>actualizarSceneStudio({shadows:e.target.checked})}/></label>
-      <label style={{display:"block",fontSize:11}}>Exposición<input style={{width:"100%"}} type="range" min="0" max="2" step=".01" value={sceneStudio.exposure} onChange={e=>actualizarSceneStudio({exposure:+e.target.value})}/></label>
-      <label style={{display:"block",fontSize:11}}>Intensidad del entorno<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={sceneStudio.environmentIntensity} onChange={e=>actualizarSceneStudio({environmentIntensity:+e.target.value})}/></label>
-      <label style={{display:"block",fontSize:11}}>Radio del entorno<input style={{width:"100%"}} type="range" min="5" max="80" step="1" value={sceneStudio.worldRadius} onChange={e=>actualizarSceneStudio({worldRadius:+e.target.value})}/></label>
+    const sceneStudioPanel=(
+    <div className="absolute right-16 top-16 z-30 w-[250px] rounded-2xl border border-white/10 bg-[#0b0d0f]/95 p-3 text-white shadow-2xl backdrop-blur-xl">
+      <div className="mb-2 text-[9px] font-semibold uppercase tracking-[.18em] text-white/35">Escena</div>
+      <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-[10px] text-white/70 hover:bg-white/5">
+        <span>Ground</span>
+        <input type="checkbox" checked={groundVisible} onChange={e=>{const v=e.target.checked;setGroundVisible(v);apiRef.current?.sceneStudio?.({ground:v});}} />
+      </label>
+      <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-[10px] text-white/70 hover:bg-white/5">
+        <span>Sombras</span>
+        <input type="checkbox" checked={shadowsVisible} onChange={e=>{const v=e.target.checked;setShadowsVisible(v);apiRef.current?.sceneStudio?.({shadows:v});}} />
+      </label>
     </div>
   );
-
   return (<>
     <button title="AURUM Scene Studio" onClick={()=>setSceneStudioOpen((v:boolean)=>!v)} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
         <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
