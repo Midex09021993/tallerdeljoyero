@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          activo: boolean
+          ciudad: string
+          created_at: string
+          direccion: string
+          documento: string
+          email: string
+          id: string
+          nombre: string
+          notas: string
+          sede_id: string | null
+          telefono: string
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          activo?: boolean
+          ciudad?: string
+          created_at?: string
+          direccion?: string
+          documento?: string
+          email?: string
+          id?: string
+          nombre: string
+          notas?: string
+          sede_id?: string | null
+          telefono?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Update: {
+          activo?: boolean
+          ciudad?: string
+          created_at?: string
+          direccion?: string
+          documento?: string
+          email?: string
+          id?: string
+          nombre?: string
+          notas?: string
+          sede_id?: string | null
+          telefono?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       config_areas: {
         Row: {
           alerta_activa: boolean
