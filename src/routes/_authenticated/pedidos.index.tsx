@@ -400,7 +400,6 @@ function PedidosPage() {
                 pieza: form.trabajo,
                 trabajo: form.trabajo,
                 cliente: form.cliente,
-                cliente_id: form.cliente_id || null,
                 telefono: form.telefono,
                 origen: form.origen,
                 contrato: form.contrato,
