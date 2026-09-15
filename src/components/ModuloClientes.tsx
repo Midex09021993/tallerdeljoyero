@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import {
   useActualizarCliente,
@@ -63,7 +63,7 @@ export function ModuloClientes() {
     setAbierto(true);
   }
 
-  async function guardar(e: React.FormEvent) {
+  async function guardar(e: FormEvent) {
     e.preventDefault();
     const nombre = form.nombre.trim();
     if (!nombre) {
