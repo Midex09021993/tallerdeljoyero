@@ -26,3 +26,4 @@ npm run dev
 ```
 
 <!-- Lovable sync trigger -->
+<!-- Sync test: 2026-09-14 -->
