@@ -29,7 +29,7 @@ export function AurumRenderClean() {
     envLights.forEach(l=>envScene.add(l));
     const envRT=pmremGenerator.fromScene(envScene,0.04);
     scene.environment=envRT.texture;
-    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
     host.appendChild(renderer.domElement);
     const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.07; controls.minDistance=.05; controls.maxDistance=100;
     const hemi=new THREE.HemisphereLight(0xffffff,0x222222,2.1); scene.add(hemi);
