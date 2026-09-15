@@ -291,11 +291,13 @@ export function AurumRender() {
       const shadowConfig=getAurumShadowConfig();
       const postConfig=getAurumPostConfig();
       const ssaoConfig=getAurumSsaoConfig();
+       // Perfil base de fotografía de joyería: el material y el HDRI deben verse limpios antes de añadir efectos de postprocesado.
+       const jewelryBasicRender = true;
       renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
-      renderer.toneMappingExposure = 0.64;
+      renderer.toneMappingExposure = jewelryBasicRender ? 0.78 : 0.64;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
@@ -314,7 +316,7 @@ export function AurumRender() {
         ssaoPass.kernelRadius = ssaoConfig.radius;
         ssaoPass.minDistance = ssaoConfig.bias;
         ssaoPass.maxDistance = Math.max(.01, ssaoConfig.radius * 2.5);
-        ssaoPass.enabled = ssaoConfig.enabled;
+        ssaoPass.enabled = jewelryBasicRender ? false : ssaoConfig.enabled;
         composer.addPass(ssaoPass);
       } catch {
         composer = null;
@@ -326,7 +328,7 @@ export function AurumRender() {
       const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
       let entorno = fallbackEnvironment;
       escena.environment = entorno;
-      escena.environmentIntensity = 0.11;
+      escena.environmentIntensity = jewelryBasicRender ? 0.22 : 0.11;
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
@@ -380,7 +382,7 @@ export function AurumRender() {
             const anterior = entorno;
             entorno = hdrEnvironment;
             escena.environment = entorno;
-            escena.environmentIntensity = 0.10;
+            escena.environmentIntensity = jewelryBasicRender ? 0.22 : 0.10;
             escena.environmentRotation.y = id === "luxury" ? Math.PI * .42 : id === "studioHard" ? Math.PI * .08 : Math.PI * .16;
             anterior?.dispose?.();
           } catch {
@@ -429,10 +431,10 @@ export function AurumRender() {
 
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft:{key:.32,fill:.10,rim:.18,gem:.08,exposure:.64,environment:.11},
-          studioHard:{key:.42,fill:.09,rim:.22,gem:.08,exposure:.66,environment:.12},
+          studioSoft:{key:.32,fill:.10,rim:.18,gem:.08,exposure:.78,environment:.22},
+          studioHard:{key:.42,fill:.09,rim:.22,gem:.08,exposure:.80,environment:.24},
           jewelry:{key:.38,fill:.11,rim:.20,gem:.08,exposure:.64,environment:.11},
-          luxury:{key:.36,fill:.08,rim:.24,gem:.08,exposure:.63,environment:.10},
+          luxury:{key:.36,fill:.08,rim:.24,gem:.08,exposure:.76,environment:.20},
         }[id];
         if(!presets) return;
         actualizarLucesAurum({
