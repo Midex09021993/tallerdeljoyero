@@ -340,7 +340,7 @@ export function AurumRender() {
         luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
       };
       let entornoGema:any = null;
-      const gemEnvironmentUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr";
+      const gemEnvironmentUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr";
       const aplicarEntornoGema = () => {
         if (!modelo || !entornoGema) return;
         modelo.traverse((x:any) => {
