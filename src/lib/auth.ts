@@ -30,6 +30,8 @@ export const areaAliases: Record<string, string> = {
   "Corte láser": "Corte Láser",
   "Corte Laser": "Corte Láser",
   "Taller / Engaste": "Taller",
+  "Más alto": "Taller",
+  "Mas alto": "Taller",
   Ventas: "Área ventas",
   "Área de Ventas": "Área ventas",
   Terminado: "Área ventas",
