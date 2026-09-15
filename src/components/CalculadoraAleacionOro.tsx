@@ -15,7 +15,7 @@ function clampQuilataje(valor: number) {
   return Math.max(0, Math.min(24, valor));
 }
 
-type ColorAleacion = "amarillo" | "blanco" | "rosa";
+type ColorAleacion = "amarillo" | "blanco" | "rosa" | "naranja";
 
 type MetalReceta = { nombre: string; porcentaje: number };
 
@@ -23,6 +23,7 @@ const ETIQUETAS_COLOR: Record<ColorAleacion, string> = {
   amarillo: "Amarillo",
   blanco: "Blanco",
   rosa: "Rosa",
+  naranja: "Naranja",
 };
 
 export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolean }) {
