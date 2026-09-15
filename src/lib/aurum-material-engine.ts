@@ -196,3 +196,12 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
   material.needsUpdate=true;
   return material;
 };
+
+
+/**
+ * Compatibilidad de API para AurumRender.
+ * Mantiene un único comportamiento de aplicación de gemas.
+ */
+export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>{
+  return applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
+};
