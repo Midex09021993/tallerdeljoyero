@@ -805,7 +805,40 @@ export function AurumRender() {
   const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setTamanoGlb(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
-  return <button title="AURUM Scene Studio" onClick={()=>setSceneStudioOpen((v:boolean)=>!v)} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
+  const hexColor = (c:number) => "#" + c.toString(16).padStart(6, "0");
+  const lightingPanel=(
+    <div style={{position:"absolute",right:16,top:330,zIndex:30,width:270,padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+        <div style={{fontWeight:700,fontSize:14}}>AURUM LIGHTING STUDIO</div>
+        <button type="button" aria-label="Cerrar" onClick={()=>setLightingOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer"}}><X className="size-4"/></button>
+      </div>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Key <input type="checkbox" checked={lightingStudio.key.enabled} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,enabled:e.target.checked}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Key intensity<input style={{width:"100%"}} type="range" min="0" max="4" step=".05" value={lightingStudio.key.intensity} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,intensity:+e.target.value}})}/></label>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Fill <input type="checkbox" checked={lightingStudio.fill.enabled} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,enabled:e.target.checked}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Fill intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.fill.intensity} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,intensity:+e.target.value}})}/></label>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Rim <input type="checkbox" checked={lightingStudio.rim.enabled} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,enabled:e.target.checked}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Rim intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Gem Light <input type="checkbox" checked={lightingStudio.gem.enabled} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,enabled:e.target.checked}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
+    </div>
+  );
+  const sceneStudioPanel=(
+    <div style={{position:"absolute",right:16,top:70,zIndex:30,width:270,padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+        <div style={{fontWeight:700,fontSize:14}}>AURUM SCENE STUDIO</div>
+        <button type="button" aria-label="Cerrar" onClick={()=>setSceneStudioOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer"}}><X className="size-4"/></button>
+      </div>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Suelo HDRi <input type="checkbox" checked={sceneStudio.hdriGround} onChange={e=>actualizarSceneStudio({hdriGround:e.target.checked})}/></label>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Suelo visible <input type="checkbox" checked={sceneStudio.ground} onChange={e=>actualizarSceneStudio({ground:e.target.checked})}/></label>
+      <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Sombras <input type="checkbox" checked={sceneStudio.shadows} onChange={e=>actualizarSceneStudio({shadows:e.target.checked})}/></label>
+      <label style={{display:"block",fontSize:11}}>Exposición<input style={{width:"100%"}} type="range" min="0" max="2" step=".01" value={sceneStudio.exposure} onChange={e=>actualizarSceneStudio({exposure:+e.target.value})}/></label>
+      <label style={{display:"block",fontSize:11}}>Intensidad del entorno<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={sceneStudio.environmentIntensity} onChange={e=>actualizarSceneStudio({environmentIntensity:+e.target.value})}/></label>
+      <label style={{display:"block",fontSize:11}}>Radio del entorno<input style={{width:"100%"}} type="range" min="5" max="80" step="1" value={sceneStudio.worldRadius} onChange={e=>actualizarSceneStudio({worldRadius:+e.target.value})}/></label>
+    </div>
+  );
+
+  return (<>
+    <button title="AURUM Scene Studio" onClick={()=>setSceneStudioOpen((v:boolean)=>!v)} style={{position:"absolute",right:16,top:16,zIndex:31,width:42,height:42,borderRadius:12,border:"1px solid rgba(255,255,255,.14)",background:"rgba(15,17,22,.9)",color:"#fff",cursor:"pointer"}}>☼</button>
         <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#070809] text-white">
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0c0e]/95 px-4 backdrop-blur-xl">
       <div className="flex min-w-0 items-center gap-3">
