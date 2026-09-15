@@ -206,6 +206,24 @@ export function AurumRender() {
   }), [materialId, gemaId, escenarioId, iluminacionId, vista]);
 
 
+  // Variaciones del configurador: cada opción se mantiene independiente para
+  // poder crecer hacia un sistema tipo iJewel sin mezclar la lógica del renderer.
+  const aurumVariations = useMemo(() => ({
+    metals: Array.from(new Set(MATERIALES.map(m=>m.grupo))).map(grupo => ({
+      id: grupo.toLowerCase().replace(/\\s+/g, "-"),
+      name: grupo,
+      options: MATERIALES.filter(m=>m.grupo===grupo).map(m=>({
+        id: m.id, name: m.nombre
+      })),
+    })),
+    gems: GEMAS.map(g => ({ id:g.id, name:g.nombre })),
+    finishes: Array.from(new Set(MATERIALES.map(m=>m.nombre))).map(nombre => ({
+      id: nombre.toLowerCase().replace(/\\s+/g, "-"),
+      name: nombre,
+      materialIds: MATERIALES.filter(m=>m.nombre===nombre).map(m=>m.id),
+    })),
+  }), []);
+
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
   const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
