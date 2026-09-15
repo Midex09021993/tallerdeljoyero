@@ -500,7 +500,10 @@ export function AurumRender() {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
           const presetId = g.id as string;
           const motorPreset = getAurumGemPreset(presetId);
-          applyAurumGemPreset(nuevo, motorPreset, thickness);\n          applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));\n          if (motorPreset.familia==="Diamante") applyAurumDiamondOptics(nuevo);\n          return nuevo;
+          applyAurumGemPreset(nuevo, motorPreset, thickness);
+                    applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));
+                    if (motorPreset.familia==="Diamante") applyAurumDiamondOptics(nuevo);
+                    return nuevo;
         };
         target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
         crearInclusiones(target,g);
