@@ -153,20 +153,19 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Tipo de tarro
           </span>
-          <div className="grid grid-cols-2 gap-3" role="group" aria-label="Tipo de tarro">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label="Tipo de tarro">
             {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
               <button
                 key={tipo}
                 type="button"
                 onClick={() => setTipoTarro(tipo)}
                 aria-pressed={tipoTarro === tipo}
-                className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${
-                  tipoTarro === tipo
-                    ? "border-gold bg-accent text-foreground shadow-sm"
-                    : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
-                }`}
+                className={`min-h-16 rounded-xl border px-4 py-3 text-left transition ${tipoTarro === tipo ? "border-gold bg-accent text-foreground shadow-sm ring-1 ring-gold/30" : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"}`}
               >
-                {tiposTarro[tipo].etiqueta}
+                <span className="block text-sm font-semibold">{tiposTarro[tipo].etiqueta}</span>
+                <span className="mt-1 block text-xs font-normal opacity-70">
+                  {tipo === "liso" ? "−5% de tolerancia" : "+20% de tolerancia"}
+                </span>
               </button>
             ))}
           </div>
