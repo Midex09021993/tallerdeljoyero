@@ -321,25 +321,6 @@ export function AurumRender() {
         });
       };
       cargarHDRI("jewelry");
-      escena.add(new THREE.HemisphereLight(0xfff8e8,0x332a24,0.16));
-      const key = new THREE.DirectionalLight(0xffefc8,0.30);
-      key.position.set(4,6,5); key.castShadow = true; key.shadow.mapSize.set(1024,1024); escena.add(key);
-      const fill = new THREE.DirectionalLight(0xdbe7ff,0.10);
-      fill.position.set(-5,3,4); escena.add(fill);
-      const rim = new THREE.DirectionalLight(0xffd49a,0.18);
-      rim.position.set(2,4,-5); escena.add(rim);
-      const top = new THREE.PointLight(0xffffff,0.06,30);
-      top.position.set(0,5,1); escena.add(top);
-      const aplicarIluminacion = (id:IluminacionId) => {
-        const presets:any = {
-          studioSoft: {key:0.32,fill:0.10,rim:0.18,top:0.06,exposure:0.64,environment:0.11},
-          studioHard: {key:0.42,fill:0.09,rim:0.22,top:0.06,exposure:0.66,environment:0.12},
-          jewelry: {key:0.38,fill:0.11,rim:0.20,top:0.06,exposure:0.64,environment:0.11},
-          luxury: {key:0.36,fill:0.08,rim:0.24,top:0.06,exposure:0.63,environment:0.10},
-        }[id];
-        key.intensity=presets.key; fill.intensity=presets.fill; rim.intensity=presets.rim; top.intensity=presets.top; renderer.toneMappingExposure=presets.exposure; escena.environmentIntensity=presets.environment;
-        cargarHDRI(id);
-      };
 
       const controles = new OrbitControls(camara,renderer.domElement);
       controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true; controles.enableRotate = true; controles.autoRotate = false; controles.autoRotateSpeed = 0.65;
