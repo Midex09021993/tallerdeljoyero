@@ -13,7 +13,9 @@ type MaterialId =
   | "oro18b_rodinado" | "oro18b_pulido" | "oro18b_mate"
   | "oro18r_pulido" | "oro18r_satinado" | "oro18r_mate"
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
-  | "platino_pulido" | "platino_mate";
+  | "platino_pulido" | "platino_mate"
+  | "oro24_pulido" | "oro18_champan" | "oro18_verde"
+  | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
 type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente";
 type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
