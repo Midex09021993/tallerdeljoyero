@@ -208,6 +208,24 @@ export function AurumRender() {
 
   // Variaciones del configurador: cada opción se mantiene independiente para
   // poder crecer hacia un sistema tipo iJewel sin mezclar la lógica del renderer.
+  // Variaciones base del configurador, derivadas del catálogo existente.
+  const aurumVariations = useMemo(() => ({
+    metals: Array.from(new Set(MATERIALES.map(m => m.grupo))).map(grupo => ({
+      id: grupo.toLowerCase().replace(/\s+/g, "-"),
+      name: grupo,
+      options: MATERIALES.filter(m => m.grupo === grupo).map(m => ({
+        id: m.id,
+        name: m.nombre,
+      })),
+    })),
+    gems: GEMAS.map(g => ({ id: g.id, name: g.nombre })),
+    finishes: Array.from(new Set(MATERIALES.map(m => m.nombre))).map(nombre => ({
+      id: nombre.toLowerCase().replace(/\s+/g, "-"),
+      name: nombre,
+      materialIds: MATERIALES.filter(m => m.nombre === nombre).map(m => m.id),
+    })),
+  }), []);
+
   // Modelo de capas del configurador: cada capa representa una parte
   // intercambiable del producto, siguiendo el concepto de variations de iJewel.
   const aurumConfiguratorLayers = useMemo(() => [
