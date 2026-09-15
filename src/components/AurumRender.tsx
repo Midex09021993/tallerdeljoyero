@@ -373,6 +373,9 @@ export function AurumRender() {
         aplicar(lucesAurum.key,lightingStudio.key); aplicar(lucesAurum.fill,lightingStudio.fill); aplicar(lucesAurum.rim,lightingStudio.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
       };
 
+      // Inicializar las luces configurables desde el arranque del visor.
+      crearLucesAurum();
+
       const sceneStudio={
         hdriGround:false, worldRadius:40, tripodHeight:1.2,
         originX:0, originY:0, originZ:0, opacity:1,
