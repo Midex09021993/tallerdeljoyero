@@ -1,4 +1,5 @@
 import type React from "react";
+import { useClientes } from "@/lib/taller-db";
 import { FechaInput } from "@/components/FechaInput";
 import { areaCoincide } from "@/lib/auth";
 import { RUTA_AREAS_PEDIDO, type PedidoFormState } from "@/lib/pedido-form";
@@ -43,6 +44,7 @@ export function PedidoFormCampos({
   camposBloqueados?: Array<keyof PedidoFormState>;
 }) {
   const bloqueados = new Set(camposBloqueados);
+  const { data: clientes = [] } = useClientes();
 
   return (
     <>
@@ -69,10 +71,36 @@ export function PedidoFormCampos({
                   min={campo === "cantidad_piezas" ? 1 : undefined}
                   required={campo === "cliente" || campo === "trabajo"}
                   value={form[campo]}
-                  onChange={(e) => onChange({ ...form, [campo]: e.target.value })}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    if (campo !== "cliente") {
+                      onChange({ ...form, [campo]: valor });
+                      return;
+                    }
+                    const cliente = clientes.find(
+                      (c) => c.nombre.trim().toLowerCase() === valor.trim().toLowerCase(),
+                    );
+                    onChange({
+                      ...form,
+                      cliente: valor,
+                      cliente_id: cliente?.id ?? "",
+                      telefono: cliente?.telefono || cliente?.whatsapp || form.telefono,
+                      origen: cliente?.ciudad || form.origen,
+                    });
+                  }}
+                  list={campo === "cliente" ? "clientes-disponibles" : undefined}
                   disabled={bloqueado}
                   className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground sm:py-2 sm:text-sm"
                 />
+                {campo === "cliente" ? (
+                  <datalist id="clientes-disponibles">
+                    {clientes.map((cliente) => (
+                      <option key={cliente.id} value={cliente.nombre}>
+                        {cliente.documento || cliente.telefono || ""}
+                      </option>
+                    ))}
+                  </datalist>
+                ) : null}
               )}
             </label>
           );
