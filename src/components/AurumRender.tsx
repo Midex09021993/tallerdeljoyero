@@ -201,6 +201,7 @@ export function AurumRender() {
   useEffect(() => {
     let vivo = true;
     let cleanup = () => {};
+    let frame = 0;
     (async () => {
       const THREE = await import("three");
       const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
@@ -787,7 +788,6 @@ export function AurumRender() {
       const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false);composer?.setSize(w,h);ssaoPass?.setSize?.(w,h)};
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
-      let frame=0;
       const animate=()=>{
         frame=requestAnimationFrame(animate);
         controles.update();
