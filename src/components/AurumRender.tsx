@@ -178,6 +178,8 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
+  const [lightingOpen, setLightingOpen] = useState(false);
+  const [sceneStudioOpen, setSceneStudioOpen] = useState(false);
   const lightingStudio:any = useMemo(() => ({...AURUM_LIGHTING_DEFAULT}), []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
