@@ -14,7 +14,7 @@ type Herramienta = {
 };
 
 const HERRAMIENTAS: Herramienta[] = [
-  { id: "aurum-render", nombre: "AURUM RENDER · Estudio 3D", icono: Gem, disponible: true },
+  { id: "aurum-render", nombre: "AURUM RENDER", icono: Gem, disponible: true },
   { id: "yeso", nombre: "Calculadora Yeso/Agua", icono: Droplets, disponible: true },
   { id: "oro", nombre: "Calculadora de Aleación de Oro", icono: Gem, disponible: true },
   { id: "peso3d", nombre: "Visualizador y Peso 3D", icono: Boxes, disponible: true },
