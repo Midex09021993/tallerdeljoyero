@@ -882,7 +882,7 @@ export function AurumRender() {
             {VISTAS.map(v=><button key={v.id} type="button" title={v.nombre} onClick={()=>setVista(v.id)} className={"rounded-lg px-3 py-2 text-[9px] uppercase tracking-wider transition "+(vista===v.id?"bg-gold text-black":"text-white/45 hover:text-white")}>{v.nombre}</button>)}
           </div>
           <div className="absolute bottom-5 left-5 z-20 hidden rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[9px] uppercase tracking-[.16em] text-white/35 backdrop-blur lg:block">AURUM RENDER · Tiempo real</div>
-          <div className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+          <div className="absolute right-[262px] top-1/2 z-30 -translate-y-1/2">
             <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/10 bg-white/90 p-1.5 shadow-[0_12px_35px_rgba(0,0,0,.18)] backdrop-blur-xl">
               <button type="button" title="Configuración" aria-label="Configuración" onClick={()=>setPanel("iluminacion")} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><SlidersHorizontal className="size-[18px]"/></button>
               <button type="button" title="Reiniciar cámara" aria-label="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><RotateCcw className="size-[18px]"/></button>
