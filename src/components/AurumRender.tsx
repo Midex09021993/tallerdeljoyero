@@ -394,7 +394,7 @@ export function AurumRender() {
           const L=tipo==="spot"?new THREE.SpotLight(color,1,30,Math.PI*.45,.7,.8):new THREE.PointLight(color,1,30,2);
           L.castShadow=cast; escena.add(L); return L;
         };
-        if(!lucesAurum.key){lucesAurum.key=mk("spot",0xffffff,true);lucesAurum.fill=mk("spot",0xffffff,true);lucesAurum.rim=mk("spot",0xffffff,true);lucesAurum.gem=mk("point",0xffffff,false);}
+        if(!lucesAurum.key){lucesAurum.key=mk("spot",0xffffff,true);lucesAurum.fill=mk("spot",0xffffff,false);lucesAurum.rim=mk("spot",0xffffff,false);lucesAurum.gem=mk("point",0xffffff,false);}
         const aplicar=(L:any,cfg:any)=>{L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
         aplicar(lucesAurum.key,lightingStudio.key); configurarSombrasAurum(lucesAurum.key); aplicar(lucesAurum.fill,lightingStudio.fill); configurarSombrasAurum(lucesAurum.fill); aplicar(lucesAurum.rim,lightingStudio.rim); configurarSombrasAurum(lucesAurum.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
       };
