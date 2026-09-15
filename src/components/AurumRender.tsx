@@ -788,11 +788,11 @@ export function AurumRender() {
       const animate=()=>{
         frame=requestAnimationFrame(animate);
         controles.update();
-        renderer.render(escena,camara);
+        if (composer) composer.render(); else renderer.render(escena,camara);
       };
       animate();
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
-    return()=>{vivo=false;cleanup()};
+    return()=>{vivo=false;cancelAnimationFrame(frame);composer?.dispose?.();cleanup()};
   },[]);
   useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
