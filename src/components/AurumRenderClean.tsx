@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { Upload, RotateCcw, Maximize2, ZoomIn, ZoomOut, Focus, Play, Pause } from "lucide-react";
+import { Upload, RotateCcw, Maximize2, ZoomIn, ZoomOut, Focus, Play, Pause, Eye, Sun, Gem, Settings2 } from "lucide-react";
 
 export function AurumRenderClean() {
   const hostRef=useRef<HTMLDivElement>(null);
@@ -66,19 +66,41 @@ export function AurumRenderClean() {
   const reset=()=>{const s=sceneRef.current;if(!s)return;s.controls.reset();s.camera.position.set(0,.8,4);s.controls.target.set(0,0,0);s.controls.update()};
   const zoom=(factor:number)=>{const s=sceneRef.current;if(!s)return;const offset=s.camera.position.clone().sub(s.controls.target);offset.multiplyScalar(factor);const distance=THREE.MathUtils.clamp(offset.length(),s.controls.minDistance,s.controls.maxDistance);offset.setLength(distance);s.camera.position.copy(s.controls.target).add(offset);s.controls.update()};
   const frameModel=()=>{const s=sceneRef.current;if(!s?.model)return;const box=new THREE.Box3().setFromObject(s.model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z)||1;const distance=max/(2*Math.tan(THREE.MathUtils.degToRad(s.camera.fov/2)))*1.35;s.controls.target.copy(center);const dir=s.camera.position.clone().sub(center).normalize();s.camera.position.copy(center).add(dir.multiplyScalar(distance));s.controls.update()};
+  const [panel,setPanel]=useState<"vista"|"escena"|"luz"|"materiales">("vista");
   return <div className="flex h-full min-h-[680px] flex-col overflow-hidden rounded-2xl bg-[#0d0f12] text-white">
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-      <div><div className="text-sm font-semibold tracking-wide">AURUM RENDER CLEAN</div><div className="text-[10px] text-white/45">{status}</div></div>
-      <div className="flex flex-wrap justify-end gap-2">
-        <label className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10"><Upload className="mr-2 inline size-3.5"/>Cargar joya<input type="file" accept=".glb,.gltf" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)load(f)}}/></label>
-        <button onClick={()=>setAutoRotate(v=>!v)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs">{autoRotate?<Pause className="mr-2 inline size-3.5"/>:<Play className="mr-2 inline size-3.5"/>}{autoRotate?"Pausar":"Auto rotar"}</button>
-        <button onClick={()=>zoom(.8)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><ZoomIn className="mr-2 inline size-3.5"/>Zoom +</button>
-        <button onClick={()=>zoom(1.25)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><ZoomOut className="mr-2 inline size-3.5"/>Zoom −</button>
-        <button onClick={frameModel} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><Focus className="mr-2 inline size-3.5"/>Encuadrar</button>
-        <button onClick={reset} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><RotateCcw className="mr-2 inline size-3.5"/>Reiniciar</button>
-        <button onClick={()=>hostRef.current?.requestFullscreen?.()} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><Maximize2 className="mr-2 inline size-3.5"/>Pantalla completa</button>
-      </div>
+      <div><div className="text-sm font-semibold tracking-wide">AURUM RENDER</div><div className="text-[10px] text-white/45">{status}</div></div>
+      <label className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10"><Upload className="mr-2 inline size-3.5"/>Cargar joya<input type="file" accept=".glb,.gltf" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)load(f)}}/></label>
     </div>
-    <div ref={hostRef} className="min-h-0 flex-1" />
-  </div>;
-}
+    <div className="flex min-h-0 flex-1">
+      <aside className="w-48 shrink-0 border-r border-white/10 bg-[#101216] p-3">
+        <div className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[.18em] text-white/35">Herramientas</div>
+        <div className="space-y-1">
+          <button onClick={()=>setPanel("vista")} className={`w-full rounded-lg px-3 py-2 text-left text-xs ${panel==="vista"?"bg-white/10":"hover:bg-white/5"}`}><Eye className="mr-2 inline size-3.5"/>Vista</button>
+          <button onClick={()=>setPanel("escena")} className={`w-full rounded-lg px-3 py-2 text-left text-xs ${panel==="escena"?"bg-white/10":"hover:bg-white/5"}`}><Settings2 className="mr-2 inline size-3.5"/>Escena</button>
+          <button onClick={()=>setPanel("luz")} className={`w-full rounded-lg px-3 py-2 text-left text-xs ${panel==="luz"?"bg-white/10":"hover:bg-white/5"}`}><Sun className="mr-2 inline size-3.5"/>Iluminación</button>
+          <button onClick={()=>setPanel("materiales")} className={`w-full rounded-lg px-3 py-2 text-left text-xs ${panel==="materiales"?"bg-white/10":"hover:bg-white/5"}`}><Gem className="mr-2 inline size-3.5"/>Materiales</button>
+        </div>
+      </aside>
+      <main className="relative min-w-0 flex-1">
+        <div ref={hostRef} className="absolute inset-0" />
+      </main>
+      <aside className="w-56 shrink-0 border-l border-white/10 bg-[#101216] p-4">
+        <div className="mb-4 text-xs font-semibold uppercase tracking-[.15em] text-white/50">{panel}</div>
+        <div className="space-y-3 text-xs text-white/60">
+          {panel==="vista" && <p>Controles de cámara y presentación.</p>}
+          {panel==="escena" && <p>Configuración de escena. La conectaremos en el siguiente paso.</p>}
+          {panel==="luz" && <p>Controles de iluminación. Se conectarán sin tocar el motor estable.</p>}
+          {panel==="materiales" && <p>Materiales de joyería. Se conectarán después.</p>}
+        </div>
+      </aside>
+    </div>
+    <div className="flex flex-wrap items-center justify-center gap-2 border-t border-white/10 bg-[#101216] px-3 py-2">
+      <button onClick={()=>setAutoRotate(v=>!v)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs">{autoRotate?<Pause className="mr-2 inline size-3.5"/>:<Play className="mr-2 inline size-3.5"/>}{autoRotate?"Pausar":"Auto rotar"}</button>
+      <button onClick={()=>zoom(.8)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><ZoomIn className="mr-2 inline size-3.5"/>Zoom +</button>
+      <button onClick={()=>zoom(1.25)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><ZoomOut className="mr-2 inline size-3.5"/>Zoom −</button>
+      <button onClick={frameModel} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><Focus className="mr-2 inline size-3.5"/>Encuadrar</button>
+      <button onClick={reset} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><RotateCcw className="mr-2 inline size-3.5"/>Reiniciar</button>
+      <button onClick={()=>hostRef.current?.requestFullscreen?.()} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs"><Maximize2 className="mr-2 inline size-3.5"/>Pantalla completa</button>
+    </div>
+  </div>;}
