@@ -8,6 +8,7 @@ export function AurumRenderClean() {
   const sceneRef=useRef<{scene:THREE.Scene;camera:THREE.PerspectiveCamera;renderer:THREE.WebGLRenderer;controls:OrbitControls;model:THREE.Object3D|null}>(null);
   const [status,setStatus]=useState("Carga una joya 3D");
   const [autoRotate,setAutoRotate]=useState(false);
+  const [view,setView]=useState<"perspectiva"|"frontal"|"superior"|"lateral">("perspectiva");
   useEffect(()=>{
     const host=hostRef.current;if(!host)return;
     const scene=new THREE.Scene(); scene.background=new THREE.Color(0x111318);
@@ -65,6 +66,7 @@ export function AurumRenderClean() {
     }catch(e){console.error(e);setStatus("No se pudo cargar el modelo")}};
   const reset=()=>{const s=sceneRef.current;if(!s)return;s.controls.reset();s.camera.position.set(0,.8,4);s.controls.target.set(0,0,0);s.controls.update()};
   const zoom=(factor:number)=>{const s=sceneRef.current;if(!s)return;const offset=s.camera.position.clone().sub(s.controls.target);offset.multiplyScalar(factor);const distance=THREE.MathUtils.clamp(offset.length(),s.controls.minDistance,s.controls.maxDistance);offset.setLength(distance);s.camera.position.copy(s.controls.target).add(offset);s.controls.update()};
+  const setViewMode=(mode:"perspectiva"|"frontal"|"superior"|"lateral")=>{const s=sceneRef.current;if(!s)return;setView(mode);const target=s.controls.target.clone();const model=s.model;if(!model)return;const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z)||1;const d=max*2.6;const positions={perspectiva:new THREE.Vector3(1,.65,1),frontal:new THREE.Vector3(0,0,1),superior:new THREE.Vector3(0,1,0),lateral:new THREE.Vector3(1,0,0)};const dir=positions[mode].normalize();s.camera.position.copy(target).add(dir.multiplyScalar(d));s.controls.target.copy(target);s.controls.update()};
   const frameModel=()=>{const s=sceneRef.current;if(!s?.model)return;const box=new THREE.Box3().setFromObject(s.model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z)||1;const distance=max/(2*Math.tan(THREE.MathUtils.degToRad(s.camera.fov/2)))*1.35;s.controls.target.copy(center);const dir=s.camera.position.clone().sub(center).normalize();s.camera.position.copy(center).add(dir.multiplyScalar(distance));s.controls.update()};
   const [panel,setPanel]=useState<"vista"|"escena"|"luz"|"materiales">("vista");
   return <div className="flex h-full min-h-[680px] flex-col overflow-hidden rounded-2xl bg-[#0d0f12] text-white">
@@ -88,7 +90,9 @@ export function AurumRenderClean() {
       <aside className="w-56 shrink-0 border-l border-white/10 bg-[#101216] p-4">
         <div className="mb-4 text-xs font-semibold uppercase tracking-[.15em] text-white/50">{panel}</div>
         <div className="space-y-3 text-xs text-white/60">
-          {panel==="vista" && <p>Controles de cámara y presentación.</p>}
+          {panel==="vista" && <div className="space-y-2">
+            {(["perspectiva","frontal","superior","lateral"] as const).map(mode=><button key={mode} onClick={()=>setViewMode(mode)} className={`w-full rounded-lg border border-white/10 px-3 py-2 text-left capitalize ${view===mode?"bg-white/10 text-white":"bg-white/5 hover:bg-white/10"}`}>{mode}</button>)}
+          </div>
           {panel==="escena" && <p>Configuración de escena. La conectaremos en el siguiente paso.</p>}
           {panel==="luz" && <p>Controles de iluminación. Se conectarán sin tocar el motor estable.</p>}
           {panel==="materiales" && <p>Materiales de joyería. Se conectarán después.</p>}
