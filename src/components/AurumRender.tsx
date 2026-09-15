@@ -178,6 +178,7 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
+  const lightingStudio:any = useMemo(() => ({...AURUM_LIGHTING_DEFAULT}), []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry"), [vista, setVista] = useState<VistaId>("perspectiva");
@@ -346,7 +347,6 @@ export function AurumRender() {
       let hdriGround:any = null;
       let hdriGroundTexture:any = null;
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
-      const lightingStudio:any={...AURUM_LIGHTING_DEFAULT};
       const lucesAurum:any={};
       const configurarSombrasAurum=(L:any)=>{
         if(!L?.castShadow) return;
