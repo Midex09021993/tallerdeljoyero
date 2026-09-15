@@ -365,30 +365,29 @@ export function AurumRender() {
         aplicar(lucesAurum.key,lightingStudio.key); configurarSombrasAurum(lucesAurum.key); aplicar(lucesAurum.fill,lightingStudio.fill); configurarSombrasAurum(lucesAurum.fill); aplicar(lucesAurum.rim,lightingStudio.rim); configurarSombrasAurum(lucesAurum.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
       };
       const actualizarLucesAurum=(patch:any)=>{
-        setLightingStudio((prev:any)=>{const n={...prev,...patch}; Object.assign(lightingStudio,n); return n;});
+        Object.assign(lightingStudio,patch);
+        const aplicar=(L:any,cfg:any)=>{if(!L||!cfg)return;L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
+        aplicar(lucesAurum.key,lightingStudio.key); aplicar(lucesAurum.fill,lightingStudio.fill); aplicar(lucesAurum.rim,lightingStudio.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
       };
 
-      const [sceneStudioOpen,setSceneStudioOpen]=useState(false);
-      const [sceneStudio,setSceneStudio]=useState({
+      const sceneStudio={
         hdriGround:false, worldRadius:40, tripodHeight:1.2,
         originX:0, originY:0, originZ:0, opacity:1,
         environmentIntensity:1, exposure:.62, ground:true, shadows:true
-      });
+      };
       const actualizarSceneStudio=(patch:any)=>{
-        setSceneStudio((prev:any)=>{
-          const next={...prev,...patch};
-          Object.assign(hdriGroundConfig,{
-            enabled:next.hdriGround, worldRadius:next.worldRadius,
-            tripodHeight:next.tripodHeight, originX:next.originX,
-            originY:next.originY, originZ:next.originZ, opacity:next.opacity
-          });
-          escena.environmentIntensity=next.environmentIntensity;
-          renderer.toneMappingExposure=next.exposure;
-          if(suelo) suelo.visible=next.ground;
-          renderer.shadowMap.enabled=next.shadows;
-          actualizarHdriGround();
-          return next;
+        const next={...sceneStudio,...patch};
+        Object.assign(sceneStudio,next);
+        Object.assign(hdriGroundConfig,{
+          enabled:next.hdriGround, worldRadius:next.worldRadius,
+          tripodHeight:next.tripodHeight, originX:next.originX,
+          originY:next.originY, originZ:next.originZ, opacity:next.opacity
         });
+        escena.environmentIntensity=next.environmentIntensity;
+        renderer.toneMappingExposure=next.exposure;
+        if(suelo) suelo.visible=next.ground;
+        renderer.shadowMap.enabled=next.shadows;
+        actualizarHdriGround();
       };
 
 
