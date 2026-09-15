@@ -480,7 +480,6 @@ export type Database = {
           cantidad_piezas: number
           cliente: string
           cliente_id: string | null
-          cliente_id: string | null
           contrato: string
           contrato_id: string | null
           corte_observaciones: string
