@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
-import { getAurumGemPreset, applyAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
+import { getAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
@@ -498,7 +498,7 @@ export function AurumRender() {
           const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
           const presetId = g.id as string;
           const motorPreset = getAurumGemPreset(presetId);
-          applyAurumGemPreset(nuevo, motorPreset, thickness);
+          applyAurumGem(nuevo, motorPreset, thickness);
                     applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));
                     if (motorPreset.familia==="Diamante") applyAurumDiamondOptics(nuevo);
                     return nuevo;
