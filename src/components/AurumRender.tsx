@@ -603,9 +603,7 @@ export function AurumRender() {
           const loader = new Rhino3dmLoader();
           loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
           loader.setWorkerLimit(2);
-          return await new Promise<any>
-        {lightingOpen && lightingPanel}
-        {sceneStudioOpen && sceneStudioPanel}((resolve, reject) => {
+          return await new Promise<any>((resolve, reject) => {
             loader.parse(buffer, resolve, reject);
           });
         }
