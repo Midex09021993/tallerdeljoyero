@@ -55,11 +55,25 @@ export function AurumRenderClean() {
   },[]);
   const load=async(file:File)=>{if(!sceneRef.current)return;setStatus("Cargando…");
     try{
-      const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
-      const url=URL.createObjectURL(file);const gltf=await new GLTFLoader().loadAsync(url);URL.revokeObjectURL(url);
+      const ext=file.name.toLowerCase().split(".").pop()||"";
+      const url=URL.createObjectURL(file);
+      let model:THREE.Object3D;
+      if(ext==="glb"||ext==="gltf"){
+        const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
+        const gltf=await new GLTFLoader().loadAsync(url); model=gltf.scene;
+      }else if(ext==="obj"){
+        const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
+        model=await new OBJLoader().loadAsync(url);
+      }else if(ext==="fbx"){
+        const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");
+        model=await new FBXLoader().loadAsync(url);
+      }else{
+        throw new Error("Formato no compatible");
+      }
+      URL.revokeObjectURL(url);
       const {scene,camera,controls}=sceneRef.current;
       if(sceneRef.current.model)scene.remove(sceneRef.current.model);
-      const model=gltf.scene;model.traverse(o=>{const m=o as THREE.Mesh;if(m.isMesh){m.castShadow=true;m.receiveShadow=true}});
+      model.traverse(o=>{const m=o as THREE.Mesh;if(m.isMesh){m.castShadow=true;m.receiveShadow=true}});
       const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
       model.position.sub(center);scene.add(model);sceneRef.current.model=model;
       const max=Math.max(size.x,size.y,size.z)||1;camera.position.set(0,max*.45,max*2.5);camera.near=max/1000;camera.far=max*100;camera.updateProjectionMatrix();controls.target.set(0,0,0);controls.update();setStatus(file.name);
@@ -72,7 +86,7 @@ export function AurumRenderClean() {
   return <div className="flex h-full min-h-[680px] flex-col overflow-hidden rounded-2xl bg-[#0d0f12] text-white">
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
       <div><div className="text-sm font-semibold tracking-wide">AURUM RENDER</div><div className="text-[10px] text-white/45">{status}</div></div>
-      <label className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10"><Upload className="mr-2 inline size-3.5"/>Cargar joya<input type="file" accept=".glb,.gltf" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)load(f)}}/></label>
+      <label className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10"><Upload className="mr-2 inline size-3.5"/>Cargar joya<input type="file" accept=".glb,.gltf,.obj,.fbx" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)load(f)}}/></label>
     </div>
     <div className="flex min-h-0 flex-1">
       <aside className="w-48 shrink-0 border-r border-white/10 bg-[#101216] p-3">
