@@ -194,6 +194,8 @@ export function AurumRender() {
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
   const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
+  const [groundVisible, setGroundVisible] = useState(true);
+  const [shadowsVisible, setShadowsVisible] = useState(true);
 
   useEffect(() => {
     let vivo = true;
@@ -712,6 +714,7 @@ export function AurumRender() {
           actualizarHdriGround();
         },
         iluminacion:aplicarIluminacion,
+        sceneStudio:(patch:any)=>actualizarSceneStudio(patch),
         reset:()=>{ controles.autoRotate=false; setAutoRotando(false); encuadrar(); },
          autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; setAutoRotando(activo); },
         capturar:()=>{composer?.render();return renderer.domElement.toDataURL("image/png")},
@@ -952,13 +955,26 @@ export function AurumRender() {
               )}
             </>}
             {panel==="escenas"&&(
-              <div className="space-y-1.5">
+              <div className="space-y-2">
+                <div className="rounded-xl border border-white/10 bg-white/[.02] p-2.5">
+                  <div className="mb-2 text-[8px] font-semibold uppercase tracking-[.18em] text-white/35">Controles de escena</div>
+                  <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-[10px] text-white/70 hover:bg-white/5">
+                    <span>Ground</span>
+                    <input type="checkbox" checked={groundVisible} onChange={e=>{const v=e.target.checked;setGroundVisible(v);apiRef.current?.sceneStudio?.({ground:v});}} />
+                  </label>
+                  <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-[10px] text-white/70 hover:bg-white/5">
+                    <span>Sombras</span>
+                    <input type="checkbox" checked={shadowsVisible} onChange={e=>{const v=e.target.checked;setShadowsVisible(v);apiRef.current?.sceneStudio?.({shadows:v});}} />
+                  </label>
+                </div>
+                <div className="space-y-1.5">
                 {ESCENARIOS.map(e=>(
                   <button key={e.id} type="button" onClick={()=>setEscenarioId(e.id)} className={"flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition "+(escenarioId===e.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
                     <span className={"size-7 shrink-0 rounded-md border border-white/15 "+e.clase}/>
                     <span className="min-w-0"><span className="block truncate text-[10px] text-white/80">{e.nombre}</span><span className="block truncate text-[8px] text-white/35">{e.descripcion}</span></span>
                   </button>
                 ))}
+                </div>
               </div>
             )}
             {panel==="iluminacion"&&(
