@@ -194,6 +194,18 @@ export function AurumRender() {
   const [autoRotando, setAutoRotando] = useState(false);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
 
+  // Estado central del configurador: una única fuente de verdad para
+  // material, gema, escena, iluminación y cámara.
+  const aurumConfiguration = useMemo(() => ({
+    material: materialId,
+    gem: gemaId,
+    scene: escenarioId,
+    lighting: iluminacionId,
+    camera: vista,
+    finish: materialId.includes("_") ? materialId.split("_").slice(1).join("_") : "pulido",
+  }), [materialId, gemaId, escenarioId, iluminacionId, vista]);
+
+
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
   const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
