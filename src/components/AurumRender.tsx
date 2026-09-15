@@ -357,6 +357,25 @@ export function AurumRender() {
       // Inicializar las luces configurables desde el arranque del visor.
       crearLucesAurum();
 
+      const aplicarIluminacion = (id:IluminacionId) => {
+        const presets:any = {
+          studioSoft:{key:.32,fill:.10,rim:.18,gem:.08,exposure:.64,environment:.11},
+          studioHard:{key:.42,fill:.09,rim:.22,gem:.08,exposure:.66,environment:.12},
+          jewelry:{key:.38,fill:.11,rim:.20,gem:.08,exposure:.64,environment:.11},
+          luxury:{key:.36,fill:.08,rim:.24,gem:.08,exposure:.63,environment:.10},
+        }[id];
+        if(!presets) return;
+        actualizarLucesAurum({
+          key:{...lightingStudio.key,intensity:presets.key},
+          fill:{...lightingStudio.fill,intensity:presets.fill},
+          rim:{...lightingStudio.rim,intensity:presets.rim},
+          gem:{...lightingStudio.gem,intensity:presets.gem},
+        });
+        escena.environmentIntensity=presets.environment;
+        renderer.toneMappingExposure=presets.exposure;
+        cargarHDRI(id);
+      };
+
       const sceneStudio={
         hdriGround:false, worldRadius:40, tripodHeight:1.2,
         originX:0, originY:0, originZ:0, opacity:1,
