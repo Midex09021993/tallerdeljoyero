@@ -896,7 +896,7 @@ export function AurumRender() {
           {lightingOpen && lightingPanel}
           {sceneStudioOpen && sceneStudioPanel}
         </div>
-        <aside className="absolute bottom-5 right-20 top-16 z-20 hidden w-[250px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d0f]/92 shadow-2xl backdrop-blur-xl lg:flex">
+        <aside className="absolute bottom-0 right-0 top-0 z-20 hidden w-[250px] flex-col overflow-hidden rounded-l-2xl rounded-r-none border border-white/10 bg-[#0b0d0f]/92 shadow-2xl backdrop-blur-xl lg:flex">
           <div className="flex shrink-0 border-b border-white/10">
             {([["materiales","Materiales"],["escenas","Escenas"],["iluminacion","Iluminación"]] as const).map(([id,nombre])=>(
               <button key={id} type="button" onClick={()=>setPanel(id)} className={"flex-1 px-2 py-2.5 text-[8px] font-semibold uppercase tracking-[.14em] transition "+(panel===id?"bg-gold/15 text-gold":"text-white/40 hover:text-white/70")}>{nombre}</button>
