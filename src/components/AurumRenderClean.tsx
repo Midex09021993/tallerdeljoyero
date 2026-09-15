@@ -14,6 +14,19 @@ export function AurumRenderClean() {
     const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
     renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.8;
+    // STEP 2: entorno de estudio procedural preparado con PMREM, sin dependencia de archivos externos.
+    const pmremGenerator=new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const envScene=new THREE.Scene();
+    const envLights=[
+      new THREE.DirectionalLight(0xffffff,2.8),
+      new THREE.DirectionalLight(0xdde7ff,1.5),
+      new THREE.DirectionalLight(0xffd9ad,1.2)
+    ];
+    envLights[0].position.set(4,6,4); envLights[1].position.set(-4,3,2); envLights[2].position.set(2,2,-5);
+    envLights.forEach(l=>envScene.add(l));
+    const envRT=pmremGenerator.fromScene(envScene,0.04);
+    scene.environment=envRT.texture;
     renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     host.appendChild(renderer.domElement);
     const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.07;
@@ -36,7 +49,7 @@ export function AurumRenderClean() {
     const ro=new ResizeObserver(resize);ro.observe(host);resize();
     let raf=0;const loop=()=>{raf=requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)};loop();
     sceneRef.current={scene,camera,renderer,controls,model:null};
-    return()=>{cancelAnimationFrame(raf);ro.disconnect();controls.dispose();renderer.dispose();host.removeChild(renderer.domElement)};
+    return()=>{cancelAnimationFrame(raf);ro.disconnect();controls.dispose();pmremGenerator.dispose();envRT.dispose();renderer.dispose();host.removeChild(renderer.domElement)};
   },[]);
   const load=async(file:File)=>{if(!sceneRef.current)return;setStatus("Cargando…");
     try{
