@@ -31,7 +31,7 @@ function HerramientasPage() {
       </header>
       <div className="space-y-6">
         <Link
-          to="/aurum-render"
+          to="/aurum-render-public"
           className="group block overflow-hidden rounded-2xl border border-gold/25 bg-ink text-ink-foreground shadow-card transition hover:border-gold/60 hover:shadow-lg"
         >
           <div className="relative flex min-h-[180px] items-end overflow-hidden bg-[radial-gradient(circle_at_65%_35%,rgba(215,173,72,.18),transparent_32%),radial-gradient(circle_at_35%_70%,rgba(255,255,255,.07),transparent_28%),#090b0e] p-6">
