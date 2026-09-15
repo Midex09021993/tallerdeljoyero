@@ -30,7 +30,8 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   if(!material) return material;
   material.color?.setHex(preset.color);
   material.metalness=preset.metalness; material.roughness=preset.roughness;
-  material.envMapIntensity=preset.envMapIntensity; material.clearcoat=preset.clearcoat;
+  // Perfil PBR de joyería: evita sobreexponer reflejos del HDR en metales pulidos.
+  material.envMapIntensity=Math.min(1.35, Math.max(.55, preset.envMapIntensity*.72)); material.clearcoat=preset.clearcoat;
   material.clearcoatRoughness=Math.min(.35,Math.max(.025,preset.roughness*.42));
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
