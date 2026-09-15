@@ -38,7 +38,7 @@ export function HerramientasFlotantes() {
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         aria-label={abierto ? "Cerrar herramientas" : "Abrir herramientas"}
-        className="flex h-36 w-10 flex-col items-center justify-center gap-2 rounded-l-2xl border border-r-0 border-ink-foreground/15 bg-ink text-ink-foreground/70 shadow-lg backdrop-blur transition-colors hover:text-gold"
+        className="flex h-36 w-10 flex-col items-center justify-center gap-2 rounded-l-2xl border border-r-0 border-[#d4af37] bg-ink text-ink-foreground/70 shadow-[0_0_10px_rgba(212,175,55,.85),0_0_24px_rgba(212,175,55,.5),inset_0_0_8px_rgba(212,175,55,.2)] backdrop-blur transition-all duration-300 hover:text-gold hover:shadow-[0_0_14px_rgba(212,175,55,1),0_0_32px_rgba(212,175,55,.7),inset_0_0_10px_rgba(212,175,55,.3)]"
       >
         <Wrench className="size-4" aria-hidden="true" />
         <span className="text-[10px] font-semibold uppercase tracking-[0.25em] [writing-mode:vertical-rl]">
