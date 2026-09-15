@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AurumRender } from "@/components/AurumRender";
+import { AurumRenderClean } from "@/components/AurumRenderClean";
 
 export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/aurum-render-public")({
 function AurumRenderPublicPage() {
   return (
     <main className="fixed inset-0 z-50 overflow-auto bg-[#050608]">
-      <AurumRender />
+      <AurumRenderClean />
     </main>
   );
 }
