@@ -792,7 +792,7 @@ export function AurumRender() {
 
   const hexColor = (c:number) => "#" + c.toString(16).padStart(6, "0");
   const lightingPanel=(
-    <div style={{position:"absolute",right:16,top:330,zIndex:30,width:270,padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
+    <div style={{position:"absolute",right:84,top:72,zIndex:40,width:270,maxHeight:"calc(100% - 88px)",overflowY:"auto",padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
         <div style={{fontWeight:700,fontSize:14}}>AURUM LIGHTING STUDIO</div>
         <button type="button" aria-label="Cerrar" onClick={()=>setLightingOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer"}}><X className="size-4"/></button>
@@ -878,7 +878,7 @@ export function AurumRender() {
           {lightingOpen && lightingPanel}
           {sceneStudioOpen && sceneStudioPanel}
         </div>
-        <aside className="absolute bottom-5 right-16 top-16 z-20 hidden w-[250px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d0f]/92 shadow-2xl backdrop-blur-xl lg:flex">
+        <aside className="absolute bottom-5 right-20 top-16 z-20 hidden w-[250px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d0f]/92 shadow-2xl backdrop-blur-xl lg:flex">
           <div className="flex shrink-0 border-b border-white/10">
             {([["materiales","Materiales"],["escenas","Escenas"],["iluminacion","Iluminación"]] as const).map(([id,nombre])=>(
               <button key={id} type="button" onClick={()=>setPanel(id)} className={"flex-1 px-2 py-2.5 text-[8px] font-semibold uppercase tracking-[.14em] transition "+(panel===id?"bg-gold/15 text-gold":"text-white/40 hover:text-white/70")}>{nombre}</button>
