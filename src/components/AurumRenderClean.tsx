@@ -21,8 +21,17 @@ export function AurumRenderClean() {
     const key=new THREE.DirectionalLight(0xffffff,3); key.position.set(3,4,5); key.castShadow=true; scene.add(key);
     const fill=new THREE.DirectionalLight(0xc9d8ff,1.2); fill.position.set(-4,2,2); scene.add(fill);
     const rim=new THREE.DirectionalLight(0xffe0b0,1.5); rim.position.set(2,3,-4); scene.add(rim);
-    const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:0x17191d,roughness:.72,metalness:.05}));
+    const groundMaterial=new THREE.MeshStandardMaterial({color:0x17191d,roughness:.82,metalness:.02});
+    const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,30),groundMaterial);
     ground.rotation.x=-Math.PI/2;ground.position.y=-1.05;ground.receiveShadow=true;scene.add(ground);
+    const groundBackdrop=new THREE.Mesh(
+      new THREE.CircleGeometry(8,96),
+      new THREE.MeshStandardMaterial({color:0x111318,roughness:.9,metalness:0})
+    );
+    groundBackdrop.rotation.x=-Math.PI/2;
+    groundBackdrop.position.y=-1.048;
+    groundBackdrop.receiveShadow=true;
+    scene.add(groundBackdrop);
     const resize=()=>{const w=host.clientWidth||900,h=host.clientHeight||600;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false)};
     const ro=new ResizeObserver(resize);ro.observe(host);resize();
     let raf=0;const loop=()=>{raf=requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)};loop();
