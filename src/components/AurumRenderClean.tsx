@@ -53,31 +53,19 @@ export function AurumRenderClean() {
     sceneRef.current={scene,camera,renderer,controls,model:null};
     return()=>{cancelAnimationFrame(raf);ro.disconnect();controls.dispose();pmremGenerator.dispose();envRT.dispose();renderer.dispose();host.removeChild(renderer.domElement)};
   },[]);
-  const load=async(file:File)=>{if(!sceneRef.current)return;setStatus("Cargando…");
-    try{
-      const ext=file.name.toLowerCase().split(".").pop()||"";
-      const url=URL.createObjectURL(file);
-      let model:THREE.Object3D;
-      if(ext==="glb"||ext==="gltf"){
-        const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
-        const gltf=await new GLTFLoader().loadAsync(url); model=gltf.scene;
-      }else if(ext==="obj"){
-        const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
-        model=await new OBJLoader().loadAsync(url);
-      }else if(ext==="fbx"){
-        const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");
-        model=await new FBXLoader().loadAsync(url);
-      }else{
-        throw new Error("Formato no compatible");
-      }
-      URL.revokeObjectURL(url);
-      const {scene,camera,controls}=sceneRef.current;
-      if(sceneRef.current.model)scene.remove(sceneRef.current.model);
-      model.traverse(o=>{const m=o as THREE.Mesh;if(m.isMesh){m.castShadow=true;m.receiveShadow=true}});
-      const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
-      model.position.sub(center);scene.add(model);sceneRef.current.model=model;
-      const max=Math.max(size.x,size.y,size.z)||1;camera.position.set(0,max*.45,max*2.5);camera.near=max/1000;camera.far=max*100;camera.updateProjectionMatrix();controls.target.set(0,0,0);controls.update();setStatus(file.name);
-    }catch(e){console.error(e);setStatus("No se pudo cargar el modelo")}};
+  const load=async(file:File)=>{if(!sceneRef.current)return;setStatus("Cargando…");let url="";try{
+    const ext=file.name.toLowerCase().split(".").pop()||"";url=URL.createObjectURL(file);let model:THREE.Object3D;
+    if(ext==="glb"||ext==="gltf"){const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");const gltf=await new GLTFLoader().loadAsync(url);model=gltf.scene;}
+    else if(ext==="obj"){const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");model=await new OBJLoader().loadAsync(url);}
+    else if(ext==="fbx"){const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");model=await new FBXLoader().loadAsync(url);}
+    else throw new Error("Formato no compatible");
+    const s=sceneRef.current;if(!s)throw new Error("Escena no disponible");
+    if(s.model)s.scene.remove(s.model);
+    model.traverse(o=>{const m=o as THREE.Mesh;if(m.isMesh){m.castShadow=true;m.receiveShadow=true;}});
+    const box=new THREE.Box3().setFromObject(model),center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
+    model.position.sub(center);s.scene.add(model);s.model=model;
+    const max=Math.max(size.x,size.y,size.z)||1;s.camera.position.set(0,max*.45,max*2.5);s.camera.near=Math.max(max/1000,.0001);s.camera.far=max*100;s.camera.updateProjectionMatrix();s.controls.target.set(0,0,0);s.controls.update();setStatus(file.name);
+  }catch(e){console.error("AURUM load:",e);setStatus("No se pudo cargar el modelo");}finally{if(url)URL.revokeObjectURL(url);}};
   const reset=()=>{const s=sceneRef.current;if(!s)return;s.controls.reset();s.camera.position.set(0,.8,4);s.controls.target.set(0,0,0);s.controls.update()};
   const zoom=(factor:number)=>{const s=sceneRef.current;if(!s)return;const offset=s.camera.position.clone().sub(s.controls.target);offset.multiplyScalar(factor);const distance=THREE.MathUtils.clamp(offset.length(),s.controls.minDistance,s.controls.maxDistance);offset.setLength(distance);s.camera.position.copy(s.controls.target).add(offset);s.controls.update()};
   const setViewMode=(mode:"perspectiva"|"frontal"|"superior"|"lateral")=>{const s=sceneRef.current;if(!s)return;setView(mode);const target=s.controls.target.clone();const model=s.model;if(!model)return;const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z)||1;const d=max*2.6;const positions={perspectiva:new THREE.Vector3(1,.65,1),frontal:new THREE.Vector3(0,0,1),superior:new THREE.Vector3(0,1,0),lateral:new THREE.Vector3(1,0,0)};const dir=positions[mode].normalize();s.camera.position.copy(target).add(dir.multiplyScalar(d));s.controls.target.copy(target);s.controls.update()};
