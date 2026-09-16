@@ -43,13 +43,17 @@ export function getAurumModelParts(
   const layers = Array.isArray(object?.userData?.layers) ? object.userData.layers : [];
   // Pre-rank the first four MatrixGold metal/gem layers by color intensity.
   // This lets two green (or blue) layers map to different materials instead of one.
-  const familyRankData = (category:"metal"|"gema") => layers.map((layer:any,idx:number)=>{
+  const familyRankData = (category:"metal"|"gema") => {
+    const start=category==="metal" ? 0 : 4;
+    const end=start+4;
+    return layers.map((layer:any,idx:number)=>{
     const c=colorRhinoHex(layer?.color); const m=c?.match(/^#([0-9a-f]{6})$/i);
     if(!m) return null;
     const n=parseInt(m[1]!,16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
     const ok=category==="metal" ? g>r*1.15 && g>b*1.15 && g>90 : b>r*1.15 && b>g*1.05 && b>90;
     return ok ? {idx,chroma:Math.max(r,g,b)-Math.min(r,g,b)} : null;
-  }).filter(Boolean).slice(0,4);
+    }).filter(Boolean).filter((x:any)=>x.idx>=start && x.idx<end);
+  };
   const metalRanks=familyRankData("metal"), gemRanks=familyRankData("gema");
   (layers as any[]).forEach((layer:any,idx:number)=>{ layer._aurumFamilyLayers = idx<4 ? (metalRanks.length>=1 && metalRanks.some((x:any)=>x.idx===idx) ? metalRanks : gemRanks) : []; });
 
