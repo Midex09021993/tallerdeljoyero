@@ -655,7 +655,10 @@ export function AurumRender() {
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         const scenePreset = getAurumScenePreset(id);
-        renderer.toneMappingExposure = Math.max(0.65, Math.min(1.15, scenePreset.exposure * postConfig.exposure / .62));
+        // Scene es la única fuente de exposición y Environment para los presets.
+        // Post Processing no vuelve a multiplicar la exposición, evitando resultados
+        // dependientes del orden de aplicación de los efectos.
+        renderer.toneMappingExposure = scenePreset.exposure;
         escena.environmentIntensity = Math.min(1.0, Math.max(0.72, scenePreset.environmentIntensity));
         escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
         // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
