@@ -132,7 +132,7 @@ const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
   if (color) {
     const m = color.match(/^#([0-9a-f]{6})$/i);
     if (m) {
-      const x=parseInt(m[1],16), rr=(x>>16)&255, gg=(x>>8)&255, bb=x&255;
+      const x=parseInt(m[1]!,16), rr=(x>>16)&255, gg=(x>>8)&255, bb=x&255;
       if (gg > rr*1.15 && gg > bb*1.15 && gg > 90) return "metal";
       if (bb > rr*1.15 && bb > gg*1.05 && bb > 90) return "gema";
     }
@@ -195,6 +195,9 @@ export function AurumRender() {
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
   const lightingStudio:any = useMemo(() => ({...AURUM_LIGHTING_DEFAULT}), []);
+  const lucesRef = useRef<((patch:any)=>void)|null>(null);
+  const [, refrescarLuces] = useState(0);
+  const actualizarLucesAurum = useCallback((patch:any) => { lucesRef.current?.(patch); refrescarLuces(n=>n+1); }, []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry"), [vista, setVista] = useState<VistaId>("perspectiva");
@@ -400,6 +403,7 @@ export function AurumRender() {
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
       const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
+      lucesRef.current = actualizarLucesAurum;
       // Inicializar las luces configurables desde el arranque del visor.
       lightingController.create();
 
@@ -529,10 +533,12 @@ export function AurumRender() {
         const ctx = canvas.getContext("2d");
         if (!ctx) return null;
         const color = new THREE.Color(colorHex);
+        const hsl = { h: 0, s: 0, l: 0 };
+        color.getHSL(hsl);
         const center = color.clone();
-        center.offsetHSL(0, 0, color.l > 0.55 ? 0.04 : 0.10);
+        center.offsetHSL(0, 0, hsl.l > 0.55 ? 0.04 : 0.10);
         const edge = color.clone();
-        edge.offsetHSL(0, 0, color.l > 0.55 ? -0.12 : -0.06);
+        edge.offsetHSL(0, 0, hsl.l > 0.55 ? -0.12 : -0.06);
         const grad = ctx.createRadialGradient(512, 330, 80, 512, 512, 760);
         grad.addColorStop(0, "#"+center.getHexString());
         grad.addColorStop(.58, "#"+color.getHexString());
@@ -560,7 +566,7 @@ export function AurumRender() {
           // compitiendo por el background.
           const fondoAnterior = escena.background;
           if (fondoAnterior && (fondoAnterior as any).isTexture) {
-            (fondoAnterior as THREE.Texture).dispose();
+            (fondoAnterior as any).dispose();
           }
           escena.background = null;
         }
@@ -707,13 +713,13 @@ export function AurumRender() {
           x.castShadow=true; x.receiveShadow=true;
           const meta=x.userData?.aurumRhino;
           if (meta?.categoria==="gema") {
-            const g=GEMAS[0];
+            const g=GEMAS[0]!;
             const m=new THREE.MeshPhysicalMaterial();
             const gemaBox = new THREE.Box3().setFromObject(x); const gemaSize = gemaBox.getSize(new THREE.Vector3());
-            applyAurumGem(m, gemPresetFromConfig(g), Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*.85, g.familia);
+            applyAurumGem(m, gemPresetFromConfig(g), Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*.85);
             x.material=m; crearInclusiones(x,g); aplicarEntornoGema();
           } else if (meta?.categoria==="metal") {
-            const m=MATERIALES[0];
+            const m=MATERIALES[0]!;
             const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
             configurarMaterial(mat,m); x.material=mat;
           } else {
@@ -848,8 +854,8 @@ export function AurumRender() {
   useEffect(()=>apiRef.current?.iluminacion(iluminacionId),[iluminacionId]);
   useEffect(()=>apiRef.current?.vista(vista),[vista]);
 
-  const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null);setTamanoGlb(null)}finally{setCargando(false);setPaso(null)}},[]);
-  const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setTamanoGlb(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
+  const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null)}finally{setCargando(false);setPaso(null)}},[]);
+  const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
 
   const hexColor = (c:number) => "#" + c.toString(16).padStart(6, "0");
@@ -949,7 +955,7 @@ export function AurumRender() {
               <div className="mb-3 rounded-lg border border-white/10 bg-white/[.025] px-2.5 py-2">
                 <div className="text-[8px] font-semibold uppercase tracking-[.18em] text-white/30">Configurador de materiales</div>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className="size-5 shrink-0 rounded-full border border-white/20" style={{background:hexColor(MATERIALES.find(m=>m.id===materialId)?.color || "#b8a15a")}}/>
+                  <span className="size-5 shrink-0 rounded-full border border-white/20" style={{background:hexColor(MATERIALES.find(m=>m.id===materialId)?.color ?? 0xb8a15a)}}/>
                   <div className="min-w-0">
                     <div className="truncate text-[10px] font-medium text-white/80">{MATERIALES.find(m=>m.id===materialId)?.nombre || "Material"}</div>
                     <div className="text-[8px] text-white/35">{GEMAS.find(g=>g.id===gemaId)?.nombre || "Sin gema seleccionada"}</div>

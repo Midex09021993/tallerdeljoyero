@@ -153,7 +153,7 @@ export function ConfiguracionCalculadoras() {
 
   const [abierta, setAbierta] = useState<string | null>(null);
 
-  async function guardarSeccion(clave: string, valor: unknown, nombre: string) {
+  async function guardarSeccion(clave: string, valor: any, nombre: string) {
     try {
       await guardar.mutateAsync({ clave, valor });
       toast.success(`${nombre} guardada`);
@@ -162,7 +162,7 @@ export function ConfiguracionCalculadoras() {
     }
   }
 
-  async function restaurarSeccion(clave: string, valor: unknown, setter: (v: any) => void, nombre: string) {
+  async function restaurarSeccion(clave: string, valor: any, setter: (v: any) => void, nombre: string) {
     setter(clonar(valor));
     try {
       await guardar.mutateAsync({ clave, valor });

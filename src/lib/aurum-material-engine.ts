@@ -87,7 +87,7 @@ export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
   moissanita:{id:"moissanita",familia:"Moissanita",variante:"Natural",color:0xffffff,transmission:1,ior:2.65,roughness:.012,envMapIntensity:1.85,attenuationColor:0xffffff,attenuationDistance:80,dispersion:.104,iridescence:.05,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"}
 };
 
-export const getAurumGemPreset=(id:string)=>AURUM_GEM_PRESETS[id]??AURUM_GEM_PRESETS.diamante;
+export const getAurumGemPreset=(id:string)=>AURUM_GEM_PRESETS[id]??AURUM_GEM_PRESETS["diamante"]!;
 export const listAurumGemPresets=()=>Object.values(AURUM_GEM_PRESETS);
 
 export const createAurumInclusionConfig=(preset:AurumGemPreset,seed=1):AurumInclusionConfig=>({
@@ -137,7 +137,7 @@ export const AURUM_OPTICAL_PROFILES:Record<string,AurumOpticalProfile>={
 };
 
 export const getAurumOpticalProfile=(familia:string):AurumOpticalProfile=>
-  AURUM_OPTICAL_PROFILES[familia]??AURUM_OPTICAL_PROFILES.Diamante;
+  AURUM_OPTICAL_PROFILES[familia]??AURUM_OPTICAL_PROFILES["Diamante"]!;
 
 export type AurumFacetProfile={
   cut:string;
@@ -156,7 +156,7 @@ export const AURUM_FACET_PROFILES:Record<string,AurumFacetProfile>={
 };
 
 export const getAurumFacetProfile=(cut:string="brillante")=>
-  AURUM_FACET_PROFILES[cut]??AURUM_FACET_PROFILES.brillante;
+  AURUM_FACET_PROFILES[cut]??AURUM_FACET_PROFILES["brillante"]!;
 
 /**
  * Ajusta propiedades ópticas del material sin alterar la geometría del modelo.

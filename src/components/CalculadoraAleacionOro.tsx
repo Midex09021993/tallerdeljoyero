@@ -204,7 +204,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                 {formatearNumero(resultado.total)} g
               </span>
               <span className="text-sm font-medium text-muted-foreground">
-                Oro {kfNum}K {resultado.colorEtiqueta}
+                Oro {kfNum}K {ETIQUETAS_COLOR[color]}
               </span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
