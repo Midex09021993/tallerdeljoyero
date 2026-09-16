@@ -122,7 +122,10 @@ export function createAurumWebGLViewer(
     preserveDrawingBuffer: true,
     powerPreference: "high-performance",
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, options.pixelRatio ?? 2));
+  // Quality is an explicit render-scale choice, not a cap by the monitor DPR.
+  // This makes Baja/Alta/Ultra visibly and measurably different even on a 1x display.
+  const requestedPixelRatio = Math.max(1, Math.min(2, Number(options.pixelRatio ?? 2)));
+  renderer.setPixelRatio(requestedPixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.domElement.className = "block h-full w-full";
