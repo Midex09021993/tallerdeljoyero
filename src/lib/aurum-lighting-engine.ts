@@ -1,5 +1,5 @@
 /**
- * AURUM LIGHTING STUDIO v1.1
+ * AURUM LIGHTING STUDIO v1.2
  * Iluminación de fotografía de joyería en tiempo real.
  */
 export type AurumLightConfig={
@@ -20,12 +20,12 @@ export const AURUM_LIGHTING_PRESETS={joyeria:{...AURUM_LIGHTING_DEFAULT},diamant
 /** Broad source ratios. The shape of the reflection matters more than raw light power. */
 export const AURUM_LIGHTING_RENDER_PRESETS={
   // Large diffused key + moderate fill: clean gradients without washing the metal.
-  productSoft:{key:.42,fill:.10,rim:.16,gem:.68,softbox:.92,strip:.64,front:.28,kicker:.38,edgeLeft:.34,edgeRight:.32},
-  studioSoft:{key:.55,fill:.13,rim:.21,gem:.46,softbox:.88,strip:.54,front:.46,kicker:.56,edgeLeft:.50,edgeRight:.48},
-  studioHard:{key:.46,fill:.05,rim:.28,gem:.12,softbox:.54,strip:.30,front:.14,kicker:.82,edgeLeft:.28,edgeRight:.34},
-  jewelry:{key:.58,fill:.14,rim:.25,gem:.52,softbox:.90,strip:.58,front:.38,kicker:.62,edgeLeft:.46,edgeRight:.44},
+  productSoft:{key:.34,fill:.075,rim:.14,gem:.48,softbox:.76,strip:.54,front:.18,kicker:.34,edgeLeft:.30,edgeRight:.28},
+  studioSoft:{key:.44,fill:.09,rim:.19,gem:.34,softbox:.80,strip:.52,front:.28,kicker:.52,edgeLeft:.44,edgeRight:.42},
+  studioHard:{key:.38,fill:.035,rim:.27,gem:.08,softbox:.50,strip:.27,front:.10,kicker:.80,edgeLeft:.26,edgeRight:.30},
+  jewelry:{key:.46,fill:.095,rim:.23,gem:.38,softbox:.82,strip:.56,front:.24,kicker:.60,edgeLeft:.44,edgeRight:.42},
   // Luxury keeps a controlled dark side and a narrower kicker for edge definition.
-  luxury:{key:.36,fill:.045,rim:.30,gem:.12,softbox:.42,strip:.22,front:.09,kicker:.82,edgeLeft:.20,edgeRight:.25},
+  luxury:{key:.30,fill:.035,rim:.27,gem:.08,softbox:.38,strip:.18,front:.06,kicker:.76,edgeLeft:.18,edgeRight:.22},
 } as const;
 export type AurumLightingRenderPresetId=keyof typeof AURUM_LIGHTING_RENDER_PRESETS;
-export const getAurumLightingPreset=(id:string)=>AURUM_LIGHTING_RENDER_PRESETS[id as AurumLightingRenderPresetId]??AURUM_LIGHTING_RENDER_PRESETS.jewelry;
+// v1.2: lower direct fill and preserve broad reflection gradients. GIA notes diffused light is preferable for gemstone color and soft gradients help polished metal.\nexport const getAurumLightingPreset=(id:string)=>AURUM_LIGHTING_RENDER_PRESETS[id as AurumLightingRenderPresetId]??AURUM_LIGHTING_RENDER_PRESETS.jewelry;
