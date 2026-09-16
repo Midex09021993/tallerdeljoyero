@@ -44,7 +44,10 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   // Target a product-shot occupancy of roughly 65–75% instead of the
   // earlier conservative framing that left the jewelry too small.
   const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
-  const distance=Math.max(fitDistance * 1.08,3.2);
+  // Product photography uses a little more breathing room, like the clean
+  // iJewel-style catalog framing used for isolated jewelry shots.
+  const framingMultiplier = sceneId === "producto" ? 1.24 : 1.08;
+  const distance=Math.max(fitDistance * framingMultiplier,3.2);
   const aimY=targetY + Math.max(size.y*.04, .025);
   // Initial view: FRONT PRODUCT VIEW.
   // Rhino/MatrixGold already provides the model centered on the world axes,
