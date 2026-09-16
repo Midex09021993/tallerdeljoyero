@@ -656,7 +656,7 @@ export function AurumRender() {
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
-          updateTemporal?.();
+          updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
           if (composer) composer.render(); else renderer.render(escena,camara);
         }
       );
