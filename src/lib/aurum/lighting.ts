@@ -64,12 +64,12 @@ export function createAurumLightingController(
         // broad rectangular highlights on polished jewelry. They do not cast
         // shadows; the key spot remains responsible for the contact shadow.
         if (THREE.RectAreaLight) {
-          lights.softbox = new THREE.RectAreaLight(0xffffff, 5.8, 8, 4.8);
+          lights.softbox = new THREE.RectAreaLight(0xffffff, 2.2, 8.5, 5.5);
           lights.softbox.position.set(3.8, 5.8, 4.8);
           lights.softbox.lookAt(0, 0, 0);
           scene.add(lights.softbox);
 
-          lights.strip = new THREE.RectAreaLight(0xffffff, 3.6, 2.2, 8);
+          lights.strip = new THREE.RectAreaLight(0xffffff, 1.25, 2.4, 8.5);
           lights.strip.position.set(-3.8, 3.5, 3.0);
           lights.strip.lookAt(0, 0, 0);
           scene.add(lights.strip);
@@ -77,7 +77,7 @@ export function createAurumLightingController(
           // Front fill: iJewel-style product photography needs a broad frontal
           // reflection source so polished metal does not fall into a black band
           // on the camera-facing side. It is intentionally softer than the key.
-          lights.front = new THREE.RectAreaLight(0xffffff, 1.8, 5.2, 3.4);
+          lights.front = new THREE.RectAreaLight(0xffffff, 0.75, 5.8, 3.8);
           lights.front.position.set(0, 3.0, 5.6);
           lights.front.lookAt(0, 0, 0);
           scene.add(lights.front);
@@ -85,7 +85,7 @@ export function createAurumLightingController(
           // Narrow rear kicker: creates a controlled highlight along the opposite
           // contour so polished bands retain their cylindrical form instead of
           // collapsing into a uniform gray surface.
-          lights.kicker = new THREE.RectAreaLight(0xffffff, 2.2, 1.8, 6.5);
+          lights.kicker = new THREE.RectAreaLight(0xffffff, 0.9, 2.0, 6.8);
           lights.kicker.position.set(4.2, 4.0, -2.8);
           lights.kicker.lookAt(0, 0, 0);
           scene.add(lights.kicker);
