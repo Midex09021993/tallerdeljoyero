@@ -713,8 +713,33 @@ export function AurumRender() {
         </aside>
 
         <main className="relative min-w-0 flex-1 bg-[#090b0e]">
-          <div ref={visorRef} className="absolute inset-0">
-            {!archivo&&!cargando&&<div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><div className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/20 bg-[#d4af37]/10 text-[#d4af37]"><Upload className="size-8"/></div><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p></div></div>}
+          <div
+            ref={visorRef}
+            className="absolute inset-0"
+            onDragOver={(e)=>{e.preventDefault();e.dataTransfer.dropEffect="copy";}}
+            onDrop={(e)=>{e.preventDefault();const file=e.dataTransfer.files?.[0];if(file)cargarArchivo(file);}}
+          >
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".stl,.obj,.glb,.fbx,.3dm,model/stl,model/obj,model/gltf-binary,model/gltf+json,application/octet-stream"
+              className="hidden"
+              onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file);}}
+            />
+            {!archivo&&!cargando&&<button
+              type="button"
+              className="absolute inset-0 z-10 grid place-items-center p-8 text-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70"
+              onClick={()=>fileRef.current?.click()}
+              onKeyDown={(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fileRef.current?.click();}}}
+              aria-label="Cargar diseño de joyería"
+            >
+              <span className="block rounded-3xl border border-[#d4af37]/20 bg-[#d4af37]/10 px-8 py-7 transition hover:border-[#d4af37]/45 hover:bg-[#d4af37]/15">
+                <span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/20 bg-[#d4af37]/10 text-[#d4af37]"><Upload className="size-8"/></span>
+                <span className="mt-5 block text-xl font-semibold text-white">Carga tu diseño de joyería</span>
+                <span className="mt-2 block text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</span>
+                <span className="mt-3 block text-[10px] uppercase tracking-[.16em] text-[#d4af37]/65">Haz clic o arrastra tu archivo aquí</span>
+              </span>
+            </button>}
             {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-[#d4af37]/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-[#d4af37]"/>{paso||"Preparando visualización..."}</div></div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
             {parteSeleccionada&&<div className="absolute left-5 top-5 z-20 max-w-[65%] rounded-xl border border-[#d4af37]/40 bg-black/65 px-3 py-2 text-[10px] text-white shadow-xl backdrop-blur-xl"><span className="text-[#d4af37]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
