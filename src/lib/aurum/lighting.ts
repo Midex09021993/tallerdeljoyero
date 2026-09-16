@@ -132,10 +132,12 @@ export function createAurumLightingController(
         if (!light) return;
         if (name === "softbox" || name === "strip" || name === "front" || name === "kicker") {
           const source = name === "softbox"
-            ? [3.5, 5.5, 4.5]
+            ? [3.8, 5.8, 4.8]
             : name === "strip"
-              ? [-3.5, 3.2, 2.8]
-              : [0, 2.8, 5.2];
+              ? [-3.8, 3.5, 3.0]
+              : name === "front"
+                ? [0, 3.0, 5.6]
+                : [4.2, 4.0, -2.8];
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
           light.lookAt?.(0, targetY, 0);
