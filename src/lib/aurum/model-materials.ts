@@ -23,9 +23,11 @@ export function applyAurumInitialModelMaterials(
     x.receiveShadow=true;
     const meta=x.userData?.aurumRhino;
     if(meta?.categoria==="gema"){
-      const gemIds=["diamante_natural","zafiro_azul","rubi_natural","esmeralda_1"];
-      const mappedGemId=Number(meta?.matrixSlot)>=1 && Number(meta?.matrixSlot)<=4 ? gemIds[Number(meta.matrixSlot)-1] : options.initialGemId;
-      const gem=options.gems.find((g:any)=>g.id===mappedGemId) ?? options.gems.find((g:any)=>g.id===options.initialGemId) ?? options.gems[0];
+      // First-load presentation is intentionally uniform, like a product-preview render:
+      // every MatrixGold gem layer starts as diamond. MatrixGold slots are used only
+      // when the user changes the material/gem after selection.
+      const initialGemId = options.initialGemId ?? "diamante_natural";
+      const gem=options.gems.find((g:any)=>g.id===initialGemId) ?? options.gems.find((g:any)=>g.id==="diamante_natural") ?? options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
@@ -40,9 +42,10 @@ export function applyAurumInitialModelMaterials(
       options.createInclusions(x,gem);
       options.applyGemEnvironment();
     }else if(meta?.categoria==="metal"){
-      const metalIds=["oro18a_pulido","plata925_pulida","oro18r_pulido","platino_pulido"];
-      const mappedMetalId=Number(meta?.matrixSlot)>=1 && Number(meta?.matrixSlot)<=4 ? metalIds[Number(meta.matrixSlot)-1] : options.initialMetalId;
-      const metal=options.metals.find((m:any)=>m.id===mappedMetalId) ?? options.metals.find((m:any)=>m.id===options.initialMetalId) ?? options.metals[0];
+      // First-load presentation is intentionally uniform: every metal layer starts
+      // with the same silver preset. Layer/slot mapping remains available for edits.
+      const initialMetalId = options.initialMetalId ?? "plata925_pulida";
+      const metal=options.metals.find((m:any)=>m.id===initialMetalId) ?? options.metals.find((m:any)=>m.id==="plata925_pulida") ?? options.metals[0];
       if(!metal) return;
       const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
       options.configureMetal(mat,metal);
