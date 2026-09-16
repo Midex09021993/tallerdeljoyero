@@ -26,13 +26,13 @@ export type AurumPhotographicProfile = {
 };
 
 export const AURUM_HDRI_URLS:Record<string,string>={
-  studioSoft:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
+  studioSoft:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_08_1k.hdr",
   studioHard:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_08_1k.hdr",
   jewelry:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
   luxury:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
   monochrome:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
-  warm:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_03_1k.hdr",
-  white:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_04_1k.hdr",
+  warm:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_02_1k.hdr",
+  white:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_08_1k.hdr",
 };
 export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS['jewelry']!;
 
