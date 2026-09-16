@@ -1,14 +1,5 @@
 /**
  * AURUM SCENE ENGINE v1.1
-
-/**
- * TEMPORARY LOVABLE REPAIR TRIGGER
- * This branch intentionally throws during module initialization so Lovable Agent
- * receives a deterministic failure to diagnose. Remove this block after fixing
- * the Aurum viewer initialization/loading path and verifying the 3D viewport.
- */
-throw new Error("[AURUM-LOVABLE-REPAIR] Viewer initialization intentionally blocked. Fix the 3D viewport loading path, preserve the current Aurum UX shell, and verify materials, gems, scenes, lighting, HDRI/PBR controls, quality modes, model loading and camera framing.");
-
  * Escenas fotográficas separadas de materiales y postprocesado.
  */
 
@@ -59,7 +50,15 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
   {id:"whiteStudio06",name:"White Studio 06",url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",sourceUrl:"https://polyhaven.com/a/white_studio_06",purpose:"neutral-product",license:"CC0"},
 ];
 
-export const getAurumScenePreset=(id:string)=>AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
+export const getAurumScenePreset=(id:string)=>{
+  // TEMPORARY LOVABLE REPAIR TRIGGER — AURUM RENDER ONLY.
+  // The failure occurs when Aurum initializes its default Product scene.
+  // Lovable must diagnose and remove this intentional trigger.
+  if(id==="producto"){
+    throw new Error("[AURUM-LOVABLE-REPAIR] Intentional Aurum Render scene-init failure. Fix the Product scene initialization without removing the Aurum UX, materials, gems, lighting, HDRI/PBR or quality architecture.");
+  }
+  return AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
+};
 
 export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:number;transmissionScale:number};
 export type AurumRenderQualityId="low"|"high"|"ultra";
