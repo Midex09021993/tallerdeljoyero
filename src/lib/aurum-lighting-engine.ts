@@ -30,20 +30,20 @@ export const AURUM_LIGHTING_PRESETS={
  */
 export const AURUM_LIGHTING_RENDER_PRESETS={
   studioSoft:{
-    key:.64,fill:.18,rim:.24,gem:.42,
-    softbox:1.05,strip:.58,front:.62,kicker:.68,edgeLeft:.62,edgeRight:.56
+    key:.58,fill:.14,rim:.22,gem:.42,
+    softbox:.90,strip:.50,front:.50,kicker:.60,edgeLeft:.54,edgeRight:.50
   },
   studioHard:{
-    key:.52,fill:.07,rim:.34,gem:.12,
-    softbox:.62,strip:.38,front:.18,kicker:.95,edgeLeft:.34,edgeRight:.42
+    key:.48,fill:.055,rim:.30,gem:.12,
+    softbox:.56,strip:.32,front:.15,kicker:.84,edgeLeft:.30,edgeRight:.36
   },
   jewelry:{
-    key:.72,fill:.20,rim:.30,gem:.46,
-    softbox:1.18,strip:.72,front:.52,kicker:.78,edgeLeft:.58,edgeRight:.54
+    key:.62,fill:.15,rim:.27,gem:.44,
+    softbox:.92,strip:.54,front:.42,kicker:.66,edgeLeft:.48,edgeRight:.46
   },
   luxury:{
-    key:.44,fill:.06,rim:.38,gem:.10,
-    softbox:.52,strip:.28,front:.12,kicker:1.12,edgeLeft:.26,edgeRight:.34
+    key:.40,fill:.05,rim:.34,gem:.10,
+    softbox:.46,strip:.24,front:.10,kicker:.96,edgeLeft:.22,edgeRight:.28
   },
 } as const;
 
