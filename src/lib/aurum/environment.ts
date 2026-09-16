@@ -1,6 +1,7 @@
 export interface AurumEnvironmentController {
   fallback: any;
   current: any;
+  fromEquirectangular: (hdrTexture: any) => any;
   load: (
     url: string,
     requestId: number,
@@ -30,6 +31,9 @@ export function createAurumEnvironment(
     fallback,
     get current() {
       return current;
+    },
+    fromEquirectangular(hdrTexture: any) {
+      return pmrem.fromEquirectangular(hdrTexture).texture;
     },
     load(url, requestId, isCurrent, onLoaded, onError) {
       new RGBELoader().load(url, (hdrTexture: any) => {
