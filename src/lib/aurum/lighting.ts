@@ -60,6 +60,9 @@ export function createAurumLightingController(
           : new THREE.PointLight(color, 1, 30, 2);
         light.castShadow = cast;
         scene.add(light);
+        // SpotLight.target must belong to the scene so its world matrix is
+        // updated correctly; this is important for soft product shadows.
+        if (light.target) scene.add(light.target);
         return light;
       };
       if (!lights.key) {
@@ -189,6 +192,7 @@ export function createAurumLightingController(
     },
     dispose() {
       Object.values(lights).forEach((light: any) => {
+        if (light?.target) scene.remove(light.target);
         scene.remove(light);
         light.dispose?.();
       });
