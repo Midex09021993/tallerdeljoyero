@@ -661,12 +661,15 @@ export function AurumRender() {
         }
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
-          renderer.setClearColor(0,1);
-          // El preset de Scene sigue siendo la fuente del color, pero se presenta
-          // como un fondo radial suave para evitar el aspecto de viewport plano.
+          renderer.setClearColor(scenePreset.background,1);
+          // Scene conserva una sola fuente para el fondo. El gradiente visual
+          // queda desactivado en esta fase para que no haya dos sistemas de Scene
+          // compitiendo por el background.
           const fondoAnterior = escena.background;
-          if (fondoAnterior && (fondoAnterior as any).isTexture) (fondoAnterior as THREE.Texture).dispose();
-          escena.background = crearFondoEstudio(scenePreset.background);
+          if (fondoAnterior && (fondoAnterior as any).isTexture) {
+            (fondoAnterior as THREE.Texture).dispose();
+          }
+          escena.background = null;
         }
         if (suelo) {
           suelo.visible = scenePreset.groundVisible;
