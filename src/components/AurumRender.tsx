@@ -688,10 +688,28 @@ export function AurumRender() {
         const bf = new THREE.Box3().setFromObject(modelo);
         const h = bf.getSize(new THREE.Vector3()).y||1;
         if (!suelo) {
-          suelo = new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x15181c,metalness:.05,roughness:.3}));
-          suelo.rotation.x=-Math.PI/2; suelo.receiveShadow=true; escena.add(suelo);
+          suelo = new THREE.Mesh(
+            new THREE.PlaneGeometry(40,40),
+            new THREE.MeshStandardMaterial({
+              color:0x15181c,
+              metalness:0.02,
+              roughness:0.34
+            })
+          );
+          suelo.rotation.x=-Math.PI/2;
+          suelo.receiveShadow=true;
+          suelo.renderOrder=-1;
+          escena.add(suelo);
+        } else {
+          // Mantener un Ground amplio y estable para que la sombra nunca llegue al borde.
+          const actual = suelo.geometry?.parameters?.width ?? 40;
+          if (actual < 40) {
+            suelo.geometry.dispose();
+            suelo.geometry = new THREE.PlaneGeometry(40,40);
+          }
         }
-        suelo.position.y = bf.min.y-Math.max(h*.035,.015);
+        suelo.position.set(0, bf.min.y-Math.max(h*.035,.015), 0);
+        suelo.receiveShadow=true;
 
         // Adaptar luces y sombras al tamaño real de la pieza ya normalizada.
         // La joya se normaliza a 2.6 unidades; las luces mantienen su composición
