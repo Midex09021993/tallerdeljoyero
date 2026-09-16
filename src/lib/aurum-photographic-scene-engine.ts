@@ -14,6 +14,9 @@ export type AurumPhotographicProfile = {
   gemEnvironmentKey: string;
   environmentIntensity: number;
   environmentRotation: number;
+  /** Independent gemstone HDRI controls, mirroring iJewel's Gem Environment. */
+  gemEnvironmentRotation: number;
+  gemEnvironmentIntensity: number;
   metalEnvironmentScale: number;
   highlightProtection: number;
   exposure: number;
@@ -48,56 +51,56 @@ export const getAurumHdriUrl=(key:string)=>
 
 export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfile> = {
   oscuro: {
-    environmentKey:"studioHard", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.54, environmentRotation:.16, metalEnvironmentScale:.88, highlightProtection:.94, exposure:.62,
+    environmentKey:"studioHard", gemEnvironmentKey:"monochrome",
+    environmentIntensity:.54, environmentRotation:.16, gemEnvironmentRotation:.34, gemEnvironmentIntensity:1.00, metalEnvironmentScale:.88, highlightProtection:.94, exposure:.62,
     lighting:"studioHard",
     post:{ssao:true,ssaoIntensity:.10,bloom:false,bloomIntensity:.035,bloomThreshold:1.45,lut:true,lutIntensity:.08,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   claro: {
-    environmentKey:"jewelry", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.54, environmentRotation:.24, metalEnvironmentScale:.80, highlightProtection:.96, exposure:.74,
+    environmentKey:"jewelry", gemEnvironmentKey:"white",
+    environmentIntensity:.54, environmentRotation:.24, gemEnvironmentRotation:-.16, gemEnvironmentIntensity:.94, metalEnvironmentScale:.80, highlightProtection:.96, exposure:.74,
     lighting:"jewelry",
     post:{ssao:true,ssaoIntensity:.08,bloom:false,bloomIntensity:.025,bloomThreshold:1.5,lut:true,lutIntensity:.07,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   luxury: {
-    environmentKey:"luxury", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.50, environmentRotation:.42, metalEnvironmentScale:.86, highlightProtection:.90, exposure:.60,
+    environmentKey:"luxury", gemEnvironmentKey:"monochrome",
+    environmentIntensity:.50, environmentRotation:.42, gemEnvironmentRotation:.68, gemEnvironmentIntensity:1.02, metalEnvironmentScale:.86, highlightProtection:.90, exposure:.60,
     lighting:"luxury",
     post:{ssao:true,ssaoIntensity:.12,bloom:true,bloomIntensity:.045,bloomThreshold:1.55,lut:true,lutIntensity:.10,taa:true,dof:true,dofAperture:.00055,dofMaxBlur:.005}
   },
   marmol: {
-    environmentKey:"studioSoft", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.56, environmentRotation:.16, metalEnvironmentScale:.90, highlightProtection:.94, exposure:.64,
+    environmentKey:"studioSoft", gemEnvironmentKey:"white",
+    environmentIntensity:.56, environmentRotation:.16, gemEnvironmentRotation:.10, gemEnvironmentIntensity:.95, metalEnvironmentScale:.90, highlightProtection:.94, exposure:.64,
     lighting:"studioSoft",
     post:{ssao:true,ssaoIntensity:.10,bloom:false,bloomIntensity:.025,bloomThreshold:1.5,lut:true,lutIntensity:.06,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   transparente: {
-    environmentKey:"studioSoft", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.52, environmentRotation:.16, metalEnvironmentScale:.90, highlightProtection:.94, exposure:.64,
+    environmentKey:"studioSoft", gemEnvironmentKey:"monochrome",
+    environmentIntensity:.52, environmentRotation:.16, gemEnvironmentRotation:.34, gemEnvironmentIntensity:1.00, metalEnvironmentScale:.90, highlightProtection:.94, exposure:.64,
     lighting:"studioSoft",
     post:{ssao:false,ssaoIntensity:.06,bloom:false,bloomIntensity:.02,bloomThreshold:1.55,lut:true,lutIntensity:.05,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   producto: {
-    environmentKey:"studioSoft", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.50, environmentRotation:.34, metalEnvironmentScale:.82, highlightProtection:.96, exposure:.70,
+    environmentKey:"studioSoft", gemEnvironmentKey:"monochrome",
+    environmentIntensity:.50, environmentRotation:.34, gemEnvironmentRotation:.28, gemEnvironmentIntensity:.98, metalEnvironmentScale:.82, highlightProtection:.96, exposure:.70,
     lighting:"studioSoft",
     post:{ssao:true,ssaoIntensity:.07,bloom:false,bloomIntensity:.020,bloomThreshold:1.60,lut:true,lutIntensity:.055,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   galeria: {
-    environmentKey:"studioHard", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.54, environmentRotation:.62, metalEnvironmentScale:.88, highlightProtection:.92, exposure:.66,
+    environmentKey:"studioHard", gemEnvironmentKey:"monochrome",
+    environmentIntensity:.54, environmentRotation:.62, gemEnvironmentRotation:.64, gemEnvironmentIntensity:1.02, metalEnvironmentScale:.88, highlightProtection:.92, exposure:.66,
     lighting:"studioHard",
     post:{ssao:true,ssaoIntensity:.11,bloom:false,bloomIntensity:.03,bloomThreshold:1.5,lut:true,lutIntensity:.08,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   oroCalido: {
     environmentKey:"warm", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.52, environmentRotation:.42, metalEnvironmentScale:.82, highlightProtection:.88, exposure:.64,
+    environmentIntensity:.52, environmentRotation:.42, gemEnvironmentRotation:.46, gemEnvironmentIntensity:.94, metalEnvironmentScale:.82, highlightProtection:.88, exposure:.64,
     lighting:"luxury",
     post:{ssao:true,ssaoIntensity:.09,bloom:false,bloomIntensity:.03,bloomThreshold:1.55,lut:true,lutIntensity:.11,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   gemaClara: {
-    environmentKey:"jewelry", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.55, environmentRotation:.08, metalEnvironmentScale:.84, highlightProtection:.90, exposure:.72,
+    environmentKey:"jewelry", gemEnvironmentKey:"white",
+    environmentIntensity:.55, environmentRotation:.08, gemEnvironmentRotation:-.08, gemEnvironmentIntensity:1.00, metalEnvironmentScale:.84, highlightProtection:.90, exposure:.72,
     lighting:"jewelry",
     post:{ssao:true,ssaoIntensity:.07,bloom:true,bloomIntensity:.035,bloomThreshold:1.65,lut:true,lutIntensity:.05,taa:true,dof:false,dofAperture:.00055,dofMaxBlur:.005}
   }
