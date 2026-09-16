@@ -1,7 +1,7 @@
 # AURUM RENDER — Lovable repair task
 
 ## Purpose
-This branch intentionally contains a deterministic initialization failure so Lovable Agent can diagnose and repair the viewer instead of guessing.
+This branch intentionally contains a deterministic failure scoped to the Aurum Render Product-scene initialization path. It must not intentionally break unrelated application screens or modules.
 
 ## Required outcome
 Restore the 3D viewport so a jewelry model loads and renders reliably, while preserving the current professional Aurum UX shell already present on `main`.
@@ -38,7 +38,7 @@ Inspect `src/components/AurumRender.tsx` and the imported Aurum engines. Check:
 10. Verify the viewer actually paints a frame after initialization.
 
 ## Important
-Remove the intentional throw in `src/lib/aurum-scene-engine.ts` only after the real initialization problem is fixed.
+Remove the intentional Product-scene throw in `src/lib/aurum-scene-engine.ts` only after the real Aurum Render initialization problem is fixed.
 
 ## Verification
 - Preview opens without a blank viewport.
