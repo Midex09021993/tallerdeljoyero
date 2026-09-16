@@ -41,8 +41,10 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   // from arriving too close, too far, or clipped at the top/bottom.
   const maxDimension=Math.max(size.x,size.y,size.z,0.001);
   const fovRad=(viewer.camera.fov * Math.PI) / 180;
-  const fitDistance=(maxDimension * 0.62) / Math.tan(fovRad / 2);
-  const distance=Math.max(fitDistance * 1.16,4.0);
+  // Target a product-shot occupancy of roughly 65–75% instead of the
+  // earlier conservative framing that left the jewelry too small.
+  const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
+  const distance=Math.max(fitDistance * 1.08,3.2);
   const aimY=targetY + Math.max(size.y*.04, .025);
   // A restrained 3/4 product angle preserves the Rhino orientation while
   // avoiding the exaggerated perspective that made earlier previews feel CAD-like.
