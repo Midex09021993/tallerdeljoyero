@@ -354,12 +354,7 @@ export function AurumRender() {
         new RGBELoader().load(gemEnvironmentUrl,(hdrTexture:any)=>{
           if (!vivo || requestId !== gemEnvironmentRequestId) { hdrTexture.dispose?.(); return; }
           try {
-            const nuevo=environmentController.current?.isTexture
-              ? environmentController.current.constructor ? environmentController.current : hdrTexture
-              : hdrTexture;
-            const pmrem = (environmentController as any).pmrem;
-            if (!pmrem) { hdrTexture.dispose?.(); return; }
-            const gemTexture=pmrem.fromEquirectangular(hdrTexture).texture;
+            const gemTexture=environmentController.fromEquirectangular(hdrTexture);
             hdrTexture.dispose?.();
             const anterior=entornoGema;
             entornoGema=gemTexture;
