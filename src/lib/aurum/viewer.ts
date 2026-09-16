@@ -117,7 +117,7 @@ export function disposeAurumViewer(viewer: {
 export function createAurumWebGLViewer(
   THREE: any,
   nodo: HTMLElement,
-  options: { pixelRatio?: number; maxDistance?: number } = {}
+  options: { pixelRatio?: number; maxDistance?: number; controlsClass?: any } = {}
 ) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 1, 0.001, 1000);
