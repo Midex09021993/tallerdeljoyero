@@ -53,6 +53,7 @@ import {
 } from "@/lib/auth";
 import { actualizarUsuario, borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
 import { ConfiguracionCalculadoras } from "@/components/ConfiguracionCalculadoras";
+import { AurumRenderConfig } from "@/components/AurumRenderConfig";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -89,7 +90,8 @@ type Modulo =
   | "automatizacion"
   | "usuarios"
   | "sedes"
-  | "calculadoras";
+  | "calculadoras"
+  | "aurumRender";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -129,6 +131,7 @@ function GestionPage() {
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
     { id: "sedes", label: "Sedes", visible: esDueno },
     { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
+    { id: "aurumRender", label: "AURUM Render", visible: esDueno },
   ];
 
   return (
@@ -186,6 +189,7 @@ function GestionPage() {
       ) : null}
       {modulo === "sedes" && esDueno ? <ModuloSedes /> : null}
       {modulo === "calculadoras" && esDueno ? <ConfiguracionCalculadoras /> : null}
+      {modulo === "aurumRender" && esDueno ? <AurumRenderConfig /> : null}
     </AppShell>
   );
 }
