@@ -59,7 +59,7 @@ export async function createAurumPostPipeline(
       const data = new Uint8Array(size * size * size * 4);
       const saturation = 1.035;
       const contrast = 1.025;
-      const warm = 0.008;
+      const warm = 0.002;
       let p = 0;
       for (let b = 0; b < size; b++) {
         for (let g = 0; g < size; g++) {
