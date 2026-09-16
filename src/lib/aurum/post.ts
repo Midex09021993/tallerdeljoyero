@@ -31,12 +31,14 @@ export async function createAurumPostPipeline(
     ssaoPass.minDistance = Math.max(0.001, ssaoConfig.bias ?? 0.025);
     ssaoPass.maxDistance = Math.max(0.02, ssaoPass.kernelRadius * 2.5);
     ssaoPass.output = (SSAOPass as any).OUTPUT.Default;
-    ssaoPass.enabled = !!ssaoConfig.enabled;
+    // SSAO remains explicitly opt-in. The current jewelry presentation keeps it off.
+    ssaoPass.enabled = ssaoConfig.enabled === true;
     ssaoPass.kernelSize = Math.min(32, Math.max(8, ssaoConfig.kernelSize ?? 16));
     ssaoPass.aoClamp = Math.max(0, Math.min(1, ssaoConfig.intensity ?? 0.22));
     composer.addPass(ssaoPass);
 
-    if (ssaoConfig.bloom) {
+    // Bloom is also opt-in and does not participate in the base render.
+    if (ssaoConfig.bloom === true) {
       const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
       const bloom = new UnrealBloomPass(
         { x: renderer.domElement.width, y: renderer.domElement.height } as any,
