@@ -804,9 +804,9 @@ export function AurumRender() {
                 {qualityOpen&&<div className="absolute bottom-0 right-12 w-44 rounded-xl border border-[#d4af37]/60 bg-[#111315]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
                   <div className="px-2 pb-1.5 text-[8px] font-semibold uppercase tracking-[.18em] text-white/35">Calidad de render</div>
                   {([
-                    ["low","Baja","Vista rápida","1× · sombras 512 · transmisión 45%"],
-                    ["high","Alta","Producción","1.5× · sombras 1024 · transmisión 75%"],
-                    ["ultra","Ultra","Máximo detalle","2× · sombras 2048 · transmisión 100%"],
+                    ["low","Baja","Vista rápida","1× · sombras 512 · transmisión 40%"],
+                    ["high","Alta","Producción","1.4× · sombras 1024 · transmisión 68%"],
+                    ["ultra","Ultra","Máximo detalle","1.6× · sombras 1536 · transmisión 82%"],
                   ] as const).map(([id,nombre,desc,spec])=>(
                     <button key={id} type="button" onClick={()=>cambiarCalidad(id)} className={"mb-1 w-full rounded-lg border px-2.5 py-2 text-left transition "+(renderQualityId===id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.03] hover:border-white/25")}>
                       <span className="flex items-center justify-between"><span className="text-[10px] font-semibold">{nombre}</span>{renderQualityId===id&&<span className="text-[9px] text-gold">●</span>}</span>
