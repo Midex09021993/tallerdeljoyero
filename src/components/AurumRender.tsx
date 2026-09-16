@@ -15,7 +15,7 @@ import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
-import { frameAurumProduct, resizeAurumViewer, disposeAurumViewer } from "../lib/aurum/viewer";
+import { frameAurumProduct, disposeAurumViewer } from "../lib/aurum/viewer";
 import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
