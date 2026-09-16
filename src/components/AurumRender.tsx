@@ -197,7 +197,7 @@ export function AurumRender() {
   const [lightingOpen, setLightingOpen] = useState(false);
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
-  const lightingStudio:any = useMemo(() => ({...AURUM_LIGHTING_DEFAULT}), []);
+  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
   const apiRef = useRef<any>(null);
@@ -351,7 +351,7 @@ export function AurumRender() {
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
-      const actualizarLucesAurum = (patch:any) => { lightingController.update(patch); refrescarLuces(n=>n+1); };
+      const actualizarLucesAurum = (patch:any) => { lightingController.update(patch); setLightingStudio((prev:any) => ({ ...prev, ...patch })); refrescarLuces(n=>n+1); };
       lucesRef.current = actualizarLucesAurum;
       // Inicializar las luces configurables desde el arranque del visor.
       lightingController.create();
