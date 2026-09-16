@@ -593,7 +593,8 @@ export function AurumRender() {
         });
       };
 
-      animate();
+      // startAurumViewerLoop ya inicia el RAF/render loop.
+      // No llamar a un animate() local inexistente: provocaba "animate is not defined".
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{
     vivo=false;
