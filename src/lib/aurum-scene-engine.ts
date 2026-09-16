@@ -1,5 +1,14 @@
 /**
  * AURUM SCENE ENGINE v1.1
+
+/**
+ * TEMPORARY LOVABLE REPAIR TRIGGER
+ * This branch intentionally throws during module initialization so Lovable Agent
+ * receives a deterministic failure to diagnose. Remove this block after fixing
+ * the Aurum viewer initialization/loading path and verifying the 3D viewport.
+ */
+throw new Error("[AURUM-LOVABLE-REPAIR] Viewer initialization intentionally blocked. Fix the 3D viewport loading path, preserve the current Aurum UX shell, and verify materials, gems, scenes, lighting, HDRI/PBR controls, quality modes, model loading and camera framing.");
+
  * Escenas fotográficas separadas de materiales y postprocesado.
  */
 
