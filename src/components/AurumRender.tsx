@@ -432,7 +432,7 @@ export function AurumRender() {
         });
         escena.environmentIntensity=next.environmentIntensity;
         renderer.toneMappingExposure=next.exposure;
-        if(suelo) suelo.visible=next.ground;
+        groundController.setVisible(next.ground);
         renderer.shadowMap.enabled=next.shadows;
         actualizarHdriGround();
       };
@@ -614,12 +614,7 @@ export function AurumRender() {
           }
           escena.background = null;
         }
-        if (suelo) {
-          suelo.visible = scenePreset.groundVisible;
-          suelo.material.color.setHex(scenePreset.ground);
-          suelo.material.roughness = scenePreset.groundRoughness;
-          suelo.material.metalness = scenePreset.groundMetalness;
-        }
+        groundController.updateFromPreset(scenePreset);
         // El entorno HDRI pertenece a Scene, no a Lighting.
         if (id !== "transparente") cargarHDRI(id);
       };
