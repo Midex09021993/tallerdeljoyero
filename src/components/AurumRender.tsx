@@ -752,7 +752,7 @@ export function AurumRender() {
                         <p className="mb-1.5 text-[8px] font-semibold uppercase tracking-[.18em] text-white/30">{grupo}</p>
                         <div className="grid grid-cols-2 gap-1.5">
                           {items.map(m=>(
-                            <button key={m.id} type="button" onClick={()=>setMaterialId(m.id)} className={"flex items-center gap-2 rounded-lg border px-2 py-2 text-left transition "+(materialId===m.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
+                            <button key={m.id} type="button" onClick={()=>{setMaterialId(m.id);apiRef.current?.material(m)}} className={"flex items-center gap-2 rounded-lg border px-2 py-2 text-left transition "+(materialId===m.id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.02] hover:border-white/25")}>
                               <span className="size-4 shrink-0 rounded-full border border-white/20" style={{background:hexColor(m.color)}}/>
                               <span className="truncate text-[9px] text-white/70">{m.nombre}</span>
                             </button>
