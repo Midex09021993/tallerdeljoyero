@@ -24,7 +24,7 @@ import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
-import { createAurumWebGLViewer } from "../lib/aurum/viewer";
+import { createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -548,15 +548,12 @@ export function AurumRender() {
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
-      const resize=()=>resizeAurumViewer({node:nodo,camera:camara,renderer,composer,ssaoPass});
-      composerRef.current = composer;
-      resize();
-      const obs=new ResizeObserver(resize); obs.observe(nodo);
-      const animate=()=>{
-        frame=(frameRef.current=requestAnimationFrame(animate));
-        controles.update();
-        if (composer) composer.render(); else renderer.render(escena,camara);
-      };
+      const viewerLoop = startAurumViewerLoop(
+        { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
+        () => { if (composer) composer.render(); else renderer.render(escena,camara); }
+      );
+      frameRef.current = viewerLoop.frame;
+      const obs = viewerLoop.observer;
 
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
