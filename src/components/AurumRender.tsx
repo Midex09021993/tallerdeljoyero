@@ -479,11 +479,10 @@ export function AurumRender() {
         gema:aplicarGema,
         escenario:aplicarEscenario,
         hdriGround:(config:any={})=>{
-          Object.assign(hdriGroundConfig,config);
-          actualizarHdriGround();
+          if (config.enabled!==undefined) groundController.setHdriGroundEnabled(!!config.enabled);
         },
         iluminacion:aplicarIluminacion,
-        sceneStudio:(patch:any)=>actualizarSceneStudio(patch),
+        sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
         capturar:()=>{composerRef.current?.render();return renderer.domElement.toDataURL("image/png")},
@@ -575,13 +574,11 @@ export function AurumRender() {
           lightingController,
           groundController,
           clearSelection:limpiarResaltado,
-          hdriGroundTexture,
           environmentController,
           gemEnvironment:entornoGema,
           gemEnvironmentController,
           composer,
         });
-        hdriGroundTexture = null;
       };
 
       animate();
