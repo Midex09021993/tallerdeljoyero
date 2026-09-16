@@ -130,3 +130,27 @@ export function createAurumWebGLViewer(
   nodo.appendChild(renderer.domElement);
   return { scene, camera, renderer, controls };
 }
+
+
+export function startAurumViewerLoop(
+  viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
+  render: () => void
+) {
+  let frame = 0;
+  const resize = () => resizeAurumViewer(viewer);
+  const observer = new ResizeObserver(resize);
+  observer.observe(viewer.node);
+  resize();
+  const animate = () => {
+    frame = requestAnimationFrame(animate);
+    viewer.controls?.update?.();
+    render();
+  };
+  animate();
+  return {
+    observer,
+    get frame() { return frame; },
+    stop: () => cancelAnimationFrame(frame),
+    resize,
+  };
+}
