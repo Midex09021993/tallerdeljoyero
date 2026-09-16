@@ -1,4 +1,5 @@
 import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
+import { getAurumReflectionRigProfile } from "../aurum-reflection-engine";
 
 export interface AurumLightingController {
   readonly lights: Record<string, any>;
@@ -64,31 +65,18 @@ export function createAurumLightingController(
         // broad rectangular highlights on polished jewelry. They do not cast
         // shadows; the key spot remains responsible for the contact shadow.
         if (THREE.RectAreaLight) {
-          lights.softbox = new THREE.RectAreaLight(0xffffff, 2.2, 8.5, 5.5);
-          lights.softbox.position.set(3.8, 5.8, 4.8);
-          lights.softbox.lookAt(0, 0, 0);
-          scene.add(lights.softbox);
-
-          lights.strip = new THREE.RectAreaLight(0xffffff, 1.25, 2.4, 8.5);
-          lights.strip.position.set(-3.8, 3.5, 3.0);
-          lights.strip.lookAt(0, 0, 0);
-          scene.add(lights.strip);
-
-          // Front fill: iJewel-style product photography needs a broad frontal
-          // reflection source so polished metal does not fall into a black band
-          // on the camera-facing side. It is intentionally softer than the key.
-          lights.front = new THREE.RectAreaLight(0xffffff, 0.75, 5.8, 3.8);
-          lights.front.position.set(0, 3.0, 5.6);
-          lights.front.lookAt(0, 0, 0);
-          scene.add(lights.front);
-
-          // Narrow rear kicker: creates a controlled highlight along the opposite
-          // contour so polished bands retain their cylindrical form instead of
-          // collapsing into a uniform gray surface.
-          lights.kicker = new THREE.RectAreaLight(0xffffff, 0.9, 2.0, 6.8);
-          lights.kicker.position.set(4.2, 4.0, -2.8);
-          lights.kicker.lookAt(0, 0, 0);
-          scene.add(lights.kicker);
+          const rig = getAurumReflectionRigProfile("jewelry");
+          const createSource = (profile:any) => {
+            const light = new THREE.RectAreaLight(0xffffff, profile.intensity, profile.width, profile.height);
+            light.position.set(...profile.position);
+            light.lookAt(0, 0, 0);
+            scene.add(light);
+            return light;
+          };
+          lights.softbox = createSource(rig.softbox);
+          lights.strip = createSource(rig.strip);
+          lights.front = createSource(rig.front);
+          lights.kicker = createSource(rig.kicker);
         }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
@@ -115,11 +103,21 @@ export function createAurumLightingController(
       // Apply the scene profile to their actual intensities as well; previously
       // only the spot/point lights changed, leaving the four large reflections
       // identical between scenes.
-      const baseSources = {softbox:2.2, strip:1.25, front:.75, kicker:.9};
-      if (lights.softbox) lights.softbox.intensity = baseSources.softbox * preset.softbox;
-      if (lights.strip) lights.strip.intensity = baseSources.strip * preset.strip;
-      if (lights.front) lights.front.intensity = baseSources.front * preset.front;
-      if (lights.kicker) lights.kicker.intensity = baseSources.kicker * preset.kicker;
+      const rig = getAurumReflectionRigProfile(id);
+      const sourceSettings = {
+        softbox: {light: lights.softbox, profile: rig.softbox, multiplier: preset.softbox},
+        strip: {light: lights.strip, profile: rig.strip, multiplier: preset.strip},
+        front: {light: lights.front, profile: rig.front, multiplier: preset.front},
+        kicker: {light: lights.kicker, profile: rig.kicker, multiplier: preset.kicker},
+      };
+      Object.values(sourceSettings).forEach((entry:any) => {
+        const light = entry.light;
+        const profile = entry.profile;
+        if (!light || !profile) return;
+        light.intensity = profile.intensity * entry.multiplier;
+        light.width = profile.width;
+        light.height = profile.height;
+      });
 
       this.create();
     },
@@ -142,13 +140,8 @@ export function createAurumLightingController(
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
         if (name === "softbox" || name === "strip" || name === "front" || name === "kicker") {
-          const source = name === "softbox"
-            ? [3.8, 5.8, 4.8]
-            : name === "strip"
-              ? [-3.8, 3.5, 3.0]
-              : name === "front"
-                ? [0, 3.0, 5.6]
-                : [4.2, 4.0, -2.8];
+          const rig = getAurumReflectionRigProfile("jewelry");
+          const source = rig[name as "softbox"|"strip"|"front"|"kicker"].position;
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
           light.lookAt?.(0, targetY, 0);
