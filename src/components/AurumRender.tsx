@@ -294,7 +294,7 @@ export function AurumRender() {
         studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
         studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
         jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        producto: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
+        producto: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_01_1k.hdr",
         claro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",
         gemaClara: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
         marmol: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/monochrome_studio_02_1k.hdr",
@@ -318,7 +318,7 @@ export function AurumRender() {
             // El GemEnvironment aporta reflejos/refracción; no sustituye el perfil óptico.
             const intensidadBase = Number.isFinite(m.userData?.aurumGemEnvIntensity)
               ? m.userData.aurumGemEnvIntensity
-              : (familia==="Diamante" ? 1.55 : familia==="Esmeralda" ? 1.15 : 1.25);
+              : (familia==="Diamante" ? 1.18 : familia==="Esmeralda" ? 1.05 : 1.10);
             m.envMapIntensity = intensidadBase;
             m.needsUpdate=true;
             return m;
