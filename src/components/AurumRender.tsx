@@ -594,8 +594,10 @@ export function AurumRender() {
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         const scenePreset = getAurumScenePreset(id);
-        renderer.toneMappingExposure = Math.max(0.65, Math.min(1.15, scenePreset.exposure * postConfig.exposure / .62));
-        escena.environmentIntensity = Math.min(1.0, Math.max(0.72, scenePreset.environmentIntensity));
+        // Scene preset is the sole owner of exposure and environment intensity.
+        // postConfig.exposure is reserved for the Post Processing phase.
+        renderer.toneMappingExposure = scenePreset.exposure;
+        escena.environmentIntensity = scenePreset.environmentIntensity;
         escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
         // El Ground se crea una sola vez al inicializar el módulo.
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
