@@ -82,10 +82,25 @@ export function createAurumLightingController(
       this.create();
     },
     scaleToModel(radius, targetY) {
-      const distance = Math.max(radius * 6, 12);
-      Object.values(lights).forEach((light: any) => {
+      // Keep the studio rig composition proportional to the product.
+      // The default coordinates are treated as normalized photographic offsets,
+      // not fixed world-space positions.
+      const safeRadius = Math.max(Number(radius) || 0, 0.001);
+      const rigScale = Math.max(safeRadius * 2.25, 1.8);
+      const distance = Math.max(safeRadius * 6, 12);
+      const normalizedPosition = (position: any) => {
+        if (!Array.isArray(position) || position.length < 3) return [0, 0, 0];
+        const maxComponent = Math.max(...position.slice(0, 3).map((v:any) => Math.abs(Number(v) || 0)), 1);
+        return position.slice(0, 3).map((v:any) => (Number(v) || 0) / maxComponent);
+      };
+      Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
         if (light.distance !== undefined) light.distance = distance;
+        const source = config?.[name]?.position;
+        if (source) {
+          const n = normalizedPosition(source);
+          light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+        }
         if (light.castShadow && light.shadow?.camera) {
           light.shadow.camera.near = Math.max(.01, radius * .02);
           light.shadow.camera.far = Math.max(distance, radius * 10);
