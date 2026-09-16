@@ -22,7 +22,9 @@ export function createAurumEnvironment(
   const pmrem = new THREE.PMREMGenerator(renderer);
   pmrem.compileEquirectangularShader();
 
-  const fallback = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+  const fallbackScene = new RoomEnvironment();
+  const fallback = pmrem.fromScene(fallbackScene, .04).texture;
+  fallbackScene.dispose?.();
   scene.environment = fallback;
 
   let current = fallback;
