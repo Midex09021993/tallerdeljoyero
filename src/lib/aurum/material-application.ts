@@ -47,6 +47,20 @@ export function applyAurumGemToTarget(
   applyGemEnvironment:()=>void
 ) {
   if (!target) return;
+  const modelRoot = target.parent?.parent ? (()=>{ let r=target; while(r.parent) r=r.parent; return r; })() : target;
+  const selectedMeta = target.userData?.aurumRhino || {};
+  const selectedLayer = selectedMeta.capa || target.userData?.attributes?.layerName || null;
+  const selectedCategory = selectedMeta.categoria || null;
+  const selectedSlot = selectedMeta.matrixSlot;
+  const targets:any[] = [];
+  modelRoot?.traverse?.((x:any)=>{
+    if (!x.isMesh || x.userData?.aurumInternalInclusion) return;
+    const meta=x.userData?.aurumRhino || {};
+    const sameLayer=!!selectedLayer && meta.capa===selectedLayer;
+    const sameSlot=selectedSlot!=null && meta.matrixSlot===selectedSlot && meta.categoria===selectedCategory;
+    if(x===target || sameLayer || sameSlot) targets.push(x);
+  });
+  if(!targets.length) targets.push(target);
   const box = new THREE.Box3().setFromObject(target);
   const size = box.getSize(new THREE.Vector3());
   const thickness = Math.max(0.015, Math.min(size.x,size.y,size.z) * 0.85);
@@ -58,10 +72,10 @@ export function applyAurumGemToTarget(
     if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
     return next;
   };
-  target.material = Array.isArray(target.material)
-    ? target.material.map(apply)
-    : apply(target.material);
-  renderAurumInclusions(THREE, target, gemConfig, 9173);
+  targets.forEach((part:any)=>{
+    part.material = Array.isArray(part.material) ? part.material.map(apply) : apply(part.material);
+    renderAurumInclusions(THREE, part, gemConfig, 9173);
+  });
   applyGemEnvironment();
 }
 
