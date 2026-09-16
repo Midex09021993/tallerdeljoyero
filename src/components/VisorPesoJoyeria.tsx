@@ -72,6 +72,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
   const [volumenUnidades, setVolumenUnidades] = useState<number | null>(null);
 
   const [metalId, setMetalId] = useState<MetalId>("oro18a");
+  const [pesoArbol, setPesoArbol] = useState(0);
   const [unidad, setUnidad] = useState("mm");
   const { data: configVisualizador } = useConfigSistema(CLAVES_CALCULADORAS.visualizador);
   const configuracion = leerConfigVisualizador(configVisualizador?.valor);
@@ -376,14 +377,16 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
   const escala = UNIDADES.find((u) => u.id === unidad)?.aCm ?? 0.1;
   const factorNum = configuracion.factorSeguridad > 0 ? configuracion.factorSeguridad : 1;
   const densidad = densidades[metalId];
-  const empujeNum = Math.max(0, configuracion.factorEmpuje);
+  const pesoArbolPorDefecto = Math.max(0, configuracion.factorEmpuje);
+  const empujeEsPorcentaje = configuracion.modoEmpuje === "porcentaje";
+  const pesoArbolEfectivo = Math.max(0, pesoArbol || pesoArbolPorDefecto);
+  const pesoArbolCalculado = empujeEsPorcentaje ? (pesoTeorico ?? 0) * pesoArbolEfectivo / 100 : pesoArbolEfectivo;
 
   const volumenCm3 =
     volumenUnidades != null ? volumenUnidades * escala ** 3 : null;
   const pesoTeorico =
     volumenCm3 != null ? volumenCm3 * densidad * factorNum : null;
-  const pesoConEmpuje =
-    pesoTeorico != null ? pesoTeorico * (1 + empujeNum / 100) : null;
+  const pesoConEmpuje = pesoTeorico != null ? pesoTeorico + pesoArbolCalculado : null;
   const pesoFinal = pesoConEmpuje;
 
   const inputCls =
@@ -521,6 +524,30 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
         </div>
       </fieldset>
 
+      {/* Árbol de colada */}
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Árbol de colada / empuje</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">Introduce el peso adicional real de esta fabricación. Tronco, ramas y botón/reservorio.</p>
+          </div>
+          <span className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-semibold text-gold">{empujeEsPorcentaje ? "%" : "g"}</span>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium">Peso adicional</span>
+            <div className="flex items-center gap-2">
+              <input type="number" min="0" step="0.01" className={inputCls} value={pesoArbol} onChange={(e) => setPesoArbol(Math.max(0, Number(e.target.value) || 0))} />
+              <span className="text-xs text-muted-foreground">{empujeEsPorcentaje ? "%" : "g"}</span>
+            </div>
+          </label>
+          <div className="rounded-xl border border-border bg-surface-muted p-3 text-xs">
+            <span className="text-muted-foreground">Valor por defecto del Dueño</span>
+            <strong className="mt-1 block">{num(pesoArbolPorDefecto, 2)} {empujeEsPorcentaje ? "%" : "g"}</strong>
+          </div>
+        </div>
+      </section>
+
       {/* Resultados */}
       {pesoFinal != null && volumenCm3 != null && pesoTeorico != null && pesoConEmpuje != null ? (
         <div
@@ -546,7 +573,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           </article>
           <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Peso con empuje
+              Peso joyas + árbol
             </p>
             <p className="mt-2 text-xl font-semibold leading-none">
               {num(pesoConEmpuje)}{" "}
