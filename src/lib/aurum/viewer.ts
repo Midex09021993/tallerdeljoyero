@@ -46,9 +46,12 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
   const distance=Math.max(fitDistance * 1.08,3.2);
   const aimY=targetY + Math.max(size.y*.04, .025);
-  // A restrained 3/4 product angle preserves the Rhino orientation while
-  // avoiding the exaggerated perspective that made earlier previews feel CAD-like.
-  viewer.camera.position.set(distance*.48, aimY + distance*.12, distance);
+  // Initial view: FRONT PRODUCT VIEW.
+  // Rhino/MatrixGold already provides the model centered on the world axes,
+  // so the first camera should not reinterpret that orientation. This mirrors
+  // the iJewel workflow where a saved front camera view is used as the
+  // reference before the user starts rotating the piece.
+  viewer.camera.position.set(0, aimY, distance);
   viewer.controls.target.set(0,aimY,0);
   viewer.camera.lookAt(0,aimY,0);
   viewer.camera.updateProjectionMatrix();
