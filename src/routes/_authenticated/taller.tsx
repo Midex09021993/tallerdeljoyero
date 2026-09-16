@@ -178,6 +178,16 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
       }
     >
       <div className={`space-y-4 p-4 sm:space-y-5 sm:p-6 lg:p-8 ${compacto ? "" : "max-w-5xl mx-auto"}`}>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-xs font-semibold">Proporción de mezcla</span>
+          <span
+            title="Referencia técnica: 38/62 corresponde a una relación agua/yeso de 0,38 y produce una mezcla más consistente; 40/60 corresponde a 0,40 y es intermedia; 42/58 corresponde a 0,42 y es más fluida, pudiendo favorecer el llenado de detalles finos. La relación adecuada depende de la inversión utilizada y debe respetar la ficha técnica del fabricante."
+            aria-label="Información técnica sobre las proporciones de mezcla"
+            className="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-border text-[10px] font-bold text-muted-foreground transition hover:border-gold hover:text-gold"
+          >
+            i
+          </span>
+        </div>
         <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
           <div className="mb-4 flex items-center gap-2.5">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
