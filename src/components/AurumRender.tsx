@@ -282,11 +282,12 @@ export function AurumRender() {
       renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
+      const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
       const { composer, ssaoPass, applyQuality: applyPostQuality } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
-        { ...ssaoConfig, ...postConfig },
+        postRuntimeConfig,
         renderQuality
       );
 
@@ -429,7 +430,7 @@ export function AurumRender() {
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
       const presetInicial = sceneController.apply("producto");
       const photoInicial = getAurumPhotographicProfile("producto");
-      Object.assign(postConfig, {
+      Object.assign(postRuntimeConfig, {
         ssao: photoInicial.post.ssao,
         ssaoIntensity: photoInicial.post.ssaoIntensity,
         bloom: photoInicial.post.bloom,
@@ -483,7 +484,7 @@ export function AurumRender() {
         // the previous behavior where changing only the background left the
         // same reflection rig and color response on every material.
         lightingController.applyPreset(photo.lighting);
-        Object.assign(postConfig, {
+        Object.assign(postRuntimeConfig, {
           ssao: photo.post.ssao,
           ssaoIntensity: photo.post.ssaoIntensity,
           bloom: photo.post.bloom,
