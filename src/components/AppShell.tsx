@@ -94,10 +94,7 @@ const produccionRoutes: Seccion["to"][] = [
 function AdminDesktopNavigation({ visibles }: { visibles: Seccion[] }) {
   const produccion = visibles.filter((s) => produccionRoutes.includes(s.to));
   const independientes = visibles.filter((s) => !produccionRoutes.includes(s.to));
-  const produccionActiva =
-    typeof window !== "undefined" && produccion.some((s) => window.location.pathname === s.to);
-
-  const [produccionAbierta, setProduccionAbierta] = useState(true || produccionActiva);
+  const [produccionAbierta, setProduccionAbierta] = useState(true);
 
   return (
     <nav className="flex-1 space-y-1 px-4">
