@@ -87,6 +87,7 @@ export function disposeAurumViewer(viewer: {
   viewer.environmentController?.dispose?.();
   viewer.gemEnvironmentController?.dispose?.(viewer.gemEnvironment);
   viewer.composer?.dispose?.();
+  viewer.renderer?.renderLists?.dispose?.();
   viewer.renderer?.dispose?.();
   if (viewer.renderer?.domElement?.parentElement === viewer.node) {
     viewer.node.removeChild(viewer.renderer.domElement);
