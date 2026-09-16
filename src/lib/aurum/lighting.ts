@@ -110,6 +110,7 @@ export function createAurumLightingController(
       // Apply the scene profile to their actual intensities as well; previously
       // only the spot/point lights changed, leaving the four large reflections
       // identical between scenes.
+      activeRigId = id;
       const rig = getAurumReflectionRigProfile(id);
       const sourceSettings = {
         softbox: {light: lights.softbox, profile: rig.softbox, multiplier: preset.softbox},
@@ -149,7 +150,7 @@ export function createAurumLightingController(
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
         if (name === "softbox" || name === "strip" || name === "front" || name === "kicker") {
-          const rig = getAurumReflectionRigProfile("jewelry");
+          const rig = getAurumReflectionRigProfile(activeRigId);
           const source = rig[name as "softbox"|"strip"|"front"|"kicker"].position;
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
