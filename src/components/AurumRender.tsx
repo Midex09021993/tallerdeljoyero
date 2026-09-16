@@ -283,7 +283,7 @@ export function AurumRender() {
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, applyQuality: applyPostQuality } = await createAurumPostPipeline(
+      const { composer, ssaoPass, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -655,7 +655,10 @@ export function AurumRender() {
 
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
-        () => { if (composer) composer.render(); else renderer.render(escena,camara); }
+        () => {
+          updateTemporal?.();
+          if (composer) composer.render(); else renderer.render(escena,camara);
+        }
       );
       frameRef.current = viewerLoop.frame;
       const obs = viewerLoop.observer;
