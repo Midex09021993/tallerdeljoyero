@@ -52,19 +52,19 @@ export const getAurumHdriUrl=(key:string)=>
 export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfile> = {
   oscuro: {
     environmentKey:"studioHard", gemEnvironmentKey:"monochrome",
-    environmentIntensity:.54, environmentRotation:.16, gemEnvironmentRotation:.34, gemEnvironmentIntensity:1.00, metalEnvironmentScale:.88, highlightProtection:.94, exposure:.62,
+    environmentIntensity:.50, environmentRotation:.16, gemEnvironmentRotation:.34, gemEnvironmentIntensity:.86, metalEnvironmentScale:.78, highlightProtection:.91, exposure:.58,
     lighting:"studioHard",
     post:{ssao:true,ssaoIntensity:.10,bloom:false,bloomIntensity:.035,bloomThreshold:1.45,lut:true,lutIntensity:.08,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   claro: {
     environmentKey:"jewelry", gemEnvironmentKey:"white",
-    environmentIntensity:.54, environmentRotation:.24, gemEnvironmentRotation:-.16, gemEnvironmentIntensity:.94, metalEnvironmentScale:.80, highlightProtection:.96, exposure:.74,
+    environmentIntensity:.48, environmentRotation:.24, gemEnvironmentRotation:-.16, gemEnvironmentIntensity:.82, metalEnvironmentScale:.68, highlightProtection:.89, exposure:.68,
     lighting:"jewelry",
     post:{ssao:true,ssaoIntensity:.08,bloom:false,bloomIntensity:.025,bloomThreshold:1.5,lut:true,lutIntensity:.07,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   luxury: {
     environmentKey:"luxury", gemEnvironmentKey:"monochrome",
-    environmentIntensity:.50, environmentRotation:.42, gemEnvironmentRotation:.68, gemEnvironmentIntensity:1.02, metalEnvironmentScale:.86, highlightProtection:.90, exposure:.60,
+    environmentIntensity:.46, environmentRotation:.42, gemEnvironmentRotation:.68, gemEnvironmentIntensity:.88, metalEnvironmentScale:.72, highlightProtection:.84, exposure:.56,
     lighting:"luxury",
     post:{ssao:true,ssaoIntensity:.12,bloom:true,bloomIntensity:.045,bloomThreshold:1.55,lut:true,lutIntensity:.10,taa:true,dof:true,dofAperture:.00055,dofMaxBlur:.005}
   },
@@ -82,7 +82,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
   },
   producto: {
     environmentKey:"studioSoft", gemEnvironmentKey:"monochrome",
-    environmentIntensity:.50, environmentRotation:.34, gemEnvironmentRotation:.28, gemEnvironmentIntensity:.98, metalEnvironmentScale:.82, highlightProtection:.96, exposure:.70,
+    environmentIntensity:.47, environmentRotation:.34, gemEnvironmentRotation:.28, gemEnvironmentIntensity:.84, metalEnvironmentScale:.70, highlightProtection:.90, exposure:.66,
     lighting:"studioSoft",
     post:{ssao:true,ssaoIntensity:.07,bloom:false,bloomIntensity:.020,bloomThreshold:1.60,lut:true,lutIntensity:.055,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
@@ -100,9 +100,9 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
   },
   gemaClara: {
     environmentKey:"jewelry", gemEnvironmentKey:"white",
-    environmentIntensity:.55, environmentRotation:.08, gemEnvironmentRotation:-.08, gemEnvironmentIntensity:1.00, metalEnvironmentScale:.84, highlightProtection:.90, exposure:.72,
+    environmentIntensity:.50, environmentRotation:.08, gemEnvironmentRotation:-.08, gemEnvironmentIntensity:.84, metalEnvironmentScale:.70, highlightProtection:.86, exposure:.68,
     lighting:"jewelry",
-    post:{ssao:true,ssaoIntensity:.07,bloom:true,bloomIntensity:.035,bloomThreshold:1.65,lut:true,lutIntensity:.05,taa:true,dof:false,dofAperture:.00055,dofMaxBlur:.005}
+    post:{ssao:true,ssaoIntensity:.065,bloom:false,bloomIntensity:.018,bloomThreshold:1.70,lut:true,lutIntensity:.045,taa:true,dof:false,dofAperture:.00055,dofMaxBlur:.005}
   }
 };
 
