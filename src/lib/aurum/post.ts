@@ -42,6 +42,7 @@ export async function createAurumPostPipeline(
       composer.addPass(bloom);
     }
   } catch {
+    composer?.dispose?.();
     composer = null;
     ssaoPass = null;
   }
