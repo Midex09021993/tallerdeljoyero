@@ -30,6 +30,63 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   gemaClara:{id:"gemaClara",background:0xe7edf2,ground:0xdde4ea,groundRoughness:.42,groundMetalness:.01,groundVisible:true,environmentIntensity:.86,environmentRotation:.08,shadowIntensity:.16,shadowSoftness:.97,exposure:.86}
 };
 
+
+export type AurumHdriResource = {
+  id:string;
+  name:string;
+  url:string;
+  sourceUrl:string;
+  purpose:"soft-product"|"specular-product"|"neutral-product";
+  license:"CC0";
+};
+
+/**
+ * Recursos HDRI externos candidatos para producto/joyería.
+ * Se mantienen en catálogo sin cambiar los presets activos hasta validarlos visualmente.
+ */
+export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
+  {
+    id:"storyStudio02",
+    name:"Story Studio 02",
+    url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_02_1k.hdr",
+    sourceUrl:"https://polyhaven.com/a/story_studio_02",
+    purpose:"soft-product",
+    license:"CC0",
+  },
+  {
+    id:"storyStudio04",
+    name:"Story Studio 04",
+    url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
+    sourceUrl:"https://polyhaven.com/a/story_studio_04",
+    purpose:"soft-product",
+    license:"CC0",
+  },
+  {
+    id:"storyStudio05",
+    name:"Story Studio 05",
+    url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
+    sourceUrl:"https://polyhaven.com/a/story_studio_05",
+    purpose:"specular-product",
+    license:"CC0",
+  },
+  {
+    id:"monochromeStudio02",
+    name:"Monochrome Studio 02",
+    url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/monochrome_studio_02_1k.hdr",
+    sourceUrl:"https://polyhaven.com/a/monochrome_studio_02",
+    purpose:"specular-product",
+    license:"CC0",
+  },
+  {
+    id:"whiteStudio06",
+    name:"White Studio 06",
+    url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",
+    sourceUrl:"https://polyhaven.com/a/white_studio_06",
+    purpose:"neutral-product",
+    license:"CC0",
+  },
+];
+
 export const getAurumScenePreset=(id:string)=>AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
 
 export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:number;transmissionScale:number};
