@@ -9,6 +9,7 @@ export function applyAurumInitialModelMaterials(
     applyGem:(material:any,preset:any,thickness:number)=>void;
     gemPresetFromConfig:(gem:any)=>any;
     configureMetal:(material:any,metal:any)=>void;
+    presentation?:{metalEnvironmentScale?:number; metalClearcoatScale?:number};
     createInclusions:(target:any,gem:any)=>void;
     applyGemEnvironment:()=>void;
   }
@@ -33,6 +34,14 @@ export function applyAurumInitialModelMaterials(
       if(!metal) return;
       const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
       options.configureMetal(mat,metal);
+      // Initial product presentation uses the existing metal presets,
+      // but attenuates only the first-load reflection energy. User-selected
+      // materials later restore their catalog values.
+      const envScale = options.presentation?.metalEnvironmentScale ?? 1;
+      const coatScale = options.presentation?.metalClearcoatScale ?? 1;
+      if (Number.isFinite(envScale)) mat.envMapIntensity = Math.max(0, (mat.envMapIntensity ?? 1) * envScale);
+      if (Number.isFinite(coatScale)) mat.clearcoat = Math.max(0, (mat.clearcoat ?? 0) * coatScale);
+      mat.needsUpdate = true;
       x.material=mat;
     }else{
       x.material=options.fallbackMaterial;
