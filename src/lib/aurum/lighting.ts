@@ -79,6 +79,13 @@ export function createAurumLightingController(
         if (light.castShadow && light.shadow?.camera) {
           light.shadow.camera.near = Math.max(.01, radius * .02);
           light.shadow.camera.far = Math.max(distance, radius * 10);
+          if ("left" in light.shadow.camera) {
+            const limit = Math.max(radius * 2.2, 3);
+            light.shadow.camera.left = -limit;
+            light.shadow.camera.right = limit;
+            light.shadow.camera.top = limit;
+            light.shadow.camera.bottom = -limit;
+          }
           light.shadow.camera.updateProjectionMatrix?.();
         }
         if (light.target) {
