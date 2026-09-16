@@ -104,13 +104,13 @@ export type AurumRenderQualityId="low"|"high"|"ultra";
 export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality>={
   // Preview: keeps interaction fluid on normal/low-power hardware.
   low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.45},
-  // Production viewport: balanced resolution and physically useful shadows.
+  // Production viewport: enough resolution to improve metal highlights without
+  // making post-processing and transmission unnecessarily expensive.
   high:{pixelRatio:1.5,shadows:true,shadowMapSize:1024,transmissionScale:.75},
-  // Detail inspection: higher drawing-buffer resolution, shadow precision and
-  // full transmission resolution for gems. The 2x cap is an Aurum safety limit;
-  // unlike a device-DPR cap, this scale is deliberately applied on 1x displays
-  // so the three modes produce a real rendering-quality difference.
-  ultra:{pixelRatio:2.0,shadows:true,shadowMapSize:2048,transmissionScale:1},
+  // Ultra is a photographic-detail mode, not a brute-force "everything max".
+  // Keep the jump measurable while avoiding the 4x pixel cost of 2x DPR plus
+  // a 2x shadow map and full-resolution transmission on every frame.
+  ultra:{pixelRatio:1.75,shadows:true,shadowMapSize:1536,transmissionScale:.90},
 };
 
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
