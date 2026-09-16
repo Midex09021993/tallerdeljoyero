@@ -458,26 +458,29 @@ export function AurumRender() {
         applyAurumMaterialToModel(modelo, parteActiva, m, material);
       };
 
+      const calibrarReflejosMetalEscena = (photo:any) => {
+        if (!modelo) return;
+        modelo.traverse((x:any) => {
+          if (!x.isMesh || !x.material) return;
+          const ajustar=(m:any)=>{
+            if (!m?.userData?.aurumMetalRenderProfile) return m;
+            const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
+            if (!Number.isFinite(base)) return m;
+            m.envMapIntensity=base*photo.metalEnvironmentScale*photo.highlightProtection;
+            m.needsUpdate=true;
+            return m;
+          };
+          x.material=Array.isArray(x.material)?x.material.map(ajustar):ajustar(x.material);
+        });
+      };
+
       const aplicarEscenario = (id:EscenarioId) => {
         const preset = sceneController.apply(id);
         const photo = getAurumPhotographicProfile(id);
         // Change the optical environment for gemstones together with the scene.
         // This prevents the metal HDR from becoming the only reflection source.
         cargarEntornoGema(photo.gemEnvironmentKey);
-        if (modelo) {
-          modelo.traverse((x:any) => {
-            if (!x.isMesh || !x.material) return;
-            const ajustar=(m:any)=>{
-              if (!m?.userData?.aurumMetalRenderProfile) return m;
-              const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
-              if (!Number.isFinite(base)) return m;
-              m.envMapIntensity=base*photo.metalEnvironmentScale*photo.highlightProtection;
-              m.needsUpdate=true;
-              return m;
-            };
-            x.material=Array.isArray(x.material)?x.material.map(ajustar):ajustar(x.material);
-          });
-        }
+        calibrarReflejosMetalEscena(photo);
         // Scene, lighting and post are one photographic preset. This prevents
         // the previous behavior where changing only the background left the
         // same reflection rig and color response on every material.
@@ -547,6 +550,7 @@ export function AurumRender() {
         // the same at load time so the user sees a finished product preview.
         const presetProducto = sceneController.apply("producto");
         lightingController.applyPreset(presetProducto.lighting);
+        calibrarReflejosMetalEscena(getAurumPhotographicProfile("producto"));
         encuadrar();
         setVista("perspectiva");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
