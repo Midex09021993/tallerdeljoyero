@@ -379,9 +379,21 @@ export function AurumRender() {
         },undefined,()=>{});
       };
       let hdrRequestId = 0;
-      const cargarHDRI = (id:IluminacionId) => {
+      const cargarHDRI = (id:IluminacionId | EscenarioId) => {
         const requestId = ++hdrRequestId;
-        const url = hdrUrls[id] || hdrUrls.jewelry;
+        const hdrPorEscena: Record<EscenarioId, IluminacionId> = {
+          oscuro:"studioSoft",
+          claro:"studioSoft",
+          luxury:"luxury",
+          marmol:"studioSoft",
+          transparente:"studioSoft",
+          producto:"studioSoft",
+          galeria:"studioHard",
+          oroCalido:"luxury",
+          gemaClara:"jewelry",
+        };
+        const iluminacionHdri = hdrPorEscena[id as EscenarioId] || (id as IluminacionId) || "jewelry";
+        const url = hdrUrls[iluminacionHdri] || hdrUrls.jewelry;
         new RGBELoader().load(url, (hdrTexture:any) => {
           if (!vivo || requestId !== hdrRequestId) { hdrTexture.dispose?.(); return; }
           try {
@@ -392,7 +404,8 @@ export function AurumRender() {
             entorno = hdrEnvironment;
             escena.environment = entorno;
             // La intensidad del entorno la gobierna aplicarEscenario(); el HDRI solo reemplaza la textura.
-            escena.environmentRotation.y = id === "luxury" ? Math.PI * .42 : id === "studioHard" ? Math.PI * .08 : Math.PI * .16;
+            const rotaciones: Record<EscenarioId, number> = { oscuro:.16, claro:.20, luxury:.42, marmol:.16, transparente:.16, producto:.12, galeria:.62, oroCalido:.42, gemaClara:.08 };
+            escena.environmentRotation.y = Math.PI * (rotaciones[id as EscenarioId] ?? .16);
             anterior?.dispose?.();
           } catch {
             hdrTexture.dispose?.();
@@ -401,7 +414,7 @@ export function AurumRender() {
           // Fallback silencioso: RoomEnvironment mantiene el visor funcional sin red.
         });
       };
-      cargarHDRI("jewelry");
+      // El escenario inicial selecciona su propio Environment HDRI.
 
       const controles = new OrbitControls(camara,renderer.domElement);
       controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true; controles.enableRotate = true; controles.autoRotate = false; controles.autoRotateSpeed = 0.65;
@@ -658,6 +671,8 @@ export function AurumRender() {
           suelo.material.roughness = scenePreset.groundRoughness;
           suelo.material.metalness = scenePreset.groundMetalness;
         }
+        // El entorno HDRI pertenece a Scene, no a Lighting.
+        if (id !== "transparente") cargarHDRI(id);
       };
        const encuadrar = () => {
         if (!modelo) return;
