@@ -541,10 +541,6 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
               <span className="text-xs text-muted-foreground">{empujeEsPorcentaje ? "%" : "g"}</span>
             </div>
           </label>
-          <div className="rounded-xl border border-border bg-surface-muted p-3 text-xs">
-            <span className="text-muted-foreground">Valor por defecto del Dueño</span>
-            <strong className="mt-1 block">{num(pesoArbolPorDefecto, 2)} {empujeEsPorcentaje ? "%" : "g"}</strong>
-          </div>
         </div>
       </section>
 
