@@ -22,6 +22,7 @@ import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
+import { createAurumApi } from "../lib/aurum/api";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -497,7 +498,7 @@ export function AurumRender() {
       const camaraVista=(id:VistaId)=>{
         applyAurumCameraView(camara, controles, modelo, id);
       };
-      apiRef.current={
+      apiRef.current=createAurumApi({
         cargar,
         material:aplicarMaterial,
         gema:aplicarGema,
@@ -509,11 +510,11 @@ export function AurumRender() {
         iluminacion:aplicarIluminacion,
         sceneStudio:(patch:any)=>actualizarSceneStudio(patch),
         reset:()=>{ controles.autoRotate=false; encuadrar(); },
-         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
+        autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
         capturar:()=>{composerRef.current?.render();return renderer.domElement.toDataURL("image/png")},
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
-    partes:()=>modelo?obtenerPartes(modelo):[],
-    seleccionarParte:(id:string)=>{
+        partes:()=>modelo?obtenerPartes(modelo):[],
+        seleccionarParte:(id:string)=>{
           if (!id) { parteActiva=null; setParteSeleccionada(null); setParteSeleccionadaNombre(null); limpiarResaltado(); return; }
           let encontrado:any=null;
           modelo?.traverse((x:any)=>{if(x.uuid===id) encontrado=x;});
@@ -521,7 +522,7 @@ export function AurumRender() {
         },
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:camaraVista,
-      };
+      });
       const limpiarResaltado = () => {
         if (!resaltado) return;
         escena.remove(resaltado);
