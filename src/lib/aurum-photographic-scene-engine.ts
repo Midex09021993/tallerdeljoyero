@@ -20,7 +20,7 @@ export type AurumPhotographicProfile = {
   metalEnvironmentScale: number;
   highlightProtection: number;
   exposure: number;
-  lighting: "studioSoft"|"studioHard"|"jewelry"|"luxury";
+  lighting: "studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft";
   post: {
     ssao: boolean;
     ssaoIntensity: number;
@@ -81,10 +81,13 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
     post:{ssao:false,ssaoIntensity:.06,bloom:false,bloomIntensity:.02,bloomThreshold:1.55,lut:true,lutIntensity:.05,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   producto: {
-    environmentKey:"studioSoft", gemEnvironmentKey:"monochrome",
-    environmentIntensity:.47, environmentRotation:.34, gemEnvironmentRotation:.28, gemEnvironmentIntensity:.84, metalEnvironmentScale:.70, highlightProtection:.90, exposure:.66,
-    lighting:"studioSoft",
-    post:{ssao:true,ssaoIntensity:.07,bloom:false,bloomIntensity:.020,bloomThreshold:1.60,lut:true,lutIntensity:.055,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
+    // Product-shot profile: bright white sweep, restrained metal exposure and a
+    // dedicated clean gem environment, matching the logic of professional
+    // jewelry product photography without copying iJewel assets.
+    environmentKey:"white", gemEnvironmentKey:"white",
+    environmentIntensity:.43, environmentRotation:.22, gemEnvironmentRotation:-.10, gemEnvironmentIntensity:.98, metalEnvironmentScale:.62, highlightProtection:.88, exposure:.72,
+    lighting:"productSoft",
+    post:{ssao:true,ssaoIntensity:.055,bloom:false,bloomIntensity:.012,bloomThreshold:1.80,lut:true,lutIntensity:.045,taa:true,dof:false,dofAperture:.00045,dofMaxBlur:.0035}
   },
   galeria: {
     environmentKey:"studioHard", gemEnvironmentKey:"monochrome",
