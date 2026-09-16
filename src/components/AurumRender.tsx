@@ -870,6 +870,7 @@ export function AurumRender() {
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
       const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false);composer?.setSize(w,h);ssaoPass?.setSize?.(w,h)};
+      composerRef.current = composer;
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       const animate=()=>{
@@ -884,6 +885,8 @@ export function AurumRender() {
         obs.disconnect();
         renderer.domElement.removeEventListener("click", seleccionarPorClick);
         controles.dispose();
+        lightingController.dispose();
+        groundController.dispose();
         limpiarResaltado();
         if (hdriGroundTexture) { hdriGroundTexture.dispose?.(); hdriGroundTexture = null; }
         environmentController.dispose(entornoGema);
@@ -893,7 +896,7 @@ export function AurumRender() {
 
       animate();
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
-    return()=>{vivo=false;if(frameRef.current!==null) cancelAnimationFrame(frameRef.current);composerRef.current?.dispose?.();cleanup()};
+    return()=>{vivo=false;if(frameRef.current!==null) cancelAnimationFrame(frameRef.current);composerRef.current?.dispose?.();composerRef.current=null;cleanup()};
   },[]);
   useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
