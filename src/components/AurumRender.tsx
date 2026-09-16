@@ -131,9 +131,7 @@ export function AurumRender() {
   const abrirSeccion = useCallback((seccion: "materiales"|"gemas"|"escena") => {
     setUxSection(seccion);
   }, []);
-  // La biblioteca del visor muestra el catálogo completo para evitar clics innecesarios.
-  // Los desplegables siguen controlando qué familia está abierta.
-  const [mostrarTodasEscenas, setMostrarTodasEscenas] = useState(true);
+  // Los desplegables controlan qué familia está abierta; cada familia muestra su catálogo completo.
 
   // Estado central del configurador: una única fuente de verdad.
   const {
