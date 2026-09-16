@@ -7,6 +7,7 @@ import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT, getAurumLightingPreset } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView } from "../lib/aurum/camera";
+import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -678,79 +679,48 @@ export function AurumRender() {
       };
        const encuadrar = () => {
         if (!modelo) return;
-        modelo.updateMatrixWorld(true);
-        const b = new THREE.Box3().setFromObject(modelo);
-        const center = b.getCenter(new THREE.Vector3());
-        const size = b.getSize(new THREE.Vector3());
-        const max = Math.max(size.x,size.y,size.z)||1;
-        modelo.position.set(0,0,0);
-        modelo.scale.setScalar(2.6/max);
-        modelo.position.sub(center);
-        modelo.updateMatrixWorld(true);
-        const bf = new THREE.Box3().setFromObject(modelo);
-        const boundsSize = bf.getSize(new THREE.Vector3());
-        const h = boundsSize.y || 1;
-        // Composición de producto: deja aire visual alrededor de la pieza
-        // y coloca el objetivo ligeramente por encima del centro geométrico.
-        const targetY = bf.min.y + h * 0.52;
+        const prepared = prepareAurumModel(modelo, 2.6);
+        const bf = prepared.bounds;
+        const boundsSize = prepared.size;
+        const h = prepared.height;
+        const targetY = prepared.targetY;
         if (!suelo) {
           suelo = new THREE.Mesh(
             new THREE.PlaneGeometry(40,40),
-            new THREE.MeshStandardMaterial({
-              color:0x15181c,
-              metalness:0.02,
-              roughness:0.34
-            })
+            new THREE.MeshStandardMaterial({color:0x15181c,metalness:0.02,roughness:0.34})
           );
           suelo.rotation.x=-Math.PI/2;
           suelo.receiveShadow=true;
           suelo.renderOrder=-1;
           escena.add(suelo);
         } else {
-          // Mantener un Ground amplio y estable para que la sombra nunca llegue al borde.
-          const actual = suelo.geometry?.parameters?.width ?? 40;
-          if (actual < 40) {
-            suelo.geometry.dispose();
-            suelo.geometry = new THREE.PlaneGeometry(40,40);
-          }
+          const actual=suelo.geometry?.parameters?.width ?? 40;
+          if(actual<40){ suelo.geometry.dispose(); suelo.geometry=new THREE.PlaneGeometry(40,40); }
         }
-        suelo.position.set(0, bf.min.y-Math.max(h*.035,.015), 0);
+        suelo.position.set(0,bf.min.y-Math.max(h*.035,.015),0);
         suelo.receiveShadow=true;
 
-        // Adaptar luces y sombras al tamaño real de la pieza ya normalizada.
-        // La joya se normaliza a 2.6 unidades; las luces mantienen su composición
-        // relativa, mientras las sombras se ajustan al volumen visible.
-        const radio = Math.max(bf.getSize(new THREE.Vector3()).length() * 0.5, 0.8);
-        const distanciaLuz = Math.max(radio * 6, 12);
-        Object.values(lucesAurum).forEach((L:any) => {
-          if (!L) return;
-          if (L.distance !== undefined) L.distance = distanciaLuz;
-          if (L.castShadow && L.shadow?.camera) {
-            L.shadow.camera.near = Math.max(0.01, radio * 0.02);
-            L.shadow.camera.far = Math.max(distanciaLuz, radio * 10);
-            if ("left" in L.shadow.camera) {
-              const limite = Math.max(radio * 2.2, 3);
-              L.shadow.camera.left = -limite;
-              L.shadow.camera.right = limite;
-              L.shadow.camera.top = limite;
-              L.shadow.camera.bottom = -limite;
+        const radio=Math.max(boundsSize.length()*.5,.8);
+        const distanciaLuz=Math.max(radio*6,12);
+        Object.values(lucesAurum).forEach((L:any)=>{
+          if(!L)return;
+          if(L.distance!==undefined)L.distance=distanciaLuz;
+          if(L.castShadow&&L.shadow?.camera){
+            L.shadow.camera.near=Math.max(.01,radio*.02);
+            L.shadow.camera.far=Math.max(distanciaLuz,radio*10);
+            if("left" in L.shadow.camera){
+              const limite=Math.max(radio*2.2,3);
+              L.shadow.camera.left=-limite;L.shadow.camera.right=limite;
+              L.shadow.camera.top=limite;L.shadow.camera.bottom=-limite;
             }
             L.shadow.camera.updateProjectionMatrix();
           }
-          if (L.target) {
-            // La sombra debe seguir el mismo objetivo visual que la cámara.
-            // Así la zona de máxima precisión de la SpotLight coincide con la joya.
-            L.target.position.set(0, targetY, 0);
-            L.target.updateMatrixWorld();
-          }
+          if(L.target){L.target.position.set(0,targetY,0);L.target.updateMatrixWorld();}
         });
-
         aplicarEscenario(escenarioId);
-        // El modelo ya está normalizado a 2.6 unidades; no usar el tamaño
-        // original para la distancia, porque produciría encuadres excesivamente lejanos.
-        const radioVisual = Math.max(boundsSize.length() * 0.5, 1.3);
-        const distancia = Math.max(radioVisual * 1.55, 3.15);
-        camara.position.set(distancia * 0.72, distancia * 0.40, distancia);
+        const radioVisual=Math.max(boundsSize.length()*.5,1.3);
+        const distancia=Math.max(radioVisual*1.55,3.15);
+        camara.position.set(distancia*.72,distancia*.40,distancia);
         controles.target.set(0,targetY,0);
         camara.lookAt(0,targetY,0);
         camara.updateProjectionMatrix();
