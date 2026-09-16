@@ -214,7 +214,7 @@ export function AurumRender() {
   }, []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("producto"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
+  const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("producto"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -469,6 +469,8 @@ export function AurumRender() {
           configureMetal:configurarMaterial,
           createInclusions:crearInclusiones,
           applyGemEnvironment:aplicarEntornoGema,
+          initialMetalId:"plata925_pulida",
+          initialGemId:"diamante_natural",
           presentation:{metalEnvironmentScale:.48,metalClearcoatScale:.28},
         });
         modelo=interno;
