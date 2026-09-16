@@ -18,7 +18,7 @@ export function createAurumLightingController(
   shadowConfig: any,
   renderQuality: any
 ): AurumLightingController {
-  const lights: any = {};\n  let activeRigId = "jewelry";
+  const lights: any = {};\n  let activeRigId = "jewelry";\n  let lastRadius = 1;\n  let lastTargetY = 0;
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
@@ -133,7 +133,7 @@ export function createAurumLightingController(
       // Keep the studio rig composition proportional to the product.
       // The default coordinates are treated as normalized photographic offsets,
       // not fixed world-space positions.
-      const safeRadius = Math.max(Number(radius) || 0, 0.001);
+      const safeRadius = Math.max(Number(radius) || 0, 0.001);\n      lastRadius = safeRadius;\n      lastTargetY = Number(targetY) || 0;
       const rigScale = Math.max(safeRadius * 2.25, 1.8);
       const distance = Math.max(safeRadius * 6, 12);
       const normalizedPosition = (position: any) => {
