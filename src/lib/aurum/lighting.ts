@@ -1,6 +1,7 @@
 import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
 
 export interface AurumLightingController {
+  readonly lights: Record<string, any>;
   create: () => void;
   applyPreset: (id: string) => void;
   update: (patch: any) => void;
@@ -35,6 +36,7 @@ export function createAurumLightingController(
     }
   };
   return {
+    lights,
     create() {
       const mk = (type: string, color: number, cast: boolean) => {
         const light = type === "spot"
