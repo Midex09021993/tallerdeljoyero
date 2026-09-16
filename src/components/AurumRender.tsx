@@ -185,6 +185,8 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
+  const composerRef = useRef<any>(null);
+  const frameRef = useRef<number | null>(null);
   const lightingStudio:any = useMemo(() => ({...AURUM_LIGHTING_DEFAULT}), []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null), [tamanoGlb, setTamanoGlb] = useState<number|null>(null);
@@ -423,7 +425,7 @@ export function AurumRender() {
         const aplicar=(L:any,cfg:any)=>{L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
         aplicar(lucesAurum.key,lightingStudio.key); configurarSombrasAurum(lucesAurum.key); aplicar(lucesAurum.fill,lightingStudio.fill); configurarSombrasAurum(lucesAurum.fill); aplicar(lucesAurum.rim,lightingStudio.rim); configurarSombrasAurum(lucesAurum.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
       };
-      const actualizarLucesAurum=(patch:any)=>{
+      const actualizarLucesAurum = (patch:any)=>{
         Object.assign(lightingStudio,patch);
         const aplicar=(L:any,cfg:any)=>{if(!L||!cfg)return;L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
         aplicar(lucesAurum.key,lightingStudio.key); aplicar(lucesAurum.fill,lightingStudio.fill); aplicar(lucesAurum.rim,lightingStudio.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
@@ -867,13 +869,13 @@ export function AurumRender() {
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
       const animate=()=>{
-        frame=requestAnimationFrame(animate);
+        frame=(frameRef.current=requestAnimationFrame(animate));
         controles.update();
         if (composer) composer.render(); else renderer.render(escena,camara);
       };
       animate();
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
-    return()=>{vivo=false;cancelAnimationFrame(frame);composer?.dispose?.();cleanup()};
+    return()=>{vivo=false;if(frameRef.current!==null) cancelAnimationFrame(frameRef.current);composerRef.current?.dispose?.();cleanup()};
   },[]);
   useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
