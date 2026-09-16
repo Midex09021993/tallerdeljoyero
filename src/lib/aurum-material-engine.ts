@@ -32,9 +32,12 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   material.metalness=preset.metalness; material.roughness=preset.roughness;
   // Mantener el perfil óptico definido por el catálogo. La exposición y el Environment
   // se controlan en Scene; aquí no se recortan artificialmente los reflejos del metal.
-  material.envMapIntensity=Math.max(0, preset.envMapIntensity);
-  material.clearcoat=Math.max(0, Math.min(.25, preset.clearcoat));
-  material.clearcoatRoughness=Math.max(.025,preset.roughness*.55);
+  material.envMapIntensity=Math.max(0, Math.min(1.45, preset.envMapIntensity));
+  // En joyería metálica la reflexión debe dibujar la forma, no "quemarla".
+  // Limitamos el clearcoat porque una capa fuerte introduce un brillo tipo barniz
+  // sobre un metal que debería responder principalmente al entorno y a los softboxes.
+  material.clearcoat=Math.max(0, Math.min(.12, preset.clearcoat));
+  material.clearcoatRoughness=Math.max(.035,Math.min(.12,preset.roughness*.7));
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
   material.specularIntensity=preset.metalness>.9?1:.8;
