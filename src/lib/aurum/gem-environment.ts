@@ -32,6 +32,7 @@ export function createAurumGemEnvironment(
 ): AurumGemEnvironmentController {
   let current:any = null;
   const cache = new Map<string, any>();
+  const MAX_CACHE = 2;
 
   const applyToModel = (
     model:any,
@@ -50,9 +51,11 @@ export function createAurumGemEnvironment(
         if (!m?.userData?.aurumOpticalProfile) return m;
         m.envMap = texture;
         const family = m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default";
-        const authored = Number.isFinite(m.userData?.aurumGemEnvIntensity)
-          ? m.userData.aurumGemEnvIntensity
-          : getAurumGemEnvironmentIntensity(family);
+        const authored = Number.isFinite(m.userData?.aurumGemBaseEnvIntensity)
+          ? m.userData.aurumGemBaseEnvIntensity
+          : (Number.isFinite(m.userData?.aurumGemEnvIntensity)
+            ? m.userData.aurumGemEnvIntensity
+            : getAurumGemEnvironmentIntensity(family));
 
         // iJewel exposes environment intensity and per-gem rotation separately.
         // Keep the authored optical preset, then apply the photographic scene
@@ -71,6 +74,9 @@ export function createAurumGemEnvironment(
         m.userData = {
           ...(m.userData ?? {}),
           aurumGemEnvironmentRotation: rotation,
+          // Keep the authored intensity immutable. Scene changes must never
+          // multiply an already-scaled value and progressively wash out gems.
+          aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
         m.needsUpdate = true;
@@ -102,6 +108,13 @@ export function createAurumGemEnvironment(
             return;
           }
           cache.set(url, next);
+          while (cache.size > MAX_CACHE) {
+            const oldest = cache.keys().next().value as string | undefined;
+            if (!oldest || oldest === url) break;
+            const oldTexture = cache.get(oldest);
+            cache.delete(oldest);
+            oldTexture?.dispose?.();
+          }
           current = next;
           onLoaded(next);
         } catch {
