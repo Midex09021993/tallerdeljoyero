@@ -25,7 +25,7 @@ export async function createAurumPostPipeline(
 
   try {
     composer=new EffectComposer(renderer);
-    composer.setPixelRatio?.(Math.min(window.devicePixelRatio||1,quality?.pixelRatio||1.5));
+    composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5)));
     const renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
 
@@ -98,7 +98,7 @@ export async function createAurumPostPipeline(
       lutPass.enabled=config.lut!==false;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
-    composer.setPixelRatio?.(Math.min(window.devicePixelRatio||1,q.pixelRatio||1.5));
+    composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(q.pixelRatio??1.5)));
     composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
   };
 
