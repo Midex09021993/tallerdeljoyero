@@ -41,7 +41,7 @@ export type ConfigYeso = {
 };
 
 export const DEFAULT_CONFIG_VISUALIZADOR: ConfigVisualizador3D = {
-  densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.1, plata925: 10.36, plata950: 10.40, plata970: 10.43, platino: 21.4 },
+  densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.4, plata925: 10.39, plata950: 10.41, plata970: 10.44, platino: 21.45 },
   factorEmpuje: 10,
   factorSeguridad: 1,
 };
