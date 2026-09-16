@@ -64,12 +64,12 @@ export function createAurumLightingController(
         // broad rectangular highlights on polished jewelry. They do not cast
         // shadows; the key spot remains responsible for the contact shadow.
         if (THREE.RectAreaLight) {
-          lights.softbox = new THREE.RectAreaLight(0xffffff, 2.2, 7, 4);
+          lights.softbox = new THREE.RectAreaLight(0xffffff, 4.6, 7, 4);
           lights.softbox.position.set(3.5, 5.5, 4.5);
           lights.softbox.lookAt(0, 0, 0);
           scene.add(lights.softbox);
 
-          lights.strip = new THREE.RectAreaLight(0xffffff, 1.15, 2.2, 7);
+          lights.strip = new THREE.RectAreaLight(0xffffff, 2.8, 2.2, 7);
           lights.strip.position.set(-3.5, 3.2, 2.8);
           lights.strip.lookAt(0, 0, 0);
           scene.add(lights.strip);
