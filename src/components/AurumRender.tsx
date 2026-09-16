@@ -274,7 +274,7 @@ export function AurumRender() {
 
       const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
       let entorno = environmentController.current;
-      escena.environmentIntensity = 0.82;
+      // Environment y exposición quedan gobernados exclusivamente por SceneController.
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
@@ -368,7 +368,7 @@ export function AurumRender() {
       const sceneStudio={
         hdriGround:false, worldRadius:40, tripodHeight:1.2,
         originX:0, originY:0, originZ:0, opacity:1,
-        environmentIntensity:1, exposure:.62, ground:true, shadows:true
+        ground:true, shadows:true
       };
       const actualizarSceneStudio=(patch:any)=>{
         const next={...sceneStudio,...patch};
@@ -378,8 +378,7 @@ export function AurumRender() {
           tripodHeight:next.tripodHeight, originX:next.originX,
           originY:next.originY, originZ:next.originZ, opacity:next.opacity
         });
-        escena.environmentIntensity=next.environmentIntensity;
-        renderer.toneMappingExposure=next.exposure;
+        // SceneController es la única fuente de environment/exposición.
         groundController.setVisible(next.ground);
         renderer.shadowMap.enabled=next.shadows;
         actualizarHdriGround();
@@ -422,6 +421,9 @@ export function AurumRender() {
         environmentController,
         (id, rotation) => cargarHDRI(id as EscenarioId, rotation)
       );
+      // Aplicar el preset inicial mediante la única fuente de verdad de escena.
+      sceneController.apply(escenarioId);
+
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
       let resaltado:any = null;
