@@ -686,7 +686,11 @@ export function AurumRender() {
         modelo.position.sub(center);
         modelo.updateMatrixWorld(true);
         const bf = new THREE.Box3().setFromObject(modelo);
-        const h = bf.getSize(new THREE.Vector3()).y||1;
+        const boundsSize = bf.getSize(new THREE.Vector3());
+        const h = boundsSize.y || 1;
+        // Composición de producto: deja aire visual alrededor de la pieza
+        // y coloca el objetivo ligeramente por encima del centro geométrico.
+        const targetY = bf.min.y + h * 0.52;
         if (!suelo) {
           suelo = new THREE.Mesh(
             new THREE.PlaneGeometry(40,40),
@@ -738,8 +742,12 @@ export function AurumRender() {
         });
 
         aplicarEscenario(escenarioId);
-        camara.position.set(3.5,2.4,4.6);
-        controles.target.set(0,0,0); controles.update();
+        const distancia = Math.max(max * 1.85, 4.6);
+        camara.position.set(distancia * 0.76, distancia * 0.48, distancia);
+        controles.target.set(0,targetY,0);
+        camara.lookAt(0,targetY,0);
+        camara.updateProjectionMatrix();
+        controles.update();
       };
 
       // Adaptadores de entrada: cada formato produce un Object3D común.
