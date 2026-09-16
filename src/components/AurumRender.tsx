@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "../lib/aurum-material-engine";
-import { getAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints, getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics } from "../lib/aurum-material-engine";
+import {
+  applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
+  getAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints,
+  getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics,
+} from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
@@ -15,7 +18,7 @@ import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
-import { frameAurumProduct, disposeAurumViewer } from "../lib/aurum/viewer";
+import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
@@ -24,7 +27,6 @@ import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
-import { createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
