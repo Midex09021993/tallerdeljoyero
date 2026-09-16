@@ -469,7 +469,7 @@ export function AurumRender() {
           configureMetal:configurarMaterial,
           createInclusions:crearInclusiones,
           applyGemEnvironment:aplicarEntornoGema,
-          presentation:{metalEnvironmentScale:.72,metalClearcoatScale:.55},
+          presentation:{metalEnvironmentScale:.48,metalClearcoatScale:.28},
         });
         modelo=interno;
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
