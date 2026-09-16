@@ -23,7 +23,12 @@ export function prepareAurumModel(model: THREE.Object3D, scaleTarget = 2.6): Aur
   const bounds = new THREE.Box3().setFromObject(model);
   const normalizedSize = bounds.getSize(new THREE.Vector3());
   const height = normalizedSize.y || 1;
-  const targetY = bounds.min.y + height * .52;
+  // Keep the model resting on the ground while preserving its normalized scale.
+  const groundOffset = -bounds.min.y;
+  model.position.y += groundOffset;
+  model.updateMatrixWorld(true);
+  const groundedBounds = new THREE.Box3().setFromObject(model);
+  const targetY = groundedBounds.min.y + (groundedBounds.max.y - groundedBounds.min.y) * .52;
 
-  return { model, bounds, size: normalizedSize, height, targetY };
+  return { model, bounds: groundedBounds, size: normalizedSize, height, targetY };
 }
