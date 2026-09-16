@@ -145,7 +145,6 @@ export function AurumRender() {
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
-  const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
 
   useEffect(() => {
     let vivo = true;
@@ -533,10 +532,8 @@ export function AurumRender() {
         // Una capa de metal abre Material; una capa de piedra/gema abre Gemas.
         // No basta con cambiar bibliotecaTipo: la UI se renderiza con uxSection.
         if (categoria === "metal") {
-          setBibliotecaTipo("metales");
           setUxSection("materiales");
         } else if (categoria === "gema") {
-          setBibliotecaTipo("gemas");
           setUxSection("gemas");
         }
         setPanel("materiales");
@@ -688,7 +685,7 @@ export function AurumRender() {
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="materiales"?"text-[#d4af37]":"text-white/25")}>{uxSection==="materiales"?"Abierto":"Abrir"}</span>
               </button>
               {uxSection==="materiales"&&<div className="grid grid-cols-5 gap-2">
-                {MATERIALES.map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{abrirSeccion("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
+                {MATERIALES.map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{abrirSeccion("materiales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(materialId===m.id?"border-[#34c7ff] bg-white/10 shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-white/10 bg-white/[.05] group-hover:border-white/25")}><span className="size-9 rounded-full border border-white/25 shadow-inner" style={{background:hexColor(m.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{m.nombre}</span>
                 </button>)}
@@ -702,7 +699,7 @@ export function AurumRender() {
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="gemas"?"text-[#d4af37]":"text-white/25")}>{uxSection==="gemas"?"Abierto":"Abrir"}</span>
               </button>
               {uxSection==="gemas"&&<div className="grid grid-cols-5 gap-2">
-                {GEMAS.map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{abrirSeccion("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
+                {GEMAS.map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{abrirSeccion("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(gemaId===g.id?"border-[#34c7ff] bg-white/10":"border-transparent bg-transparent group-hover:border-white/15")}><span className="size-9 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(g.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{g.nombre}</span>
                 </button>)}
