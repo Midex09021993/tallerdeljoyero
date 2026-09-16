@@ -91,9 +91,11 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
 export const getAurumScenePreset=(id:string)=>AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
 
 export type AurumRenderQuality={
+  /** Drawing-buffer scale used by the interactive viewport. */
   pixelRatio:number;
   shadows:boolean;
   shadowMapSize:number;
+  /** Resolution scale of Three.js' transmission render target for gems. */
   transmissionScale:number;
 };
 
@@ -105,8 +107,9 @@ export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality
   // Production viewport: balanced resolution and physically useful shadows.
   high:{pixelRatio:1.5,shadows:true,shadowMapSize:1024,transmissionScale:.75},
   // Detail inspection: higher drawing-buffer resolution, shadow precision and
-  // full transmission resolution for gems. This is intentionally still capped
-  // at 2x so "Ultra" does not explode GPU cost on high-DPI displays.
+  // full transmission resolution for gems. The 2x cap is an Aurum safety limit;
+  // unlike a device-DPR cap, this scale is deliberately applied on 1x displays
+  // so the three modes produce a real rendering-quality difference.
   ultra:{pixelRatio:2.0,shadows:true,shadowMapSize:2048,transmissionScale:1},
 };
 
