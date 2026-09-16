@@ -71,6 +71,7 @@ export function disposeAurumViewer(viewer: {
   groundController?: any;
   lightingController?: any;
   environmentController?: any;
+  gemEnvironmentController?: { dispose?: (texture?: any) => void };
   gemEnvironment?: any;
   hdriGroundTexture?: any;
   clearSelection?: () => void;
