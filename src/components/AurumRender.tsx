@@ -10,6 +10,7 @@ import { applyAurumCameraView } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
+import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
@@ -338,6 +339,14 @@ export function AurumRender() {
           }
         );
       };
+
+      const sceneController = createAurumSceneController(
+        escena,
+        renderer,
+        groundController,
+        environmentController,
+        (id, rotation) => cargarHDRI(id as EscenarioId, rotation)
+      );
       // El escenario inicial selecciona su propio Environment HDRI.
 
       const controles = new OrbitControls(camara,renderer.domElement);
@@ -499,29 +508,7 @@ export function AurumRender() {
         return texture;
       };
       const aplicarEscenario = (id:EscenarioId) => {
-        const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
-        const scenePreset = getAurumScenePreset(id);
-        // Scene preset is the sole owner of exposure and environment intensity.
-        // postConfig.exposure is reserved for the Post Processing phase.
-        renderer.toneMappingExposure = scenePreset.exposure;
-        escena.environmentIntensity = scenePreset.environmentIntensity;
-        escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
-        // El Ground se crea una sola vez al inicializar el módulo.
-        if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
-        else {
-          renderer.setClearColor(scenePreset.background,1);
-          // Scene conserva una sola fuente para el fondo. El gradiente visual
-          // queda desactivado en esta fase para que no haya dos sistemas de Scene
-          // compitiendo por el background.
-          const fondoAnterior = escena.background;
-          if (fondoAnterior && (fondoAnterior as any).isTexture) {
-            (fondoAnterior as any).dispose();
-          }
-          escena.background = null;
-        }
-        groundController.updateFromPreset(scenePreset);
-        // El entorno HDRI pertenece a Scene, no a Lighting.
-        if (id !== "transparente") cargarHDRI(id, scenePreset.environmentRotation);
+        sceneController.apply(id);
       };
        const encuadrar = () => {
         if (!modelo) return;
