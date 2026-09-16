@@ -15,9 +15,12 @@ export function prepareAurumModel(model: THREE.Object3D, scaleTarget = 2.6): Aur
   const size = source.getSize(new THREE.Vector3());
   const max = Math.max(size.x,size.y,size.z) || 1;
 
-  model.position.set(0,0,0);
-  model.scale.setScalar(scaleTarget / max);
-  model.position.sub(center);
+  // Normalize around the true geometric center. The center must be scaled
+  // together with the model; subtracting the unscaled center causes a visible
+  // offset that becomes more pronounced on imported 3DM files.
+  const scale = scaleTarget / max;
+  model.scale.setScalar(scale);
+  model.position.copy(center).multiplyScalar(-scale);
   model.updateMatrixWorld(true);
 
   const bounds = new THREE.Box3().setFromObject(model);
