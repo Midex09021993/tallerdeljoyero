@@ -18,6 +18,7 @@ import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, resizeAurumViewer, disposeAurumViewer } from "../lib/aurum/viewer";
 import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
+import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -473,27 +474,7 @@ export function AurumRender() {
       // Adaptadores de entrada: cada formato produce un Object3D común.
       // Rhino 3DM se decodifica con Rhino3dmLoader/WebAssembly y después
       // sigue exactamente el mismo flujo: Object3D -> GLB interno -> WebGL.
-      const obtenerPartes = (objeto:any):ParteModelo[] => {
-        const resultado:ParteModelo[] = [];
-        const layers = Array.isArray(objeto?.userData?.layers) ? objeto.userData.layers : [];
-        objeto.traverse((x:any) => {
-          if (x === objeto) return;
-          const esMalla = !!x.isMesh;
-          const tieneHijos = Array.isArray(x.children) && x.children.length > 0;
-          if (!esMalla && !tieneHijos) return;
-          const nombre = (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : (esMalla ? "Malla" : "Componente");
-          const attrs = x.userData?.attributes || {};
-          const meta = x.userData?.aurumRhino;
-          const layerIndex = Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1;
-          const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
-          const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
-          const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
-          const categoria = meta?.categoria ?? clasificarCapa(capa || "", colorCapa);
-          const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== objeto ? 1 : 0));
-          resultado.push({ id: x.uuid, nombre, tipo: esMalla ? "malla" : "grupo", nivel, capa, colorCapa, categoria });
-        });
-        return resultado;
-      };
+      const obtenerPartes = (objeto:any):ParteModelo[] => getAurumModelParts(objeto, colorRhinoHex, clasificarCapa);
 
       const cargar = async(file:File, informar:(paso:string)=>void) => {
         const ext=file.name.split(".").pop()?.toLowerCase();
