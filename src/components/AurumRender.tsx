@@ -5,7 +5,7 @@ import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT }
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
-import { AURUM_LIGHTING_DEFAULT, getAurumLightingPreset } from "../lib/aurum-lighting-engine";
+import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
@@ -366,13 +366,7 @@ export function AurumRender() {
       lightingController.create();
 
       const aplicarIluminacion = (id:IluminacionId) => {
-        const presets=getAurumLightingPreset(id);
-        actualizarLucesAurum({
-          key:{...lightingStudio.key,intensity:presets.key},
-          fill:{...lightingStudio.fill,intensity:presets.fill},
-          rim:{...lightingStudio.rim,intensity:presets.rim},
-          gem:{...lightingStudio.gem,intensity:presets.gem},
-        });
+        lightingController.applyPreset(id);
         // Iluminación solo modifica luces. Scene conserva Environment y exposición.
       };
 
