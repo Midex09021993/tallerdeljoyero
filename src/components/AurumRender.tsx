@@ -461,6 +461,8 @@ export function AurumRender() {
       };
        const encuadrar = () => {
         if (!modelo) return;
+        // ModelPreparation + Camera/Lighting se coordinan desde el adaptador de framing.
+        // Mantener esta llamada como único punto de encuadre evita duplicar transformaciones.
         frameAurumProduct({
           camera: camara, controls: controles, lights: lucesAurum,
           groundController, lightingController, scene: escena, renderer,
