@@ -3,6 +3,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
+import { getAurumPhotographicProfile } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -281,11 +282,13 @@ export function AurumRender() {
       renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
-      const { composer, ssaoPass } = await createAurumPostPipeline(
+      const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
+      const { composer, ssaoPass, applyQuality: applyPostQuality } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
-        { ...ssaoConfig, ...postConfig }
+        postRuntimeConfig,
+        renderQuality
       );
 
       const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
@@ -390,6 +393,7 @@ export function AurumRender() {
         const dpr = Math.min(window.devicePixelRatio || 1, renderQuality.pixelRatio);
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
+        applyPostQuality?.(renderQuality);
         (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
         renderer.shadowMap.enabled = renderQuality.shadows;
         lightingController.create();
@@ -425,8 +429,19 @@ export function AurumRender() {
       );
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
       const presetInicial = sceneController.apply("producto");
+      const photoInicial = getAurumPhotographicProfile("producto");
+      Object.assign(postRuntimeConfig, {
+        ssao: photoInicial.post.ssao,
+        ssaoIntensity: photoInicial.post.ssaoIntensity,
+        bloom: photoInicial.post.bloom,
+        bloomIntensity: photoInicial.post.bloomIntensity,
+        bloomThreshold: photoInicial.post.bloomThreshold,
+        lut: photoInicial.post.lut,
+        lutIntensity: photoInicial.post.lutIntensity,
+      });
       // La escena es la fuente de verdad también para la estrategia de iluminación.
-      lightingController.applyPreset(presetInicial.lighting);
+      lightingController.applyPreset(photoInicial.lighting);
+      applyPostQuality?.(renderQuality);
 
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
@@ -464,9 +479,21 @@ export function AurumRender() {
 
       const aplicarEscenario = (id:EscenarioId) => {
         const preset = sceneController.apply(id);
-        // Cada escena define su propia estrategia fotográfica. Así el cambio
-        // de fondo no deja la misma iluminación aplicada a todas las joyas.
-        lightingController.applyPreset(preset.lighting);
+        const photo = getAurumPhotographicProfile(id);
+        // Scene, lighting and post are one photographic preset. This prevents
+        // the previous behavior where changing only the background left the
+        // same reflection rig and color response on every material.
+        lightingController.applyPreset(photo.lighting);
+        Object.assign(postRuntimeConfig, {
+          ssao: photo.post.ssao,
+          ssaoIntensity: photo.post.ssaoIntensity,
+          bloom: photo.post.bloom,
+          bloomIntensity: photo.post.bloomIntensity,
+          bloomThreshold: photo.post.bloomThreshold,
+          lut: photo.post.lut,
+          lutIntensity: photo.post.lutIntensity,
+        });
+        applyPostQuality?.(renderQuality);
       };
        const encuadrar = () => {
         if (!modelo) return;
