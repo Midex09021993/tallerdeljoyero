@@ -46,5 +46,6 @@ export async function createAurumPostPipeline(
     ssaoPass = null;
   }
 
+  if (!composer) return { composer: null, ssaoPass: null };
   return { composer, ssaoPass };
 }
