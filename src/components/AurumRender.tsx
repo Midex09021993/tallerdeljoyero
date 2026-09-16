@@ -10,6 +10,7 @@ import { applyAurumCameraView } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
+import { createAurumGround } from "../lib/aurum/ground";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -484,7 +485,8 @@ export function AurumRender() {
         crearHdriGround();
       };
 
-      let suelo:any = null;
+      const groundController = createAurumGround(THREE, escena);
+      let suelo:any = groundController.mesh;
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
       let resaltado:any = null;
@@ -619,11 +621,7 @@ export function AurumRender() {
         renderer.toneMappingExposure = Math.max(0.65, Math.min(1.15, scenePreset.exposure * postConfig.exposure / .62));
         escena.environmentIntensity = Math.min(1.0, Math.max(0.72, scenePreset.environmentIntensity));
         escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
-        // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
-        if (!suelo) {
-          suelo = new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshStandardMaterial({color:0xc9c7c2,metalness:.02,roughness:.4}));
-          suelo.rotation.x=-Math.PI/2; suelo.position.y=-0.02; suelo.receiveShadow=true; escena.add(suelo);
-        }
+        // El Ground se crea una sola vez al inicializar el módulo.
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(scenePreset.background,1);
@@ -652,21 +650,7 @@ export function AurumRender() {
         const boundsSize = prepared.size;
         const h = prepared.height;
         const targetY = prepared.targetY;
-        if (!suelo) {
-          suelo = new THREE.Mesh(
-            new THREE.PlaneGeometry(40,40),
-            new THREE.MeshStandardMaterial({color:0x15181c,metalness:0.02,roughness:0.34})
-          );
-          suelo.rotation.x=-Math.PI/2;
-          suelo.receiveShadow=true;
-          suelo.renderOrder=-1;
-          escena.add(suelo);
-        } else {
-          const actual=suelo.geometry?.parameters?.width ?? 40;
-          if(actual<40){ suelo.geometry.dispose(); suelo.geometry=new THREE.PlaneGeometry(40,40); }
-        }
-        suelo.position.set(0,bf.min.y-Math.max(h*.035,.015),0);
-        suelo.receiveShadow=true;
+        groundController.positionUnderModel(bf);
 
         const radio=Math.max(boundsSize.length()*.5,.8);
         const distanciaLuz=Math.max(radio*6,12);
