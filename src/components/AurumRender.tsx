@@ -350,11 +350,6 @@ export function AurumRender() {
 
 
       let modelo:any = null;
-      let hdriGround:any = null;
-      let hdriGroundTexture:any = null;
-      // HDRI Ground está reservado para una futura integración; se mantiene
-      // fuera del flujo activo para no alterar la presentación actual.
-      const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT, enabled:false};
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
       const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
@@ -367,33 +362,7 @@ export function AurumRender() {
         // Iluminación solo modifica luces. Scene conserva Environment y exposición.
       };
 
-      const crearHdriGround = () => {
-        if (!hdriGroundTexture || !hdriGroundConfig.enabled) return;
-        if (hdriGround) { escena.remove(hdriGround); hdriGround.geometry?.dispose?.(); }
-        const r=Math.max(5,hdriGroundConfig.worldRadius);
-        const geo=new THREE.SphereGeometry(r,64,32,0,Math.PI*2,0,Math.PI*.5);
-        const mat=new THREE.MeshBasicMaterial({
-          map:hdriGroundTexture,
-          side:THREE.BackSide,
-          transparent:true,
-          opacity:hdriGroundConfig.opacity,
-          depthWrite:false
-        });
-        hdriGround=new THREE.Mesh(geo,mat);
-        hdriGround.position.set(hdriGroundConfig.originX,hdriGroundConfig.originY+hdriGroundConfig.tripodHeight,hdriGroundConfig.originZ);
-        hdriGround.rotation.x=Math.PI;
-        hdriGround.renderOrder=-10;
-        escena.add(hdriGround);
-      };
-
-      const actualizarHdriGround=()=>{
-        if(!hdriGroundConfig.enabled){
-          if(hdriGround){escena.remove(hdriGround);hdriGround=null;}
-          return;
-        }
-        crearHdriGround();
-      };
-
+      // HDRI Ground is managed by groundController and remains disabled for now.
       const groundController = createAurumGround(THREE, escena);
       let suelo:any = groundController.mesh;
       const sceneController = createAurumSceneController(
