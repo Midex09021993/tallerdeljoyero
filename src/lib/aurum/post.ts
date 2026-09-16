@@ -16,6 +16,7 @@ export async function createAurumPostPipeline(
   let composer: any = null;
   let ssaoPass: any = null;
   let lutPass: any = null;
+  let outputPass: any = null;
 
   try {
     composer = new EffectComposer(renderer);
@@ -90,12 +91,21 @@ export async function createAurumPostPipeline(
       lutPass.intensity = Math.max(0, Math.min(1, ssaoConfig.lutIntensity ?? 0.12));
       composer.addPass(lutPass);
     }
+    // Three.js keeps the EffectComposer pipeline in HDR. OutputPass is the final
+    // display transform: it applies the renderer's tone mapping and color-space
+    // conversion exactly once. This is essential for consistent exposure and
+    // highlight roll-off on polished jewelry, especially yellow gold.
+    const { OutputPass } = await import("three/examples/jsm/postprocessing/OutputPass.js");
+    outputPass = new OutputPass();
+    composer.addPass(outputPass);
+
 
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
     composer = null;
     ssaoPass = null;
+    outputPass = null;
   }
 
   if (!composer) return { composer: null, ssaoPass: null };
