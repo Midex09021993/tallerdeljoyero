@@ -162,7 +162,7 @@ export function createAurumLightingController(
           const rig = getAurumReflectionRigProfile(activeRigId);
           const source = rig[name as "softbox"|"strip"|"front"|"kicker"|"edgeLeft"|"edgeRight"].position;
           const n = normalizedPosition(source);
-          light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          light.position.set(n[0]! * rigScale, targetY + n[1]! * rigScale, n[2]! * rigScale);
           light.lookAt?.(0, targetY, 0);
           return;
         }
@@ -170,7 +170,7 @@ export function createAurumLightingController(
         const source = config?.[name]?.position;
         if (source) {
           const n = normalizedPosition(source);
-          light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          light.position.set(n[0]! * rigScale, targetY + n[1]! * rigScale, n[2]! * rigScale);
         }
         if (light.castShadow && light.shadow?.camera) {
           light.shadow.camera.near = Math.max(.01, radius * .02);
