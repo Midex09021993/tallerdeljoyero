@@ -3,7 +3,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
-import { getAurumPhotographicProfile, getAurumHdriUrl } from "../lib/aurum-photographic-scene-engine";
+import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -301,7 +301,7 @@ export function AurumRender() {
       // óptico limpio para refracción/dispersion.
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
       let entornoGema:any = null;
-      let gemEnvironmentUrl = getAurumHdriUrl("monochrome");
+      let gemEnvironmentUrl = getAurumGemHdriUrl("gemNeutral");
       let gemEnvironmentRotation = .28;
       let gemEnvironmentIntensityScale = .98;
       const aplicarEntornoGema = () => {
@@ -312,8 +312,8 @@ export function AurumRender() {
         });
       };
       let gemEnvironmentRequestId = 0;
-      const cargarEntornoGema = (key="monochrome", rotation=.28, intensityScale=.98) => {
-        gemEnvironmentUrl = getAurumHdriUrl(key);
+      const cargarEntornoGema = (key="gemNeutral", rotation=.28, intensityScale=.98) => {
+        gemEnvironmentUrl = getAurumGemHdriUrl(key);
         gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .28;
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
         const requestId = ++gemEnvironmentRequestId;
@@ -330,7 +330,7 @@ export function AurumRender() {
       // Precarga el GemEnvironment una sola vez. El modelo se engancha
       // cuando termina de cargar; así las gemas no quedan negras por falta de
       // environment en el primer frame.
-      cargarEntornoGema("monochrome", .28, .98);
+      cargarEntornoGema("gemNeutral", .28, .98);
 
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId | EscenarioId) => {
