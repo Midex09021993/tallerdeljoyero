@@ -20,6 +20,7 @@ import { createAurumConfiguration, createAurumVariations, createAurumConfigurato
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
+import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -464,26 +465,12 @@ export function AurumRender() {
           objeto.rotation.x = -Math.PI / 2;
           objeto.updateMatrixWorld(true);
         }
-        // Rhino 3DM conserva las capas en userData del objeto raíz y el layerIndex
-        // en userData.attributes de cada objeto. Capturamos esa información antes
-        // de convertir a GLB para que no se pierda durante la conversión.
-        const metadataCapas = ext==="3dm"
-          ? obtenerPartes(objeto).filter(p=>p.tipo==="malla").map(p=>({nombre:p.nombre,capa:p.capa,colorCapa:p.colorCapa,categoria:p.categoria}))
-          : [];
         informar("Convirtiendo a GLB...");
         const glb = await convertAurumToGlb(objeto);
         informar("Preparando visualización...");
-        const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
-        const interno=(await new GLTFLoader().parseAsync(glb,"")).scene;
-        if (metadataCapas.length) {
-          let i=0;
-          interno.traverse((x:any)=>{
-            if (!x.isMesh) return;
-            const meta=metadataCapas[i++];
-            if (!meta) return;
-            x.userData = {...x.userData, aurumRhino: meta};
-          });
-        }
+        const interno = await normalizeAurumModel(
+          objeto, glb, ext, colorRhinoHex, clasificarCapa
+        );
         quitar();
         interno.traverse((x:any)=>{
           if (!x.isMesh) return;
