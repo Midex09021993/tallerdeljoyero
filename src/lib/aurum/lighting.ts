@@ -22,7 +22,6 @@ export function createAurumLightingController(
   let activeRigId = "jewelry";
   let lastRadius = 1;
   let lastTargetY = 0;
-  const __lovablePreviewDiagnosticsProbe: string = 123;
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
