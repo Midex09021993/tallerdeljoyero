@@ -7,6 +7,6 @@
 export type AurumSsaoConfig={enabled:boolean;radius:number;intensity:number;bias:number;quality:"low"|"medium"|"high"};
 export const AURUM_SSAO_CONFIG:AurumSsaoConfig={
  // AO de contacto suave: aporta profundidad sin ennegrecer los metales pulidos.
- enabled:true,radius:.18,intensity:.16,bias:.02,quality:"medium"
+ enabled:false,radius:.28,intensity:.22,bias:.025,quality:"medium"
 };
 export const getAurumSsaoConfig=()=>({...AURUM_SSAO_CONFIG});
