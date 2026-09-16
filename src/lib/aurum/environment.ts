@@ -51,6 +51,8 @@ export function createAurumEnvironment(
       // scene.environmentRotation when the renderer supports it.
       if (scene.environmentRotation?.set) {
         scene.environmentRotation.set(0, rotation, 0);
+      } else if (scene.environmentRotation) {
+        scene.environmentRotation.y = rotation;
       }
     },
     setIntensity(value: number) {
