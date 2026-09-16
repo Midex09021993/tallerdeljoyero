@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
-import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
+import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -203,6 +203,8 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
+  const [qualityOpen, setQualityOpen] = useState(false);
+  const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
   const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT}));
@@ -250,7 +252,7 @@ export function AurumRender() {
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
-      const renderQuality = getAurumRenderQuality("balanced");
+      let renderQuality = getAurumRenderQuality(renderQualityId);
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: renderQuality.pixelRatio,
         maxDistance: 100,
@@ -379,6 +381,28 @@ export function AurumRender() {
       let modelo:any = null;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
+
+      // Render Quality changes the actual GPU workload, not just a label:
+      // drawing-buffer resolution, shadow-map precision and gem transmission
+      // resolution are updated together. EffectComposer receives the same DPR.
+      const aplicarCalidadRender = (id:AurumRenderQualityId) => {
+        renderQuality = getAurumRenderQuality(id);
+        const dpr = Math.min(window.devicePixelRatio || 1, renderQuality.pixelRatio);
+        renderer.setPixelRatio(dpr);
+        composer?.setPixelRatio?.(dpr);
+        (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
+        renderer.shadowMap.enabled = renderQuality.shadows;
+        lightingController.create();
+        // Existing shadow maps must be rebuilt at the selected precision.
+        Object.values(lucesAurum).forEach((light:any) => {
+          if (light?.shadow?.map) {
+            light.shadow.map.dispose?.();
+            light.shadow.map = null;
+          }
+        });
+        lightingController.create();
+        setRenderQualityId(id);
+      };
       const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
       lucesRef.current = actualizarLucesAurum;
       // Inicializar las luces configurables desde el arranque del visor.
@@ -539,6 +563,7 @@ export function AurumRender() {
         },
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:camaraVista,
+        calidad:aplicarCalidadRender,
       });
       const limpiarResaltado = () => {
         if (!resaltado) return;
@@ -648,6 +673,10 @@ export function AurumRender() {
   const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null)}finally{setCargando(false);setPaso(null)}},[]);
   const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
+  const cambiarCalidad=(id:AurumRenderQualityId)=>{
+    apiRef.current?.calidad(id);
+    setQualityOpen(false);
+  };
 
   const hexColor = (c:number) => "#" + c.toString(16).padStart(6, "0");
   const lightingPanel=(
@@ -728,7 +757,24 @@ export function AurumRender() {
               <button type="button" title="Reiniciar cámara" aria-label="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><RotateCcw className="size-[18px]"/></button>
               <button type="button" title="Zoom Extents" aria-label="Zoom Extents" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Maximize2 className="size-[18px]"/></button>
               <button type="button" title="Pantalla completa" aria-label="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 transition hover:bg-black/5 hover:text-black"><Expand className="size-[18px]"/></button>
-              <div className="my-0.5 h-px w-6 bg-black/10"/>
+              <div className="relative">
+                <button type="button" title="Calidad de render" aria-label="Calidad de render" onClick={()=>setQualityOpen(v=>!v)} className={"grid size-10 place-items-center rounded-xl transition "+(qualityOpen?"bg-gold/15 text-gold":"text-black/70 hover:bg-black/5 hover:text-black")}>
+                  <Sparkles className="size-[18px]"/>
+                </button>
+                {qualityOpen&&<div className="absolute bottom-0 right-12 w-44 rounded-xl border border-[#d4af37]/60 bg-[#111315]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
+                  <div className="px-2 pb-1.5 text-[8px] font-semibold uppercase tracking-[.18em] text-white/35">Calidad de render</div>
+                  {([
+                    ["low","Baja","Vista rápida","1× · sombras 512"],
+                    ["high","Alta","Producción","1.5× · sombras 1024"],
+                    ["ultra","Ultra","Máximo detalle","2× · sombras 2048"],
+                  ] as const).map(([id,nombre,desc,spec])=>(
+                    <button key={id} type="button" onClick={()=>cambiarCalidad(id)} className={"mb-1 w-full rounded-lg border px-2.5 py-2 text-left transition "+(renderQualityId===id?"border-gold/60 bg-gold/10":"border-white/10 bg-white/[.03] hover:border-white/25")}>
+                      <span className="flex items-center justify-between"><span className="text-[10px] font-semibold">{nombre}</span>{renderQualityId===id&&<span className="text-[9px] text-gold">●</span>}</span>
+                      <span className="mt-0.5 block text-[8px] text-white/40">{desc} · {spec}</span>
+                    </button>
+                  ))}
+                </div>}
+              </div>
               <div className="my-0.5 h-px w-6 bg-black/10"/>
               <button type="button" title="Capturar imagen" aria-label="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-gold transition hover:bg-gold/10"><Camera className="size-[18px]"/></button>
             </div>
