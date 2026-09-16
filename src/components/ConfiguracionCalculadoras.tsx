@@ -34,6 +34,49 @@ const metalesVisualizador = [
   ["platino", "Densidad Platino"],
 ] as const;
 
+const FUENTES_DENSIDADES: Record<string, { fuente: string; detalle: string; url: string }> = {
+  oro18a: {
+    fuente: "Palloys — Fabricated Metal Colour Chart",
+    detalle: "18ct S Yellow Gold: 15.50 g/cm³.",
+    url: "https://www.palloys.com/resources/technicalGuides/fabricatedMetalColourChart",
+  },
+  oro18b: {
+    fuente: "Palloys — Fabricated Metal Colour Chart",
+    detalle: "18ct white gold varies by alloy; the reference M alloy is 15.80 g/cm³.",
+    url: "https://www.palloys.com/resources/technicalGuides/fabricatedMetalColourChart",
+  },
+  oro18r: {
+    fuente: "Palloys — Fabricated Metal Colour Chart",
+    detalle: "18ct Pink Gold: 15.30 g/cm³.",
+    url: "https://www.palloys.com/resources/technicalGuides/fabricatedMetalColourChart",
+  },
+  oro14: {
+    fuente: "Palloys — Casting Alloy Colour Chart",
+    detalle: "14ct Yellow Gold: 13.40 g/cm³. Other 14K alloys vary with composition.",
+    url: "https://www.palloys.com/resources/technicalGuides/alloysColour",
+  },
+  plata925: {
+    fuente: "Palloys — Casting Alloy Colour Chart",
+    detalle: "Sterling Silver: 10.39 g/cm³.",
+    url: "https://www.palloys.com/resources/technicalGuides/alloysColour",
+  },
+  plata950: {
+    fuente: "Sempsa Joyeria Plateria — Silver 950 SDS",
+    detalle: "Silver 950: 10.41 g/cm³.",
+    url: "https://www.cookson-clal.com/downloads/pdf/notes/FDS%20HSI%200012-ENG_12-2021.pdf",
+  },
+  plata970: {
+    fuente: "Estimación físico-metalúrgica",
+    detalle: "≈10.44 g/cm³, calculada para 97% Ag + 3% Cu usando densidades de referencia de Ag y Cu. La aleación real puede variar.",
+    url: "https://pubchem.ncbi.nlm.nih.gov/periodic-table/density/",
+  },
+  platino: {
+    fuente: "CRC Materials Science / ASM",
+    detalle: "21.45 g/cm³ corresponde a platino prácticamente puro. Pt950 depende de la aleación; por ejemplo Pt95Ir ≈20.00 g/cm³.",
+    url: "https://www.palloys.com/resources/technicalGuides/fabricatedMetalColourChart",
+  },
+};
+
 const coloresAleacion = [
   ["amarillo", "Oro Amarillo"],
   ["blanco", "Oro Blanco"],
@@ -264,15 +307,30 @@ export function ConfiguracionCalculadoras() {
         onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.visualizador, DEFAULT_CONFIG_VISUALIZADOR, setCfgVisualizador, "Visualizador 3D")}
       >
         <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
-          {metalesVisualizador.map(([id, etiqueta]) => (
-            <label key={id} className="space-y-1.5">
-              <span className="text-xs font-medium">{etiqueta}</span>
-              <div className="flex items-center gap-2">
-                <input type="number" min="0" step="0.01" className={inputCls} value={cfgVisualizador.densidades[id]} onChange={(e) => actualizarDensidad(id, e.target.value)} />
-                <span className="text-xs text-muted-foreground">g/cm³</span>
-              </div>
-            </label>
-          ))}
+          {metalesVisualizador.map(([id, etiqueta]) => {
+            const fuente = FUENTES_DENSIDADES[id];
+            return (
+              <label key={id} className="space-y-1.5">
+                <span className="flex items-center gap-2 text-xs font-medium">
+                  {etiqueta}
+                  {fuente ? (
+                    <span className="group relative inline-flex size-4 cursor-help items-center justify-center rounded-full border border-border text-[9px] text-muted-foreground" tabIndex={0} aria-label={fuente.fuente}>
+                      i
+                      <span className="pointer-events-none absolute bottom-full left-0 z-30 mb-2 hidden w-80 rounded-xl border border-border bg-popover p-3 text-left text-[11px] font-normal leading-relaxed text-popover-foreground shadow-xl group-hover:block group-focus:block">
+                        <strong className="block text-gold">{fuente.fuente}</strong>
+                        <span className="mt-1 block">{fuente.detalle}</span>
+                        <span className="mt-2 block break-all text-[10px] text-muted-foreground">{fuente.url}</span>
+                      </span>
+                    </span>
+                  ) : null}
+                </span>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="0" step="0.01" className={inputCls} value={cfgVisualizador.densidades[id]} onChange={(e) => actualizarDensidad(id, e.target.value)} />
+                  <span className="text-xs text-muted-foreground">g/cm³</span>
+                </div>
+              </label>
+            );
+          })}
           <label className="space-y-1.5">
             <span className="text-xs font-medium">Factor de empuje por defecto</span>
             <input type="number" min="0" step="0.1" className={inputCls} value={cfgVisualizador.factorEmpuje} onChange={(e) => setCfgVisualizador((a) => ({ ...a, factorEmpuje: Number(e.target.value) || 0 }))} />
