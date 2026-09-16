@@ -6,7 +6,7 @@ export const AURUM_SHADOW_CONFIG={
   progressive:true,
   contact:true,
   contactOpacity:.32,
-  contactScale:1.35,
+  contactScale:1.5,
   bias:.0005,
   normalBias:.015,
   mapSize:2048
