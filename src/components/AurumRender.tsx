@@ -658,8 +658,12 @@ export function AurumRender() {
         // Scene es la única fuente de exposición y Environment para los presets.
         // Post Processing no vuelve a multiplicar la exposición, evitando resultados
         // dependientes del orden de aplicación de los efectos.
-        renderer.toneMappingExposure = scenePreset.exposure;
-        escena.environmentIntensity = Math.min(1.0, Math.max(0.72, scenePreset.environmentIntensity));
+        // Mantener la calibración fotográfica base que ya funcionaba.
+        // Los presets de Scene siguen definiendo su intención, pero su exposición
+        // se normaliza a un rango seguro para AgX y nuestros HDRI actuales.
+        const exposure = Math.max(0.78, Math.min(1.05, scenePreset.exposure));
+        renderer.toneMappingExposure = exposure;
+        escena.environmentIntensity = Math.min(1.0, Math.max(0.82, scenePreset.environmentIntensity));
         escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
         // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
         if (!suelo) {
