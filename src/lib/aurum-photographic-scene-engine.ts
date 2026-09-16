@@ -66,7 +66,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
     environmentKey:"luxury", gemEnvironmentKey:"monochrome",
     environmentIntensity:.46, environmentRotation:.42, gemEnvironmentRotation:.68, gemEnvironmentIntensity:.88, metalEnvironmentScale:.72, highlightProtection:.84, exposure:.56,
     lighting:"luxury",
-    post:{ssao:true,ssaoIntensity:.12,bloom:true,bloomIntensity:.045,bloomThreshold:1.55,lut:true,lutIntensity:.10,taa:true,dof:true,dofAperture:.00055,dofMaxBlur:.005}
+    post:{ssao:true,ssaoIntensity:.10,bloom:false,bloomIntensity:.018,bloomThreshold:1.70,lut:true,lutIntensity:.08,taa:true,dof:false,dofAperture:.00055,dofMaxBlur:.005}
   },
   marmol: {
     environmentKey:"studioSoft", gemEnvironmentKey:"white",
