@@ -16,18 +16,19 @@ export type AurumScenePreset = {
   shadowIntensity:number;
   shadowSoftness:number;
   exposure:number;
+  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury";
 };
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
-  oscuro:{id:"oscuro",background:0x090b0e,ground:0x15181c,groundRoughness:.30,groundMetalness:.05,groundVisible:true,environmentIntensity:.72,environmentRotation:.16,shadowIntensity:.48,shadowSoftness:.72,exposure:.62},
-  claro:{id:"claro",background:0xe9e9e7,ground:0xe3e2df,groundRoughness:.52,groundMetalness:.01,groundVisible:true,environmentIntensity:.76,environmentRotation:.20,shadowIntensity:.22,shadowSoftness:.94,exposure:.88},
-  luxury:{id:"luxury",background:0x21150c,ground:0x20140b,groundRoughness:.30,groundMetalness:.04,groundVisible:true,environmentIntensity:.70,environmentRotation:.42,shadowIntensity:.52,shadowSoftness:.68,exposure:.60},
-  marmol:{id:"marmol",background:0xc9c6bf,ground:0xc5c2bc,groundRoughness:.24,groundMetalness:.02,groundVisible:true,environmentIntensity:.72,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.60},
-  transparente:{id:"transparente",background:0x000000,ground:0x15181c,groundRoughness:.30,groundMetalness:.02,groundVisible:false,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62},
-  producto:{id:"producto",background:0xf1f0ed,ground:0xe8e6e1,groundRoughness:.72,groundMetalness:.001,groundVisible:true,environmentIntensity:.72,environmentRotation:.30,shadowIntensity:.26,shadowSoftness:.92,exposure:.82},
-  galeria:{id:"galeria",background:0x18191c,ground:0x24262a,groundRoughness:.34,groundMetalness:.025,groundVisible:true,environmentIntensity:.74,environmentRotation:.62,shadowIntensity:.36,shadowSoftness:.90,exposure:.68},
-  oroCalido:{id:"oroCalido",background:0x302216,ground:0x3b2a1b,groundRoughness:.38,groundMetalness:.02,groundVisible:true,environmentIntensity:.72,environmentRotation:.42,shadowIntensity:.30,shadowSoftness:.92,exposure:.72},
-  gemaClara:{id:"gemaClara",background:0xe7edf2,ground:0xdde4ea,groundRoughness:.42,groundMetalness:.01,groundVisible:true,environmentIntensity:.70,environmentRotation:.08,shadowIntensity:.16,shadowSoftness:.97,exposure:.80}
+  oscuro:{id:"oscuro",background:0x090b0e,ground:0x15181c,groundRoughness:.30,groundMetalness:.05,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.48,shadowSoftness:.72,exposure:.62,lighting:"studioHard"},
+  claro:{id:"claro",background:0xe9e9e7,ground:0xe3e2df,groundRoughness:.52,groundMetalness:.01,groundVisible:true,environmentIntensity:.72,environmentRotation:.20,shadowIntensity:.22,shadowSoftness:.94,exposure:.86,lighting:"jewelry"},
+  luxury:{id:"luxury",background:0x21150c,ground:0x20140b,groundRoughness:.30,groundMetalness:.04,groundVisible:true,environmentIntensity:.64,environmentRotation:.42,shadowIntensity:.52,shadowSoftness:.68,exposure:.60,lighting:"luxury"},
+  marmol:{id:"marmol",background:0xc9c6bf,ground:0xc5c2bc,groundRoughness:.24,groundMetalness:.02,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
+  transparente:{id:"transparente",background:0x000000,ground:0x15181c,groundRoughness:.30,groundMetalness:.02,groundVisible:false,environmentIntensity:.62,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
+  producto:{id:"producto",background:0xf1f0ed,ground:0xe8e6e1,groundRoughness:.72,groundMetalness:.001,groundVisible:true,environmentIntensity:.68,environmentRotation:.30,shadowIntensity:.26,shadowSoftness:.92,exposure:.80,lighting:"studioSoft"},
+  galeria:{id:"galeria",background:0x18191c,ground:0x24262a,groundRoughness:.34,groundMetalness:.025,groundVisible:true,environmentIntensity:.68,environmentRotation:.62,shadowIntensity:.36,shadowSoftness:.90,exposure:.68,lighting:"studioHard"},
+  oroCalido:{id:"oroCalido",background:0x302216,ground:0x3b2a1b,groundRoughness:.38,groundMetalness:.02,groundVisible:true,environmentIntensity:.64,environmentRotation:.42,shadowIntensity:.30,shadowSoftness:.92,exposure:.70,lighting:"luxury"},
+  gemaClara:{id:"gemaClara",background:0xe7edf2,ground:0xdde4ea,groundRoughness:.42,groundMetalness:.01,groundVisible:true,environmentIntensity:.66,environmentRotation:.08,shadowIntensity:.16,shadowSoftness:.97,exposure:.80,lighting:"jewelry"}
 };
 
 
