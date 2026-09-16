@@ -95,11 +95,13 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
     post:{ssao:false,ssaoIntensity:.06,bloom:false,bloomIntensity:.02,bloomThreshold:1.55,lut:true,lutIntensity:.05,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004}
   },
   producto: {
-    // Product-shot profile: bright white sweep, restrained metal exposure and a
-    // dedicated clean gem environment, matching the logic of professional
-    // jewelry product photography without copying iJewel assets.
-    environmentKey:"white", gemEnvironmentKey:"gemWhite",
-    environmentIntensity:.43, environmentRotation:.22, gemEnvironmentRotation:-.18, gemEnvironmentIntensity:.90, metalEnvironmentScale:.62, highlightProtection:.90, exposure:.72,
+    // Product-shot profile: the background is a clean white sweep, but the
+    // metal still needs a specular studio HDRI. A neutral-white HDRI alone
+    // washes polished silver/gold into a flat gray field. This follows the
+    // documented iJewel workflow of choosing the HDR specifically for the
+    // metal/gem response while keeping the background independent.
+    environmentKey:"jewelry", gemEnvironmentKey:"gemWhite",
+    environmentIntensity:.40, environmentRotation:.54, gemEnvironmentRotation:-.18, gemEnvironmentIntensity:.90, metalEnvironmentScale:.70, highlightProtection:.88, exposure:.68,
     lighting:"productSoft",
     post:{ssao:true,ssaoIntensity:.055,bloom:false,bloomIntensity:.012,bloomThreshold:1.80,lut:true,lutIntensity:.045,taa:true,dof:false,dofAperture:.00045,dofMaxBlur:.0035}
   },
