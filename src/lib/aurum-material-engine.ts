@@ -26,24 +26,76 @@ export type AurumInclusionConfig = {
 
 export const AURUM_MATERIAL_ENGINE_VERSION="1.2.0";
 
+/**
+ * Reflected-light response for jewelry metals.
+ *
+ * Professional jewelry photography is controlled primarily by what the polished
+ * surface reflects: broad white sources create clean gradients while narrow dark
+ * regions preserve edge definition. A single global environment multiplier makes
+ * warm gold clip much sooner than silver/white metals. We therefore attenuate the
+ * environment contribution per metal family while keeping the authored base color
+ * intact. This is a material response control, not a global exposure hack.
+ */
+export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
+  const r=(preset.color>>16)&255, g=(preset.color>>8)&255, b=preset.color&255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), avg=(r+g+b)/3;
+  let scale=.72;
+  let family="neutral";
+
+  // Yellow gold: warm alloy color must survive without broad HDR highlights
+  // turning into featureless white.
+  if(r>b*1.28 && g>b*1.10){
+    scale=.55;
+    family="yellow-gold";
+  // Rose gold: the copper component already supplies warmth, so keep the
+  // reflected environment slightly more restrained than neutral metals.
+  }else if(r>b*1.18 && g>b*1.04 && r-g<75){
+    scale=.60;
+    family="rose-gold";
+  // Very dark/black metals need enough environment to reveal curvature.
+  }else if(avg<78){
+    scale=.80;
+    family="dark-metal";
+  // White gold, silver and platinum benefit from clean but controlled broad
+  // reflections against a light product background.
+  }else if(max-min<42 && avg>125){
+    scale=.72;
+    family="white-metal";
+  }
+
+  return {
+    family,
+    environmentIntensity:Math.max(.42,Math.min(1.55,preset.envMapIntensity*scale)),
+    highlightScale:scale,
+  };
+};
+
 export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   if(!material) return material;
   material.color?.setHex(preset.color);
-  material.metalness=preset.metalness; material.roughness=preset.roughness;
-  // Mantener el perfil óptico definido por el catálogo. La exposición y el Environment
-  // se controlan en Scene; aquí no se recortan artificialmente los reflejos del metal.
-  material.envMapIntensity=Math.max(0, Math.min(1.45, preset.envMapIntensity));
-  // En joyería metálica la reflexión debe dibujar la forma, no "quemarla".
-  // Limitamos el clearcoat porque una capa fuerte introduce un brillo tipo barniz
-  // sobre un metal que debería responder principalmente al entorno y a los softboxes.
-  material.clearcoat=Math.max(0, Math.min(.12, preset.clearcoat));
-  material.clearcoatRoughness=Math.max(.035,Math.min(.12,preset.roughness*.7));
+  material.metalness=preset.metalness;
+  material.roughness=preset.roughness;
+
+  const response=getAurumMetalReflectionResponse(preset);
+  material.envMapIntensity=response.environmentIntensity;
+
+  // Keep the metal itself responsible for the reflection. A strong clearcoat
+  // reads like lacquer and can create a second, artificial hot highlight.
+  material.clearcoat=Math.max(.025,Math.min(.10,preset.clearcoat*.25+.025));
+  material.clearcoatRoughness=Math.max(.045,Math.min(.14,preset.roughness*.8));
+
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
   material.specularIntensity=preset.metalness>.9?1:.8;
   material.specularColor?.setHex(0xffffff);
-  material.emissive?.setHex(0x000000); material.emissiveIntensity=0;
-  material.needsUpdate=true; return material;
+  material.emissive?.setHex(0x000000);
+  material.emissiveIntensity=0;
+  material.userData={
+    ...(material.userData??{}),
+    aurumMetalRenderProfile:response,
+  };
+  material.needsUpdate=true;
+  return material;
 };
 
 export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)=>{
