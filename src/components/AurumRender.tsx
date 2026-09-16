@@ -268,6 +268,9 @@ export function AurumRender() {
       renderer.toneMapping = THREE.AgXToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
       renderer.toneMappingExposure = 0.82;
+      // Calibración inicial de fotografía de producto. El preset de escena
+      // vuelve a aplicar la exposición final; este valor evita un primer frame
+      // excesivamente brillante mientras llegan el HDRI y el modelo.
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
@@ -291,11 +294,11 @@ export function AurumRender() {
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
       // especulares naturales. RoomEnvironment permanece como fallback offline.
       const hdrUrls: Record<string,string> = {
-        studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
+        studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
         studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        producto: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",
-        claro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",
+        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
+        producto: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
+        claro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
         gemaClara: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
         marmol: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/monochrome_studio_02_1k.hdr",
         oscuro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
@@ -403,7 +406,8 @@ export function AurumRender() {
       let parteActiva:any = null;
       let resaltado:any = null;
       const material = new THREE.MeshPhysicalMaterial({
-        color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 1.9, clearcoat: .45, clearcoatRoughness: .08
+        color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 1.15,
+        clearcoat: .08, clearcoatRoughness: .055
       });
 
       const dispose = (o:any) => o?.traverse((x:any) => {
