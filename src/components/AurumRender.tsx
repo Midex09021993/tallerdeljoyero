@@ -418,6 +418,10 @@ export function AurumRender() {
         bloomThreshold: photoInicial.post.bloomThreshold,
         lut: photoInicial.post.lut,
         lutIntensity: photoInicial.post.lutIntensity,
+        taa: photoInicial.post.taa,
+        dof: photoInicial.post.dof,
+        dofAperture: photoInicial.post.dofAperture,
+        dofMaxBlur: photoInicial.post.dofMaxBlur,
       });
       // La escena es la fuente de verdad también para la estrategia de iluminación.
       lightingController.applyPreset(photoInicial.lighting);
@@ -492,6 +496,10 @@ export function AurumRender() {
           bloomThreshold: photo.post.bloomThreshold,
           lut: photo.post.lut,
           lutIntensity: photo.post.lutIntensity,
+          taa: photo.post.taa,
+          dof: photo.post.dof,
+          dofAperture: photo.post.dofAperture,
+          dofMaxBlur: photo.post.dofMaxBlur,
         });
         applyPostQuality?.(renderQuality);
       };
