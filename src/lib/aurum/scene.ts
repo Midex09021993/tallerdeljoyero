@@ -10,7 +10,7 @@ export function createAurumSceneController(
   renderer: any,
   groundController: any,
   environmentController: any,
-  loadEnvironment: (id: string) => void,
+  loadEnvironment: (id: string, rotation?: number) => void,
   backgroundElement?: { style: { backgroundColor: string } }
 ): AurumSceneController {
   return {
