@@ -652,6 +652,33 @@ export function AurumRender() {
           suelo.rotation.x=-Math.PI/2; suelo.receiveShadow=true; escena.add(suelo);
         }
         suelo.position.y = bf.min.y-Math.max(h*.035,.015);
+
+        // Adaptar luces y sombras al tamaño real de la pieza ya normalizada.
+        // La joya se normaliza a 2.6 unidades; las luces mantienen su composición
+        // relativa, mientras las sombras se ajustan al volumen visible.
+        const radio = Math.max(bf.getSize(new THREE.Vector3()).length() * 0.5, 0.8);
+        const distanciaLuz = Math.max(radio * 6, 12);
+        Object.values(lucesAurum).forEach((L:any) => {
+          if (!L) return;
+          if (L.distance !== undefined) L.distance = distanciaLuz;
+          if (L.castShadow && L.shadow?.camera) {
+            L.shadow.camera.near = Math.max(0.01, radio * 0.02);
+            L.shadow.camera.far = Math.max(distanciaLuz, radio * 10);
+            if ("left" in L.shadow.camera) {
+              const limite = Math.max(radio * 2.2, 3);
+              L.shadow.camera.left = -limite;
+              L.shadow.camera.right = limite;
+              L.shadow.camera.top = limite;
+              L.shadow.camera.bottom = -limite;
+            }
+            L.shadow.camera.updateProjectionMatrix();
+          }
+          if (L.target) {
+            L.target.position.set(0, 0, 0);
+            L.target.updateMatrixWorld();
+          }
+        });
+
         aplicarEscenario(escenarioId);
         camara.position.set(3.5,2.4,4.6);
         controles.target.set(0,0,0); controles.update();
