@@ -65,7 +65,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
   }, [kiNum, kfNum, masaNum, color, configuracion]);
 
   return (
-    <div className={`space-y-5 ${compacto ? "p-1" : "p-5 sm:p-6 lg:p-8"}`}>
+    <div className={`relative overflow-hidden rounded-[28px] border border-gold/20 bg-background shadow-[0_18px_60px_rgba(0,0,0,0.12)] ${compacto ? "p-1" : "p-4 sm:p-6 lg:p-8"}`}>
       <header className="relative mb-6 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/25 to-gold/5 shadow-inner">
@@ -110,7 +110,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             value={inicial}
             onChange={(e) => setInicial(e.target.value)}
             placeholder="Ej. 24"
-            className="h-12 w-full rounded-xl border border-input bg-background px-4 text-base outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20"
+            className="h-14 w-full rounded-2xl border border-input bg-card px-4 text-lg font-semibold outline-none transition placeholder:text-muted-foreground/50 focus:border-gold focus:ring-4 focus:ring-gold/10"
           />
         </label>
 
