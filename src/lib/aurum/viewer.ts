@@ -99,7 +99,9 @@ export function disposeAurumViewer(viewer: {
   viewer.clearSelection?.();
   viewer.hdriGroundTexture?.dispose?.();
   viewer.environmentController?.dispose?.();
-  viewer.gemEnvironmentController?.dispose?.(viewer.gemEnvironment);
+  // GemEnvironment keeps a small HDR cache during scene switching; clear the
+  // complete cache when the viewer is destroyed to avoid retaining PMREM textures.
+  viewer.gemEnvironmentController?.dispose?.();
   viewer.composer?.dispose?.();
   viewer.renderer?.renderLists?.dispose?.();
   viewer.renderer?.dispose?.();
