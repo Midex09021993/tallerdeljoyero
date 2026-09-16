@@ -1,3 +1,5 @@
+import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+
 import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
 
 export interface AurumLightingController {
@@ -17,6 +19,7 @@ export function createAurumLightingController(
   renderQuality: any
 ): AurumLightingController {
   const lights: any = {};
+  RectAreaLightUniformsLib.init();
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
@@ -38,6 +41,10 @@ export function createAurumLightingController(
     light.visible = cfg.enabled;
     light.intensity = cfg.intensity;
     light.position.set(...cfg.position);
+    if (light.isRectAreaLight) {
+      light.lookAt(0, 0, 0);
+      return;
+    }
     if (light.angle !== undefined) {
       light.angle = cfg.angle;
       light.penumbra = cfg.penumbra;
@@ -46,19 +53,16 @@ export function createAurumLightingController(
   return {
     lights,
     create() {
-      const mk = (type: string, color: number, cast: boolean) => {
-        const light = type === "spot"
-          ? new THREE.SpotLight(color, 1, 30, Math.PI * .45, .7, .8)
-          : new THREE.PointLight(color, 1, 30, 2);
-        light.castShadow = cast;
-        scene.add(light);
-        return light;
-      };
+      const mkArea = (width:number,height:number) =>
+        new THREE.RectAreaLight(0xffffff, 0, width, height);
       if (!lights.key) {
-        lights.key = mk("spot", 0xffffff, true);
-        lights.fill = mk("spot", 0xffffff, false);
-        lights.rim = mk("spot", 0xffffff, false);
-        lights.gem = mk("point", 0xffffff, false);
+        // Large rectangular sources emulate photographic softboxes. They create
+        // broad specular reflections instead of point-like hot spots on polished metal.
+        lights.key = mkArea(5, 3.2);
+        lights.fill = mkArea(4.2, 2.8);
+        lights.rim = mkArea(3.6, 2.2);
+        lights.gem = new THREE.PointLight(0xffffff, 0, 30, 2);
+        scene.add(lights.key, lights.fill, lights.rim, lights.gem);
       }
       apply(lights.key, config.key); configureShadow(lights.key);
       apply(lights.fill, config.fill);
@@ -100,7 +104,22 @@ export function createAurumLightingController(
         if (source) {
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          if (light.isRectAreaLight) {
+            const size = Math.max(rigScale * 1.35, 2.4);
+            if (name === "key") {
+              light.width = size * 1.45;
+              light.height = size * .82;
+            } else if (name === "fill") {
+              light.width = size * 1.15;
+              light.height = size * .72;
+            } else {
+              light.width = size;
+              light.height = size * .60;
+            }
+            light.lookAt(0, targetY + safeRadius * .10, 0);
+          }
         }
+        if (light.isRectAreaLight) continue;
         if (light.castShadow && light.shadow?.camera) {
           light.shadow.camera.near = Math.max(.01, radius * .02);
           light.shadow.camera.far = Math.max(distance, radius * 10);
