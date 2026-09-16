@@ -67,6 +67,8 @@ export function createAurumLightingController(
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
+      // Los presets sólo ajustan la contribución relativa de las luces.
+      // Environment, exposición y fondo pertenecen exclusivamente al SceneController.
       Object.assign(config, {
         key: {...config.key, intensity: preset.key},
         fill: {...config.fill, intensity: preset.fill},
