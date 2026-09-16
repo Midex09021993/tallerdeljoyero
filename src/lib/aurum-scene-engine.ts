@@ -90,14 +90,27 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
 
 export const getAurumScenePreset=(id:string)=>AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
 
-export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:number;transmissionScale:number};
-
-export const AURUM_RENDER_QUALITY:Record<"balanced"|"high",AurumRenderQuality>={
-  balanced:{pixelRatio:1.5,shadows:true,shadowMapSize:1024,transmissionScale:.65},
-  high:{pixelRatio:2,shadows:true,shadowMapSize:2048,transmissionScale:.85}
+export type AurumRenderQuality={
+  pixelRatio:number;
+  shadows:boolean;
+  shadowMapSize:number;
+  transmissionScale:number;
 };
 
-export const getAurumRenderQuality=(quality:"balanced"|"high"="balanced")=>AURUM_RENDER_QUALITY[quality];
+export type AurumRenderQualityId="low"|"high"|"ultra";
+
+export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality>={
+  // Preview: keeps interaction fluid on normal/low-power hardware.
+  low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.45},
+  // Production viewport: balanced resolution and physically useful shadows.
+  high:{pixelRatio:1.5,shadows:true,shadowMapSize:1024,transmissionScale:.75},
+  // Detail inspection: higher drawing-buffer resolution, shadow precision and
+  // full transmission resolution for gems. This is intentionally still capped
+  // at 2x so "Ultra" does not explode GPU cost on high-DPI displays.
+  ultra:{pixelRatio:2.0,shadows:true,shadowMapSize:2048,transmissionScale:1},
+};
+
+export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
 
 
 export type AurumHdriGroundConfig={
