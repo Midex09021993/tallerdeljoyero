@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
-  getAurumGemPreset, createAurumInclusionConfig, generateAurumInclusionPoints,
-  getAurumOpticalProfile, applyAurumOpticalProfile, applyAurumDiamondOptics,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT } from "../lib/aurum-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
@@ -19,7 +17,6 @@ import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
-import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
