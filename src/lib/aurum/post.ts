@@ -18,17 +18,34 @@ export async function createAurumPostPipeline(
   const { SSAOPass } = await import("three/examples/jsm/postprocessing/SSAOPass.js");
 
   let composer:any=null;
+  let renderPass:any=null;
+  let taaPass:any=null;
   let ssaoPass:any=null;
   let bloomPass:any=null;
   let lutPass:any=null;
   let vignettePass:any=null;
+  let dofPass:any=null;
   let outputPass:any=null;
 
   try {
     composer=new EffectComposer(renderer);
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
-    const renderPass=new RenderPass(scene,camera);
+    renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
+
+    // Temporal AA is deliberately kept as an optional Ultra layer. Three.js
+    // accumulates jittered samples when the camera is static; while the user
+    // moves the jewelry we temporarily reset accumulation to avoid ghosting.
+    try {
+      const { TAARenderPass }=await import("three/examples/jsm/postprocessing/TAARenderPass.js");
+      taaPass=new TAARenderPass(scene,camera);
+      taaPass.accumulate=false;
+      taaPass.sampleLevel=2;
+      taaPass.unbiased=true;
+      composer.addPass(taaPass);
+    } catch {
+      taaPass=null;
+    }
 
     ssaoPass=new SSAOPass(scene,camera,
       Math.max(1,renderer.domElement.width),
@@ -71,6 +88,21 @@ export async function createAurumPostPipeline(
     lutPass=new LUTPass({lut:lutTexture});
     composer.addPass(lutPass);
 
+    // Controlled depth of field: kept very shallow because jewelry product
+    // photography should preserve the ring silhouette while giving the hero
+    // stone a photographic separation. Enabled only at Ultra.
+    try {
+      const { BokehPass }=await import("three/examples/jsm/postprocessing/BokehPass.js");
+      dofPass=new BokehPass(scene,camera,{
+        focus:4.0,
+        aperture:0.00065,
+        maxblur:0.006
+      });
+      composer.addPass(dofPass);
+    } catch {
+      dofPass=null;
+    }
+
     // Subtle photographic vignette: iJewel exposes vignette as a post effect;
     // here it is intentionally restrained so the jewelry remains the subject.
     const { ShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
@@ -87,7 +119,7 @@ export async function createAurumPostPipeline(
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
-    composer=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; outputPass=null;
+    composer=null; renderPass=null; taaPass=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
   const applyQuality=(next:any)=>{
@@ -95,6 +127,16 @@ export async function createAurumPostPipeline(
     const q=next||{};
     const high=q.pixelRatio>=1.5;
     const ultra=q.pixelRatio>=2;
+    if(renderPass){
+      renderPass.enabled=true;
+    }
+    if(taaPass){
+      // Ultra uses accumulation only when the scene is stable. The caller can
+      // reset it through updateTemporal() whenever the camera moves.
+      taaPass.enabled=ultra && config.taa!==false;
+      taaPass.accumulate=ultra && config.taa!==false;
+      taaPass.sampleLevel=ultra?3:2;
+    }
     if(ssaoPass){
       ssaoPass.enabled=Boolean(config.ssao) && (high || ultra);
       ssaoPass.kernelSize=ultra?32:high?24:12;
@@ -109,6 +151,13 @@ export async function createAurumPostPipeline(
       lutPass.enabled=config.lut!==false;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
+    if(dofPass){
+      dofPass.enabled=ultra && config.dof===true;
+      if(dofPass.uniforms){
+        dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
+        dofPass.uniforms.maxblur.value=Math.max(0,Number(config.dofMaxBlur??0.006));
+      }
+    }
     if(vignettePass){
       vignettePass.enabled=config.vignette!==false;
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
@@ -118,6 +167,29 @@ export async function createAurumPostPipeline(
     composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
   };
 
+  let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
+  const updateTemporal=()=>{
+    if(!taaPass) return;
+    const p=camera.position, q=camera.quaternion;
+    const moved=!Number.isFinite(lastPX)
+      || Math.abs(p.x-lastPX)>1e-5 || Math.abs(p.y-lastPY)>1e-5 || Math.abs(p.z-lastPZ)>1e-5
+      || Math.abs(q.x-lastQX)>1e-5 || Math.abs(q.y-lastQY)>1e-5 || Math.abs(q.z-lastQZ)>1e-5 || Math.abs(q.w-lastQW)>1e-5;
+    if(moved){
+      taaPass.accumulateIndex=-1;
+      taaPass.accumulate=false;
+    }else if(taaPass.enabled && config.taa!==false){
+      taaPass.accumulate=true;
+    }
+    lastPX=p.x; lastPY=p.y; lastPZ=p.z;
+    lastQX=q.x; lastQY=q.y; lastQZ=q.z; lastQW=q.w;
+    if(dofPass?.enabled && dofPass.uniforms){
+      // BokehPass focus is measured along the camera look direction. Using the
+      // camera-to-target distance keeps focus attached to the product while zooming.
+      const focus=camera.position.distanceTo ? camera.position.distanceTo(camera.getWorldDirection ? camera.position.clone().add(camera.getWorldDirection(new (camera.position.constructor as any)())) : camera.position) : 4;
+      if(Number.isFinite(focus)) dofPass.uniforms.focus.value=Math.max(.5,focus);
+    }
+  };
+
   applyQuality(quality);
-  return {composer,ssaoPass,applyQuality};
+  return {composer,ssaoPass,applyQuality,updateTemporal,dofPass,taaPass};
 }
