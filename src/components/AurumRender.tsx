@@ -651,7 +651,7 @@ export function AurumRender() {
       <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-white/10 bg-[#101316]/96 px-5 backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
-            <div className="font-display text-[25px] tracking-[.22em] text-[#e5c77a]">AURUM</div>
+            <div className="font-display text-[25px] tracking-[.18em] text-[#e5c77a]">AURUM RENDER</div>
             <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-white/35">Render profesional para joyería</div>
           </div>
         </div>
