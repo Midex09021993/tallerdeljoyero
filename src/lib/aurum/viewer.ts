@@ -83,7 +83,8 @@ export function disposeAurumViewer(viewer: {
   viewer.groundController?.dispose?.();
   viewer.clearSelection?.();
   viewer.hdriGroundTexture?.dispose?.();
-  viewer.environmentController?.dispose?.(viewer.gemEnvironment);
+  viewer.environmentController?.dispose?.();
+  viewer.gemEnvironmentController?.dispose?.(viewer.gemEnvironment);
   viewer.composer?.dispose?.();
   viewer.renderer?.dispose?.();
   if (viewer.renderer?.domElement?.parentElement === viewer.node) {
