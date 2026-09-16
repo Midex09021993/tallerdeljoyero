@@ -94,9 +94,9 @@ const MATERIALES: MaterialConfig[] = [
   { id: "oro18r_pulido", grupo: "Oro Rosa", nombre: "Pulido", color: 0xd9937e, metalness: 1, roughness: .12, envMapIntensity: 1.9, clearcoat: .42, anisotropy: .05 },
   { id: "oro18r_satinado", grupo: "Oro Rosa", nombre: "Satinado", color: 0xd58f7b, metalness: 1, roughness: .29, envMapIntensity: 1.6, clearcoat: .20, anisotropy: .18 },
   { id: "oro18r_mate", grupo: "Oro Rosa", nombre: "Mate", color: 0xc98573, metalness: 1, roughness: .5, envMapIntensity: 1.35, clearcoat: .06 },
-  { id: "plata925_pulida", grupo: "Plata", nombre: "Plata 925 Pulida", color: 0xd7dbe0, metalness: 1, roughness: .1, envMapIntensity: 2.0, clearcoat: .40 },
-  { id: "plata950_pulida", grupo: "Plata", nombre: "Plata 950 Pulida", color: 0xcfd4d9, metalness: 1, roughness: .12, envMapIntensity: 1.9, clearcoat: .38 },
-  { id: "plata970_pulida", grupo: "Plata", nombre: "Plata 970 Pulida", color: 0xe0e3e6, metalness: 1, roughness: .1, envMapIntensity: 2.0, clearcoat: .40 },
+  { id: "plata925_pulida", grupo: "Plata", nombre: "Plata 925 Pulida", color: 0xe1e4e7, metalness: 1, roughness: .14, envMapIntensity: 1.55, clearcoat: .08 },
+  { id: "plata950_pulida", grupo: "Plata", nombre: "Plata 950 Pulida", color: 0xdfe3e7, metalness: 1, roughness: .15, envMapIntensity: 1.5, clearcoat: .08 },
+  { id: "plata970_pulida", grupo: "Plata", nombre: "Plata 970 Pulida", color: 0xe8eaec, metalness: 1, roughness: .13, envMapIntensity: 1.6, clearcoat: .08 },
   { id: "plata_envejecida", grupo: "Plata", nombre: "Plata Envejecida", color: 0x777c82, metalness: .92, roughness: .4, envMapIntensity: 1.65, clearcoat: .08, anisotropy: .08 },
   { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc5cbd0, metalness: 1, roughness: .1, envMapIntensity: 1.95, clearcoat: .42 },
   { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.35, clearcoat: .06 },
@@ -479,7 +479,7 @@ export function AurumRender() {
           applyGemEnvironment:aplicarEntornoGema,
           initialMetalId:"plata925_pulida",
           initialGemId:"diamante_natural",
-          presentation:{metalEnvironmentScale:.92,metalClearcoatScale:.28},
+          presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
         // Presentación inicial determinista: producto + studioSoft + framing.
