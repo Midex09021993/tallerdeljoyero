@@ -781,9 +781,22 @@ export function AurumRender() {
         glbInterno=new Blob([glb],{type:"model/gltf-binary"});
         escena.add(modelo);
         if (ext!=="3dm") aplicarMaterial(materialActivo);
+        // Presentación inicial: encuadrar siempre después de añadir el modelo.
+        encuadrar();
       };
       const camaraVista=(id:VistaId)=>{
-        const p:any={perspectiva:[3.5,2.4,4.6],frontal:[0,0,5],superior:[0,5,.001],lateral:[5,0,0]}[id];
+        const posiciones:Record<VistaId,[number,number,number]> = {
+          perspectiva:[3.5,2.4,4.6],
+          frontal:[0,0,5],
+          superior:[0,5,0.001],
+          lateral:[5,0,0],
+        };
+        const p=posiciones[id] || posiciones.perspectiva;
+        camara.position.set(p[0],p[1],p[2]);
+        controles.target.set(0,0,0);
+        controles.update();
+        camara.lookAt(0,0,0);
+        camara.updateProjectionMatrix();
       };
       apiRef.current={
         cargar,
