@@ -23,6 +23,7 @@ import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarg
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { createAurumApi } from "../lib/aurum/api";
+import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -224,19 +225,14 @@ export function AurumRender() {
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
 
   // Estado central del configurador: una única fuente de verdad.
-  const aurumConfiguration = useMemo(() => createAurumConfiguration({
+  const {
+    configuration: aurumConfiguration,
+    variations: aurumVariations,
+    layers: aurumConfiguratorLayers,
+  } = useMemo(() => createAurumConfiguratorState({
     material: materialId, gem: gemaId, scene: escenarioId, lighting: iluminacionId, camera: vista,
+    materials: MATERIALES, gems: GEMAS,
   }), [materialId, gemaId, escenarioId, iluminacionId, vista]);
-
-  const aurumVariations = useMemo(
-    () => createAurumVariations(MATERIALES, GEMAS),
-    []
-  );
-
-  const aurumConfiguratorLayers = useMemo(
-    () => createAurumConfiguratorLayers(aurumVariations),
-    [aurumVariations]
-  );
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
