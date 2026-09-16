@@ -524,38 +524,10 @@ export function AurumRender() {
       };
        const encuadrar = () => {
         if (!modelo) return;
-        const prepared = prepareAurumModel(modelo, 2.6);
-        const bf = prepared.bounds;
-        const boundsSize = prepared.size;
-        const h = prepared.height;
-        const targetY = prepared.targetY;
-        groundController.positionUnderModel(bf);
-
-        const radio=Math.max(boundsSize.length()*.5,.8);
-        const distanciaLuz=Math.max(radio*6,12);
-        Object.values(lucesAurum).forEach((L:any)=>{
-          if(!L)return;
-          if(L.distance!==undefined)L.distance=distanciaLuz;
-          if(L.castShadow&&L.shadow?.camera){
-            L.shadow.camera.near=Math.max(.01,radio*.02);
-            L.shadow.camera.far=Math.max(distanciaLuz,radio*10);
-            if("left" in L.shadow.camera){
-              const limite=Math.max(radio*2.2,3);
-              L.shadow.camera.left=-limite;L.shadow.camera.right=limite;
-              L.shadow.camera.top=limite;L.shadow.camera.bottom=-limite;
-            }
-            L.shadow.camera.updateProjectionMatrix();
-          }
-          if(L.target){L.target.position.set(0,targetY,0);L.target.updateMatrixWorld();}
-        });
-        aplicarEscenario(escenarioId);
-        const radioVisual=Math.max(boundsSize.length()*.5,1.3);
-        const distancia=Math.max(radioVisual*1.55,3.15);
-        camara.position.set(distancia*.72,distancia*.40,distancia);
-        controles.target.set(0,targetY,0);
-        camara.lookAt(0,targetY,0);
-        camara.updateProjectionMatrix();
-        controles.update();
+        frameAurumProduct({
+          camera: camara, controls: controles, lights: lucesAurum,
+          groundController, scene: escena, renderer,
+        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
       };
 
       // Adaptadores de entrada: cada formato produce un Object3D común.
