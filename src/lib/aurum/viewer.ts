@@ -77,6 +77,7 @@ export function disposeAurumViewer(viewer: {
   clearSelection?: () => void;
   composer?: any;
 }) {
+  // Detener primero los observadores y listeners antes de liberar WebGL.
   viewer.observer?.disconnect();
   if (viewer.clickHandler) viewer.renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
   viewer.controls?.dispose?.();
