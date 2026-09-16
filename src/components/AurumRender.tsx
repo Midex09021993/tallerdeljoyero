@@ -464,6 +464,7 @@ export function AurumRender() {
           configureMetal:configurarMaterial,
           createInclusions:crearInclusiones,
           applyGemEnvironment:aplicarEntornoGema,
+          presentation:{metalEnvironmentScale:.72,metalClearcoatScale:.55},
         });
         modelo=interno;
         setParteSeleccionada(null);
