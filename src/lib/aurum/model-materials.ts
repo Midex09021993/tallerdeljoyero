@@ -5,6 +5,8 @@ export function applyAurumInitialModelMaterials(
   options:{
     gems:any[];
     metals:any[];
+    initialMetalId?:string;
+    initialGemId?:string;
     fallbackMaterial:any;
     applyGem:(material:any,preset:any,thickness:number)=>void;
     gemPresetFromConfig:(gem:any)=>any;
@@ -20,7 +22,7 @@ export function applyAurumInitialModelMaterials(
     x.receiveShadow=true;
     const meta=x.userData?.aurumRhino;
     if(meta?.categoria==="gema"){
-      const gem=options.gems[0];
+      const gem=options.gems.find((g:any)=>g.id===options.initialGemId) ?? options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
@@ -30,7 +32,7 @@ export function applyAurumInitialModelMaterials(
       options.createInclusions(x,gem);
       options.applyGemEnvironment();
     }else if(meta?.categoria==="metal"){
-      const metal=options.metals[0];
+      const metal=options.metals.find((m:any)=>m.id===options.initialMetalId) ?? options.metals[0];
       if(!metal) return;
       const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
       options.configureMetal(mat,metal);
