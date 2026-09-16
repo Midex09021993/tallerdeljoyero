@@ -257,7 +257,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
                   {volumen > 0 ? `${formatearEntero(volumen)} ml` : "—"}
                 </p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³`} : "0 cm³"} · {tiposTarro[tipoTarro].etiqueta} {configuracion.tolerancias[tipoTarro] >= 0 ? "+" : ""}{formatearCantidad(configuracion.tolerancias[tipoTarro], 2)}%
+                  Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³` : "0 cm³"} · {tiposTarro[tipoTarro].etiqueta} {configuracion.tolerancias[tipoTarro] >= 0 ? "+" : ""}{formatearCantidad(configuracion.tolerancias[tipoTarro], 2)}%
                 </p>
               </div>
             </div>
