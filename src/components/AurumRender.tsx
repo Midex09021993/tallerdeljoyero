@@ -740,7 +740,7 @@ export function AurumRender() {
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
-      const resize=()=>{const w=nodo.clientWidth||900,h=nodo.clientHeight||600;camara.aspect=w/h;camara.updateProjectionMatrix();renderer.setSize(w,h,false);composer?.setSize(w,h);ssaoPass?.setSize?.(w,h)};
+      const resize=()=>resizeAurumViewer({node:nodo,camera:camara,renderer,composer,ssaoPass});
       composerRef.current = composer;
       resize();
       const obs=new ResizeObserver(resize); obs.observe(nodo);
@@ -753,16 +753,21 @@ export function AurumRender() {
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
-        obs.disconnect();
-        renderer.domElement.removeEventListener("click", seleccionarPorClick);
-        controles.dispose();
-        lightingController.dispose();
-        groundController.dispose();
-        limpiarResaltado();
-        if (hdriGroundTexture) { hdriGroundTexture.dispose?.(); hdriGroundTexture = null; }
-        environmentController.dispose(entornoGema);
-        renderer.dispose();
-        if (renderer.domElement.parentElement === nodo) nodo.removeChild(renderer.domElement);
+        disposeAurumViewer({
+          node:nodo,
+          renderer,
+          controls:controles,
+          observer:obs,
+          clickHandler:seleccionarPorClick,
+          lightingController,
+          groundController,
+          clearSelection:limpiarResaltado,
+          hdriGroundTexture,
+          environmentController,
+          gemEnvironment:entornoGema,
+          composer,
+        });
+        hdriGroundTexture = null;
       };
 
       animate();
