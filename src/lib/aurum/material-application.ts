@@ -8,7 +8,7 @@ import {
   getAurumOpticalProfile,
   metalPresetFromConfig,
 } from "../aurum-material-engine";
-import { renderAurumInclusions, clearAurumInclusions } from "../aurum-gem-engine";
+import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 
 export function applyAurumMaterialToModel(
   model:any,
