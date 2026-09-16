@@ -284,7 +284,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             </p>
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-gold/15 bg-background/40 p-3">
               <Info className="mt-0.5 size-3.5 shrink-0 text-gold" aria-hidden="true" />
-              <p className="text-[11px] leading-relaxed text-muted-foreground">La receta utilizada proviene de la configuración técnica de la calculadora.</p>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">Resultado calculado con la receta configurada para esta aleación.</p>
             </div>
           </article>
         </div>
