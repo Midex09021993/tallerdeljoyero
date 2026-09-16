@@ -352,7 +352,9 @@ export function AurumRender() {
       let modelo:any = null;
       let hdriGround:any = null;
       let hdriGroundTexture:any = null;
-      const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
+      // HDRI Ground está reservado para una futura integración; se mantiene
+      // fuera del flujo activo para no alterar la presentación actual.
+      const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT, enabled:false};
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
       const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
@@ -364,26 +366,6 @@ export function AurumRender() {
         lightingController.applyPreset(id);
         // Iluminación solo modifica luces. Scene conserva Environment y exposición.
       };
-
-      const sceneStudio={
-        hdriGround:false, worldRadius:40, tripodHeight:1.2,
-        originX:0, originY:0, originZ:0, opacity:1,
-        ground:true, shadows:true
-      };
-      const actualizarSceneStudio=(patch:any)=>{
-        const next={...sceneStudio,...patch};
-        Object.assign(sceneStudio,next);
-        Object.assign(hdriGroundConfig,{
-          enabled:next.hdriGround, worldRadius:next.worldRadius,
-          tripodHeight:next.tripodHeight, originX:next.originX,
-          originY:next.originY, originZ:next.originZ, opacity:next.opacity
-        });
-        // SceneController es la única fuente de environment/exposición.
-        groundController.setVisible(next.ground);
-        renderer.shadowMap.enabled=next.shadows;
-        actualizarHdriGround();
-      };
-
 
       const crearHdriGround = () => {
         if (!hdriGroundTexture || !hdriGroundConfig.enabled) return;
