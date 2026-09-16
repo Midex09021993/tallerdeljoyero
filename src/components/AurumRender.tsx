@@ -24,6 +24,7 @@ import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
+import { createAurumWebGLViewer } from "../lib/aurum/viewer";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
