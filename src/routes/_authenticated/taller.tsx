@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calculator } from "lucide-react";
+import { Calculator, Droplets, RotateCcw, Check } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
@@ -136,153 +136,204 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
     return volumenBase * (1 + configuracion.tolerancias[tipoTarro] / 100);
   }, [tipoTarro, configuracion.tolerancias, volumenBase]);
 
+  const medidasCompletas = volumenBase > 0;
+  const limpiar = () => {
+    setDiametro("");
+    setAltura("");
+    setTipoTarro("liso");
+  };
+
   return (
     <Panel
       titulo="Calculadora de yeso"
       accion={
-        <div className="flex items-center gap-2">
-          <span className="hidden items-center gap-1 rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground sm:inline-flex">
-            <Calculator className="size-3" aria-hidden="true" />
-            Joyería 40/60
-          </span>
-        </div>
+        <span className="hidden items-center gap-1.5 rounded-full border border-gold/20 bg-accent px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground sm:inline-flex">
+          <Droplets className="size-3" aria-hidden="true" />
+          Mezcla para fundición
+        </span>
       }
     >
-      <div className={`space-y-6 p-5 ${compacto ? "" : "sm:p-6 lg:p-8"}`}>
-        <div className="space-y-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Tipo de tarro
-          </span>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label="Tipo de tarro">
-            {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => (
-              <button
-                key={tipo}
-                type="button"
-                onClick={() => setTipoTarro(tipo)}
-                aria-pressed={tipoTarro === tipo}
-                className={`min-h-16 rounded-xl border px-4 py-3 text-left transition ${tipoTarro === tipo ? "border-gold bg-accent text-foreground shadow-sm ring-1 ring-gold/30" : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"}`}
-              >
-                <span className="block text-sm font-semibold">{tiposTarro[tipo].etiqueta}</span>
-                <span className="mt-1 block text-xs font-normal opacity-70">
-                  {tipo === "liso" ? "−5% de tolerancia" : "+20% de tolerancia"}
-                </span>
-              </button>
-            ))}
+      <div className={`space-y-4 p-4 sm:space-y-5 sm:p-6 lg:p-8 ${compacto ? "" : "max-w-5xl"}`}>
+        <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
+              <Calculator className="size-4" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Medidas del cilindro</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">Introduce las medidas reales del tarro antes de preparar la mezcla.</p>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
-          <label className="space-y-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Diámetro del cilindro (cm)
+          <div className="grid grid-cols-2 gap-3">
+            <label className="min-w-0 space-y-2">
+              <span className="block text-[11px] font-semibold text-muted-foreground">Diámetro</span>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={diametro}
+                  onChange={(e) => setDiametro(e.target.value)}
+                  placeholder="7.50"
+                  aria-label="Diámetro del cilindro en centímetros"
+                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-12 text-lg font-semibold outline-none transition placeholder:text-muted-foreground/40 focus:border-gold focus:ring-4 focus:ring-gold/10"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">cm</span>
+              </div>
+            </label>
+
+            <label className="min-w-0 space-y-2">
+              <span className="block text-[11px] font-semibold text-muted-foreground">Altura</span>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={altura}
+                  onChange={(e) => setAltura(e.target.value)}
+                  placeholder="10.00"
+                  aria-label="Altura del cilindro en centímetros"
+                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-12 text-lg font-semibold outline-none transition placeholder:text-muted-foreground/40 focus:border-gold focus:ring-4 focus:ring-gold/10"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">cm</span>
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
+                <Droplets className="size-4" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Tipo de tarro</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Selecciona el que vas a utilizar.</p>
+              </div>
+            </div>
+            <span className="shrink-0 rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold">
+              {tipoTarro === "liso" ? "−5%" : "+20%"}
             </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              value={diametro}
-              onChange={(e) => setDiametro(e.target.value)}
-              placeholder="Ej. 7.5"
-              className="h-12 w-full rounded-xl border border-input bg-background px-4 text-base outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20"
-            />
-          </label>
-          <label className="space-y-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Altura del cilindro (cm)
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              value={altura}
-              onChange={(e) => setAltura(e.target.value)}
-              placeholder="Ej. 10"
-              className="h-12 w-full rounded-xl border border-input bg-background px-4 text-base outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20"
-            />
-          </label>
-        </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => {
+              const seleccionado = tipoTarro === tipo;
+              return (
+                <button
+                  key={tipo}
+                  type="button"
+                  onClick={() => setTipoTarro(tipo)}
+                  aria-pressed={seleccionado}
+                  className={`min-h-14 rounded-2xl border px-3 py-3 text-left transition active:scale-[0.98] ${
+                    seleccionado
+                      ? "border-gold bg-gradient-to-b from-gold/20 to-gold/5 text-foreground shadow-[0_6px_18px_rgba(180,140,50,0.10)]"
+                      : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
+                  }`}
+                >
+                  <span className="flex items-center justify-between gap-2 text-sm font-semibold">
+                    {tiposTarro[tipo].etiqueta}
+                    {seleccionado ? <Check className="size-4 shrink-0 text-gold" aria-hidden="true" /> : null}
+                  </span>
+                  <span className="mt-1 block text-[10px] opacity-70">
+                    {tipo === "liso" ? "Tolerancia −5%" : "Tolerancia +20%"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {esDueno ? (
-          <div className="rounded-xl border border-border bg-surface-muted p-5 lg:rounded-2xl lg:p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Volumen ajustado
-            </p>
-            <p className="mt-1 text-3xl font-semibold text-foreground">
-              {volumen > 0 ? `${formatearEntero(volumen)} ml` : "Ingresa medidas"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³` : "0 cm³"} ·{" "}
-              {tiposTarro[tipoTarro].etiqueta} {configuracion.tolerancias[tipoTarro] >= 0 ? "+" : ""}
-              {formatearCantidad(configuracion.tolerancias[tipoTarro], 2)}%
-            </p>
-          </div>
+          <section className="rounded-3xl border border-gold/20 bg-gold/5 p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Vista técnica · Dueño</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {volumen > 0 ? `${formatearEntero(volumen)} ml` : "—"}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³`} : "0 cm³"} · {tiposTarro[tipoTarro].etiqueta} {configuracion.tolerancias[tipoTarro] >= 0 ? "+" : ""}{formatearCantidad(configuracion.tolerancias[tipoTarro], 2)}%
+                </p>
+              </div>
+            </div>
+          </section>
         ) : null}
-        <div
-          className={
-            compacto
-              ? "grid grid-cols-1 gap-4"
-              : "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8"
-          }
-        >
-          {configuracion.proporciones.map((p) => {
-            const { agua, yeso } = calcularMezcla(volumen, p.agua, p.yeso, configuracion.volumenPorGramo, configuracion.factorCorreccion);
-            return (
-              <article
-                key={`${p.agua}-${p.yeso}`}
-                className={`rounded-2xl border p-5 ${compacto ? "" : "lg:p-7"} ${
-                  p.recomendada ? "border-gold bg-accent shadow-card" : "border-border bg-card"
-                }`}
-              >
-                <div className={compacto ? "mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1" : "mb-6"}>
-                  <p className="text-2xl font-semibold">
-                    {p.agua}/{p.yeso}
-                  </p>
-                  {esDueno ? (
-                    <>
-                      <p className="text-xs text-muted-foreground">
-                        {p.agua}% agua / {p.yeso}% yeso
+
+        <section aria-live="polite" className="rounded-3xl border border-gold/20 bg-gradient-to-br from-card to-accent/30 p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Mezcla recomendada</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {medidasCompletas ? `Para ${formatearEntero(volumen)} ml de volumen ajustado` : "Completa diámetro y altura para calcular"}
+              </p>
+            </div>
+            {medidasCompletas ? (
+              <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-bold text-gold-foreground">Lista</span>
+            ) : null}
+          </div>
+
+          <div className={`grid grid-cols-1 gap-3 ${compacto ? "" : "sm:grid-cols-3"}`}>
+            {configuracion.proporciones.map((p) => {
+              const { agua, yeso } = calcularMezcla(
+                volumen,
+                p.agua,
+                p.yeso,
+                configuracion.volumenPorGramo,
+                configuracion.factorCorreccion,
+              );
+              return (
+                <article
+                  key={`${p.agua}-${p.yeso}`}
+                  className={`rounded-2xl border p-4 sm:p-5 ${
+                    p.recomendada
+                      ? "border-gold bg-background shadow-[0_8px_24px_rgba(180,140,50,0.10)]"
+                      : "border-border bg-background/70"
+                  }`}
+                >
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xl font-bold tracking-tight text-foreground">{p.agua}/{p.yeso}</p>
+                      <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">agua / yeso</p>
+                    </div>
+                    {p.recomendada ? (
+                      <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-gold">Recomendada</span>
+                    ) : null}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-surface-muted p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Agua</p>
+                      <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                        {medidasCompletas ? formatearEntero(agua) : "—"} <span className="text-xs font-medium text-muted-foreground">ml</span>
                       </p>
-                      {p.recomendada ? (
-                        <p className="w-full text-[10px] font-semibold uppercase tracking-wider text-gold">
-                          Recomendada para joyería
-                        </p>
-                      ) : null}
-                    </>
-                  ) : null}
-                </div>
-                <dl className={`grid gap-3 ${compacto ? "grid-cols-2" : "grid-cols-1 gap-4 lg:grid-cols-2"}`}>
-                  <div className={`rounded-xl bg-background p-4 ${compacto ? "" : "lg:p-5"}`}>
-                    <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Agua
-                    </dt>
-                    <dd
-                      className={`whitespace-nowrap font-semibold leading-none ${
-                        compacto ? "text-2xl" : "text-3xl lg:text-4xl"
-                      }`}
-                    >
-                      {volumen > 0 ? formatearEntero(agua) : "0"}{" "}
-                      <span className="ml-1 text-sm font-medium text-muted-foreground">ml</span>
-                    </dd>
+                    </div>
+                    <div className="rounded-2xl bg-surface-muted p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Yeso</p>
+                      <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                        {medidasCompletas ? formatearEntero(yeso) : "—"} <span className="text-xs font-medium text-muted-foreground">g</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className={`rounded-xl bg-background p-4 ${compacto ? "" : "lg:p-5"}`}>
-                    <dt className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Yeso
-                    </dt>
-                    <dd
-                      className={`whitespace-nowrap font-semibold leading-none ${
-                        compacto ? "text-2xl" : "text-3xl lg:text-4xl"
-                      }`}
-                    >
-                      {volumen > 0 ? formatearEntero(yeso) : "0"}{" "}
-                      <span className="ml-1 text-sm font-medium text-muted-foreground">g</span>
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-            );
-          })}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={limpiar}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-input bg-background px-4 text-xs font-semibold text-muted-foreground transition hover:border-gold/60 hover:text-foreground active:scale-[0.98]"
+          >
+            <RotateCcw className="size-4" aria-hidden="true" />
+            Limpiar
+          </button>
         </div>
       </div>
     </Panel>
