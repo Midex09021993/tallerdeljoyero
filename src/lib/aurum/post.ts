@@ -34,7 +34,7 @@ export async function createAurumPostPipeline(
     if (ssaoConfig.bloom) {
       const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
       const bloom = new UnrealBloomPass(
-        { x: renderer.domElement.width, y: renderer.domElement.height },
+        { x: renderer.domElement.width, y: renderer.domElement.height } as any,
         ssaoConfig.bloomIntensity ?? 0.08,
         0.4,
         ssaoConfig.bloomThreshold ?? 1.35
