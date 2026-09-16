@@ -13,6 +13,7 @@ import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
+import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -211,73 +212,20 @@ export function AurumRender() {
   const [autoRotando, setAutoRotando] = useState(false);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
 
-  // Estado central del configurador: una única fuente de verdad para
-  // material, gema, escena, iluminación y cámara.
-  const aurumConfiguration = useMemo(() => ({
-    material: materialId,
-    gem: gemaId,
-    scene: escenarioId,
-    lighting: iluminacionId,
-    camera: vista,
-    finish: materialId.includes("_") ? materialId.split("_").slice(1).join("_") : "pulido",
+  // Estado central del configurador: una única fuente de verdad.
+  const aurumConfiguration = useMemo(() => createAurumConfiguration({
+    material: materialId, gem: gemaId, scene: escenarioId, lighting: iluminacionId, camera: vista,
   }), [materialId, gemaId, escenarioId, iluminacionId, vista]);
 
+  const aurumVariations = useMemo(
+    () => createAurumVariations(MATERIALES, GEMAS),
+    []
+  );
 
-  // Variaciones del configurador: cada opción se mantiene independiente para
-  // poder crecer hacia un sistema tipo iJewel sin mezclar la lógica del renderer.
-  // Variaciones base del configurador, derivadas del catálogo existente.
-  const aurumVariations = useMemo(() => ({
-    metals: Array.from(new Set(MATERIALES.map(m => m.grupo))).map(grupo => ({
-      id: grupo.toLowerCase().replace(/\s+/g, "-"),
-      name: grupo,
-      options: MATERIALES.filter(m => m.grupo === grupo).map(m => ({
-        id: m.id,
-        name: m.nombre,
-      })),
-    })),
-    gems: GEMAS.map(g => ({ id: g.id, name: g.nombre })),
-    finishes: Array.from(new Set(MATERIALES.map(m => m.nombre))).map(nombre => ({
-      id: nombre.toLowerCase().replace(/\s+/g, "-"),
-      name: nombre,
-      materialIds: MATERIALES.filter(m => m.nombre === nombre).map(m => m.id),
-    })),
-  }), []);
-
-  // Modelo de capas del configurador: cada capa representa una parte
-  // intercambiable del producto, siguiendo el concepto de variations de iJewel.
-  const aurumConfiguratorLayers = useMemo(() => [
-    {
-      id: "metal",
-      title: "Metal",
-      preview: "color" as const,
-      options: aurumVariations.metals.flatMap(group => group.options.map(option => ({
-        id: option.id,
-        name: group.name + " · " + option.name,
-        type: "metal" as const,
-      }))),
-    },
-    {
-      id: "gemstone",
-      title: "Gema",
-      preview: "color" as const,
-      options: aurumVariations.gems.map(g => ({
-        id: g.id,
-        name: g.name,
-        type: "gem" as const,
-      })),
-    },
-    {
-      id: "finish",
-      title: "Acabado",
-      preview: "color" as const,
-      options: aurumVariations.finishes.map(f => ({
-        id: f.id,
-        name: f.name,
-        type: "finish" as const,
-        materialIds: f.materialIds,
-      })),
-    },
-  ], [aurumVariations]);
+  const aurumConfiguratorLayers = useMemo(
+    () => createAurumConfiguratorLayers(aurumVariations),
+    [aurumVariations]
+  );
 
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
