@@ -67,7 +67,7 @@ export const DEFAULT_CONFIG_YESO: ConfigYeso = {
   tolerancias: { liso: -5, perforado: 20 },
 };
 
-function objeto(valor: unknown): Record<string, unknown> {
+function objeto(valor: unknown): any {
   return valor && typeof valor === "object" && !Array.isArray(valor)
     ? (valor as Record<string, unknown>)
     : {};

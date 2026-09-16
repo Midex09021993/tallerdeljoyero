@@ -30,7 +30,7 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   gemaClara:{id:"gemaClara",background:0xe7edf2,ground:0xdde4ea,groundRoughness:.42,groundMetalness:.01,groundVisible:true,environmentIntensity:.18,environmentRotation:.08,shadowIntensity:.16,shadowSoftness:.97,exposure:.86}
 };
 
-export const getAurumScenePreset=(id:string)=>AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS.claro;
+export const getAurumScenePreset=(id:string)=>AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
 
 export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:number;transmissionScale:number};
 
