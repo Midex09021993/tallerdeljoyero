@@ -308,5 +308,7 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
  * Mantiene un único comportamiento de aplicación de gemas.
  */
 export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>{
-  return applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
+  // applyAurumGem owns thicknessScale so every entry point uses the same
+  // physical thickness response.
+  return applyAurumGem(material,preset,Math.max(.015,thickness));
 };
