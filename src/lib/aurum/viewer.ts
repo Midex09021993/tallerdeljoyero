@@ -7,6 +7,7 @@ export interface AurumViewerFrame {
   groundController: any;
   scene: any;
   renderer: any;
+  lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
 export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any) {
@@ -15,21 +16,25 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   viewer.groundController.positionUnderModel(bounds);
   const radius=Math.max(size.length()*.5,.8);
   const lightDistance=Math.max(radius*6,12);
-  Object.values(viewer.lights).forEach((L:any)=>{
-    if(!L)return;
-    if(L.distance!==undefined)L.distance=lightDistance;
-    if(L.castShadow&&L.shadow?.camera){
-      L.shadow.camera.near=Math.max(.01,radius*.02);
-      L.shadow.camera.far=Math.max(lightDistance,radius*10);
-      if("left" in L.shadow.camera){
-        const limit=Math.max(radius*2.2,3);
-        L.shadow.camera.left=-limit; L.shadow.camera.right=limit;
-        L.shadow.camera.top=limit; L.shadow.camera.bottom=-limit;
+  if (viewer.lightingController?.scaleToModel) {
+    viewer.lightingController.scaleToModel(radius,targetY);
+  } else {
+    Object.values(viewer.lights).forEach((L:any)=>{
+      if(!L)return;
+      if(L.distance!==undefined)L.distance=lightDistance;
+      if(L.castShadow&&L.shadow?.camera){
+        L.shadow.camera.near=Math.max(.01,radius*.02);
+        L.shadow.camera.far=Math.max(lightDistance,radius*10);
+        if("left" in L.shadow.camera){
+          const limit=Math.max(radius*2.2,3);
+          L.shadow.camera.left=-limit; L.shadow.camera.right=limit;
+          L.shadow.camera.top=limit; L.shadow.camera.bottom=-limit;
+        }
+        L.shadow.camera.updateProjectionMatrix();
       }
-      L.shadow.camera.updateProjectionMatrix();
-    }
-    if(L.target){L.target.position.set(0,targetY,0); L.target.updateMatrixWorld();}
-  });
+      if(L.target){L.target.position.set(0,targetY,0); L.target.updateMatrixWorld();}
+    });
+  }
   applyScene(sceneId);
   const visualRadius=Math.max(size.length()*.5,1.3);
   const distance=Math.max(visualRadius*1.55,3.15);
