@@ -73,6 +73,14 @@ export function createAurumLightingController(
           lights.strip.position.set(-3.5, 3.2, 2.8);
           lights.strip.lookAt(0, 0, 0);
           scene.add(lights.strip);
+
+          // Front fill: iJewel-style product photography needs a broad frontal
+          // reflection source so polished metal does not fall into a black band
+          // on the camera-facing side. It is intentionally softer than the key.
+          lights.front = new THREE.RectAreaLight(0xffffff, 2.35, 4.5, 3.2);
+          lights.front.position.set(0, 2.8, 5.2);
+          lights.front.lookAt(0, 0, 0);
+          scene.add(lights.front);
         }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
@@ -81,6 +89,7 @@ export function createAurumLightingController(
       apply(lights.gem, config.gem);
       if (lights.softbox) lights.softbox.visible = true;
       if (lights.strip) lights.strip.visible = true;
+      if (lights.front) lights.front.visible = true;
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
@@ -112,8 +121,12 @@ export function createAurumLightingController(
       };
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
-        if (name === "softbox" || name === "strip") {
-          const source = name === "softbox" ? [3.5, 5.5, 4.5] : [-3.5, 3.2, 2.8];
+        if (name === "softbox" || name === "strip" || name === "front") {
+          const source = name === "softbox"
+            ? [3.5, 5.5, 4.5]
+            : name === "strip"
+              ? [-3.5, 3.2, 2.8]
+              : [0, 2.8, 5.2];
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
           light.lookAt?.(0, targetY, 0);
