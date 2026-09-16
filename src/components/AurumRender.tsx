@@ -293,8 +293,8 @@ export function AurumRender() {
 
       const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
       let entorno = environmentController.current;
-      // Environment y exposición quedan gobernados exclusivamente por SceneController.
-      escena.environmentRotation.y = Math.PI * 0.16;
+      // El EnvironmentController es la única autoridad para HDRI,
+      // intensidad y rotación. El componente no escribe estado de entorno directamente.
       // Biblioteca HDRI profesional centralizada en el motor fotográfico.
       // El mapa de entorno y el GemEnvironment son independientes: el metal
       // necesita bandas de reflexión controladas y la gema necesita un entorno
@@ -343,7 +343,7 @@ export function AurumRender() {
       cargarEntornoGema("jewelry");
 
       let hdrRequestId = 0;
-      const cargarHDRI = (id:IluminacionId | EscenarioId, rotation = 0.16) => {
+      const cargarHDRI = (id:IluminacionId | EscenarioId) => {
         const requestId = ++hdrRequestId;
         const photo = getAurumPhotographicProfile(id as string);
         const url = getAurumHdriUrl(photo.environmentKey);
@@ -353,7 +353,6 @@ export function AurumRender() {
           () => vivo && requestId === hdrRequestId,
           (next) => {
             entorno = next;
-            escena.environmentRotation.y = Math.PI * rotation;
           }
         );
       };
