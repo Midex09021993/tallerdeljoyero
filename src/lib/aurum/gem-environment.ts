@@ -49,7 +49,7 @@ export function createAurumGemEnvironment(
       const apply = (m:any) => {
         if (!m?.userData?.aurumOpticalProfile) return m;
         m.envMap = texture;
-        const family = m.userData.aurumOpticalProfile;
+        const family = m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default";
         const authored = Number.isFinite(m.userData?.aurumGemEnvIntensity)
           ? m.userData.aurumGemEnvIntensity
           : getAurumGemEnvironmentIntensity(family);
