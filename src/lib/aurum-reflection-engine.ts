@@ -31,10 +31,10 @@ const source=(width:number,height:number,intensity:number,position:[number,numbe
 
 export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfile>={
   studioSoft:{
-    softbox:source(9.5,6.5,2.05,[3.8,5.8,4.8]),
-    strip:source(2.8,9.5,.72,[-3.8,3.5,3.0]),
-    front:source(6.8,4.6,.58,[0,3.0,5.6]),
-    kicker:source(2.4,7.4,.55,[4.2,4.0,-2.8]),
+    softbox:source(10.5,7.0,1.95,[3.8,5.8,4.8]),
+    strip:source(3.0,10.5,.92,[-3.8,3.6,3.0]),
+    front:source(6.0,4.0,.38,[0,3.1,5.8]),
+    kicker:source(2.6,8.2,.72,[4.4,4.0,-3.0]),
   },
   studioHard:{
     softbox:source(7.0,4.0,1.28,[3.8,5.8,4.8]),
@@ -43,10 +43,10 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
     kicker:source(1.5,7.8,1.02,[4.2,4.0,-2.8]),
   },
   jewelry:{
-    softbox:source(10.5,7.0,2.55,[3.8,5.8,4.8]),
-    strip:source(2.5,10.5,.90,[-3.8,3.5,3.0]),
-    front:source(7.0,4.8,.72,[0,3.0,5.6]),
-    kicker:source(2.2,8.2,.70,[4.2,4.0,-2.8]),
+    softbox:source(11.5,7.5,2.35,[3.8,5.8,4.8]),
+    strip:source(2.8,11.0,1.02,[-3.8,3.6,3.0]),
+    front:source(6.5,4.4,.46,[0,3.1,5.8]),
+    kicker:source(2.4,8.6,.78,[4.4,4.0,-3.0]),
   },
   luxury:{
     softbox:source(6.0,3.6,1.08,[3.8,5.8,4.8]),
