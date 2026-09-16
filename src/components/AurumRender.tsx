@@ -333,7 +333,7 @@ export function AurumRender() {
       const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
       let entorno = fallbackEnvironment;
       escena.environment = entorno;
-      escena.environmentIntensity = jewelryBasicRender ? 0.14 : 0.11;
+      escena.environmentIntensity = 0.82;
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
@@ -387,7 +387,7 @@ export function AurumRender() {
             const anterior = entorno;
             entorno = hdrEnvironment;
             escena.environment = entorno;
-            escena.environmentIntensity = jewelryBasicRender ? 0.22 : 0.10;
+            // La intensidad del entorno la gobierna aplicarEscenario(); el HDRI solo reemplaza la textura.
             escena.environmentRotation.y = id === "luxury" ? Math.PI * .42 : id === "studioHard" ? Math.PI * .08 : Math.PI * .16;
             anterior?.dispose?.();
           } catch {
@@ -448,9 +448,9 @@ export function AurumRender() {
           rim:{...lightingStudio.rim,intensity:presets.rim},
           gem:{...lightingStudio.gem,intensity:presets.gem},
         });
-        escena.environmentIntensity=presets.environment;
-        renderer.toneMappingExposure=presets.exposure;
-        cargarHDRI(id);
+        // La iluminación controla únicamente las intensidades relativas de las luces.
+        // Environment y exposición pertenecen a Scene/aplicarEscenario para evitar conflictos.
+
       };
 
       const sceneStudio={
@@ -613,8 +613,8 @@ export function AurumRender() {
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         const scenePreset = getAurumScenePreset(id);
-        renderer.toneMappingExposure = scenePreset.exposure * postConfig.exposure / .62;
-        escena.environmentIntensity = scenePreset.environmentIntensity;
+        renderer.toneMappingExposure = Math.max(0.65, Math.min(1.15, scenePreset.exposure * postConfig.exposure / .62));
+        escena.environmentIntensity = Math.min(1.0, Math.max(0.72, scenePreset.environmentIntensity));
         escena.environmentRotation.y = Math.PI * scenePreset.environmentRotation;
         // Set de estudio profesional disponible desde el inicio, incluso sin modelo cargado.
         if (!suelo) {
