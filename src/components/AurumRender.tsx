@@ -274,7 +274,12 @@ export function AurumRender() {
       renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
-      const { composer, ssaoPass } = await createAurumPostPipeline(renderer, escena, camara, ssaoConfig);
+      const { composer, ssaoPass } = await createAurumPostPipeline(
+        renderer,
+        escena,
+        camara,
+        { ...ssaoConfig, ...postConfig }
+      );
 
       const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
       let entorno = environmentController.current;
