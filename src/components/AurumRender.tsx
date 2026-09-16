@@ -128,9 +128,9 @@ export function AurumRender() {
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena">("materiales");
-  const [materialesAbiertos, setMaterialesAbiertos] = useState(true);
-  const [gemasAbiertas, setGemasAbiertas] = useState(true);
-  const [escenaAbierta, setEscenaAbierta] = useState(true);
+  const abrirSeccion = useCallback((seccion: "materiales"|"gemas"|"escena") => {
+    setUxSection(seccion);
+  }, []);
   const [mostrarTodosMateriales, setMostrarTodosMateriales] = useState(false);
   const [mostrarTodasGemas, setMostrarTodasGemas] = useState(false);
   const [mostrarTodasEscenas, setMostrarTodasEscenas] = useState(false);
@@ -679,12 +679,12 @@ export function AurumRender() {
         <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" aria-expanded={materialesAbiertos} onClick={()=>{setUxSection("materiales");setMaterialesAbiertos(v=>!v)}} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/85")}>
-                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(materialesAbiertos?"":"-rotate-90")}/><span>Material</span><span className="text-[10px] font-normal text-white/30">{MATERIALES.filter(m=>m.grupo!=="Especiales").length}</span></span>
-                <span className="text-[9px] uppercase tracking-[.12em] text-white/30">{materialesAbiertos?"Ocultar":"Mostrar"}</span>
+              <button type="button" aria-expanded={materialesAbiertos} onClick={()=>abrirSeccion("materiales")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/55")}>
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"":"-rotate-90")}/><span>Material</span><span className="text-[10px] font-normal text-white/30">{MATERIALES.filter(m=>m.grupo!=="Especiales").length}</span></span>
+                <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="materiales"?"text-[#d4af37]":"text-white/25")}>{uxSection==="materiales"?"Abierto":"Abrir"}</span>
               </button>
-              {materialesAbiertos&&<div className="grid grid-cols-5 gap-2">
-                {(mostrarTodosMateriales?MATERIALES.filter(m=>m.grupo!=="Especiales"):MATERIALES.filter(m=>m.grupo!=="Especiales").slice(0,5)).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
+              {uxSection==="materiales"&&<div className="grid grid-cols-5 gap-2">
+                {(mostrarTodosMateriales?MATERIALES.filter(m=>m.grupo!=="Especiales"):MATERIALES.filter(m=>m.grupo!=="Especiales").slice(0,5)).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{abrirSeccion("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(materialId===m.id?"border-[#34c7ff] bg-white/10 shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-white/10 bg-white/[.05] group-hover:border-white/25")}><span className="size-9 rounded-full border border-white/25 shadow-inner" style={{background:hexColor(m.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{m.nombre}</span>
                 </button>)}
@@ -693,12 +693,12 @@ export function AurumRender() {
             </section>
 
             <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" aria-expanded={gemasAbiertas} onClick={()=>{setUxSection("gemas");setGemasAbiertas(v=>!v)}} className="mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium">
-                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(gemasAbiertas?"":"-rotate-90")}/><span>Gemas</span><span className="text-[10px] font-normal text-white/30">{GEMAS.length}</span></span>
-                <span className="text-[9px] uppercase tracking-[.12em] text-white/30">{gemasAbiertas?"Ocultar":"Mostrar"}</span>
+              <button type="button" aria-expanded={gemasAbiertas} onClick={()=>abrirSeccion("gemas")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="gemas"?"text-white":"text-white/55")}>
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="gemas"?"":"-rotate-90")}/><span>Gemas</span><span className="text-[10px] font-normal text-white/30">{GEMAS.length}</span></span>
+                <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="gemas"?"text-[#d4af37]":"text-white/25")}>{uxSection==="gemas"?"Abierto":"Abrir"}</span>
               </button>
-              {gemasAbiertas&&<div className="grid grid-cols-5 gap-2">
-                {(mostrarTodasGemas?GEMAS:GEMAS.slice(0,5)).map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
+              {uxSection==="gemas"&&<div className="grid grid-cols-5 gap-2">
+                {(mostrarTodasGemas?GEMAS:GEMAS.slice(0,5)).map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{abrirSeccion("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(gemaId===g.id?"border-[#34c7ff] bg-white/10":"border-transparent bg-transparent group-hover:border-white/15")}><span className="size-9 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(g.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{g.nombre}</span>
                 </button>)}
@@ -707,12 +707,12 @@ export function AurumRender() {
             </section>
 
             <section className="px-5 py-5">
-              <button type="button" aria-expanded={escenaAbierta} onClick={()=>{setUxSection("escena");setEscenaAbierta(v=>!v)}} className="mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium">
-                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(escenaAbierta?"":"-rotate-90")}/><span>Escena</span><span className="text-[10px] font-normal text-white/30">{ESCENARIOS.length}</span></span>
-                <span className="text-[9px] uppercase tracking-[.12em] text-white/30">{escenaAbierta?"Ocultar":"Mostrar"}</span>
+              <button type="button" aria-expanded={escenaAbierta} onClick={()=>abrirSeccion("escena")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="escena"?"text-white":"text-white/55")}>
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="escena"?"":"-rotate-90")}/><span>Escena</span><span className="text-[10px] font-normal text-white/30">{ESCENARIOS.length}</span></span>
+                <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="escena"?"text-[#d4af37]":"text-white/25")}>{uxSection==="escena"?"Abierto":"Abrir"}</span>
               </button>
-              {escenaAbierta&&<div className="grid grid-cols-3 gap-3">
-                {(mostrarTodasEscenas?ESCENARIOS:ESCENARIOS.slice(0,6)).map(e=><button key={e.id} type="button" onClick={()=>{setUxSection("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
+              {uxSection==="escena"&&<div className="grid grid-cols-3 gap-3">
+                {(mostrarTodasEscenas?ESCENARIOS:ESCENARIOS.slice(0,6)).map(e=><button key={e.id} type="button" onClick={()=>{abrirSeccion("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
                   <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}>
                     <span className={"block h-full w-full "+e.clase}/>
                   </span>
