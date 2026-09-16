@@ -128,7 +128,7 @@ export async function createAurumPostPipeline(
     const high=q.pixelRatio>=1.5;
     const ultra=q.pixelRatio>=2;
     if(renderPass){
-      renderPass.enabled=true;
+      renderPass.enabled=!(ultra && config.taa!==false);
     }
     if(taaPass){
       // Ultra uses accumulation only when the scene is stable. The caller can
@@ -169,16 +169,17 @@ export async function createAurumPostPipeline(
 
   let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
   const updateTemporal=(focusDistance?:number)=>{
-    if(!taaPass) return;
     const p=camera.position, q=camera.quaternion;
     const moved=!Number.isFinite(lastPX)
       || Math.abs(p.x-lastPX)>1e-5 || Math.abs(p.y-lastPY)>1e-5 || Math.abs(p.z-lastPZ)>1e-5
       || Math.abs(q.x-lastQX)>1e-5 || Math.abs(q.y-lastQY)>1e-5 || Math.abs(q.z-lastQZ)>1e-5 || Math.abs(q.w-lastQW)>1e-5;
-    if(moved){
-      taaPass.accumulateIndex=-1;
-      taaPass.accumulate=false;
-    }else if(taaPass.enabled && config.taa!==false){
-      taaPass.accumulate=true;
+    if(taaPass){
+      if(moved){
+        taaPass.accumulateIndex=-1;
+        taaPass.accumulate=false;
+      }else if(taaPass.enabled && config.taa!==false){
+        taaPass.accumulate=true;
+      }
     }
     lastPX=p.x; lastPY=p.y; lastPZ=p.z;
     lastQX=q.x; lastQY=q.y; lastQZ=q.z; lastQW=q.w;
