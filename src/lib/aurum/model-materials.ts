@@ -23,7 +23,9 @@ export function applyAurumInitialModelMaterials(
     x.receiveShadow=true;
     const meta=x.userData?.aurumRhino;
     if(meta?.categoria==="gema"){
-      const gem=options.gems.find((g:any)=>g.id===options.initialGemId) ?? options.gems[0];
+      const gemIds=["diamante_natural","zafiro_azul","rubi_natural","esmeralda_1"];
+      const mappedGemId=Number(meta?.matrixSlot)>=1 && Number(meta?.matrixSlot)<=4 ? gemIds[Number(meta.matrixSlot)-1] : options.initialGemId;
+      const gem=options.gems.find((g:any)=>g.id===mappedGemId) ?? options.gems.find((g:any)=>g.id===options.initialGemId) ?? options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
@@ -38,7 +40,9 @@ export function applyAurumInitialModelMaterials(
       options.createInclusions(x,gem);
       options.applyGemEnvironment();
     }else if(meta?.categoria==="metal"){
-      const metal=options.metals.find((m:any)=>m.id===options.initialMetalId) ?? options.metals[0];
+      const metalIds=["oro18a_pulido","plata925_pulida","oro18r_pulido","platino_pulido"];
+      const mappedMetalId=Number(meta?.matrixSlot)>=1 && Number(meta?.matrixSlot)<=4 ? metalIds[Number(meta.matrixSlot)-1] : options.initialMetalId;
+      const metal=options.metals.find((m:any)=>m.id===mappedMetalId) ?? options.metals.find((m:any)=>m.id===options.initialMetalId) ?? options.metals[0];
       if(!metal) return;
       const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
       options.configureMetal(mat,metal);
