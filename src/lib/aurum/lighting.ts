@@ -64,23 +64,31 @@ export function createAurumLightingController(
         // broad rectangular highlights on polished jewelry. They do not cast
         // shadows; the key spot remains responsible for the contact shadow.
         if (THREE.RectAreaLight) {
-          lights.softbox = new THREE.RectAreaLight(0xffffff, 4.6, 7, 4);
-          lights.softbox.position.set(3.5, 5.5, 4.5);
+          lights.softbox = new THREE.RectAreaLight(0xffffff, 5.8, 8, 4.8);
+          lights.softbox.position.set(3.8, 5.8, 4.8);
           lights.softbox.lookAt(0, 0, 0);
           scene.add(lights.softbox);
 
-          lights.strip = new THREE.RectAreaLight(0xffffff, 2.8, 2.2, 7);
-          lights.strip.position.set(-3.5, 3.2, 2.8);
+          lights.strip = new THREE.RectAreaLight(0xffffff, 3.6, 2.2, 8);
+          lights.strip.position.set(-3.8, 3.5, 3.0);
           lights.strip.lookAt(0, 0, 0);
           scene.add(lights.strip);
 
           // Front fill: iJewel-style product photography needs a broad frontal
           // reflection source so polished metal does not fall into a black band
           // on the camera-facing side. It is intentionally softer than the key.
-          lights.front = new THREE.RectAreaLight(0xffffff, 2.35, 4.5, 3.2);
-          lights.front.position.set(0, 2.8, 5.2);
+          lights.front = new THREE.RectAreaLight(0xffffff, 1.8, 5.2, 3.4);
+          lights.front.position.set(0, 3.0, 5.6);
           lights.front.lookAt(0, 0, 0);
           scene.add(lights.front);
+
+          // Narrow rear kicker: creates a controlled highlight along the opposite
+          // contour so polished bands retain their cylindrical form instead of
+          // collapsing into a uniform gray surface.
+          lights.kicker = new THREE.RectAreaLight(0xffffff, 2.2, 1.8, 6.5);
+          lights.kicker.position.set(4.2, 4.0, -2.8);
+          lights.kicker.lookAt(0, 0, 0);
+          scene.add(lights.kicker);
         }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
@@ -90,6 +98,7 @@ export function createAurumLightingController(
       if (lights.softbox) lights.softbox.visible = true;
       if (lights.strip) lights.strip.visible = true;
       if (lights.front) lights.front.visible = true;
+      if (lights.kicker) lights.kicker.visible = true;
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
@@ -121,7 +130,7 @@ export function createAurumLightingController(
       };
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
-        if (name === "softbox" || name === "strip" || name === "front") {
+        if (name === "softbox" || name === "strip" || name === "front" || name === "kicker") {
           const source = name === "softbox"
             ? [3.5, 5.5, 4.5]
             : name === "strip"
