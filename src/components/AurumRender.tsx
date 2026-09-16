@@ -742,7 +742,9 @@ export function AurumRender() {
             L.shadow.camera.updateProjectionMatrix();
           }
           if (L.target) {
-            L.target.position.set(0, 0, 0);
+            // La sombra debe seguir el mismo objetivo visual que la cámara.
+            // Así la zona de máxima precisión de la SpotLight coincide con la joya.
+            L.target.position.set(0, targetY, 0);
             L.target.updateMatrixWorld();
           }
         });
