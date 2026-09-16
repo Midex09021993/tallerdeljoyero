@@ -113,7 +113,20 @@ export function createAurumWebGLViewer(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.domElement.className = "block h-full w-full";
-  nodo.appendChild(renderer.domElement);
 
-  return { scene, camera, renderer };
+  const Controls = options.controlsClass;
+  const controls = Controls ? new Controls(camera, renderer.domElement) : null;
+  if (controls) {
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.enablePan = true;
+    controls.enableRotate = true;
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 0.65;
+    controls.minDistance = 0.15;
+    controls.maxDistance = options.maxDistance ?? 100;
+  }
+
+  nodo.appendChild(renderer.domElement);
+  return { scene, camera, renderer, controls };
 }
