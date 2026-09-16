@@ -21,6 +21,7 @@ export async function createAurumPostPipeline(
   let ssaoPass:any=null;
   let bloomPass:any=null;
   let lutPass:any=null;
+  let vignettePass:any=null;
   let outputPass:any=null;
 
   try {
@@ -70,13 +71,23 @@ export async function createAurumPostPipeline(
     lutPass=new LUTPass({lut:lutTexture});
     composer.addPass(lutPass);
 
+    // Subtle photographic vignette: iJewel exposes vignette as a post effect;
+    // here it is intentionally restrained so the jewelry remains the subject.
+    const { ShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
+    vignettePass=new ShaderPass({
+      uniforms:{tDiffuse:{value:null},offset:{value:config.vignetteOffset??1.0},darkness:{value:config.vignetteDarkness??.055}},
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`uniform sampler2D tDiffuse; uniform float offset; uniform float darkness; varying vec2 vUv; void main(){vec4 c=texture2D(tDiffuse,vUv); vec2 p=vUv-.5; float d=dot(p,p)*2.0; float vig=smoothstep(offset*.55,offset,d); c.rgb*=1.0-vig*darkness; gl_FragColor=c;}`,
+    });
+    composer.addPass(vignettePass);
+
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
     composer.addPass(outputPass);
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
-    composer=null; ssaoPass=null; bloomPass=null; lutPass=null; outputPass=null;
+    composer=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; outputPass=null;
   }
 
   const applyQuality=(next:any)=>{
@@ -97,6 +108,11 @@ export async function createAurumPostPipeline(
     if(lutPass){
       lutPass.enabled=config.lut!==false;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
+    }
+    if(vignettePass){
+      vignettePass.enabled=config.vignette!==false;
+      vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
+      vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(q.pixelRatio??1.5))));
     composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
