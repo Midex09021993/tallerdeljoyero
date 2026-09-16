@@ -59,11 +59,28 @@ export function createAurumLightingController(
         lights.fill = mk("spot", 0xffffff, false);
         lights.rim = mk("spot", 0xffffff, false);
         lights.gem = mk("point", 0xffffff, false);
+
+        // Large reflection sources: unlike a point/spot source, these produce
+        // broad rectangular highlights on polished jewelry. They do not cast
+        // shadows; the key spot remains responsible for the contact shadow.
+        if (THREE.RectAreaLight) {
+          lights.softbox = new THREE.RectAreaLight(0xffffff, 2.2, 7, 4);
+          lights.softbox.position.set(3.5, 5.5, 4.5);
+          lights.softbox.lookAt(0, 0, 0);
+          scene.add(lights.softbox);
+
+          lights.strip = new THREE.RectAreaLight(0xffffff, 1.15, 2.2, 7);
+          lights.strip.position.set(-3.5, 3.2, 2.8);
+          lights.strip.lookAt(0, 0, 0);
+          scene.add(lights.strip);
+        }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
       apply(lights.fill, config.fill);
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
+      if (lights.softbox) lights.softbox.visible = true;
+      if (lights.strip) lights.strip.visible = true;
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
@@ -95,6 +112,13 @@ export function createAurumLightingController(
       };
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
+        if (name === "softbox" || name === "strip") {
+          const source = name === "softbox" ? [3.5, 5.5, 4.5] : [-3.5, 3.2, 2.8];
+          const n = normalizedPosition(source);
+          light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          light.lookAt?.(0, targetY, 0);
+          return;
+        }
         if (light.distance !== undefined) light.distance = distance;
         const source = config?.[name]?.position;
         if (source) {
