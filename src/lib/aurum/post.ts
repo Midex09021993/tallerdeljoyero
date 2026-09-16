@@ -129,7 +129,10 @@ export async function createAurumPostPipeline(
     if(!composer) return;
     const q=next||{};
     const high=q.pixelRatio>=1.5;
-    const ultra=q.pixelRatio>=2;
+    // Aurum Ultra intentionally uses a lighter 1.6x render scale than the
+    // old 2x target. Keep the feature gate tied to the quality tier rather
+    // than to the obsolete pixel-ratio threshold.
+    const ultra=q.pixelRatio>=1.55;
     if(renderPass){
       renderPass.enabled=!(ultra && config.taa!==false);
     }
