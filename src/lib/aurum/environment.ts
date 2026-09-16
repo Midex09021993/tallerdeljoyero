@@ -7,7 +7,7 @@ export interface AurumEnvironmentController {
     requestId: number,
     isCurrent: () => boolean,
     onLoaded: (texture: any) => void,
-    onError?: () => void
+    onError?: (error?: unknown) => void
   ) => void;
   rotation: number;
   intensity: number;
@@ -81,11 +81,11 @@ export function createAurumEnvironment(
           onLoaded(next);
         } catch {
           hdrTexture.dispose?.();
-          onError?.();
+          onError?.(new Error("AURUM HDR conversion failed; RoomEnvironment fallback active."));
         }
       }, undefined, () => {
         // RoomEnvironment permanece como fallback silencioso cuando falla la red.
-        onError?.();
+        onError?.(new Error(`AURUM HDR could not be loaded: ${url}`));
       });
     },
     dispose(extraTexture?: any) {
