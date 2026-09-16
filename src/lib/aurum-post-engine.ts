@@ -19,6 +19,7 @@ export type AurumPostConfig={
 export const AURUM_POST_CONFIG:AurumPostConfig={
   toneMapping:"ACES", exposure:.62, contrast:1, saturation:1,
   bloom:false, bloomIntensity:.08, bloomThreshold:1.35,
-  ssao:false, ssaoIntensity:.22, ssr:false, temporalAA:false
+  ssao:false, ssaoIntensity:.22, ssr:false, temporalAA:false,
+  lut:true, lutIntensity:.12
 };
 export const getAurumPostConfig=()=>({...AURUM_POST_CONFIG});
