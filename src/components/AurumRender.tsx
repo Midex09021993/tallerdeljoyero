@@ -128,6 +128,12 @@ export function AurumRender() {
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena">("materiales");
+  const [materialesAbiertos, setMaterialesAbiertos] = useState(true);
+  const [gemasAbiertas, setGemasAbiertas] = useState(true);
+  const [escenaAbierta, setEscenaAbierta] = useState(true);
+  const [mostrarTodosMateriales, setMostrarTodosMateriales] = useState(false);
+  const [mostrarTodasGemas, setMostrarTodasGemas] = useState(false);
+  const [mostrarTodasEscenas, setMostrarTodasEscenas] = useState(false);
 
   // Estado central del configurador: una única fuente de verdad.
   const {
@@ -673,35 +679,47 @@ export function AurumRender() {
         <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" onClick={()=>setUxSection("materiales")} className={"mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/85")}><ChevronDown className="size-4"/><span>Material</span></button>
-              <div className="grid grid-cols-5 gap-2">
-                {MATERIALES.filter(m=>m.grupo!=="Especiales").slice(0,5).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
+              <button type="button" aria-expanded={materialesAbiertos} onClick={()=>{setUxSection("materiales");setMaterialesAbiertos(v=>!v)}} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/85")}>
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(materialesAbiertos?"":"-rotate-90")}/><span>Material</span><span className="text-[10px] font-normal text-white/30">{MATERIALES.filter(m=>m.grupo!=="Especiales").length}</span></span>
+                <span className="text-[9px] uppercase tracking-[.12em] text-white/30">{materialesAbiertos?"Ocultar":"Mostrar"}</span>
+              </button>
+              {materialesAbiertos&&<div className="grid grid-cols-5 gap-2">
+                {(mostrarTodosMateriales?MATERIALES.filter(m=>m.grupo!=="Especiales"):MATERIALES.filter(m=>m.grupo!=="Especiales").slice(0,5)).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(materialId===m.id?"border-[#34c7ff] bg-white/10 shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-white/10 bg-white/[.05] group-hover:border-white/25")}><span className="size-9 rounded-full border border-white/25 shadow-inner" style={{background:hexColor(m.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{m.nombre}</span>
                 </button>)}
-              </div>
+                {MATERIALES.filter(m=>m.grupo!=="Especiales").length>5&&<button type="button" onClick={()=>setMostrarTodosMateriales(v=>!v)} className="col-span-5 mt-2 rounded-lg border border-white/10 bg-white/[.035] py-2 text-[10px] text-white/60 hover:border-[#d4af37]/40 hover:text-white">{mostrarTodosMateriales?"Mostrar menos":"Ver todos los materiales"} · {MATERIALES.filter(m=>m.grupo!=="Especiales").length}</button>}
+              </div>}
             </section>
 
             <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" onClick={()=>setUxSection("gemas")} className="mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium"><ChevronDown className="size-4"/><span>Gemas</span></button>
-              <div className="grid grid-cols-5 gap-2">
-                {GEMAS.slice(0,5).map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
+              <button type="button" aria-expanded={gemasAbiertas} onClick={()=>{setUxSection("gemas");setGemasAbiertas(v=>!v)}} className="mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium">
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(gemasAbiertas?"":"-rotate-90")}/><span>Gemas</span><span className="text-[10px] font-normal text-white/30">{GEMAS.length}</span></span>
+                <span className="text-[9px] uppercase tracking-[.12em] text-white/30">{gemasAbiertas?"Ocultar":"Mostrar"}</span>
+              </button>
+              {gemasAbiertas&&<div className="grid grid-cols-5 gap-2">
+                {(mostrarTodasGemas?GEMAS:GEMAS.slice(0,5)).map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(gemaId===g.id?"border-[#34c7ff] bg-white/10":"border-transparent bg-transparent group-hover:border-white/15")}><span className="size-9 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(g.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{g.nombre}</span>
                 </button>)}
-              </div>
+                {GEMAS.length>5&&<button type="button" onClick={()=>setMostrarTodasGemas(v=>!v)} className="col-span-5 mt-2 rounded-lg border border-white/10 bg-white/[.035] py-2 text-[10px] text-white/60 hover:border-[#d4af37]/40 hover:text-white">{mostrarTodasGemas?"Mostrar menos":"Ver todas las gemas"} · {GEMAS.length}</button>}
+              </div>}
             </section>
 
             <section className="px-5 py-5">
-              <button type="button" onClick={()=>setUxSection("escena")} className="mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium"><ChevronDown className="size-4"/><span>Escena</span></button>
-              <div className="grid grid-cols-3 gap-3">
-                {ESCENARIOS.slice(0,6).map(e=><button key={e.id} type="button" onClick={()=>{setUxSection("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
+              <button type="button" aria-expanded={escenaAbierta} onClick={()=>{setUxSection("escena");setEscenaAbierta(v=>!v)}} className="mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium">
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(escenaAbierta?"":"-rotate-90")}/><span>Escena</span><span className="text-[10px] font-normal text-white/30">{ESCENARIOS.length}</span></span>
+                <span className="text-[9px] uppercase tracking-[.12em] text-white/30">{escenaAbierta?"Ocultar":"Mostrar"}</span>
+              </button>
+              {escenaAbierta&&<div className="grid grid-cols-3 gap-3">
+                {(mostrarTodasEscenas?ESCENARIOS:ESCENARIOS.slice(0,6)).map(e=><button key={e.id} type="button" onClick={()=>{setUxSection("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
                   <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}>
                     <span className={"block h-full w-full "+e.clase}/>
                   </span>
                   <span className="mt-2 block text-[10px]">{e.nombre}</span>
                 </button>)}
-              </div>
+                {ESCENARIOS.length>6&&<button type="button" onClick={()=>setMostrarTodasEscenas(v=>!v)} className="col-span-3 mt-2 rounded-lg border border-white/10 bg-white/[.035] py-2 text-[10px] text-white/60 hover:border-[#d4af37]/40 hover:text-white">{mostrarTodasEscenas?"Mostrar menos":"Ver todas las escenas"} · {ESCENARIOS.length}</button>}
+              </div>}
             </section>
             <div className="px-5 pb-6">
               <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-3 py-3 text-left hover:border-[#d4af37]/40">
