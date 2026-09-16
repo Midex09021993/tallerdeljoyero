@@ -108,7 +108,7 @@ export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)
   if(!material) return material;
   material.color?.setHex(preset.color); material.metalness=0;
   material.roughness=preset.roughness; material.transmission=preset.transmission;
-  material.thickness=Math.max(.015,thickness);
+  material.thickness=Math.max(.015,thickness*(preset.thicknessScale??1));
   material.ior=Math.min(2.65,Math.max(1.01,preset.ior)); material.specularIntensity=1;
   material.clearcoat=(preset.familia==="Diamante"||preset.familia==="Moissanita") ? .26 : .18;
   material.clearcoatRoughness=(preset.familia==="Diamante"||preset.familia==="Moissanita") ? .012 : .02;
@@ -159,8 +159,12 @@ export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
   // corundum (ruby/sapphire). Natural amethyst may show hematite needles and
   // fluid-related features, so its inclusion profile is subtle rather than a
   // generic "sparkle" texture.
-  amatista_natural:{id:"amatista_natural",familia:"Amatista",variante:"Natural",color:0x7650b9,transmission:.91,ior:1.55,roughness:.025,envMapIntensity:1.60,attenuationColor:0x57358f,attenuationDistance:8,dispersion:.009,iridescence:0,thicknessScale:1.04,inclusions:true,inclusionDensity:.065,inclusionType:"needle"},
-  amatista_intensa:{id:"amatista_intensa",familia:"Amatista",variante:"Intensa",color:0x5b319c,transmission:.87,ior:1.55,roughness:.030,envMapIntensity:1.54,attenuationColor:0x3f2076,attenuationDistance:5.5,dispersion:.009,iridescence:0,thicknessScale:1.04,inclusions:true,inclusionDensity:.04,inclusionType:"needle"},
+  // Quartz/amethyst: preserve body color through absorption rather than a
+  // saturated surface tint. GIA reports RI ~1.544–1.553 and identifies the
+  // purple color with iron-related color centers; natural stones may show
+  // reddish-brown hematite needles and fluid/growth features.
+  amatista_natural:{id:"amatista_natural",familia:"Amatista",variante:"Natural",color:0x7650b9,transmission:.86,ior:1.55,roughness:.025,envMapIntensity:1.28,attenuationColor:0x57358f,attenuationDistance:2.8,dispersion:.009,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.055,inclusionType:"needle"},
+  amatista_intensa:{id:"amatista_intensa",familia:"Amatista",variante:"Intensa",color:0x6338a4,transmission:.80,ior:1.55,roughness:.030,envMapIntensity:1.22,attenuationColor:0x3f2076,attenuationDistance:1.9,dispersion:.009,iridescence:0,thicknessScale:1.10,inclusions:true,inclusionDensity:.035,inclusionType:"needle"},
   topacio_azul:{id:"topacio_azul",familia:"Topacio",variante:"Azul",color:0x65b9e8,transmission:.94,ior:1.63,roughness:.020,envMapIntensity:1.62,attenuationColor:0x4d9acb,attenuationDistance:10,dispersion:.014,iridescence:.003,thicknessScale:1.03,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   topacio_imperial:{id:"topacio_imperial",familia:"Topacio",variante:"Imperial",color:0xd79b4b,transmission:.91,ior:1.63,roughness:.025,envMapIntensity:1.58,attenuationColor:0xa96722,attenuationDistance:7,dispersion:.014,iridescence:.002,thicknessScale:1.03,inclusions:true,inclusionDensity:.035,inclusionType:"cloud"},
   moissanita:{id:"moissanita",familia:"Moissanita",variante:"Natural",color:0xffffff,transmission:1,ior:2.65,roughness:.012,envMapIntensity:1.85,attenuationColor:0xffffff,attenuationDistance:80,dispersion:.104,iridescence:.05,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"},
@@ -255,11 +259,18 @@ export const getAurumFacetProfile=(cut:string="brillante")=>
  */
 export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)=>{
   if(!material)return material;
-  material.ior=Math.min(2.65,Math.max(1.01,profile.ior));
-  material.transmission=Math.max(0,Math.min(1,profile.transmission));
-  material.dispersion=Math.max(0,profile.dispersion);
-  material.thickness=Math.max(.015,material.thickness??.5);
-  material.attenuationDistance=Math.max(.1,profile.absorptionDistance);
+  // The family profile is a physical baseline, while the catalog preset carries
+  // the specific stone's absorption/color response. Do not overwrite that
+  // response with a generic family transmission value: doing so was washing out
+  // quartz gems such as amethyst under a bright studio environment.
+  material.ior=Math.min(2.65,Math.max(1.01,Number.isFinite(material.ior)?material.ior:profile.ior));
+  material.dispersion=Math.max(Number(material.dispersion)||0,profile.dispersion);
+  material.thickness=Math.max(.015,Number(material.thickness)||.5);
+  const currentDistance=Number(material.attenuationDistance);
+  const familyDistance=Math.max(.1,profile.absorptionDistance);
+  material.attenuationDistance=Number.isFinite(currentDistance)
+    ? Math.min(currentDistance,familyDistance)
+    : familyDistance;
   material.userData={...(material.userData??{}),aurumOpticalProfile:profile};
   material.needsUpdate=true;
   return material;
