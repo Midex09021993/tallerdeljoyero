@@ -16,6 +16,11 @@ export function createAurumSceneController(
       const preset = getAurumScenePreset(id);
       // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
       renderer.toneMappingExposure = preset.exposure;
+      // El controlador de Environment es la autoridad para orientación e intensidad.
+      // Mantenemos el mismo resultado visual y evitamos duplicar estado en Scene.
+      environmentController?.setIntensity?.(preset.environmentIntensity);
+      environmentController?.setRotation?.(Math.PI * preset.environmentRotation);
+      // Compatibilidad con versiones de three.js que no exponen estos setters.
       scene.environmentIntensity = preset.environmentIntensity;
       if (scene.environmentRotation) {
         scene.environmentRotation.y = Math.PI * preset.environmentRotation;
