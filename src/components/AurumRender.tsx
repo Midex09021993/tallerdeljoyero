@@ -679,7 +679,7 @@ export function AurumRender() {
         <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" aria-expanded={materialesAbiertos} onClick={()=>abrirSeccion("materiales")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/55")}>
+              <button type="button" aria-expanded={uxSection==="materiales"} onClick={()=>abrirSeccion("materiales")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/55")}>
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"":"-rotate-90")}/><span>Material</span><span className="text-[10px] font-normal text-white/30">{MATERIALES.filter(m=>m.grupo!=="Especiales").length}</span></span>
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="materiales"?"text-[#d4af37]":"text-white/25")}>{uxSection==="materiales"?"Abierto":"Abrir"}</span>
               </button>
@@ -693,7 +693,7 @@ export function AurumRender() {
             </section>
 
             <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" aria-expanded={gemasAbiertas} onClick={()=>abrirSeccion("gemas")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="gemas"?"text-white":"text-white/55")}>
+              <button type="button" aria-expanded={uxSection==="gemas"} onClick={()=>abrirSeccion("gemas")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="gemas"?"text-white":"text-white/55")}>
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="gemas"?"":"-rotate-90")}/><span>Gemas</span><span className="text-[10px] font-normal text-white/30">{GEMAS.length}</span></span>
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="gemas"?"text-[#d4af37]":"text-white/25")}>{uxSection==="gemas"?"Abierto":"Abrir"}</span>
               </button>
@@ -707,7 +707,7 @@ export function AurumRender() {
             </section>
 
             <section className="px-5 py-5">
-              <button type="button" aria-expanded={escenaAbierta} onClick={()=>abrirSeccion("escena")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="escena"?"text-white":"text-white/55")}>
+              <button type="button" aria-expanded={uxSection==="escena"} onClick={()=>abrirSeccion("escena")} className={"mb-4 flex w-full items-center justify-between text-left text-[16px] font-medium "+(uxSection==="escena"?"text-white":"text-white/55")}>
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="escena"?"":"-rotate-90")}/><span>Escena</span><span className="text-[10px] font-normal text-white/30">{ESCENARIOS.length}</span></span>
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="escena"?"text-[#d4af37]":"text-white/25")}>{uxSection==="escena"?"Abierto":"Abrir"}</span>
               </button>
