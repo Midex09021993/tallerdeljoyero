@@ -22,12 +22,6 @@ export function createAurumSceneController(
       // Mantenemos el mismo resultado visual y evitamos duplicar estado en Scene.
       environmentController?.setIntensity?.(photo.environmentIntensity);
       environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
-      // Compatibilidad con versiones de three.js que no exponen estos setters.
-      scene.environmentIntensity = photo.environmentIntensity;
-      if (scene.environmentRotation) {
-        scene.environmentRotation.y = Math.PI * photo.environmentRotation;
-      }
-
       if (opts?.transparent || id === "transparente") {
         scene.background = null;
         renderer.setClearColor(0, 0);
