@@ -523,7 +523,16 @@ export function AurumRender() {
         const nombre = (typeof obj.name === "string" && obj.name.trim()) ? obj.name.trim() : "Componente seleccionado";
         const meta = obj.userData?.aurumRhino || {};
         const capa = meta.capa || obj.userData?.attributes?.layerName || null;
-        const categoria = (meta.categoria || clasificarCapa(capa || "", meta.colorCapa)) as CategoriaParte;
+        // La metadata explícita tiene prioridad; si llega como "otro" o falta,
+        // reclasificamos por nombre/color para que una capa verde/azul siga
+        // abriendo automáticamente su biblioteca aunque el GLB haya perdido parte
+        // de la metadata original de Rhino.
+        const categoriaDetectada = clasificarCapa(capa || "", meta.colorCapa);
+        const categoria = (
+          meta.categoria === "metal" || meta.categoria === "gema"
+            ? meta.categoria
+            : categoriaDetectada
+        ) as CategoriaParte;
         setParteSeleccionada(obj.uuid);
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
