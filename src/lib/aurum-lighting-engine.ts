@@ -23,7 +23,7 @@ export const AURUM_LIGHTING_PRESETS={
  suave:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.15},fill:{...AURUM_LIGHTING_DEFAULT.fill,intensity:.7}}
 };
 export const AURUM_LIGHTING_RENDER_PRESETS={
-  studioSoft:{key:0,fill:0,rim:0,gem:.06},
+  studioSoft:{key:.80,fill:.24,rim:.10,gem:.10},
   studioHard:{key:.42,fill:.09,rim:.22,gem:.08},
   jewelry:{key:.9,fill:.32,rim:.5,gem:.3},
   luxury:{key:.36,fill:.08,rim:.24,gem:.08},
