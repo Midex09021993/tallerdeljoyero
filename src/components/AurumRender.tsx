@@ -13,6 +13,7 @@ import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
+import { frameAurumProduct, resizeAurumViewer, disposeAurumViewer } from "../lib/aurum/viewer";
 import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
