@@ -11,6 +11,7 @@ import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGround } from "../lib/aurum/ground";
+import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
@@ -482,57 +483,8 @@ export function AurumRender() {
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
         applyAurumMetal(mat, metalPresetFromConfig(m));
       };
-      const limpiarInclusiones = (target:any) => {
-        const quitar:any[] = [];
-        target?.traverse?.((child:any) => { if (child.userData?.aurumInternalInclusion) quitar.push(child); });
-        quitar.forEach((child:any) => { child.parent?.remove(child); child.geometry?.dispose?.(); child.material?.dispose?.(); });
-      };
-      const crearInclusiones = (target:any, g:GemaConfig) => {
-        limpiarInclusiones(target);
-        const preset = getAurumGemPreset(g.id as string);
-        const inclusionConfig = createAurumInclusionConfig(preset, 9173);
-        // Compatibilidad con configuraciones antiguas: solo crea inclusiones cuando
-        // el preset o la configuración existente las solicita.
-        const enabled = preset.inclusions || (!!g.inclusionStrength && g.inclusionStyle!=="ninguna");
-        if (!enabled || inclusionConfig.density<=0) return;
-
-        const box = new THREE.Box3().setFromObject(target);
-        const size = box.getSize(new THREE.Vector3());
-        const minSize = Math.max(Math.min(size.x,size.y,size.z),0.001);
-        const points = generateAurumInclusionPoints(inclusionConfig,56);
-
-        points.forEach((p:any) => {
-          const material = new THREE.MeshPhysicalMaterial({
-            color: inclusionConfig.color,
-            metalness: 0,
-            roughness: inclusionConfig.type==="silk" ? .34 : .22,
-            transmission: inclusionConfig.type==="crystal" ? .48 : .10,
-            transparent: true,
-            opacity: p.opacity,
-            depthWrite: false,
-            envMapIntensity: .75
-          });
-          let geometry:THREE.BufferGeometry;
-          if (inclusionConfig.type==="needle" || inclusionConfig.type==="silk") {
-            geometry = new THREE.CylinderGeometry(p.size*.16,p.size*.16,p.size*3.2,5);
-          } else if (inclusionConfig.type==="feather" || inclusionConfig.type==="veil") {
-            geometry = new THREE.TetrahedronGeometry(p.size*1.6,0);
-          } else {
-            geometry = new THREE.IcosahedronGeometry(p.size,1);
-          }
-          const inclusion = new THREE.Mesh(geometry,material);
-          inclusion.position.set(p.x*size.x*.46,p.y*size.y*.46,p.z*size.z*.46);
-          inclusion.rotation.set(p.y*3.1,p.z*4.7,p.x*5.3);
-          if (inclusionConfig.type==="silk" || inclusionConfig.type==="needle") {
-            inclusion.scale.set(1,1,.35);
-          }
-          inclusion.userData.aurumInternalInclusion=true;
-          inclusion.userData.aurumInclusionType=inclusionConfig.type;
-          inclusion.userData.aurumInclusionSeed=inclusionConfig.seed;
-          inclusion.renderOrder=12;
-          target.add(inclusion);
-        });
-      };
+      const limpiarInclusiones = (target:any) => clearAurumInclusions(target);
+      const crearInclusiones = (target:any, g:GemaConfig) => renderAurumInclusions(THREE,target,g,9173);
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva; if(!target) return;
         const box = new THREE.Box3().setFromObject(target);
