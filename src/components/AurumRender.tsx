@@ -510,7 +510,7 @@ export function AurumRender() {
         if (!modelo) return;
         frameAurumProduct({
           camera: camara, controls: controles, lights: lucesAurum,
-          groundController, scene: escena, renderer,
+          groundController, lightingController, scene: escena, renderer,
         }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
       };
 
