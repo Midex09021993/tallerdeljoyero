@@ -10,6 +10,7 @@ import { applyAurumCameraView } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
+import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
@@ -285,6 +286,7 @@ export function AurumRender() {
         jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
         luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
       };
+      const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
       let entornoGema:any = null;
       const gemEnvironmentUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr";
       const aplicarEntornoGema = () => {
@@ -309,17 +311,15 @@ export function AurumRender() {
       let gemEnvironmentRequestId = 0;
       const cargarEntornoGema = () => {
         const requestId = ++gemEnvironmentRequestId;
-        new RGBELoader().load(gemEnvironmentUrl,(hdrTexture:any)=>{
-          if (!vivo || requestId !== gemEnvironmentRequestId) { hdrTexture.dispose?.(); return; }
-          try {
-            const gemTexture=environmentController.fromEquirectangular(hdrTexture);
-            hdrTexture.dispose?.();
-            const anterior=entornoGema;
-            entornoGema=gemTexture;
-            anterior?.dispose?.();
+        gemEnvironmentController.load(
+          gemEnvironmentUrl,
+          requestId,
+          () => vivo && requestId === gemEnvironmentRequestId,
+          (next) => {
+            entornoGema = next;
             aplicarEntornoGema();
-          } catch { hdrTexture.dispose?.(); }
-        },undefined,()=>{});
+          }
+        );
       };
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId | EscenarioId, rotation = 0.16) => {
@@ -751,6 +751,7 @@ export function AurumRender() {
           hdriGroundTexture,
           environmentController,
           gemEnvironment:entornoGema,
+          gemEnvironmentController,
           composer,
         });
         hdriGroundTexture = null;
