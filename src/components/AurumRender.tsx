@@ -555,7 +555,7 @@ export function AurumRender() {
         sceneStudio:(patch:any)=>actualizarSceneStudio(patch),
         reset:()=>{ controles.autoRotate=false; encuadrar(); },
          autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
-        capturar:()=>{composer?.render();return renderer.domElement.toDataURL("image/png")},
+        capturar:()=>{composerRef.current?.render();return renderer.domElement.toDataURL("image/png")},
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
     partes:()=>modelo?obtenerPartes(modelo):[],
     seleccionarParte:(id:string)=>{
