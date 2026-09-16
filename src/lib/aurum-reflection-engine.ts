@@ -37,12 +37,16 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
     strip:source(3.0,10.5,.92,[-3.8,3.6,3.0]),
     front:source(6.0,4.0,.38,[0,3.1,5.8]),
     kicker:source(2.6,8.2,.72,[4.4,4.0,-3.0]),
+    edgeLeft:source(1.15,6.8,.42,[-4.8,3.8,1.2]),
+    edgeRight:source(1.15,6.8,.38,[4.8,3.8,1.2]),
   },
   studioHard:{
     softbox:source(7.0,4.0,1.28,[3.8,5.8,4.8]),
     strip:source(1.8,7.2,.48,[-3.8,3.5,3.0]),
     front:source(4.8,3.0,.24,[0,3.0,5.6]),
     kicker:source(1.5,7.8,1.02,[4.2,4.0,-2.8]),
+    edgeLeft:source(.8,6.0,.18,[-4.6,3.8,1.0]),
+    edgeRight:source(.8,6.0,.22,[4.6,3.8,1.0]),
   },
   jewelry:{
     softbox:source(11.5,7.5,2.35,[3.8,5.8,4.8]),
