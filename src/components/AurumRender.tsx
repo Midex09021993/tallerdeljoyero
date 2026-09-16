@@ -353,7 +353,11 @@ export function AurumRender() {
       const cargarHDRI = (id:IluminacionId | EscenarioId, rotation = 0.16) => {
         const requestId = ++hdrRequestId;
         const hdrPorEscena: Record<EscenarioId, IluminacionId> = {
-          oscuro:"studioSoft", claro:"studioSoft", luxury:"luxury", marmol:"studioSoft",
+          // Match the HDRI to the scene's photographic lighting profile.
+          // Dark and clear jewelry scenes need the higher-contrast environments;
+          // otherwise their scene lighting changes but the main reflection pattern
+          // remains the same.
+          oscuro:"studioHard", claro:"jewelry", luxury:"luxury", marmol:"studioSoft",
           transparente:"studioSoft", producto:"studioSoft", galeria:"studioHard",
           oroCalido:"luxury", gemaClara:"jewelry",
         };
