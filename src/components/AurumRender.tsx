@@ -321,7 +321,11 @@ export function AurumRender() {
         ssaoPass.kernelRadius = ssaoConfig.radius;
         ssaoPass.minDistance = ssaoConfig.bias;
         ssaoPass.maxDistance = Math.max(.01, ssaoConfig.radius * 2.5);
-        ssaoPass.enabled = jewelryBasicRender ? false : ssaoConfig.enabled;
+        // AO de contacto muy sutil: aporta separación entre joya y Ground sin ensuciar el metal.
+        ssaoPass.output = (SSAOPass as any).OUTPUT.SSAO;
+        ssaoPass.enabled = ssaoConfig.enabled;
+        ssaoPass.kernelSize = Math.min(16, Math.max(8, ssaoConfig.kernelSize ?? 16));
+        ssaoPass.aoClamp = 0.45;
         composer.addPass(ssaoPass);
       } catch {
         composer = null;
