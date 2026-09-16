@@ -15,6 +15,7 @@ export async function createAurumPostPipeline(
 
   let composer: any = null;
   let ssaoPass: any = null;
+  let lutPass: any = null;
 
   try {
     composer = new EffectComposer(renderer);
@@ -48,7 +49,50 @@ export async function createAurumPostPipeline(
       );
       composer.addPass(bloom);
     }
+    // Color grading: iJewel documents LUT color correction for precious metals.
+    // We keep a subtle procedural jewelry LUT locally so the render does not depend
+    // on another network asset. The effect is intentionally low-intensity.
+    if (ssaoConfig.lut === true) {
+      const { Data3DTexture, RGBAFormat, UnsignedByteType, LinearFilter } = await import("three");
+      const { LUTPass } = await import("three/examples/jsm/postprocessing/LUTPass.js");
+      const size = 16;
+      const data = new Uint8Array(size * size * size * 4);
+      const saturation = 1.035;
+      const contrast = 1.025;
+      const warm = 0.008;
+      let p = 0;
+      for (let b = 0; b < size; b++) {
+        for (let g = 0; g < size; g++) {
+          for (let r = 0; r < size; r++) {
+            const rf = r / (size - 1), gf = g / (size - 1), bf = b / (size - 1);
+            const luma = rf * 0.2126 + gf * 0.7152 + bf * 0.0722;
+            let rr = luma + (rf - luma) * saturation;
+            let gg = luma + (gf - luma) * saturation;
+            let bb = luma + (bf - luma) * saturation;
+            rr = (rr - 0.5) * contrast + 0.5 + warm;
+            gg = (gg - 0.5) * contrast + 0.5;
+            bb = (bb - 0.5) * contrast + 0.5 - warm * 0.5;
+            data[p++] = Math.round(Math.max(0, Math.min(1, rr)) * 255);
+            data[p++] = Math.round(Math.max(0, Math.min(1, gg)) * 255);
+            data[p++] = Math.round(Math.max(0, Math.min(1, bb)) * 255);
+            data[p++] = 255;
+          }
+        }
+      }
+      const lutTexture = new Data3DTexture(data, size, size, size);
+      lutTexture.format = RGBAFormat;
+      lutTexture.type = UnsignedByteType;
+      lutTexture.minFilter = LinearFilter;
+      lutTexture.magFilter = LinearFilter;
+      lutTexture.unpackAlignment = 1;
+      lutTexture.needsUpdate = true;
+      lutPass = new LUTPass({ lut: lutTexture });
+      lutPass.intensity = Math.max(0, Math.min(1, ssaoConfig.lutIntensity ?? 0.12));
+      composer.addPass(lutPass);
+    }
+
   } catch {
+    lutPass?.lut?.dispose?.();
     composer?.dispose?.();
     composer = null;
     ssaoPass = null;
