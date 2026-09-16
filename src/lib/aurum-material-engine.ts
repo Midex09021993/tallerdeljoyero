@@ -108,6 +108,11 @@ export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)
   material.clearcoat=(preset.familia==="Diamante"||preset.familia==="Moissanita") ? .26 : .18;
   material.clearcoatRoughness=(preset.familia==="Diamante"||preset.familia==="Moissanita") ? .012 : .02;
   material.envMapIntensity=preset.envMapIntensity;
+  material.userData={
+    ...(material.userData??{}),
+    aurumGemFamily:preset.familia,
+    aurumGemEnvIntensity:preset.envMapIntensity,
+  };
   material.attenuationColor?.setHex(preset.attenuationColor);
   material.attenuationDistance=preset.attenuationDistance;
   material.dispersion=Math.max(0,preset.dispersion); material.iridescence=preset.iridescence;
