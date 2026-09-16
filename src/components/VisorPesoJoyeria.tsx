@@ -379,13 +379,14 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
   const densidad = densidades[metalId];
   const pesoArbolPorDefecto = Math.max(0, configuracion.factorEmpuje);
   const empujeEsPorcentaje = configuracion.modoEmpuje === "porcentaje";
-  const pesoArbolEfectivo = Math.max(0, pesoArbol ?? pesoArbolPorDefecto);
-  const pesoArbolCalculado = empujeEsPorcentaje ? (pesoTeorico ?? 0) * pesoArbolEfectivo / 100 : pesoArbolEfectivo;
-
   const volumenCm3 =
     volumenUnidades != null ? volumenUnidades * escala ** 3 : null;
   const pesoTeorico =
     volumenCm3 != null ? volumenCm3 * densidad * factorNum : null;
+  const pesoArbolEfectivo = Math.max(0, pesoArbol ?? pesoArbolPorDefecto);
+  const pesoArbolCalculado = empujeEsPorcentaje
+    ? (pesoTeorico ?? 0) * pesoArbolEfectivo / 100
+    : pesoArbolEfectivo;
   const pesoConEmpuje = pesoTeorico != null ? pesoTeorico + pesoArbolCalculado : null;
   const pesoFinal = pesoConEmpuje;
 
@@ -394,18 +395,31 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
 
   return (
     <div className={`space-y-5 ${compacto ? "p-1" : "p-5 sm:p-6 lg:p-8"}`}>
-      <div className="flex items-center gap-2">
-        <Boxes className="size-4 text-gold" aria-hidden="true" />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
-          Visualizador y peso 3D
-        </span>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Boxes className="size-4 text-gold" aria-hidden="true" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
+              Visualizador y peso 3D
+            </span>
+          </div>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight">Peso estimado de la joya</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Carga tu modelo, selecciona el material y añade el peso real del árbol de colada.
+          </p>
+        </div>
+        {nombreArchivo ? (
+          <span className="max-w-full truncate rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-medium text-muted-foreground sm:max-w-[280px]">
+            {nombreArchivo}
+          </span>
+        ) : null}
       </div>
 
       {/* Visor */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-viewer shadow-card">
         <div
           ref={contenedor}
-          className={compacto ? "h-64 w-full" : "h-[420px] w-full"}
+          className={compacto ? "h-64 w-full" : "h-[360px] w-full sm:h-[460px]"}
         />
         {!nombreArchivo && !cargando ? (
           <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-viewer-foreground/50">
@@ -416,13 +430,6 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-viewer-foreground/70">
             Procesando modelo…
           </p>
-        ) : null}
-        {nombreArchivo ? (
-          <div className="absolute left-3 top-3 flex items-center gap-2">
-            <span className="max-w-[60vw] truncate rounded-full bg-viewer/70 px-3 py-1 text-[11px] text-viewer-foreground/80 backdrop-blur">
-              {nombreArchivo}
-            </span>
-          </div>
         ) : null}
         <div className="absolute right-3 top-3 flex gap-2">
           <button
@@ -455,7 +462,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           <button
             type="button"
             onClick={() => inputArchivo.current?.click()}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gold bg-accent px-4 text-sm font-medium text-foreground transition hover:brightness-105"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-gold bg-accent px-4 text-sm font-semibold text-foreground shadow-sm transition hover:brightness-105"
           >
             <Upload className="size-4" aria-hidden="true" />
             Subir modelo
@@ -492,8 +499,11 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
 
       {/* Metales */}
       <fieldset className="space-y-2">
-        <legend className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Metal
+        <legend className="flex w-full items-center justify-between gap-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <span>Material</span>
+          <span className="normal-case tracking-normal text-[11px] text-muted-foreground">
+            {metal.nombre} · {num(densidad, 2)} g/cm³
+          </span>
         </legend>
         <div className={`grid gap-2 ${compacto ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
           {METALES.map((m) => {
@@ -529,7 +539,9 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">Árbol de colada / empuje</h3>
-            <p className="mt-1 text-[11px] text-muted-foreground">Introduce el peso adicional real de esta fabricación. Tronco, ramas y botón/reservorio.</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+              Introduce el peso adicional real de esta fabricación: tronco, ramas y botón/reservorio.
+            </p>
           </div>
           <span className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-semibold text-gold">{empujeEsPorcentaje ? "%" : "g"}</span>
         </div>
@@ -546,51 +558,48 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
 
       {/* Resultados */}
       {pesoFinal != null && volumenCm3 != null && pesoTeorico != null && pesoConEmpuje != null ? (
-        <div
-          className={`grid gap-4 ${compacto ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-4"}`}
-        >
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Volumen detectado
-            </p>
-            <p className="mt-2 text-xl font-semibold leading-none">
-              {num(volumenCm3, 3)}{" "}
-              <span className="text-sm font-medium text-muted-foreground">cm³</span>
-            </p>
+        <section className="space-y-3">
+          <article className="relative overflow-hidden rounded-3xl border border-gold/35 bg-gradient-to-br from-accent via-card to-card p-5 shadow-card sm:p-6">
+            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                  Peso final estimado
+                </p>
+                <p className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">
+                  {num(pesoFinal)}
+                  <span className="ml-2 text-base font-medium text-muted-foreground">g</span>
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Joya + {num(pesoArbolCalculado)} g de árbol de colada
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-background/60 px-4 py-3 backdrop-blur">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</p>
+                <p className="mt-1 text-sm font-semibold">{metal.nombre}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Densidad {num(densidad, 2)} g/cm³</p>
+              </div>
+            </div>
           </article>
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Peso teórico
-            </p>
-            <p className="mt-2 text-xl font-semibold leading-none">
-              {num(pesoTeorico)}{" "}
-              <span className="text-sm font-medium text-muted-foreground">g</span>
-            </p>
-          </article>
-          <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Peso joyas + árbol
-            </p>
-            <p className="mt-2 text-xl font-semibold leading-none">
-              {num(pesoConEmpuje)}{" "}
-              <span className="text-sm font-medium text-muted-foreground">g</span>
-            </p>
-          </article>
-          <article className="rounded-2xl border border-gold bg-accent p-4 shadow-card">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">
-              Peso final
-            </p>
-            <p className="mt-2 text-2xl font-semibold leading-none">
-              {num(pesoFinal)}{" "}
-              <span className="text-sm font-medium text-muted-foreground">g</span>
-            </p>
-          </article>
-        </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Volumen</p>
+              <p className="mt-2 text-xl font-semibold">{num(volumenCm3, 3)} <span className="text-xs font-medium text-muted-foreground">cm³</span></p>
+            </article>
+            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Peso de la joya</p>
+              <p className="mt-2 text-xl font-semibold">{num(pesoTeorico)} <span className="text-xs font-medium text-muted-foreground">g</span></p>
+            </article>
+            <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Árbol / empuje</p>
+              <p className="mt-2 text-xl font-semibold">{num(pesoArbolCalculado)} <span className="text-xs font-medium text-muted-foreground">g</span></p>
+            </article>
+          </div>
+        </section>
       ) : (
         <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-5 text-center">
-          <p className="text-sm text-muted-foreground">
-            El peso estimado aparecerá al cargar un modelo 3D.
-          </p>
+          <p className="text-sm font-medium">Carga un modelo 3D para calcular su peso.</p>
+          <p className="mt-1 text-xs text-muted-foreground">El resultado aparecerá automáticamente al procesar el volumen.</p>
         </div>
       )}
 
