@@ -29,6 +29,10 @@ export const AURUM_LIGHTING_PRESETS={
  * makes every scene a distinct lighting setup instead of a background swap.
  */
 export const AURUM_LIGHTING_RENDER_PRESETS={
+  productSoft:{
+    key:.46,fill:.12,rim:.18,gem:.58,
+    softbox:1.00,strip:.56,front:.34,kicker:.46,edgeLeft:.40,edgeRight:.38
+  },
   studioSoft:{
     key:.58,fill:.14,rim:.22,gem:.42,
     softbox:.90,strip:.50,front:.50,kicker:.60,edgeLeft:.54,edgeRight:.50
