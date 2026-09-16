@@ -1,0 +1,96 @@
+import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
+
+export interface AurumLightingController {
+  create: () => void;
+  applyPreset: (id: string) => void;
+  update: (patch: any) => void;
+  scaleToModel: (radius: number, targetY: number) => void;
+  dispose: () => void;
+}
+
+export function createAurumLightingController(
+  THREE: any,
+  scene: any,
+  config: any,
+  shadowConfig: any,
+  renderQuality: any
+): AurumLightingController {
+  const lights: any = {};
+  const configureShadow = (light: any) => {
+    if (!light?.castShadow) return;
+    const mapSize = Math.max(512, Math.min(shadowConfig.mapSize, renderQuality.shadowMapSize));
+    light.shadow.mapSize.set(mapSize, mapSize);
+    light.shadow.bias = shadowConfig.bias;
+    light.shadow.normalBias = shadowConfig.normalBias;
+    light.shadow.radius = shadowConfig.contact ? shadowConfig.contactScale : 1;
+  };
+  const apply = (light: any, cfg: any) => {
+    if (!light || !cfg) return;
+    light.visible = cfg.enabled;
+    light.intensity = cfg.intensity;
+    light.position.set(...cfg.position);
+    if (light.angle !== undefined) {
+      light.angle = cfg.angle;
+      light.penumbra = cfg.penumbra;
+    }
+  };
+  return {
+    create() {
+      const mk = (type: string, color: number, cast: boolean) => {
+        const light = type === "spot"
+          ? new THREE.SpotLight(color, 1, 30, Math.PI * .45, .7, .8)
+          : new THREE.PointLight(color, 1, 30, 2);
+        light.castShadow = cast;
+        scene.add(light);
+        return light;
+      };
+      if (!lights.key) {
+        lights.key = mk("spot", 0xffffff, true);
+        lights.fill = mk("spot", 0xffffff, false);
+        lights.rim = mk("spot", 0xffffff, false);
+        lights.gem = mk("point", 0xffffff, false);
+      }
+      apply(lights.key, config.key); configureShadow(lights.key);
+      apply(lights.fill, config.fill);
+      apply(lights.rim, config.rim);
+      apply(lights.gem, config.gem);
+    },
+    applyPreset(id) {
+      const preset = getAurumLightingPreset(id);
+      Object.assign(config, {
+        key: {...config.key, intensity: preset.key},
+        fill: {...config.fill, intensity: preset.fill},
+        rim: {...config.rim, intensity: preset.rim},
+        gem: {...config.gem, intensity: preset.gem},
+      });
+      this.create();
+    },
+    update(patch) {
+      Object.assign(config, patch);
+      this.create();
+    },
+    scaleToModel(radius, targetY) {
+      const distance = Math.max(radius * 6, 12);
+      Object.values(lights).forEach((light: any) => {
+        if (!light) return;
+        if (light.distance !== undefined) light.distance = distance;
+        if (light.castShadow && light.shadow?.camera) {
+          light.shadow.camera.near = Math.max(.01, radius * .02);
+          light.shadow.camera.far = Math.max(distance, radius * 10);
+          light.shadow.camera.updateProjectionMatrix?.();
+        }
+        if (light.target) {
+          light.target.position.set(0, targetY, 0);
+          light.target.updateMatrixWorld();
+        }
+      });
+    },
+    dispose() {
+      Object.values(lights).forEach((light: any) => {
+        scene.remove(light);
+        light.dispose?.();
+      });
+      Object.keys(lights).forEach(k => delete lights[k]);
+    },
+  };
+}
