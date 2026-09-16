@@ -31,19 +31,19 @@ export const AURUM_LIGHTING_PRESETS={
 export const AURUM_LIGHTING_RENDER_PRESETS={
   studioSoft:{
     key:.64,fill:.18,rim:.24,gem:.42,
-    softbox:1.05,strip:.58,front:.62,kicker:.68
+    softbox:1.05,strip:.58,front:.62,kicker:.68,edgeLeft:.62,edgeRight:.56
   },
   studioHard:{
     key:.52,fill:.07,rim:.34,gem:.12,
-    softbox:.62,strip:.38,front:.18,kicker:.95
+    softbox:.62,strip:.38,front:.18,kicker:.95,edgeLeft:.34,edgeRight:.42
   },
   jewelry:{
     key:.72,fill:.20,rim:.30,gem:.46,
-    softbox:1.18,strip:.72,front:.52,kicker:.78
+    softbox:1.18,strip:.72,front:.52,kicker:.78,edgeLeft:.58,edgeRight:.54
   },
   luxury:{
     key:.44,fill:.06,rim:.38,gem:.10,
-    softbox:.52,strip:.28,front:.12,kicker:1.12
+    softbox:.52,strip:.28,front:.12,kicker:1.12,edgeLeft:.26,edgeRight:.34
   },
 } as const;
 
