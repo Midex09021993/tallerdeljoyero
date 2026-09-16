@@ -214,7 +214,7 @@ export function AurumRender() {
   }, []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry"), [vista, setVista] = useState<VistaId>("perspectiva");
+  const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("producto"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -378,7 +378,11 @@ export function AurumRender() {
         (id, rotation) => cargarHDRI(id as EscenarioId, rotation)
       );
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
-      sceneController.apply(escenarioId);
+      sceneController.apply("producto");
+      // Presentación inicial tipo fotografía de producto:
+      // environment suave + luces de estudio conservadoras para evitar clipping
+      // en oro pulido y preservar información en diamantes/gemas.
+      lightingController.applyPreset("studioSoft");
 
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
