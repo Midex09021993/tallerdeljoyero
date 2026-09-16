@@ -5,7 +5,7 @@ import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT }
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
-import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
+import { AURUM_LIGHTING_DEFAULT, getAurumLightingPreset } from "../lib/aurum-lighting-engine";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -459,13 +459,7 @@ export function AurumRender() {
       crearLucesAurum();
 
       const aplicarIluminacion = (id:IluminacionId) => {
-        const presets:any = {
-          studioSoft:{key:.32,fill:.10,rim:.18,gem:.08},
-          studioHard:{key:.42,fill:.09,rim:.22,gem:.08},
-          jewelry:{key:.9,fill:.32,rim:.5,gem:.3},
-          luxury:{key:.36,fill:.08,rim:.24,gem:.08},
-        }[id];
-        if(!presets) return;
+        const presets=getAurumLightingPreset(id);
         actualizarLucesAurum({
           key:{...lightingStudio.key,intensity:presets.key},
           fill:{...lightingStudio.fill,intensity:presets.fill},
