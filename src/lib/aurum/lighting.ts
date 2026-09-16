@@ -110,6 +110,17 @@ export function createAurumLightingController(
         rim: {...config.rim, intensity: preset.rim},
         gem: {...config.gem, intensity: preset.gem},
       });
+
+      // The broad sources are the main "shape painters" for polished metal.
+      // Apply the scene profile to their actual intensities as well; previously
+      // only the spot/point lights changed, leaving the four large reflections
+      // identical between scenes.
+      const baseSources = {softbox:2.2, strip:1.25, front:.75, kicker:.9};
+      if (lights.softbox) lights.softbox.intensity = baseSources.softbox * preset.softbox;
+      if (lights.strip) lights.strip.intensity = baseSources.strip * preset.strip;
+      if (lights.front) lights.front.intensity = baseSources.front * preset.front;
+      if (lights.kicker) lights.kicker.intensity = baseSources.kicker * preset.kicker;
+
       this.create();
     },
     update(patch) {
