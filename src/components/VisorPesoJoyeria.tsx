@@ -72,7 +72,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
   const [volumenUnidades, setVolumenUnidades] = useState<number | null>(null);
 
   const [metalId, setMetalId] = useState<MetalId>("oro18a");
-  const [pesoArbol, setPesoArbol] = useState(0);
+  const [pesoArbol, setPesoArbol] = useState<number | null>(null);
   const [unidad, setUnidad] = useState("mm");
   const { data: configVisualizador } = useConfigSistema(CLAVES_CALCULADORAS.visualizador);
   const configuracion = leerConfigVisualizador(configVisualizador?.valor);
@@ -379,7 +379,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
   const densidad = densidades[metalId];
   const pesoArbolPorDefecto = Math.max(0, configuracion.factorEmpuje);
   const empujeEsPorcentaje = configuracion.modoEmpuje === "porcentaje";
-  const pesoArbolEfectivo = Math.max(0, pesoArbol || pesoArbolPorDefecto);
+  const pesoArbolEfectivo = Math.max(0, pesoArbol ?? pesoArbolPorDefecto);
   const pesoArbolCalculado = empujeEsPorcentaje ? (pesoTeorico ?? 0) * pesoArbolEfectivo / 100 : pesoArbolEfectivo;
 
   const volumenCm3 =
@@ -537,7 +537,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
           <label className="space-y-1.5">
             <span className="text-xs font-medium">Peso adicional</span>
             <div className="flex items-center gap-2">
-              <input type="number" min="0" step="0.01" className={inputCls} value={pesoArbol} onChange={(e) => setPesoArbol(Math.max(0, Number(e.target.value) || 0))} />
+              <input type="number" min="0" step="0.01" className={inputCls} value={pesoArbol ?? pesoArbolPorDefecto} onChange={(e) => setPesoArbol(Math.max(0, Number(e.target.value) || 0))} />
               <span className="text-xs text-muted-foreground">{empujeEsPorcentaje ? "%" : "g"}</span>
             </div>
           </label>
