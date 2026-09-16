@@ -440,10 +440,10 @@ export function AurumRender() {
 
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets:any = {
-          studioSoft:{key:.32,fill:.10,rim:.18,gem:.08,exposure:.78,environment:.22},
-          studioHard:{key:.42,fill:.09,rim:.22,gem:.08,exposure:.80,environment:.24},
-          jewelry:{key:.9,fill:.32,rim:.5,gem:.3,exposure:.82,environment:.14},
-          luxury:{key:.36,fill:.08,rim:.24,gem:.08,exposure:.76,environment:.20},
+          studioSoft:{key:.32,fill:.10,rim:.18,gem:.08},
+          studioHard:{key:.42,fill:.09,rim:.22,gem:.08},
+          jewelry:{key:.9,fill:.32,rim:.5,gem:.3},
+          luxury:{key:.36,fill:.08,rim:.24,gem:.08},
         }[id];
         if(!presets) return;
         actualizarLucesAurum({
@@ -452,9 +452,7 @@ export function AurumRender() {
           rim:{...lightingStudio.rim,intensity:presets.rim},
           gem:{...lightingStudio.gem,intensity:presets.gem},
         });
-        // La iluminación controla únicamente las intensidades relativas de las luces.
-        // Environment y exposición pertenecen a Scene/aplicarEscenario para evitar conflictos.
-
+        // Iluminación solo modifica luces. Scene conserva Environment y exposición.
       };
 
       const sceneStudio={
