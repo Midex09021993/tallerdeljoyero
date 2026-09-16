@@ -168,7 +168,7 @@ export async function createAurumPostPipeline(
   };
 
   let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
-  const updateTemporal=()=>{
+  const updateTemporal=(focusDistance?:number)=>{
     if(!taaPass) return;
     const p=camera.position, q=camera.quaternion;
     const moved=!Number.isFinite(lastPX)
@@ -185,8 +185,8 @@ export async function createAurumPostPipeline(
     if(dofPass?.enabled && dofPass.uniforms){
       // BokehPass focus is measured along the camera look direction. Using the
       // camera-to-target distance keeps focus attached to the product while zooming.
-      const focus=camera.position.distanceTo ? camera.position.distanceTo(camera.getWorldDirection ? camera.position.clone().add(camera.getWorldDirection(new (camera.position.constructor as any)())) : camera.position) : 4;
-      if(Number.isFinite(focus)) dofPass.uniforms.focus.value=Math.max(.5,focus);
+      const focus=Number.isFinite(focusDistance) ? Number(focusDistance) : 4;
+      dofPass.uniforms.focus.value=Math.max(.5,focus);
     }
   };
 
