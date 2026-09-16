@@ -93,6 +93,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   material.userData={
     ...(material.userData??{}),
     aurumMetalRenderProfile:response,
+    aurumMetalBaseEnvMapIntensity:response.environmentIntensity,
   };
   material.needsUpdate=true;
   return material;
