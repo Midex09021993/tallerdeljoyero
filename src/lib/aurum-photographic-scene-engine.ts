@@ -51,7 +51,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
   },
   claro: {
     environmentKey:"jewelry", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.58, environmentRotation:.20, metalEnvironmentScale:.84, highlightProtection:.92, exposure:.76,
+    environmentIntensity:.54, environmentRotation:.24, metalEnvironmentScale:.80, highlightProtection:.96, exposure:.74,
     lighting:"jewelry",
     post:{ssao:true,ssaoIntensity:.08,bloom:false,bloomIntensity:.025,bloomThreshold:1.5,lut:true,lutIntensity:.07}
   },
@@ -75,9 +75,9 @@ export const AURUM_PHOTOGRAPHIC_PROFILES: Record<string, AurumPhotographicProfil
   },
   producto: {
     environmentKey:"studioSoft", gemEnvironmentKey:"jewelry",
-    environmentIntensity:.56, environmentRotation:.30, metalEnvironmentScale:.86, highlightProtection:.92, exposure:.72,
+    environmentIntensity:.50, environmentRotation:.34, metalEnvironmentScale:.82, highlightProtection:.96, exposure:.70,
     lighting:"studioSoft",
-    post:{ssao:true,ssaoIntensity:.09,bloom:false,bloomIntensity:.025,bloomThreshold:1.5,lut:true,lutIntensity:.06}
+    post:{ssao:true,ssaoIntensity:.07,bloom:false,bloomIntensity:.020,bloomThreshold:1.60,lut:true,lutIntensity:.055}
   },
   galeria: {
     environmentKey:"studioHard", gemEnvironmentKey:"jewelry",
