@@ -11,7 +11,7 @@ export async function normalizeAurumModel(
   const metadataCapas = extension === "3dm"
     ? getAurumModelParts(object,colorRhinoHex,clasificarCapa)
         .filter(p=>p.tipo==="malla")
-        .map(p=>({nombre:p.nombre,capa:p.capa,colorCapa:p.colorCapa,categoria:p.categoria}))
+        .map(p=>({nombre:p.nombre,capa:p.capa,colorCapa:p.colorCapa,categoria:p.categoria,matrixSlot:p.matrixSlot}))
     : [];
 
   const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
