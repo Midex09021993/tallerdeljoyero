@@ -19,6 +19,7 @@ import { frameAurumProduct, resizeAurumViewer, disposeAurumViewer } from "../lib
 import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
+import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -396,46 +397,20 @@ export function AurumRender() {
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
         applyAurumMetal(mat, metalPresetFromConfig(m));
       };
-      const limpiarInclusiones = (target:any) => clearAurumInclusions(target);
+      const limpiarInclusiones = (target:any) => clearAurumGemFromTarget(target);
       const crearInclusiones = (target:any, g:GemaConfig) => renderAurumInclusions(THREE,target,g,9173);
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
-        const target=objetivo||parteActiva; if(!target) return;
-        const box = new THREE.Box3().setFromObject(target);
-        const size = box.getSize(new THREE.Vector3());
-        const thickness = Math.max(0.015, Math.min(size.x,size.y,size.z) * 0.85);
-        const aplicar = (base:any) => {
-          const nuevo = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
-          const presetId = g.id as string;
-          const motorPreset = getAurumGemPreset(presetId);
-          applyAurumGem(nuevo, motorPreset, thickness);
-                    applyAurumOpticalProfile(nuevo, getAurumOpticalProfile(motorPreset.familia));
-                    if (motorPreset.familia==="Diamante") applyAurumDiamondOptics(nuevo);
-                    return nuevo;
-        };
-        target.material=Array.isArray(target.material)?target.material.map((base:any)=>aplicar(base)):aplicar(target.material);
-        crearInclusiones(target,g);
-        aplicarEntornoGema();
+        const target=objetivo||parteActiva;
+        applyAurumGemToTarget(target,g,aplicarEntornoGema);
+      };
+      const aplicarMaterial = (m:MaterialConfig) => {
+        if (!modelo) {
+          configurarMaterial(material, m);
+          return;
+        }
+        applyAurumMaterialToModel(modelo, parteActiva, m, material);
       };
 
-      const aplicarMaterial = (m:MaterialConfig) => {
-        configurarMaterial(material, m);
-        if (!modelo) return;
-        modelo.traverse((x:any) => {
-          if (!x.isMesh) return;
-          x.castShadow = true;
-          x.receiveShadow = true;
-          if (parteActiva && x.uuid === parteActiva.uuid) {
-            const aplicar = (base:any) => {
-              const nuevo = base?.clone ? base.clone() : material.clone();
-              configurarMaterial(nuevo, m);
-              return nuevo;
-            };
-            x.material = Array.isArray(x.material) ? x.material.map((base:any)=>aplicar(base)) : aplicar(x.material);
-          } else if (!parteActiva) {
-            x.material = material;
-          }
-        });
-      };
       const crearFondoEstudio = (colorHex:number) => {
         const canvas = document.createElement("canvas");
         canvas.width = 1024; canvas.height = 1024;
