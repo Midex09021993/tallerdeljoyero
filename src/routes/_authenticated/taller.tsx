@@ -121,7 +121,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
   const configuracion = leerConfigYeso(configYeso?.valor);
   const [diametro, setDiametro] = useState("");
   const [altura, setAltura] = useState("");
-  const [tipoTarro, setTipoTarro] = useState<TipoTarro>("liso");
+  const [tipoTarro, setTipoTarro] = useState<TipoTarro>("perforado");
 
   const volumenBase = useMemo(() => {
     const d = Number(diametro);
@@ -140,7 +140,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
   const limpiar = () => {
     setDiametro("");
     setAltura("");
-    setTipoTarro("liso");
+    setTipoTarro("perforado");
   };
 
   return (
