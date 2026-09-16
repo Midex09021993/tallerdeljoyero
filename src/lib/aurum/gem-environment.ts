@@ -1,9 +1,9 @@
 export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; }> = {
-  Diamante: { intensity: 1.55 },
-  Esmeralda: { intensity: 1.15 },
-  Rubi: { intensity: 1.25 },
-  Zafiro: { intensity: 1.25 },
-  default: { intensity: 1.25 },
+  Diamante: { intensity: 1.18 },
+  Esmeralda: { intensity: 1.05 },
+  Rubi: { intensity: 1.10 },
+  Zafiro: { intensity: 1.10 },
+  default: { intensity: 1.10 },
 };
 
 export const getAurumGemEnvironmentIntensity = (family:string) =>
