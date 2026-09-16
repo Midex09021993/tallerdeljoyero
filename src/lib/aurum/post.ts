@@ -21,13 +21,18 @@ export async function createAurumPostPipeline(
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    ssaoPass = new SSAOPass(scene, camera, 1, 1);
-    ssaoPass.kernelRadius = ssaoConfig.radius;
-    ssaoPass.minDistance = ssaoConfig.bias;
-    ssaoPass.maxDistance = Math.max(.01, ssaoConfig.radius * 2.5);
+    ssaoPass = new SSAOPass(
+      scene,
+      camera,
+      Math.max(1, renderer.domElement.width),
+      Math.max(1, renderer.domElement.height)
+    );
+    ssaoPass.kernelRadius = Math.max(0.01, ssaoConfig.radius ?? 0.28);
+    ssaoPass.minDistance = Math.max(0.001, ssaoConfig.bias ?? 0.025);
+    ssaoPass.maxDistance = Math.max(0.02, ssaoPass.kernelRadius * 2.5);
     ssaoPass.output = (SSAOPass as any).OUTPUT.Default;
-    ssaoPass.enabled = ssaoConfig.enabled;
-    ssaoPass.kernelSize = Math.min(16, Math.max(8, ssaoConfig.kernelSize ?? 16));
+    ssaoPass.enabled = !!ssaoConfig.enabled;
+    ssaoPass.kernelSize = Math.min(32, Math.max(8, ssaoConfig.kernelSize ?? 16));
     ssaoPass.aoClamp = Math.max(0, Math.min(1, ssaoConfig.intensity ?? 0.22));
     composer.addPass(ssaoPass);
 
