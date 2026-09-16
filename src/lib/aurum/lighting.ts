@@ -154,6 +154,7 @@ export function createAurumLightingController(
     dispose() {
       Object.values(lights).forEach((light: any) => {
         scene.remove(light);
+        if (light?.target?.parent === scene) scene.remove(light.target);
         light.dispose?.();
       });
       Object.keys(lights).forEach(k => delete lights[k]);
