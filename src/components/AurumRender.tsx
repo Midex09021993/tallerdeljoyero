@@ -358,16 +358,22 @@ export function AurumRender() {
             if (!m?.userData?.aurumOpticalProfile) return m;
             m.envMap=entornoGema;
             const familia=m.userData.aurumOpticalProfile;
-            m.envMapIntensity = familia==="Diamante" ? 1.55 : familia==="Esmeralda" ? 1.15 : 1.25;
+            // El GemEnvironment aporta reflejos/refracción; no sustituye el perfil óptico.
+            const intensidadBase = Number.isFinite(m.userData?.aurumGemEnvIntensity)
+              ? m.userData.aurumGemEnvIntensity
+              : (familia==="Diamante" ? 1.55 : familia==="Esmeralda" ? 1.15 : 1.25);
+            m.envMapIntensity = intensidadBase;
             m.needsUpdate=true;
             return m;
           };
           x.material=Array.isArray(x.material)?x.material.map(aplicar):aplicar(x.material);
         });
       };
+      let gemEnvironmentRequestId = 0;
       const cargarEntornoGema = () => {
+        const requestId = ++gemEnvironmentRequestId;
         new RGBELoader().load(gemEnvironmentUrl,(hdrTexture:any)=>{
-          if (!vivo) { hdrTexture.dispose?.(); return; }
+          if (!vivo || requestId !== gemEnvironmentRequestId) { hdrTexture.dispose?.(); return; }
           try {
             const nuevo=pmrem.fromEquirectangular(hdrTexture).texture;
             hdrTexture.dispose?.();
