@@ -94,3 +94,26 @@ export function disposeAurumViewer(viewer: {
     viewer.node.removeChild(viewer.renderer.domElement);
   }
 }
+
+
+export function createAurumWebGLViewer(
+  THREE: any,
+  nodo: HTMLElement,
+  options: { pixelRatio?: number; maxDistance?: number } = {}
+) {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.001, 1000);
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    preserveDrawingBuffer: true,
+    powerPreference: "high-performance",
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, options.pixelRatio ?? 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.domElement.className = "block h-full w-full";
+  nodo.appendChild(renderer.domElement);
+
+  return { scene, camera, renderer };
+}
