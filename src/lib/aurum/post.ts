@@ -22,6 +22,8 @@ export async function createAurumPostPipeline(
     composer.addPass(renderPass);
 
     ssaoPass = new SSAOPass(scene, camera, 1, 1);
+    // Keep SSAO disabled until the base render is fully validated; the pipeline is ready for controlled activation.
+    ssaoPass.enabled = false;
     ssaoPass.kernelRadius = ssaoConfig.radius;
     ssaoPass.minDistance = ssaoConfig.bias;
     ssaoPass.maxDistance = Math.max(.01, ssaoConfig.radius * 2.5);
