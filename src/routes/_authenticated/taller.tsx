@@ -46,10 +46,15 @@ function formatearCantidad(valor: number, decimales = 1) {
   }).format(valor);
 }
 
-function formatearEntero(valor: number) {
+function formatearResultado(valor: number, decimales: 0 | 1 | 2 = 0) {
   return new Intl.NumberFormat("es-PE", {
-    maximumFractionDigits: 0,
-  }).format(Math.round(valor));
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(valor);
+}
+
+function formatearEntero(valor: number) {
+  return formatearResultado(Math.round(valor), 0);
 }
 
 function validarMedida(valor: string) {
@@ -139,6 +144,8 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
   const [diametro, setDiametro] = useState("");
   const [altura, setAltura] = useState("");
   const [tipoTarro, setTipoTarro] = useState<TipoTarro>("perforado");
+const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
+
 
   const volumenBase = useMemo(() => {
     const d = Number(diametro);
@@ -328,13 +335,13 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
                     <div className="rounded-2xl bg-surface-muted p-3">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Agua</p>
                       <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                        {medidasCompletas ? formatearEntero(agua) : "—"} <span className="text-xs font-medium text-muted-foreground">ml</span>
+                        {medidasCompletas ? formatearResultado(agua, precisionResultados) : "—"} <span className="text-xs font-medium text-muted-foreground">ml</span>
                       </p>
                     </div>
                     <div className="rounded-2xl bg-surface-muted p-3">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Yeso</p>
                       <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
-                        {medidasCompletas ? formatearEntero(yeso) : "—"} <span className="text-xs font-medium text-muted-foreground">g</span>
+                        {medidasCompletas ? formatearResultado(yeso, precisionResultados) : "—"} <span className="text-xs font-medium text-muted-foreground">g</span>
                       </p>
                     </div>
                   </div>
