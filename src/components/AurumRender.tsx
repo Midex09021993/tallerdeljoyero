@@ -319,6 +319,8 @@ export function AurumRender() {
         dof: photoInicial.post.dof,
         dofAperture: photoInicial.post.dofAperture,
         dofMaxBlur: photoInicial.post.dofMaxBlur,
+        vignette: photoInicial.post.vignette,
+        vignetteDarkness: photoInicial.post.vignetteDarkness,
       });
       // La escena es la fuente de verdad también para la estrategia de iluminación.
       lightingController.applyPreset(photoInicial.lighting);
@@ -401,6 +403,8 @@ export function AurumRender() {
           dof: photo.post.dof,
           dofAperture: photo.post.dofAperture,
           dofMaxBlur: photo.post.dofMaxBlur,
+          vignette: photo.post.vignette,
+          vignetteDarkness: photo.post.vignetteDarkness,
         });
         applyPostQuality?.(renderQuality);
       };
