@@ -103,14 +103,14 @@ export type AurumRenderQualityId="low"|"high"|"ultra";
 
 export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality>={
   // Preview: keeps interaction fluid on normal/low-power hardware.
-  low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.45},
+  low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
   // Production viewport: enough resolution to improve metal highlights without
   // making post-processing and transmission unnecessarily expensive.
-  high:{pixelRatio:1.5,shadows:true,shadowMapSize:1024,transmissionScale:.75},
+  high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.68},
   // Ultra is a photographic-detail mode, not a brute-force "everything max".
   // Keep the jump measurable while avoiding the 4x pixel cost of 2x DPR plus
   // a 2x shadow map and full-resolution transmission on every frame.
-  ultra:{pixelRatio:1.75,shadows:true,shadowMapSize:1536,transmissionScale:.90},
+  ultra:{pixelRatio:1.6,shadows:true,shadowMapSize:1536,transmissionScale:.82},
 };
 
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
