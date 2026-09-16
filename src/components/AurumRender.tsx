@@ -131,9 +131,9 @@ export function AurumRender() {
   const abrirSeccion = useCallback((seccion: "materiales"|"gemas"|"escena") => {
     setUxSection(seccion);
   }, []);
-  const [mostrarTodosMateriales, setMostrarTodosMateriales] = useState(false);
-  const [mostrarTodasGemas, setMostrarTodasGemas] = useState(false);
-  const [mostrarTodasEscenas, setMostrarTodasEscenas] = useState(false);
+  // La biblioteca del visor muestra el catálogo completo para evitar clics innecesarios.
+  // Los desplegables siguen controlando qué familia está abierta.
+  const [mostrarTodasEscenas, setMostrarTodasEscenas] = useState(true);
 
   // Estado central del configurador: una única fuente de verdad.
   const {
@@ -531,10 +531,16 @@ export function AurumRender() {
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
         setParteSeleccionadaCategoria(categoria);
-        // MatrixGold drives the library: green/metal layers open Materials,
-        // blue/gem layers open Gems automatically.
-        if (categoria === "metal") setBibliotecaTipo("metales");
-        else if (categoria === "gema") setBibliotecaTipo("gemas");
+        // La selección de una capa gobierna directamente la familia visible.
+        // Una capa de metal abre Material; una capa de piedra/gema abre Gemas.
+        // No basta con cambiar bibliotecaTipo: la UI se renderiza con uxSection.
+        if (categoria === "metal") {
+          setBibliotecaTipo("metales");
+          setUxSection("materiales");
+        } else if (categoria === "gema") {
+          setBibliotecaTipo("gemas");
+          setUxSection("gemas");
+        }
         setPanel("materiales");
         limpiarResaltado();        if (obj.geometry) {
           const edges = new THREE.EdgesGeometry(obj.geometry, 18);
@@ -684,11 +690,11 @@ export function AurumRender() {
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="materiales"?"text-[#d4af37]":"text-white/25")}>{uxSection==="materiales"?"Abierto":"Abrir"}</span>
               </button>
               {uxSection==="materiales"&&<div className="grid grid-cols-5 gap-2">
-                {(mostrarTodosMateriales?MATERIALES.filter(m=>m.grupo!=="Especiales"):MATERIALES.filter(m=>m.grupo!=="Especiales").slice(0,5)).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{abrirSeccion("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
+                {MATERIALES.map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{abrirSeccion("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(materialId===m.id?"border-[#34c7ff] bg-white/10 shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-white/10 bg-white/[.05] group-hover:border-white/25")}><span className="size-9 rounded-full border border-white/25 shadow-inner" style={{background:hexColor(m.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{m.nombre}</span>
                 </button>)}
-                {MATERIALES.filter(m=>m.grupo!=="Especiales").length>5&&<button type="button" onClick={()=>setMostrarTodosMateriales(v=>!v)} className="col-span-5 mt-2 rounded-lg border border-white/10 bg-white/[.035] py-2 text-[10px] text-white/60 hover:border-[#d4af37]/40 hover:text-white">{mostrarTodosMateriales?"Mostrar menos":"Ver todos los materiales"} · {MATERIALES.filter(m=>m.grupo!=="Especiales").length}</button>}
+
               </div>}
             </section>
 
@@ -698,11 +704,11 @@ export function AurumRender() {
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="gemas"?"text-[#d4af37]":"text-white/25")}>{uxSection==="gemas"?"Abierto":"Abrir"}</span>
               </button>
               {uxSection==="gemas"&&<div className="grid grid-cols-5 gap-2">
-                {(mostrarTodasGemas?GEMAS:GEMAS.slice(0,5)).map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{abrirSeccion("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
+                {GEMAS.map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{abrirSeccion("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
                   <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(gemaId===g.id?"border-[#34c7ff] bg-white/10":"border-transparent bg-transparent group-hover:border-white/15")}><span className="size-9 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(g.color)}}/></span>
                   <span className="mt-2 block truncate text-[10px]">{g.nombre}</span>
                 </button>)}
-                {GEMAS.length>5&&<button type="button" onClick={()=>setMostrarTodasGemas(v=>!v)} className="col-span-5 mt-2 rounded-lg border border-white/10 bg-white/[.035] py-2 text-[10px] text-white/60 hover:border-[#d4af37]/40 hover:text-white">{mostrarTodasGemas?"Mostrar menos":"Ver todas las gemas"} · {GEMAS.length}</button>}
+
               </div>}
             </section>
 
@@ -712,13 +718,13 @@ export function AurumRender() {
                 <span className={"text-[9px] uppercase tracking-[.12em] "+(uxSection==="escena"?"text-[#d4af37]":"text-white/25")}>{uxSection==="escena"?"Abierto":"Abrir"}</span>
               </button>
               {uxSection==="escena"&&<div className="grid grid-cols-3 gap-3">
-                {(mostrarTodasEscenas?ESCENARIOS:ESCENARIOS.slice(0,6)).map(e=><button key={e.id} type="button" onClick={()=>{abrirSeccion("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
+                {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{abrirSeccion("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
                   <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}>
                     <span className={"block h-full w-full "+e.clase}/>
                   </span>
                   <span className="mt-2 block text-[10px]">{e.nombre}</span>
                 </button>)}
-                {ESCENARIOS.length>6&&<button type="button" onClick={()=>setMostrarTodasEscenas(v=>!v)} className="col-span-3 mt-2 rounded-lg border border-white/10 bg-white/[.035] py-2 text-[10px] text-white/60 hover:border-[#d4af37]/40 hover:text-white">{mostrarTodasEscenas?"Mostrar menos":"Ver todas las escenas"} · {ESCENARIOS.length}</button>}
+
               </div>}
             </section>
             <div className="px-5 pb-6">
