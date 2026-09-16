@@ -308,7 +308,7 @@ export function AurumRender() {
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
-      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.enabled = renderQuality.shadows;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
@@ -437,7 +437,8 @@ export function AurumRender() {
       const lucesAurum:any={};
       const configurarSombrasAurum=(L:any)=>{
         if(!L?.castShadow) return;
-        L.shadow.mapSize.set(shadowConfig.mapSize,shadowConfig.mapSize);
+        const mapSize=Math.max(512,Math.min(shadowConfig.mapSize,renderQuality.shadowMapSize));
+        L.shadow.mapSize.set(mapSize,mapSize);
         L.shadow.bias=shadowConfig.bias;
         L.shadow.normalBias=shadowConfig.normalBias;
         L.shadow.radius=shadowConfig.contact?shadowConfig.contactScale:1;
