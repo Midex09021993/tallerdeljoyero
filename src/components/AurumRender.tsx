@@ -9,6 +9,7 @@ import { AURUM_LIGHTING_DEFAULT, getAurumLightingPreset } from "../lib/aurum-lig
 import { applyAurumCameraView } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
+import { createAurumEnvironment } from "../lib/aurum/environment";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -313,11 +314,8 @@ export function AurumRender() {
       nodo.appendChild(renderer.domElement);
       const { composer, ssaoPass } = await createAurumPostPipeline(renderer, escena, camara, ssaoConfig);
 
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      pmrem.compileEquirectangularShader();
-      const fallbackEnvironment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
-      let entorno = fallbackEnvironment;
-      escena.environment = entorno;
+      const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
+      let entorno = environmentController.current;
       escena.environmentIntensity = 0.82;
       escena.environmentRotation.y = Math.PI * 0.16;
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
@@ -356,10 +354,15 @@ export function AurumRender() {
         new RGBELoader().load(gemEnvironmentUrl,(hdrTexture:any)=>{
           if (!vivo || requestId !== gemEnvironmentRequestId) { hdrTexture.dispose?.(); return; }
           try {
-            const nuevo=pmrem.fromEquirectangular(hdrTexture).texture;
+            const nuevo=environmentController.current?.isTexture
+              ? environmentController.current.constructor ? environmentController.current : hdrTexture
+              : hdrTexture;
+            const pmrem = (environmentController as any).pmrem;
+            if (!pmrem) { hdrTexture.dispose?.(); return; }
+            const gemTexture=pmrem.fromEquirectangular(hdrTexture).texture;
             hdrTexture.dispose?.();
             const anterior=entornoGema;
-            entornoGema=nuevo;
+            entornoGema=gemTexture;
             anterior?.dispose?.();
             aplicarEntornoGema();
           } catch { hdrTexture.dispose?.(); }
@@ -369,37 +372,25 @@ export function AurumRender() {
       const cargarHDRI = (id:IluminacionId | EscenarioId) => {
         const requestId = ++hdrRequestId;
         const hdrPorEscena: Record<EscenarioId, IluminacionId> = {
-          oscuro:"studioSoft",
-          claro:"studioSoft",
-          luxury:"luxury",
-          marmol:"studioSoft",
-          transparente:"studioSoft",
-          producto:"studioSoft",
-          galeria:"studioHard",
-          oroCalido:"luxury",
-          gemaClara:"jewelry",
+          oscuro:"studioSoft", claro:"studioSoft", luxury:"luxury", marmol:"studioSoft",
+          transparente:"studioSoft", producto:"studioSoft", galeria:"studioHard",
+          oroCalido:"luxury", gemaClara:"jewelry",
         };
         const iluminacionHdri = hdrPorEscena[id as EscenarioId] || (id as IluminacionId) || "jewelry";
         const url = hdrUrls[iluminacionHdri] || hdrUrls.jewelry;
-        new RGBELoader().load(url, (hdrTexture:any) => {
-          if (!vivo || requestId !== hdrRequestId) { hdrTexture.dispose?.(); return; }
-          try {
-            const hdrEnvironment = pmrem.fromEquirectangular(hdrTexture).texture;
-            hdrTexture.dispose?.();
-            if (!vivo || requestId !== hdrRequestId) { hdrEnvironment.dispose?.(); return; }
-            const anterior = entorno;
-            entorno = hdrEnvironment;
-            escena.environment = entorno;
-            // La intensidad del entorno la gobierna aplicarEscenario(); el HDRI solo reemplaza la textura.
-            const rotaciones: Record<EscenarioId, number> = { oscuro:.16, claro:.20, luxury:.42, marmol:.16, transparente:.16, producto:.12, galeria:.62, oroCalido:.42, gemaClara:.08 };
+        const rotaciones: Record<EscenarioId, number> = {
+          oscuro:.16, claro:.20, luxury:.42, marmol:.16, transparente:.16,
+          producto:.12, galeria:.62, oroCalido:.42, gemaClara:.08
+        };
+        environmentController.load(
+          url,
+          requestId,
+          () => vivo && requestId === hdrRequestId,
+          (next) => {
+            entorno = next;
             escena.environmentRotation.y = Math.PI * (rotaciones[id as EscenarioId] ?? .16);
-            anterior?.dispose?.();
-          } catch {
-            hdrTexture.dispose?.();
           }
-        }, undefined, () => {
-          // Fallback silencioso: RoomEnvironment mantiene el visor funcional sin red.
-        });
+        );
       };
       // El escenario inicial selecciona su propio Environment HDRI.
 
@@ -936,9 +927,7 @@ export function AurumRender() {
         controles.dispose();
         limpiarResaltado();
         if (hdriGroundTexture) { hdriGroundTexture.dispose?.(); hdriGroundTexture = null; }
-        if (entorno && entorno !== fallbackEnvironment) entorno.dispose?.();
-        fallbackEnvironment?.dispose?.();
-        pmrem.dispose();
+        environmentController.dispose(entornoGema);
         renderer.dispose();
         if (renderer.domElement.parentElement === nodo) nodo.removeChild(renderer.domElement);
       };
