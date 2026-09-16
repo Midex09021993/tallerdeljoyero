@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { getAurumModelParts } from "./model-parts";
+import { prepareAurumRenderReady } from "./render-ready";
 
 export async function normalizeAurumModel(
   object:any,
@@ -26,5 +27,6 @@ export async function normalizeAurumModel(
       x.userData = {...x.userData, aurumRhino: meta};
     });
   }
+  prepareAurumRenderReady(interno);
   return interno;
 }
