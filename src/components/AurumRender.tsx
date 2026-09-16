@@ -3,7 +3,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
-import { getAurumPhotographicProfile } from "../lib/aurum-photographic-scene-engine";
+import { getAurumPhotographicProfile, getAurumHdriUrl } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -295,26 +295,13 @@ export function AurumRender() {
       let entorno = environmentController.current;
       // Environment y exposición quedan gobernados exclusivamente por SceneController.
       escena.environmentRotation.y = Math.PI * 0.16;
-      // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
-      // los metales tengan reflejos largos y limpios y las gemas reciban luces
-      // especulares naturales. RoomEnvironment permanece como fallback offline.
-      const hdrUrls: Record<string,string> = {
-        studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
-        studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
-        producto: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
-        claro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",
-        gemaClara: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
-        marmol: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/monochrome_studio_02_1k.hdr",
-        oscuro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        galeria: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
-        luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
-        oroCalido: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_02_1k.hdr",
-        transparente: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
-      };
+      // Biblioteca HDRI profesional centralizada en el motor fotográfico.
+      // El mapa de entorno y el GemEnvironment son independientes: el metal
+      // necesita bandas de reflexión controladas y la gema necesita un entorno
+      // óptico limpio para refracción/dispersion.
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
       let entornoGema:any = null;
-      const gemEnvironmentUrl = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr";
+      let gemEnvironmentUrl = getAurumHdriUrl("jewelry");
       const aplicarEntornoGema = () => {
         if (!modelo || !entornoGema) return;
         modelo.traverse((x:any) => {
@@ -337,7 +324,8 @@ export function AurumRender() {
         });
       };
       let gemEnvironmentRequestId = 0;
-      const cargarEntornoGema = () => {
+      const cargarEntornoGema = (key="jewelry") => {
+        gemEnvironmentUrl = getAurumHdriUrl(key);
         const requestId = ++gemEnvironmentRequestId;
         gemEnvironmentController.load(
           gemEnvironmentUrl,
@@ -352,22 +340,13 @@ export function AurumRender() {
       // Precarga el GemEnvironment una sola vez. El modelo se engancha
       // cuando termina de cargar; así las gemas no quedan negras por falta de
       // environment en el primer frame.
-      cargarEntornoGema();
+      cargarEntornoGema("jewelry");
 
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId | EscenarioId, rotation = 0.16) => {
         const requestId = ++hdrRequestId;
-        const hdrPorEscena: Record<EscenarioId, IluminacionId> = {
-          // Match the HDRI to the scene's photographic lighting profile.
-          // Dark and clear jewelry scenes need the higher-contrast environments;
-          // otherwise their scene lighting changes but the main reflection pattern
-          // remains the same.
-          oscuro:"studioHard", claro:"jewelry", luxury:"luxury", marmol:"studioSoft",
-          transparente:"studioSoft", producto:"studioSoft", galeria:"studioHard",
-          oroCalido:"luxury", gemaClara:"jewelry",
-        };
-        const iluminacionHdri = hdrPorEscena[id as EscenarioId] || (id as IluminacionId) || "jewelry";
-        const url = hdrUrls[iluminacionHdri] || hdrUrls.jewelry;
+        const photo = getAurumPhotographicProfile(id as string);
+        const url = getAurumHdriUrl(photo.environmentKey);
         environmentController.load(
           url,
           requestId,
@@ -482,6 +461,23 @@ export function AurumRender() {
       const aplicarEscenario = (id:EscenarioId) => {
         const preset = sceneController.apply(id);
         const photo = getAurumPhotographicProfile(id);
+        // Change the optical environment for gemstones together with the scene.
+        // This prevents the metal HDR from becoming the only reflection source.
+        cargarEntornoGema(photo.gemEnvironmentKey);
+        if (modelo) {
+          modelo.traverse((x:any) => {
+            if (!x.isMesh || !x.material) return;
+            const ajustar=(m:any)=>{
+              if (!m?.userData?.aurumMetalRenderProfile) return m;
+              const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
+              if (!Number.isFinite(base)) return m;
+              m.envMapIntensity=base*photo.metalEnvironmentScale*photo.highlightProtection;
+              m.needsUpdate=true;
+              return m;
+            };
+            x.material=Array.isArray(x.material)?x.material.map(ajustar):ajustar(x.material);
+          });
+        }
         // Scene, lighting and post are one photographic preset. This prevents
         // the previous behavior where changing only the background left the
         // same reflection rig and color response on every material.
