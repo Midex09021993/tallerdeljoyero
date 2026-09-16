@@ -628,8 +628,8 @@ export function AurumRender() {
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
-          const fondos:any={oscuro:0x090b0e,claro:0xe9e9e7,luxury:0x21150c,marmol:0xc9c6bf,producto:0xf4f3f0,galeria:0x18191c,oroCalido:0x302216,gemaClara:0xe7edf2};
-          escena.background = new THREE.Color(fondos[id]);
+          // El preset de Scene es la única fuente del fondo.
+          escena.background = new THREE.Color(scenePreset.background);
         }
         if (suelo) {
           suelo.visible = scenePreset.groundVisible;
