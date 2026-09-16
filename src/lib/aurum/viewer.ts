@@ -39,3 +39,49 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   viewer.camera.updateProjectionMatrix();
   viewer.controls.update();
 }
+
+
+export function resizeAurumViewer(viewer: {
+  node: { clientWidth: number; clientHeight: number };
+  camera: any;
+  renderer: any;
+  composer?: any;
+  ssaoPass?: any;
+}) {
+  const w = viewer.node.clientWidth || 900;
+  const h = viewer.node.clientHeight || 600;
+  viewer.camera.aspect = w / h;
+  viewer.camera.updateProjectionMatrix();
+  viewer.renderer.setSize(w, h, false);
+  viewer.composer?.setSize?.(w, h);
+  viewer.ssaoPass?.setSize?.(w, h);
+}
+
+export function disposeAurumViewer(viewer: {
+  node: any;
+  renderer: any;
+  controls?: any;
+  observer?: { disconnect: () => void };
+  clickHandler?: (event: MouseEvent) => void;
+  groundController?: any;
+  lightingController?: any;
+  environmentController?: any;
+  gemEnvironment?: any;
+  hdriGroundTexture?: any;
+  clearSelection?: () => void;
+  composer?: any;
+}) {
+  viewer.observer?.disconnect();
+  if (viewer.clickHandler) viewer.renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
+  viewer.controls?.dispose?.();
+  viewer.lightingController?.dispose?.();
+  viewer.groundController?.dispose?.();
+  viewer.clearSelection?.();
+  viewer.hdriGroundTexture?.dispose?.();
+  viewer.environmentController?.dispose?.(viewer.gemEnvironment);
+  viewer.composer?.dispose?.();
+  viewer.renderer?.dispose?.();
+  if (viewer.renderer?.domElement?.parentElement === viewer.node) {
+    viewer.node.removeChild(viewer.renderer.domElement);
+  }
+}
