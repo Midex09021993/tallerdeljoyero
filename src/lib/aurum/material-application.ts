@@ -21,15 +21,22 @@ export function applyAurumMaterialToModel(
     if (!x.isMesh) return;
     x.castShadow = true;
     x.receiveShadow = true;
-    if (!activePart || x.uuid === activePart.uuid) {
+    // MatrixGold semantics: a selected part represents its entire source layer.
+    // Apply to every mesh with the same Rhino layer (and, when present, MatrixGold slot).
+    const selectedMeta = activePart?.userData?.aurumRhino || {};
+    const selectedLayer = selectedMeta.capa || activePart?.userData?.attributes?.layerName || null;
+    const selectedCategory = selectedMeta.categoria || null;
+    const selectedSlot = selectedMeta.matrixSlot;
+    const meta = x.userData?.aurumRhino || {};
+    const sameLayer = !!activePart && selectedLayer && meta.capa === selectedLayer;
+    const sameSlot = !!activePart && selectedSlot != null && meta.matrixSlot === selectedSlot && meta.categoria === selectedCategory;
+    if (!activePart || x.uuid === activePart.uuid || sameLayer || sameSlot) {
       const apply = (base:any) => {
         const next = base?.clone ? base.clone() : sharedMaterial.clone();
         applyAurumMetal(next, metalPresetFromConfig(materialConfig));
         return next;
       };
-      x.material = Array.isArray(x.material)
-        ? x.material.map(apply)
-        : activePart ? apply(x.material) : sharedMaterial;
+      x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
     }
   });
 }
