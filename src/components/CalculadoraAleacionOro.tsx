@@ -19,6 +19,8 @@ type ColorAleacion = "amarillo" | "blanco" | "rosa" | "naranja";
 
 type MetalReceta = { nombre: string; porcentaje: number };
 
+const LEYES_OBJETIVO = [8, 9, 10, 12, 14, 18, 20, 22] as const;
+
 const ETIQUETAS_COLOR: Record<ColorAleacion, string> = {
   amarillo: "Amarillo",
   blanco: "Blanco",
@@ -32,6 +34,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
   const [masa, setMasa] = useState("");
   const [inicial, setInicial] = useState("24");
   const [final, setFinal] = useState("18");
+  const [leyPersonalizada, setLeyPersonalizada] = useState(false);
   const [color, setColor] = useState<ColorAleacion>("rosa");
 
   const masaNum = Number(masa);
@@ -99,7 +102,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
 
         <label className="space-y-2">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Quilataje inicial
+            Ley real del oro
           </span>
           <input
             type="number"
@@ -109,27 +112,44 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             step="0.1"
             value={inicial}
             onChange={(e) => setInicial(e.target.value)}
-            placeholder="Ej. 24"
+            placeholder="Ej. 23.60"
             className="h-14 w-full rounded-2xl border border-input bg-card px-4 text-lg font-semibold outline-none transition placeholder:text-muted-foreground/50 focus:border-gold focus:ring-4 focus:ring-gold/10"
           />
         </label>
 
-        <label className="space-y-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Quilataje final
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            max="24"
-            step="0.1"
-            value={final}
-            onChange={(e) => setFinal(e.target.value)}
-            placeholder="Ej. 18"
-            className="h-12 w-full rounded-xl border border-input bg-background px-4 text-base outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20"
-          />
-        </label>
+        <div className="space-y-3 sm:col-span-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Ley final deseada</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Selecciona una ley habitual o introduce una personalizada.</p>
+            </div>
+            <span className="rounded-full border border-gold/20 bg-gold/5 px-2.5 py-1 text-[10px] font-medium text-gold">
+              {final ? `${final}K · ${Math.round((Number(final) / 24) * 1000)}‰` : "—"}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+            {LEYES_OBJETIVO.map((ley) => {
+              const seleccionado = !leyPersonalizada && final === String(ley);
+              return (
+                <button key={ley} type="button" onClick={() => { setLeyPersonalizada(false); setFinal(String(ley)); }} aria-pressed={seleccionado}
+                  className={`h-12 rounded-2xl border text-sm font-semibold transition ${seleccionado ? "border-gold bg-gradient-to-b from-gold/25 to-gold/10 text-foreground shadow-[0_8px_24px_rgba(180,140,50,0.14)]" : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"}`}>
+                  {ley}K
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button type="button" onClick={() => setLeyPersonalizada((v) => !v)}
+              className={`h-11 rounded-2xl border px-4 text-xs font-semibold transition ${leyPersonalizada ? "border-gold bg-gold/10 text-foreground" : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"}`}>
+              Ley personalizada
+            </button>
+            {leyPersonalizada ? (
+              <input type="number" inputMode="decimal" min="0" max="24" step="0.01" value={final}
+                onChange={(e) => setFinal(e.target.value)} placeholder="Ej. 16.75" aria-label="Ley final personalizada"
+                className="h-11 w-full rounded-2xl border border-input bg-card px-4 text-sm font-semibold outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10 sm:max-w-xs" />
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <fieldset className="relative space-y-3">
@@ -231,7 +251,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             Introduce la masa y el quilataje final
           </p>
           <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted-foreground">
-            Selecciona el color de la aleación y obtén la cantidad de liga necesaria.
+            Indica la ley real de tu oro, elige la ley final y obtén la cantidad de liga necesaria.
           </p>
           {Number.isFinite(masaNum) && masaNum > 0 && kiNum <= kfNum ? (
             <p className="mt-2 text-xs text-warning">
