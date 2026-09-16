@@ -612,6 +612,26 @@ export function AurumRender() {
           }
         });
       };
+      const crearFondoEstudio = (colorHex:number) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1024; canvas.height = 1024;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return null;
+        const color = new THREE.Color(colorHex);
+        const center = color.clone();
+        center.offsetHSL(0, 0, color.l > 0.55 ? 0.04 : 0.10);
+        const edge = color.clone();
+        edge.offsetHSL(0, 0, color.l > 0.55 ? -0.12 : -0.06);
+        const grad = ctx.createRadialGradient(512, 330, 80, 512, 512, 760);
+        grad.addColorStop(0, "#"+center.getHexString());
+        grad.addColorStop(.58, "#"+color.getHexString());
+        grad.addColorStop(1, "#"+edge.getHexString());
+        ctx.fillStyle = grad; ctx.fillRect(0,0,1024,1024);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.needsUpdate = true;
+        return texture;
+      };
       const aplicarEscenario = (id:EscenarioId) => {
         const cfg = ESCENARIOS.find(e=>e.id===id) || ESCENARIOS[0];
         const scenePreset = getAurumScenePreset(id);
@@ -626,8 +646,11 @@ export function AurumRender() {
         if (id==="transparente") { escena.background=null; renderer.setClearColor(0,0); }
         else {
           renderer.setClearColor(0,1);
-          // El preset de Scene es la única fuente del fondo.
-          escena.background = new THREE.Color(scenePreset.background);
+          // El preset de Scene sigue siendo la fuente del color, pero se presenta
+          // como un fondo radial suave para evitar el aspecto de viewport plano.
+          const fondoAnterior = escena.background;
+          if (fondoAnterior && (fondoAnterior as any).isTexture) (fondoAnterior as THREE.Texture).dispose();
+          escena.background = crearFondoEstudio(scenePreset.background);
         }
         if (suelo) {
           suelo.visible = scenePreset.groundVisible;
