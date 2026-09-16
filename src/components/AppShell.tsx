@@ -11,10 +11,8 @@ import {
   Scissors,
   UserRound,
   Gem,
-  ChevronDown,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useState } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 
 type Seccion = {
@@ -83,68 +81,6 @@ function seccionesVisibles(
   return [...inicio, ...porArea, ...perfil];
 }
 
-const produccionRoutes: Seccion["to"][] = [
-  "/diseno-3d",
-  "/impresion-3d",
-  "/casting",
-  "/corte-laser",
-  "/taller",
-];
-
-function AdminDesktopNavigation({ visibles }: { visibles: Seccion[] }) {
-  const produccion = visibles.filter((s) => produccionRoutes.includes(s.to));
-  const independientes = visibles.filter((s) => !produccionRoutes.includes(s.to));
-  const [produccionAbierta, setProduccionAbierta] = useState(true);
-
-  return (
-    <nav className="flex-1 space-y-1 px-4">
-      {independientes
-        .filter((s) => s.to !== "/perfil")
-        .map((s) => (
-          <Link
-            key={s.to}
-            to={s.to}
-            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
-            activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
-          >
-            {s.label}
-          </Link>
-        ))}
-
-      {produccion.length > 0 ? (
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => setProduccionAbierta((v) => !v)}
-            className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
-            aria-expanded={produccionAbierta}
-          >
-            <span>Producción</span>
-            <ChevronDown
-              className={`size-4 transition-transform ${produccionAbierta ? "rotate-180" : ""}`}
-              aria-hidden="true"
-            />
-          </button>
-          {produccionAbierta ? (
-            <div className="ml-3 space-y-1 border-l border-ink-foreground/10 pl-2">
-              {produccion.map((s) => (
-                <Link
-                  key={s.to}
-                  to={s.to}
-                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-ink-foreground/55 transition-colors hover:text-ink-foreground"
-                  activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
-                >
-                  {s.label}
-                </Link>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-    </nav>
-  );
-}
-
 export function AppShell({
   titulo,
   subtitulo,
@@ -181,22 +117,18 @@ export function AppShell({
             </p>
           </div>
 
-          {sesion?.esAdmin ? (
-            <AdminDesktopNavigation visibles={visibles} />
-          ) : (
-            <nav className="flex-1 space-y-1 px-4">
-              {visibles.map((s) => (
-                <Link
-                  key={s.to}
-                  to={s.to}
-                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
-                  activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
-                >
-                  {s.label}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <nav className="flex-1 space-y-1 px-4">
+            {visibles.map((s) => (
+              <Link
+                key={s.to}
+                to={s.to}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
+                activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </nav>
 
           <div className="border-t border-ink-foreground/5 p-6">
             <div className="mb-4 flex items-center gap-3">
