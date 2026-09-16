@@ -39,8 +39,8 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   const visualRadius=Math.max(size.length()*.5,1.3);
   // Product-shot composition: slightly low 3/4 angle, with the aim point
   // above the ground so the ring is read as a product rather than a top-down CAD view.
-  const distance=Math.max(visualRadius*1.48,3.15);
-  const aimY=targetY + Math.max(size.y*.16, .08);
+  const distance=Math.max(visualRadius*1.85,4.0);
+  const aimY=targetY + Math.max(size.y*.13, .07);
   viewer.camera.position.set(distance*.58, aimY + distance*.22, distance);
   viewer.controls.target.set(0,aimY,0);
   viewer.camera.lookAt(0,aimY,0);
