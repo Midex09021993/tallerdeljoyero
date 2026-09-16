@@ -10,7 +10,7 @@ export function createAurumSceneController(
   renderer: any,
   groundController: any,
   environmentController: any,
-  loadEnvironment: (id: string, rotation: number) => void
+  loadEnvironment: (id: string) => void
 ): AurumSceneController {
   return {
     apply(id, opts) {
@@ -40,7 +40,7 @@ export function createAurumSceneController(
 
       groundController.updateFromPreset(preset);
       if (id !== "transparente") {
-        loadEnvironment(photo.environmentKey, photo.environmentRotation);
+        loadEnvironment(photo.environmentKey);
       } else {
         // La escena transparente conserva el último environment válido
         // para mantener reflejos de producto en los materiales.
