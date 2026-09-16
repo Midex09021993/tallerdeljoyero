@@ -115,7 +115,7 @@ export function AurumRender() {
     refrescarLuces(n=>n+1);
   }, []);
   const apiRef = useRef<any>(null);
-  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
+  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);\n  const [previewStatus, setPreviewStatus] = useState("Inicializando AURUM…");
   const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("producto"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
@@ -194,7 +194,7 @@ export function AurumRender() {
         renderQuality
       );
 
-      const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
+      setPreviewStatus("Renderer WebGL activo · preparando escena…");\n      const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
       let entorno = environmentController.current;
       // El EnvironmentController es la única autoridad para HDRI,
       // intensidad y rotación. El componente no escribe estado de entorno directamente.
@@ -614,7 +614,7 @@ export function AurumRender() {
         });
       };
 
-      // startAurumViewerLoop ya inicia el RAF/render loop.
+      if (vivo) setPreviewStatus("AURUM Render listo · carga un diseño para previsualizarlo");\n\n      // startAurumViewerLoop ya inicia el RAF/render loop.
       // No llamar a un animate() local inexistente: provocaba "animate is not defined".
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{
@@ -771,7 +771,7 @@ export function AurumRender() {
               </span>
             </button>}
             {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-[#d4af37]/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-[#d4af37]"/>{paso||"Preparando visualización..."}</div></div>}
-            {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
+            {previewStatus&&<div className="absolute left-1/2 top-5 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[9px] text-white/45 backdrop-blur">{previewStatus}</div>}\n            {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
             {parteSeleccionada&&<div className="absolute left-5 top-5 z-20 max-w-[65%] rounded-xl border border-[#d4af37]/40 bg-black/65 px-3 py-2 text-[10px] text-white shadow-xl backdrop-blur-xl"><span className="text-[#d4af37]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
             {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-[10px] text-white/50 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
 
