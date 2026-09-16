@@ -1,4 +1,5 @@
 import { getAurumScenePreset, type AurumScenePreset } from "../aurum-scene-engine";
+import { getAurumPhotographicProfile } from "../aurum-photographic-scene-engine";
 
 export interface AurumSceneController {
   apply: (id: string, opts?: { transparent?: boolean }) => AurumScenePreset;
@@ -14,16 +15,17 @@ export function createAurumSceneController(
   return {
     apply(id, opts) {
       const preset = getAurumScenePreset(id);
+      const photo = getAurumPhotographicProfile(id);
       // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
-      renderer.toneMappingExposure = preset.exposure;
+      renderer.toneMappingExposure = photo.exposure;
       // El controlador de Environment es la autoridad para orientación e intensidad.
       // Mantenemos el mismo resultado visual y evitamos duplicar estado en Scene.
-      environmentController?.setIntensity?.(preset.environmentIntensity);
-      environmentController?.setRotation?.(Math.PI * preset.environmentRotation);
+      environmentController?.setIntensity?.(photo.environmentIntensity);
+      environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
       // Compatibilidad con versiones de three.js que no exponen estos setters.
-      scene.environmentIntensity = preset.environmentIntensity;
+      scene.environmentIntensity = photo.environmentIntensity;
       if (scene.environmentRotation) {
-        scene.environmentRotation.y = Math.PI * preset.environmentRotation;
+        scene.environmentRotation.y = Math.PI * photo.environmentRotation;
       }
 
       if (opts?.transparent || id === "transparente") {
@@ -38,7 +40,7 @@ export function createAurumSceneController(
 
       groundController.updateFromPreset(preset);
       if (id !== "transparente") {
-        loadEnvironment(id, preset.environmentRotation);
+        loadEnvironment(photo.environmentKey, photo.environmentRotation);
       } else {
         // La escena transparente conserva el último environment válido
         // para mantener reflejos de producto en los materiales.
