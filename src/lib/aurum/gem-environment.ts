@@ -4,6 +4,9 @@ export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; 
   Esmeralda: { intensity: 1.12 },
   Rubi: { intensity: 1.16 },
   Zafiro: { intensity: 1.16 },
+  Amatista: { intensity: 1.10 },
+  Citrino: { intensity: 1.08 },
+  Topacio: { intensity: 1.10 },
   default: { intensity: 1.14 },
 };
 
