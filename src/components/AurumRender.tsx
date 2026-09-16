@@ -200,6 +200,10 @@ export function AurumRender() {
   const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
+  const actualizarLucesAurum = useCallback((patch:any) => {
+    lucesRef.current?.(patch);
+    refrescarLuces(n=>n+1);
+  }, []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry"), [vista, setVista] = useState<VistaId>("perspectiva");
@@ -351,7 +355,7 @@ export function AurumRender() {
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
-      const actualizarLucesAurum = (patch:any) => { lightingController.update(patch); setLightingStudio((prev:any) => ({ ...prev, ...patch })); refrescarLuces(n=>n+1); };
+      const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
       lucesRef.current = actualizarLucesAurum;
       // Inicializar las luces configurables desde el arranque del visor.
       lightingController.create();
