@@ -8,7 +8,12 @@ export interface AurumGroundController {
 
 export function createAurumGround(THREE: any, scene: any): AurumGroundController {
   const material = new THREE.MeshStandardMaterial({
-    color: 0xc9c7c2, metalness: .02, roughness: .4
+    color: 0xc9c7c2,
+    metalness: .02,
+    roughness: .55,
+    transparent: true,
+    opacity: .92,
+    depthWrite: false
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), material);
   mesh.rotation.x = -Math.PI / 2;
