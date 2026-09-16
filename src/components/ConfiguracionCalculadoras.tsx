@@ -332,8 +332,19 @@ export function ConfiguracionCalculadoras() {
             );
           })}
           <label className="space-y-1.5">
-            <span className="text-xs font-medium">Factor de empuje por defecto</span>
-            <input type="number" min="0" step="0.1" className={inputCls} value={cfgVisualizador.factorEmpuje} onChange={(e) => setCfgVisualizador((a) => ({ ...a, factorEmpuje: Number(e.target.value) || 0 }))} />
+            <span className="text-xs font-medium">Peso adicional del árbol de colada (por defecto)</span>
+            <div className="flex items-center gap-2">
+              <input type="number" min="0" step="0.01" className={inputCls} value={cfgVisualizador.factorEmpuje} onChange={(e) => setCfgVisualizador((a) => ({ ...a, factorEmpuje: Number(e.target.value) || 0 }))} />
+              <span className="text-xs text-muted-foreground">{cfgVisualizador.modoEmpuje === "porcentaje" ? "%" : "g"}</span>
+            </div>
+            <span className="block text-[11px] text-muted-foreground">Referencia inicial para el cálculo. El usuario puede definir el árbol de cada fabricación.</span>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium">Modo del peso adicional</span>
+            <select className={inputCls} value={cfgVisualizador.modoEmpuje} onChange={(e) => setCfgVisualizador((a) => ({ ...a, modoEmpuje: e.target.value === "porcentaje" ? "porcentaje" : "gramos" }))}>
+              <option value="gramos">Gramos (peso del árbol)</option>
+              <option value="porcentaje">Porcentaje del peso de las joyas</option>
+            </select>
           </label>
           <label className="space-y-1.5">
             <span className="text-xs font-medium">Factor de seguridad</span>
