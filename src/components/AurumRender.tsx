@@ -340,13 +340,6 @@ export function AurumRender() {
         );
       };
 
-      const sceneController = createAurumSceneController(
-        escena,
-        renderer,
-        groundController,
-        environmentController,
-        (id, rotation) => cargarHDRI(id as EscenarioId, rotation)
-      );
       // El escenario inicial selecciona su propio Environment HDRI.
 
       const controles = new OrbitControls(camara,renderer.domElement);
@@ -420,6 +413,13 @@ export function AurumRender() {
 
       const groundController = createAurumGround(THREE, escena);
       let suelo:any = groundController.mesh;
+      const sceneController = createAurumSceneController(
+        escena,
+        renderer,
+        groundController,
+        environmentController,
+        (id, rotation) => cargarHDRI(id as EscenarioId, rotation)
+      );
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
       let resaltado:any = null;
