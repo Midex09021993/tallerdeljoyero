@@ -59,10 +59,22 @@ function calcularMezcla(
   volumenPorGramo: number,
   factorCorreccion: number,
 ) {
+  // Las recetas 38/62, 40/60 y 42/58 se expresan como
+  // agua / yeso. Por tanto, 40/60 significa agua ÷ yeso = 0.40.
+  // "partesYeso" se conserva para documentar la receta, pero la
+  // relación operativa se obtiene explícitamente del primer valor.
   const ratioAguaSobreYeso = partesAgua / 100;
-  const yeso = volumen / (volumenPorGramo * factorCorreccion + ratioAguaSobreYeso);
+  const volumenEspecificoAjustado = volumenPorGramo * factorCorreccion;
+  const yeso = volumen / (volumenEspecificoAjustado + ratioAguaSobreYeso);
   const agua = yeso * ratioAguaSobreYeso;
-  return { agua, yeso };
+
+  return {
+    agua,
+    yeso,
+    ratioAguaSobreYeso,
+    relacionVerificada: yeso > 0 ? agua / yeso : 0,
+    partesYeso,
+  };
 }
 
 function TallerPage() {
