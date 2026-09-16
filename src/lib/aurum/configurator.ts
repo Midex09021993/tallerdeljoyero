@@ -1,8 +1,6 @@
-import type { GemaId, MaterialId, MaterialGrupo } from "../../components/AurumRender";
-
 export type AurumConfiguratorInput = {
-  material: MaterialId;
-  gem: GemaId;
+  material: string;
+  gem: string;
   scene: string;
   lighting: string;
   camera: string;
@@ -16,8 +14,8 @@ export function createAurumConfiguration(input: AurumConfiguratorInput) {
 }
 
 export function createAurumVariations(
-  materials: Array<{ id: MaterialId; grupo: MaterialGrupo; nombre: string }>,
-  gems: Array<{ id: GemaId; nombre: string }>
+  materials: Array<{ id: string; grupo: string; nombre: string }>,
+  gems: Array<{ id: string; nombre: string }>
 ) {
   return {
     metals: Array.from(new Set(materials.map(m => m.grupo))).map(grupo => ({
