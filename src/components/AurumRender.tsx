@@ -575,13 +575,11 @@ export function AurumRender() {
           lightingController,
           groundController,
           clearSelection:limpiarResaltado,
-          hdriGroundTexture,
           environmentController,
           gemEnvironment:entornoGema,
           gemEnvironmentController,
           composer,
         });
-        hdriGroundTexture = null;
       };
 
       animate();
