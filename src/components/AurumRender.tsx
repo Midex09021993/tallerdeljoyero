@@ -764,8 +764,6 @@ export function AurumRender() {
     }
     apiRef.current=null;
     composerRef.current=null;
-    entornoGema?.dispose?.();
-    entornoGema=null;
     cleanup();
   };
   },[]);
