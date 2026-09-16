@@ -61,9 +61,9 @@ const GEMAS: GemaConfig[] = [
   // Perfil óptico propio de AURUM RENDER. El diamante real tiene RI ~2.42 y
   // dispersión ~0.044; MeshPhysicalMaterial limita IOR a 2.333, por lo que
   // usamos el máximo soportado y una dispersión contenida para evitar arcoíris artificiales.
-  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xfafcff, transmission:.985, ior:2.333, roughness:.009, envMapIntensity:5.4, attenuationColor:0xf9fcff, attenuationDistance:22, dispersion:.22, iridescence:.008, inclusionStyle:"diamante", inclusionStrength:.08 },
-  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xfcfdff, transmission:.99, ior:2.333, roughness:.006, envMapIntensity:5.8, attenuationColor:0xfbfdff, attenuationDistance:32, dispersion:.24, iridescence:.006, inclusionStyle:"diamante", inclusionStrength:.035 },
-  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xf5f9ff, transmission:.975, ior:2.333, roughness:.014, envMapIntensity:5.0, attenuationColor:0xf2f7ff, attenuationDistance:13, dispersion:.20, iridescence:.01, inclusionStyle:"diamante", inclusionStrength:.22 },
+  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xfafcff, transmission:.985, ior:2.333, roughness:.009, envMapIntensity:2.05, attenuationColor:0xf9fcff, attenuationDistance:22, dispersion:.22, iridescence:.008, inclusionStyle:"diamante", inclusionStrength:.08 },
+  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xfcfdff, transmission:.99, ior:2.333, roughness:.006, envMapIntensity:2.18, attenuationColor:0xfbfdff, attenuationDistance:32, dispersion:.24, iridescence:.006, inclusionStyle:"diamante", inclusionStrength:.035 },
+  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xf5f9ff, transmission:.975, ior:2.333, roughness:.014, envMapIntensity:1.92, attenuationColor:0xf2f7ff, attenuationDistance:13, dispersion:.20, iridescence:.01, inclusionStyle:"diamante", inclusionStrength:.22 },
   { id:"zafiro_azul", familia:"Zafiro", nombre:"Zafiro Azul Natural", color:0x174a9e, transmission:.9, ior:1.77, roughness:.025, envMapIntensity:4.1, attenuationColor:0x123d91, attenuationDistance:2.4, dispersion:.12, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.08 },
   { id:"zafiro_intenso", familia:"Zafiro", nombre:"Zafiro Azul Intenso", color:0x0d2f78, transmission:.86, ior:1.77, roughness:.03, envMapIntensity:4.3, attenuationColor:0x08265f, attenuationDistance:1.55, dispersion:.1, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.05 },
   { id:"zafiro_inclusiones", familia:"Zafiro", nombre:"Zafiro · Inclusiones", color:0x194a96, transmission:.88, ior:1.77, roughness:.035, envMapIntensity:3.9, attenuationColor:0x123a82, attenuationDistance:2, dispersion:.1, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.24 },
@@ -306,34 +306,9 @@ export function AurumRender() {
       let gemEnvironmentIntensityScale = .98;
       const aplicarEntornoGema = () => {
         if (!modelo || !entornoGema) return;
-        modelo.traverse((x:any) => {
-          if (!x.isMesh || !x.material) return;
-          const aplicar=(m:any)=>{
-            if (!m?.userData?.aurumOpticalProfile) return m;
-            m.envMap=entornoGema;
-            const familia=m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default";
-            // El GemEnvironment aporta reflejos/refracción; no sustituye el perfil óptico.
-            const intensidadMaterial = Number.isFinite(m.userData?.aurumGemEnvIntensity)
-              ? m.userData.aurumGemEnvIntensity
-              : (Number.isFinite(m.envMapIntensity) ? m.envMapIntensity : 1.2);
-            // La documentación de iJewel separa el HDRI de metal del HDRI de gema
-            // y permite intensidad/rotación independiente para encontrar el mejor fuego.
-            m.envMapIntensity = Math.min(2.35, Math.max(.55, intensidadMaterial * gemEnvironmentIntensityScale));
-            if (m.envMapRotation?.set) {
-              m.envMapRotation.set(0, gemEnvironmentRotation, 0);
-            } else if (m.envMapRotation) {
-              m.envMapRotation.y = gemEnvironmentRotation;
-            }
-            m.userData = {
-              ...(m.userData ?? {}),
-              aurumGemFamily: familia,
-              aurumGemEnvironmentRotation: gemEnvironmentRotation,
-              aurumGemEnvironmentIntensity: m.envMapIntensity,
-            };
-            m.needsUpdate=true;
-            return m;
-          };
-          x.material=Array.isArray(x.material)?x.material.map(aplicar):aplicar(x.material);
+        gemEnvironmentController.applyToModel(modelo, entornoGema, {
+          rotation: gemEnvironmentRotation,
+          intensityScale: gemEnvironmentIntensityScale,
         });
       };
       let gemEnvironmentRequestId = 0;
