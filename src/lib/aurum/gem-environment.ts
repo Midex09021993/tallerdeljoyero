@@ -1,3 +1,15 @@
+export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; }> = {
+  Diamante: { intensity: 1.55 },
+  Esmeralda: { intensity: 1.15 },
+  Rubi: { intensity: 1.25 },
+  Zafiro: { intensity: 1.25 },
+  default: { intensity: 1.25 },
+};
+
+export const getAurumGemEnvironmentIntensity = (family:string) =>
+  AURUM_GEM_ENVIRONMENT_PROFILES[family]?.intensity ??
+  AURUM_GEM_ENVIRONMENT_PROFILES.default.intensity;
+
 export interface AurumGemEnvironmentController {
   load: (
     url:string,
@@ -25,7 +37,7 @@ export function createAurumGemEnvironment(
         const family = m.userData.aurumOpticalProfile;
         const intensity = Number.isFinite(m.userData?.aurumGemEnvIntensity)
           ? m.userData.aurumGemEnvIntensity
-          : (family === "Diamante" ? 1.55 : family === "Esmeralda" ? 1.15 : 1.25);
+          : getAurumGemEnvironmentIntensity(family);
         m.envMapIntensity = intensity;
         m.needsUpdate = true;
         return m;
