@@ -14,9 +14,12 @@ export function createAurumSceneController(
   return {
     apply(id, opts) {
       const preset = getAurumScenePreset(id);
+      // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
       renderer.toneMappingExposure = preset.exposure;
       scene.environmentIntensity = preset.environmentIntensity;
-      scene.environmentRotation.y = Math.PI * preset.environmentRotation;
+      if (scene.environmentRotation) {
+        scene.environmentRotation.y = Math.PI * preset.environmentRotation;
+      }
 
       if (opts?.transparent || id === "transparente") {
         scene.background = null;
