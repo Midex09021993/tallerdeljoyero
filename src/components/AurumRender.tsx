@@ -11,6 +11,7 @@ import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGround } from "../lib/aurum/ground";
+import { createAurumLightingController } from "../lib/aurum/lighting";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -399,32 +400,11 @@ export function AurumRender() {
       let hdriGround:any = null;
       let hdriGroundTexture:any = null;
       const hdriGroundConfig = {...AURUM_HDRI_GROUND_DEFAULT};
-      const lucesAurum:any={};
-      const configurarSombrasAurum=(L:any)=>{
-        if(!L?.castShadow) return;
-        const mapSize=Math.max(512,Math.min(shadowConfig.mapSize,renderQuality.shadowMapSize));
-        L.shadow.mapSize.set(mapSize,mapSize);
-        L.shadow.bias=shadowConfig.bias;
-        L.shadow.normalBias=shadowConfig.normalBias;
-        L.shadow.radius=shadowConfig.contact?shadowConfig.contactScale:1;
-      };
-      const crearLucesAurum=()=>{
-        const mk=(tipo:string,color:number,cast:boolean)=>{
-          const L=tipo==="spot"?new THREE.SpotLight(color,1,30,Math.PI*.45,.7,.8):new THREE.PointLight(color,1,30,2);
-          L.castShadow=cast; escena.add(L); return L;
-        };
-        if(!lucesAurum.key){lucesAurum.key=mk("spot",0xffffff,true);lucesAurum.fill=mk("spot",0xffffff,false);lucesAurum.rim=mk("spot",0xffffff,false);lucesAurum.gem=mk("point",0xffffff,false);}
-        const aplicar=(L:any,cfg:any)=>{L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
-        aplicar(lucesAurum.key,lightingStudio.key); configurarSombrasAurum(lucesAurum.key); aplicar(lucesAurum.fill,lightingStudio.fill); configurarSombrasAurum(lucesAurum.fill); aplicar(lucesAurum.rim,lightingStudio.rim); configurarSombrasAurum(lucesAurum.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
-      };
-      const actualizarLucesAurum = (patch:any)=>{
-        Object.assign(lightingStudio,patch);
-        const aplicar=(L:any,cfg:any)=>{if(!L||!cfg)return;L.visible=cfg.enabled;L.intensity=cfg.intensity;L.position.set(...cfg.position);if(L.angle!==undefined){L.angle=cfg.angle;L.penumbra=cfg.penumbra;}};
-        aplicar(lucesAurum.key,lightingStudio.key); aplicar(lucesAurum.fill,lightingStudio.fill); aplicar(lucesAurum.rim,lightingStudio.rim); aplicar(lucesAurum.gem,lightingStudio.gem);
-      };
-
+      const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
+      const lucesAurum = (lightingController as any).lights ?? {};
+      const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
       // Inicializar las luces configurables desde el arranque del visor.
-      crearLucesAurum();
+      lightingController.create();
 
       const aplicarIluminacion = (id:IluminacionId) => {
         const presets=getAurumLightingPreset(id);
