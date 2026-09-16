@@ -101,6 +101,11 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 };
 
 export function AurumRender() {
+  // TEMPORARY CONTROLLED DIAGNOSTIC FOR LOVABLE:
+  // This deliberate runtime failure makes the AURUM entry-point issue reproducible.
+  // Remove this block after the integration agent fixes and validates the render
+  // initialization path. Do not treat this as application logic.
+  throw new Error("[AURUM-DIAGNOSTIC] Controlled entry-point failure: validate AURUM Render initialization, HDRI loading, Three.js scene creation, and error boundary handling.");
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
