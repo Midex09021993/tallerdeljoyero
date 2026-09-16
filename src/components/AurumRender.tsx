@@ -742,8 +742,11 @@ export function AurumRender() {
         });
 
         aplicarEscenario(escenarioId);
-        const distancia = Math.max(max * 1.85, 4.6);
-        camara.position.set(distancia * 0.76, distancia * 0.48, distancia);
+        // El modelo ya está normalizado a 2.6 unidades; no usar el tamaño
+        // original para la distancia, porque produciría encuadres excesivamente lejanos.
+        const radioVisual = Math.max(boundsSize.length() * 0.5, 1.3);
+        const distancia = Math.max(radioVisual * 1.55, 3.15);
+        camara.position.set(distancia * 0.72, distancia * 0.40, distancia);
         controles.target.set(0,targetY,0);
         camara.lookAt(0,targetY,0);
         camara.updateProjectionMatrix();
