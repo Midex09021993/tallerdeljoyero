@@ -301,7 +301,9 @@ export function AurumRender() {
       // óptico limpio para refracción/dispersion.
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
       let entornoGema:any = null;
-      let gemEnvironmentUrl = getAurumHdriUrl("jewelry");
+      let gemEnvironmentUrl = getAurumHdriUrl("monochrome");
+      let gemEnvironmentRotation = .28;
+      let gemEnvironmentIntensityScale = .98;
       const aplicarEntornoGema = () => {
         if (!modelo || !entornoGema) return;
         modelo.traverse((x:any) => {
@@ -309,14 +311,25 @@ export function AurumRender() {
           const aplicar=(m:any)=>{
             if (!m?.userData?.aurumOpticalProfile) return m;
             m.envMap=entornoGema;
-            const familia=m.userData.aurumOpticalProfile;
+            const familia=m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default";
             // El GemEnvironment aporta reflejos/refracción; no sustituye el perfil óptico.
-            const intensidadMaterial = Number.isFinite(m.envMapIntensity) ? m.envMapIntensity : 1.2;
-            // Mantener la intensidad óptica definida por el preset, pero evitar
-            // que el GemEnvironment queme la piedra. iJewel separa Environment
-            // y GemEnvironment para controlar reflejos/refracción de forma independiente.
-            const intensidadBase = Math.min(2.25, Math.max(1.15, intensidadMaterial));
-            m.envMapIntensity = intensidadBase;
+            const intensidadMaterial = Number.isFinite(m.userData?.aurumGemEnvIntensity)
+              ? m.userData.aurumGemEnvIntensity
+              : (Number.isFinite(m.envMapIntensity) ? m.envMapIntensity : 1.2);
+            // La documentación de iJewel separa el HDRI de metal del HDRI de gema
+            // y permite intensidad/rotación independiente para encontrar el mejor fuego.
+            m.envMapIntensity = Math.min(2.35, Math.max(.55, intensidadMaterial * gemEnvironmentIntensityScale));
+            if (m.envMapRotation?.set) {
+              m.envMapRotation.set(0, gemEnvironmentRotation, 0);
+            } else if (m.envMapRotation) {
+              m.envMapRotation.y = gemEnvironmentRotation;
+            }
+            m.userData = {
+              ...(m.userData ?? {}),
+              aurumGemFamily: familia,
+              aurumGemEnvironmentRotation: gemEnvironmentRotation,
+              aurumGemEnvironmentIntensity: m.envMapIntensity,
+            };
             m.needsUpdate=true;
             return m;
           };
@@ -324,8 +337,10 @@ export function AurumRender() {
         });
       };
       let gemEnvironmentRequestId = 0;
-      const cargarEntornoGema = (key="jewelry") => {
+      const cargarEntornoGema = (key="monochrome", rotation=.28, intensityScale=.98) => {
         gemEnvironmentUrl = getAurumHdriUrl(key);
+        gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .28;
+        gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
         const requestId = ++gemEnvironmentRequestId;
         gemEnvironmentController.load(
           gemEnvironmentUrl,
@@ -340,7 +355,7 @@ export function AurumRender() {
       // Precarga el GemEnvironment una sola vez. El modelo se engancha
       // cuando termina de cargar; así las gemas no quedan negras por falta de
       // environment en el primer frame.
-      cargarEntornoGema("jewelry");
+      cargarEntornoGema("monochrome", .28, .98);
 
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId | EscenarioId) => {
@@ -410,6 +425,13 @@ export function AurumRender() {
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
       const presetInicial = sceneController.apply("producto");
       const photoInicial = getAurumPhotographicProfile("producto");
+      // Product scene starts with the same independent Gem Environment used by
+      // the active photographic profile, rather than inheriting the metal HDRI.
+      cargarEntornoGema(
+        photoInicial.gemEnvironmentKey,
+        photoInicial.gemEnvironmentRotation,
+        photoInicial.gemEnvironmentIntensity
+      );
       Object.assign(postRuntimeConfig, {
         ssao: photoInicial.post.ssao,
         ssaoIntensity: photoInicial.post.ssaoIntensity,
@@ -482,7 +504,11 @@ export function AurumRender() {
         const photo = getAurumPhotographicProfile(id);
         // Change the optical environment for gemstones together with the scene.
         // This prevents the metal HDR from becoming the only reflection source.
-        cargarEntornoGema(photo.gemEnvironmentKey);
+        cargarEntornoGema(
+          photo.gemEnvironmentKey,
+          photo.gemEnvironmentRotation,
+          photo.gemEnvironmentIntensity
+        );
         calibrarReflejosMetalEscena(photo);
         // Scene, lighting and post are one photographic preset. This prevents
         // the previous behavior where changing only the background left the
