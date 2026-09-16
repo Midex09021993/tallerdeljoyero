@@ -29,7 +29,12 @@ export function createAurumSceneController(
       }
 
       groundController.updateFromPreset(preset);
-      if (id !== "transparente") loadEnvironment(id, preset.environmentRotation);
+      if (id !== "transparente") {
+        loadEnvironment(id, preset.environmentRotation);
+      } else {
+        // La escena transparente conserva el último environment válido
+        // para mantener reflejos de producto en los materiales.
+      }
       return preset;
     },
   };
