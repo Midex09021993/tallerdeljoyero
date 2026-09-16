@@ -11,11 +11,11 @@ export interface AurumGroundController {
 
 export function createAurumGround(THREE: any, scene: any): AurumGroundController {
   const material = new THREE.MeshStandardMaterial({
-    color: 0xc9c7c2,
+    color: 0xe3e1dd,
     metalness: .02,
-    roughness: .55,
+    roughness: .82,
     transparent: true,
-    opacity: .92,
+    opacity: .96,
     depthWrite: false
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), material);
