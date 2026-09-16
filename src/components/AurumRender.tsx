@@ -366,7 +366,7 @@ export function AurumRender() {
         },undefined,()=>{});
       };
       let hdrRequestId = 0;
-      const cargarHDRI = (id:IluminacionId | EscenarioId) => {
+      const cargarHDRI = (id:IluminacionId | EscenarioId, rotation = 0.16) => {
         const requestId = ++hdrRequestId;
         const hdrPorEscena: Record<EscenarioId, IluminacionId> = {
           oscuro:"studioSoft", claro:"studioSoft", luxury:"luxury", marmol:"studioSoft",
@@ -375,17 +375,13 @@ export function AurumRender() {
         };
         const iluminacionHdri = hdrPorEscena[id as EscenarioId] || (id as IluminacionId) || "jewelry";
         const url = hdrUrls[iluminacionHdri] || hdrUrls.jewelry;
-        const rotaciones: Record<EscenarioId, number> = {
-          oscuro:.16, claro:.20, luxury:.42, marmol:.16, transparente:.16,
-          producto:.12, galeria:.62, oroCalido:.42, gemaClara:.08
-        };
         environmentController.load(
           url,
           requestId,
           () => vivo && requestId === hdrRequestId,
           (next) => {
             entorno = next;
-            escena.environmentRotation.y = Math.PI * (rotaciones[id as EscenarioId] ?? .16);
+            escena.environmentRotation.y = Math.PI * rotation;
           }
         );
       };
@@ -616,7 +612,7 @@ export function AurumRender() {
         }
         groundController.updateFromPreset(scenePreset);
         // El entorno HDRI pertenece a Scene, no a Lighting.
-        if (id !== "transparente") cargarHDRI(id);
+        if (id !== "transparente") cargarHDRI(id, scenePreset.environmentRotation);
       };
        const encuadrar = () => {
         if (!modelo) return;
