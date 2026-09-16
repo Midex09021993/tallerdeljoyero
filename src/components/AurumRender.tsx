@@ -547,6 +547,11 @@ export function AurumRender() {
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
         setParteSeleccionadaCategoria(categoria);
+        // MatrixGold drives the library: green/metal layers open Materials,
+        // blue/gem layers open Gems automatically.
+        if (categoria === "metal") setBibliotecaTipo("metales");
+        else if (categoria === "gema") setBibliotecaTipo("gemas");
+        setPanel("materiales");
         limpiarResaltado();        if (obj.geometry) {
           const edges = new THREE.EdgesGeometry(obj.geometry, 18);
           resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
