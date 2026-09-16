@@ -8,6 +8,7 @@ import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT, getAurumLightingPreset } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
+import { createAurumPostPipeline } from "../lib/aurum/post";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -285,9 +286,6 @@ export function AurumRender() {
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
-      const { EffectComposer } = await import("three/examples/jsm/postprocessing/EffectComposer.js");
-      const { RenderPass } = await import("three/examples/jsm/postprocessing/RenderPass.js");
-      const { SSAOPass } = await import("three/examples/jsm/postprocessing/SSAOPass.js");
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       const escena = new THREE.Scene();
       const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
@@ -313,27 +311,7 @@ export function AurumRender() {
       renderer.shadowMap.autoUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
-      let composer:any = null;
-      let ssaoPass:any = null;
-      try {
-        composer = new EffectComposer(renderer);
-        const renderPass = new RenderPass(escena, camara);
-        composer.addPass(renderPass);
-        ssaoPass = new SSAOPass(escena, camara, 1, 1);
-        ssaoPass.kernelRadius = ssaoConfig.radius;
-        ssaoPass.minDistance = ssaoConfig.bias;
-        ssaoPass.maxDistance = Math.max(.01, ssaoConfig.radius * 2.5);
-        // AO de contacto muy sutil: aporta separación entre joya y Ground sin ensuciar el metal.
-        // Salida final: el AO se mezcla con el render, no se muestra como mapa de diagnóstico.
-        ssaoPass.output = (SSAOPass as any).OUTPUT.Default;
-        ssaoPass.enabled = ssaoConfig.enabled;
-        ssaoPass.kernelSize = Math.min(16, Math.max(8, ssaoConfig.kernelSize ?? 16));
-        ssaoPass.aoClamp = 0.45;
-        composer.addPass(ssaoPass);
-      } catch {
-        composer = null;
-        ssaoPass = null;
-      }
+      const { composer, ssaoPass } = await createAurumPostPipeline(renderer, escena, camara, ssaoConfig);
 
       const pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
