@@ -6,6 +6,6 @@
  */
 export type AurumSsaoConfig={enabled:boolean;radius:number;intensity:number;bias:number;quality:"low"|"medium"|"high"};
 export const AURUM_SSAO_CONFIG:AurumSsaoConfig={
- enabled:true,radius:.22,intensity:.18,bias:.018,quality:"medium"
+ enabled:false,radius:.28,intensity:.22,bias:.025,quality:"medium"
 };
 export const getAurumSsaoConfig=()=>({...AURUM_SSAO_CONFIG});
