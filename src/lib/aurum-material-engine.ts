@@ -149,7 +149,20 @@ export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
   rubi_sangre_pichon:{id:"rubi_sangre_pichon",familia:"Rubí",variante:"Sangre de pichón",color:0x8f0d28,transmission:.91,ior:1.762,roughness:.016,envMapIntensity:1.7,attenuationColor:0x78091f,attenuationDistance:13,dispersion:.014,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   rubi_inclusiones:{id:"rubi_inclusiones",familia:"Rubí",variante:"Con inclusiones",color:0x7f1233,transmission:.84,ior:1.762,roughness:.025,envMapIntensity:1.5,attenuationColor:0x650c28,attenuationDistance:9,dispersion:.014,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.20,inclusionType:"silk"},
   zafiro_azul:{id:"zafiro_azul",familia:"Zafiro",variante:"Azul",color:0x1247a6,transmission:.94,ior:1.77,roughness:.018,envMapIntensity:1.65,attenuationColor:0x103d91,attenuationDistance:17,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
+  zafiro_intenso:{id:"zafiro_intenso",familia:"Zafiro",variante:"Azul intenso",color:0x0d2f78,transmission:.91,ior:1.77,roughness:.022,envMapIntensity:1.62,attenuationColor:0x08265f,attenuationDistance:13,dispersion:.012,iridescence:.008,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   zafiro_inclusiones:{id:"zafiro_inclusiones",familia:"Zafiro",variante:"Con inclusiones",color:0x173c86,transmission:.85,ior:1.77,roughness:.025,envMapIntensity:1.5,attenuationColor:0x112e69,attenuationDistance:10,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.18,inclusionType:"silk"},
+  moissanita_blanca:{id:"moissanita_blanca",familia:"Moissanita",variante:"Blanca",color:0xf4f8ff,transmission:.985,ior:2.65,roughness:.013,envMapIntensity:1.88,attenuationColor:0xf6faff,attenuationDistance:80,dispersion:.104,iridescence:.055,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"},
+  moissanita_brillante:{id:"moissanita_brillante",familia:"Moissanita",variante:"Brillante",color:0xeaf3ff,transmission:.99,ior:2.65,roughness:.010,envMapIntensity:1.98,attenuationColor:0xf2f8ff,attenuationDistance:90,dispersion:.104,iridescence:.075,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"},
+  citrino_natural:{id:"citrino_natural",familia:"Citrino",variante:"Natural",color:0xd49a22,transmission:.91,ior:1.544,roughness:.025,envMapIntensity:1.58,attenuationColor:0xa96d0c,attenuationDistance:8,dispersion:.009,iridescence:0,thicknessScale:1.04,inclusions:true,inclusionDensity:.045,inclusionType:"fingerprint"},
+  citrino_intenso:{id:"citrino_intenso",familia:"Citrino",variante:"Intenso",color:0xb8780b,transmission:.87,ior:1.544,roughness:.030,envMapIntensity:1.52,attenuationColor:0x8b5307,attenuationDistance:5.5,dispersion:.009,iridescence:0,thicknessScale:1.04,inclusions:true,inclusionDensity:.025,inclusionType:"veil"},
+  // Amethyst is quartz: the optical response is deliberately different from
+  // corundum (ruby/sapphire). Natural amethyst may show hematite needles and
+  // fluid-related features, so its inclusion profile is subtle rather than a
+  // generic "sparkle" texture.
+  amatista_natural:{id:"amatista_natural",familia:"Amatista",variante:"Natural",color:0x7650b9,transmission:.91,ior:1.55,roughness:.025,envMapIntensity:1.60,attenuationColor:0x57358f,attenuationDistance:8,dispersion:.009,iridescence:0,thicknessScale:1.04,inclusions:true,inclusionDensity:.065,inclusionType:"needle"},
+  amatista_intensa:{id:"amatista_intensa",familia:"Amatista",variante:"Intensa",color:0x5b319c,transmission:.87,ior:1.55,roughness:.030,envMapIntensity:1.54,attenuationColor:0x3f2076,attenuationDistance:5.5,dispersion:.009,iridescence:0,thicknessScale:1.04,inclusions:true,inclusionDensity:.04,inclusionType:"needle"},
+  topacio_azul:{id:"topacio_azul",familia:"Topacio",variante:"Azul",color:0x65b9e8,transmission:.94,ior:1.63,roughness:.020,envMapIntensity:1.62,attenuationColor:0x4d9acb,attenuationDistance:10,dispersion:.014,iridescence:.003,thicknessScale:1.03,inclusions:false,inclusionDensity:0,inclusionType:"none"},
+  topacio_imperial:{id:"topacio_imperial",familia:"Topacio",variante:"Imperial",color:0xd79b4b,transmission:.91,ior:1.63,roughness:.025,envMapIntensity:1.58,attenuationColor:0xa96722,attenuationDistance:7,dispersion:.014,iridescence:.002,thicknessScale:1.03,inclusions:true,inclusionDensity:.035,inclusionType:"fluid"},
   moissanita:{id:"moissanita",familia:"Moissanita",variante:"Natural",color:0xffffff,transmission:1,ior:2.65,roughness:.012,envMapIntensity:1.85,attenuationColor:0xffffff,attenuationDistance:80,dispersion:.104,iridescence:.05,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"}
 };
 
@@ -161,7 +174,7 @@ export const createAurumInclusionConfig=(preset:AurumGemPreset,seed=1):AurumIncl
   density:Math.max(0,Math.min(1,preset.inclusionDensity)),
   scale:preset.familia==="Diamante" ? .035 : .06,
   opacity:.30,depth:.72,seed,
-  color:preset.familia==="Esmeralda"?0x173c2c:preset.familia==="Rubí"?0x3a0714:preset.familia==="Zafiro"?0xd9e4ff:0x6f6f6f
+  color:preset.familia==="Esmeralda"?0x173c2c:preset.familia==="Rubí"?0x3a0714:preset.familia==="Zafiro"?0xd9e4ff:preset.familia==="Amatista"?0x8b4b2f:preset.familia==="Citrino"?0x9a6b24:preset.familia==="Topacio"?0xb8dff2:0x6f6f6f
 });
 
 export const generateAurumInclusionPoints=(config:AurumInclusionConfig,count=48)=>{
@@ -199,7 +212,13 @@ export const AURUM_OPTICAL_PROFILES:Record<string,AurumOpticalProfile>={
   Moissanita:{ior:2.65,transmission:1,dispersion:.104,absorptionDistance:80,internalReflection:.99,facetContrast:1,brilliance:.98,fire:1.18},
   Esmeralda:{ior:1.577,transmission:.92,dispersion:.012,absorptionDistance:15,internalReflection:.82,facetContrast:.88,brilliance:.78,fire:.45},
   Rubí:{ior:1.762,transmission:.90,dispersion:.014,absorptionDistance:13,internalReflection:.86,facetContrast:.92,brilliance:.84,fire:.52},
-  Zafiro:{ior:1.77,transmission:.91,dispersion:.012,absorptionDistance:15,internalReflection:.87,facetContrast:.92,brilliance:.82,fire:.48}
+  Zafiro:{ior:1.77,transmission:.91,dispersion:.012,absorptionDistance:15,internalReflection:.87,facetContrast:.92,brilliance:.82,fire:.48},
+  // Quartz-family profiles: lower RI and dispersion than corundum, with
+  // controlled absorption so purple/yellow stones retain body color without
+  // becoming opaque under a bright studio HDRI.
+  Amatista:{ior:1.55,transmission:.90,dispersion:.009,absorptionDistance:8,internalReflection:.72,facetContrast:.78,brilliance:.66,fire:.18},
+  Citrino:{ior:1.544,transmission:.90,dispersion:.009,absorptionDistance:8,internalReflection:.72,facetContrast:.80,brilliance:.68,fire:.18},
+  Topacio:{ior:1.63,transmission:.93,dispersion:.014,absorptionDistance:10,internalReflection:.78,facetContrast:.84,brilliance:.74,fire:.24}
 };
 
 export const getAurumOpticalProfile=(familia:string):AurumOpticalProfile=>
