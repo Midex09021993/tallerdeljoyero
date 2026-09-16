@@ -40,6 +40,9 @@ export async function createAurumPostPipeline(
       const { TAARenderPass }=await import("three/examples/jsm/postprocessing/TAARenderPass.js");
       taaPass=new TAARenderPass(scene,camera);
       taaPass.accumulate=false;
+      // A jewelry viewport benefits more from stable temporal accumulation than
+      // from a large sample burst. Keep Ultra at 4 samples; the camera is reset
+      // while moving and accumulation resumes only when the product is stable.
       taaPass.sampleLevel=2;
       taaPass.unbiased=true;
       composer.addPass(taaPass);
@@ -135,12 +138,19 @@ export async function createAurumPostPipeline(
       // reset it through updateTemporal() whenever the camera moves.
       taaPass.enabled=ultra && config.taa!==false;
       taaPass.accumulate=ultra && config.taa!==false;
-      taaPass.sampleLevel=ultra?3:2;
+      taaPass.sampleLevel=2;
     }
     if(ssaoPass){
       ssaoPass.enabled=Boolean(config.ssao) && (high || ultra);
-      ssaoPass.kernelSize=ultra?32:high?24:12;
-      ssaoPass.aoClamp=Math.max(0,Math.min(1,(config.ssaoIntensity??.12)*(ultra?1:.82)));
+      // SSAO is a secondary contact cue. Render it below the final drawing
+      // resolution so Ultra spends its extra budget on the jewelry itself.
+      ssaoPass.kernelSize=ultra?24:high?20:12;
+      const ssaoScale=ultra?.72:high?.82:.70;
+      ssaoPass.setSize?.(
+        Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
+        Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
+      );
+      ssaoPass.aoClamp=Math.max(0,Math.min(1,(config.ssaoIntensity??.12)*(ultra?.92:.82)));
     }
     if(bloomPass){
       bloomPass.enabled=Boolean(config.bloom) && (high || ultra);
@@ -152,6 +162,8 @@ export async function createAurumPostPipeline(
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
+      // DOF is a capture/photography effect, not an interactive quality tax.
+      // The photographic profiles decide when it is explicitly requested.
       dofPass.enabled=ultra && config.dof===true;
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
@@ -163,8 +175,16 @@ export async function createAurumPostPipeline(
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
       vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
-    composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(q.pixelRatio??1.5))));
+    const finalPixelRatio=Math.max(1,Math.min(1.75,Number(q.pixelRatio??1.5)));
+    composer.setPixelRatio?.(finalPixelRatio);
     composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
+    if(ssaoPass){
+      const ssaoScale=ultra?.72:high?.82:.70;
+      ssaoPass.setSize?.(
+        Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
+        Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
+      );
+    }
   };
 
   let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
