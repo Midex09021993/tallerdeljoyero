@@ -21,6 +21,7 @@ import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
+import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -472,23 +473,15 @@ export function AurumRender() {
           objeto, glb, ext, colorRhinoHex, clasificarCapa
         );
         quitar();
-        interno.traverse((x:any)=>{
-          if (!x.isMesh) return;
-          x.castShadow=true; x.receiveShadow=true;
-          const meta=x.userData?.aurumRhino;
-          if (meta?.categoria==="gema") {
-            const g=GEMAS[0]!;
-            const m=new THREE.MeshPhysicalMaterial();
-            const gemaBox = new THREE.Box3().setFromObject(x); const gemaSize = gemaBox.getSize(new THREE.Vector3());
-            applyAurumGem(m, gemPresetFromConfig(g), Math.min(gemaSize.x,gemaSize.y,gemaSize.z)*.85);
-            x.material=m; crearInclusiones(x,g); aplicarEntornoGema();
-          } else if (meta?.categoria==="metal") {
-            const m=MATERIALES[0]!;
-            const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
-            configurarMaterial(mat,m); x.material=mat;
-          } else {
-            x.material=material;
-          }
+        applyAurumInitialModelMaterials(interno,{
+          gems:GEMAS,
+          metals:MATERIALES,
+          fallbackMaterial:material,
+          applyGem:applyAurumGem,
+          gemPresetFromConfig,
+          configureMetal:configurarMaterial,
+          createInclusions:crearInclusiones,
+          applyGemEnvironment:aplicarEntornoGema,
         });
         modelo=interno;
         setParteSeleccionada(null);
