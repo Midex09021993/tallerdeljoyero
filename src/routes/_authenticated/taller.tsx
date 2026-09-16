@@ -153,7 +153,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
         </span>
       }
     >
-      <div className={`space-y-4 p-4 sm:space-y-5 sm:p-6 lg:p-8 ${compacto ? "" : "max-w-5xl"}`}>
+      <div className={`space-y-4 p-4 sm:space-y-5 sm:p-6 lg:p-8 ${compacto ? "" : "max-w-5xl mx-auto"}`}>
         <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
           <div className="mb-4 flex items-center gap-2.5">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
@@ -246,7 +246,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
         </section>
 
         {esDueno ? (
-          <section className="rounded-3xl border border-gold/20 bg-gold/5 p-4 sm:p-5">
+          <section className="rounded-3xl border border-gold/20 bg-gold/5 p-4 sm:p-5 shadow-[0_6px_24px_rgba(180,140,50,0.06)]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Vista técnica · Dueño</p>
