@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { applyAurumOpticalProfile, applyAurumDiamondOptics, getAurumOpticalProfile } from "../aurum-material-engine";
 
 export function applyAurumInitialModelMaterials(
   model:any,
@@ -27,7 +28,12 @@ export function applyAurumInitialModelMaterials(
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
       const size=box.getSize(new THREE.Vector3());
-      options.applyGem(m,options.gemPresetFromConfig(gem),Math.min(size.x,size.y,size.z)*.85);
+      const preset=options.gemPresetFromConfig(gem);
+      options.applyGem(m,preset,Math.min(size.x,size.y,size.z)*.85);
+      if (preset?.familia) {
+        applyAurumOpticalProfile(m,getAurumOpticalProfile(preset.familia));
+        if (preset.familia==="Diamante") applyAurumDiamondOptics(m);
+      }
       x.material=m;
       options.createInclusions(x,gem);
       options.applyGemEnvironment();
