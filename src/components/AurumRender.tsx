@@ -467,7 +467,9 @@ export function AurumRender() {
         const presetProducto = sceneController.apply("producto");
         lightingController.applyPreset(presetProducto.lighting);
         calibrarReflejosMetalEscena(getAurumPhotographicProfile("producto"));
-        encuadrar();
+        // Frame only after the model is attached to the scene. Calling frameAurumProduct
+        // before scene.add() and again afterward normalizes the same transform twice,
+        // which can move the product outside the camera frustum and make the preview appear blank.
         setVista("perspectiva");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
         // Si todavía está en red, su callback lo aplicará al terminar.
