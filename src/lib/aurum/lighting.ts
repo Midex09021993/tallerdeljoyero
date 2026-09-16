@@ -18,7 +18,7 @@ export function createAurumLightingController(
   shadowConfig: any,
   renderQuality: any
 ): AurumLightingController {
-  const lights: any = {};
+  const lights: any = {};\n  let activeRigId = "jewelry";
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
