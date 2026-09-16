@@ -23,6 +23,8 @@ export type AurumReflectionRigProfile = {
   strip:AurumReflectionSourceProfile;
   front:AurumReflectionSourceProfile;
   kicker:AurumReflectionSourceProfile;
+  edgeLeft:AurumReflectionSourceProfile;
+  edgeRight:AurumReflectionSourceProfile;
 };
 
 const source=(width:number,height:number,intensity:number,position:[number,number,number]):AurumReflectionSourceProfile=>({
@@ -47,12 +49,16 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
     strip:source(2.8,11.0,1.02,[-3.8,3.6,3.0]),
     front:source(6.5,4.4,.46,[0,3.1,5.8]),
     kicker:source(2.4,8.6,.78,[4.4,4.0,-3.0]),
+    edgeLeft:source(1.0,6.4,.34,[-4.7,3.8,1.1]),
+    edgeRight:source(1.0,6.4,.32,[4.7,3.8,1.1]),
   },
   luxury:{
     softbox:source(6.0,3.6,1.08,[3.8,5.8,4.8]),
     strip:source(1.5,6.5,.34,[-3.8,3.5,3.0]),
     front:source(4.0,2.6,.18,[0,3.0,5.6]),
     kicker:source(1.4,8.8,1.38,[4.2,4.0,-2.8]),
+    edgeLeft:source(.85,6.2,.20,[-4.6,3.8,1.0]),
+    edgeRight:source(.85,6.2,.26,[4.6,3.8,1.0]),
   },
 };
 
