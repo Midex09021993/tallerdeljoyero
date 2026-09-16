@@ -23,14 +23,18 @@ export function createAurumSceneController(
       // Mantenemos el mismo resultado visual y evitamos duplicar estado en Scene.
       environmentController?.setIntensity?.(photo.environmentIntensity);
       environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
+      // Keep the photographic background outside the AgX/composer response.
+      // iJewel separates background tonemapping from the metal/gem response;
+      // this preserves a true white product sweep while the jewelry keeps its
+      // HDR reflections, LUT and tone mapping.
+      scene.background = null;
       if (opts?.transparent || id === "transparente") {
-        scene.background = null;
-        renderer.setClearColor(0, 0);
+        if (backgroundElement?.style) backgroundElement.style.backgroundColor = "transparent";
+        renderer.setClearColor(0x000000, 0);
       } else {
-        renderer.setClearColor(preset.background, 1);
-        const previous = scene.background;
-        if (previous?.isTexture) previous.dispose?.();
-        scene.background = null;
+        const hex = Number(preset.background).toString(16).padStart(6, "0");
+        if (backgroundElement?.style) backgroundElement.style.backgroundColor = "#" + hex;
+        renderer.setClearColor(0x000000, 0);
       }
 
       groundController.updateFromPreset(preset);
