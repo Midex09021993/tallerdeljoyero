@@ -62,12 +62,20 @@ export function createAurumLightingController(
         lights.fill = mkArea(4.2, 2.8);
         lights.rim = mkArea(3.6, 2.2);
         lights.gem = new THREE.PointLight(0xffffff, 0, 30, 2);
-        scene.add(lights.key, lights.fill, lights.rim, lights.gem);
+        // A tiny dedicated shadow source keeps the product grounded while
+        // RectAreaLight provides the photographic soft illumination.
+        lights.contactShadow = new THREE.SpotLight(0xffffff, .035, 30, Math.PI * .32, .98, .7);
+        lights.contactShadow.castShadow = true;
+        scene.add(lights.key, lights.fill, lights.rim, lights.gem, lights.contactShadow);
       }
       apply(lights.key, config.key); configureShadow(lights.key);
       apply(lights.fill, config.fill);
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
+      lights.contactShadow.position.set(0, 5, 3);
+      lights.contactShadow.target.position.set(0, 0, 0);
+      if (!lights.contactShadow.target.parent) scene.add(lights.contactShadow.target);
+      configureShadow(lights.contactShadow);
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
@@ -118,6 +126,11 @@ export function createAurumLightingController(
             }
             light.lookAt(0, targetY + safeRadius * .10, 0);
           }
+        }
+        if (light === lights.contactShadow) {
+          light.position.set(safeRadius * .55, targetY + safeRadius * 2.4, safeRadius * 1.8);
+          light.target.position.set(0, targetY, 0);
+          light.target.updateMatrixWorld();
         }
         if (light.isRectAreaLight) continue;
         if (light.castShadow && light.shadow?.camera) {
