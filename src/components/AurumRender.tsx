@@ -414,28 +414,6 @@ export function AurumRender() {
         applyAurumMaterialToModel(modelo, parteActiva, m, material);
       };
 
-      const crearFondoEstudio = (colorHex:number) => {
-        const canvas = document.createElement("canvas");
-        canvas.width = 1024; canvas.height = 1024;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return null;
-        const color = new THREE.Color(colorHex);
-        const hsl = { h: 0, s: 0, l: 0 };
-        color.getHSL(hsl);
-        const center = color.clone();
-        center.offsetHSL(0, 0, hsl.l > 0.55 ? 0.04 : 0.10);
-        const edge = color.clone();
-        edge.offsetHSL(0, 0, hsl.l > 0.55 ? -0.12 : -0.06);
-        const grad = ctx.createRadialGradient(512, 330, 80, 512, 512, 760);
-        grad.addColorStop(0, "#"+center.getHexString());
-        grad.addColorStop(.58, "#"+color.getHexString());
-        grad.addColorStop(1, "#"+edge.getHexString());
-        ctx.fillStyle = grad; ctx.fillRect(0,0,1024,1024);
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.needsUpdate = true;
-        return texture;
-      };
       const aplicarEscenario = (id:EscenarioId) => {
         sceneController.apply(id);
       };
