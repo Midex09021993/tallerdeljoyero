@@ -6,6 +6,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT, getAurumLightingPreset } from "../lib/aurum-lighting-engine";
+import { applyAurumCameraView } from "../lib/aurum/camera";
 import { Camera, ChevronDown, Download, Expand, Gem, Grid3X3, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, Box } from "lucide-react";
 
 type MaterialId =
@@ -884,35 +885,7 @@ export function AurumRender() {
         encuadrar();
       };
       const camaraVista=(id:VistaId)=>{
-        // Las vistas usan el tamaño del modelo ya normalizado, no posiciones
-        // absolutas. Así una vista funciona igual para cualquier joya.
-        const target = modelo
-          ? new THREE.Box3().setFromObject(modelo).getCenter(new THREE.Vector3())
-          : new THREE.Vector3(0,0,0);
-        const size = modelo
-          ? new THREE.Box3().setFromObject(modelo).getSize(new THREE.Vector3())
-          : new THREE.Vector3(2.6,2.6,2.6);
-        const radio = Math.max(size.length() * 0.5, 1.3);
-        const d = Math.max(radio * 1.75, 3.6);
-
-        controles.target.copy(target);
-        if (id === "frontal") {
-          camara.up.set(0,1,0);
-          camara.position.set(target.x, target.y, target.z + d);
-        } else if (id === "superior") {
-          // Evita el giro/roll que produce lookAt cuando up y la dirección coinciden.
-          camara.up.set(0,0,-1);
-          camara.position.set(target.x, target.y + d, target.z);
-        } else if (id === "lateral") {
-          camara.up.set(0,1,0);
-          camara.position.set(target.x + d, target.y, target.z);
-        } else {
-          camara.up.set(0,1,0);
-          camara.position.set(target.x + d * 0.72, target.y + d * 0.40, target.z + d);
-        }
-        camara.lookAt(target);
-        camara.updateProjectionMatrix();
-        controles.update();
+        applyAurumCameraView(camara, controles, modelo, id);
       };
       apiRef.current={
         cargar,
