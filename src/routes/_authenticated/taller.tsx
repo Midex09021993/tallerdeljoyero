@@ -215,9 +215,6 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
                 <p className="mt-0.5 text-[11px] text-muted-foreground">Selecciona el que vas a utilizar.</p>
               </div>
             </div>
-            <span className="shrink-0 rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold">
-              {tipoTarro === "liso" ? "−5%" : "+20%"}
-            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -240,7 +237,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
                     {seleccionado ? <Check className="size-4 shrink-0 text-gold" aria-hidden="true" /> : null}
                   </span>
                   <span className="mt-1 block text-[10px] opacity-70">
-                    {tipo === "liso" ? "Tolerancia −5%" : "Tolerancia +20%"}
+                    {tipo === "liso" ? "Cilindro estándar" : "Cilindro perforado"}
                   </span>
                 </button>
               );
