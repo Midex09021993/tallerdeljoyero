@@ -10,8 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
@@ -58,11 +58,12 @@ const ClienteRoute = ClienteRouteImport.update({
   path: '/cliente',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAurumRenderRoute = AuthenticatedAurumRenderRouteImport.update({
-  id: '/aurum-render',
-  path: '/aurum-render',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedAurumRenderRoute =
+  AuthenticatedAurumRenderRouteImport.update({
+    id: '/aurum-render',
+    path: '/aurum-render',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
   id: '/casting',
   path: '/casting',
@@ -187,9 +188,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
+  '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -211,8 +212,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/aurum-render-public': typeof AurumRenderPublicRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
@@ -265,9 +266,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/aurum-render-public'
-    | '/aurum-render'
     | '/auth'
     | '/cliente'
+    | '/aurum-render'
     | '/casting'
     | '/corte-laser'
     | '/diseno-3d'
@@ -288,8 +289,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/aurum-render-public'
     | '/_authenticated'
+    | '/aurum-render-public'
     | '/auth'
     | '/cliente'
     | '/_authenticated/aurum-render'
@@ -315,8 +316,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AurumRenderPublicRoute: typeof AurumRenderPublicRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AurumRenderPublicRoute: typeof AurumRenderPublicRoute
   AuthRoute: typeof AuthRoute
   ClienteRoute: typeof ClienteRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -331,18 +332,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/aurum-render-public': {
-      id: '/aurum-render-public'
-      path: '/aurum-render-public'
-      fullPath: '/aurum-render-public'
-      preLoaderRoute: typeof AurumRenderPublicRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aurum-render-public': {
+      id: '/aurum-render-public'
+      path: '/aurum-render-public'
+      fullPath: '/aurum-render-public'
+      preLoaderRoute: typeof AurumRenderPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -551,8 +552,8 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AurumRenderPublicRoute: AurumRenderPublicRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AurumRenderPublicRoute: AurumRenderPublicRoute,
   AuthRoute: AuthRoute,
   ClienteRoute: ClienteRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
