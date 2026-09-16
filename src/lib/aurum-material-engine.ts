@@ -24,7 +24,7 @@ export type AurumInclusionConfig = {
   depth:number; seed:number; color:number;
 };
 
-export const AURUM_MATERIAL_ENGINE_VERSION="1.2.0";
+export const AURUM_MATERIAL_ENGINE_VERSION="1.3.0";
 
 /**
  * Reflected-light response for jewelry metals.
@@ -86,7 +86,12 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
-  material.specularIntensity=preset.metalness>.9?1:.8;
+  // Precious metals need strong reflections, but yellow/rose alloys should not
+  // turn broad studio sources into clipped white patches. Keep the reflection
+  // visible and attenuate only the specular peak by the metal family response.
+  material.specularIntensity=preset.metalness>.9
+    ? Math.max(.78,Math.min(1,response.highlightScale+.25))
+    : .8;
   material.specularColor?.setHex(0xffffff);
   material.emissive?.setHex(0x000000);
   material.emissiveIntensity=0;
