@@ -396,11 +396,9 @@ export function AurumRender() {
         (id, rotation) => cargarHDRI(id as EscenarioId, rotation)
       );
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
-      sceneController.apply("producto");
-      // Presentación inicial tipo fotografía de producto:
-      // environment suave + luces de estudio conservadoras para evitar clipping
-      // en oro pulido y preservar información en diamantes/gemas.
-      lightingController.applyPreset("studioSoft");
+      const presetInicial = sceneController.apply("producto");
+      // La escena es la fuente de verdad también para la estrategia de iluminación.
+      lightingController.applyPreset(presetInicial.lighting);
 
       let glbInterno:Blob|null = null;
       let parteActiva:any = null;
@@ -437,7 +435,10 @@ export function AurumRender() {
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
-        sceneController.apply(id);
+        const preset = sceneController.apply(id);
+        // Cada escena define su propia estrategia fotográfica. Así el cambio
+        // de fondo no deja la misma iluminación aplicada a todas las joyas.
+        lightingController.applyPreset(preset.lighting);
       };
        const encuadrar = () => {
         if (!modelo) return;
@@ -491,8 +492,8 @@ export function AurumRender() {
         // Presentación inicial determinista: producto + studioSoft + framing.
         // iJewel separates scene, camera and material configuration; Aurum does
         // the same at load time so the user sees a finished product preview.
-        sceneController.apply("producto");
-        lightingController.applyPreset("studioSoft");
+        const presetProducto = sceneController.apply("producto");
+        lightingController.applyPreset(presetProducto.lighting);
         encuadrar();
         setVista("perspectiva");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
