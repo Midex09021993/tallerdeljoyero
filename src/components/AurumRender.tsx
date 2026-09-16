@@ -17,6 +17,7 @@ import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, resizeAurumViewer, disposeAurumViewer } from "../lib/aurum/viewer";
 import { createAurumConfiguration, createAurumVariations, createAurumConfiguratorLayers } from "../lib/aurum/configurator";
+import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 type MaterialId =
@@ -472,45 +473,6 @@ export function AurumRender() {
       // Adaptadores de entrada: cada formato produce un Object3D común.
       // Rhino 3DM se decodifica con Rhino3dmLoader/WebAssembly y después
       // sigue exactamente el mismo flujo: Object3D -> GLB interno -> WebGL.
-      const parsearEntrada = async (file:File, ext:string) => {
-        const buffer = await file.arrayBuffer();
-        if (ext==="stl") {
-          const {STLLoader}=await import("three/examples/jsm/loaders/STLLoader.js");
-          const geo=new STLLoader().parse(buffer); geo.computeVertexNormals();
-          return new THREE.Mesh(geo, material);
-        }
-        if (ext==="obj") {
-          const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
-          return new OBJLoader().parse(new TextDecoder().decode(buffer));
-        }
-        if (ext==="fbx") {
-          const {FBXLoader}=await import("three/examples/jsm/loaders/FBXLoader.js");
-          return new FBXLoader().parse(buffer,"");
-        }
-        if (ext==="glb") {
-          const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
-          return (await new GLTFLoader().parseAsync(buffer,"")).scene;
-        }
-        if (ext==="3dm") {
-          const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
-          const loader = new Rhino3dmLoader();
-          loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
-          loader.setWorkerLimit(2);
-          return await new Promise<any>((resolve, reject) => {
-            loader.parse(buffer, resolve, reject);
-          });
-        }
-        throw new Error("Formato no compatible.");
-      };
-
-      const convertirAGlb = (objeto:any) => new Promise<ArrayBuffer>((resolve,reject) => {
-        const exportador = new GLTFExporter();
-        exportador.parse(objeto,(resultado:any) => {
-          if (resultado instanceof ArrayBuffer) resolve(resultado);
-          else reject(new Error("No se pudo generar el GLB interno."));
-        },(e:any)=>reject(e),{binary:true,onlyVisible:true,trs:false});
-      });
-
       const obtenerPartes = (objeto:any):ParteModelo[] => {
         const resultado:ParteModelo[] = [];
         const layers = Array.isArray(objeto?.userData?.layers) ? objeto.userData.layers : [];
@@ -539,7 +501,7 @@ export function AurumRender() {
           throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
         }
         informar("Procesando archivo...");
-        const objeto = await parsearEntrada(file,ext);
+        const objeto = await parseAurumInput(file,ext,material);
         // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
         // la orientación "de pie" con la que el modelo fue diseñado en Rhino.
         if (ext==="3dm") {
@@ -553,7 +515,7 @@ export function AurumRender() {
           ? obtenerPartes(objeto).filter(p=>p.tipo==="malla").map(p=>({nombre:p.nombre,capa:p.capa,colorCapa:p.colorCapa,categoria:p.categoria}))
           : [];
         informar("Convirtiendo a GLB...");
-        const glb = await convertirAGlb(objeto);
+        const glb = await convertAurumToGlb(objeto);
         informar("Preparando visualización...");
         const {GLTFLoader}=await import("three/examples/jsm/loaders/GLTFLoader.js");
         const interno=(await new GLTFLoader().parseAsync(glb,"")).scene;
