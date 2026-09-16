@@ -391,7 +391,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
   const pesoFinal = pesoConEmpuje;
 
   const inputCls =
-    "h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20";
+    "h-12 w-full rounded-2xl border border-input bg-background px-3 text-sm outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10";
 
   return (
     <div className={`space-y-5 ${compacto ? "p-1" : "p-5 sm:p-6 lg:p-8"}`}>
@@ -416,7 +416,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       </div>
 
       {/* Visor */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-viewer shadow-card">
+      <div className="relative overflow-hidden rounded-3xl border border-border bg-viewer shadow-card">
         <div
           ref={contenedor}
           className={compacto ? "h-64 w-full" : "h-[360px] w-full sm:h-[460px]"}
@@ -498,14 +498,14 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       </div>
 
       {/* Metales */}
-      <fieldset className="space-y-2">
+      <fieldset className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5 space-y-3">
         <legend className="flex w-full items-center justify-between gap-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           <span>Material</span>
           <span className="normal-case tracking-normal text-[11px] text-muted-foreground">
             {metal.nombre} · {num(densidad, 2)} g/cm³
           </span>
         </legend>
-        <div className={`grid gap-2 ${compacto ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+        <div className={`grid gap-2.5 ${compacto ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
           {METALES.map((m) => {
             const activo = m.id === metalId;
             return (
@@ -514,7 +514,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
                 type="button"
                 onClick={() => setMetalId(m.id)}
                 aria-pressed={activo}
-                className={`flex h-11 items-center gap-2 rounded-xl border px-3 text-left text-xs font-medium transition ${
+                className={`flex h-12 items-center gap-2 rounded-2xl border px-3 text-left text-xs font-medium transition ${
                   activo
                     ? "border-gold bg-accent text-foreground shadow-card"
                     : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
@@ -535,7 +535,7 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       </fieldset>
 
       {/* Árbol de colada */}
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <section className="rounded-3xl border border-border bg-card/60 p-4 shadow-card sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">Árbol de colada / empuje</h3>
