@@ -19,7 +19,15 @@ export function createAurumLightingController(
   const lights: any = {};
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
-    const mapSize = Math.max(512, Math.min(shadowConfig.mapSize, renderQuality.shadowMapSize));
+    const requestedSize = Number(renderQuality?.shadowMapSize);
+    const configuredSize = Number(shadowConfig?.mapSize);
+    const mapSize = Math.max(
+      512,
+      Math.min(
+        Number.isFinite(configuredSize) ? configuredSize : 2048,
+        Number.isFinite(requestedSize) ? requestedSize : 2048
+      )
+    );
     light.shadow.mapSize.set(mapSize, mapSize);
     light.shadow.bias = shadowConfig.bias;
     light.shadow.normalBias = shadowConfig.normalBias;
