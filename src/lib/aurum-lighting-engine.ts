@@ -22,11 +22,29 @@ export const AURUM_LIGHTING_PRESETS={
  oro:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.0}},
  suave:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.15},fill:{...AURUM_LIGHTING_DEFAULT.fill,intensity:.7}}
 };
+/**
+ * Photographic rig profiles.
+ * The RectAreaLights are part of the reflection design: polished jewelry reads
+ * the shape of the source, not only its intensity. Keeping their ratios here
+ * makes every scene a distinct lighting setup instead of a background swap.
+ */
 export const AURUM_LIGHTING_RENDER_PRESETS={
-  studioSoft:{key:.78,fill:.24,rim:.32,gem:.56},
-  studioHard:{key:.42,fill:.09,rim:.22,gem:.08},
-  jewelry:{key:.9,fill:.32,rim:.5,gem:.3},
-  luxury:{key:.36,fill:.08,rim:.24,gem:.08},
+  studioSoft:{
+    key:.64,fill:.18,rim:.24,gem:.42,
+    softbox:1.05,strip:.58,front:.62,kicker:.68
+  },
+  studioHard:{
+    key:.52,fill:.07,rim:.34,gem:.12,
+    softbox:.62,strip:.38,front:.18,kicker:.95
+  },
+  jewelry:{
+    key:.72,fill:.20,rim:.30,gem:.46,
+    softbox:1.18,strip:.72,front:.52,kicker:.78
+  },
+  luxury:{
+    key:.44,fill:.06,rim:.38,gem:.10,
+    softbox:.52,strip:.28,front:.12,kicker:1.12
+  },
 } as const;
 
 export type AurumLightingRenderPresetId=keyof typeof AURUM_LIGHTING_RENDER_PRESETS;
