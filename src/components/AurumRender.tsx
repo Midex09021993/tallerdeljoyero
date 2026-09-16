@@ -291,10 +291,10 @@ export function AurumRender() {
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
       // especulares naturales. RoomEnvironment permanece como fallback offline.
       const hdrUrls: Record<IluminacionId,string> = {
-        studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
-        studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-        luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
+        studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_04_1k.hdr",
+        studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_05_1k.hdr",
+        jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
+        luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/art_studio_1k.hdr",
       };
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
       let entornoGema:any = null;
