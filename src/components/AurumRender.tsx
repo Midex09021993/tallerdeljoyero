@@ -756,7 +756,16 @@ export function AurumRender() {
 
       animate();
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
-    return()=>{vivo=false;if(frameRef.current!==null) cancelAnimationFrame(frameRef.current);composerRef.current?.dispose?.();composerRef.current=null;cleanup()};
+    return()=>{
+    vivo=false;
+    if(frameRef.current!==null){
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current=null;
+    }
+    apiRef.current=null;
+    composerRef.current=null;
+    cleanup();
+  };
   },[]);
   useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
   useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
