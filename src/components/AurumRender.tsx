@@ -290,11 +290,20 @@ export function AurumRender() {
       // Biblioteca HDRI profesional. Cada preset usa un entorno distinto para que
       // los metales tengan reflejos largos y limpios y las gemas reciban luces
       // especulares naturales. RoomEnvironment permanece como fallback offline.
-      const hdrUrls: Record<IluminacionId,string> = {
+      const hdrUrls: Record<string,string> = {
         studioSoft: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
         studioHard: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
         jewelry: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
         luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
+        producto: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
+        claro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",
+        gemaClara: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",
+        marmol: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/monochrome_studio_02_1k.hdr",
+        oscuro: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
+        galeria: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
+        luxury: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
+        oroCalido: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_02_1k.hdr",
+        transparente: "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_05_1k.hdr",
       };
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
       let entornoGema:any = null;
@@ -474,6 +483,13 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:.88,metalClearcoatScale:.12},
         });
         modelo=interno;
+        // Presentación inicial determinista: producto + studioSoft + framing.
+        // iJewel separates scene, camera and material configuration; Aurum does
+        // the same at load time so the user sees a finished product preview.
+        sceneController.apply("producto");
+        lightingController.applyPreset("studioSoft");
+        encuadrar();
+        setVista("perspectiva");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
         // Si todavía está en red, su callback lo aplicará al terminar.
         if (entornoGema) aplicarEntornoGema();
