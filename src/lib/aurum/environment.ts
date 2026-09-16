@@ -9,6 +9,10 @@ export interface AurumEnvironmentController {
     onLoaded: (texture: any) => void,
     onError?: () => void
   ) => void;
+  rotation: number;
+  intensity: number;
+  setRotation: (radians: number) => void;
+  setIntensity: (value: number) => void;
   dispose: (extraTexture?: any) => void;
 }
 
@@ -28,6 +32,8 @@ export function createAurumEnvironment(
   scene.environment = fallback;
 
   let current = fallback;
+  let rotation = 0;
+  let intensity = 1;
 
   return {
     fallback,
@@ -36,6 +42,22 @@ export function createAurumEnvironment(
     },
     fromEquirectangular(hdrTexture: any) {
       return pmrem.fromEquirectangular(hdrTexture).texture;
+    },
+    get rotation() { return rotation; },
+    get intensity() { return intensity; },
+    setRotation(radians: number) {
+      rotation = Number.isFinite(radians) ? radians : 0;
+      // PMREM textures are world-oriented; rotate the environment through
+      // scene.environmentRotation when the renderer supports it.
+      if (scene.environmentRotation?.set) {
+        scene.environmentRotation.set(0, rotation, 0);
+      }
+    },
+    setIntensity(value: number) {
+      intensity = Math.max(0, Number.isFinite(value) ? value : 1);
+      if ("environmentIntensity" in scene) {
+        scene.environmentIntensity = intensity;
+      }
     },
     load(url, requestId, isCurrent, onLoaded, onError) {
       new RGBELoader().load(url, (hdrTexture: any) => {
