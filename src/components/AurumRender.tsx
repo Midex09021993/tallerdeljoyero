@@ -245,17 +245,18 @@ export function AurumRender() {
     let frame = 0;
     (async () => {
       const THREE = await import("three");
-      const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
-      const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
+            const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
-      const escena = new THREE.Scene();
-      const camara = new THREE.PerspectiveCamera(38, 1, .001, 1000);
-      const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true, powerPreference:"high-performance" });
+      const renderQuality = getAurumRenderQuality("balanced");
+      const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
+        pixelRatio: renderQuality.pixelRatio,
+        maxDistance: 100,
+        controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
+      });
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
-      const renderQuality = getAurumRenderQuality("balanced");
       const shadowConfig=getAurumShadowConfig();
       const postConfig=getAurumPostConfig();
       const ssaoConfig=getAurumSsaoConfig();
@@ -346,11 +347,6 @@ export function AurumRender() {
       };
 
       // El escenario inicial selecciona su propio Environment HDRI.
-
-      const controles = new OrbitControls(camara,renderer.domElement);
-      controles.enableDamping = true; controles.dampingFactor = .07; controles.enablePan = true; controles.enableRotate = true; controles.autoRotate = false; controles.autoRotateSpeed = 0.65;
-      controles.minDistance = .15; controles.maxDistance = 100;
-
 
       let modelo:any = null;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
