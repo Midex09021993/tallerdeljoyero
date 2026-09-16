@@ -20,6 +20,7 @@ export type ConfigVisualizador3D = {
     platino: number;
   };
   factorEmpuje: number;
+  modoEmpuje: "gramos" | "porcentaje";
   factorSeguridad: number;
 };
 
@@ -42,7 +43,8 @@ export type ConfigYeso = {
 
 export const DEFAULT_CONFIG_VISUALIZADOR: ConfigVisualizador3D = {
   densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.4, plata925: 10.39, plata950: 10.41, plata970: 10.44, platino: 21.45 },
-  factorEmpuje: 10,
+  factorEmpuje: 0,
+  modoEmpuje: "gramos",
   factorSeguridad: 1,
 };
 
@@ -109,6 +111,7 @@ export function leerConfigVisualizador(valor: unknown): ConfigVisualizador3D {
       platino: numero(densidades.platino, d.platino),
     },
     factorEmpuje: numero(root.factorEmpuje, DEFAULT_CONFIG_VISUALIZADOR.factorEmpuje),
+    modoEmpuje: root.modoEmpuje === "porcentaje" ? "porcentaje" : "gramos",
     factorSeguridad: numero(root.factorSeguridad, DEFAULT_CONFIG_VISUALIZADOR.factorSeguridad),
   };
 }
