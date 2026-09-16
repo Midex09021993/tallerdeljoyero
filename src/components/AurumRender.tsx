@@ -331,6 +331,11 @@ export function AurumRender() {
           }
         );
       };
+      // Precarga el GemEnvironment una sola vez. El modelo se engancha
+      // cuando termina de cargar; así las gemas no quedan negras por falta de
+      // environment en el primer frame.
+      cargarEntornoGema();
+
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId | EscenarioId, rotation = 0.16) => {
         const requestId = ++hdrRequestId;
@@ -467,6 +472,9 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:.72,metalClearcoatScale:.55},
         });
         modelo=interno;
+        // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
+        // Si todavía está en red, su callback lo aplicará al terminar.
+        if (entornoGema) aplicarEntornoGema();
         setParteSeleccionada(null);
         setParteSeleccionadaNombre(null); setParteSeleccionadaCapa(null); setParteSeleccionadaCategoria("otro");
         parteActiva=null;
