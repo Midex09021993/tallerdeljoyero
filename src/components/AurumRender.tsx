@@ -982,6 +982,22 @@ export function AurumRender() {
         controles.update();
         if (composer) composer.render(); else renderer.render(escena,camara);
       };
+
+      // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
+      // al entrar/salir de Aurum Render o cambiar de ruta.
+      cleanup = () => {
+        obs.disconnect();
+        renderer.domElement.removeEventListener("click", seleccionarPorClick);
+        controles.dispose();
+        limpiarResaltado();
+        if (hdriGroundTexture) { hdriGroundTexture.dispose?.(); hdriGroundTexture = null; }
+        if (entorno && entorno !== fallbackEnvironment) entorno.dispose?.();
+        fallbackEnvironment?.dispose?.();
+        pmrem.dispose();
+        renderer.dispose();
+        if (renderer.domElement.parentElement === nodo) nodo.removeChild(renderer.domElement);
+      };
+
       animate();
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{vivo=false;if(frameRef.current!==null) cancelAnimationFrame(frameRef.current);composerRef.current?.dispose?.();cleanup()};
