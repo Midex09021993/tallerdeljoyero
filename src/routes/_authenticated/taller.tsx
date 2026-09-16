@@ -52,6 +52,11 @@ function formatearEntero(valor: number) {
   }).format(Math.round(valor));
 }
 
+function validarMedida(valor: string) {
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero > 0;
+}
+
 function calcularMezcla(
   volumen: number,
   partesAgua: number,
@@ -148,7 +153,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
     return volumenBase * (1 + configuracion.tolerancias[tipoTarro] / 100);
   }, [tipoTarro, configuracion.tolerancias, volumenBase]);
 
-  const medidasCompletas = volumenBase > 0;
+  const medidasCompletas = validarMedida(diametro) && validarMedida(altura) && volumenBase > 0;
   const limpiar = () => {
     setDiametro("");
     setAltura("");
@@ -214,6 +219,11 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
               </div>
             </label>
           </div>
+          {(diametro !== "" && !validarMedida(diametro)) || (altura !== "" && !validarMedida(altura)) ? (
+            <p role="alert" className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-[11px] font-medium text-destructive">
+              Introduce valores mayores que 0 en diámetro y altura.
+            </p>
+          ) : null}
         </section>
 
         <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
@@ -273,7 +283,7 @@ export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
           </section>
         ) : null}
 
-        <section aria-live="polite" className="rounded-3xl border border-gold/20 bg-gradient-to-br from-card to-accent/30 p-4 sm:p-5">
+        <section aria-live="polite" className="rounded-3xl border border-gold/25 bg-gradient-to-br from-card via-card to-gold/5 p-4 sm:p-5 shadow-[0_10px_30px_rgba(180,140,50,0.08)] sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Mezcla recomendada</p>
