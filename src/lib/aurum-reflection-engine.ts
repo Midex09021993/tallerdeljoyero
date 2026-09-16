@@ -33,12 +33,15 @@ const source=(width:number,height:number,intensity:number,position:[number,numbe
 
 export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfile>={
   productSoft:{
-    softbox:source(15.5,10.5,1.62,[3.4,6.2,5.2]),
-    strip:source(3.0,12.5,.58,[-4.0,3.8,3.2]),
-    front:source(7.5,5.5,.24,[0,3.4,6.2]),
-    kicker:source(2.2,8.0,.42,[4.8,4.2,-3.2]),
-    edgeLeft:source(1.0,7.0,.20,[-5.0,3.9,1.3]),
-    edgeRight:source(1.0,7.0,.18,[5.0,3.9,1.3]),
+    // Product photography uses broad but directional reflections: one large
+    // key defines the main gradient, vertical strips describe the shank, and
+    // restrained edge sources keep polished metal from becoming a white blob.
+    softbox:source(11.5,8.0,1.34,[3.4,6.2,5.2]),
+    strip:source(3.0,12.5,.72,[-4.0,3.8,3.2]),
+    front:source(6.0,4.0,.16,[0,3.4,6.2]),
+    kicker:source(2.0,8.5,.50,[4.8,4.2,-3.2]),
+    edgeLeft:source(1.0,7.0,.30,[-5.0,3.9,1.3]),
+    edgeRight:source(1.0,7.0,.28,[5.0,3.9,1.3]),
   },
   studioSoft:{
     softbox:source(12.5,8.5,1.55,[3.8,5.8,4.8]),
