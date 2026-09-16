@@ -256,13 +256,13 @@ export function AurumRender() {
       const shadowConfig=getAurumShadowConfig();
       const postConfig=getAurumPostConfig();
       const ssaoConfig=getAurumSsaoConfig();
-       // Perfil base de fotografía de joyería: el material y el HDRI deben verse limpios antes de añadir efectos de postprocesado.
-       const jewelryBasicRender = true;
+       // Exposición inicial; los presets de escena son la fuente de verdad
+       // una vez creado el SceneController.
       renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.AgXToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
-      renderer.toneMappingExposure = jewelryBasicRender ? 0.82 : 0.64;
+      renderer.toneMappingExposure = 0.82;
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
