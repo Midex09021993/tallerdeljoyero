@@ -84,6 +84,8 @@ export function createAurumLightingController(
           lights.strip = createSource(rig.strip);
           lights.front = createSource(rig.front);
           lights.kicker = createSource(rig.kicker);
+          lights.edgeLeft = createSource(rig.edgeLeft);
+          lights.edgeRight = createSource(rig.edgeRight);
         }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
@@ -94,6 +96,8 @@ export function createAurumLightingController(
       if (lights.strip) lights.strip.visible = true;
       if (lights.front) lights.front.visible = true;
       if (lights.kicker) lights.kicker.visible = true;
+      if (lights.edgeLeft) lights.edgeLeft.visible = true;
+      if (lights.edgeRight) lights.edgeRight.visible = true;
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
@@ -117,6 +121,8 @@ export function createAurumLightingController(
         strip: {light: lights.strip, profile: rig.strip, multiplier: preset.strip},
         front: {light: lights.front, profile: rig.front, multiplier: preset.front},
         kicker: {light: lights.kicker, profile: rig.kicker, multiplier: preset.kicker},
+        edgeLeft: {light: lights.edgeLeft, profile: rig.edgeLeft, multiplier: preset.edgeLeft},
+        edgeRight: {light: lights.edgeRight, profile: rig.edgeRight, multiplier: preset.edgeRight},
       };
       Object.values(sourceSettings).forEach((entry:any) => {
         const light = entry.light;
@@ -149,9 +155,9 @@ export function createAurumLightingController(
       };
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
-        if (name === "softbox" || name === "strip" || name === "front" || name === "kicker") {
+        if (name === "softbox" || name === "strip" || name === "front" || name === "kicker" || name === "edgeLeft" || name === "edgeRight") {
           const rig = getAurumReflectionRigProfile(activeRigId);
-          const source = rig[name as "softbox"|"strip"|"front"|"kicker"].position;
+          const source = rig[name as "softbox"|"strip"|"front"|"kicker"|"edgeLeft"|"edgeRight"].position;
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
           light.lookAt?.(0, targetY, 0);
