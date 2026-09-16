@@ -33,8 +33,8 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // Mantener el perfil óptico definido por el catálogo. La exposición y el Environment
   // se controlan en Scene; aquí no se recortan artificialmente los reflejos del metal.
   material.envMapIntensity=Math.max(.55, preset.envMapIntensity);
-  material.clearcoat=Math.max(0, Math.min(.5, preset.clearcoat));
-  material.clearcoatRoughness=Math.min(.35,Math.max(.025,preset.roughness*.42));
+  material.clearcoat=Math.max(0, preset.clearcoat);
+  material.clearcoatRoughness=Math.max(.01,preset.roughness*.42);
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
   material.specularIntensity=preset.metalness>.9?1:.8;
