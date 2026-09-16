@@ -217,6 +217,8 @@ export function AurumRender() {
   const [materialId, setMaterialId] = useState<MaterialId>("oro18a_pulido"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("claro"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("jewelry"), [vista, setVista] = useState<VistaId>("perspectiva");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
+  const categoriaProyectoRef = useRef("Anillo");
+  categoriaProyectoRef.current = categoriaProyecto;
   const [captura, setCaptura] = useState<string | null>(null);
   const [parteSeleccionada, setParteSeleccionada] = useState<string | null>(null);
   const [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string | null>(null);
@@ -471,7 +473,7 @@ export function AurumRender() {
         encuadrar();
       };
       const camaraVista=(id:VistaId)=>{
-        applyAurumCameraView(camara, controles, modelo, id);
+        applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
       };
       apiRef.current=createAurumApi({
         cargar,
