@@ -479,7 +479,7 @@ export function AurumRender() {
           applyGemEnvironment:aplicarEntornoGema,
           initialMetalId:"plata925_pulida",
           initialGemId:"diamante_natural",
-          presentation:{metalEnvironmentScale:.88,metalClearcoatScale:.12},
+          presentation:{metalEnvironmentScale:.92,metalClearcoatScale:.28},
         });
         modelo=interno;
         // Presentación inicial determinista: producto + studioSoft + framing.
