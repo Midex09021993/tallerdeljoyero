@@ -1,3 +1,4 @@
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
 import { getAurumReflectionRigProfile } from "../aurum-reflection-engine";
 
@@ -47,6 +48,9 @@ export function createAurumLightingController(
   return {
     lights,
     create() {
+      // Three.js requires the RectAreaLight shader uniforms to be initialized
+      // before these broad reflection sources are used.
+      RectAreaLightUniformsLib.init();
       const mk = (type: string, color: number, cast: boolean) => {
         const light = type === "spot"
           ? new THREE.SpotLight(color, 1, 30, Math.PI * .45, .7, .8)
