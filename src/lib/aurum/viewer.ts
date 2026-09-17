@@ -46,7 +46,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
   // Product photography uses a little more breathing room, like the clean
   // iJewel-style catalog framing used for isolated jewelry shots.
-  const framingMultiplier = sceneId === "producto" ? 1.24 : 1.08;
+  const framingMultiplier = sceneId === "producto" ? 1.40 : 1.08;
   const distance=Math.max(fitDistance * framingMultiplier,3.2);
   const aimY=targetY + Math.max(size.y*.04, .025);
   // Initial view: FRONT PRODUCT VIEW.
@@ -64,7 +64,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
 
 export function resizeAurumViewer(viewer: {
   node: { clientWidth: number; clientHeight: number };
-  camera: any;
+  camera: PerspectiveCamera;
   renderer: any;
   composer?: any;
   ssaoPass?: any;
