@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
+import { ArrowRight, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, ShieldCheck, UserRound } from "lucide-react";
+import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/auth")({
@@ -37,6 +39,7 @@ function LoginPage() {
   const [nombre, setNombre] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const modoAlta = Boolean(estado?.vacio);
 
   useEffect(() => {
@@ -76,140 +79,156 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-ink px-6 py-12 text-ink-foreground">
-      {/* Fondo único: degradados suaves sobre tinta */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at 20% 30%, oklch(0.712 0.083 84 / 0.08), transparent 28rem), radial-gradient(circle at 85% 70%, oklch(0.955 0.035 155 / 0.05), transparent 24rem), linear-gradient(180deg, oklch(0.223 0.006 250), oklch(0.18 0.008 255))",
-        }}
-      />
-
-      <div className="relative z-10 w-full max-w-6xl">
-        <div className="grid items-center gap-16 lg:grid-cols-[1fr_auto_420px]">
-          {/* Lado izquierdo: marca y propuesta */}
-          <section className="hidden flex-col justify-center lg:flex">
-            <div className="mb-10">
-              <p className="font-display text-5xl italic leading-tight text-gold md:text-6xl">
-                Aurum Lab
-              </p>
-              <p className="mt-3 text-[11px] uppercase tracking-[0.3em] text-ink-foreground/40">
-                Sistema del Taller de Joyería
-              </p>
-            </div>
-
-            <div className="max-w-md space-y-6 text-ink-foreground/80">
-              <p className="font-display text-2xl italic leading-relaxed text-ink-foreground/90">
-                Tus clientes. Tus trabajos. Tu crecimiento.
-              </p>
-              <p className="text-sm leading-relaxed">
-                Todo conectado en un solo lugar. Acceso seguro según tu rol.
-              </p>
-            </div>
-
-            <div className="mt-12 max-w-sm rounded-2xl border border-ink-foreground/10 bg-ink-foreground/[0.03] p-6 backdrop-blur-sm">
-              <p className="text-xs font-medium text-ink-foreground/70">
-                ¿Deseas probar Aurum Lab?
-              </p>
-              <p className="mt-2 text-[11px] leading-relaxed text-ink-foreground/50">
-                Solicita tu acceso de prueba por WhatsApp:
-              </p>
-              <p className="mt-1 text-sm font-medium text-gold">+51 948 727 973</p>
-              <a
-                href="https://wa.me/51948727973?text=Hola,%20quiero%20solicitar%20acceso%20de%20prueba%20a%20Aurum%20Lab"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center justify-center rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-ink transition-opacity hover:opacity-90"
-              >
-                Solicitar acceso
-              </a>
-            </div>
-          </section>
-
-          {/* Divisor sutil: visible solo en escritorio */}
-          <div className="hidden h-80 w-px bg-gradient-to-b from-transparent via-ink-foreground/15 to-transparent lg:block" />
-
-          {/* Lado derecho: formulario */}
-          <section className="mx-auto w-full max-w-sm lg:mx-0">
-            {/* Cabecera móvil: marca resumida */}
-            <div className="mb-8 text-center lg:hidden">
-              <p className="font-display text-4xl italic text-gold">Aurum Lab</p>
-              <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-ink-foreground/40">
-                Sistema del taller de joyería
-              </p>
-            </div>
-
-            <form
-              onSubmit={entrar}
-              className="rounded-2xl border border-ink-foreground/10 bg-ink-foreground/[0.03] p-8 backdrop-blur-sm"
-            >
-              <h1 className="mb-6 text-sm font-medium">
-                {modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}
-              </h1>
-
-              {modoAlta ? (
-                <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-                  Nombre completo
-                  <input
-                    required
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-                  />
-                </label>
-              ) : null}
-
-              <label className="mb-4 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-                Usuario o DNI
-                <input
-                  required
-                  autoComplete="username"
-                  value={usuario}
-                  onChange={(e) => setUsuario(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-                />
-              </label>
-
-              <label className="mb-6 block text-[10px] uppercase tracking-wider text-ink-foreground/50">
-                Contraseña
-                <input
-                  required
-                  type="password"
-                  autoComplete={modoAlta ? "new-password" : "current-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-ink-foreground/15 bg-ink px-3 py-2.5 text-sm text-ink-foreground outline-none focus:border-gold"
-                />
-              </label>
-
-              {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
-
-              <button
-                type="submit"
-                disabled={cargando}
-                className="w-full rounded-lg bg-gold py-2.5 text-xs font-semibold uppercase tracking-wider text-ink disabled:opacity-50"
-              >
-                {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
-              </button>
-            </form>
-
-            <p className="mt-6 text-center text-[11px] text-ink-foreground/35">
-              ¿Eres cliente?{" "}
-              <a href="/cliente" className="text-gold underline-offset-2 hover:underline">
-                Consulta tu pedido aquí
-              </a>
-            </p>
-
-            <p className="mt-4 text-center text-[10px] tracking-wider text-ink-foreground/25">
-              Desarrollado por Fadilab EIRL
-            </p>
-          </section>
-        </div>
+    <main className="relative min-h-screen overflow-hidden bg-[#090a0b] text-ink-foreground">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_40%,rgba(212,175,55,.12),transparent_32%),radial-gradient(circle_at_78%_35%,rgba(255,255,255,.05),transparent_28%),linear-gradient(180deg,#111315_0%,#08090a_100%)]" />
+        <div
+          className="absolute inset-y-0 left-0 w-[62%] bg-cover bg-center opacity-35 mix-blend-screen"
+          style={{ backgroundImage: `linear-gradient(90deg,rgba(8,9,10,.2),rgba(8,9,10,.78) 78%,rgba(8,9,10,1)), url(${heroJoyeria})` }}
+        />
+        <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-black/50 to-transparent" />
       </div>
+
+      <header className="relative z-20 flex h-20 items-center justify-between border-b border-white/10 px-6 lg:px-10">
+        <div className="flex items-center gap-3">
+          <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-xl object-cover ring-1 ring-gold/60" />
+          <div>
+            <p className="font-display text-xl font-semibold tracking-tight text-gold">AURUM LAB</p>
+            <p className="text-[9px] uppercase tracking-[0.28em] text-white/45">Sistema del taller de joyería</p>
+          </div>
+        </div>
+        <nav className="hidden items-center gap-8 md:flex">
+          <a href="/auth" className="flex items-center gap-2 text-sm text-gold">
+            <Home className="size-4" /> Inicio
+          </a>
+          <a href="#herramientas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
+            <Grid2X2 className="size-4" /> Herramientas
+          </a>
+        </nav>
+        <a href="#login" className="rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink">
+          Iniciar sesión
+        </a>
+      </header>
+
+      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-5rem)] max-w-[1500px] items-center gap-8 px-6 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:px-10">
+        <section className="min-w-0 pb-8 lg:pb-16">
+          <div className="max-w-4xl">
+            <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl">Aurum Lab</p>
+            <p className="mt-4 text-[10px] uppercase tracking-[0.42em] text-white/50 sm:text-xs">
+              Sistema del taller de joyería
+            </p>
+            <p className="mt-8 max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl">
+              Tus clientes. Tus trabajos. Tu crecimiento.
+            </p>
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base">
+              Todo conectado en un solo lugar. Acceso seguro según tu rol.
+            </p>
+          </div>
+
+          <section id="herramientas" className="mt-10 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6">
+            <div className="flex items-center gap-3">
+              <Gem className="size-7 text-gold" />
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-gold sm:text-base">
+                  Herramientas gratuitas para joyeros
+                </h2>
+                <p className="mt-1 text-xs text-white/60 sm:text-sm">
+                  Calcula, visualiza y optimiza tus proyectos desde cualquier dispositivo.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {[
+                ["Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
+                ["Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
+                ["Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
+                ["Visualizador y Peso 3D", "Visualiza y calcula el peso de tus diseños 3D."],
+                ["AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
+              ].map(([titulo, descripcion], i) => (
+                <div key={titulo} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/40 hover:bg-white/[0.045]">
+                  <Gem className="size-6 text-gold" />
+                  <p className="mt-4 text-sm font-semibold text-white">{titulo}</p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-white/50">{descripcion}</p>
+                  {i === 4 ? <span className="mt-3 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <a href="#herramientas" className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
+                Explorar herramientas <ArrowRight className="size-4" />
+              </a>
+              <a href="https://wa.me/51948727973?text=Hola,%20quiero%20solicitar%20acceso%20de%20prueba%20a%20Aurum%20Lab" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-gold/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/10">
+                Solicitar acceso de prueba
+              </a>
+            </div>
+          </section>
+        </section>
+
+        <section id="login" className="mx-auto w-full max-w-[430px]">
+          <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9">
+            <div className="mb-7 flex items-center gap-3">
+              <LockKeyhole className="size-7 text-gold" />
+              <div>
+                <h1 className="text-xl font-semibold text-white">{modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}</h1>
+                {!modoAlta ? <p className="mt-1 text-xs text-white/50">Accede a tu taller. Todo en un solo lugar.</p> : null}
+              </div>
+            </div>
+
+            {modoAlta ? (
+              <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                Nombre completo
+                <input required value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+              </label>
+            ) : null}
+
+            <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
+              Usuario o DNI
+              <span className="relative mt-2 block">
+                <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <input required autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+              </span>
+            </label>
+
+            <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
+              Contraseña
+              <span className="relative mt-2 block">
+                <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <input required type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-gold" />
+                <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-gold" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                  {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </span>
+            </label>
+
+            {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
+
+            <button type="submit" disabled={cargando} className="w-full rounded-lg bg-gold py-3.5 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90 disabled:opacity-50">
+              {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-xs text-white/55">
+            ¿Eres cliente?{" "}
+            <a href="/cliente" className="text-gold underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
+          </p>
+          <p className="mt-4 text-center text-[10px] tracking-wider text-white/25">Desarrollado por Fadilab EIRL</p>
+        </section>
+      </div>
+
+      <footer className="relative z-10 border-t border-white/10 px-6 py-5">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 text-xs text-white/45">
+          <div className="flex flex-wrap items-center gap-6">
+            <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-gold" /> Seguro y confiable</span>
+            <span className="flex items-center gap-2"><Monitor className="size-4 text-gold" /> Acceso desde cualquier dispositivo</span>
+            <span className="flex items-center gap-2"><Headphones className="size-4 text-gold" /> Soporte especializado</span>
+          </div>
+          <span>© 2026 Aurum Lab. Todos los derechos reservados.</span>
+        </div>
+      </footer>
 
       <HerramientasFlotantes />
     </main>
   );
-}
+
