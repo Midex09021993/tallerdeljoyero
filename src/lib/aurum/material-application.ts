@@ -119,10 +119,20 @@ export function applyAurumGemToTarget(
     applyAurumGem(next, preset, thickness);
     applyAurumOpticalProfile(next, opticalProfile);
     if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
+    // Faceted gemstones need face-level normals to preserve the hard optical
+    // boundaries of the cut. Three.js flatShading derives the normal per face
+    // in the shader, avoiding a destructive rewrite of the authored CAD mesh.
+    next.flatShading = true;
+    next.needsUpdate = true;
     return next;
   };
   targets.forEach((part:any)=>{
     part.material = Array.isArray(part.material) ? part.material.map(apply) : apply(part.material);
+    part.userData = {
+      ...part.userData,
+      aurumFacetNormalsApplied:true,
+      aurumFacetNormalMode:"flatShading",
+    };
     renderAurumInclusions(THREE, part, gemConfig, 9173, preset);
   });
   applyGemEnvironment();
