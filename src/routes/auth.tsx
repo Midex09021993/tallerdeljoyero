@@ -79,7 +79,7 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#090a0b] text-ink-foreground">
+    <main className="relative flex min-h-screen flex-col overflow-hidden bg-[#090a0b] text-ink-foreground">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_40%,rgba(212,175,55,.12),transparent_32%),radial-gradient(circle_at_78%_35%,rgba(255,255,255,.05),transparent_28%),linear-gradient(180deg,#111315_0%,#08090a_100%)]" />
         <div
@@ -89,7 +89,7 @@ function LoginPage() {
         <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-black/50 to-transparent" />
       </div>
 
-      <header className="relative z-20 flex h-20 items-center justify-between border-b border-white/10 px-6 lg:px-10">
+      <header className="relative z-20 flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6 lg:px-10">
         <div className="flex items-center gap-3">
           <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-xl object-cover ring-1 ring-gold/60" />
           <div>
@@ -110,7 +110,7 @@ function LoginPage() {
         </a>
       </header>
 
-      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-5rem)] max-w-[1500px] items-center gap-8 px-6 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:px-10">
+      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-8 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:px-10">
         <section className="min-w-0 pb-8 lg:pb-16">
           <div className="max-w-4xl">
             <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl">Aurum Lab</p>
@@ -217,7 +217,7 @@ function LoginPage() {
         </section>
       </div>
 
-      <footer className="relative z-10 border-t border-white/10 px-6 py-5">
+      <footer className="relative z-10 shrink-0 border-t border-white/10 px-6 py-5">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 text-xs text-white/45">
           <div className="flex flex-wrap items-center gap-6">
             <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-gold" /> Seguro y confiable</span>
