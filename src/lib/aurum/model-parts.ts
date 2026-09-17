@@ -17,7 +17,7 @@ function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefin
   return undefined;
 }
 
-function matrixFamilyCategory(layer:any,index:number,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
+function matrixFamilyCategory(layer:any,index:number,colorCapa?:string,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
   const name=String(layer?.name??"").trim();
 
   // Rhino/iJewel-compatible rule: an explicit layer name is authoritative.
@@ -74,7 +74,7 @@ export function getAurumModelParts(
     const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
     const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
     const categoria = meta?.categoria ?? (layer
-      ? matrixFamilyCategory(layer,layerIndex,clasificarCapa)
+      ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa)
       : clasificarCapa(capa || "",colorCapa));
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
     const matrixSlot = layerIndex>=0 && layer
