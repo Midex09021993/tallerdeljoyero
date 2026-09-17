@@ -42,10 +42,11 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   const framingMultiplier = sceneId === "producto" ? 1.40 : 1.08;
   const distance=Math.max(fitDistance * framingMultiplier,3.2);
   const aimY=targetY + Math.max(size.y*.035, .025);
-  // Product-shot camera: keep the ring essentially frontal, but lift the
-  // camera slightly so the horizontal studio floor becomes visible and the
-  // piece no longer reads as if it were floating in a flat gray canvas.
-  const cameraLift = sceneId === "producto" ? Math.max(size.y*.075, .04) : 0;
+  // Product-shot camera: use a visible but restrained downward angle so the
+  // studio floor can enter the lower frame. The previous .075 lift was visually
+  // too small to reveal the ground plane, so the product still read like it was
+  // floating on a flat canvas. Keep the target fixed to preserve the ring framing.
+  const cameraLift = sceneId === "producto" ? Math.max(size.y*.24, .12) : 0;
   viewer.camera.position.set(0, aimY + cameraLift, distance);
   viewer.controls.target.set(0,aimY,0);
   viewer.camera.lookAt(0,aimY,0);
