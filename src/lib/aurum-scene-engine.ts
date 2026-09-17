@@ -24,9 +24,10 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   luxury:{id:"luxury",background:0x21150c,ground:0x20140b,groundRoughness:.34,groundMetalness:.03,groundVisible:true,environmentIntensity:.56,environmentRotation:.42,shadowIntensity:.46,shadowSoftness:.82,exposure:.57,lighting:"luxury"},
   marmol:{id:"marmol",background:0xc9c6bf,ground:0xc5c2bc,groundRoughness:.24,groundMetalness:.02,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
   transparente:{id:"transparente",background:0x000000,ground:0x15181c,groundRoughness:.30,groundMetalness:.02,groundVisible:false,environmentIntensity:.62,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
-  // White-background packshot: pure white canvas, slightly off-white ground for
-  // separation, restrained exposure and enough HDR energy to keep polished metal alive.
-  producto:{id:"producto",background:0xffffff,ground:0xf8f8f6,groundRoughness:.72,groundMetalness:.001,groundVisible:true,environmentIntensity:.34,environmentRotation:.54,shadowIntensity:.16,shadowSoftness:.985,exposure:.58,lighting:"productSoft"},
+  // Product presentation: neutral gray photographic sweep with a separate light
+  // ground. The distinction makes the jewelry sit in the frame instead of
+  // disappearing into a pure-white canvas.
+  producto:{id:"producto",background:0xdfdfdd,ground:0xf5f5f3,groundRoughness:.82,groundMetalness:.001,groundVisible:true,environmentIntensity:.34,environmentRotation:.54,shadowIntensity:.24,shadowSoftness:.985,exposure:.62,lighting:"productSoft"},
   galeria:{id:"galeria",background:0x18191c,ground:0x24262a,groundRoughness:.34,groundMetalness:.025,groundVisible:true,environmentIntensity:.68,environmentRotation:.62,shadowIntensity:.36,shadowSoftness:.90,exposure:.68,lighting:"studioHard"},
   oroCalido:{id:"oroCalido",background:0x302216,ground:0x3b2a1b,groundRoughness:.38,groundMetalness:.02,groundVisible:true,environmentIntensity:.58,environmentRotation:.42,shadowIntensity:.28,shadowSoftness:.92,exposure:.61,lighting:"luxury"},
   // Gem scene: brighter neutral set, but not a global exposure push.
