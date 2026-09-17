@@ -697,17 +697,18 @@ function PedidoVentaCard({
         <button
           type="button"
           onClick={onAccion}
-          className="min-w-[140px] flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground"
+          className="min-w-[140px] flex-1 rounded-xl border border-border bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground"
+          title="Registrar el envío cuando el pedido sale por encomienda"
         >
-          {accionPrincipal}
+          📦 {accionPrincipal}
         </button>
         {accionSecundaria && onAccionSecundaria ? (
           <button
             type="button"
             onClick={onAccionSecundaria}
-            className="min-w-[110px] flex-1 rounded-xl border border-success/25 bg-success-soft px-3 py-2.5 text-xs font-medium text-success"
+            className="min-w-[110px] flex-1 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2.5 text-xs font-medium text-gold"
           >
-            {accionSecundaria}
+            ✓ {accionSecundaria}
           </button>
         ) : null}
         <button
