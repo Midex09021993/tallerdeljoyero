@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AurumRender } from "@/components/AurumRender";
+import { AurumRenderShell } from "@/components/AurumRenderShell";
 
 export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
@@ -20,5 +20,5 @@ export const Route = createFileRoute("/aurum-render-public")({
 });
 
 function AurumRenderPublicPage() {
-  return <AurumRender />;
+  return <AurumRenderShell />;
 }
