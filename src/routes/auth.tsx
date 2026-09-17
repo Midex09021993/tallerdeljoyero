@@ -167,6 +167,9 @@ function LoginPage() {
         </section>
 
         <section id="login" className="mx-auto w-full max-w-[430px]">
+          <div className="mb-7 text-center md:hidden">
+            <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
+          </div>
           <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9 [@media(max-height:800px)]:p-5">
             <div className="mb-7 flex items-center gap-3">
               <LockKeyhole className="size-7 text-gold" />
