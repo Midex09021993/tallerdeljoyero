@@ -43,7 +43,8 @@ export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   let family="neutral";
 
   // Yellow gold: warm alloy color must survive without broad HDR highlights
-  // turning into featureless white.
+  // turning into featureless white. Keep the environment restrained and let a
+  // slightly broader surface response preserve the continuous studio gradient.
   if(r>b*1.28 && g>b*1.10){
     scale=.55;
     family="yellow-gold";
@@ -74,15 +75,26 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   if(!material) return material;
   material.color?.setHex(preset.color);
   material.metalness=preset.metalness;
-  material.roughness=preset.roughness;
 
   const response=getAurumMetalReflectionResponse(preset);
+
+  // Yellow-gold is especially sensitive to large white studio reflections.
+  // A small roughness broadening keeps the highlight readable as a continuous
+  // metal gradient instead of a clipped white spot, without changing the
+  // authored finish category (polished / satin / matte / brushed).
+  const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
+  if(response.family==="yellow-gold"){
+    material.roughness=Math.max(.075,Math.min(.55,baseRoughness*1.06+.004));
+  }else{
+    material.roughness=baseRoughness;
+  }
+
   material.envMapIntensity=response.environmentIntensity;
 
   // Keep the metal itself responsible for the reflection. A strong clearcoat
   // reads like lacquer and can create a second, artificial hot highlight.
   material.clearcoat=Math.max(.025,Math.min(.10,preset.clearcoat*.25+.025));
-  material.clearcoatRoughness=Math.max(.045,Math.min(.14,preset.roughness*.8));
+  material.clearcoatRoughness=Math.max(.045,Math.min(.14,material.roughness*.8));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
@@ -99,6 +111,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     ...(material.userData??{}),
     aurumMetalRenderProfile:response,
     aurumMetalBaseEnvMapIntensity:response.environmentIntensity,
+    aurumMetalSurfaceRoughness:material.roughness,
   };
   material.needsUpdate=true;
   return material;
