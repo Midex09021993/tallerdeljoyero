@@ -1,11 +1,13 @@
 import type { AurumOpticalProfile } from "../aurum-material-engine";
 
 /**
- * Dynamic scintillation response for AURUM gemstones.
+ * Dynamic scintillation + runtime gemstone optics for AURUM.
  *
- * The effect is view/facet dependent rather than a time-based sparkle overlay.
- * It uses the physical facet response already produced by MeshPhysicalMaterial
- * and adds only a restrained contrast accent at grazing reflection angles.
+ * The gemstone continues to use Three.js MeshPhysicalMaterial for the actual
+ * IOR, transmission, thickness, framebuffer refraction and dispersion. This
+ * layer only modulates dispersion at runtime from the real facet/view angle,
+ * so the spectral separation follows the optical geometry instead of using an
+ * artificial RGB sparkle overlay.
  */
 export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalProfile)=>{
   if(!material) return material;
@@ -13,9 +15,22 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const family=String(material.userData?.aurumGemFamily??"");
   const brilliance=Math.max(0,Math.min(1.2,Number(profile.brilliance??.75)));
   const facetContrast=Math.max(0,Math.min(1.2,Number(profile.facetContrast??.9)));
+  const baseDispersion=Math.max(0,Number(profile.dispersion??material.dispersion??0));
 
-  // Diamonds and moissanite naturally show stronger scintillation; colored
-  // stones remain restrained so their body color is not washed out.
+  // Diamonds and moissanite naturally show stronger spectral separation;
+  // colored stones stay deliberately restrained so body color remains dominant.
+  const familyDispersionScale=family==="Diamante"
+    ? 1.00
+    : family==="Moissanita"
+      ? 1.00
+      : family==="Esmeralda"
+        ? .72
+        : family==="Rubí"
+          ? .78
+          : family==="Zafiro"
+            ? .76
+            : .80;
+
   const strength=family==="Diamante"
     ? .16*brilliance
     : family==="Moissanita"
@@ -31,16 +46,34 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       contrastStrength,
       mode:"physical-facet-contrast",
     },
+    aurumRuntimeGemOptics:{
+      mode:"facet-angle-dispersion",
+      familyDispersionScale,
+      baseDispersion,
+      version:"v1",
+    },
   };
 
   material.onBeforeCompile=(shader:any)=>{
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
+    shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
 
     shader.fragmentShader=`
       uniform float aurumScintillationStrength;
       uniform float aurumScintillationContrast;
+      uniform float aurumRuntimeDispersion;
     `+shader.fragmentShader;
+
+    // Three.js already performs physical volume refraction and RGB dispersion
+    // inside getIBLVolumeRefraction(). Replace only its dispersion input with
+    // a runtime value derived from the current facet/view geometry.
+    shader.fragmentShader=shader.fragmentShader.replace(
+      "material.dispersion, material.ior, material.thickness,",
+      `(
+        aurumRuntimeDispersion * mix(0.86, 1.14, pow(1.0 - max(dot(normalize(n), normalize(v)), 0.0), 1.35))
+      ), material.ior, material.thickness,`
+    );
 
     shader.fragmentShader=shader.fragmentShader.replace(
       "#include <dithering_fragment>",
@@ -71,7 +104,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v2-${family}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v3-${family}-${familyDispersionScale}`;
   material.needsUpdate=true;
   return material;
 };
