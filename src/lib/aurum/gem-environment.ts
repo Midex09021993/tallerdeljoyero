@@ -1,15 +1,21 @@
-export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; }> = {
-  Diamante: { intensity: 1.28 },
-  Moissanita: { intensity: 1.24 },
-  Esmeralda: { intensity: 1.12 },
-  Rubi: { intensity: 1.16 },
-  Zafiro: { intensity: 1.16 },
-  default: { intensity: 1.14 },
+export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; rotationOffset:number; }> = {
+  // The gem environment is intentionally independent from the metal environment.
+  // Small family offsets improve the way the same HDR light field crosses
+  // different optical responses without changing IOR, color or dispersion.
+  Diamante: { intensity: 1.28, rotationOffset: 0.00 },
+  Moissanita: { intensity: 1.24, rotationOffset: 0.025 },
+  Esmeralda: { intensity: 1.12, rotationOffset: -0.035 },
+  Rubi: { intensity: 1.16, rotationOffset: -0.020 },
+  Zafiro: { intensity: 1.16, rotationOffset: 0.020 },
+  default: { intensity: 1.14, rotationOffset: 0.00 },
 };
 
+export const getAurumGemEnvironmentProfile = (family:string) =>
+  AURUM_GEM_ENVIRONMENT_PROFILES[family] ??
+  AURUM_GEM_ENVIRONMENT_PROFILES["default"]!;
+
 export const getAurumGemEnvironmentIntensity = (family:string) =>
-  AURUM_GEM_ENVIRONMENT_PROFILES[family]?.intensity ??
-  AURUM_GEM_ENVIRONMENT_PROFILES["default"]!.intensity;
+  getAurumGemEnvironmentProfile(family).intensity;
 
 export interface AurumGemEnvironmentController {
   load: (
@@ -50,32 +56,31 @@ export function createAurumGemEnvironment(
       const apply = (m:any) => {
         if (!m?.userData?.aurumOpticalProfile) return m;
         m.envMap = texture;
-        const family = m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default";
+        const family = String(m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default");
+        const profile = getAurumGemEnvironmentProfile(family);
         const authored = Number.isFinite(m.userData?.aurumGemBaseEnvIntensity)
           ? m.userData.aurumGemBaseEnvIntensity
           : (Number.isFinite(m.userData?.aurumGemEnvIntensity)
             ? m.userData.aurumGemEnvIntensity
-            : getAurumGemEnvironmentIntensity(family));
+            : profile.intensity);
 
-        // iJewel exposes environment intensity and per-gem rotation separately.
-        // Keep the authored optical preset, then apply the photographic scene
-        // multiplier without letting the environment wash out the facets.
+        // iJewel exposes the gem environment independently from the scene
+        // environment. A very small family-specific rotation offset is applied
+        // to the gem light field only; it does not alter geometry or IOR.
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale));
+        const effectiveRotation = rotation + profile.rotationOffset;
 
-        // Three.js r185 supports per-material environment rotation. This is
-        // intentionally independent from scene.environmentRotation so the same
-        // HDRI can illuminate metal and still be oriented differently for gems.
         if (m.envMapRotation?.set) {
-          m.envMapRotation.set(0, rotation, 0);
+          m.envMapRotation.set(0, effectiveRotation, 0);
         } else if (m.envMapRotation) {
-          m.envMapRotation.y = rotation;
+          m.envMapRotation.y = effectiveRotation;
         }
 
         m.userData = {
           ...(m.userData ?? {}),
-          aurumGemEnvironmentRotation: rotation,
-          // Keep the authored intensity immutable. Scene changes must never
-          // multiply an already-scaled value and progressively wash out gems.
+          aurumGemEnvironmentRotation: effectiveRotation,
+          aurumGemEnvironmentBaseRotation: rotation,
+          aurumGemEnvironmentRotationOffset: profile.rotationOffset,
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
