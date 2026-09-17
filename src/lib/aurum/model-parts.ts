@@ -7,6 +7,7 @@ export type AurumModelPart = {
   colorCapa?: string;
   categoria: "metal" | "gema" | "otro";
   matrixSlot?: number;
+  layerIndex?: number;
 };
 
 function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefined {
@@ -17,16 +18,18 @@ function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefin
 }
 
 function matrixFamilyCategory(layer:any,index:number,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
-  const name=String(layer?.name??"").trim();
-  const explicit=explicitLayerCategory(name);
-  if(explicit) return explicit;
-
   // MatrixGold convention used by AURUM: first four green layers are metal,
   // next four blue layers are gemstones. Everything after those families is
-  // intentionally "other" and must never be auto-promoted to a gemstone.
+  // intentionally "other" and must remain independently assignable by layer.
+  // The positional convention has priority so a later decorative layer whose
+  // name happens to contain "piedra" or "gem" cannot be promoted into the
+  // shared gemstone family.
   if(index>=0 && index<4) return "metal";
   if(index>=4 && index<8) return "gema";
-  return "otro";
+  if(index>=8) return "otro";
+
+  const name=String(layer?.name??"").trim();
+  return explicitLayerCategory(name) ?? clasificarCapa(name, colorCapa);
 }
 
 function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"):number|undefined {
@@ -73,7 +76,7 @@ export function getAurumModelParts(
       ? matrixLayerSlot(layer,layerIndex,categoria)
       : undefined;
 
-    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, matrixSlot });
+    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, matrixSlot, layerIndex });
   });
 
   return result;
