@@ -24,17 +24,16 @@ export type AurumInclusionConfig = {
   depth:number; seed:number; color:number;
 };
 
-export const AURUM_MATERIAL_ENGINE_VERSION="1.4.0";
+export const AURUM_MATERIAL_ENGINE_VERSION="1.4.1";
 
 /**
  * Reflected-light response for jewelry metals.
  *
  * Professional jewelry photography is controlled primarily by what the polished
  * surface reflects: broad white sources create clean gradients while narrow dark
- * regions preserve edge definition. A single global environment multiplier makes
- * warm gold clip much sooner than silver/white metals. We therefore attenuate the
- * environment contribution per metal family while keeping the authored base color
- * intact. This is a material response control, not a global exposure hack.
+ * regions preserve edge definition. Warm yellow gold needs a moderated reflected
+ * environment because its colored metallic base response has much stronger contrast
+ * against neutral studio sources than white metals.
  */
 export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   const r=(preset.color>>16)&255, g=(preset.color>>8)&255, b=preset.color&255;
@@ -42,25 +41,18 @@ export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   let scale=.72;
   let family="neutral";
 
-  // Yellow gold intentionally uses the same reflection scale as the neutral
-  // precious-metal path. The previous yellow-specific attenuation produced a
-  // different HDR response on small/high-curvature parts than on silver and
-  // palladium. Keep the gold color in the authored material color and do not
-  // compensate for it with a second family-specific reflection model.
   if(r>b*1.28 && g>b*1.10){
-    scale=.72;
+    // Yellow gold: moderate the environment without changing the alloy color.
+    // This avoids the extreme white/black reflection contrast seen on small,
+    // highly curved ornamental parts while keeping polished metal readable.
+    scale=.62;
     family="yellow-gold";
-  // Rose gold retains a restrained environment response because its copper-rich
-  // base color is materially warmer than neutral white metals.
   }else if(r>b*1.18 && g>b*1.04 && r-g<75){
     scale=.60;
     family="rose-gold";
-  // Very dark/black metals need enough environment to reveal curvature.
   }else if(avg<78){
     scale=.80;
     family="dark-metal";
-  // White gold, silver and platinum benefit from clean but controlled broad
-  // reflections against a light product background.
   }else if(max-min<42 && avg>125){
     scale=.72;
     family="white-metal";
@@ -80,27 +72,26 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
 
   const response=getAurumMetalReflectionResponse(preset);
 
-  // Keep the authored finish unchanged. Roughness is a primary PBR control for
-  // metallic reflection; do not add a special yellow-gold roughness multiplier.
-  // This makes yellow gold use the same reflection model as the other metals
-  // while preserving its own base color and catalog finish.
-  material.roughness=Math.max(.02,Number(preset.roughness??.12));
+  // Keep authored finish categories, but give polished yellow gold a slightly
+  // broader micro-surface response than the previous .12 setting. This is still
+  // a polished metal; it only reduces clipped highlights on small ornamental faces.
+  const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
+  material.roughness=response.family==="yellow-gold"
+    ? Math.max(.075,Math.min(.55,baseRoughness*1.33))
+    : baseRoughness;
 
   material.envMapIntensity=response.environmentIntensity;
 
   // Base precious metals are not lacquered. Keep clearcoat only as a tiny
   // residual response so polished metal highlights come from the metal itself.
-  // GIA documents polished/buffed jewelry as a metal surface finish; this PBR
-  // translation avoids introducing a second artificial lacquer highlight.
   material.clearcoat=Math.max(.025,Math.min(.055,preset.clearcoat*.10+.015));
   material.clearcoatRoughness=Math.max(.045,Math.min(.14,material.roughness*.8));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
-  // Specular color/intensity in MeshPhysicalMaterial is defined for non-metals;
-  // metallic reflection is driven by the metallic BRDF and environment response.
-  // Do not use this property to compensate for yellow-gold brightness.
-  material.specularIntensity=preset.metalness>.9 ? 1 : .8;
+  material.specularIntensity=preset.metalness>.9
+    ? Math.max(.78,Math.min(1,response.highlightScale+.25))
+    : .8;
   material.specularColor?.setHex(0xffffff);
   material.emissive?.setHex(0x000000);
   material.emissiveIntensity=0;
@@ -154,7 +145,7 @@ export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
   diamante_inclusiones:{id:"diamante_inclusiones",familia:"Diamante",variante:"Con inclusiones",color:0xf8f8f8,transmission:1,ior:2.417,roughness:.018,envMapIntensity:1.8,attenuationColor:0xf5f5f5,attenuationDistance:65,dispersion:.035,iridescence:.04,thicknessScale:1,inclusions:true,inclusionDensity:.18,inclusionType:"crystal"},
   esmeralda_1:{id:"esmeralda_1",familia:"Esmeralda",variante:"Calidad 1",color:0x087f45,transmission:.94,ior:1.577,roughness:.018,envMapIntensity:1.65,attenuationColor:0x087f45,attenuationDistance:18,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   esmeralda_2:{id:"esmeralda_2",familia:"Esmeralda",variante:"Calidad 2",color:0x0a6b3b,transmission:.88,ior:1.577,roughness:.022,envMapIntensity:1.55,attenuationColor:0x075d34,attenuationDistance:12,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:true,inclusionDensity:.10,inclusionType:"fingerprint"},
-  esmeralda_3:{id:"esmeralda_3",familia:"Esmeralda",variante:"Calidad 3",color:0x064d2f,transmission:.80,ior:1.577,roughness:.028,envMapIntensity:1.45,attenuationColor:0x043d25,attenuationDistance:8,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.22,inclusionType:"fingerprint"},
+  esmeralda_3:{id:"esmeralda_3",familia:"Calidad 3",variante:"Natural",color:0x064d2f,transmission:.80,ior:1.577,roughness:.028,envMapIntensity:1.45,attenuationColor:0x043d25,attenuationDistance:8,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.22,inclusionType:"fingerprint"},
   rubi:{id:"rubi",familia:"Rubí",variante:"Natural",color:0x9f1239,transmission:.93,ior:1.762,roughness:.018,envMapIntensity:1.65,attenuationColor:0x8f1239,attenuationDistance:16,dispersion:.014,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   rubi_sangre_pichon:{id:"rubi_sangre_pichon",familia:"Rubí",variante:"Sangre de pichón",color:0x8f0d28,transmission:.91,ior:1.762,roughness:.016,envMapIntensity:1.7,attenuationColor:0x78091f,attenuationDistance:13,dispersion:.014,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   rubi_inclusiones:{id:"rubi_inclusiones",familia:"Rubí",variante:"Con inclusiones",color:0x7f1233,transmission:.84,ior:1.762,roughness:.025,envMapIntensity:1.5,attenuationColor:0x650c28,attenuationDistance:9,dispersion:.014,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.20,inclusionType:"silk"},
@@ -186,21 +177,9 @@ export const generateAurumInclusionPoints=(config:AurumInclusionConfig,count=48)
   return points;
 };
 
-/**
- * AURUM OPTICAL ENGINE v1.0
- * Presets de óptica y corte. La geometría original del archivo no se reemplaza:
- * estos parámetros permiten preparar el material y el postprocesado para la
- * respuesta óptica de cada familia de gema.
- */
 export type AurumOpticalProfile = {
-  ior:number;
-  transmission:number;
-  dispersion:number;
-  absorptionDistance:number;
-  internalReflection:number;
-  facetContrast:number;
-  brilliance:number;
-  fire:number;
+  ior:number; transmission:number; dispersion:number; absorptionDistance:number;
+  internalReflection:number; facetContrast:number; brilliance:number; fire:number;
 };
 
 export const AURUM_OPTICAL_PROFILES:Record<string,AurumOpticalProfile>={
@@ -214,14 +193,7 @@ export const AURUM_OPTICAL_PROFILES:Record<string,AurumOpticalProfile>={
 export const getAurumOpticalProfile=(familia:string):AurumOpticalProfile=>
   AURUM_OPTICAL_PROFILES[familia]??AURUM_OPTICAL_PROFILES["Diamante"]!;
 
-export type AurumFacetProfile={
-  cut:string;
-  crownAngle:number;
-  pavilionAngle:number;
-  tableRatio:number;
-  facetContrast:number;
-};
-
+export type AurumFacetProfile={cut:string;crownAngle:number;pavilionAngle:number;tableRatio:number;facetContrast:number};
 export const AURUM_FACET_PROFILES:Record<string,AurumFacetProfile>={
   brillante:{cut:"Brillante",crownAngle:34,pavilionAngle:40.75,tableRatio:.57,facetContrast:1},
   esmeralda:{cut:"Esmeralda",crownAngle:33,pavilionAngle:38,tableRatio:.68,facetContrast:.88},
@@ -230,13 +202,8 @@ export const AURUM_FACET_PROFILES:Record<string,AurumFacetProfile>={
   princesa:{cut:"Princesa",crownAngle:36,pavilionAngle:40,tableRatio:.72,facetContrast:.96}
 };
 
-export const getAurumFacetProfile=(cut:string="brillante")=>
-  AURUM_FACET_PROFILES[cut]??AURUM_FACET_PROFILES["brillante"]!;
+export const getAurumFacetProfile=(cut:string="brillante")=>AURUM_FACET_PROFILES[cut]??AURUM_FACET_PROFILES["brillante"]!;
 
-/**
- * Ajusta propiedades ópticas del material sin alterar la geometría del modelo.
- * Esto permite probar el pipeline óptico de forma segura con los archivos actuales.
- */
 export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)=>{
   if(!material)return material;
   material.ior=Math.min(2.65,Math.max(1.01,profile.ior));
@@ -249,35 +216,13 @@ export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)
   return material;
 };
 
-export type AurumDiamondOpticalConfig = {
-  refractionStrength:number; dispersionStrength:number; internalReflection:number;
-  brilliance:number; fire:number; facetContrast:number; environmentBoost:number;
-};
-
-export const AURUM_DIAMOND_OPTICAL_CONFIG:AurumDiamondOpticalConfig={
-  refractionStrength:1, dispersionStrength:1, internalReflection:.98,
-  brilliance:1, fire:1, facetContrast:1, environmentBoost:1
-};
-
+export type AurumDiamondOpticalConfig = {refractionStrength:number;dispersionStrength:number;internalReflection:number;brilliance:number;fire:number;facetContrast:number;environmentBoost:number};
+export const AURUM_DIAMOND_OPTICAL_CONFIG:AurumDiamondOpticalConfig={refractionStrength:1,dispersionStrength:1,internalReflection:.98,brilliance:1,fire:1,facetContrast:1,environmentBoost:1};
 export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_CONFIG)=>{
   if(!material)return material;
-  material.transmission=1;
-  material.ior=2.417;
-  material.dispersion=.035*config.dispersionStrength;
-  material.roughness=.010;
-  material.clearcoat=.26;
-  material.clearcoatRoughness=.010;
-  material.envMapIntensity=1.9*config.environmentBoost;
-  material.attenuationDistance=100;
-  material.userData={...(material.userData??{}),aurumDiamondOptics:config};
-  material.needsUpdate=true;
-  return material;
+  material.transmission=1; material.ior=2.417; material.dispersion=.035*config.dispersionStrength;
+  material.roughness=.010; material.clearcoat=.26; material.clearcoatRoughness=.010;
+  material.envMapIntensity=1.9*config.environmentBoost; material.attenuationDistance=100;
+  material.userData={...(material.userData??{}),aurumDiamondOptics:config}; material.needsUpdate=true; return material;
 };
-
-/**
- * Compatibilidad de API para AurumRender.
- * Mantiene un único comportamiento de aplicación de gemas.
- */
-export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>{
-  return applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
-};
+export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
