@@ -12,7 +12,7 @@ import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
 
-const presetFromCatalog=(g:any)=>({
+const presetFromCatalog=(g:any):any=>({
   id:String(g.id??"gema"),
   familia:String(g.familia??"Gema"),
   variante:String(g.nombre??g.id??"Natural"),
@@ -112,7 +112,7 @@ export function applyAurumGemToTarget(
   const box = new THREE.Box3().setFromObject(target);
   const size = box.getSize(new THREE.Vector3());
   const thickness = Math.max(0.015, Math.min(size.x,size.y,size.z) * 0.85);
-  const preset = presetFromCatalog(gemConfig);
+  const preset:any = presetFromCatalog(gemConfig);
   const opticalProfile = opticalProfileFromCatalog(gemConfig);
   const apply = (base:any) => {
     const next = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
