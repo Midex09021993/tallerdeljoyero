@@ -36,25 +36,17 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     });
   }
   applyScene(sceneId);
-  // Product-shot framing: calculate distance from the actual camera FOV
-  // instead of using a fixed multiplier. This keeps different 3DM proportions
-  // from arriving too close, too far, or clipped at the top/bottom.
   const maxDimension=Math.max(size.x,size.y,size.z,0.001);
   const fovRad=(viewer.camera.fov * Math.PI) / 180;
-  // Target a product-shot occupancy of roughly 65–75% instead of the
-  // earlier conservative framing that left the jewelry too small.
   const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
-  // Product photography uses a little more breathing room, like the clean
-  // iJewel-style catalog framing used for isolated jewelry shots.
   const framingMultiplier = sceneId === "producto" ? 1.40 : 1.08;
   const distance=Math.max(fitDistance * framingMultiplier,3.2);
-  const aimY=targetY + Math.max(size.y*.04, .025);
-  // Initial view: FRONT PRODUCT VIEW.
-  // Rhino/MatrixGold already provides the model centered on the world axes,
-  // so the first camera should not reinterpret that orientation. This mirrors
-  // the iJewel workflow where a saved front camera view is used as the
-  // reference before the user starts rotating the piece.
-  viewer.camera.position.set(0, aimY, distance);
+  const aimY=targetY + Math.max(size.y*.035, .025);
+  // Product-shot camera: keep the ring essentially frontal, but lift the
+  // camera slightly so the horizontal studio floor becomes visible and the
+  // piece no longer reads as if it were floating in a flat gray canvas.
+  const cameraLift = sceneId === "producto" ? Math.max(size.y*.075, .04) : 0;
+  viewer.camera.position.set(0, aimY + cameraLift, distance);
   viewer.controls.target.set(0,aimY,0);
   viewer.camera.lookAt(0,aimY,0);
   viewer.camera.updateProjectionMatrix();
@@ -93,7 +85,6 @@ export function disposeAurumViewer(viewer: {
   clearSelection?: () => void;
   composer?: any;
 }) {
-  // Detener primero los observadores y listeners antes de liberar WebGL.
   viewer.observer?.disconnect();
   if (viewer.clickHandler) viewer.renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
   viewer.controls?.dispose?.();
@@ -102,8 +93,6 @@ export function disposeAurumViewer(viewer: {
   viewer.clearSelection?.();
   viewer.hdriGroundTexture?.dispose?.();
   viewer.environmentController?.dispose?.();
-  // GemEnvironment keeps a small HDR cache during scene switching; clear the
-  // complete cache when the viewer is destroyed to avoid retaining PMREM textures.
   viewer.gemEnvironmentController?.dispose?.();
   viewer.composer?.dispose?.();
   viewer.renderer?.renderLists?.dispose?.();
@@ -127,8 +116,6 @@ export function createAurumWebGLViewer(
     preserveDrawingBuffer: true,
     powerPreference: "high-performance",
   });
-  // Quality is an explicit render-scale choice, not a cap by the monitor DPR.
-  // This makes Baja/Alta/Ultra visibly and measurably different even on a 1x display.
   const requestedPixelRatio = Math.max(1, Math.min(2, Number(options.pixelRatio ?? 2)));
   renderer.setPixelRatio(requestedPixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
