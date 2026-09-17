@@ -216,7 +216,7 @@ function LoginPage() {
             ¿Eres cliente?{" "}
             <a href="/cliente" className="text-gold underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
           </p>
-          <p className="mt-4 hidden text-center text-[10px] tracking-wider text-white/25 md:block max-[767px]:block">Desarrollado por Fadilab EIRL</p>
+          <p className="mt-4 hidden text-center text-[10px] tracking-wider text-white/25 md:block max-[767px]:block">Desarrollado por Fadilab</p>
         </section>
       </div>
 
