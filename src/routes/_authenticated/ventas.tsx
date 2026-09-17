@@ -623,7 +623,12 @@ function PedidoVentaCard({
           </div>
         )}
       </button>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-4 rounded-xl border border-border/80 bg-surface-sunken/60 p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pagos</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+        <div className="flex flex-wrap gap-2">
         {tieneContratoFinanciero ? (
           <button
             type="button"
@@ -638,6 +643,7 @@ function PedidoVentaCard({
             type="button"
             onClick={onRegistrarPago}
             className="rounded-xl border border-success/25 bg-success-soft px-3 py-2 text-xs font-medium text-success"
+            title="Registrar un abono o pago recibido del cliente"
           >
             Registrar pago
           </button>
@@ -679,25 +685,34 @@ function PedidoVentaCard({
           </div>
         ) : null}
       </div>
+        </div>
+      </div>
       {historialAbierto ? <HistorialPagos pagos={pagos} /> : null}
       {pagoAbierto ? (
         <FormularioPagoVentas guardando={guardandoPago} onGuardar={onGuardarPago} />
       ) : null}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 rounded-xl border border-gold/20 bg-gold/5 p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Entrega</span>
+          <span className="h-px flex-1 bg-gold/20" />
+        </div>
+        <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onAccion}
           className="min-w-[140px] flex-1 rounded-xl bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground"
+          title="Registrar el envío cuando el pedido sale por encomienda"
         >
-          {accionPrincipal}
+          📦 {accionPrincipal}
         </button>
         {accionSecundaria && onAccionSecundaria ? (
           <button
             type="button"
             onClick={onAccionSecundaria}
-            className="min-w-[110px] flex-1 rounded-xl border border-success/25 bg-success-soft px-3 py-2.5 text-xs font-medium text-success"
+            className="min-w-[110px] flex-1 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2.5 text-xs font-medium text-gold"
+            title="Marcar como entregado cuando el cliente recoge el pedido en tienda"
           >
-            {accionSecundaria}
+            ✓ {accionSecundaria}
           </button>
         ) : null}
         <button
@@ -707,6 +722,7 @@ function PedidoVentaCard({
         >
           Ficha
         </button>
+        </div>
       </div>
       {children}
       </div>
