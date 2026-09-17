@@ -677,82 +677,53 @@ export function AurumRender() {
       <div className="flex min-h-0 flex-1">
         <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
           <div className="h-full overflow-y-auto">
-            <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" onClick={()=>setUxSection("materiales")} className={"mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/85")}><ChevronDown className="size-4"/><span>Material</span></button>
-              <div className="space-y-3">
-                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
-                  Familia / grupo
-                  <select value={materialActivo?.grupo || MATERIALES[0]?.grupo} onChange={(e)=>{const grupo=e.target.value;const primero=MATERIALES.find(m=>m.grupo===grupo);if(primero){setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(primero.id);apiRef.current?.material(primero)}}} className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
-                    {[...new Set(MATERIALES.map(m=>m.grupo))].map(g=><option key={g} value={g} className="bg-[#111416]">{g}</option>)}
+            <section className="border-b border-white/10 px-5 py-2">
+              <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{MATERIALES.length}</span>
+              </button>
+              {uxSection==="materiales"&&<div className="pb-5">
+                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">Material / acabado
+                  <select value={materialId} onChange={e=>{const m=MATERIALES.find(x=>x.id===e.target.value);if(m){setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}} className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
+                    {MATERIALES.map(m=><option key={m.id} value={m.id} className="bg-[#111416]">{m.nombre}</option>)}
                   </select>
                 </label>
-                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
-                  Material / acabado
-                  <select value={materialId} onChange={(e)=>{const m=MATERIALES.find(x=>x.id===e.target.value);if(m){setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}} className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
-                    {[...new Set(MATERIALES.map(m=>m.grupo))].map(g=><optgroup key={g} label={g}>{MATERIALES.filter(m=>m.grupo===g).map(m=><option key={m.id} value={m.id} className="bg-[#111416]">{m.nombre}</option>)}</optgroup>)}
-                  </select>
-                </label>
-                <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
+                <div className="mt-3 flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
                   <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
                   <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{materialActivo.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">{materialActivo.grupo} · Metalicidad {(materialActivo.metalness*100).toFixed(0)}% · Rugosidad {materialActivo.roughness.toFixed(2)}</p></div>
                 </div>
-              </div>
+              </div>}
             </section>
 
-            <section className="border-b border-white/10 px-5 py-5">
-              <button type="button" onClick={()=>setUxSection("gemas")} className="mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium"><ChevronDown className="size-4"/><span>Gemas</span></button>
-              <div className="space-y-3">
-                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
-                  Familia
-                  <select
-                    value={gemaActiva?.familia || GEMAS[0]?.familia}
-                    onChange={(e)=>{
-                      const familia=e.target.value;
-                      const primera=GEMAS.find(g=>g.familia===familia);
-                      if(primera){setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(primera.id);apiRef.current?.gema(primera);}
-                    }}
-                    className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60"
-                  >
-                    {[...new Set(GEMAS.map(g=>g.familia))].map(f=><option key={f} value={f} className="bg-[#111416]">{f}</option>)}
+            <section className="border-b border-white/10 px-5 py-2">
+              <button type="button" onClick={()=>setUxSection(uxSection==="gemas"?"":"gemas")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="gemas"?"rotate-0":"-rotate-90")}/><span>Gemas</span></span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{GEMAS.length}</span>
+              </button>
+              {uxSection==="gemas"&&<div className="pb-5">
+                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">Gema / variante
+                  <select value={gemaId} onChange={e=>{const g=GEMAS.find(x=>x.id===e.target.value);if(g){setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}} className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
+                    {GEMAS.map(g=><option key={g.id} value={g.id} className="bg-[#111416]">{g.nombre}</option>)}
                   </select>
                 </label>
-                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
-                  Gema / calidad
-                  <select
-                    value={gemaId}
-                    onChange={(e)=>{
-                      const g=GEMAS.find(x=>x.id===e.target.value);
-                      if(g){setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g);}
-                    }}
-                    className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60"
-                  >
-                    {[...new Set(GEMAS.map(g=>g.familia))].map(f=>(
-                      <optgroup key={f} label={f}>
-                        {GEMAS.filter(g=>g.familia===f).map(g=><option key={g.id} value={g.id} className="bg-[#111416]">{g.nombre}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
-                <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
+                <div className="mt-3 flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
                   <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-white">{gemaActiva.nombre}</p>
-                    <p className="mt-0.5 text-[9px] text-white/40">RI {gemaActiva.ior.toFixed(2)} · Transmisión {(gemaActiva.transmission*100).toFixed(0)}% · Inclusiones {gemaActiva.inclusionStyle==="ninguna"?"No": "Sí"}</p>
-                  </div>
+                  <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{gemaActiva.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">RI {gemaActiva.ior.toFixed(2)} · Transmisión {(gemaActiva.transmission*100).toFixed(0)}% · Inclusiones {gemaActiva.inclusionStyle==="ninguna"?"No":"Sí"}</p></div>
                 </div>
-              </div>
+              </div>}
             </section>
 
-            <section className="px-5 py-5">
-              <button type="button" onClick={()=>setUxSection("escena")} className="mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium"><ChevronDown className="size-4"/><span>Escena</span></button>
-              <div className="grid grid-cols-3 gap-3">
-                {ESCENARIOS.slice(0,6).map(e=><button key={e.id} type="button" onClick={()=>{setUxSection("escena");setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
-                  <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}>
-                    <span className={"block h-full w-full "+e.clase}/>
-                  </span>
+            <section className="border-b border-white/10 px-5 py-2">
+              <button type="button" onClick={()=>setUxSection(uxSection==="escena"?"":"escena")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="escena"?"rotate-0":"-rotate-90")}/><span>Escenas</span></span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{ESCENARIOS.length}</span>
+              </button>
+              {uxSection==="escena"&&<div className="grid grid-cols-3 gap-3 pb-5">
+                {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
+                  <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}><span className={"block h-full w-full "+e.clase}/></span>
                   <span className="mt-2 block text-[10px]">{e.nombre}</span>
                 </button>)}
-              </div>
+              </div>}
             </section>
             <div className="px-5 pb-6">
               <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-3 py-3 text-left hover:border-[#d4af37]/40">
