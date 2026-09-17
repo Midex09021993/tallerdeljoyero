@@ -40,12 +40,10 @@ export function applyAurumCameraView(
     : new THREE.Vector3(2.6, 2.6, 2.6);
   const radius = Math.max(size.length() * 0.5, 1.3);
   const profile = getAurumProductCameraProfile(category);
-  // La vista frontal necesita un poco más de aire para presentar la pieza completa
-  // como fotografía de producto, sin alterar la perspectiva ni el resto de vistas.
-  const distance = Math.max(
-    radius * (view === "frontal" ? 2.30 : 1.75) * profile.distance,
-    3.6
-  );
+
+  // Encuadre de presentación coherente: más aire alrededor de la pieza
+  // y escala consistente al cambiar entre frontal, perspectiva, superior y lateral.
+  const distance = Math.max(radius * 2.35 * profile.distance, 3.6);
   const verticalBias = radius * profile.vertical;
 
   controls.target.copy(target);
