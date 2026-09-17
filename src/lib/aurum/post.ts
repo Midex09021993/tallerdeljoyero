@@ -72,7 +72,13 @@ export async function createAurumPostPipeline(
     const { LUTPass }=await import("three/examples/jsm/postprocessing/LUTPass.js");
     const size=16;
     const data=new Uint8Array(size*size*size*4);
-    const saturation=1.025,contrast=1.018,warm=.0015;
+    // Build the grading LUT from the active photographic profile instead of
+    // using a second hard-coded color response. This keeps the LUT aligned with
+    // AURUM_POST_CONFIG and makes the post pipeline the single authority for
+    // contrast and saturation.
+    const saturation=Math.max(0,Number(config.saturation??1.018));
+    const contrast=Math.max(0,Number(config.contrast??1.018));
+    const warm=.0015;
     let p=0;
     for(let b=0;b<size;b++) for(let g=0;g<size;g++) for(let rr=0;rr<size;rr++){
       const r=rr/(size-1),gg=g/(size-1),bb=b/(size-1);
