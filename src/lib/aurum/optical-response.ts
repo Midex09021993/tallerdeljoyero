@@ -3,10 +3,8 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
 /**
  * Family-specific optical response.
  *
- * GIA separates brightness, fire and scintillation rather than treating
- * "more brightness" as universally better. This layer therefore makes only
- * restrained, family-aware adjustments to the material response and leaves
- * authored IOR, transmission, attenuation and dispersion values authoritative.
+ * This layer makes the differences between transparent gemstones visible in the
+ * render without replacing the authored CAD geometry or optical constants.
  */
 export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalProfile)=>{
   if(!material) return material;
@@ -14,30 +12,33 @@ export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalP
   const brilliance=Math.max(0,Math.min(1.2,Number(profile.brilliance??.75)));
   const fire=Math.max(0,Math.min(1.25,Number(profile.fire??.35)));
   const facetContrast=Math.max(0,Math.min(1.2,Number(profile.facetContrast??.9)));
+  const internalReflection=Math.max(0,Math.min(1,Number(profile.internalReflection??.8)));
   const family=String(material.userData?.aurumGemFamily??"");
 
-  // Keep the authored environment response, but shape it by optical family.
-  // This avoids the common "turn the gem brighter" shortcut that washes color.
+  // Make broad reflections readable without washing out saturated stones.
   const baseEnv=Number(material.envMapIntensity??1);
-  material.envMapIntensity=baseEnv*(.94+brilliance*.10);
+  material.envMapIntensity=baseEnv*(.90+brilliance*.18);
 
-  // A polished gemstone needs a strong but controlled specular response.
-  // Contrast is intentionally a small multiplier because the actual facets
-  // already come from the CAD geometry and flat-shaded normals.
-  material.specularIntensity=Math.max(.82,Math.min(1, .90+facetContrast*.10));
+  // Strong specular response is essential for polished facet transitions.
+  material.specularIntensity=Math.max(.88,Math.min(1, .90+facetContrast*.10));
 
-  // Dispersion is already authored per catalog stone. Fire only modulates it
-  // gently; this prevents colored gems from becoming synthetic rainbow glass.
-  const dispersion=Number(material.dispersion??0);
-  const fireScale=.94+fire*.08;
-  material.dispersion=Math.max(0,dispersion*fireScale);
-
-  // Colored stones benefit from slightly stronger facet separation than a
-  // transparent-glass look. Diamonds/moissanite retain their own dedicated
-  // optical path below this layer.
+  // Increase the visible separation between neighboring authored facets. The
+  // geometry remains untouched; flatShading supplies the actual facet normals.
   if(family!=="Diamante" && family!=="Moissanita"){
-    material.roughness=Math.max(.006,Number(material.roughness??.02)*(1-.035*facetContrast));
+    const baseRoughness=Math.max(.006,Number(material.roughness??.02));
+    material.roughness=Math.max(.006,baseRoughness*(1-.12*facetContrast));
+    material.clearcoat=Math.max(.14,Math.min(.30,.14+facetContrast*.10));
+    material.clearcoatRoughness=Math.max(.008,Math.min(.025,baseRoughness*.65));
   }
+
+  // Let internal reflection influence the transmission response instead of
+  // treating every colored stone as the same piece of glass.
+  const baseTransmission=Math.max(0,Math.min(1,Number(material.transmission??1)));
+  material.transmission=Math.max(0,Math.min(1,baseTransmission*(.92+internalReflection*.08)));
+
+  // Fire remains a subtle spectral effect on colored stones.
+  const dispersion=Number(material.dispersion??0);
+  material.dispersion=Math.max(0,dispersion*(.94+fire*.08));
 
   material.userData={
     ...(material.userData??{}),
@@ -46,7 +47,8 @@ export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalP
       brilliance,
       fire,
       facetContrast,
-      internalReflection:Number(profile.internalReflection??.8),
+      internalReflection,
+      facetResponseVersion:"v2",
     },
   };
   material.needsUpdate=true;
