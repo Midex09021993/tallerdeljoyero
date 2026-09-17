@@ -19,12 +19,12 @@ export const AURUM_LIGHTING_PRESETS={joyeria:{...AURUM_LIGHTING_DEFAULT},diamant
 
 /** Broad source ratios. The shape of the reflection matters more than raw light power. */
 export const AURUM_LIGHTING_RENDER_PRESETS={
-  // Large diffused key + moderate fill: clean gradients without washing the metal.
-  productSoft:{key:.42,fill:.10,rim:.16,gem:.68,softbox:.92,strip:.64,front:.28,kicker:.38,edgeLeft:.34,edgeRight:.32},
+  // Product shot: broad diffusion plus a controlled front source. The goal is
+  // to reveal white-metal curvature while retaining the soft studio character.
+  productSoft:{key:.50,fill:.15,rim:.20,gem:.68,softbox:1.00,strip:.72,front:.40,kicker:.38,edgeLeft:.34,edgeRight:.32},
   studioSoft:{key:.55,fill:.13,rim:.21,gem:.46,softbox:.88,strip:.54,front:.46,kicker:.56,edgeLeft:.50,edgeRight:.48},
   studioHard:{key:.46,fill:.05,rim:.28,gem:.12,softbox:.54,strip:.30,front:.14,kicker:.82,edgeLeft:.28,edgeRight:.34},
   jewelry:{key:.58,fill:.14,rim:.25,gem:.52,softbox:.90,strip:.58,front:.38,kicker:.62,edgeLeft:.46,edgeRight:.44},
-  // Luxury keeps a controlled dark side and a narrower kicker for edge definition.
   luxury:{key:.36,fill:.045,rim:.30,gem:.12,softbox:.42,strip:.22,front:.09,kicker:.82,edgeLeft:.20,edgeRight:.25},
 } as const;
 export type AurumLightingRenderPresetId=keyof typeof AURUM_LIGHTING_RENDER_PRESETS;
