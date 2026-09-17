@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Boxes, Calculator, ChevronLeft, Droplets, Gem, Ruler, Scale, Wrench } from "lucide-react";
+import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Wrench } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
@@ -63,7 +63,7 @@ export function HerramientasFlotantes() {
               className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-ink-foreground/15 text-ink-foreground/60 transition hover:border-gold hover:text-gold"
               aria-label="Cerrar herramientas"
             >
-              <ChevronLeft className="size-4" aria-hidden="true" />
+              <ChevronRight className="size-4" aria-hidden="true" />
             </button>
           </div>
 
