@@ -78,4 +78,4 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
 };
 
 export const getAurumReflectionRigProfile=(id:string):AurumReflectionRigProfile=>
-  AURUM_REFLECTION_RIG_PROFILES[id]??AURUM_REFLECTION_RIG_PROFILES.jewelry;
+  AURUM_REFLECTION_RIG_PROFILES[id]??AURUM_REFLECTION_RIG_PROFILES["jewelry"]!;

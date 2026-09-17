@@ -9,7 +9,7 @@ export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; 
 
 export const getAurumGemEnvironmentIntensity = (family:string) =>
   AURUM_GEM_ENVIRONMENT_PROFILES[family]?.intensity ??
-  AURUM_GEM_ENVIRONMENT_PROFILES.default.intensity;
+  AURUM_GEM_ENVIRONMENT_PROFILES["default"]!.intensity;
 
 export interface AurumGemEnvironmentController {
   load: (
