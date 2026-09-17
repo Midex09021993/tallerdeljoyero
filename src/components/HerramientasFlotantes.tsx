@@ -31,7 +31,7 @@ export function HerramientasFlotantes() {
   const [activa, setActiva] = useState<string>("yeso");
 
   return (
-    <div className="fixed left-0 top-1/2 z-40 flex -translate-y-1/2 items-center">
+    <div className="fixed bottom-24 left-2 z-40 flex items-center md:bottom-auto md:left-0 md:top-1/2 md:-translate-y-1/2">
       {/* Pestaña colapsada */}
       <button
         type="button"
