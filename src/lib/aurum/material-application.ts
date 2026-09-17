@@ -10,6 +10,7 @@ import {
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
 import { applyAurumDynamicScintillation } from "./scintillation";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
+import { applyAurumLatinGemProfile } from "./latin-gem-catalog";
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
@@ -129,6 +130,7 @@ export function applyAurumGemToTarget(
       aurumFacetNormalMode:"flatShading",
     };
     renderAurumInclusions(THREE, part, gemConfig, 9173, preset);
+    applyAurumLatinGemProfile(part, gemConfig);
   });
   applyGemEnvironment();
 }
