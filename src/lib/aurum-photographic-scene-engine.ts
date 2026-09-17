@@ -55,8 +55,9 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   transparente:{environmentKey:"studioSoft",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:1.00,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(false,.05,.04,{vignette:false})},
   // Packshot: keep a neutral photographic background while giving polished
   // white metals enough environment energy to read as reflective rather than
-  // charcoal. Exposure is raised instead of clipping the HDR source.
-  producto:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.40,environmentRotation:.54,gemEnvironmentRotation:-.18,gemEnvironmentIntensity:1.00,metalEnvironmentScale:1.22,highlightProtection:.94,exposure:.70,lighting:"productSoft",post:post(true,.035,.025,{vignette:false})},
+  // charcoal. Reflection energy is kept controlled to prevent warm metals from
+  // producing clipped studio highlights.
+  producto:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.40,environmentRotation:.54,gemEnvironmentRotation:-.18,gemEnvironmentIntensity:1.00,metalEnvironmentScale:1.08,highlightProtection:.94,exposure:.70,lighting:"productSoft",post:post(true,.035,.025,{vignette:false})},
   galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.94,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
   oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
   gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.40,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.08,metalEnvironmentScale:.88,highlightProtection:.93,exposure:.64,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
