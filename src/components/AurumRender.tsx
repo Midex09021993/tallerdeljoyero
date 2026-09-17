@@ -683,14 +683,20 @@ export function AurumRender() {
                 <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{MATERIALES.length}</span>
               </button>
               {uxSection==="materiales"&&<div className="pb-5">
-                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">Material / acabado
-                  <select value={materialId} onChange={e=>{const m=MATERIALES.find(x=>x.id===e.target.value);if(m){setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}} className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
-                    {MATERIALES.map(m=><option key={m.id} value={m.id} className="bg-[#111416]">{m.nombre}</option>)}
-                  </select>
-                </label>
-                <div className="mt-3 flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
-                  <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
-                  <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{materialActivo.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">{materialActivo.grupo} · Metalicidad {(materialActivo.metalness*100).toFixed(0)}% · Rugosidad {materialActivo.roughness.toFixed(2)}</p></div>
+                <div className="grid grid-cols-4 gap-2.5 pb-1">
+                  {MATERIALES.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
+                    onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
+                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(materialId===m.id?"bg-white/[.06]":"hover:bg-white/[.04]")}>
+                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,.35)]":"border-white/10 group-hover:border-white/30")}>
+                      <span className="size-10 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
+                        style={{background:`radial-gradient(circle at 32% 27%,rgba(255,255,255,.78) 0 6%,rgba(255,255,255,.18) 17%,transparent 34%),linear-gradient(145deg,rgba(255,255,255,.42),transparent 34%),${hexColor(m.color)}`}}/>
+                    </span>
+                    <span className="mt-1.5 w-full truncate text-center text-[8px] text-white/65">{m.nombre}</span>
+                  </button>)}
+                </div>
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
+                  <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
+                  <p className="truncate text-[10px] text-white/65">{materialActivo.nombre}</p>
                 </div>
               </div>}
             </section>
@@ -701,14 +707,20 @@ export function AurumRender() {
                 <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{GEMAS.length}</span>
               </button>
               {uxSection==="gemas"&&<div className="pb-5">
-                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">Gema / variante
-                  <select value={gemaId} onChange={e=>{const g=GEMAS.find(x=>x.id===e.target.value);if(g){setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}} className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
-                    {GEMAS.map(g=><option key={g.id} value={g.id} className="bg-[#111416]">{g.nombre}</option>)}
-                  </select>
-                </label>
-                <div className="mt-3 flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
-                  <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
-                  <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{gemaActiva.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">RI {gemaActiva.ior.toFixed(2)} · Transmisión {(gemaActiva.transmission*100).toFixed(0)}% · Inclusiones {gemaActiva.inclusionStyle==="ninguna"?"No":"Sí"}</p></div>
+                <div className="grid grid-cols-4 gap-2.5 pb-1">
+                  {GEMAS.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
+                    onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
+                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(gemaId===g.id?"bg-white/[.06]":"hover:bg-white/[.04]")}>
+                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(gemaId===g.id?"border-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,.35)]":"border-white/10 group-hover:border-white/30")}>
+                      <span className="relative size-10 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
+                        style={{background:`radial-gradient(circle at 30% 24%,rgba(255,255,255,.82) 0 5%,rgba(255,255,255,.18) 12%,transparent 28%),conic-gradient(from 20deg,rgba(255,255,255,.28),transparent 12%,rgba(0,0,0,.18) 25%,rgba(255,255,255,.22) 38%,transparent 52%,rgba(0,0,0,.2) 67%,rgba(255,255,255,.24) 82%,transparent),${hexColor(g.color)}`}}/>
+                    </span>
+                    <span className="mt-1.5 w-full truncate text-center text-[8px] text-white/65">{g.nombre}</span>
+                  </button>)}
+                </div>
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
+                  <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
+                  <p className="truncate text-[10px] text-white/65">{gemaActiva.nombre}</p>
                 </div>
               </div>}
             </section>
