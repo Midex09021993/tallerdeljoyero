@@ -22,6 +22,11 @@ export function createAurumLightingController(
   let activeRigId = "jewelry";
   let lastRadius = 1;
   let lastTargetY = 0;
+  const diagnosticMode = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("aurumDiag")
+    : null;
+  const diagnosticEnvironmentOnly = diagnosticMode === "environment";
+
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
@@ -101,6 +106,15 @@ export function createAurumLightingController(
       if (lights.kicker) lights.kicker.visible = true;
       if (lights.edgeLeft) lights.edgeLeft.visible = true;
       if (lights.edgeRight) lights.edgeRight.visible = true;
+
+      // Diagnostic mode: isolate the HDR/IBL contribution from every direct
+      // and rectangular reflection source. Production behavior is unchanged
+      // unless ?aurumDiag=environment is explicitly present in the URL.
+      if (diagnosticEnvironmentOnly) {
+        Object.values(lights).forEach((light:any) => {
+          if (light) light.visible = false;
+        });
+      }
     },
     applyPreset(id) {
       const preset = getAurumLightingPreset(id);
