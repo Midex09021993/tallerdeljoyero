@@ -58,33 +58,48 @@ const opticalProfileFromCatalog=(g:any)=>{
   };
 };
 
+const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
+const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
+
 export function applyAurumMaterialToModel(
   model:any,
   activePart:any,
   materialConfig:any,
   sharedMaterial:any
 ) {
+  // A material change is an operation on the selected component only.
+  // Never interpret a missing selection as "apply to the whole model".
+  if (!model || !activePart?.isMesh) return false;
+
+  const selectedMeta = selectionMeta(activePart);
+  const selectedLayer = selectedMeta.capa || activePart?.userData?.attributes?.layerName || null;
+  const selectedCategory = selectionCategory(activePart);
+  const selectedSlot = selectedMeta.matrixSlot;
+
+  // Metals may only be assigned to an explicitly selected metal component.
+  if (selectedCategory !== "metal") return false;
+
   applyAurumMetal(sharedMaterial, metalPresetFromConfig(materialConfig));
-  model?.traverse?.((x:any) => {
+  let applied = 0;
+  model.traverse((x:any) => {
     if (!x.isMesh) return;
     x.castShadow = true;
     x.receiveShadow = true;
-    const selectedMeta = activePart?.userData?.aurumRhino || {};
-    const selectedLayer = selectedMeta.capa || activePart?.userData?.attributes?.layerName || null;
-    const selectedCategory = selectedMeta.categoria || null;
-    const selectedSlot = selectedMeta.matrixSlot;
-    const meta = x.userData?.aurumRhino || {};
-    const sameLayer = !!activePart && selectedLayer && meta.capa === selectedLayer;
-    const sameSlot = !!activePart && selectedSlot != null && meta.matrixSlot === selectedSlot && meta.categoria === selectedCategory;
-    if (!activePart || x.uuid === activePart.uuid || sameLayer || sameSlot) {
+    const meta = selectionMeta(x);
+    const category = selectionCategory(x);
+    const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === "metal";
+    const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === "metal";
+    if (x.uuid === activePart.uuid || sameLayer || sameSlot) {
       const apply = (base:any) => {
         const next = base?.clone ? base.clone() : sharedMaterial.clone();
         applyAurumMetal(next, metalPresetFromConfig(materialConfig));
         return next;
       };
       x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
+      applied++;
     }
   });
+  return applied>0;
 }
 
 export function applyAurumGemToTarget(
@@ -92,18 +107,23 @@ export function applyAurumGemToTarget(
   gemConfig:any,
   applyGemEnvironment:()=>void
 ) {
-  if (!target) return;
+  // Gem changes also require an explicit gemstone selection. A selected
+  // metal/other component must never be converted into a gemstone.
+  if (!target?.isMesh) return false;
+  const selectedCategory=selectionCategory(target);
+  if (selectedCategory !== "gema") return false;
+
   const modelRoot = target.parent?.parent ? (()=>{ let r=target; while(r.parent) r=r.parent; return r; })() : target;
-  const selectedMeta = target.userData?.aurumRhino || {};
+  const selectedMeta = selectionMeta(target);
   const selectedLayer = selectedMeta.capa || target.userData?.attributes?.layerName || null;
-  const selectedCategory = selectedMeta.categoria || null;
   const selectedSlot = selectedMeta.matrixSlot;
   const targets:any[] = [];
   modelRoot?.traverse?.((x:any)=>{
     if (!x.isMesh || x.userData?.aurumInternalInclusion) return;
-    const meta=x.userData?.aurumRhino || {};
-    const sameLayer=!!selectedLayer && meta.capa===selectedLayer;
-    const sameSlot=selectedSlot!=null && meta.matrixSlot===selectedSlot && meta.categoria===selectedCategory;
+    const meta=selectionMeta(x);
+    const category=selectionCategory(x);
+    const sameLayer=!!selectedLayer && meta.capa===selectedLayer && category==="gema";
+    const sameSlot=selectedSlot!=null && meta.matrixSlot===selectedSlot && category==="gema";
     if(x===target || sameLayer || sameSlot) targets.push(x);
   });
   if(!targets.length) targets.push(target);
@@ -135,6 +155,7 @@ export function applyAurumGemToTarget(
     applyAurumLatinGemProfile(part, gemConfig);
   });
   applyGemEnvironment();
+  return true;
 }
 
 export function clearAurumGemFromTarget(target:any) {
