@@ -76,6 +76,36 @@ const estimateAurumGemThickness=(target:any,thicknessScale=1)=>{
   return Math.max(.015,minimumDimension*.85*Math.max(.5,Math.min(1.5,Number(thicknessScale??1))));
 };
 
+
+const inspectAurumGemGeometry=(target:any)=>{
+  const geometry=target?.geometry;
+  if(!geometry)return {available:false};
+  geometry.computeBoundingBox?.();
+  const position=geometry.getAttribute?.("position");
+  const normal=geometry.getAttribute?.("normal");
+  const uv=geometry.getAttribute?.("uv");
+  const index=geometry.getIndex?.();
+  const box=geometry.boundingBox;
+  const size=box?box.getSize(new THREE.Vector3()):new THREE.Vector3();
+  const triangles=index?Math.floor(index.count/3):position?Math.floor(position.count/3):0;
+  const preflight=target.userData?.aurumMeshPreflight;
+  return {
+    available:true,
+    vertices:position?.count??0,
+    triangles,
+    indexed:!!index,
+    hasNormals:!!normal&&normal.count===(position?.count??-1),
+    hasUV:!!uv&&uv.count===(position?.count??-1),
+    hasColor:!!geometry.getAttribute?.("color"),
+    dimensions:{x:Number(size.x.toFixed(6)),y:Number(size.y.toFixed(6)),z:Number(size.z.toFixed(6))},
+    localMinimumDimension:Number(Math.min(size.x,size.y,size.z).toFixed(6)),
+    closedCandidate:preflight?preflight.boundaryEdges===0&&preflight.nonManifoldEdges===0:null,
+    boundaryEdges:preflight?.boundaryEdges??null,
+    nonManifoldEdges:preflight?.nonManifoldEdges??null,
+    degenerateTriangles:preflight?.degenerateTriangles??null,
+  };
+};
+
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
 const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
 
@@ -142,7 +172,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   };
   targets.forEach((part:any)=>{
     part.material=Array.isArray(part.material)?part.material.map(apply):apply(part.material);
-    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1"};
+    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
   });
