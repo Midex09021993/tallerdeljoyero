@@ -91,9 +91,11 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
 
   material.envMapIntensity=response.environmentIntensity;
 
-  // Keep the metal itself responsible for the reflection. A strong clearcoat
-  // reads like lacquer and can create a second, artificial hot highlight.
-  material.clearcoat=Math.max(.025,Math.min(.10,preset.clearcoat*.25+.025));
+  // Base precious metals are not lacquered. Keep clearcoat only as a tiny
+  // residual response so polished metal highlights come from the metal itself.
+  // GIA documents polished/buffed jewelry as a metal surface finish; this PBR
+  // translation avoids introducing a second artificial lacquer highlight.
+  material.clearcoat=Math.max(.025,Math.min(.055,preset.clearcoat*.10+.015));
   material.clearcoatRoughness=Math.max(.045,Math.min(.14,material.roughness*.8));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
@@ -189,7 +191,6 @@ export const generateAurumInclusionPoints=(config:AurumInclusionConfig,count=48)
   return points;
 };
 
-
 /**
  * AURUM OPTICAL ENGINE v1.0
  * Presets de óptica y corte. La geometría original del archivo no se reemplaza:
@@ -253,7 +254,6 @@ export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)
   return material;
 };
 
-
 export type AurumDiamondOpticalConfig = {
   refractionStrength:number; dispersionStrength:number; internalReflection:number;
   brilliance:number; fire:number; facetContrast:number; environmentBoost:number;
@@ -278,7 +278,6 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
   material.needsUpdate=true;
   return material;
 };
-
 
 /**
  * Compatibilidad de API para AurumRender.
