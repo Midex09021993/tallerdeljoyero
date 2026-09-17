@@ -1,6 +1,63 @@
 import * as THREE from "three";
 import { getAurumModelParts } from "./model-parts";
 
+function isRhinoObjectHidden(attributes:any): boolean {
+  if (!attributes) return false;
+
+  // rhino3dm exposes both the direct visibility flag and ObjectMode.
+  // OpenNURBS uses: normal=0, hidden=1, locked=2.
+  const mode = attributes.mode;
+  const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
+  return attributes.visible === false
+    || mode === 1
+    || modeText === "hidden"
+    || modeText === "hidden_object";
+}
+
+function buildRhinoLayerVisibility(layers:any[]) {
+  const byId = new Map<string, any>();
+  for (const layer of layers) {
+    const id = layer?.id ?? layer?.Id;
+    if (id != null) byId.set(String(id), layer);
+  }
+
+  const cache = new Map<number, boolean>();
+
+  const isLayerEffectivelyVisible = (index:number, trail = new Set<number>()): boolean => {
+    if (index < 0 || index >= layers.length) return true;
+    if (cache.has(index)) return cache.get(index)!;
+    if (trail.has(index)) return true; // protect against malformed layer cycles
+
+    const layer = layers[index];
+    if (!layer) return true;
+
+    if (layer.visible === false) {
+      cache.set(index, false);
+      return false;
+    }
+
+    const parentId = layer.parentLayerId ?? layer.parentId;
+    if (parentId != null && String(parentId) && String(parentId) !== "00000000-0000-0000-0000-000000000000") {
+      const parent = byId.get(String(parentId));
+      if (parent) {
+        const parentIndex = layers.indexOf(parent);
+        if (parentIndex >= 0) {
+          const nextTrail = new Set(trail);
+          nextTrail.add(index);
+          const visible = isLayerEffectivelyVisible(parentIndex, nextTrail);
+          cache.set(index, visible);
+          return visible;
+        }
+      }
+    }
+
+    cache.set(index, true);
+    return true;
+  };
+
+  return isLayerEffectivelyVisible;
+}
+
 export async function normalizeAurumModel(
   object:any,
   glb:ArrayBuffer,
@@ -20,12 +77,35 @@ export async function normalizeAurumModel(
   // iJewel/Threepipe soporta 3DM como formato nativo de entrada y recomienda
   // conservar las render meshes de Rhino para el flujo de joyería.
   if (extension === "3dm") {
+    const layers = Array.isArray(object?.userData?.layers) ? object.userData.layers : [];
+    const isLayerEffectivelyVisible = buildRhinoLayerVisibility(layers);
+
     let i = 0;
     object?.traverse?.((x:any) => {
       if (!x.isMesh) return;
+
       const meta = metadataCapas[i++];
       if (!meta) return;
-      x.userData = {...x.userData, aurumRhino: meta};
+
+      const attrs = x.userData?.attributes || {};
+      const layerIndex = Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1;
+      const objectVisible = !isRhinoObjectHidden(attrs);
+      const layerVisible = isLayerEffectivelyVisible(layerIndex);
+
+      // Rhino puede ocultar un objeto directamente o mediante su capa.
+      // Además, una capa hija puede seguir reportando visible=true cuando
+      // su capa padre está apagada; por eso comprobamos toda la jerarquía.
+      const visible = objectVisible && layerVisible;
+
+      x.visible = x.visible !== false && visible;
+      x.userData = {
+        ...x.userData,
+        aurumRhino: {
+          ...meta,
+          visible,
+          hiddenByRhino: !visible,
+        },
+      };
     });
     object?.updateMatrixWorld?.(true);
     return object;
