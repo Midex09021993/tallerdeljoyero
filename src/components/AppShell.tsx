@@ -84,6 +84,19 @@ function seccionesVisibles(
 
 const RUTAS_PRODUCCION = ["/diseno-3d", "/impresion-3d", "/casting", "/corte-laser", "/taller"] as const;
 
+// Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
+const ORDEN_MENU: Record<string, number> = {
+  "/pedidos": 10,
+  "/ventas": 20,
+  "/inventario": 30,
+  "/gestion": 40,
+  "/aurum-render": 999,
+};
+
+function ordenarMenu(items: Seccion[]): Seccion[] {
+  return [...items].sort((a, b) => (ORDEN_MENU[a.to] ?? 50) - (ORDEN_MENU[b.to] ?? 50));
+}
+
 export function AppShell({
   titulo,
   subtitulo,
@@ -106,6 +119,7 @@ export function AppShell({
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
   const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
+  const visiblesOrdenadas = ordenarMenu(visibles);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
 
@@ -122,8 +136,8 @@ export function AppShell({
 
           <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
             {(() => {
-              const produccion = visibles.filter((s) => RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
-              const resto = visibles.filter((s) => !RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
+              const produccion = visiblesOrdenadas.filter((s) => RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
+              const resto = visiblesOrdenadas.filter((s) => !RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
               return <>
                 {resto.map((s) => (
                   <Link
@@ -237,7 +251,7 @@ export function AppShell({
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {visibles.map((s) => (
+              {visiblesOrdenadas.map((s) => (
                 <Link
                   key={s.to}
                   to={s.to}
