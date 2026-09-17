@@ -1167,7 +1167,7 @@ export function useCrearPedido() {
       const respuesta = await supabase
         .from("pedidos")
         .insert(pedidoConContrato)
-        .select("id, referencia, cliente")
+        .select("id, referencia, cliente, sede_id")
         .single();
 
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = pedidoConContrato;
@@ -1178,7 +1178,7 @@ export function useCrearPedido() {
           ? await supabase
               .from("pedidos")
               .insert(sinContratoId)
-              .select("id, referencia, cliente")
+              .select("id, referencia, cliente, sede_id")
               .single()
           : respuesta;
       if (error) throw error;
@@ -1217,7 +1217,7 @@ export function useCrearTrabajoContrato() {
       const respuesta = await supabase
         .from("pedidos")
         .insert(nuevo)
-        .select("id, referencia, cliente")
+        .select("id, referencia, cliente, sede_id")
         .single();
 
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = nuevo;
@@ -1227,7 +1227,7 @@ export function useCrearTrabajoContrato() {
           ? await supabase
               .from("pedidos")
               .insert(sinContratoId)
-              .select("id, referencia, cliente")
+              .select("id, referencia, cliente, sede_id")
               .single()
           : respuesta;
       if (error) throw error;
