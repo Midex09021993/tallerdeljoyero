@@ -8,6 +8,7 @@ import {
   metalPresetFromConfig,
 } from "../aurum-material-engine";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
+import { applyAurumDynamicScintillation } from "./scintillation";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
@@ -114,6 +115,7 @@ export function applyAurumGemToTarget(
     applyAurumGem(next, preset, thickness);
     applyAurumOpticalProfile(next, opticalProfile);
     applyAurumFamilyOpticalResponse(next, opticalProfile);
+    applyAurumDynamicScintillation(next, opticalProfile);
     if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
     next.flatShading = true;
     next.needsUpdate = true;
