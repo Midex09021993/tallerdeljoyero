@@ -16,7 +16,7 @@ function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefin
   return undefined;
 }
 
-function matrixFamilyCategory(layer:any,index:number,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro",colorRhinoHex:(color:any)=>string|undefined):"metal"|"gema"|"otro" {
+function matrixFamilyCategory(layer:any,index:number,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
   const name=String(layer?.name??"").trim();
   const explicit=explicitLayerCategory(name);
   if(explicit) return explicit;
@@ -26,13 +26,10 @@ function matrixFamilyCategory(layer:any,index:number,clasificarCapa:(capa:string
   // intentionally "other" and must never be auto-promoted to a gemstone.
   if(index>=0 && index<4) return "metal";
   if(index>=4 && index<8) return "gema";
-
-  // For files that do not follow the MatrixGold ordering, retain semantic
-  // classification by name/color only after the reserved first eight layers.
-  return clasificarCapa(name,colorRhinoHex(layer?.color));
+  return "otro";
 }
 
-function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro", colorRhinoHex:(color:any)=>string|undefined):number|undefined {
+function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"):number|undefined {
   if (category==="otro" || index<0) return undefined;
   const name=String(layer?.name ?? "").trim().toLowerCase();
   const explicit=name.match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
@@ -41,15 +38,6 @@ function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"
   // Preserve the physical MatrixGold order: Metal 01-04, then Gem 01-04.
   if(category==="metal" && index<4) return index+1;
   if(category==="gema" && index>=4 && index<8) return index-3;
-
-  const c=colorRhinoHex(layer?.color);
-  if (!c) return undefined;
-  const m=c.match(/^#([0-9a-f]{6})$/i);
-  if (!m) return undefined;
-  const n=parseInt(m[1]!,16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
-  const isGreen=category==="metal" && g>r*1.15 && g>b*1.15 && g>90;
-  const isBlue=category==="gema" && b>r*1.15 && b>g*1.05 && b>90;
-  if (!isGreen && !isBlue) return undefined;
   return undefined;
 }
 
@@ -78,11 +66,11 @@ export function getAurumModelParts(
     const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
     const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
     const categoria = meta?.categoria ?? (layer
-      ? matrixFamilyCategory(layer,layerIndex,clasificarCapa,colorRhinoHex)
+      ? matrixFamilyCategory(layer,layerIndex,clasificarCapa)
       : clasificarCapa(capa || "",colorCapa));
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
     const matrixSlot = layerIndex>=0 && layer
-      ? matrixLayerSlot(layer,layerIndex,categoria,colorRhinoHex)
+      ? matrixLayerSlot(layer,layerIndex,categoria)
       : undefined;
 
     result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, matrixSlot });
