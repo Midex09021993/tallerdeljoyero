@@ -46,7 +46,7 @@ function buildRhinoLayerVisibility(layers:any[]) {
   const isLayerEffectivelyVisible = (index:number, trail = new Set<number>()): boolean => {
     if (index < 0 || index >= layers.length) return true;
     if (cache.has(index)) return cache.get(index)!;
-    if (trail.has(index)) return true; // protect against malformed layer cycles
+    if (trail.has(index)) return true;
 
     const layer = layers[index];
     if (!layer) return true;
@@ -80,8 +80,6 @@ function buildRhinoLayerVisibility(layers:any[]) {
       return isLayerEffectivelyVisible(index);
     }
 
-    // Si el loader no entregó layerIndex, no debemos asumir que la capa está
-    // visible. Intentamos resolverla por nombre antes de aplicar el fallback.
     const name = String(layerName ?? "").trim().toLowerCase();
     if (name) {
       const layer = byName.get(name);
@@ -119,7 +117,14 @@ export async function normalizeAurumModel(
   const metadataCapas = extension === "3dm"
     ? getAurumModelParts(object,colorRhinoHex,clasificarCapa)
         .filter(p=>p.tipo==="malla")
-        .map(p=>({nombre:p.nombre,capa:p.capa,colorCapa:p.colorCapa,categoria:p.categoria,matrixSlot:p.matrixSlot}))
+        .map(p=>({
+          nombre:p.nombre,
+          capa:p.capa,
+          colorCapa:p.colorCapa,
+          categoria:p.categoria,
+          matrixSlot:p.matrixSlot,
+          layerIndex:p.layerIndex,
+        }))
     : [];
 
   // En 3DM conservamos directamente el render mesh producido por
@@ -140,9 +145,6 @@ export async function normalizeAurumModel(
       const layerIndex = resolveRhinoLayerIndex(x);
       const objectVisible = !isRhinoObjectHidden(attrs);
       const layerVisible = isLayerEffectivelyVisible(layerIndex, meta.capa);
-
-      // Rhino puede ocultar un objeto directamente o mediante su capa.
-      // Nunca hacemos visible una malla que venga de una capa oculta.
       const visible = objectVisible && layerVisible;
 
       x.visible = x.visible !== false && visible;
@@ -150,6 +152,7 @@ export async function normalizeAurumModel(
         ...x.userData,
         aurumRhino: {
           ...meta,
+          layerIndex,
           visible,
           hiddenByRhino: !visible,
         },
