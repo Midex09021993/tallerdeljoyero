@@ -212,11 +212,11 @@ function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-5 text-center text-xs text-white/55">
+          <p className="mt-5 hidden text-center text-xs text-white/55 md:block">
             ¿Eres cliente?{" "}
             <a href="/cliente" className="text-gold underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
           </p>
-          <p className="mt-4 text-center text-[10px] tracking-wider text-white/25">Desarrollado por Fadilab EIRL</p>
+          <p className="mt-4 hidden text-center text-[10px] tracking-wider text-white/25 md:block">Desarrollado por Fadilab EIRL</p>
         </section>
       </div>
 
@@ -235,4 +235,3 @@ function LoginPage() {
     </main>
   );
 }
-
