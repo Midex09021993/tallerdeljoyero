@@ -45,6 +45,15 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     applyScene(sceneId);
     model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
     applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+
+    // AurumRender actualiza el estado de vista al cargar. Ese estado puede
+    // intentar aplicar "perspectiva" inmediatamente después del encuadre.
+    // Reafirmamos el frontal en el siguiente frame, sin tocar materiales ni escena.
+    requestAnimationFrame(() => {
+      if (model.userData?.aurumInitialFrameApplied) {
+        applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+      }
+    });
     return;
   }
 
