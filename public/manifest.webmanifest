@@ -1,7 +1,7 @@
 {
-  "name": "Taller del Joyero",
-  "short_name": "Joyero",
-  "description": "ERP de producción para talleres de joyería.",
+  "name": "Aurum Lab",
+  "short_name": "Aurum Lab",
+  "description": "Sistema de gestión y producción para talleres de joyería Aurum Lab.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
