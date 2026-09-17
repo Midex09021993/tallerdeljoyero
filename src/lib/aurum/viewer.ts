@@ -11,7 +11,7 @@ export interface AurumViewerFrame {
   lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
-export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Otro") {
+export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo") {
   const prepared=prepare(model,2.6);
   const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
   viewer.groundController.positionUnderModel(bounds);
