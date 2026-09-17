@@ -679,11 +679,23 @@ export function AurumRender() {
           <div className="h-full overflow-y-auto">
             <section className="border-b border-white/10 px-5 py-5">
               <button type="button" onClick={()=>setUxSection("materiales")} className={"mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium "+(uxSection==="materiales"?"text-white":"text-white/85")}><ChevronDown className="size-4"/><span>Material</span></button>
-              <div className="grid grid-cols-5 gap-2">
-                {MATERIALES.filter(m=>m.grupo!=="Especiales").slice(0,5).map(m=><button key={m.id} type="button" title={m.nombre} onClick={()=>{setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}} className={"group text-center "+(materialId===m.id?"text-white":"text-white/70")}>
-                  <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(materialId===m.id?"border-[#34c7ff] bg-white/10 shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-white/10 bg-white/[.05] group-hover:border-white/25")}><span className="size-9 rounded-full border border-white/25 shadow-inner" style={{background:hexColor(m.color)}}/></span>
-                  <span className="mt-2 block truncate text-[10px]">{m.nombre}</span>
-                </button>)}
+              <div className="space-y-3">
+                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
+                  Familia / grupo
+                  <select value={materialActivo?.grupo || MATERIALES[0]?.grupo} onChange={(e)=>{const grupo=e.target.value;const primero=MATERIALES.find(m=>m.grupo===grupo);if(primero){setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(primero.id);apiRef.current?.material(primero)}}} className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
+                    {[...new Set(MATERIALES.map(m=>m.grupo))].map(g=><option key={g} value={g} className="bg-[#111416]">{g}</option>)}
+                  </select>
+                </label>
+                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
+                  Material / acabado
+                  <select value={materialId} onChange={(e)=>{const m=MATERIALES.find(x=>x.id===e.target.value);if(m){setUxSection("materiales");setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}} className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60">
+                    {[...new Set(MATERIALES.map(m=>m.grupo))].map(g=><optgroup key={g} label={g}>{MATERIALES.filter(m=>m.grupo===g).map(m=><option key={m.id} value={m.id} className="bg-[#111416]">{m.nombre}</option>)}</optgroup>)}
+                  </select>
+                </label>
+                <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
+                  <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
+                  <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{materialActivo.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">{materialActivo.grupo} · Densidad {materialActivo.density} g/cm³ · IOR {materialActivo.ior.toFixed(2)}</p></div>
+                </div>
               </div>
             </section>
 
