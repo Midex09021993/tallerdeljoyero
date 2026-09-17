@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
       const { data: adminRole } = await admin.rpc("es_admin", { _user_id: userId });
       if (!adminRole) return json({ error: "No autorizado" }, 403);
     } else {
-      const { data: roles } = await admin.from("user_roles").select("rol").eq("user_id", userId);
-      const internos = (roles ?? []).map((r) => String(r.rol)).filter((r) => r !== "cliente");
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
+      const internos = (roles ?? []).map((r) => String(r.role)).filter((r) => r !== "cliente");
       if (!internos.length) return json({ error: "No autorizado" }, 403);
     }
 
@@ -54,15 +54,25 @@ Deno.serve(async (req) => {
     let registradorNombre = String(payload.registrado_por ?? "");
     const pedidoId = String(payload.pedido_id ?? "");
 
+    let sedeIdPedido = "";
     if (!prueba && pedidoId) {
       const { data: pedido } = await admin.from("pedidos").select("id, referencia, cliente, sede_id").eq("id", pedidoId).maybeSingle();
       if (pedido) {
         referencia ||= pedido.referencia ?? "";
         cliente ||= pedido.cliente ?? "";
-        if (!sedeNombre && pedido.sede_id) {
-          const { data: sede } = await admin.from("sedes").select("nombre").eq("id", pedido.sede_id).maybeSingle();
-          sedeNombre = sede?.nombre ?? "";
-        }
+        sedeIdPedido = pedido.sede_id ?? "";
+      }
+    }
+
+    if (!sedeNombre) {
+      let sedeId = sedeIdPedido;
+      if (!sedeId) {
+        const { data: perfilSede } = await admin.from("profiles").select("sede_id").eq("id", userId).maybeSingle();
+        sedeId = perfilSede?.sede_id ?? "";
+      }
+      if (sedeId) {
+        const { data: sede } = await admin.from("sedes").select("nombre").eq("id", sedeId).maybeSingle();
+        sedeNombre = sede?.nombre ?? "";
       }
     }
 
@@ -71,7 +81,7 @@ Deno.serve(async (req) => {
       registradorNombre = profile?.nombre ?? "";
     }
 
-    const { data: owners, error: ownersError } = await admin.from("user_roles").select("user_id").eq("rol", "dueno");
+    const { data: owners, error: ownersError } = await admin.from("user_roles").select("user_id").eq("role", "dueno");
     if (ownersError) return json({ error: ownersError.message }, 500);
     const ownerIds = [...new Set((owners ?? []).map((row) => row.user_id).filter(Boolean))];
     if (!ownerIds.length) return json({ ok: true, sent: 0, reason: "No hay usuarios dueno" });
@@ -84,10 +94,10 @@ Deno.serve(async (req) => {
       : [
           "Nuevo pedido registrado",
           "",
-          `Código: ${referencia}`,
-          `Cliente: ${cliente}`,
-          `Sede: ${sedeNombre}`,
-          `Registrado por: ${registradorNombre}`,
+          `Código: ${referencia || "Sin código"}`,
+          `Cliente: ${cliente || "No especificado"}`,
+          `Sede: ${sedeNombre || "No especificada"}`,
+          `Registrado por: ${registradorNombre || "Usuario del sistema"}`,
         ].join("\n");
 
     const notification = JSON.stringify({

@@ -127,7 +127,7 @@ export function AurumRender() {
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena">("materiales");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
 
   // Estado central del configurador: una única fuente de verdad.
   const {
