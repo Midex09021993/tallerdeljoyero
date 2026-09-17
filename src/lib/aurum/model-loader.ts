@@ -1,5 +1,60 @@
 import * as THREE from "three";
 
+/**
+ * Preprocesado seguro del modelo antes de convertirlo al GLB interno.
+ *
+ * El CAD de joyería es una fuente de fabricación, no un activo de render.
+ * Antes de exportar preservamos la geometría existente, pero garantizamos
+ * que cada malla tenga normales válidas y límites calculados. No se cambian
+ * cortes ni se suavizan gemas: las normales existentes se respetan.
+ */
+export function preprocessAurumModel(object: THREE.Object3D) {
+  object.updateMatrixWorld(true);
+
+  let meshes = 0;
+  let normalsBuilt = 0;
+
+  object.traverse((x:any) => {
+    if (!x.isMesh || !x.geometry) return;
+    meshes++;
+
+    const geometry = x.geometry as THREE.BufferGeometry;
+    const position = geometry.getAttribute("position");
+    if (!position || position.count < 3) return;
+
+    // Never overwrite authored CAD normals. Only generate them when the
+    // imported geometry has none, which is essential for correct PBR response.
+    const normal = geometry.getAttribute("normal");
+    if (!normal || normal.count !== position.count) {
+      geometry.computeVertexNormals();
+      normalsBuilt++;
+    }
+
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+    x.castShadow = true;
+    x.receiveShadow = true;
+    x.userData = {
+      ...x.userData,
+      aurumPreprocessed: true,
+      aurumNormalsGenerated: normalsBuilt > 0 && (!normal || normal.count !== position.count),
+    };
+  });
+
+  object.updateMatrixWorld(true);
+  object.userData = {
+    ...object.userData,
+    aurumPreprocess: {
+      version: 1,
+      meshes,
+      normalsBuilt,
+      preserveAuthoredNormals: true,
+    },
+  };
+
+  return object;
+}
+
 export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material) {
   const buffer = await file.arrayBuffer();
 
