@@ -295,7 +295,7 @@ export function AurumRender() {
         renderer,
         groundController,
         environmentController,
-        (id, rotation) => cargarHDRI(id as EscenarioId, rotation),
+        (id: string) => cargarHDRI(id as EscenarioId),
         nodo
       );
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
