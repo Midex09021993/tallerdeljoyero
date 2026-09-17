@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { modulosAdminMovil } from "@/components/AppShell";
-import { PushDuenoCard } from "@/components/PushDuenoCard";
 import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import {
   areaCoincide,
@@ -52,7 +51,6 @@ function InicioAdminMovil() {
     if (!esOperario) return modulosAdminMovil.map((modulo) => ({ ...modulo, subtitulo: "" }));
 
     const tarjetas = areasOperario.map((area) => {
-      // Misma base que la vista del área: solo trabajo activo en producción.
       const asignados = pedidos.filter(
         (pedido) =>
           !esEstadoFinalPedido(pedido.estado) &&
@@ -124,8 +122,6 @@ function InicioAdminMovil() {
           </p>
         </div>
       ) : null}
-
-      <PushDuenoCard sesion={sesion} />
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {modulos.map((modulo) => {
