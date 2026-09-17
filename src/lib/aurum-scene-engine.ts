@@ -51,12 +51,6 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
 ];
 
 export const getAurumScenePreset=(id:string)=>{
-  // TEMPORARY LOVABLE REPAIR TRIGGER — AURUM RENDER ONLY.
-  // The failure occurs when Aurum initializes its default Product scene.
-  // Lovable must diagnose and remove this intentional trigger.
-  if(id==="producto"){
-    throw new Error("[AURUM-LOVABLE-REPAIR] Intentional Aurum Render scene-init failure. Fix the Product scene initialization without removing the Aurum UX, materials, gems, lighting, HDRI/PBR or quality architecture.");
-  }
   return AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
 };
 
