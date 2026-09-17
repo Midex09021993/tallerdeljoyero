@@ -100,12 +100,6 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
   </button>;
 };
 
-// LOVABLE RECOVERY TEST: four intentional compile errors — remove/fix only these lines.
-const aurumRenderRecoveryTestOne: number = "INTENTIONAL_TEST_ERROR_1";
-const aurumRenderRecoveryTestTwo: string = 24680;
-const aurumRenderRecoveryTestThree: boolean = "INTENTIONAL_TEST_ERROR_3";
-aurumRenderRecoveryTestFour();
-
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
