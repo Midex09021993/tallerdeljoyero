@@ -115,7 +115,7 @@ export function applyAurumGemToTarget(
     const next = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
     applyAurumGem(next, preset, thickness);
     applyAurumOpticalProfile(next, opticalProfile);
-    applyAurumFamilyOpticalResponse(next, opticalProfile);
+    applyAurumFamilyOpticalResponse(next, opticalProfile, thickness);
     applyAurumDynamicScintillation(next, opticalProfile);
     if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
     next.flatShading = true;
