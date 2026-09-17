@@ -520,7 +520,17 @@ function PedidoVentaCard({
   const tieneSaldo = resumenFinanciero.saldo > 0;
   const tieneContratoFinanciero = resumenFinanciero.origen === "contrato";
   return (
-    <article className="rounded-2xl border border-border bg-background/70 p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5">
+    <article className="overflow-hidden rounded-2xl border border-border bg-background/70 shadow-sm transition-shadow hover:shadow-card">
+      <div className="flex items-center gap-3 border-b border-border/80 px-4 py-3 sm:px-5">
+        <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          Pedido
+        </span>
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          {pedido.referencia}
+        </span>
+      </div>
+      <div className="p-4 sm:p-5">
       <button type="button" onClick={onAbrir} className="block w-full text-left">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -699,6 +709,7 @@ function PedidoVentaCard({
         </button>
       </div>
       {children}
+      </div>
     </article>
   );
 }
