@@ -154,7 +154,7 @@ export function createAurumLightingController(
       const normalizedPosition = (position: any) => {
         if (!Array.isArray(position) || position.length < 3) return [0, 0, 0];
         const maxComponent = Math.max(...position.slice(0, 3).map((v:any) => Math.abs(Number(v) || 0)), 1);
-        return position.slice(0, 3).map((v:any) => (Number(v) || 0) / maxComponent);
+        return position.slice(0, 3).map((v:any) => (Number(v) || 0) / maxComponent) as [number, number, number];
       };
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
