@@ -24,6 +24,28 @@ function diagnosticMaterial(category:string){
   return m;
 }
 
+// Material de presentación para objetos/capas "otro".
+// No pretende representar un metal ni una gema: identifica visualmente que la
+// pieza todavía no tiene material asignado y evita que AURUM la convierta en
+// diamante por defecto. El usuario puede reemplazarlo libremente por cualquier
+// metal o gema desde las bibliotecas.
+function createAurumNeutralMaterial(){
+  const m=new THREE.MeshPhysicalMaterial({
+    color:0xc98fa7,
+    metalness:0,
+    roughness:.46,
+    envMapIntensity:.35,
+    clearcoat:.04,
+    clearcoatRoughness:.12,
+  });
+  m.userData={
+    ...(m.userData??{}),
+    aurumNeutralMaterial:true,
+    aurumMaterialAssigned:false,
+  };
+  return m;
+}
+
 export function applyAurumInitialModelMaterials(
   model:any,
   options:{
@@ -64,9 +86,8 @@ export function applyAurumInitialModelMaterials(
     }
 
     if(meta?.categoria==="gema"){
-      // First-load presentation is intentionally uniform, like a product-preview render:
-      // every MatrixGold gem layer starts as diamond. MatrixGold slots are used only
-      // when the user changes the material/gem after selection.
+      // First-load presentation: only the four MatrixGold gem layers receive
+      // the default diamond preview. "Other" layers never enter this branch.
       const initialGemId = options.initialGemId ?? "diamante_natural";
       const gem=options.gems.find((g:any)=>g.id===initialGemId) ?? options.gems.find((g:any)=>g.id==="diamante_natural") ?? options.gems[0];
       if(!gem) return;
@@ -90,9 +111,6 @@ export function applyAurumInitialModelMaterials(
       if(!metal) return;
       const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
       options.configureMetal(mat,metal);
-      // Initial product presentation uses the existing metal presets,
-      // but attenuates only the first-load reflection energy. User-selected
-      // materials later restore their catalog values.
       const envScale = options.presentation?.metalEnvironmentScale ?? 1;
       const coatScale = options.presentation?.metalClearcoatScale ?? 1;
       if (Number.isFinite(envScale)) mat.envMapIntensity = Math.max(0, (mat.envMapIntensity ?? 1) * envScale);
@@ -100,7 +118,9 @@ export function applyAurumInitialModelMaterials(
       mat.needsUpdate = true;
       x.material=mat;
     }else{
-      x.material=options.fallbackMaterial;
+      // Neutral placeholder for all remaining layers (purple, cream, yellow,
+      // decorative objects, etc.). It is deliberately NOT a gemstone.
+      x.material=createAurumNeutralMaterial();
     }
   });
 }
