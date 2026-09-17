@@ -112,7 +112,7 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       {!ocultarNavegacion ? (
-        <aside className="hidden w-64 shrink-0 flex-col bg-ink text-ink-foreground lg:flex">
+        <aside className="sticky top-0 hidden h-screen max-h-screen w-64 shrink-0 flex-col overflow-hidden bg-ink text-ink-foreground lg:flex">
           <div className="p-8">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
             <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
@@ -120,7 +120,7 @@ export function AppShell({
             </p>
           </div>
 
-          <nav className="flex-1 space-y-1 px-4">
+          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
             {(() => {
               const produccion = visibles.filter((s) => RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
               const resto = visibles.filter((s) => !RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
@@ -153,7 +153,7 @@ export function AppShell({
             })()}
           </nav>
 
-          <div className="border-t border-ink-foreground/5 p-6">
+          <div className="shrink-0 border-t border-ink-foreground/5 p-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/20 font-display italic text-gold">
                 {inicial}
