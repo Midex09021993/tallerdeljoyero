@@ -520,13 +520,7 @@ function PedidoVentaCard({
   const tieneSaldo = resumenFinanciero.saldo > 0;
   const tieneContratoFinanciero = resumenFinanciero.origen === "contrato";
   return (
-    <article className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-card sm:p-0">
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-5">
-        <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Pedido</span>
-        <span className="h-px flex-1 bg-gradient-to-r from-gold/45 to-transparent" />
-        <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">{pedido.referencia}</span>
-      </div>
-      <div className="p-4 sm:p-5">
+    <article className="rounded-2xl border border-border bg-background/70 p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5">
       <button type="button" onClick={onAbrir} className="block w-full text-left">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -619,9 +613,7 @@ function PedidoVentaCard({
           </div>
         )}
       </button>
-      </div>
-      <div className="border-t border-border/80 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
-        <div className="flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {tieneContratoFinanciero ? (
           <button
             type="button"
@@ -706,9 +698,7 @@ function PedidoVentaCard({
           Ficha
         </button>
       </div>
-        </div>
-      </div>
-      {children ? <div className="border-t border-border/70 px-4 py-3 sm:px-5">{children}</div> : null}
+      {children}
     </article>
   );
 }
