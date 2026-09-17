@@ -102,13 +102,28 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     const normal = geometry.getAttribute("normal"), generated = !normal || normal.count !== position.count, gem = isLikelyGem(x), normalInspection = generated ? null : inspectMeshNormals(geometry);
     if (experimentMode === "recompute-metal" && !gem) { geometry = geometry.clone(); geometry.computeVertexNormals(); x.geometry = geometry; normalsRecomputedForTest++; }
     else if (generated) { meshesWithoutNormals++; geometry.computeVertexNormals(); normalsBuilt++; if (gem) x.userData = { ...x.userData, aurumNeedsFacetNormals: true }; }
-    else if (experimentMode !== "diagnostic" && (!normalInspection?.valid || normalInspection.suspiciousRatio >= 0.12)) { geometry = geometry.clone(); const repair = repairMeshWindingAndNormals(geometry); x.geometry = geometry; normalsRepaired++; windingFacesFlipped += repair.flippedFaces; meshesWithSuspiciousNormals++; x.userData = { ...x.userData, aurumNormalsRepaired: true, aurumNormalRepairRatio: Number((normalInspection?.suspiciousRatio ?? 1).toFixed(3)), aurumWindingFacesFlipped: repair.flippedFaces, aurumWindingComponents: repair.components }; }
-    else geometry.normalizeNormals();
+    else {
+      // iJewel's documented workflow expects the Rhino render mesh to arrive
+      // already prepared. It explicitly recommends fixing wrong normals in the
+      // modelling file rather than silently rebuilding production geometry at
+      // runtime. Preserve authored Rhino normals by default; only the explicit
+      // ?aurumNormals=recompute-metal experiment rebuilds them for comparison.
+      geometry.normalizeNormals();
+      if (normalInspection?.suspiciousRatio >= 0.12) {
+        meshesWithSuspiciousNormals++;
+        x.userData = {
+          ...x.userData,
+          aurumNormalsSuspicious:true,
+          aurumNormalRepairAvailable:true,
+          aurumNormalRepairRatio:Number(normalInspection.suspiciousRatio.toFixed(3)),
+        };
+      }
+    }
     geometry.computeBoundingBox(); geometry.computeBoundingSphere(); x.castShadow = true; x.receiveShadow = true;
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
   });
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
-  object.userData = { ...object.userData, aurumPreprocess: { version: 6, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode !== "recompute-metal", repairThreshold: 0.12, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
+  object.userData = { ...object.userData, aurumPreprocess: { version: 7, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: true, autoRepairNormals: false, repairThreshold: 0.12, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
   return object;
 }
 
