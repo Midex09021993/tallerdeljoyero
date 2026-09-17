@@ -1,12 +1,87 @@
 import * as THREE from "three";
 
 /**
+ * Detecta normales CAD que existen pero no son coherentes con la geometría.
+ *
+ * No reemplaza normales authored por defecto. Solo considera sospechosa una
+ * malla cuando una proporción significativa de sus normales apunta en una
+ * dirección incompatible con las caras que comparten ese vértice.
+ */
+function inspectMeshNormals(geometry: THREE.BufferGeometry) {
+  const position = geometry.getAttribute("position");
+  const normal = geometry.getAttribute("normal");
+  if (!position || !normal || normal.count !== position.count) {
+    return { valid: false, suspiciousRatio: 1, vertices: position?.count ?? 0 };
+  }
+
+  const accumulated = new Float32Array(position.count * 3);
+  const index = geometry.getIndex();
+  const addFace = (ia: number, ib: number, ic: number) => {
+    const ax = position.getX(ia), ay = position.getY(ia), az = position.getZ(ia);
+    const bx = position.getX(ib), by = position.getY(ib), bz = position.getZ(ib);
+    const cx = position.getX(ic), cy = position.getY(ic), cz = position.getZ(ic);
+    const abx = bx - ax, aby = by - ay, abz = bz - az;
+    const acx = cx - ax, acy = cy - ay, acz = cz - az;
+    const nx = aby * acz - abz * acy;
+    const ny = abz * acx - abx * acz;
+    const nz = abx * acy - aby * acx;
+    const len = Math.hypot(nx, ny, nz);
+    if (!Number.isFinite(len) || len < 1e-12) return;
+    accumulated[ia * 3] += nx;
+    accumulated[ia * 3 + 1] += ny;
+    accumulated[ia * 3 + 2] += nz;
+    accumulated[ib * 3] += nx;
+    accumulated[ib * 3 + 1] += ny;
+    accumulated[ib * 3 + 2] += nz;
+    accumulated[ic * 3] += nx;
+    accumulated[ic * 3 + 1] += ny;
+    accumulated[ic * 3 + 2] += nz;
+  };
+
+  if (index) {
+    for (let i = 0; i + 2 < index.count; i += 3) {
+      addFace(index.getX(i), index.getX(i + 1), index.getX(i + 2));
+    }
+  } else {
+    for (let i = 0; i + 2 < position.count; i += 3) addFace(i, i + 1, i + 2);
+  }
+
+  let comparable = 0;
+  let suspicious = 0;
+  for (let i = 0; i < position.count; i++) {
+    const ax = accumulated[i * 3];
+    const ay = accumulated[i * 3 + 1];
+    const az = accumulated[i * 3 + 2];
+    const al = Math.hypot(ax, ay, az);
+    const nx = normal.getX(i);
+    const ny = normal.getY(i);
+    const nz = normal.getZ(i);
+    const nl = Math.hypot(nx, ny, nz);
+    if (!Number.isFinite(nx) || !Number.isFinite(ny) || !Number.isFinite(nz) || !Number.isFinite(nl) || nl < 1e-8) {
+      suspicious++;
+      comparable++;
+      continue;
+    }
+    if (al < 1e-10) continue;
+    const dot = (nx * ax + ny * ay + nz * az) / (nl * al);
+    comparable++;
+    if (!Number.isFinite(dot) || dot < 0.15) suspicious++;
+  }
+
+  return {
+    valid: true,
+    suspiciousRatio: comparable ? suspicious / comparable : 0,
+    vertices: position.count,
+  };
+}
+
+/**
  * Preprocesado seguro del modelo antes de convertirlo al GLB interno.
  *
  * El CAD de joyería es una fuente de fabricación, no un activo de render.
  * Esta etapa limpia únicamente elementos que no son geometría de producto,
- * valida la malla y genera un diagnóstico interno para el pipeline.
- * No modifica cortes, escala, topología ni normales authored del CAD.
+ * valida la malla y corrige únicamente normales claramente inconsistentes.
+ * No modifica cortes, escala ni topología.
  */
 export function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
@@ -14,9 +89,11 @@ export function preprocessAurumModel(object: THREE.Object3D) {
   let meshes = 0;
   let triangles = 0;
   let normalsBuilt = 0;
+  let normalsRepaired = 0;
   let lineObjectsRemoved = 0;
   let pointObjectsRemoved = 0;
   let meshesWithoutNormals = 0;
+  let meshesWithSuspiciousNormals = 0;
   let repeatedGeometryRefs = 0;
   const geometryRefs = new Map<any, number>();
 
@@ -31,8 +108,6 @@ export function preprocessAurumModel(object: THREE.Object3D) {
 
   const removeQueue:any[] = [];
   object.traverse((x:any) => {
-    // iJewel explicitly hides Rhino line/point meshes because they are often
-    // construction helpers rather than part of the jewelry product.
     if (x !== object && (x.isLine || x.isLineSegments || x.isPoints)) {
       removeQueue.push(x);
       if (x.isPoints) pointObjectsRemoved++;
@@ -43,7 +118,7 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     if (!x.isMesh || !x.geometry) return;
     meshes++;
 
-    const geometry = x.geometry as THREE.BufferGeometry;
+    let geometry = x.geometry as THREE.BufferGeometry;
     geometryRefs.set(geometry, (geometryRefs.get(geometry) ?? 0) + 1);
 
     const position = geometry.getAttribute("position");
@@ -52,10 +127,6 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     const index = geometry.getIndex();
     triangles += index ? Math.floor(index.count / 3) : Math.floor(position.count / 3);
 
-    // Never overwrite authored CAD normals. When they are missing, generate
-    // a safe baseline so PBR lighting has valid surface directions. Gemstones
-    // are flagged separately because their final treatment should preserve
-    // facet/face normals rather than smooth them indiscriminately.
     const normal = geometry.getAttribute("normal");
     const generated = !normal || normal.count !== position.count;
     if (generated) {
@@ -64,7 +135,23 @@ export function preprocessAurumModel(object: THREE.Object3D) {
       normalsBuilt++;
       if (likelyGem(x)) x.userData = {...x.userData, aurumNeedsFacetNormals:true};
     } else {
-      geometry.normalizeNormals();
+      const inspection = inspectMeshNormals(geometry);
+      if (!inspection.valid || inspection.suspiciousRatio >= 0.12) {
+        // Clone before repair because Rhino can reuse one geometry object in
+        // several parts. This keeps the correction local to the bad mesh.
+        geometry = geometry.clone();
+        geometry.computeVertexNormals();
+        x.geometry = geometry;
+        normalsRepaired++;
+        meshesWithSuspiciousNormals++;
+        x.userData = {
+          ...x.userData,
+          aurumNormalsRepaired: true,
+          aurumNormalRepairRatio: Number(inspection.suspiciousRatio.toFixed(3)),
+        };
+      } else {
+        geometry.normalizeNormals();
+      }
     }
 
     geometry.computeBoundingBox();
@@ -90,15 +177,18 @@ export function preprocessAurumModel(object: THREE.Object3D) {
   object.userData = {
     ...object.userData,
     aurumPreprocess: {
-      version: 2,
+      version: 3,
       meshes,
       triangles,
       normalsBuilt,
+      normalsRepaired,
       meshesWithoutNormals,
+      meshesWithSuspiciousNormals,
       lineObjectsRemoved,
       pointObjectsRemoved,
       repeatedGeometryRefs,
       preserveAuthoredNormals: true,
+      repairThreshold: 0.12,
       facetNormalsRequiredForGems: true,
       renderReadyChecks: {
         constructionLinesRemoved: lineObjectsRemoved > 0,
