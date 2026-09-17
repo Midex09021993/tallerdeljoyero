@@ -12,52 +12,44 @@ export interface AurumViewerFrame {
 }
 
 export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo") {
-  const prepared=prepare(model,2.6);
-  const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
-  viewer.groundController.positionUnderModel(bounds);
-  const radius=Math.max(size.length()*.5,.8);
-  const lightDistance=Math.max(radius*6,12);
-  if (viewer.lightingController?.scaleToModel) {
-    viewer.lightingController.scaleToModel(radius,targetY);
-  } else {
-    Object.values(viewer.lights).forEach((L:any)=>{
-      if(!L)return;
-      if(L.distance!==undefined)L.distance=lightDistance;
-      if(L.castShadow&&L.shadow?.camera){
-        L.shadow.camera.near=Math.max(.01,radius*.02);
-        L.shadow.camera.far=Math.max(lightDistance,radius*10);
-        if("left" in L.shadow.camera){
-          const limit=Math.max(radius*2.2,3);
-          L.shadow.camera.left=-limit; L.shadow.camera.right=limit;
-          L.shadow.camera.top=limit; L.shadow.camera.bottom=-limit;
-        }
-        L.shadow.camera.updateProjectionMatrix();
-      }
-      if(L.target){L.target.position.set(0,targetY,0); L.target.updateMatrixWorld();}
-    });
-  }
-  applyScene(sceneId);
+  // Primera llamada: preparar producto y presentar frontalmente.
+  // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
+  // reaplicar escena/materiales y provocar cambios de color.
+  const wasPrepared = !!model.userData?.aurumInitialFrameApplied;
 
-  // Producto: reutilizar exactamente la vista perspectiva configurada para
-  // "Restablecer vista". Esto mantiene la preparación técnica del modelo,
-  // suelo y luces, pero evita que la primera carga entre con una cámara frontal.
-  if (sceneId === "producto") {
-    applyAurumCameraView(viewer.camera, viewer.controls, model, "perspectiva", category);
+  if (!wasPrepared) {
+    const prepared=prepare(model,2.6);
+    const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
+    viewer.groundController.positionUnderModel(bounds);
+    const radius=Math.max(size.length()*.5,.8);
+    const lightDistance=Math.max(radius*6,12);
+    if (viewer.lightingController?.scaleToModel) {
+      viewer.lightingController.scaleToModel(radius,targetY);
+    } else {
+      Object.values(viewer.lights).forEach((L:any)=>{
+        if(!L)return;
+        if(L.distance!==undefined)L.distance=lightDistance;
+        if(L.castShadow&&L.shadow?.camera){
+          L.shadow.camera.near=Math.max(.01,radius*.02);
+          L.shadow.camera.far=Math.max(lightDistance,radius*10);
+          if("left" in L.shadow.camera){
+            const limit=Math.max(radius*2.2,3);
+            L.shadow.camera.left=-limit; L.shadow.camera.right=limit;
+            L.shadow.camera.top=limit; L.shadow.camera.bottom=-limit;
+          }
+          L.shadow.camera.updateProjectionMatrix();
+        }
+        if(L.target){L.target.position.set(0,targetY,0); L.target.updateMatrixWorld();}
+      });
+    }
+    applyScene(sceneId);
+    model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
+    applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
     return;
   }
 
-  const maxDimension=Math.max(size.x,size.y,size.z,0.001);
-  const fovRad=(viewer.camera.fov * Math.PI) / 180;
-  const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
-  const framingMultiplier = sceneId === "producto" ? 1.40 : 1.08;
-  const distance=Math.max(fitDistance * framingMultiplier,3.2);
-  const aimY=targetY + Math.max(size.y*.035, .025);
-  const cameraLift = sceneId === "producto" ? Math.max(size.y*.24, .12) : 0;
-  viewer.camera.position.set(0, aimY + cameraLift, distance);
-  viewer.controls.target.set(0,aimY,0);
-  viewer.camera.lookAt(0,aimY,0);
-  viewer.camera.updateProjectionMatrix();
-  viewer.controls.update();
+  // Reset de cámara: no toca escena, HDRI, exposición ni materiales.
+  applyAurumCameraView(viewer.camera, viewer.controls, model, "perspectiva", category);
 }
 
 
