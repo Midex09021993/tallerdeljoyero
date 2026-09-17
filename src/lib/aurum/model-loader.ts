@@ -76,12 +76,140 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
 }
 
 /**
+ * Corrige la orientación local de los triángulos antes de recalcular normales.
+ *
+ * Esto es importante para mallas CAD: computeVertexNormals() solo puede
+ * promediar correctamente si las caras vecinas tienen un winding coherente.
+ * Se conserva la dirección global de las normales authored de Rhino para no
+ * invertir accidentalmente toda la pieza.
+ */
+function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
+  const index = geometry.getIndex();
+  const position = geometry.getAttribute("position");
+  if (!index || !position || index.count < 3 || index.count % 3 !== 0) {
+    geometry.computeVertexNormals();
+    return { flippedFaces: 0, components: 0 };
+  }
+
+  const faceCount = Math.floor(index.count / 3);
+  const edges = new Map<string, Array<{ face: number; dir: number }>>();
+  const edgeInfo = (a: number, b: number) => {
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+    return { key: `${lo}:${hi}`, dir: a === lo ? 1 : -1 };
+  };
+
+  for (let f = 0; f < faceCount; f++) {
+    const a = index.getX(f * 3);
+    const b = index.getX(f * 3 + 1);
+    const c = index.getX(f * 3 + 2);
+    for (const edge of [edgeInfo(a, b), edgeInfo(b, c), edgeInfo(c, a)]) {
+      const list = edges.get(edge.key) ?? [];
+      list.push({ face: f, dir: edge.dir });
+      edges.set(edge.key, list);
+    }
+  }
+
+  const adjacency = new Map<number, Array<{ face: number; sameDirection: boolean }>>();
+  edges.forEach((list) => {
+    if (list.length < 2) return;
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i], b = list[j];
+        const sameDirection = a.dir === b.dir;
+        const aList = adjacency.get(a.face) ?? [];
+        const bList = adjacency.get(b.face) ?? [];
+        aList.push({ face: b.face, sameDirection });
+        bList.push({ face: a.face, sameDirection });
+        adjacency.set(a.face, aList);
+        adjacency.set(b.face, bList);
+      }
+    }
+  });
+
+  const flip = new Array<boolean>(faceCount).fill(false);
+  const visited = new Array<boolean>(faceCount).fill(false);
+  const components:number[][] = [];
+
+  for (let start = 0; start < faceCount; start++) {
+    if (visited[start]) continue;
+    const queue = [start];
+    const component:number[] = [];
+    visited[start] = true;
+
+    while (queue.length) {
+      const face = queue.shift()!;
+      component.push(face);
+      for (const link of adjacency.get(face) ?? []) {
+        if (visited[link.face]) continue;
+        // Shared edges must run in opposite directions after orientation.
+        flip[link.face] = link.sameDirection ? !flip[face] : flip[face];
+        visited[link.face] = true;
+        queue.push(link.face);
+      }
+    }
+    components.push(component);
+  }
+
+  const authoredNormal = geometry.getAttribute("normal");
+  const faceNormal = (face:number, useFlip:boolean) => {
+    let a = index.getX(face * 3), b = index.getX(face * 3 + 1), c = index.getX(face * 3 + 2);
+    if (useFlip) [b, c] = [c, b];
+    const ax = position.getX(a), ay = position.getY(a), az = position.getZ(a);
+    const bx = position.getX(b), by = position.getY(b), bz = position.getZ(b);
+    const cx = position.getX(c), cy = position.getY(c), cz = position.getZ(c);
+    const abx = bx - ax, aby = by - ay, abz = bz - az;
+    const acx = cx - ax, acy = cy - ay, acz = cz - az;
+    return new THREE.Vector3(
+      aby * acz - abz * acy,
+      abz * acx - abx * acz,
+      abx * acy - aby * acx,
+    );
+  };
+
+  // Keep the overall orientation closest to the normals Rhino authored.
+  if (authoredNormal && authoredNormal.count === position.count) {
+    for (const component of components) {
+      const face = component[0];
+      const candidate = faceNormal(face, flip[face]).normalize();
+      const a = index.getX(face * 3), b = index.getX(face * 3 + 1), c = index.getX(face * 3 + 2);
+      const reference = new THREE.Vector3()
+        .set(authoredNormal.getX(a), authoredNormal.getY(a), authoredNormal.getZ(a))
+        .add(new THREE.Vector3(authoredNormal.getX(b), authoredNormal.getY(b), authoredNormal.getZ(b)))
+        .add(new THREE.Vector3(authoredNormal.getX(c), authoredNormal.getY(c), authoredNormal.getZ(c)))
+        .normalize();
+      if (reference.lengthSq() > 1e-8 && candidate.dot(reference) < 0) {
+        for (const f of component) flip[f] = !flip[f];
+      }
+    }
+  }
+
+  const nextIndex = index.array.slice();
+  let flippedFaces = 0;
+  for (let f = 0; f < faceCount; f++) {
+    if (!flip[f]) continue;
+    const base = f * 3;
+    const tmp = nextIndex[base + 1];
+    nextIndex[base + 1] = nextIndex[base + 2];
+    nextIndex[base + 2] = tmp;
+    flippedFaces++;
+  }
+
+  if (flippedFaces > 0) {
+    geometry.setIndex(new THREE.BufferAttribute(nextIndex, 1));
+  }
+  geometry.computeVertexNormals();
+  return { flippedFaces, components: components.length };
+}
+
+/**
  * Preprocesado seguro del modelo antes de convertirlo al GLB interno.
  *
  * El CAD de joyería es una fuente de fabricación, no un activo de render.
  * Esta etapa limpia únicamente elementos que no son geometría de producto,
  * valida la malla y corrige únicamente normales claramente inconsistentes.
- * No modifica cortes, escala ni topología.
+ * No modifica posiciones ni escala; en una malla sospechosa solo corrige el
+ * winding de los triángulos y vuelve a generar las normales.
  */
 export function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
@@ -90,6 +218,7 @@ export function preprocessAurumModel(object: THREE.Object3D) {
   let triangles = 0;
   let normalsBuilt = 0;
   let normalsRepaired = 0;
+  let windingFacesFlipped = 0;
   let lineObjectsRemoved = 0;
   let pointObjectsRemoved = 0;
   let meshesWithoutNormals = 0;
@@ -137,17 +266,18 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     } else {
       const inspection = inspectMeshNormals(geometry);
       if (!inspection.valid || inspection.suspiciousRatio >= 0.12) {
-        // Clone before repair because Rhino can reuse one geometry object in
-        // several parts. This keeps the correction local to the bad mesh.
         geometry = geometry.clone();
-        geometry.computeVertexNormals();
+        const repair = repairMeshWindingAndNormals(geometry);
         x.geometry = geometry;
         normalsRepaired++;
+        windingFacesFlipped += repair.flippedFaces;
         meshesWithSuspiciousNormals++;
         x.userData = {
           ...x.userData,
           aurumNormalsRepaired: true,
           aurumNormalRepairRatio: Number(inspection.suspiciousRatio.toFixed(3)),
+          aurumWindingFacesFlipped: repair.flippedFaces,
+          aurumWindingComponents: repair.components,
         };
       } else {
         geometry.normalizeNormals();
@@ -177,11 +307,12 @@ export function preprocessAurumModel(object: THREE.Object3D) {
   object.userData = {
     ...object.userData,
     aurumPreprocess: {
-      version: 3,
+      version: 4,
       meshes,
       triangles,
       normalsBuilt,
       normalsRepaired,
+      windingFacesFlipped,
       meshesWithoutNormals,
       meshesWithSuspiciousNormals,
       lineObjectsRemoved,
