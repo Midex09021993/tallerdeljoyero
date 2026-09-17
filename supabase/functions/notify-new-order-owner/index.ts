@@ -54,15 +54,25 @@ Deno.serve(async (req) => {
     let registradorNombre = String(payload.registrado_por ?? "");
     const pedidoId = String(payload.pedido_id ?? "");
 
+    let sedeIdPedido = "";
     if (!prueba && pedidoId) {
       const { data: pedido } = await admin.from("pedidos").select("id, referencia, cliente, sede_id").eq("id", pedidoId).maybeSingle();
       if (pedido) {
         referencia ||= pedido.referencia ?? "";
         cliente ||= pedido.cliente ?? "";
-        if (!sedeNombre && pedido.sede_id) {
-          const { data: sede } = await admin.from("sedes").select("nombre").eq("id", pedido.sede_id).maybeSingle();
-          sedeNombre = sede?.nombre ?? "";
-        }
+        sedeIdPedido = pedido.sede_id ?? "";
+      }
+    }
+
+    if (!sedeNombre) {
+      let sedeId = sedeIdPedido;
+      if (!sedeId) {
+        const { data: perfilSede } = await admin.from("profiles").select("sede_id").eq("id", userId).maybeSingle();
+        sedeId = perfilSede?.sede_id ?? "";
+      }
+      if (sedeId) {
+        const { data: sede } = await admin.from("sedes").select("nombre").eq("id", sedeId).maybeSingle();
+        sedeNombre = sede?.nombre ?? "";
       }
     }
 
@@ -71,7 +81,7 @@ Deno.serve(async (req) => {
       registradorNombre = profile?.nombre ?? "";
     }
 
-    const { data: owners, error: ownersError } = await admin.from("user_roles").select("user_id").eq("rol", "dueno");
+    const { data: owners, error: ownersError } = await admin.from("user_roles").select("user_id").eq("role", "dueno");
     if (ownersError) return json({ error: ownersError.message }, 500);
     const ownerIds = [...new Set((owners ?? []).map((row) => row.user_id).filter(Boolean))];
     if (!ownerIds.length) return json({ ok: true, sent: 0, reason: "No hay usuarios dueno" });
