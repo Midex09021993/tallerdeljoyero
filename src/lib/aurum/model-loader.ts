@@ -25,7 +25,8 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     // Never overwrite authored CAD normals. Only generate them when the
     // imported geometry has none, which is essential for correct PBR response.
     const normal = geometry.getAttribute("normal");
-    if (!normal || normal.count !== position.count) {
+    const generated = !normal || normal.count !== position.count;
+    if (generated) {
       geometry.computeVertexNormals();
       normalsBuilt++;
     }
@@ -37,7 +38,7 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     x.userData = {
       ...x.userData,
       aurumPreprocessed: true,
-      aurumNormalsGenerated: normalsBuilt > 0 && (!normal || normal.count !== position.count),
+      aurumNormalsGenerated: generated,
     };
   });
 
