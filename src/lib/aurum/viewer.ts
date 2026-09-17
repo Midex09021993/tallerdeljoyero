@@ -57,8 +57,8 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     return;
   }
 
-  // Reset de cámara: no toca escena, HDRI, exposición ni materiales.
-  applyAurumCameraView(viewer.camera, viewer.controls, model, "perspectiva", category);
+  // Reset de cámara: vuelve al frontal y no toca escena, HDRI, exposición ni materiales.
+  applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
 }
 
 
@@ -110,7 +110,6 @@ export function disposeAurumViewer(viewer: {
   }
 }
 
-
 export function createAurumWebGLViewer(
   THREE: any,
   nodo: HTMLElement,
@@ -146,7 +145,6 @@ export function createAurumWebGLViewer(
   nodo.appendChild(renderer.domElement);
   return { scene, camera, renderer, controls };
 }
-
 
 export function startAurumViewerLoop(
   viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
