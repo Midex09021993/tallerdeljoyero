@@ -527,8 +527,13 @@ export function AurumRender() {
         setParteSeleccionadaCategoria(categoria);
         // MatrixGold drives the library: green/metal layers open Materials,
         // blue/gem layers open Gems automatically.
-        if (categoria === "metal") setBibliotecaTipo("metales");
-        else if (categoria === "gema") setBibliotecaTipo("gemas");
+        if (categoria === "metal") {
+          setBibliotecaTipo("metales");
+          setUxSection("materiales");
+        } else if (categoria === "gema") {
+          setBibliotecaTipo("gemas");
+          setUxSection("gemas");
+        }
         setPanel("materiales");
         limpiarResaltado();        if (obj.geometry) {
           const edges = new THREE.EdgesGeometry(obj.geometry, 18);
@@ -684,11 +689,45 @@ export function AurumRender() {
 
             <section className="border-b border-white/10 px-5 py-5">
               <button type="button" onClick={()=>setUxSection("gemas")} className="mb-4 flex w-full items-center gap-2 text-left text-[16px] font-medium"><ChevronDown className="size-4"/><span>Gemas</span></button>
-              <div className="grid grid-cols-5 gap-2">
-                {GEMAS.slice(0,5).map(g=><button key={g.id} type="button" title={g.nombre} onClick={()=>{setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}} className={"group text-center "+(gemaId===g.id?"text-white":"text-white/70")}>
-                  <span className={"mx-auto grid size-[58px] place-items-center rounded-xl border-2 transition "+(gemaId===g.id?"border-[#34c7ff] bg-white/10":"border-transparent bg-transparent group-hover:border-white/15")}><span className="size-9 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(g.color)}}/></span>
-                  <span className="mt-2 block truncate text-[10px]">{g.nombre}</span>
-                </button>)}
+              <div className="space-y-3">
+                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
+                  Familia
+                  <select
+                    value={gemaActiva?.familia || GEMAS[0]?.familia}
+                    onChange={(e)=>{
+                      const familia=e.target.value;
+                      const primera=GEMAS.find(g=>g.familia===familia);
+                      if(primera){setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(primera.id);apiRef.current?.gema(primera);}
+                    }}
+                    className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60"
+                  >
+                    {[...new Set(GEMAS.map(g=>g.familia))].map(f=><option key={f} value={f} className="bg-[#111416]">{f}</option>)}
+                  </select>
+                </label>
+                <label className="block text-[9px] uppercase tracking-[.16em] text-white/35">
+                  Gema / calidad
+                  <select
+                    value={gemaId}
+                    onChange={(e)=>{
+                      const g=GEMAS.find(x=>x.id===e.target.value);
+                      if(g){setUxSection("gemas");setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g);}
+                    }}
+                    className="mt-1.5 w-full rounded-lg border border-[#d4af37]/30 bg-[#090b0e] px-3 py-2.5 text-xs text-white outline-none focus:border-[#d4af37]/60"
+                  >
+                    {[...new Set(GEMAS.map(g=>g.familia))].map(f=>(
+                      <optgroup key={f} label={f}>
+                        {GEMAS.filter(g=>g.familia===f).map(g=><option key={g.id} value={g.id} className="bg-[#111416]">{g.nombre}</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                </label>
+                <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
+                  <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-white">{gemaActiva.nombre}</p>
+                    <p className="mt-0.5 text-[9px] text-white/40">RI {gemaActiva.ior.toFixed(2)} · Transmisión {(gemaActiva.transmission*100).toFixed(0)}% · Inclusiones {gemaActiva.inclusionStyle==="ninguna"?"No": "Sí"}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
