@@ -694,7 +694,7 @@ export function AurumRender() {
                 </label>
                 <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.025] p-2.5">
                   <span className="size-10 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
-                  <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{materialActivo.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">{materialActivo.grupo} · Densidad {materialActivo.density} g/cm³ · IOR {materialActivo.ior.toFixed(2)}</p></div>
+                  <div className="min-w-0"><p className="truncate text-xs font-medium text-white">{materialActivo.nombre}</p><p className="mt-0.5 text-[9px] text-white/40">{materialActivo.grupo} · Metalicidad {(materialActivo.metalness*100).toFixed(0)}% · Rugosidad {materialActivo.roughness.toFixed(2)}</p></div>
                 </div>
               </div>
             </section>
