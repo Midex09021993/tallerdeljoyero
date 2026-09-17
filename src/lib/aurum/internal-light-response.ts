@@ -4,6 +4,10 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  * Controlled volume response for transparent colored gems.
  * Keeps authored optical constants while making thickness/absorption read
  * more naturally instead of treating every stone like clear glass.
+ *
+ * The response is based on a normalized Beer-Lambert-style depth term:
+ * thicker geometry participates more strongly in absorption, while the
+ * catalog's attenuation distance remains the physical authority for color.
  */
 export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalProfile,thickness:number)=>{
   if(!material) return material;
@@ -13,15 +17,26 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
   const absorption=Math.max(.05,Number(profile.absorptionDistance??10));
   const reflection=Math.max(0,Math.min(1,Number(profile.internalReflection??.8)));
 
-  // The authored attenuation distance remains the authority. We only apply
-  // a restrained geometry-aware correction so thicker stones show more depth.
+  // Family differences are kept restrained. Colored stones need stronger
+  // volumetric depth than near-clear diamond/moissanite, without changing
+  // their authored IOR, transmission or dispersion.
   const familyScale=family==="Esmeralda" ? .86
     : family==="Rubí" ? .90
     : family==="Zafiro" ? .92
     : family==="Diamante" || family==="Moissanita" ? 1.02
     : .96;
-  const depthFactor=Math.max(.78,Math.min(1.12,1-(t/(absorption+t))*0.22));
-  const correctedDistance=Math.max(.05,absorption*familyScale*depthFactor*(.92+reflection*.08));
+
+  // Normalized depth response. This approaches 0 for very thin stones and
+  // increases smoothly with thickness instead of using a fixed linear lift.
+  // It is only used to modulate attenuation distance; the material's optical
+  // constants remain unchanged.
+  const depthResponse=1-Math.exp(-t/absorption);
+  const depthFactor=Math.max(.76,Math.min(1.04,1-depthResponse*.30));
+
+  // Internal reflection preserves some light in high-IOR/high-reflection
+  // families while absorption still increases with physical depth.
+  const reflectionFactor=.94+reflection*.06;
+  const correctedDistance=Math.max(.05,absorption*familyScale*depthFactor*reflectionFactor);
 
   material.attenuationDistance=correctedDistance;
   material.userData={
@@ -30,9 +45,11 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
       family,
       thickness:t,
       authoredAbsorptionDistance:absorption,
+      depthResponse,
+      depthFactor,
       effectiveAttenuationDistance:correctedDistance,
       internalReflection:reflection,
-      version:"v1",
+      version:"v2-beer-depth",
     },
   };
   material.needsUpdate=true;
