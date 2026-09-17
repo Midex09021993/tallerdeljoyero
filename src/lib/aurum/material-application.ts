@@ -29,7 +29,7 @@ const presetFromCatalog=(g:any):any=>({
   attenuationDistance:Number(g.attenuationDistance??10),
   dispersion:Number(g.dispersion??0),
   iridescence:Number(g.iridescence??0),
-  thicknessScale:1,
+  thicknessScale:Number(g.thicknessScale??1),
   inclusions:Boolean(g.inclusionStrength>0 && g.inclusionStyle!=="ninguna"),
   inclusionDensity:Math.max(0,Math.min(1,Number(g.inclusionStrength??0))),
   inclusionType:inclusionTypeFromCatalog(g.inclusionStyle),
@@ -56,6 +56,24 @@ const opticalProfileFromCatalog=(g:any)=>{
     dispersion:Number(g.dispersion??base.dispersion),
     absorptionDistance:Number(g.attenuationDistance??base.absorptionDistance),
   };
+};
+
+/**
+ * Estimate optical thickness in the gem's LOCAL coordinate system.
+ * Three.js MeshPhysicalMaterial expects thickness in local space, so using a
+ * world-space AABB can make a rotated stone appear artificially thicker.
+ * We intentionally keep this a conservative scalar estimate for this step;
+ * per-ray geometric depth/BVH remains a later enhancement.
+ */
+const estimateAurumGemThickness=(target:any,thicknessScale=1)=>{
+  const geometry=target?.geometry;
+  if(!geometry)return .015;
+  geometry.computeBoundingBox?.();
+  const box=geometry.boundingBox;
+  if(!box)return .015;
+  const size=box.getSize(new THREE.Vector3());
+  const minimumDimension=Math.min(size.x,size.y,size.z);
+  return Math.max(.015,minimumDimension*.85*Math.max(.5,Math.min(1.5,Number(thicknessScale??1))));
 };
 
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
@@ -102,11 +120,9 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&(sameLayer||sameSlot)))targets.push(x);
   });
   if(!targets.length)targets.push(target);
-  const box=new THREE.Box3().setFromObject(target);
-  const size=box.getSize(new THREE.Vector3());
-  const thickness=Math.max(.015,Math.min(size.x,size.y,size.z)*.85);
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
+  const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
   const apply=(base:any)=>{
     const next=base?.clone?base.clone():new THREE.MeshPhysicalMaterial();
     applyAurumGem(next,preset,thickness);
@@ -126,7 +142,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   };
   targets.forEach((part:any)=>{
     part.material=Array.isArray(part.material)?part.material.map(apply):apply(part.material);
-    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback"};
+    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1"};
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
   });
