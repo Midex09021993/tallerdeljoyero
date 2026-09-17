@@ -475,7 +475,7 @@ export function AurumRender() {
         limpiarResaltado();
         glbInterno=new Blob([glb],{type:"model/gltf-binary"});
         escena.add(modelo);
-        if (ext!=="3dm") aplicarMaterial(materialActivo);
+        // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: encuadrar siempre después de añadir el modelo.
         encuadrar();
       };
