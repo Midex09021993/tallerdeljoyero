@@ -468,7 +468,7 @@ function SeccionVentas({
           {cantidad}
         </span>
       </div>
-      <div className="divide-y divide-border">{children}</div>
+      <div className="space-y-3 p-3 sm:p-4">{children}</div>
     </section>
   );
 }
@@ -524,7 +524,7 @@ function PedidoVentaCard({
   const tieneSaldo = resumenFinanciero.saldo > 0;
   const tieneContratoFinanciero = resumenFinanciero.origen === "contrato";
   return (
-    <article className="px-4 py-4">
+    <article className="rounded-2xl border border-border bg-background/70 p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5">
       <button type="button" onClick={onAbrir} className="block w-full text-left">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
