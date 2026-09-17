@@ -176,6 +176,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // LOVABLE RECOVERY TEST: intentional compile errors — remove/fix these two lines.
     const aurumRecoveryTestOne: number = "INTENTIONAL_TEST_ERROR";
     aurumRecoveryTestTwo();
+    const aurumRecoveryTestThree: boolean = 12345;
+    aurumRecoveryTestFour();
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
   });
