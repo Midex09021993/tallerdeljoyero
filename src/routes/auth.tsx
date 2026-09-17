@@ -80,7 +80,7 @@ function LoginPage() {
 
   return (
     <main className="relative flex min-h-screen flex-col overflow-hidden bg-[#090a0b] text-ink-foreground">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 max-[767px]:hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_40%,rgba(212,175,55,.12),transparent_32%),radial-gradient(circle_at_78%_35%,rgba(255,255,255,.05),transparent_28%),linear-gradient(180deg,#111315_0%,#08090a_100%)]" />
         <div
           className="absolute inset-y-0 left-0 w-[62%] bg-cover bg-center opacity-35 mix-blend-screen"
@@ -89,7 +89,7 @@ function LoginPage() {
         <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-black/50 to-transparent" />
       </div>
 
-      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5 lg:h-20 lg:px-10">
+      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5 lg:h-20 lg:px-10 max-[767px]:hidden">
         <div className="flex items-center gap-3">
           <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-xl object-cover ring-1 ring-gold/60" />
           <div>
@@ -110,8 +110,8 @@ function LoginPage() {
         </a>
       </header>
 
-      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1">
-        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
+      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
+        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1 max-[767px]:hidden">
           <div className="max-w-4xl">
             <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl [@media(max-height:800px)]:lg:text-[3.4rem]">Aurum Lab</p>
             <p className="mt-4 text-[10px] uppercase tracking-[0.42em] text-white/50 sm:text-xs">
@@ -166,11 +166,11 @@ function LoginPage() {
           </section>
         </section>
 
-        <section id="login" className="mx-auto w-full max-w-[430px]">
+        <section id="login" className="mx-auto w-full max-w-[430px] max-[767px]:max-w-[430px]">
           <div className="mb-7 text-center md:hidden">
             <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
           </div>
-          <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9 [@media(max-height:800px)]:p-5">
+          <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9 [@media(max-height:800px)]:p-5 max-[767px]:w-full">
             <div className="mb-7 flex items-center gap-3">
               <LockKeyhole className="size-7 text-gold" />
               <div>
@@ -212,15 +212,15 @@ function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-5 hidden text-center text-xs text-white/55 md:block">
+          <p className="mt-5 hidden text-center text-xs text-white/55 md:block max-[767px]:block">
             ¿Eres cliente?{" "}
             <a href="/cliente" className="text-gold underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
           </p>
-          <p className="mt-4 hidden text-center text-[10px] tracking-wider text-white/25 md:block">Desarrollado por Fadilab EIRL</p>
+          <p className="mt-4 hidden text-center text-[10px] tracking-wider text-white/25 md:block max-[767px]:block">Desarrollado por Fadilab EIRL</p>
         </section>
       </div>
 
-      <footer className="relative z-10 shrink-0 border-t border-white/10 px-5 py-3 lg:px-6 lg:py-5">
+      <footer className="relative z-10 shrink-0 border-t border-white/10 px-5 py-3 lg:px-6 lg:py-5 max-[767px]:hidden">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 text-xs text-white/45">
           <div className="flex flex-wrap items-center gap-6">
             <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-gold" /> Seguro y confiable</span>
@@ -231,7 +231,9 @@ function LoginPage() {
         </div>
       </footer>
 
-      <HerramientasFlotantes />
+      <div className="max-[767px]:hidden">
+        <HerramientasFlotantes />
+      </div>
     </main>
   );
 }
