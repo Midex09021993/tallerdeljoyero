@@ -520,8 +520,8 @@ function PedidoVentaCard({
   const tieneSaldo = resumenFinanciero.saldo > 0;
   const tieneContratoFinanciero = resumenFinanciero.origen === "contrato";
   return (
-    <article className="overflow-hidden rounded-2xl border border-border bg-background/70 shadow-sm transition-shadow hover:shadow-card">
-      <div className="flex items-center gap-3 border-b border-border/80 px-4 py-3 sm:px-5">
+    <article className="overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-card transition-shadow hover:shadow-raised">
+      <div className="flex items-center gap-3 border-b border-gold/20 bg-surface-sunken px-4 py-3 sm:px-5">
         <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Pedido
         </span>
