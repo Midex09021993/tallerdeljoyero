@@ -7,6 +7,7 @@ import {
   getAurumOpticalProfile,
   metalPresetFromConfig,
 } from "../aurum-material-engine";
+import { applyAurumFamilyOpticalResponse } from "./optical-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
@@ -45,10 +46,6 @@ const opticalProfileFromCatalog=(g:any)=>{
         brilliance:.75,
         fire:.35,
       };
-
-  // The catalog is authoritative for the physical values of the selected stone.
-  // This prevents Amethyst/Citrine/Topaz and other catalog gems from inheriting
-  // the Diamond fallback profile.
   return {
     ...base,
     ior:Number(g.ior??base.ior),
@@ -69,8 +66,6 @@ export function applyAurumMaterialToModel(
     if (!x.isMesh) return;
     x.castShadow = true;
     x.receiveShadow = true;
-    // MatrixGold semantics: a selected part represents its entire source layer.
-    // Apply to every mesh with the same Rhino layer (and, when present, MatrixGold slot).
     const selectedMeta = activePart?.userData?.aurumRhino || {};
     const selectedLayer = selectedMeta.capa || activePart?.userData?.attributes?.layerName || null;
     const selectedCategory = selectedMeta.categoria || null;
@@ -118,10 +113,8 @@ export function applyAurumGemToTarget(
     const next = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
     applyAurumGem(next, preset, thickness);
     applyAurumOpticalProfile(next, opticalProfile);
+    applyAurumFamilyOpticalResponse(next, opticalProfile);
     if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
-    // Faceted gemstones need face-level normals to preserve the hard optical
-    // boundaries of the cut. Three.js flatShading derives the normal per face
-    // in the shader, avoiding a destructive rewrite of the authored CAD mesh.
     next.flatShading = true;
     next.needsUpdate = true;
     return next;
