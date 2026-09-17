@@ -4,15 +4,14 @@ import { getAurumModelParts } from "./model-parts";
 function isRhinoObjectHidden(attributes:any): boolean {
   if (!attributes) return false;
 
-  // rhino3dm puede exponer la visibilidad con distintas mayúsculas según
-  // la versión / wrapper. Nunca convertimos un objeto explícitamente oculto
-  // en visible por el hecho de ser metal o gema.
-  const visibleFlags = [attributes.visible, attributes.Visible, attributes.isVisible, attributes.IsVisible];
-  if (visibleFlags.some((v:any) => v === false)) return true;
-
+  // Rhino/rhino3dm puede exponer la visibilidad con nombres distintos según
+  // la versión del loader. Tratamos explícitamente todos los estados ocultos.
   const mode = attributes.mode ?? attributes.Mode ?? attributes.objectMode ?? attributes.ObjectMode;
   const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
-  return mode === 1
+  return attributes.visible === false
+    || attributes.Visible === false
+    || attributes.isVisible === false
+    || mode === 1
     || modeText === "hidden"
     || modeText === "hidden_object"
     || modeText === "hiddenobject";
@@ -20,34 +19,28 @@ function isRhinoObjectHidden(attributes:any): boolean {
 
 function buildRhinoLayerVisibility(layers:any[]) {
   const byId = new Map<string, any>();
+  const byName = new Map<string, any>();
   for (const layer of layers) {
     const id = layer?.id ?? layer?.Id;
     if (id != null) byId.set(String(id), layer);
+    const name = String(layer?.name ?? layer?.Name ?? "").trim().toLowerCase();
+    if (name) byName.set(name, layer);
   }
 
   const cache = new Map<number, boolean>();
 
-  const readLayerVisibility = (layer:any): boolean => {
+  const layerIsDirectlyVisible = (layer:any): boolean => {
     if (!layer) return true;
-
-    // Aceptamos las formas de visibilidad que pueden llegar desde rhino3dm.
-    // Si alguna fuente dice explícitamente que la capa está oculta,
-    // conservamos ese estado tal cual.
-    const flags = [
-      layer.visible,
-      layer.Visible,
-      layer.isVisible,
-      layer.IsVisible,
-      layer.visibility,
-      layer.Visibility,
-    ];
-    const explicitFalse = flags.find((v:any) => v === false || v === 0);
-    if (explicitFalse !== undefined) return false;
-
-    const explicitTrue = flags.find((v:any) => v === true || v === 1);
-    if (explicitTrue !== undefined) return true;
-
-    return true;
+    const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
+    const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
+    return layer.visible !== false
+      && layer.Visible !== false
+      && layer.isVisible !== false
+      && layer.visibility !== false
+      && mode !== 1
+      && modeText !== "hidden"
+      && modeText !== "hidden_layer"
+      && modeText !== "hiddenlayer";
   };
 
   const isLayerEffectivelyVisible = (index:number, trail = new Set<number>()): boolean => {
@@ -58,12 +51,12 @@ function buildRhinoLayerVisibility(layers:any[]) {
     const layer = layers[index];
     if (!layer) return true;
 
-    if (!readLayerVisibility(layer)) {
+    if (!layerIsDirectlyVisible(layer)) {
       cache.set(index, false);
       return false;
     }
 
-    const parentId = layer.parentLayerId ?? layer.parentId ?? layer.ParentLayerId ?? layer.ParentId;
+    const parentId = layer.parentLayerId ?? layer.parentId ?? layer.parentLayerID ?? layer.ParentLayerId;
     if (parentId != null && String(parentId) && String(parentId) !== "00000000-0000-0000-0000-000000000000") {
       const parent = byId.get(String(parentId));
       if (parent) {
@@ -82,7 +75,38 @@ function buildRhinoLayerVisibility(layers:any[]) {
     return true;
   };
 
-  return isLayerEffectivelyVisible;
+  return (index:number, layerName?:string): boolean => {
+    if (Number.isInteger(index) && index >= 0 && index < layers.length) {
+      return isLayerEffectivelyVisible(index);
+    }
+
+    // Si el loader no entregó layerIndex, no debemos asumir que la capa está
+    // visible. Intentamos resolverla por nombre antes de aplicar el fallback.
+    const name = String(layerName ?? "").trim().toLowerCase();
+    if (name) {
+      const layer = byName.get(name);
+      if (layer) {
+        const resolvedIndex = layers.indexOf(layer);
+        if (resolvedIndex >= 0) return isLayerEffectivelyVisible(resolvedIndex);
+      }
+    }
+
+    return true;
+  };
+}
+
+function resolveRhinoLayerIndex(x:any): number {
+  const candidates = [
+    x?.userData?.attributes?.layerIndex,
+    x?.userData?.attributes?.LayerIndex,
+    x?.userData?.layerIndex,
+    x?.userData?.LayerIndex,
+  ];
+  for (const value of candidates) {
+    const n = Number(value);
+    if (Number.isInteger(n) && n >= 0) return n;
+  }
+  return -1;
 }
 
 export async function normalizeAurumModel(
@@ -101,8 +125,6 @@ export async function normalizeAurumModel(
   // En 3DM conservamos directamente el render mesh producido por
   // Rhino3dmLoader. Esto elimina el round-trip 3DM -> GLB -> GLTFLoader
   // durante el render y permite comparar el shading de la malla Rhino original.
-  // iJewel/Threepipe soporta 3DM como formato nativo de entrada y recomienda
-  // conservar las render meshes de Rhino para el flujo de joyería.
   if (extension === "3dm") {
     const layers = Array.isArray(object?.userData?.layers) ? object.userData.layers : [];
     const isLayerEffectivelyVisible = buildRhinoLayerVisibility(layers);
@@ -115,19 +137,15 @@ export async function normalizeAurumModel(
       if (!meta) return;
 
       const attrs = x.userData?.attributes || {};
-      const layerIndex = Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1;
+      const layerIndex = resolveRhinoLayerIndex(x);
       const objectVisible = !isRhinoObjectHidden(attrs);
-      const layerVisible = isLayerEffectivelyVisible(layerIndex);
+      const layerVisible = isLayerEffectivelyVisible(layerIndex, meta.capa);
 
       // Rhino puede ocultar un objeto directamente o mediante su capa.
-      // Además, una capa hija puede seguir reportando visible=true cuando
-      // su capa padre está apagada; por eso comprobamos toda la jerarquía.
-      // Esto aplica por igual a las 8 primeras capas (metal/gema) y a las
-      // capas posteriores: la clasificación de material nunca puede reactivar
-      // una capa que Rhino dejó oculta.
+      // Nunca hacemos visible una malla que venga de una capa oculta.
       const visible = objectVisible && layerVisible;
 
-      x.visible = visible;
+      x.visible = x.visible !== false && visible;
       x.userData = {
         ...x.userData,
         aurumRhino: {
