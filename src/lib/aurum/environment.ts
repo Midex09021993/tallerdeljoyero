@@ -26,10 +26,18 @@ export function createAurumEnvironment(
   const pmrem = new THREE.PMREMGenerator(renderer);
   pmrem.compileEquirectangularShader();
 
+  const diagnosticMode = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("aurumDiag")
+    : null;
+  const diagnosticDirectOnly = diagnosticMode === "direct";
+  const diagnosticNeutral = diagnosticMode === "neutral";
+
   const fallbackScene = new RoomEnvironment();
   const fallback = pmrem.fromScene(fallbackScene, .04).texture;
   fallbackScene.dispose?.();
-  scene.environment = fallback;
+  // Diagnostic modes are intentionally opt-in through the URL. Production keeps
+  // the normal fallback environment exactly as before.
+  scene.environment = diagnosticDirectOnly ? null : fallback;
 
   let current = fallback;
   let rotation = 0;
@@ -62,6 +70,16 @@ export function createAurumEnvironment(
       }
     },
     load(url, requestId, isCurrent, onLoaded, onError) {
+      // Diagnostic "direct" removes the IBL/HDR contribution entirely.
+      // Diagnostic "neutral" keeps only the controlled RoomEnvironment PMREM.
+      // Neither mode downloads or installs the production HDRI.
+      if (diagnosticDirectOnly || diagnosticNeutral) {
+        if (diagnosticDirectOnly) scene.environment = null;
+        else scene.environment = fallback;
+        onLoaded(fallback);
+        return;
+      }
+
       new RGBELoader().load(url, (hdrTexture: any) => {
         if (!isCurrent()) {
           hdrTexture.dispose?.();
