@@ -6,7 +6,7 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  * This layer makes the differences between transparent gemstones visible in the
  * render without replacing the authored CAD geometry or optical constants.
  */
-export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalProfile)=>{
+export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalProfile,thickness=0)=>{
   if(!material) return material;
 
   const brilliance=Math.max(0,Math.min(1.2,Number(profile.brilliance??.75)));
@@ -40,6 +40,22 @@ export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalP
   const dispersion=Number(material.dispersion??0);
   material.dispersion=Math.max(0,dispersion*(.94+fire*.08));
 
+  // Depth response: thickness controls how much of the volume participates in
+  // transmission/attenuation. We use the actual gem dimensions already measured
+  // by the renderer and only apply a restrained family-specific scale.
+  if(thickness>0){
+    const depthScale=family==="Esmeralda" ? 1.08
+      : family==="Rubí" ? 1.05
+      : family==="Zafiro" ? 1.05
+      : family==="Diamante"||family==="Moissanita" ? 1
+      : .98;
+    material.thickness=Math.max(.015,thickness*depthScale);
+    material.userData={
+      ...(material.userData??{}),
+      aurumGemDepth:{thickness:material.thickness,depthScale},
+    };
+  }
+
   material.userData={
     ...(material.userData??{}),
     aurumFamilyOpticalResponse:{
@@ -48,7 +64,7 @@ export const applyAurumFamilyOpticalResponse=(material:any,profile:AurumOpticalP
       fire,
       facetContrast,
       internalReflection,
-      facetResponseVersion:"v2",
+      facetResponseVersion:"v3-depth",
     },
   };
   material.needsUpdate=true;
