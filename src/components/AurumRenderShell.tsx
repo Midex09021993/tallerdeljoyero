@@ -7,13 +7,13 @@ export function AurumRenderShell() {
 
   useEffect(() => {
     let disposed = false;
-    let cleanupHeader = () => {};
-    let cleanupView = () => {};
+    let observer: MutationObserver | null = null;
+    let cleanup = () => {};
 
     const wire = () => {
-      if (disposed) return;
+      if (disposed) return false;
       const root = document.querySelector("header");
-      if (!root) return;
+      if (!root) return false;
 
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let target: HTMLElement | null = null;
@@ -24,51 +24,52 @@ export function AurumRenderShell() {
           break;
         }
       }
+      if (!target) return false;
 
-      if (target) {
-        const previous = target.style.cursor;
-        target.style.cursor = "pointer";
-        target.setAttribute("role", "link");
-        target.setAttribute("tabindex", "0");
-        target.setAttribute("aria-label", "Volver al inicio de sesión");
-        const goHome = () => navigate({ to: "/auth" });
-        target.addEventListener("click", goHome);
-        const onKeyDown = (event: KeyboardEvent) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            goHome();
-          }
-        };
-        target.addEventListener("keydown", onKeyDown);
-        cleanupHeader = () => {
-          target?.removeEventListener("click", goHome);
-          target?.removeEventListener("keydown", onKeyDown);
-          if (target) target.style.cursor = previous;
-        };
-      }
+      const previousCursor = target.style.cursor;
+      target.style.cursor = "pointer";
+      target.setAttribute("role", "link");
+      target.setAttribute("tabindex", "0");
+      target.setAttribute("aria-label", "Volver al inicio de sesión");
+      const goHome = () => navigate({ to: "/auth" });
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          goHome();
+        }
+      };
+      target.addEventListener("click", goHome);
+      target.addEventListener("keydown", onKeyDown);
 
       const select = root.querySelector("select");
       const label = select?.closest("label");
       const extraChevron = label?.querySelector("svg.lucide-chevron-down") as SVGElement | null;
-      if (extraChevron) {
-        const previousDisplay = extraChevron.style.display;
-        extraChevron.style.display = "none";
-        cleanupView = () => {
-          extraChevron.style.display = previousDisplay;
-        };
-      }
+      const previousDisplay = extraChevron?.style.display ?? "";
+      if (extraChevron) extraChevron.style.display = "none";
+
+      cleanup = () => {
+        target?.removeEventListener("click", goHome);
+        target?.removeEventListener("keydown", onKeyDown);
+        if (target) target.style.cursor = previousCursor;
+        if (extraChevron) extraChevron.style.display = previousDisplay;
+      };
+      return true;
     };
 
-    wire();
-    const observer = new MutationObserver(() => wire());
-    const rootObserver = document.body;
-    observer.observe(rootObserver, { childList: true, subtree: true });
+    const start = () => {
+      if (wire()) return;
+      observer = new MutationObserver(() => {
+        if (wire()) observer?.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    };
 
+    const timer = window.setTimeout(start, 0);
     return () => {
       disposed = true;
-      observer.disconnect();
-      cleanupHeader();
-      cleanupView();
+      window.clearTimeout(timer);
+      observer?.disconnect();
+      cleanup();
     };
   }, [navigate]);
 
