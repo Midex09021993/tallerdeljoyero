@@ -136,7 +136,7 @@ export function AppShell({
                   </Link>
                 ))}
                 {produccion.length > 0 && (
-                  <details open className="pt-2">
+                  <details className="pt-2">
                     <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 hover:text-ink-foreground">
                       <span>Producción</span><ChevronDown className="size-4" aria-hidden="true" />
                     </summary>
