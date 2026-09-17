@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
       const { data: adminRole } = await admin.rpc("es_admin", { _user_id: userId });
       if (!adminRole) return json({ error: "No autorizado" }, 403);
     } else {
-      const { data: roles } = await admin.from("user_roles").select("rol").eq("user_id", userId);
-      const internos = (roles ?? []).map((r) => String(r.rol)).filter((r) => r !== "cliente");
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
+      const internos = (roles ?? []).map((r) => String(r.role)).filter((r) => r !== "cliente");
       if (!internos.length) return json({ error: "No autorizado" }, 403);
     }
 
