@@ -31,14 +31,14 @@ export function HerramientasFlotantes() {
   const [activa, setActiva] = useState<string>("yeso");
 
   return (
-    <div className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center">
+    <div className="fixed left-0 top-1/2 z-40 flex -translate-y-1/2 items-center">
       {/* Pestaña colapsada */}
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         aria-label={abierto ? "Cerrar herramientas" : "Abrir herramientas"}
-        className="flex h-36 w-10 flex-col items-center justify-center gap-2 rounded-l-2xl border border-r-0 border-[#d4af37] bg-ink text-ink-foreground/70 shadow-[0_0_10px_rgba(212,175,55,.85),0_0_24px_rgba(212,175,55,.5),inset_0_0_8px_rgba(212,175,55,.2)] backdrop-blur transition-all duration-300 hover:text-gold hover:shadow-[0_0_14px_rgba(212,175,55,1),0_0_32px_rgba(212,175,55,.7),inset_0_0_10px_rgba(212,175,55,.3)]"
+        className="flex h-36 w-10 flex-col items-center justify-center gap-2 rounded-r-2xl border border-l-0 border-[#d4af37] bg-ink text-ink-foreground/70 shadow-[0_0_10px_rgba(212,175,55,.85),0_0_24px_rgba(212,175,55,.5),inset_0_0_8px_rgba(212,175,55,.2)] backdrop-blur transition-all duration-300 hover:text-gold hover:shadow-[0_0_14px_rgba(212,175,55,1),0_0_32px_rgba(212,175,55,.7),inset_0_0_10px_rgba(212,175,55,.3)]"
       >
         <Wrench className="size-4" aria-hidden="true" />
         <span className="text-[10px] font-semibold uppercase tracking-[0.25em] [writing-mode:vertical-rl]">
@@ -52,7 +52,7 @@ export function HerramientasFlotantes() {
           abierto ? "w-[min(94vw,440px)] opacity-100" : "w-0 opacity-0"
         }`}
       >
-        <div className="max-h-[80vh] w-[min(94vw,440px)] overflow-y-auto rounded-l-2xl p-4">
+        <div className="max-h-[80vh] w-[min(94vw,440px)] overflow-y-auto rounded-r-2xl p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
               Herramientas
