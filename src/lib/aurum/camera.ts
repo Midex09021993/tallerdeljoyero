@@ -23,7 +23,7 @@ export const getAurumProductCameraProfile = (category: string) =>
 
 /**
  * Calcula la composición de cámara usando el volumen real de la joya.
- * Este módulo no conoce React ni modifica el Viewer.
+ * El encuadre mantiene una escala coherente entre todas las vistas.
  */
 export function applyAurumCameraView(
   camera: THREE.PerspectiveCamera,
@@ -41,9 +41,9 @@ export function applyAurumCameraView(
   const radius = Math.max(size.length() * 0.5, 1.3);
   const profile = getAurumProductCameraProfile(category);
 
-  // Encuadre de presentación coherente: más aire alrededor de la pieza
-  // y escala consistente al cambiar entre frontal, perspectiva, superior y lateral.
-  const distance = Math.max(radius * 2.35 * profile.distance, 3.6);
+  // Un poco más de aire alrededor de la pieza para una presentación de producto.
+  // Se aplica por igual a frontal, perspectiva, superior y lateral.
+  const distance = Math.max(radius * 2.65 * profile.distance, 3.6);
   const verticalBias = radius * profile.vertical;
 
   controls.target.copy(target);
