@@ -18,18 +18,23 @@ function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefin
 }
 
 function matrixFamilyCategory(layer:any,index:number,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
-  // MatrixGold convention used by AURUM: first four green layers are metal,
-  // next four blue layers are gemstones. Everything after those families is
-  // intentionally "other" and must remain independently assignable by layer.
-  // The positional convention has priority so a later decorative layer whose
-  // name happens to contain "piedra" or "gem" cannot be promoted into the
-  // shared gemstone family.
+  const name=String(layer?.name??"").trim();
+
+  // Rhino/iJewel-compatible rule: an explicit layer name is authoritative.
+  // The layer itself defines which material family it represents. Positional
+  // MatrixGold conventions are only a fallback for files whose layers carry
+  // no recognizable material name.
+  const explicit=explicitLayerCategory(name);
+  if(explicit) return explicit;
+
+  const classified=clasificarCapa(name,colorCapa);
+  if(classified!=="otro") return classified;
+
+  // Backward-compatible fallback for unnamed/legacy MatrixGold files:
+  // first four slots are metals, next four are gems, later layers are other.
   if(index>=0 && index<4) return "metal";
   if(index>=4 && index<8) return "gema";
-  if(index>=8) return "otro";
-
-  const name=String(layer?.name??"").trim();
-  return explicitLayerCategory(name) ?? clasificarCapa(name, colorCapa);
+  return "otro";
 }
 
 function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"):number|undefined {
@@ -38,7 +43,7 @@ function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"
   const explicit=name.match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
   if (explicit) return Number(explicit[1]);
 
-  // Preserve the physical MatrixGold order: Metal 01-04, then Gem 01-04.
+  // Positional slot is only a fallback when the layer name does not encode it.
   if(category==="metal" && index<4) return index+1;
   if(category==="gema" && index>=4 && index<8) return index-3;
   return undefined;
