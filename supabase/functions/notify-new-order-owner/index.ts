@@ -94,10 +94,10 @@ Deno.serve(async (req) => {
       : [
           "Nuevo pedido registrado",
           "",
-          `Código: ${referencia}`,
-          `Cliente: ${cliente}`,
-          `Sede: ${sedeNombre}`,
-          `Registrado por: ${registradorNombre}`,
+          `Código: ${referencia || "Sin código"}`,
+          `Cliente: ${cliente || "No especificado"}`,
+          `Sede: ${sedeNombre || "No especificada"}`,
+          `Registrado por: ${registradorNombre || "Usuario del sistema"}`,
         ].join("\n");
 
     const notification = JSON.stringify({
