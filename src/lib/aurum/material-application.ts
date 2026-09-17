@@ -68,7 +68,7 @@ export function applyAurumMaterialToModel(
   sharedMaterial:any
 ) {
   // A material change is an operation on the selected component only.
-  // Never interpret a missing selection as "apply to the whole model".
+  // A missing selection never means "apply to the whole model".
   if (!model || !activePart?.isMesh) return false;
 
   const selectedMeta = selectionMeta(activePart);
@@ -76,8 +76,9 @@ export function applyAurumMaterialToModel(
   const selectedCategory = selectionCategory(activePart);
   const selectedSlot = selectedMeta.matrixSlot;
 
-  // Metals may only be assigned to an explicitly selected metal component.
-  if (selectedCategory !== "metal") return false;
+  // A metal can be assigned to a metal layer OR to an "other" layer.
+  // This is intentionally free-form for decorative/CAD object layers.
+  if (selectedCategory !== "metal" && selectedCategory !== "otro") return false;
 
   applyAurumMetal(sharedMaterial, metalPresetFromConfig(materialConfig));
   let applied = 0;
@@ -87,9 +88,9 @@ export function applyAurumMaterialToModel(
     x.receiveShadow = true;
     const meta = selectionMeta(x);
     const category = selectionCategory(x);
-    const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === "metal";
-    const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === "metal";
-    if (x.uuid === activePart.uuid || sameLayer || sameSlot) {
+    const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === selectedCategory;
+    const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === selectedCategory;
+    if (x.uuid === activePart.uuid || (selectedCategory === "metal" && (sameLayer || sameSlot))) {
       const apply = (base:any) => {
         const next = base?.clone ? base.clone() : sharedMaterial.clone();
         applyAurumMetal(next, metalPresetFromConfig(materialConfig));
@@ -107,11 +108,11 @@ export function applyAurumGemToTarget(
   gemConfig:any,
   applyGemEnvironment:()=>void
 ) {
-  // Gem changes also require an explicit gemstone selection. A selected
-  // metal/other component must never be converted into a gemstone.
+  // A gemstone can be assigned to a gem layer OR to an "other" layer.
+  // "Other" is a free-material category, not a hidden gemstone category.
   if (!target?.isMesh) return false;
   const selectedCategory=selectionCategory(target);
-  if (selectedCategory !== "gema") return false;
+  if (selectedCategory !== "gema" && selectedCategory !== "otro") return false;
 
   const modelRoot = target.parent?.parent ? (()=>{ let r=target; while(r.parent) r=r.parent; return r; })() : target;
   const selectedMeta = selectionMeta(target);
@@ -122,8 +123,8 @@ export function applyAurumGemToTarget(
     if (!x.isMesh || x.userData?.aurumInternalInclusion) return;
     const meta=selectionMeta(x);
     const category=selectionCategory(x);
-    const sameLayer=!!selectedLayer && meta.capa===selectedLayer && category==="gema";
-    const sameSlot=selectedSlot!=null && meta.matrixSlot===selectedSlot && category==="gema";
+    const sameLayer=selectedCategory === "gema" && !!selectedLayer && meta.capa===selectedLayer && category==="gema";
+    const sameSlot=selectedCategory === "gema" && selectedSlot!=null && meta.matrixSlot===selectedSlot && category==="gema";
     if(x===target || sameLayer || sameSlot) targets.push(x);
   });
   if(!targets.length) targets.push(target);
