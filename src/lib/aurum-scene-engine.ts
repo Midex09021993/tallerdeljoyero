@@ -59,7 +59,7 @@ export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:
 export type AurumRenderQualityId="low"|"high"|"ultra";
 export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality>={
   low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
-  high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.68},
+  high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.82},
   ultra:{pixelRatio:1.6,shadows:true,shadowMapSize:1536,transmissionScale:.82},
 };
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
