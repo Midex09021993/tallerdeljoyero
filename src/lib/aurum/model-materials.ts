@@ -1,5 +1,23 @@
 import * as THREE from "three";
-import { applyAurumOpticalProfile, applyAurumDiamondOptics, getAurumOpticalProfile } from "../aurum-material-engine";
+
+function getAurumCategoryDiagnostic(){
+  try {
+    return new URLSearchParams(window.location.search).get("aurumCategories") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function diagnosticMaterial(category:string){
+  const colors:{[key:string]:number}={metal:0x00ff00,gema:0x0088ff,otro:0xff00ff};
+  const m=new THREE.MeshStandardMaterial({
+    color:colors[category] ?? colors.otro,
+    metalness:0,
+    roughness:.55,
+  });
+  m.userData={...m.userData,aurumCategoryDiagnostic:true,aurumCategory:category};
+  return m;
+}
 
 export function applyAurumInitialModelMaterials(
   model:any,
@@ -17,11 +35,29 @@ export function applyAurumInitialModelMaterials(
     applyGemEnvironment:()=>void;
   }
 ){
+  const categoryDiagnostic=getAurumCategoryDiagnostic();
   model?.traverse?.((x:any)=>{
     if(!x.isMesh) return;
     x.castShadow=true;
     x.receiveShadow=true;
     const meta=x.userData?.aurumRhino;
+    const category=meta?.categoria ?? "otro";
+
+    // Diagnostic-only mode: isolate the classification stage. No HDR,
+    // lighting, camera, geometry, normals or production materials are changed.
+    // green = metal, blue = gem, magenta = other.
+    if(categoryDiagnostic){
+      x.material=diagnosticMaterial(category);
+      x.userData={
+        ...x.userData,
+        aurumCategoryDiagnostic:true,
+        aurumDetectedCategory:category,
+        aurumDetectedLayer:meta?.capa ?? null,
+        aurumDetectedMatrixSlot:meta?.matrixSlot ?? null,
+      };
+      return;
+    }
+
     if(meta?.categoria==="gema"){
       // First-load presentation is intentionally uniform, like a product-preview render:
       // every MatrixGold gem layer starts as diamond. MatrixGold slots are used only
