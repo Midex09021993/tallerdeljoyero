@@ -1,12 +1,16 @@
 import * as THREE from "three";
 import { inspectAurumMesh } from "./mesh-preflight";
+import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-function getAurumNormalExperimentMode(): "authored" | "diagnostic" | "recompute-metal" {
+type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
+
+function getAurumNormalExperimentMode(): AurumNormalMode {
   try {
     const value = new URLSearchParams(window.location.search).get("aurumNormals");
-    if (value === "diagnostic" || value === "recompute-metal") return value;
+    if (value === "diagnostic" || value === "recompute-metal" || value === "crease-metal") return value;
   } catch {}
-  return "authored";
+  // Controlled test: reconstruct only metal normals while preserving gemstones.
+  return "crease-metal";
 }
 
 function isLikelyGem(x: any) {
@@ -44,52 +48,10 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
   return { valid: true, suspiciousRatio: comparable ? suspicious / comparable : 0, vertices: position.count };
 }
 
-function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
-  const index = geometry.getIndex(), position = geometry.getAttribute("position");
-  if (!index || !position || index.count < 3 || index.count % 3 !== 0) { geometry.computeVertexNormals(); return { flippedFaces: 0, components: 0 }; }
-  const faceCount = Math.floor(index.count / 3), edges = new Map<string, Array<{ face: number; dir: number }>>();
-  const edgeInfo = (a: number, b: number) => { const lo = Math.min(a, b); return { key: `${lo}:${Math.max(a, b)}`, dir: a === lo ? 1 : -1 }; };
-  for (let f = 0; f < faceCount; f++) {
-    const a = index.getX(f * 3), b = index.getX(f * 3 + 1), c = index.getX(f * 3 + 2);
-    for (const edge of [edgeInfo(a, b), edgeInfo(b, c), edgeInfo(c, a)]) { const list = edges.get(edge.key) ?? []; list.push({ face: f, dir: edge.dir }); edges.set(edge.key, list); }
-  }
-  const adjacency = new Map<number, Array<{ face: number; sameDirection: boolean }>>();
-  edges.forEach((list) => {
-    if (list.length < 2) return;
-    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
-      const a = list[i], b = list[j], sameDirection = a.dir === b.dir;
-      const aList = adjacency.get(a.face) ?? [], bList = adjacency.get(b.face) ?? [];
-      aList.push({ face: b.face, sameDirection }); bList.push({ face: a.face, sameDirection }); adjacency.set(a.face, aList); adjacency.set(b.face, bList);
-    }
-  });
-  const flip = new Array<boolean>(faceCount).fill(false), visited = new Array<boolean>(faceCount).fill(false), components: number[][] = [];
-  for (let start = 0; start < faceCount; start++) {
-    if (visited[start]) continue;
-    const queue = [start], component: number[] = []; visited[start] = true;
-    while (queue.length) { const face = queue.shift()!; component.push(face); for (const link of adjacency.get(face) ?? []) { if (visited[link.face]) continue; flip[link.face] = link.sameDirection ? !flip[face] : flip[face]; visited[link.face] = true; queue.push(link.face); } }
-    components.push(component);
-  }
-  const authoredNormal = geometry.getAttribute("normal");
-  const faceNormal = (face: number, useFlip: boolean) => {
-    let a = index.getX(face * 3), b = index.getX(face * 3 + 1), c = index.getX(face * 3 + 2); if (useFlip) [b, c] = [c, b];
-    const ax = position.getX(a), ay = position.getY(a), az = position.getZ(a), bx = position.getX(b), by = position.getY(b), bz = position.getZ(b), cx = position.getX(c), cy = position.getY(c), cz = position.getZ(c);
-    return new THREE.Vector3((by - ay) * (cz - az) - (bz - az) * (cy - ay), (bz - az) * (cx - ax) - (bx - ax) * (cz - az), (bx - ax) * (cy - ay) - (by - ay) * (cx - ax));
-  };
-  if (authoredNormal && authoredNormal.count === position.count) for (const component of components) {
-    const face = component[0], candidate = faceNormal(face, flip[face]).normalize(), a = index.getX(face * 3), b = index.getX(face * 3 + 1), c = index.getX(face * 3 + 2);
-    const reference = new THREE.Vector3().set(authoredNormal.getX(a), authoredNormal.getY(a), authoredNormal.getZ(a)).add(new THREE.Vector3(authoredNormal.getX(b), authoredNormal.getY(b), authoredNormal.getZ(b))).add(new THREE.Vector3(authoredNormal.getX(c), authoredNormal.getY(c), authoredNormal.getZ(c))).normalize();
-    if (reference.lengthSq() > 1e-8 && candidate.dot(reference) < 0) for (const f of component) flip[f] = !flip[f];
-  }
-  const nextIndex = index.array.slice(); let flippedFaces = 0;
-  for (let f = 0; f < faceCount; f++) if (flip[f]) { const base = f * 3, tmp = nextIndex[base + 1]; nextIndex[base + 1] = nextIndex[base + 2]; nextIndex[base + 2] = tmp; flippedFaces++; }
-  if (flippedFaces > 0) geometry.setIndex(new THREE.BufferAttribute(nextIndex, 1)); geometry.computeVertexNormals();
-  return { flippedFaces, components: components.length };
-}
-
 export function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
   const experimentMode = getAurumNormalExperimentMode();
-  let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRepaired = 0, windingFacesFlipped = 0, normalsRecomputedForTest = 0;
+  let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRepaired = 0, windingFacesFlipped = 0, normalsRecomputedForTest = 0, creasedNormalsForTest = 0;
   let lineObjectsRemoved = 0, pointObjectsRemoved = 0, meshesWithoutNormals = 0, meshesWithSuspiciousNormals = 0, repeatedGeometryRefs = 0, meshesWithBoundaryEdges = 0, meshesWithNonManifoldEdges = 0, meshesWithDegenerateTriangles = 0;
   const geometryRefs = new Map<any, number>(), removeQueue: any[] = [];
   object.traverse((x: any) => {
@@ -100,14 +62,25 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     const index = geometry.getIndex(); triangles += index ? Math.floor(index.count / 3) : Math.floor(position.count / 3);
     const preflight = inspectAurumMesh(geometry); if (preflight.boundaryEdges > 0) meshesWithBoundaryEdges++; if (preflight.nonManifoldEdges > 0) meshesWithNonManifoldEdges++; if (preflight.degenerateTriangles > 0) meshesWithDegenerateTriangles++;
     const normal = geometry.getAttribute("normal"), generated = !normal || normal.count !== position.count, gem = isLikelyGem(x), normalInspection = generated ? null : inspectMeshNormals(geometry);
-    if (experimentMode === "recompute-metal" && !gem) { geometry = geometry.clone(); geometry.computeVertexNormals(); x.geometry = geometry; normalsRecomputedForTest++; }
-    else if (generated) { meshesWithoutNormals++; geometry.computeVertexNormals(); normalsBuilt++; if (gem) x.userData = { ...x.userData, aurumNeedsFacetNormals: true }; }
-    else {
-      // iJewel's documented workflow expects the Rhino render mesh to arrive
-      // already prepared. It explicitly recommends fixing wrong normals in the
-      // modelling file rather than silently rebuilding production geometry at
-      // runtime. Preserve authored Rhino normals by default; only the explicit
-      // ?aurumNormals=recompute-metal experiment rebuilds them for comparison.
+
+    if (gem) {
+      // Gems keep their Rhino/render-mesh normals. iJewel explicitly treats
+      // gemstone face normals as part of the cut definition.
+      if (generated) { meshesWithoutNormals++; geometry.computeVertexNormals(); normalsBuilt++; x.userData = { ...x.userData, aurumNeedsFacetNormals: true }; }
+      else geometry.normalizeNormals();
+    } else if (experimentMode === "crease-metal") {
+      // Controlled metal-only reconstruction. This does not alter positions or
+      // topology; it rebuilds smooth normals while preserving hard edges above
+      // 60 degrees. It is intentionally isolated from gems for comparison.
+      geometry = toCreasedNormals(geometry.clone(), Math.PI / 3);
+      x.geometry = geometry;
+      creasedNormalsForTest++;
+    } else if (experimentMode === "recompute-metal") {
+      geometry = geometry.clone(); geometry.computeVertexNormals(); x.geometry = geometry; normalsRecomputedForTest++;
+    } else if (generated) {
+      meshesWithoutNormals++; geometry.computeVertexNormals(); normalsBuilt++;
+    } else {
+      // Default diagnostic mode preserves authored Rhino normals.
       geometry.normalizeNormals();
       if (normalInspection?.suspiciousRatio >= 0.12) {
         meshesWithSuspiciousNormals++;
@@ -119,11 +92,12 @@ export function preprocessAurumModel(object: THREE.Object3D) {
         };
       }
     }
+
     geometry.computeBoundingBox(); geometry.computeBoundingSphere(); x.castShadow = true; x.receiveShadow = true;
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
   });
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
-  object.userData = { ...object.userData, aurumPreprocess: { version: 7, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: true, autoRepairNormals: false, repairThreshold: 0.12, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
+  object.userData = { ...object.userData, aurumPreprocess: { version: 8, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
   return object;
 }
 
@@ -131,7 +105,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   const buffer = await file.arrayBuffer();
   if (ext === "stl") { const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js"); const geo = new STLLoader().parse(buffer); geo.computeVertexNormals(); return new THREE.Mesh(geo, fallbackMaterial); }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
-  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
+  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return (await new FBXLoader().parseAsync(buffer, "")).scene; }
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
   if (ext === "3dm") { const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js"); const loader = new Rhino3dmLoader(); loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/"); loader.setWorkerLimit(2); return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject)); }
   throw new Error("Formato no compatible.");
