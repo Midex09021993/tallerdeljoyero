@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import {
+  applyAurumOpticalProfile,
+  applyAurumDiamondOptics,
+  getAurumOpticalProfile,
+} from "../aurum-material-engine";
 
 function getAurumCategoryDiagnostic(){
   try {
