@@ -69,10 +69,26 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized", step: "auth_user", detail: userError?.message }, 401);
   }
 
-  const { data: canCreate } = await supabase.rpc("es_admin", { _user_id: user.id });
-  if (!canCreate) return json({ error: "Forbidden", step: "role_check" }, 403);
-
   const payload = (await req.json().catch(() => ({}))) as PedidoPayload;
+
+  // Las pruebas de notificación siguen siendo exclusivas de Dueño/Gerente.
+  if (payload.prueba || payload.diagnostico) {
+    const { data: canAdmin } = await supabase.rpc("es_admin", { _user_id: user.id });
+    if (!canAdmin) return json({ error: "Forbidden", step: "role_check" }, 403);
+  } else {
+    // Un pedido puede ser registrado por un usuario interno distinto del Dueño.
+    // La notificación debe llegar al Dueño igualmente. Los clientes no pueden
+    // usar este canal interno para generar avisos.
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    if (rolesError) return json({ error: rolesError.message, step: "role_check" }, 500);
+
+    const esUsuarioInterno = (roles ?? []).some((row) => row.role !== "cliente");
+    if (!esUsuarioInterno) return json({ error: "Forbidden", step: "role_check" }, 403);
+  }
+
   if (payload.diagnostico) {
     console.info("push_environment_diagnostic", {
       ok: envDiagnostic.ok,
@@ -115,6 +131,18 @@ Deno.serve(async (req) => {
 
   if (!payload.pedido_id && !payload.prueba) return json({ error: "Missing pedido_id" }, 400);
 
+  let pedidoReal: { id: string; referencia: string; cliente: string } | null = null;
+  if (!payload.prueba) {
+    const { data: pedido, error: pedidoError } = await supabase
+      .from("pedidos")
+      .select("id, referencia, cliente")
+      .eq("id", payload.pedido_id)
+      .maybeSingle();
+    if (pedidoError) return json({ error: pedidoError.message, step: "pedido_query" }, 500);
+    if (!pedido) return json({ error: "Pedido no encontrado", step: "pedido_query" }, 404);
+    pedidoReal = pedido;
+  }
+
   const { data: duenos, error: duenosError } = await supabase
     .from("user_roles")
     .select("user_id")
@@ -136,11 +164,11 @@ Deno.serve(async (req) => {
     title: "Taller del Joyero",
     body: payload.prueba
       ? "Notificaciones activadas correctamente."
-      : `Nuevo pedido registrado\n${payload.referencia ?? ""}\n${payload.cliente ?? ""}`.trim(),
+      : `Nuevo pedido registrado\n${pedidoReal?.referencia ?? payload.referencia ?? ""}\n${pedidoReal?.cliente ?? payload.cliente ?? ""}`.trim(),
     url: payload.prueba
       ? "/inicio"
-      : payload.pedido_id
-        ? `/pedidos/${payload.pedido_id}`
+      : pedidoReal?.id
+        ? `/pedidos/${pedidoReal.id}`
         : "/pedidos",
   });
 
