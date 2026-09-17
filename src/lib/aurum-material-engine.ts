@@ -24,7 +24,7 @@ export type AurumInclusionConfig = {
   depth:number; seed:number; color:number;
 };
 
-export const AURUM_MATERIAL_ENGINE_VERSION="1.3.0";
+export const AURUM_MATERIAL_ENGINE_VERSION="1.4.0";
 
 /**
  * Reflected-light response for jewelry metals.
@@ -42,14 +42,16 @@ export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   let scale=.72;
   let family="neutral";
 
-  // Yellow gold: warm alloy color must survive without broad HDR highlights
-  // turning into featureless white. Keep the environment restrained and let a
-  // slightly broader surface response preserve the continuous studio gradient.
+  // Yellow gold intentionally uses the same reflection scale as the neutral
+  // precious-metal path. The previous yellow-specific attenuation produced a
+  // different HDR response on small/high-curvature parts than on silver and
+  // palladium. Keep the gold color in the authored material color and do not
+  // compensate for it with a second family-specific reflection model.
   if(r>b*1.28 && g>b*1.10){
-    scale=.55;
+    scale=.72;
     family="yellow-gold";
-  // Rose gold: the copper component already supplies warmth, so keep the
-  // reflected environment slightly more restrained than neutral metals.
+  // Rose gold retains a restrained environment response because its copper-rich
+  // base color is materially warmer than neutral white metals.
   }else if(r>b*1.18 && g>b*1.04 && r-g<75){
     scale=.60;
     family="rose-gold";
@@ -78,16 +80,11 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
 
   const response=getAurumMetalReflectionResponse(preset);
 
-  // Yellow-gold is especially sensitive to large white studio reflections.
-  // A small roughness broadening keeps the highlight readable as a continuous
-  // metal gradient instead of a clipped white spot, without changing the
-  // authored finish category (polished / satin / matte / brushed).
-  const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
-  if(response.family==="yellow-gold"){
-    material.roughness=Math.max(.075,Math.min(.55,baseRoughness*1.06+.004));
-  }else{
-    material.roughness=baseRoughness;
-  }
+  // Keep the authored finish unchanged. Roughness is a primary PBR control for
+  // metallic reflection; do not add a special yellow-gold roughness multiplier.
+  // This makes yellow gold use the same reflection model as the other metals
+  // while preserving its own base color and catalog finish.
+  material.roughness=Math.max(.02,Number(preset.roughness??.12));
 
   material.envMapIntensity=response.environmentIntensity;
 
@@ -100,12 +97,10 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   material.anisotropyRotation=preset.anisotropyRotation??0;
-  // Precious metals need strong reflections, but yellow/rose alloys should not
-  // turn broad studio sources into clipped white patches. Keep the reflection
-  // visible and attenuate only the specular peak by the metal family response.
-  material.specularIntensity=preset.metalness>.9
-    ? Math.max(.78,Math.min(1,response.highlightScale+.25))
-    : .8;
+  // Specular color/intensity in MeshPhysicalMaterial is defined for non-metals;
+  // metallic reflection is driven by the metallic BRDF and environment response.
+  // Do not use this property to compensate for yellow-gold brightness.
+  material.specularIntensity=preset.metalness>.9 ? 1 : .8;
   material.specularColor?.setHex(0xffffff);
   material.emissive?.setHex(0x000000);
   material.emissiveIntensity=0;
