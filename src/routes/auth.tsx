@@ -231,4 +231,5 @@ function LoginPage() {
       <HerramientasFlotantes />
     </main>
   );
+}
 
