@@ -50,16 +50,15 @@ const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=
 export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>={
   oscuro:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:.86,metalEnvironmentScale:.78,highlightProtection:.91,exposure:.58,lighting:"studioHard",post:post(true,.10,.08,{vignetteDarkness:.025})},
   claro:{environmentKey:"jewelry",gemEnvironmentKey:"gemWhite",environmentIntensity:.44,environmentRotation:.24,gemEnvironmentRotation:-.16,gemEnvironmentIntensity:.90,metalEnvironmentScale:.82,highlightProtection:.93,exposure:.66,lighting:"jewelry",post:post(true,.065,.055,{vignetteDarkness:.02})},
-  luxury:{environmentKey:"luxury",gemEnvironmentKey:"gemNeutral",environmentIntensity:.42,environmentRotation:.42,gemEnvironmentRotation:.68,gemEnvironmentIntensity:.86,metalEnvironmentScale:.84,highlightProtection:.90,exposure:.54,lighting:"luxury",post:post(true,.085,.055,{vignetteDarkness:.04})},
+  luxury:{environmentKey:"luxury",gemEnvironmentKey:"gemNeutral",environmentIntensity:.42,environmentRotation:.42,gemEnvironmentIntensity:.86,gemEnvironmentRotation:.68,metalEnvironmentScale:.84,highlightProtection:.90,exposure:.54,lighting:"luxury",post:post(true,.085,.055,{vignetteDarkness:.04})},
   marmol:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.16,gemEnvironmentRotation:.10,gemEnvironmentIntensity:.96,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(true,.085,.045,{vignetteDarkness:.025})},
   transparente:{environmentKey:"studioSoft",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:1.00,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(false,.05,.04,{vignette:false})},
-  // Packshot: keep the canvas white while protecting the jewelry from clipping.
-  // The metal gets more environment than before; exposure is reduced instead of
-  // dimming the reflections. This preserves curvature and white-metal edges.
-  producto:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.34,environmentRotation:.54,gemEnvironmentRotation:-.18,gemEnvironmentIntensity:1.00,metalEnvironmentScale:.98,highlightProtection:.95,exposure:.58,lighting:"productSoft",post:post(true,.035,.025,{vignette:false})},
+  // Packshot: keep a neutral photographic background while giving polished
+  // white metals enough environment energy to read as reflective rather than
+  // charcoal. Exposure is raised instead of clipping the HDR source.
+  producto:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.40,environmentRotation:.54,gemEnvironmentRotation:-.18,gemEnvironmentIntensity:1.00,metalEnvironmentScale:1.22,highlightProtection:.94,exposure:.70,lighting:"productSoft",post:post(true,.035,.025,{vignette:false})},
   galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.94,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
   oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
-  // Gem packshot: stronger gem environment, restrained metal environment and no vignette.
   gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.40,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.08,metalEnvironmentScale:.88,highlightProtection:.93,exposure:.64,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
 };
 
