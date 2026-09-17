@@ -9,6 +9,7 @@ import {
 } from "../aurum-material-engine";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
 import { applyAurumDynamicScintillation } from "./scintillation";
+import { applyAurumInternalLightResponse } from "./internal-light-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 import { applyAurumLatinGemProfile } from "./latin-gem-catalog";
 
@@ -115,7 +116,8 @@ export function applyAurumGemToTarget(
     const next = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
     applyAurumGem(next, preset, thickness);
     applyAurumOpticalProfile(next, opticalProfile);
-    applyAurumFamilyOpticalResponse(next, opticalProfile, thickness);
+    applyAurumFamilyOpticalResponse(next, opticalProfile);
+    applyAurumInternalLightResponse(next, opticalProfile, thickness);
     applyAurumDynamicScintillation(next, opticalProfile);
     if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
     next.flatShading = true;
