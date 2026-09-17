@@ -12,9 +12,9 @@ export const clearAurumInclusions=(target:any)=>{
   remove.forEach(child=>{child.parent?.remove(child);child.geometry?.dispose?.();child.material?.dispose?.();});
 };
 
-export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInput,seed=9173)=>{
+export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInput,seed=9173,providedPreset?:any)=>{
   clearAurumInclusions(target);
-  const preset=getAurumGemPreset(g.id);
+  const preset=providedPreset ?? getAurumGemPreset(g.id);
   const config=createAurumInclusionConfig(preset,seed);
   const enabled=preset.inclusions || (!!g.inclusionStrength && g.inclusionStyle!=="ninguna");
   if(!enabled || config.density<=0)return;
