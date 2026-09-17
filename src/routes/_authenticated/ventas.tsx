@@ -107,7 +107,7 @@ function VentasPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <SeccionVentas titulo="Pendientes de entrega" cantidad={pendientesEntrega.length}>
           {pendientesEntrega.length === 0 ? (
             <Vacio texto="No hay pedidos pendientes de entrega." />
@@ -330,10 +330,6 @@ function VentasPage() {
           )}
         </SeccionVentas>
 
-        <p className="rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-          Los pedidos entregados salen del flujo de ventas y quedan archivados en Gestión → Pedidos
-          Entregados.
-        </p>
       </div>
     </>
   );
