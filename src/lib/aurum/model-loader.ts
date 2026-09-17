@@ -96,6 +96,11 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
 
 export function convertAurumToGlb(object: THREE.Object3D) {
   return new Promise<ArrayBuffer>((resolve, reject) => {
+    // Every imported format passes through the same controlled preprocessor
+    // immediately before GLB export. This keeps the render asset consistent
+    // without altering the source CAD file or its authored facet normals.
+    preprocessAurumModel(object);
+
     import("three/examples/jsm/exporters/GLTFExporter.js").then(({ GLTFExporter }) => {
       const exporter = new GLTFExporter();
       exporter.parse(
