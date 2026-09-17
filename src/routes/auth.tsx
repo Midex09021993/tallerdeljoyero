@@ -90,14 +90,14 @@ function LoginPage() {
       </div>
 
       <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5 lg:h-20 lg:px-10">
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="flex items-center gap-3">
           <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-xl object-cover ring-1 ring-gold/60" />
           <div>
             <p className="font-display text-xl font-semibold tracking-tight text-gold">AURUM LAB</p>
             <p className="text-[9px] uppercase tracking-[0.28em] text-white/45">Sistema del taller de joyería</p>
           </div>
         </div>
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-8 md:flex">
           <a href="/auth" className="flex items-center gap-2 text-sm text-gold">
             <Home className="size-4" /> Inicio
           </a>
@@ -105,13 +105,13 @@ function LoginPage() {
             <Grid2X2 className="size-4" /> Herramientas
           </a>
         </nav>
-        <a href="#login" className="hidden rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink md:inline-flex">
+        <a href="#login" className="rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink">
           Iniciar sesión
         </a>
       </header>
 
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1">
-        <section className="hidden min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
+        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
             <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl [@media(max-height:800px)]:lg:text-[3.4rem]">Aurum Lab</p>
             <p className="mt-4 text-[10px] uppercase tracking-[0.42em] text-white/50 sm:text-xs">
@@ -231,7 +231,7 @@ function LoginPage() {
         </div>
       </footer>
 
-      <div className="md:hidden"><HerramientasFlotantes /></div>
+      <HerramientasFlotantes />
     </main>
   );
 }
