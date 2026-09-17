@@ -17,7 +17,7 @@ function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefin
   return undefined;
 }
 
-function matrixFamilyCategory(layer:any,index:number,colorCapa?:string,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
+function matrixFamilyCategory(layer:any,index:number,colorCapa:string|undefined,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
   const name=String(layer?.name??"").trim();
 
   // Rhino/iJewel-compatible rule: an explicit layer name is authoritative.
