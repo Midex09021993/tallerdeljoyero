@@ -110,22 +110,22 @@ function LoginPage() {
         </a>
       </header>
 
-      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)]">
-        <section className="min-w-0 pb-8 lg:pb-16">
+      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-2">
+        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-2">
           <div className="max-w-4xl">
-            <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl">Aurum Lab</p>
+            <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl [@media(max-height:800px)]:lg:text-6xl">Aurum Lab</p>
             <p className="mt-4 text-[10px] uppercase tracking-[0.42em] text-white/50 sm:text-xs">
               Sistema del taller de joyería
             </p>
-            <p className="mt-8 max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl">
+            <p className="mt-8 max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:lg:text-3xl">
               Tus clientes. Tus trabajos. Tu crecimiento.
             </p>
-            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base">
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-3">
               Todo conectado en un solo lugar. Acceso seguro según tu rol.
             </p>
           </div>
 
-          <section id="herramientas" className="mt-10 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6">
+          <section id="herramientas" className="mt-10 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-5 [@media(max-height:800px)]:p-4">
             <div className="flex items-center gap-3">
               <Gem className="size-7 text-gold" />
               <div>
@@ -138,7 +138,7 @@ function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 [@media(max-height:800px)]:mt-3">
               {[
                 ["Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
                 ["Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
@@ -146,7 +146,7 @@ function LoginPage() {
                 ["Visualizador y Peso 3D", "Visualiza y calcula el peso de tus diseños 3D."],
                 ["AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
               ].map(([titulo, descripcion], i) => (
-                <div key={titulo} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/40 hover:bg-white/[0.045]">
+                <div key={titulo} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3">
                   <Gem className="size-6 text-gold" />
                   <p className="mt-4 text-sm font-semibold text-white">{titulo}</p>
                   <p className="mt-2 text-[11px] leading-relaxed text-white/50">{descripcion}</p>
@@ -167,7 +167,7 @@ function LoginPage() {
         </section>
 
         <section id="login" className="mx-auto w-full max-w-[430px]">
-          <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9">
+          <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9 [@media(max-height:800px)]:p-6">
             <div className="mb-7 flex items-center gap-3">
               <LockKeyhole className="size-7 text-gold" />
               <div>
