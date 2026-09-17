@@ -67,7 +67,7 @@ export function applyAurumMaterialToModel(
   materialConfig:any,
   sharedMaterial:any
 ) {
-  // A material change is an operation on the selected component only.
+  // Material assignment is layer-based for every layer, including the free-form "other" layers.
   // A missing selection never means "apply to the whole model".
   if (!model || !activePart?.isMesh) return false;
 
@@ -76,8 +76,6 @@ export function applyAurumMaterialToModel(
   const selectedCategory = selectionCategory(activePart);
   const selectedSlot = selectedMeta.matrixSlot;
 
-  // A metal can be assigned to a metal layer OR to an "other" layer.
-  // This is intentionally free-form for decorative/CAD object layers.
   if (selectedCategory !== "metal" && selectedCategory !== "otro") return false;
 
   applyAurumMetal(sharedMaterial, metalPresetFromConfig(materialConfig));
@@ -90,7 +88,10 @@ export function applyAurumMaterialToModel(
     const category = selectionCategory(x);
     const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === selectedCategory;
     const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === selectedCategory;
-    if (x.uuid === activePart.uuid || (selectedCategory === "metal" && (sameLayer || sameSlot))) {
+    const shouldApply = x.uuid === activePart.uuid
+      || (selectedCategory === "otro" && sameLayer)
+      || (selectedCategory === "metal" && (sameLayer || sameSlot));
+    if (shouldApply) {
       const apply = (base:any) => {
         const next = base?.clone ? base.clone() : sharedMaterial.clone();
         applyAurumMetal(next, metalPresetFromConfig(materialConfig));
@@ -108,8 +109,7 @@ export function applyAurumGemToTarget(
   gemConfig:any,
   applyGemEnvironment:()=>void
 ) {
-  // A gemstone can be assigned to a gem layer OR to an "other" layer.
-  // "Other" is a free-material category, not a hidden gemstone category.
+  // Gem assignment is layer-based for every layer, including the free-form "other" layers.
   if (!target?.isMesh) return false;
   const selectedCategory=selectionCategory(target);
   if (selectedCategory !== "gema" && selectedCategory !== "otro") return false;
@@ -123,9 +123,9 @@ export function applyAurumGemToTarget(
     if (!x.isMesh || x.userData?.aurumInternalInclusion) return;
     const meta=selectionMeta(x);
     const category=selectionCategory(x);
-    const sameLayer=selectedCategory === "gema" && !!selectedLayer && meta.capa===selectedLayer && category==="gema";
-    const sameSlot=selectedCategory === "gema" && selectedSlot!=null && meta.matrixSlot===selectedSlot && category==="gema";
-    if(x===target || sameLayer || sameSlot) targets.push(x);
+    const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === selectedCategory;
+    const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === selectedCategory;
+    if(x===target || (selectedCategory === "otro" && sameLayer) || (selectedCategory === "gema" && (sameLayer || sameSlot))) targets.push(x);
   });
   if(!targets.length) targets.push(target);
   const box = new THREE.Box3().setFromObject(target);
