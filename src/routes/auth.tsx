@@ -89,7 +89,7 @@ function LoginPage() {
         <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-black/50 to-transparent" />
       </div>
 
-      <header className="relative z-20 flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6 lg:px-10">
+      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5 lg:h-20 lg:px-10">
         <div className="flex items-center gap-3">
           <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-xl object-cover ring-1 ring-gold/60" />
           <div>
@@ -110,7 +110,7 @@ function LoginPage() {
         </a>
       </header>
 
-      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-8 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] lg:px-10">
+      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)]">
         <section className="min-w-0 pb-8 lg:pb-16">
           <div className="max-w-4xl">
             <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl">Aurum Lab</p>
@@ -217,7 +217,7 @@ function LoginPage() {
         </section>
       </div>
 
-      <footer className="relative z-10 shrink-0 border-t border-white/10 px-6 py-5">
+      <footer className="relative z-10 shrink-0 border-t border-white/10 px-5 py-3 lg:px-6 lg:py-5">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 text-xs text-white/45">
           <div className="flex flex-wrap items-center gap-6">
             <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-gold" /> Seguro y confiable</span>
