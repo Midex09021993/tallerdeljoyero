@@ -50,7 +50,10 @@ export function applyAurumCameraView(
   controls.target.copy(target);
   if (view === "frontal") {
     camera.up.set(0, 1, 0);
-    camera.position.set(target.x, target.y, target.z + distance);
+    // Elevación mínima: conserva la lectura frontal pero permite que el plano
+    // de producto y su sombra de contacto entren en la composición.
+    const productLift = radius * 0.06;
+    camera.position.set(target.x, target.y + productLift, target.z + distance);
   } else if (view === "superior") {
     camera.up.set(0, 0, -1);
     camera.position.set(target.x, target.y + distance, target.z);
