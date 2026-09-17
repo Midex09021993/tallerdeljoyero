@@ -1,4 +1,5 @@
 import type { Object3D, PerspectiveCamera, Vector3 } from "three";
+import { applyAurumCameraView } from "./camera";
 
 export interface AurumViewerFrame {
   camera: PerspectiveCamera;
@@ -10,7 +11,7 @@ export interface AurumViewerFrame {
   lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
-export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any) {
+export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Otro") {
   const prepared=prepare(model,2.6);
   const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
   viewer.groundController.positionUnderModel(bounds);
@@ -36,16 +37,21 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     });
   }
   applyScene(sceneId);
+
+  // Producto: reutilizar exactamente la vista perspectiva configurada para
+  // "Restablecer vista". Esto mantiene la preparación técnica del modelo,
+  // suelo y luces, pero evita que la primera carga entre con una cámara frontal.
+  if (sceneId === "producto") {
+    applyAurumCameraView(viewer.camera, viewer.controls, model, "perspectiva", category);
+    return;
+  }
+
   const maxDimension=Math.max(size.x,size.y,size.z,0.001);
   const fovRad=(viewer.camera.fov * Math.PI) / 180;
   const fitDistance=(maxDimension * 0.50) / Math.tan(fovRad / 2);
   const framingMultiplier = sceneId === "producto" ? 1.40 : 1.08;
   const distance=Math.max(fitDistance * framingMultiplier,3.2);
   const aimY=targetY + Math.max(size.y*.035, .025);
-  // Product-shot camera: use a visible but restrained downward angle so the
-  // studio floor can enter the lower frame. The previous .075 lift was visually
-  // too small to reveal the ground plane, so the product still read like it was
-  // floating on a flat canvas. Keep the target fixed to preserve the ring framing.
   const cameraLift = sceneId === "producto" ? Math.max(size.y*.24, .12) : 0;
   viewer.camera.position.set(0, aimY + cameraLift, distance);
   viewer.controls.target.set(0,aimY,0);
