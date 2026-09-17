@@ -1,12 +1,6 @@
 import * as THREE from "three";
+import { inspectAurumMesh } from "./mesh-preflight";
 
-/**
- * Detecta normales CAD que existen pero no son coherentes con la geometría.
- *
- * No reemplaza normales authored por defecto. Solo considera sospechosa una
- * malla cuando una proporción significativa de sus normales apunta en una
- * dirección incompatible con las caras que comparten ese vértice.
- */
 function inspectMeshNormals(geometry: THREE.BufferGeometry) {
   const position = geometry.getAttribute("position");
   const normal = geometry.getAttribute("normal");
@@ -39,9 +33,7 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
   };
 
   if (index) {
-    for (let i = 0; i + 2 < index.count; i += 3) {
-      addFace(index.getX(i), index.getX(i + 1), index.getX(i + 2));
-    }
+    for (let i = 0; i + 2 < index.count; i += 3) addFace(index.getX(i), index.getX(i + 1), index.getX(i + 2));
   } else {
     for (let i = 0; i + 2 < position.count; i += 3) addFace(i, i + 1, i + 2);
   }
@@ -68,21 +60,9 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
     if (!Number.isFinite(dot) || dot < 0.15) suspicious++;
   }
 
-  return {
-    valid: true,
-    suspiciousRatio: comparable ? suspicious / comparable : 0,
-    vertices: position.count,
-  };
+  return { valid: true, suspiciousRatio: comparable ? suspicious / comparable : 0, vertices: position.count };
 }
 
-/**
- * Corrige la orientación local de los triángulos antes de recalcular normales.
- *
- * Esto es importante para mallas CAD: computeVertexNormals() solo puede
- * promediar correctamente si las caras vecinas tienen un winding coherente.
- * Se conserva la dirección global de las normales authored de Rhino para no
- * invertir accidentalmente toda la pieza.
- */
 function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
   const index = geometry.getIndex();
   const position = geometry.getAttribute("position");
@@ -129,20 +109,18 @@ function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
 
   const flip = new Array<boolean>(faceCount).fill(false);
   const visited = new Array<boolean>(faceCount).fill(false);
-  const components:number[][] = [];
+  const components: number[][] = [];
 
   for (let start = 0; start < faceCount; start++) {
     if (visited[start]) continue;
     const queue = [start];
-    const component:number[] = [];
+    const component: number[] = [];
     visited[start] = true;
-
     while (queue.length) {
       const face = queue.shift()!;
       component.push(face);
       for (const link of adjacency.get(face) ?? []) {
         if (visited[link.face]) continue;
-        // Shared edges must run in opposite directions after orientation.
         flip[link.face] = link.sameDirection ? !flip[face] : flip[face];
         visited[link.face] = true;
         queue.push(link.face);
@@ -152,7 +130,7 @@ function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
   }
 
   const authoredNormal = geometry.getAttribute("normal");
-  const faceNormal = (face:number, useFlip:boolean) => {
+  const faceNormal = (face: number, useFlip: boolean) => {
     let a = index.getX(face * 3), b = index.getX(face * 3 + 1), c = index.getX(face * 3 + 2);
     if (useFlip) [b, c] = [c, b];
     const ax = position.getX(a), ay = position.getY(a), az = position.getZ(a);
@@ -160,14 +138,9 @@ function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
     const cx = position.getX(c), cy = position.getY(c), cz = position.getZ(c);
     const abx = bx - ax, aby = by - ay, abz = bz - az;
     const acx = cx - ax, acy = cy - ay, acz = cz - az;
-    return new THREE.Vector3(
-      aby * acz - abz * acy,
-      abz * acx - abx * acz,
-      abx * acy - aby * acx,
-    );
+    return new THREE.Vector3(aby * acz - abz * acy, abz * acx - abx * acz, abx * acy - aby * acx);
   };
 
-  // Keep the overall orientation closest to the normals Rhino authored.
   if (authoredNormal && authoredNormal.count === position.count) {
     for (const component of components) {
       const face = component[0];
@@ -194,23 +167,11 @@ function repairMeshWindingAndNormals(geometry: THREE.BufferGeometry) {
     nextIndex[base + 2] = tmp;
     flippedFaces++;
   }
-
-  if (flippedFaces > 0) {
-    geometry.setIndex(new THREE.BufferAttribute(nextIndex, 1));
-  }
+  if (flippedFaces > 0) geometry.setIndex(new THREE.BufferAttribute(nextIndex, 1));
   geometry.computeVertexNormals();
   return { flippedFaces, components: components.length };
 }
 
-/**
- * Preprocesado seguro del modelo antes de convertirlo al GLB interno.
- *
- * El CAD de joyería es una fuente de fabricación, no un activo de render.
- * Esta etapa limpia únicamente elementos que no son geometría de producto,
- * valida la malla y corrige únicamente normales claramente inconsistentes.
- * No modifica posiciones ni escala; en una malla sospechosa solo corrige el
- * winding de los triángulos y vuelve a generar las normales.
- */
 export function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
 
@@ -224,37 +185,40 @@ export function preprocessAurumModel(object: THREE.Object3D) {
   let meshesWithoutNormals = 0;
   let meshesWithSuspiciousNormals = 0;
   let repeatedGeometryRefs = 0;
+  let meshesWithBoundaryEdges = 0;
+  let meshesWithNonManifoldEdges = 0;
+  let meshesWithDegenerateTriangles = 0;
   const geometryRefs = new Map<any, number>();
 
-  const likelyGem = (x:any) => {
-    const text = [
-      x?.name,
-      x?.userData?.aurumRhino?.capa,
-      x?.userData?.attributes?.layerName,
-    ].map((v:any) => String(v ?? "").toLowerCase()).join(" ");
+  const likelyGem = (x: any) => {
+    const text = [x?.name, x?.userData?.aurumRhino?.capa, x?.userData?.attributes?.layerName]
+      .map((v: any) => String(v ?? "").toLowerCase()).join(" ");
     return /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(text);
   };
 
-  const removeQueue:any[] = [];
-  object.traverse((x:any) => {
+  const removeQueue: any[] = [];
+  object.traverse((x: any) => {
     if (x !== object && (x.isLine || x.isLineSegments || x.isPoints)) {
       removeQueue.push(x);
       if (x.isPoints) pointObjectsRemoved++;
       else lineObjectsRemoved++;
       return;
     }
-
     if (!x.isMesh || !x.geometry) return;
     meshes++;
 
     let geometry = x.geometry as THREE.BufferGeometry;
     geometryRefs.set(geometry, (geometryRefs.get(geometry) ?? 0) + 1);
-
     const position = geometry.getAttribute("position");
     if (!position || position.count < 3) return;
 
     const index = geometry.getIndex();
     triangles += index ? Math.floor(index.count / 3) : Math.floor(position.count / 3);
+
+    const preflight = inspectAurumMesh(geometry);
+    if (preflight.boundaryEdges > 0) meshesWithBoundaryEdges++;
+    if (preflight.nonManifoldEdges > 0) meshesWithNonManifoldEdges++;
+    if (preflight.degenerateTriangles > 0) meshesWithDegenerateTriangles++;
 
     const normal = geometry.getAttribute("normal");
     const generated = !normal || normal.count !== position.count;
@@ -292,22 +256,18 @@ export function preprocessAurumModel(object: THREE.Object3D) {
       ...x.userData,
       aurumPreprocessed: true,
       aurumNormalsGenerated: generated,
+      aurumMeshPreflight: preflight,
     };
   });
 
-  removeQueue.forEach((x:any) => {
-    x.parent?.remove(x);
-  });
-
-  geometryRefs.forEach((count) => {
-    if (count > 1) repeatedGeometryRefs += count;
-  });
+  removeQueue.forEach((x: any) => x.parent?.remove(x));
+  geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; });
 
   object.updateMatrixWorld(true);
   object.userData = {
     ...object.userData,
     aurumPreprocess: {
-      version: 4,
+      version: 5,
       meshes,
       triangles,
       normalsBuilt,
@@ -315,6 +275,9 @@ export function preprocessAurumModel(object: THREE.Object3D) {
       windingFacesFlipped,
       meshesWithoutNormals,
       meshesWithSuspiciousNormals,
+      meshesWithBoundaryEdges,
+      meshesWithNonManifoldEdges,
+      meshesWithDegenerateTriangles,
       lineObjectsRemoved,
       pointObjectsRemoved,
       repeatedGeometryRefs,
@@ -335,46 +298,37 @@ export function preprocessAurumModel(object: THREE.Object3D) {
 
 export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material) {
   const buffer = await file.arrayBuffer();
-
   if (ext === "stl") {
     const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js");
     const geo = new STLLoader().parse(buffer);
     geo.computeVertexNormals();
     return new THREE.Mesh(geo, fallbackMaterial);
   }
-
   if (ext === "obj") {
     const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js");
     return new OBJLoader().parse(new TextDecoder().decode(buffer));
   }
-
   if (ext === "fbx") {
     const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js");
     return new FBXLoader().parse(buffer, "");
   }
-
   if (ext === "glb") {
     const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
     return (await new GLTFLoader().parseAsync(buffer, "")).scene;
   }
-
   if (ext === "3dm") {
     const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
     const loader = new Rhino3dmLoader();
     loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
     loader.setWorkerLimit(2);
-    return await new Promise<any>((resolve, reject) => {
-      loader.parse(buffer, resolve, reject);
-    });
+    return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject));
   }
-
   throw new Error("Formato no compatible.");
 }
 
 export function convertAurumToGlb(object: THREE.Object3D) {
   return new Promise<ArrayBuffer>((resolve, reject) => {
     preprocessAurumModel(object);
-
     import("three/examples/jsm/exporters/GLTFExporter.js").then(({ GLTFExporter }) => {
       const exporter = new GLTFExporter();
       exporter.parse(
