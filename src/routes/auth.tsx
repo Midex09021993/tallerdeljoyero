@@ -118,7 +118,7 @@ function LoginPage() {
               Sistema del taller de joyería
             </p>
             <p className="mt-8 max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:lg:text-[1.7rem]">
-              Tus clientes. Tus trabajos. Tu crecimiento.
+              Tus clientes. Tus trabajos. Tu crecimiento. Tus herramientas.
             </p>
             <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-3">
               Todo conectado en un solo lugar. Acceso seguro según tu rol.
