@@ -48,6 +48,117 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
   return { valid: true, suspiciousRatio: comparable ? suspicious / comparable : 0, vertices: position.count };
 }
 
+function isRhinoObjectHiddenForExport(attributes: any): boolean {
+  if (!attributes) return false;
+  const mode = attributes.mode ?? attributes.Mode ?? attributes.objectMode ?? attributes.ObjectMode;
+  const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
+  return attributes.visible === false
+    || attributes.Visible === false
+    || attributes.isVisible === false
+    || mode === 1
+    || modeText === "hidden"
+    || modeText === "hidden_object"
+    || modeText === "hiddenobject";
+}
+
+function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
+  const layers = Array.isArray((object as any)?.userData?.layers) ? (object as any).userData.layers : [];
+  if (!layers.length) return;
+
+  const byId = new Map<string, any>();
+  const byName = new Map<string, any>();
+  for (const layer of layers) {
+    const id = layer?.id ?? layer?.Id;
+    if (id != null) byId.set(String(id), layer);
+    const name = String(layer?.name ?? layer?.Name ?? "").trim().toLowerCase();
+    if (name) byName.set(name, layer);
+  }
+
+  const cache = new Map<number, boolean>();
+  const directVisible = (layer: any) => {
+    if (!layer) return true;
+    const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
+    const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
+    return layer.visible !== false
+      && layer.Visible !== false
+      && layer.isVisible !== false
+      && layer.visibility !== false
+      && mode !== 1
+      && modeText !== "hidden"
+      && modeText !== "hidden_layer"
+      && modeText !== "hiddenlayer";
+  };
+
+  const effectiveVisible = (index: number, trail = new Set<number>()): boolean => {
+    if (index < 0 || index >= layers.length) return true;
+    if (cache.has(index)) return cache.get(index)!;
+    if (trail.has(index)) return true;
+    const layer = layers[index];
+    if (!directVisible(layer)) {
+      cache.set(index, false);
+      return false;
+    }
+    const parentId = layer?.parentLayerId ?? layer?.parentId ?? layer?.parentLayerID ?? layer?.ParentLayerId;
+    if (parentId != null && String(parentId) && String(parentId) !== "00000000-0000-0000-0000-000000000000") {
+      const parent = byId.get(String(parentId));
+      if (parent) {
+        const parentIndex = layers.indexOf(parent);
+        if (parentIndex >= 0) {
+          const nextTrail = new Set(trail);
+          nextTrail.add(index);
+          const visible = effectiveVisible(parentIndex, nextTrail);
+          cache.set(index, visible);
+          return visible;
+        }
+      }
+    }
+    cache.set(index, true);
+    return true;
+  };
+
+  const resolveLayerIndex = (x: any) => {
+    const candidates = [
+      x?.userData?.attributes?.layerIndex,
+      x?.userData?.attributes?.LayerIndex,
+      x?.userData?.layerIndex,
+      x?.userData?.LayerIndex,
+    ];
+    for (const value of candidates) {
+      const n = Number(value);
+      if (Number.isInteger(n) && n >= 0) return n;
+    }
+    return -1;
+  };
+
+  object.traverse((x: any) => {
+    if (!x.isMesh) return;
+    const attrs = x.userData?.attributes || {};
+    const index = resolveLayerIndex(x);
+    let layerVisible = true;
+    if (index >= 0) {
+      layerVisible = effectiveVisible(index);
+    } else {
+      const layerName = String(x.userData?.attributes?.layerName ?? x.userData?.layerName ?? "").trim().toLowerCase();
+      if (layerName && byName.has(layerName)) {
+        layerVisible = effectiveVisible(layers.indexOf(byName.get(layerName)));
+      }
+    }
+    const visible = !isRhinoObjectHiddenForExport(attrs) && layerVisible;
+    if (!visible) x.visible = false;
+    x.userData = {
+      ...x.userData,
+      aurumRhinoVisibility: {
+        enforcedBeforeExport: true,
+        layerIndex: index,
+        layerVisible,
+        objectVisible: !isRhinoObjectHiddenForExport(attrs),
+        visible,
+      },
+    };
+  });
+  object.updateMatrixWorld(true);
+}
+
 export function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
   const experimentMode = getAurumNormalExperimentMode();
@@ -105,12 +216,25 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   const buffer = await file.arrayBuffer();
   if (ext === "stl") { const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js"); const geo = new STLLoader().parse(buffer); geo.computeVertexNormals(); return new THREE.Mesh(geo, fallbackMaterial); }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
-  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return (await new FBXLoader().parseAsync(buffer, "")).scene; }
-  if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
+  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return (await FBXLoader().parseAsync(buffer, "")).scene; }
+  if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await GLTFLoader().parseAsync(buffer, "")).scene; }
   if (ext === "3dm") { const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js"); const loader = new Rhino3dmLoader(); loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/"); loader.setWorkerLimit(2); return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject)); }
   throw new Error("Formato no compatible.");
 }
 
 export function convertAurumToGlb(object: THREE.Object3D) {
-  return new Promise<ArrayBuffer>((resolve, reject) => { preprocessAurumModel(object); import("three/examples/jsm/exporters/GLTFExporter.js").then(({ GLTFExporter }) => { const exporter = new GLTFExporter(); exporter.parse(object, (result: ArrayBuffer | { [key: string]: unknown }) => { if (result instanceof ArrayBuffer) resolve(result); else reject(new Error("No se pudo generar el GLB interno.")); }, (error: unknown) => reject(error), { binary: true, onlyVisible: true, trs: false }); }).catch(reject); });
+  return new Promise<ArrayBuffer>((resolve, reject) => {
+    // IMPORTANT: Rhino layer visibility must be applied BEFORE GLB export.
+    // The exporter uses onlyVisible:true; enforcing visibility after this point
+    // is too late because hidden Rhino geometry has already been serialized.
+    enforceRhinoLayerVisibilityBeforeExport(object);
+    preprocessAurumModel(object);
+    import("three/examples/jsm/exporters/GLTFExporter.js").then(({ GLTFExporter }) => {
+      const exporter = new GLTFExporter();
+      exporter.parse(object, (result: ArrayBuffer | { [key: string]: unknown }) => {
+        if (result instanceof ArrayBuffer) resolve(result);
+        else reject(new Error("No se pudo generar el GLB interno."));
+      }, (error: unknown) => reject(error), { binary: true, onlyVisible: true, trs: false });
+    }).catch(reject);
+  });
 }
