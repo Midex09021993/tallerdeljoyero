@@ -131,16 +131,32 @@ Deno.serve(async (req) => {
 
   if (!payload.pedido_id && !payload.prueba) return json({ error: "Missing pedido_id" }, 400);
 
-  let pedidoReal: { id: string; referencia: string; cliente: string } | null = null;
+  let pedidoReal: { id: string; referencia: string; cliente: string; sede_id: string | null } | null = null;
+  let sedeNombre = "Sin sede";
+  let registradorNombre = user.email ?? "Usuario interno";
+
   if (!payload.prueba) {
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
-      .select("id, referencia, cliente")
+      .select("id, referencia, cliente, sede_id")
       .eq("id", payload.pedido_id)
       .maybeSingle();
     if (pedidoError) return json({ error: pedidoError.message, step: "pedido_query" }, 500);
     if (!pedido) return json({ error: "Pedido no encontrado", step: "pedido_query" }, 404);
     pedidoReal = pedido;
+
+    const [{ data: sede, error: sedeError }, { data: perfil, error: perfilError }] = await Promise.all([
+      pedido.sede_id
+        ? supabase.from("sedes").select("nombre").eq("id", pedido.sede_id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      supabase.from("profiles").select("nombre").eq("id", user.id).maybeSingle(),
+    ]);
+
+    if (sedeError) return json({ error: sedeError.message, step: "sede_query" }, 500);
+    if (perfilError) return json({ error: perfilError.message, step: "profile_query" }, 500);
+
+    sedeNombre = sede?.nombre?.trim() || "Sin sede";
+    registradorNombre = perfil?.nombre?.trim() || user.email || "Usuario interno";
   }
 
   const { data: duenos, error: duenosError } = await supabase
@@ -161,10 +177,17 @@ Deno.serve(async (req) => {
   webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
   const body = JSON.stringify({
-    title: "Taller del Joyero",
+    title: "🔔 Taller del Joyero",
     body: payload.prueba
       ? "Notificaciones activadas correctamente."
-      : `Nuevo pedido registrado\n${pedidoReal?.referencia ?? payload.referencia ?? ""}\n${pedidoReal?.cliente ?? payload.cliente ?? ""}`.trim(),
+      : [
+          "Nuevo pedido registrado",
+          "",
+          `Código: ${pedidoReal?.referencia ?? payload.referencia ?? ""}`,
+          `Cliente: ${pedidoReal?.cliente ?? payload.cliente ?? ""}`,
+          `Sede: ${sedeNombre}`,
+          `Registrado por: ${registradorNombre}`,
+        ].join("\n"),
     url: payload.prueba
       ? "/inicio"
       : pedidoReal?.id
