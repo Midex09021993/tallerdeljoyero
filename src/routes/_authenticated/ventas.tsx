@@ -623,6 +623,16 @@ function PedidoVentaCard({
           </div>
         )}
       </button>
+      <div className="mt-4 rounded-xl border border-gold/20 bg-surface-sunken/50 p-3">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          Guía rápida de ventas
+        </p>
+        <div className="mt-2 grid gap-2 text-[11px] text-muted-foreground sm:grid-cols-3">
+          <p><span className="font-semibold text-success">Pago</span> · registra un abono del cliente.</p>
+          <p><span className="font-semibold text-foreground">Envío</span> · cuando sale por encomienda.</p>
+          <p><span className="font-semibold text-gold">Entregado</span> · cuando recoge en tienda.</p>
+        </div>
+      </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {tieneContratoFinanciero ? (
           <button
