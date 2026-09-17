@@ -159,7 +159,7 @@ function LoginPage() {
               <a href="#herramientas" className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
                 Explorar herramientas <ArrowRight className="size-4" />
               </a>
-              <a href="https://wa.me/51948727973?text=Hola,%20quiero%20solicitar%20acceso%20de%20prueba%20a%20Aurum%20Lab" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-gold/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/10">
+              <a href="https://wa.me/51948727973?text=Hola%2C%20quiero%20solicitar%20acceso%20de%20prueba%20a%20Aurum%20Lab" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-gold/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/10">
                 Solicitar acceso de prueba
               </a>
             </div>
