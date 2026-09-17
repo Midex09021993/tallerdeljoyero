@@ -61,104 +61,77 @@ const opticalProfileFromCatalog=(g:any)=>{
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
 const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
 
-export function applyAurumMaterialToModel(
-  model:any,
-  activePart:any,
-  materialConfig:any,
-  sharedMaterial:any
-) {
-  // Material assignment is layer-based for every layer, including the free-form "other" layers.
-  // A missing selection never means "apply to the whole model".
+export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any) {
   if (!model || !activePart?.isMesh) return false;
-
-  const selectedMeta = selectionMeta(activePart);
-  const selectedLayer = selectedMeta.capa || activePart?.userData?.attributes?.layerName || null;
-  const selectedCategory = selectionCategory(activePart);
-  const selectedSlot = selectedMeta.matrixSlot;
-
-  if (selectedCategory !== "metal" && selectedCategory !== "otro") return false;
-
-  applyAurumMetal(sharedMaterial, metalPresetFromConfig(materialConfig));
-  let applied = 0;
-  model.traverse((x:any) => {
-    if (!x.isMesh) return;
-    x.castShadow = true;
-    x.receiveShadow = true;
-    const meta = selectionMeta(x);
-    const category = selectionCategory(x);
-    const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === selectedCategory;
-    const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === selectedCategory;
-    const shouldApply = x.uuid === activePart.uuid
-      || (selectedCategory === "otro" && sameLayer)
-      || (selectedCategory === "metal" && (sameLayer || sameSlot));
-    if (shouldApply) {
-      const apply = (base:any) => {
-        const next = base?.clone ? base.clone() : sharedMaterial.clone();
-        applyAurumMetal(next, metalPresetFromConfig(materialConfig));
-        return next;
-      };
-      x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
-      applied++;
+  const selectedMeta=selectionMeta(activePart);
+  const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
+  const selectedCategory=selectionCategory(activePart);
+  const selectedSlot=selectedMeta.matrixSlot;
+  if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
+  applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
+  let applied=0;
+  model.traverse((x:any)=>{
+    if(!x.isMesh)return;
+    x.castShadow=true;x.receiveShadow=true;
+    const meta=selectionMeta(x),category=selectionCategory(x);
+    const sameLayer=!!selectedLayer&&meta.capa===selectedLayer&&category===selectedCategory;
+    const sameSlot=selectedSlot!=null&&meta.matrixSlot===selectedSlot&&category===selectedCategory;
+    const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&(sameLayer||sameSlot));
+    if(shouldApply){
+      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));return next;};
+      x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);applied++;
     }
   });
   return applied>0;
 }
 
-export function applyAurumGemToTarget(
-  target:any,
-  gemConfig:any,
-  applyGemEnvironment:()=>void
-) {
-  // Gem assignment is layer-based for every layer, including the free-form "other" layers.
-  if (!target?.isMesh) return false;
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void) {
+  if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
-  if (selectedCategory !== "gema" && selectedCategory !== "otro") return false;
-
-  const modelRoot = target.parent?.parent ? (()=>{ let r=target; while(r.parent) r=r.parent; return r; })() : target;
-  const selectedMeta = selectionMeta(target);
-  const selectedLayer = selectedMeta.capa || target.userData?.attributes?.layerName || null;
-  const selectedSlot = selectedMeta.matrixSlot;
-  const targets:any[] = [];
+  if(selectedCategory!=="gema"&&selectedCategory!=="otro")return false;
+  const modelRoot=target.parent?.parent?(()=>{let r=target;while(r.parent)r=r.parent;return r;})():target;
+  const selectedMeta=selectionMeta(target);
+  const selectedLayer=selectedMeta.capa||target.userData?.attributes?.layerName||null;
+  const selectedSlot=selectedMeta.matrixSlot;
+  const targets:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
-    if (!x.isMesh || x.userData?.aurumInternalInclusion) return;
-    const meta=selectionMeta(x);
-    const category=selectionCategory(x);
-    const sameLayer = !!selectedLayer && meta.capa === selectedLayer && category === selectedCategory;
-    const sameSlot = selectedSlot != null && meta.matrixSlot === selectedSlot && category === selectedCategory;
-    if(x===target || (selectedCategory === "otro" && sameLayer) || (selectedCategory === "gema" && (sameLayer || sameSlot))) targets.push(x);
+    if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
+    const meta=selectionMeta(x),category=selectionCategory(x);
+    const sameLayer=!!selectedLayer&&meta.capa===selectedLayer&&category===selectedCategory;
+    const sameSlot=selectedSlot!=null&&meta.matrixSlot===selectedSlot&&category===selectedCategory;
+    if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&(sameLayer||sameSlot)))targets.push(x);
   });
-  if(!targets.length) targets.push(target);
-  const box = new THREE.Box3().setFromObject(target);
-  const size = box.getSize(new THREE.Vector3());
-  const thickness = Math.max(0.015, Math.min(size.x,size.y,size.z) * 0.85);
-  const preset:any = presetFromCatalog(gemConfig);
-  const opticalProfile = opticalProfileFromCatalog(gemConfig);
-  const apply = (base:any) => {
-    const next = base?.clone ? base.clone() : new THREE.MeshPhysicalMaterial();
-    applyAurumGem(next, preset, thickness);
-    applyAurumOpticalProfile(next, opticalProfile);
-    applyAurumFamilyOpticalResponse(next, opticalProfile);
-    applyAurumInternalLightResponse(next, opticalProfile, thickness);
-    applyAurumDynamicScintillation(next, opticalProfile);
-    if (preset.familia === "Diamante") applyAurumDiamondOptics(next);
-    next.flatShading = true;
-    next.needsUpdate = true;
+  if(!targets.length)targets.push(target);
+  const box=new THREE.Box3().setFromObject(target);
+  const size=box.getSize(new THREE.Vector3());
+  const thickness=Math.max(.015,Math.min(size.x,size.y,size.z)*.85);
+  const preset:any=presetFromCatalog(gemConfig);
+  const opticalProfile=opticalProfileFromCatalog(gemConfig);
+  const apply=(base:any)=>{
+    const next=base?.clone?base.clone():new THREE.MeshPhysicalMaterial();
+    applyAurumGem(next,preset,thickness);
+    applyAurumOpticalProfile(next,opticalProfile);
+    applyAurumFamilyOpticalResponse(next,opticalProfile);
+    applyAurumInternalLightResponse(next,opticalProfile,thickness);
+    applyAurumDynamicScintillation(next,opticalProfile);
+    if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
+    // Preserve authored CAD facet normals. Only fall back to flat shading when
+    // the geometry has no usable normals; the renderer's normal pipeline handles
+    // crease preservation for meshes that already carry valid facet normals.
+    const geometry=target.geometry;
+    const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
+    next.flatShading=!hasUsableNormals;
+    next.needsUpdate=true;
     return next;
   };
   targets.forEach((part:any)=>{
-    part.material = Array.isArray(part.material) ? part.material.map(apply) : apply(part.material);
-    part.userData = {
-      ...part.userData,
-      aurumFacetNormalsApplied:true,
-      aurumFacetNormalMode:"flatShading",
-    };
-    renderAurumInclusions(THREE, part, gemConfig, 9173, preset);
-    applyAurumLatinGemProfile(part, gemConfig);
+    part.material=Array.isArray(part.material)?part.material.map(apply):apply(part.material);
+    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback"};
+    renderAurumInclusions(THREE,part,gemConfig,9173,preset);
+    applyAurumLatinGemProfile(part,gemConfig);
   });
   applyGemEnvironment();
   return true;
 }
 
-export function clearAurumGemFromTarget(target:any) {
-  if (target) clearAurumInclusions(target);
-}
+export function clearAurumGemFromTarget(target:any){if(target)clearAurumInclusions(target);}
