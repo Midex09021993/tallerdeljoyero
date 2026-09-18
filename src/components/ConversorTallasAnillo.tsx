@@ -45,7 +45,18 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
   const [anchoCalibracion, setAnchoCalibracion] = useState(320);
   const [diametroPx, setDiametroPx] = useState(210);
 
-  useEffect(() => {\n    const actualizarReferencia = () => {\n      setReferencia(window.innerWidth < 768 ? "moneda" : "tarjeta");\n      setCalibrada(false);\n    };\n    actualizarReferencia();\n    window.addEventListener("resize", actualizarReferencia);\n    return () => window.removeEventListener("resize", actualizarReferencia);\n  }, []);\n\n  const referenciaMm = REFERENCIAS[referencia].mm;\n  const mmPorPx = referenciaMm / anchoCalibracion;
+  useEffect(() => {
+    const actualizarReferencia = () => {
+      setReferencia(window.innerWidth < 768 ? "moneda" : "tarjeta");
+      setCalibrada(false);
+    };
+    actualizarReferencia();
+    window.addEventListener("resize", actualizarReferencia);
+    return () => window.removeEventListener("resize", actualizarReferencia);
+  }, []);
+
+  const referenciaMm = REFERENCIAS[referencia].mm;
+  const mmPorPx = referenciaMm / anchoCalibracion;
   const diametroMedido = diametroPx * mmPorPx;
 
   const resultadoBusqueda = useMemo(() => {
@@ -172,6 +183,7 @@ function MedidorAnillo({
   onAnchoChange,
   onDiametroChange,
   onCalibrar,
+  onReferenciaChange,
   referencia,
   referenciaMm,
   resultado,
