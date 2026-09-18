@@ -56,8 +56,8 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=128):Thick
   const triangles:Array<[number,number,number]>=geometry.index
     ? Array.from({length:Math.floor(geometry.index.count/3)},(_,i)=>[
         geometry.index.getX(i*3),geometry.index.getX(i*3+1),geometry.index.getX(i*3+2)
-      ])
-    : Array.from({length:Math.floor(vertexCount/3)},(_,i)=>[i*3,i*3+1,i*3+2]);
+      ] as [number,number,number])
+    : Array.from({length:Math.floor(vertexCount/3)},(_,i)=>[i*3,i*3+1,i*3+2] as [number,number,number]);
 
   const depths=new Float32Array(vertexCount);
   let hits=0,minDepth=Infinity,maxDepth=0;
