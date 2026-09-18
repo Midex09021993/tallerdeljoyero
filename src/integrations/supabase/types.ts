@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      ecosistema_participantes: {
+        Row: {
+          ciudad: string | null
+          created_at: string
+          descripcion: string | null
+          email: string | null
+          estado: string
+          id: string
+          metadata: Json
+          nombre: string
+          notas_owner: string | null
+          razon_social: string | null
+          telefono: string | null
+          tipo_participante: string
+          updated_at: string
+        }
+        Insert: {
+          ciudad?: string | null
+          created_at?: string
+          descripcion?: string | null
+          email?: string | null
+          estado?: string
+          id?: string
+          metadata?: Json
+          nombre: string
+          notas_owner?: string | null
+          razon_social?: string | null
+          telefono?: string | null
+          tipo_participante: string
+          updated_at?: string
+        }
+        Update: {
+          ciudad?: string | null
+          created_at?: string
+          descripcion?: string | null
+          email?: string | null
+          estado?: string
+          id?: string
+          metadata?: Json
+          nombre?: string
+          notas_owner?: string | null
+          razon_social?: string | null
+          telefono?: string | null
+          tipo_participante?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      especialidades: {
+        Row: { activa: boolean; categoria: string | null; created_at: string; id: string; nombre: string }
+        Insert: { activa?: boolean; categoria?: string | null; created_at?: string; id?: string; nombre: string }
+        Update: { activa?: boolean; categoria?: string | null; created_at?: string; id?: string; nombre?: string }
+        Relationships: []
+      }
+      participante_especialidades: {
+        Row: { created_at: string; especialidad_id: string; participante_id: string }
+        Insert: { created_at?: string; especialidad_id: string; participante_id: string }
+        Update: { created_at?: string; especialidad_id?: string; participante_id?: string }
+        Relationships: [
+          { foreignKeyName: "participante_especialidades_especialidad_id_fkey"; columns: ["especialidad_id"]; isOneToOne: false; referencedRelation: "especialidades"; referencedColumns: ["id"] },
+          { foreignKeyName: "participante_especialidades_participante_id_fkey"; columns: ["participante_id"]; isOneToOne: false; referencedRelation: "ecosistema_participantes"; referencedColumns: ["id"] },
+        ]
+      }
+      participante_cuentas: {
+        Row: { created_at: string; estado: string; id: string; participante_id: string; relacion: string; user_id: string }
+        Insert: { created_at?: string; estado?: string; id?: string; participante_id: string; relacion?: string; user_id: string }
+        Update: { created_at?: string; estado?: string; id?: string; participante_id?: string; relacion?: string; user_id?: string }
+        Relationships: [
+          { foreignKeyName: "participante_cuentas_participante_id_fkey"; columns: ["participante_id"]; isOneToOne: false; referencedRelation: "ecosistema_participantes"; referencedColumns: ["id"] },
+        ]
+      }
       inventario: {
         Row: {
           created_at: string
@@ -434,6 +505,7 @@ export type Database = {
           id: string
           nombre: string
           notas_owner: string | null
+          participante_id: string | null
           revisado_at: string | null
           revisado_por: string | null
           telefono: string | null
@@ -452,6 +524,7 @@ export type Database = {
           id?: string
           nombre: string
           notas_owner?: string | null
+          participante_id?: string | null
           revisado_at?: string | null
           revisado_por?: string | null
           telefono?: string | null
@@ -476,7 +549,9 @@ export type Database = {
           tipo_solicitante?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          { foreignKeyName: "solicitudes_acceso_participante_id_fkey"; columns: ["participante_id"]; isOneToOne: false; referencedRelation: "ecosistema_participantes"; referencedColumns: ["id"] },
+        ]
       }
       tareas_taller: {
         Row: {
