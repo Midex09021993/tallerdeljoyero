@@ -33,7 +33,35 @@ const brasilEmerald=(target:any,s:THREE.Vector3,r:()=>number,d:number)=>{
 const paraiba=(target:any,s:THREE.Vector3,r:()=>number,d:number,copper=false)=>{const m=Math.min(s.x,s.y,s.z),axis=new THREE.Vector3(0,0,1);for(let i=0;i<18+Math.round(d*18);i++){const line=new THREE.Mesh(new THREE.CylinderGeometry(m*.0012,m*.0012,m*(.12+r()*.28),5),new THREE.MeshPhysicalMaterial({color:copper?0xb88745:0x91c6bd,metalness:copper?.55:.05,roughness:copper?.18:.34,transparent:true,opacity:copper?.16:.075,depthWrite:false,envMapIntensity:copper?.9:.45}));line.position.set((r()-.5)*s.x*.72,(r()-.5)*s.y*.72,(r()-.5)*s.z*.55);line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis);add(target,line,copper?"paraiba-copper-platelet":"paraiba-growth-tube");}};
 const rutilo=(target:any,s:THREE.Vector3,r:()=>number,d:number)=>{const m=Math.min(s.x,s.y,s.z);for(let i=0;i<9+Math.round(d*15);i++){const start=pos(r,s,.7),dir=new THREE.Vector3((r()-.5)*.5,(r()-.5)*.5,1).normalize(),len=m*(.15+r()*.35),a=start.clone().sub(dir.clone().multiplyScalar(len*.5)),b=start.clone().add(dir.clone().multiplyScalar(len*.5));const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(a,b),1,m*.0022,4,false),new THREE.MeshPhysicalMaterial({color:0xb06b2c,metalness:.15,roughness:.3,transparent:true,opacity:.16+d*.06,depthWrite:false,envMapIntensity:.6}));add(target,mesh,"quartz-rutile-needle");}};
 const ametrino=(target:any,s:THREE.Vector3)=>{const g=new THREE.Group();g.userData={aurumInternalInclusion:true,aurumInclusionType:"ametrine-sector-zoning"};const a=new THREE.Mesh(new THREE.BoxGeometry(s.x*.92,s.y*.92,s.z*.46),new THREE.MeshPhysicalMaterial({color:0x7046aa,roughness:.03,transmission:.22,transparent:true,opacity:.34,depthWrite:false,envMapIntensity:1}));a.position.z=-s.z*.23;g.add(a);const b=new THREE.Mesh(new THREE.BoxGeometry(s.x*.92,s.y*.92,s.z*.46),new THREE.MeshPhysicalMaterial({color:0xd79b32,roughness:.03,transmission:.22,transparent:true,opacity:.30,depthWrite:false,envMapIntensity:1}));b.position.z=s.z*.23;g.add(b);target.add(g);};
-const opal=(target:any,s:THREE.Vector3,r:()=>number,color:number)=>{const m=Math.min(s.x,s.y,s.z);for(let i=0;i<35;i++){const q=m*(.0015+r()*.0035),mesh=new THREE.Mesh(new THREE.SphereGeometry(q,5,4),new THREE.MeshPhysicalMaterial({color,roughness:.18,transmission:.45,transparent:true,opacity:.025+r()*.025,depthWrite:false,envMapIntensity:.3}));mesh.position.copy(pos(r,s,.75));add(target,mesh,"opal-silica-microstructure");}};
+
+/**
+ * Common-opal microstructure proxy.
+ * GIA describes play-of-color as diffraction from ordered silica spheres. The
+ * catalog entries here are common opals, so we do NOT invent a rainbow
+ * play-of-color. We retain a restrained translucent microstructure, but pack
+ * the 35 inclusions into one InstancedMesh to avoid 35 extra draw calls and
+ * 35 MeshPhysicalMaterial instances.
+ */
+const opal=(target:any,s:THREE.Vector3,r:()=>number,color:number)=>{
+  const m=Math.min(s.x,s.y,s.z);
+  const count=35;
+  const geometry=new THREE.SphereGeometry(m*.0025,5,4);
+  const material=new THREE.MeshPhysicalMaterial({
+    color,roughness:.18,transmission:.45,transparent:true,opacity:.035,
+    depthWrite:false,envMapIntensity:.3
+  });
+  const instances=new THREE.InstancedMesh(geometry,material,count);
+  const matrix=new THREE.Matrix4();
+  for(let i=0;i<count;i++){
+    const q=m*(.0015+r()*.0035);
+    const p=pos(r,s,.75);
+    matrix.compose(p,new THREE.Quaternion(),new THREE.Vector3(q/(m*.0025),q/(m*.0025),q/(m*.0025)));
+    instances.setMatrixAt(i,matrix);
+  }
+  instances.instanceMatrix.needsUpdate=true;
+  add(target,instances,"opal-silica-microstructure");
+};
+
 const rodocrosita=(target:any,s:THREE.Vector3)=>{const g=new THREE.Group();g.userData={aurumInternalInclusion:true,aurumInclusionType:"rodocrosita-growth"};for(let i=0;i<3;i++){const beam=new THREE.Mesh(new THREE.BoxGeometry(s.x*.06,s.y*.92,Math.min(s.x,s.y,s.z)*.018),new THREE.MeshPhysicalMaterial({color:0xead0d0,roughness:.38,transparent:true,opacity:.22,depthWrite:false}));beam.rotation.z=i*Math.PI*2/3;g.add(beam);}target.add(g);};
 
 export const LATIN_GEMAS:GemaConfig[]=[
