@@ -259,6 +259,7 @@ export function AurumRender() {
       // resolution are updated together. EffectComposer receives the same DPR.
       const aplicarCalidadRender = (id:AurumRenderQualityId) => {
         renderQuality = getAurumRenderQuality(id);
+        measuredQualityId = id;
         // Quality is an intentional render scale. Do not clamp it to devicePixelRatio:
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
         const dpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
@@ -621,7 +622,7 @@ export function AurumRender() {
           textures:info?.memory?.textures??null,
           pixelRatio:renderer.getPixelRatio?.(),
           transmissionScale:(renderer as any).transmissionResolutionScale??null,
-          quality:renderQualityId,
+          quality:measuredQualityId,
           measurement:"complete-composer-frame",
         });
         perfLast=now;
