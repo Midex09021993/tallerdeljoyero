@@ -53,18 +53,36 @@ function validar(input: NuevoUsuario): NuevoUsuario {
 
 /** Indica si todavía no existe ningún usuario con rol: permite crear el primer dueño. */
 export const sistemaSinDuenos = createServerFn({ method: "GET" }).handler(async () => {
-  // El login público no debe quedar en blanco si Lovable Cloud todavía no
-  // inyectó la Service Role Key. La creación administrativa seguirá fallando
-  // de forma controlada hasta que Supabase esté conectado en Cloud.
-  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
+  // Esta comprobación debe poder ejecutarse incluso cuando Lovable Cloud
+  // todavía no tiene configurada la Service Role Key. La creación del
+  // primer dueño sí requiere esa clave y fallará de forma controlada.
+  const supabaseUrl = process.env["SUPABASE_URL"];
+  const serviceRoleKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+
+  if (!supabaseUrl || !serviceRoleKey) {
     return { vacio: false, disponible: false };
   }
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { count, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("id", { count: "exact", head: true });
-  if (error) throw new Error(error.message);
-  return { vacio: (count ?? 0) === 0 };
+
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const { count, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("id", { count: "exact", head: true });
+
+    if (error) {
+      console.error("[sistemaSinDuenos]", error.message);
+      return { vacio: false, disponible: false };
+    }
+
+    return { vacio: (count ?? 0) === 0, disponible: true };
+  } catch (error) {
+    console.error("[sistemaSinDuenos]", error);
+    return { vacio: false, disponible: false };
+  }
 });
 
 /** Alta del primer dueño general. Sólo funciona mientras no haya ningún rol asignado. */
