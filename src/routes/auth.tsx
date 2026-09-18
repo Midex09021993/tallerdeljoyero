@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
+import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { ArrowRight, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, ShieldCheck, UserRound } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
@@ -159,9 +160,7 @@ function LoginPage() {
               <a href="#herramientas" className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
                 Explorar herramientas <ArrowRight className="size-4" />
               </a>
-              <button type="button" onClick={() => { const text = encodeURIComponent("Hola, quiero solicitar acceso de prueba a Aurum Lab"); const url = `https://web.whatsapp.com/send?phone=51948727973&text=${text}`; window.open(url, "_blank", "noopener,noreferrer"); }} className="inline-flex items-center gap-2 rounded-lg border border-gold/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/10">
-                Solicitar acceso de prueba
-              </button>
+              <SolicitudAcceso />
             </div>
           </section>
         </section>
@@ -211,6 +210,8 @@ function LoginPage() {
               {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
             </button>
           </form>
+
+          <div className="mt-5 flex justify-center md:hidden max-[767px]:flex"><SolicitudAcceso /></div>
 
           <p className="mt-5 hidden text-center text-xs text-white/55 md:block max-[767px]:block">
             ¿Eres cliente?{" "}
