@@ -14,69 +14,10 @@ export type Database = {
   }
   public: {
     Tables: {
-      config_areas: {
-        Row: {
-          alerta_activa: boolean
-          area: string
-          created_at: string
-          horas_objetivo: number
-          id: string
-          sede_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          alerta_activa?: boolean
-          area: string
-          created_at?: string
-          horas_objetivo?: number
-          id?: string
-          sede_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          alerta_activa?: boolean
-          area?: string
-          created_at?: string
-          horas_objetivo?: number
-          id?: string
-          sede_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "config_areas_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      config_sistema: {
-        Row: {
-          clave: string
-          created_at: string
-          updated_at: string
-          valor: Json
-        }
-        Insert: {
-          clave: string
-          created_at?: string
-          updated_at?: string
-          valor?: Json
-        }
-        Update: {
-          clave?: string
-          created_at?: string
-          updated_at?: string
-          valor?: Json
-        }
-        Relationships: []
-      }
       contrato_pagos: {
         Row: {
           concepto: string
-          contrato_id: string | null
+          contrato_id: string
           contrato_numero: string
           created_at: string
           fecha: string
@@ -86,17 +27,17 @@ export type Database = {
         }
         Insert: {
           concepto?: string
-          contrato_id?: string | null
+          contrato_id: string
           contrato_numero?: string
           created_at?: string
           fecha?: string
           id?: string
-          monto?: number
+          monto: number
           usuario_id?: string | null
         }
         Update: {
           concepto?: string
-          contrato_id?: string | null
+          contrato_id?: string
           contrato_numero?: string
           created_at?: string
           fecha?: string
@@ -112,13 +53,6 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contrato_pagos_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       contratos: {
@@ -130,6 +64,7 @@ export type Database = {
           notas: string
           numero: string
           origen: string
+          saldo: number
           sede_id: string | null
           telefono: string
           total: number
@@ -143,6 +78,7 @@ export type Database = {
           notas?: string
           numero: string
           origen?: string
+          saldo?: number
           sede_id?: string | null
           telefono?: string
           total?: number
@@ -156,6 +92,7 @@ export type Database = {
           notas?: string
           numero?: string
           origen?: string
+          saldo?: number
           sede_id?: string | null
           telefono?: string
           total?: number
@@ -171,53 +108,80 @@ export type Database = {
           },
         ]
       }
-      gastos: {
+      ecosistema_participantes: {
         Row: {
-          categoria: string
-          concepto: string
+          ciudad: string | null
           created_at: string
-          fecha: string
+          descripcion: string | null
+          email: string | null
+          estado: string
           id: string
-          importe: number
-          sede_id: string | null
+          metadata: Json
+          nombre: string
+          notas_owner: string | null
+          razon_social: string | null
+          telefono: string | null
+          tipo_participante: string
           updated_at: string
-          usuario_id: string | null
         }
         Insert: {
-          categoria?: string
-          concepto?: string
+          ciudad?: string | null
           created_at?: string
-          fecha?: string
+          descripcion?: string | null
+          email?: string | null
+          estado?: string
           id?: string
-          importe?: number
-          sede_id?: string | null
+          metadata?: Json
+          nombre: string
+          notas_owner?: string | null
+          razon_social?: string | null
+          telefono?: string | null
+          tipo_participante: string
           updated_at?: string
-          usuario_id?: string | null
         }
         Update: {
-          categoria?: string
-          concepto?: string
+          ciudad?: string | null
           created_at?: string
-          fecha?: string
+          descripcion?: string | null
+          email?: string | null
+          estado?: string
           id?: string
-          importe?: number
-          sede_id?: string | null
+          metadata?: Json
+          nombre?: string
+          notas_owner?: string | null
+          razon_social?: string | null
+          telefono?: string | null
+          tipo_participante?: string
           updated_at?: string
-          usuario_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "gastos_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      especialidades: {
+        Row: {
+          activa: boolean
+          categoria: string | null
+          created_at: string
+          id: string
+          nombre: string
+        }
+        Insert: {
+          activa?: boolean
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          nombre: string
+        }
+        Update: {
+          activa?: boolean
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          nombre?: string
+        }
+        Relationships: []
       }
       inventario: {
         Row: {
-          categoria: string
           created_at: string
           id: string
           material: string
@@ -228,7 +192,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          categoria?: string
           created_at?: string
           id?: string
           material: string
@@ -239,7 +202,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          categoria?: string
           created_at?: string
           id?: string
           material?: string
@@ -261,7 +223,6 @@ export type Database = {
       }
       inventario_movimientos: {
         Row: {
-          area: string
           cantidad: number
           created_at: string
           id: string
@@ -271,7 +232,6 @@ export type Database = {
           usuario_id: string | null
         }
         Insert: {
-          area?: string
           cantidad: number
           created_at?: string
           id?: string
@@ -281,7 +241,6 @@ export type Database = {
           usuario_id?: string | null
         }
         Update: {
-          area?: string
           cantidad?: number
           created_at?: string
           id?: string
@@ -300,31 +259,70 @@ export type Database = {
           },
         ]
       }
-      material_areas: {
+      participante_cuentas: {
         Row: {
-          area: string
           created_at: string
+          estado: string
           id: string
-          material_id: string
+          participante_id: string
+          relacion: string
+          user_id: string
         }
         Insert: {
-          area: string
           created_at?: string
+          estado?: string
           id?: string
-          material_id: string
+          participante_id: string
+          relacion?: string
+          user_id: string
         }
         Update: {
-          area?: string
           created_at?: string
+          estado?: string
           id?: string
-          material_id?: string
+          participante_id?: string
+          relacion?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "material_areas_material_id_fkey"
-            columns: ["material_id"]
+            foreignKeyName: "participante_cuentas_participante_id_fkey"
+            columns: ["participante_id"]
             isOneToOne: false
-            referencedRelation: "inventario"
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participante_especialidades: {
+        Row: {
+          created_at: string
+          especialidad_id: string
+          participante_id: string
+        }
+        Insert: {
+          created_at?: string
+          especialidad_id: string
+          participante_id: string
+        }
+        Update: {
+          created_at?: string
+          especialidad_id?: string
+          participante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participante_especialidades_especialidad_id_fkey"
+            columns: ["especialidad_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participante_especialidades_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
             referencedColumns: ["id"]
           },
         ]
@@ -333,38 +331,29 @@ export type Database = {
         Row: {
           created_at: string
           es_enlace: boolean
-          grupo: string
           id: string
           nombre: string
           pedido_id: string
-          poster: string
           tipo: string
           url: string
-          version: number
         }
         Insert: {
           created_at?: string
           es_enlace?: boolean
-          grupo?: string
           id?: string
           nombre?: string
           pedido_id: string
-          poster?: string
           tipo?: string
           url: string
-          version?: number
         }
         Update: {
           created_at?: string
           es_enlace?: boolean
-          grupo?: string
           id?: string
           nombre?: string
           pedido_id?: string
-          poster?: string
           tipo?: string
           url?: string
-          version?: number
         }
         Relationships: [
           {
@@ -425,10 +414,6 @@ export type Database = {
           cliente: string
           contrato: string
           contrato_id: string | null
-          corte_observaciones: string
-          corte_texto: string
-          corte_tipografia: string
-          corte_ubicacion: string
           created_at: string
           entrega: string
           entregado_at: string | null
@@ -476,10 +461,6 @@ export type Database = {
           cliente: string
           contrato?: string
           contrato_id?: string | null
-          corte_observaciones?: string
-          corte_texto?: string
-          corte_tipografia?: string
-          corte_ubicacion?: string
           created_at?: string
           entrega?: string
           entregado_at?: string | null
@@ -527,10 +508,6 @@ export type Database = {
           cliente?: string
           contrato?: string
           contrato_id?: string | null
-          corte_observaciones?: string
-          corte_texto?: string
-          corte_tipografia?: string
-          corte_ubicacion?: string
           created_at?: string
           entrega?: string
           entregado_at?: string | null
@@ -640,7 +617,6 @@ export type Database = {
           acceso_desde: string | null
           acceso_hasta: string | null
           activo: boolean
-          clave_visible: string | null
           created_at: string
           dni: string
           id: string
@@ -653,7 +629,6 @@ export type Database = {
           acceso_desde?: string | null
           acceso_hasta?: string | null
           activo?: boolean
-          clave_visible?: string | null
           created_at?: string
           dni?: string
           id: string
@@ -666,7 +641,6 @@ export type Database = {
           acceso_desde?: string | null
           acceso_hasta?: string | null
           activo?: boolean
-          clave_visible?: string | null
           created_at?: string
           dni?: string
           id?: string
@@ -747,6 +721,74 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      solicitudes_acceso: {
+        Row: {
+          ciudad: string | null
+          created_at: string
+          descripcion: string | null
+          documento: string | null
+          email: string
+          empresa: string | null
+          especialidades: string[]
+          estado: string
+          id: string
+          nombre: string
+          notas_owner: string | null
+          participante_id: string | null
+          revisado_at: string | null
+          revisado_por: string | null
+          telefono: string | null
+          tipo_solicitante: string
+          updated_at: string
+        }
+        Insert: {
+          ciudad?: string | null
+          created_at?: string
+          descripcion?: string | null
+          documento?: string | null
+          email: string
+          empresa?: string | null
+          especialidades?: string[]
+          estado?: string
+          id?: string
+          nombre: string
+          notas_owner?: string | null
+          participante_id?: string | null
+          revisado_at?: string | null
+          revisado_por?: string | null
+          telefono?: string | null
+          tipo_solicitante: string
+          updated_at?: string
+        }
+        Update: {
+          ciudad?: string | null
+          created_at?: string
+          descripcion?: string | null
+          documento?: string | null
+          email?: string
+          empresa?: string | null
+          especialidades?: string[]
+          estado?: string
+          id?: string
+          nombre?: string
+          notas_owner?: string | null
+          participante_id?: string | null
+          revisado_at?: string | null
+          revisado_por?: string | null
+          telefono?: string | null
+          tipo_solicitante?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitudes_acceso_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tareas_taller: {
         Row: {
@@ -856,24 +898,16 @@ export type Database = {
         Returns: boolean
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
-      normaliza_area: { Args: { _area: string }; Returns: string }
       seguimiento_pedido: {
         Args: { _ref: string }
         Returns: {
           area_actual: string
           cliente: string
-          estado: string
           fecha_entrega: string
-          fecha_entregado: string
-          fecha_envio: string
-          guia_envio: string
-          medio_envio: string
-          receptor_envio: string
           referencia: string
           ruta: string[]
           sede: string
           trabajo: string
-          ventas_estado: string
         }[]
       }
       ve_sede: {
