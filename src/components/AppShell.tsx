@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
+import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionProduccion";
 
 type Seccion = {
   to:
@@ -126,6 +127,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
+      <AlertaAutorizacionProduccion />
       {!ocultarNavegacion ? (
         <aside className="sticky top-0 hidden h-screen max-h-screen w-64 shrink-0 flex-col overflow-hidden bg-ink text-ink-foreground lg:flex">
           <div className="p-8">
