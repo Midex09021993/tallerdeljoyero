@@ -51,7 +51,8 @@ export type GemaId =
   | "zafiro_rosa" | "zafiro_amarillo" | "zafiro_padparadscha"
   | "turmalina_verde" | "turmalina_rosa" | "turmalina_azul"
   | "crisoberilo_gato" | "crisoberilo_estrella" | "zafiro_estrella" | "rubi_estrella"
-  | "granate_estrella" | "turmalina_gato" | "espinela_estrella" | "esmeralda_gato" | "esmeralda_estrella";
+  | "granate_estrella" | "turmalina_gato" | "espinela_estrella" | "esmeralda_gato" | "esmeralda_estrella"
+  | "moonstone_adularescencia" | "sunstone_aventurescencia" | "labradorita_labradorescencia" | "opal_precioso_playofcolor";
 export type GemaOrigen = "Colombia" | "Brasil" | "Bolivia" | "Perú" | "Argentina" | "Latinoamérica" | "Global";
 export type GemaPerfilInterno = "colombia_jardin" | "brasil_jardin" | "paraiba_acicular" | "paraiba_chatoyancy" | "brasil_pegmatita" | "ametrino_zonificado" | "cuarzo_rutilado" | "opal_microestructura" | "crisocola_calcedonia" | "rodocrosita_crecimiento" | "generico";
 export type GemaConfig = {
@@ -59,7 +60,7 @@ export type GemaConfig = {
   attenuationColor:number; attenuationDistance:number; dispersion:number; iridescence:number;
   inclusionStyle:"ninguna"|"diamante"|"silk"|"velos"; inclusionStrength:number;
   origen?:GemaOrigen; perfilInterno?:GemaPerfilInterno; notaGemologica?:string;
-  fenomenoOptico?: "chatoyancy" | "asterism";
+  fenomenoOptico?: "chatoyancy" | "asterism" | "adularescence" | "aventurescence" | "labradorescence" | "play-of-color";
 };
 export type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number; anisotropy?: number; anisotropyRotation?: number };
 export type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
@@ -129,6 +130,10 @@ export const GEMAS: GemaConfig[] = [
   { id:"espinela_estrella", familia:"Espinela", nombre:"Espinela · Estrella Natural", color:0x7f2541, transmission:.8, ior:1.72, roughness:.05, envMapIntensity:3.35, attenuationColor:0x4f1429, attenuationDistance:1.7, dispersion:.02, iridescence:.004, inclusionStyle:"silk", inclusionStrength:.25, origen:"Global", perfilInterno:"generico", fenomenoOptico:"asterism", notaGemologica:"El asterismo es raro en espinela y se asocia a inclusiones orientadas." },
   { id:"esmeralda_gato", familia:"Esmeralda", nombre:"Esmeralda · Ojo de Gato", color:0x11754b, transmission:.68, ior:1.58, roughness:.065, envMapIntensity:3.25, attenuationColor:0x06472f, attenuationDistance:1.1, dispersion:.06, iridescence:.004, inclusionStyle:"velos", inclusionStrength:.34, origen:"Global", perfilInterno:"generico", fenomenoOptico:"chatoyancy", notaGemologica:"La chatoyancia en esmeralda puede deberse a concentraciones de tubos finos paralelos; el efecto se observa especialmente en cabujones correctamente orientados." },
   { id:"esmeralda_estrella", familia:"Esmeralda", nombre:"Esmeralda · Estrella Natural", color:0x168052, transmission:.66, ior:1.58, roughness:.07, envMapIntensity:3.15, attenuationColor:0x075035, attenuationDistance:1.0, dispersion:.055, iridescence:.006, inclusionStyle:"velos", inclusionStrength:.32, origen:"Global", perfilInterno:"generico", fenomenoOptico:"asterism", notaGemologica:"La esmeralda puede mostrar asterismo muy raro; GIA documenta estrellas de seis rayos producidas por estructuras internas orientadas." },
+  { id:"moonstone_adularescencia", familia:"Feldespato", nombre:"Piedra Luna · Adularescencia", color:0xe7edf2, transmission:.72, ior:1.53, roughness:.12, envMapIntensity:3.0, attenuationColor:0xcbd7e2, attenuationDistance:2.2, dispersion:.008, iridescence:.04, inclusionStyle:"velos", inclusionStrength:.14, origen:"Global", perfilInterno:"generico", fenomenoOptico:"adularescence", notaGemologica:"Adularescencia: brillo flotante, normalmente azul desaturado, producido por microestructuras de feldespato." },
+  { id:"sunstone_aventurescencia", familia:"Feldespato", nombre:"Sunstone · Aventurescencia", color:0xd28b48, transmission:.82, ior:1.56, roughness:.07, envMapIntensity:3.4, attenuationColor:0x965326, attenuationDistance:2.1, dispersion:.012, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.22, origen:"Global", perfilInterno:"generico", fenomenoOptico:"aventurescence", notaGemologica:"Aventurescencia por inclusiones planas reflectantes; en sunstone de Oregon las inclusiones responsables pueden ser cobre nativo." },
+  { id:"labradorita_labradorescencia", familia:"Labradorita", nombre:"Labradorita · Labradorescencia", color:0x353d4a, transmission:.58, ior:1.56, roughness:.14, envMapIntensity:2.8, attenuationColor:0x252d3b, attenuationDistance:1.4, dispersion:.01, iridescence:.35, inclusionStyle:"velos", inclusionStrength:.12, origen:"Global", perfilInterno:"generico", fenomenoOptico:"labradorescence", notaGemologica:"Destellos de interferencia en lamelas internas; los colores pueden variar entre azul, verde, dorado, naranja y violeta." },
+  { id:"opal_precioso_playofcolor", familia:"Ópalo", nombre:"Ópalo Precioso · Play-of-Color", color:0xdce7e5, transmission:.46, ior:1.45, roughness:.09, envMapIntensity:3.0, attenuationColor:0xaab9b8, attenuationDistance:1.0, dispersion:.01, iridescence:.72, inclusionStyle:"velos", inclusionStrength:.18, origen:"Global", perfilInterno:"opal_microestructura", fenomenoOptico:"play-of-color", notaGemologica:"Play-of-color por difracción en la estructura ordenada de esferas de sílice; no equivale a la simple opalescencia del ópalo común." },
 ];
 
 export const MATERIALES: MaterialConfig[] = [
