@@ -266,8 +266,9 @@ export function AurumRender() {
         applyPostQuality?.(renderQuality);
         (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
         renderer.shadowMap.enabled = renderQuality.shadows;
-        lightingController.create();
         // Existing shadow maps must be rebuilt at the selected precision.
+        // create() is intentionally called only after disposing the previous maps;
+        // the controller itself is idempotent and does not need the redundant call.
         Object.values(lucesAurum).forEach((light:any) => {
           if (light?.shadow?.map) {
             light.shadow.map.dispose?.();
@@ -572,11 +573,43 @@ export function AurumRender() {
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
+      // Optional performance diagnostics. Production remains silent unless
+      // ?aurumPerf=1 is explicitly added to the URL.
+      const perfEnabled = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("aurumPerf") === "1"
+        : false;
+      let perfLast = performance.now();
+      let perfFrames = 0;
+      const perfTick = () => {
+        if (!perfEnabled) return;
+        perfFrames++;
+        const now=performance.now();
+        if(now-perfLast<2000) return;
+        const seconds=(now-perfLast)/1000;
+        const fps=perfFrames/seconds;
+        const info=(renderer as any).info;
+        console.warn("[AURUM][PERF]",{
+          fps:Number(fps.toFixed(1)),
+          calls:info?.render?.calls??null,
+          triangles:info?.render?.triangles??null,
+          lines:info?.render?.lines??null,
+          points:info?.render?.points??null,
+          geometries:info?.memory?.geometries??null,
+          textures:info?.memory?.textures??null,
+          pixelRatio:renderer.getPixelRatio?.(),
+          transmissionScale:(renderer as any).transmissionResolutionScale??null,
+          quality:renderQualityId,
+        });
+        perfLast=now;
+        perfFrames=0;
+      };
+
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
           if (composer) composer.render(); else renderer.render(escena,camara);
+          perfTick();
         }
       );
       frameRef.current = viewerLoop.frame;
