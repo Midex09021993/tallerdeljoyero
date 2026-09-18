@@ -41,6 +41,7 @@ import {
   type Sede,
   type Usuario,
   esEstadoFinalPedido,
+  pedidoPendienteAutorizacionProduccion,
 } from "@/lib/taller-db";
 import {
   AREAS,
@@ -233,6 +234,13 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <button type="button" onClick={() => window.location.assign("/pedidos?autorizacion=pendientes")} className="text-left">
+          <StatCard
+            etiqueta="Pendientes de autorización"
+            valor={String(pedidos.filter(pedidoPendienteAutorizacionProduccion).length)}
+            tono={pedidos.some(pedidoPendienteAutorizacionProduccion) ? "negativo" : "neutro"}
+          />
+        </button>
         <StatCard etiqueta="Pedidos activos" valor={String(activos.length)} />
         <StatCard
           etiqueta="Atrasados"
