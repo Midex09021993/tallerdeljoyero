@@ -10,7 +10,6 @@ import {
   PackageCheck,
   Scissors,
   UserRound,
-  ChevronDown,
   Gem,
   Wrench,
 } from "lucide-react";
@@ -31,7 +30,8 @@ type Seccion = {
     | "/monitor"
     | "/operario"
     | "/perfil"
-    | "/aurum-render";
+    | "/aurum-render"
+    | "/herramientas";
   label: string;
   area?: string;
   roles?: Rol[];
@@ -84,8 +84,6 @@ function seccionesVisibles(
   const perfil = secciones.filter((s) => s.to === "/perfil");
   return [...inicio, ...porArea, ...perfil];
 }
-
-const RUTAS_PRODUCCION = ["/diseno-3d", "/impresion-3d", "/casting", "/corte-laser", "/taller"] as const;
 
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
 const ORDEN_MENU: Record<string, number> = {
