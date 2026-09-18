@@ -53,25 +53,31 @@ alter table public.especialidades enable row level security;
 alter table public.participante_especialidades enable row level security;
 alter table public.participante_cuentas enable row level security;
 
+drop policy if exists "owner_manage_ecosistema_participantes" on public.ecosistema_participantes;
 create policy "owner_manage_ecosistema_participantes" on public.ecosistema_participantes for all to authenticated
 using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
 with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
 
+drop policy if exists "owner_manage_especialidades" on public.especialidades;
 create policy "owner_manage_especialidades" on public.especialidades for all to authenticated
 using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
 with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
 
+drop policy if exists "owner_manage_participante_especialidades" on public.participante_especialidades;
 create policy "owner_manage_participante_especialidades" on public.participante_especialidades for all to authenticated
 using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
 with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
 
+drop policy if exists "owner_manage_participante_cuentas" on public.participante_cuentas;
 create policy "owner_manage_participante_cuentas" on public.participante_cuentas for all to authenticated
 using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
 with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
 
+drop policy if exists "account_read_own_participant" on public.participante_cuentas;
 create policy "account_read_own_participant" on public.participante_cuentas for select to authenticated
 using ((select auth.uid()) = user_id);
 
+drop policy if exists "account_read_own_participant_profile" on public.ecosistema_participantes;
 create policy "account_read_own_participant_profile" on public.ecosistema_participantes for select to authenticated
 using (exists (
   select 1 from public.participante_cuentas pc
