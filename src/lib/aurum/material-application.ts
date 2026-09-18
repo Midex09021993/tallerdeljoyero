@@ -82,8 +82,19 @@ const opticalProfileFromCatalog=(g:any)=>{
       ? .76
       : family==="Turmalina" && gemId.includes("paraiba")
         ? .34
-        : Number(base.fire??.35);
-  const familyBrilliance=family==="Zircon" ? 1.02 : family==="Turmalina" && gemId.includes("paraiba") ? 1.04 : Number(base.brilliance??.75);
+        : family==="Crisoberilo" && gemId==="alexandrita_brasil"
+          ? .48
+          : Number(base.fire??.35);
+  const familyBrilliance=family==="Zircon"
+    ? 1.02
+    : family==="Turmalina" && gemId.includes("paraiba")
+      ? 1.04
+      : family==="Crisoberilo" && gemId==="alexandrita_brasil"
+        ? 1.00
+        : Number(base.brilliance??.75);
+  const colorChange=gemId==="alexandrita_brasil"
+    ? {enabled:true,fluorescent:new (await import("three")).Color(0x4e9a67),incandescent:new (await import("three")).Color(0x8a3557),strength:.58}
+    : undefined;
   return {
     ...base,
     ior:Number(g.ior??base.ior),
@@ -91,6 +102,7 @@ const opticalProfileFromCatalog=(g:any)=>{
     dispersion:Number(g.dispersion??base.dispersion),
     absorptionDistance:Number(g.attenuationDistance??base.absorptionDistance),
     ...(pleochroism?{pleochroism}:{}),
+    ...(colorChange?{colorChange}:{}),
   };
 };
 
