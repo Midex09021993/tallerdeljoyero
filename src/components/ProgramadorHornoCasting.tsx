@@ -210,8 +210,8 @@ export function ProgramadorHornoCasting() {
   const temperaturaMaxima = Math.max(inicio, ...etapas.map((e) => e.temperatura), 0);
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-border/80 bg-card shadow-xl shadow-black/5">
-      <header className="relative overflow-hidden border-b border-border/70 bg-gradient-to-br from-surface-muted/80 via-card to-card px-4 py-5 sm:px-6 sm:py-6">
+    <section className="w-full overflow-hidden rounded-[28px] border border-border/80 bg-card shadow-xl shadow-black/5">
+      <header className="relative overflow-hidden border-b border-border/70 bg-gradient-to-br from-surface-muted/80 via-card to-card px-4 py-5 sm:px-6 lg:px-8">
         <div className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full bg-gold/10 blur-3xl" />
         <div className="relative">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -220,7 +220,7 @@ export function ProgramadorHornoCasting() {
                 <Flame className="size-3.5" /> Casting · Burnout
               </div>
               <h2 className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">Programador de Rampas de Horno</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
+              <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
                 Diseña, revisa y adapta ciclos térmicos para patrones de joyería antes de la colada.
               </p>
             </div>
@@ -230,7 +230,7 @@ export function ProgramadorHornoCasting() {
             </button>
           </div>
 
-          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.42fr)]">
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
             <label className="rounded-2xl border border-border bg-background/90 p-3.5">
               <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Programa / material</span>
               <select value={programaId} onChange={(e) => cargar(e.target.value)}
@@ -253,17 +253,103 @@ export function ProgramadorHornoCasting() {
               <p className="mt-0.5 text-[10px] text-muted-foreground">{programaSeleccionado.fuente}</p>
             </div>
           </div>
-
           <div className="mt-3 rounded-2xl border border-border/80 bg-background/70 px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
             {programaSeleccionado.descripcion}
           </div>
         </div>
       </header>
 
-      <div className="space-y-6 p-4 sm:p-6">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)] lg:items-start">
+          <div className="min-w-0">
+            <div className="mb-3 flex items-end justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight">Secuencia térmica</h3>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">Temperatura objetivo, rampa y sostenimiento de cada etapa.</p>
+              </div>
+              <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">{personalizado ? "Personalizado" : "Referencia"}</span>
+            </div>
+
+            <div className="space-y-3">
+              {etapas.map((e, i) => (
+                <article key={e.id} className="group relative overflow-hidden rounded-2xl border border-border bg-background p-3.5 sm:p-4 transition hover:border-gold/40">
+                  <div className="absolute inset-y-0 left-0 w-1 bg-gold/60" />
+                  <div className="flex items-center justify-between gap-3 pl-1">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-gold">Etapa {String(i + 1).padStart(2, "0")}</span>
+                      <input value={e.nombre} onChange={(x) => cambiar(e.id, "nombre", x.target.value)}
+                        className="mt-1 h-8 w-full rounded-lg border border-transparent bg-transparent px-0 text-sm font-bold outline-none transition focus:border-border focus:bg-card focus:px-2" />
+                    </div>
+                    {etapas.length > 1 && (
+                      <button type="button" onClick={() => eliminar(e.id)} aria-label="Eliminar etapa"
+                        className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-2.5 grid grid-cols-3 gap-2 pl-1">
+                    <label className="rounded-xl border border-border/80 bg-card p-2.5">
+                      <span className="block text-[9px] text-muted-foreground">Objetivo</span>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <input type="number" min="0" value={e.temperatura} onChange={(x) => cambiar(e.id, "temperatura", x.target.value)}
+                          className="w-full min-w-0 bg-transparent text-lg font-bold outline-none" />
+                        <span className="text-[9px] text-muted-foreground">°C</span>
+                      </div>
+                    </label>
+                    <label className="rounded-xl border border-border/80 bg-card p-2.5">
+                      <span className="block text-[9px] text-muted-foreground">Rampa</span>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <input type="number" min="0" value={e.rampaMin} onChange={(x) => cambiar(e.id, "rampaMin", x.target.value)}
+                          className="w-full min-w-0 bg-transparent text-lg font-bold outline-none" />
+                        <span className="text-[9px] text-muted-foreground">min</span>
+                      </div>
+                    </label>
+                    <label className="rounded-xl border border-border/80 bg-card p-2.5">
+                      <span className="block text-[9px] text-muted-foreground">Sostén</span>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <input type="number" min="0" value={e.sostenimientoMin} onChange={(x) => cambiar(e.id, "sostenimientoMin", x.target.value)}
+                          className="w-full min-w-0 bg-transparent text-lg font-bold outline-none" />
+                        <span className="text-[9px] text-muted-foreground">min</span>
+                      </div>
+                    </label>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <button type="button" onClick={agregar}
+              className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-border px-3 text-[11px] font-semibold transition hover:border-gold hover:bg-gold/5">
+              <Plus className="size-3.5" /> Agregar etapa
+            </button>
+          </div>
+
+          <div className="min-w-0">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background">
+              <div className="flex flex-col gap-1 border-b border-border bg-surface-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-bold">Curva térmica</h3>
+                  <p className="text-[10px] text-muted-foreground">Temperatura frente al tiempo acumulado</p>
+                </div>
+                <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[9px] font-semibold text-muted-foreground">{temperaturaMaxima} °C máx.</span>
+              </div>
+              <div className="h-[360px] w-full p-2 sm:h-[430px] sm:p-4 lg:h-[480px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={calculo.puntos} margin={{ top: 16, right: 20, left: 2, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    <XAxis dataKey="minuto" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(v) => tiempoTexto(Number(v))} tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, "auto"]} tickFormatter={(v) => v + "°"} width={52} tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(v) => [Math.round(Number(v)) + " °C", "Temperatura"]} labelFormatter={(v) => "Tiempo: " + tiempoTexto(Number(v))} />
+                    <Line type="linear" dataKey="temperatura" stroke="currentColor" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <label className="rounded-2xl border border-border bg-background p-3.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Inicio</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Temperatura inicial</span>
             <div className="mt-2 flex items-center gap-2">
               <input type="number" min="0" step="1" value={inicio}
                 onChange={(e) => { setInicio(Math.max(0, numero(e.target.value, 25))); setPersonalizado(true); }}
@@ -286,90 +372,7 @@ export function ProgramadorHornoCasting() {
           </div>
         </div>
 
-        <div>
-          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h3 className="text-sm font-bold tracking-tight">Secuencia térmica</h3>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Cada bloque representa una temperatura objetivo, su rampa y el sostenimiento.</p>
-            </div>
-            <span className="text-[10px] font-semibold text-muted-foreground">{personalizado ? "Programa personalizado" : "Referencia seleccionada"}</span>
-          </div>
-
-          <div className="grid gap-3 xl:grid-cols-2">
-            {etapas.map((e, i) => (
-              <article key={e.id} className="group relative overflow-hidden rounded-2xl border border-border bg-background p-4 transition hover:border-gold/40">
-                <div className="absolute inset-y-0 left-0 w-1 bg-gold/60" />
-                <div className="flex items-start justify-between gap-3 pl-1">
-                  <div>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-gold">Etapa {String(i + 1).padStart(2, "0")}</span>
-                    <input value={e.nombre} onChange={(x) => cambiar(e.id, "nombre", x.target.value)}
-                      className="mt-1 h-9 w-full rounded-lg border border-transparent bg-transparent px-0 text-sm font-bold outline-none transition focus:border-border focus:bg-card focus:px-2" />
-                  </div>
-                  {etapas.length > 1 && (
-                    <button type="button" onClick={() => eliminar(e.id)} aria-label="Eliminar etapa"
-                      className="rounded-lg p-1.5 text-muted-foreground opacity-70 transition hover:bg-destructive/10 hover:text-destructive">
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  )}
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 pl-1">
-                  <label className="rounded-xl border border-border/80 bg-card p-2.5">
-                    <span className="block text-[9px] text-muted-foreground">Objetivo</span>
-                    <div className="mt-1 flex items-baseline gap-1">
-                      <input type="number" min="0" value={e.temperatura} onChange={(x) => cambiar(e.id, "temperatura", x.target.value)}
-                        className="w-full min-w-0 bg-transparent text-base font-bold outline-none" />
-                      <span className="text-[9px] text-muted-foreground">°C</span>
-                    </div>
-                  </label>
-                  <label className="rounded-xl border border-border/80 bg-card p-2.5">
-                    <span className="block text-[9px] text-muted-foreground">Rampa</span>
-                    <div className="mt-1 flex items-baseline gap-1">
-                      <input type="number" min="0" value={e.rampaMin} onChange={(x) => cambiar(e.id, "rampaMin", x.target.value)}
-                        className="w-full min-w-0 bg-transparent text-base font-bold outline-none" />
-                      <span className="text-[9px] text-muted-foreground">min</span>
-                    </div>
-                  </label>
-                  <label className="rounded-xl border border-border/80 bg-card p-2.5">
-                    <span className="block text-[9px] text-muted-foreground">Sostén</span>
-                    <div className="mt-1 flex items-baseline gap-1">
-                      <input type="number" min="0" value={e.sostenimientoMin} onChange={(x) => cambiar(e.id, "sostenimientoMin", x.target.value)}
-                        className="w-full min-w-0 bg-transparent text-base font-bold outline-none" />
-                      <span className="text-[9px] text-muted-foreground">min</span>
-                    </div>
-                  </label>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <button type="button" onClick={agregar}
-            className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-border px-3 text-[11px] font-semibold transition hover:border-gold hover:bg-gold/5">
-            <Plus className="size-3.5" /> Agregar etapa
-          </button>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl border border-border bg-background">
-          <div className="flex flex-col gap-1 border-b border-border bg-surface-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-sm font-bold">Curva térmica</h3>
-              <p className="text-[10px] text-muted-foreground">Temperatura frente al tiempo acumulado</p>
-            </div>
-            <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[9px] font-semibold text-muted-foreground">{temperaturaMaxima} °C máx.</span>
-          </div>
-          <div className="h-[280px] w-full p-2 sm:h-[340px] sm:p-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={calculo.puntos} margin={{ top: 12, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="minuto" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(v) => tiempoTexto(Number(v))} tick={{ fontSize: 10 }} />
-                <YAxis domain={[0, "auto"]} tickFormatter={(v) => v + "°"} width={48} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v) => [Math.round(Number(v)) + " °C", "Temperatura"]} labelFormatter={(v) => "Tiempo: " + tiempoTexto(Number(v))} />
-                <Line type="linear" dataKey="temperatura" stroke="currentColor" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-surface-muted/35 p-4">
+        <div className="mt-5 rounded-2xl border border-border bg-surface-muted/35 p-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Resumen del ciclo</div>
@@ -383,7 +386,7 @@ export function ProgramadorHornoCasting() {
         </div>
       </div>
 
-      <footer className="border-t border-border bg-surface-muted/25 px-4 py-4 sm:px-6">
+      <footer className="border-t border-border bg-surface-muted/25 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-start gap-2">
           <Flame className="mt-0.5 size-4 shrink-0 text-gold" />
           <div className="min-w-0 text-[10px] leading-relaxed text-muted-foreground">
