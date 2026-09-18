@@ -15,7 +15,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
-  const wasPrepared = !!model.userData?.aurumInitialFrameApplied;
+  const wasPrepared = !!model.userData?.["aurumInitialFrameApplied"];
 
   if (!wasPrepared) {
     const prepared=prepare(model,2.6);
@@ -50,7 +50,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     // intentar aplicar "perspectiva" inmediatamente después del encuadre.
     // Reafirmamos el frontal en el siguiente frame, sin tocar materiales ni escena.
     requestAnimationFrame(() => {
-      if (model.userData?.aurumInitialFrameApplied) {
+      if (model.userData?.["aurumInitialFrameApplied"]) {
         applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
       }
     });

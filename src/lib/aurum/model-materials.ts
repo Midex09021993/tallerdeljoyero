@@ -16,7 +16,7 @@ function getAurumCategoryDiagnostic(){
 function diagnosticMaterial(category:string){
   const colors:{[key:string]:number}={metal:0x00ff00,gema:0x0088ff,otro:0xff00ff};
   const m=new THREE.MeshStandardMaterial({
-    color:colors[category] ?? colors.otro,
+    color:colors[category] ?? 0xff00ff,
     metalness:0,
     roughness:.55,
   });

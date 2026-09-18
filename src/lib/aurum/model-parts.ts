@@ -81,7 +81,7 @@ export function getAurumModelParts(
       ? matrixLayerSlot(layer,layerIndex,categoria)
       : undefined;
 
-    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, matrixSlot, layerIndex });
+    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
 
   return result;

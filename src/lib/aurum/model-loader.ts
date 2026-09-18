@@ -31,13 +31,13 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
     const abx = bx - ax, aby = by - ay, abz = bz - az, acx = cx - ax, acy = cy - ay, acz = cz - az;
     const nx = aby * acz - abz * acy, ny = abz * acx - abx * acz, nz = abx * acy - aby * acx;
     if (!Number.isFinite(Math.hypot(nx, ny, nz)) || Math.hypot(nx, ny, nz) < 1e-12) return;
-    for (const i of [ia, ib, ic]) { accumulated[i * 3] += nx; accumulated[i * 3 + 1] += ny; accumulated[i * 3 + 2] += nz; }
+    for (const i of [ia, ib, ic]) { accumulated[i * 3]! += nx; accumulated[i * 3 + 1]! += ny; accumulated[i * 3 + 2]! += nz; }
   };
   if (index) for (let i = 0; i + 2 < index.count; i += 3) addFace(index.getX(i), index.getX(i + 1), index.getX(i + 2));
   else for (let i = 0; i + 2 < position.count; i += 3) addFace(i, i + 1, i + 2);
   let comparable = 0, suspicious = 0;
   for (let i = 0; i < position.count; i++) {
-    const ax = accumulated[i * 3], ay = accumulated[i * 3 + 1], az = accumulated[i * 3 + 2], al = Math.hypot(ax, ay, az);
+    const ax = accumulated[i * 3] ?? 0, ay = accumulated[i * 3 + 1] ?? 0, az = accumulated[i * 3 + 2] ?? 0, al = Math.hypot(ax, ay, az);
     const nx = normal.getX(i), ny = normal.getY(i), nz = normal.getZ(i), nl = Math.hypot(nx, ny, nz);
     if (!Number.isFinite(nx) || !Number.isFinite(ny) || !Number.isFinite(nz) || !Number.isFinite(nl) || nl < 1e-8) { suspicious++; comparable++; continue; }
     if (al < 1e-10) continue;
@@ -141,7 +141,7 @@ export function preprocessAurumModel(object: THREE.Object3D) {
       meshesWithoutNormals++; geometry.computeVertexNormals(); normalsBuilt++;
     } else {
       geometry.normalizeNormals();
-      if (normalInspection?.suspiciousRatio >= 0.12) {
+      if (normalInspection && normalInspection.suspiciousRatio >= 0.12) {
         meshesWithSuspiciousNormals++;
         x.userData = { ...x.userData, aurumNormalsSuspicious:true, aurumNormalRepairAvailable:true, aurumNormalRepairRatio:Number(normalInspection.suspiciousRatio.toFixed(3)) };
       }
@@ -158,7 +158,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   const buffer = await file.arrayBuffer();
   if (ext === "stl") { const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js"); const geo = new STLLoader().parse(buffer); geo.computeVertexNormals(); return new THREE.Mesh(geo, fallbackMaterial); }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
-  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return (await new FBXLoader().parseAsync(buffer, "")).scene; }
+  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
   if (ext === "3dm") { const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js"); const loader = new Rhino3dmLoader(); loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/"); loader.setWorkerLimit(2); return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject)); }
   throw new Error("Formato no compatible.");
