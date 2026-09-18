@@ -51,6 +51,22 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
   {id:"whiteStudio06",name:"White Studio 06",url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_06_1k.hdr",sourceUrl:"https://polyhaven.com/a/white_studio_06",purpose:"neutral-product",license:"CC0"},
 ];
 
+/** Escena maestra para comparar materiales bajo condiciones constantes. No cambia el visor público. */
+export const AURUM_MATERIAL_CALIBRATION_SCENE: AurumScenePreset = {
+  id:"material-calibration",
+  background:0xe7e7e4,
+  ground:0xf1f0ec,
+  groundRoughness:.68,
+  groundMetalness:.01,
+  groundVisible:true,
+  environmentIntensity:.40,
+  environmentRotation:.54,
+  shadowIntensity:.22,
+  shadowSoftness:.985,
+  exposure:.66,
+  lighting:"productSoft",
+};
+
 export const getAurumScenePreset=(id:string)=>{
   return AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
 };
