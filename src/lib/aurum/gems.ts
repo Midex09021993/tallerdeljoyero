@@ -134,6 +134,28 @@ const addAlexandriteInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
+const addChrysoberylPhenomenalInclusions=(THREE:any,target:any,config:any,size:any,phenomenon:"chatoyancy"|"asterism")=>{
+  let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+  const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
+  const count=Math.max(18,Math.round(18+strength*34));
+  const makeNeedle=(angle:number,spread:number)=>{
+    const needle=new THREE.Mesh(new THREE.CylinderGeometry(scale*.0009,scale*.0015,scale*(.22+rnd()*.38),5),new THREE.MeshPhysicalMaterial({color:0x8f8472,roughness:.2,transmission:.06,transparent:true,opacity:.045+strength*.045,depthWrite:false,envMapIntensity:.42}));
+    needle.position.set((rnd()-.5)*size.x*.5,(rnd()-.5)*size.y*.5,(rnd()-.5)*size.z*.5);
+    needle.rotation.set((rnd()-.5)*spread,angle+(rnd()-.5)*spread,(rnd()-.5)*spread);
+    needle.userData={aurumInternalInclusion:true,aurumInclusionType:phenomenon==="chatoyancy"?"chrysoberyl-rutile-chatoyancy":"chrysoberyl-rutile-asterism"};
+    target.add(needle);
+  };
+  if(phenomenon==="chatoyancy"){
+    for(let i=0;i<count;i++)makeNeedle(0,.055);
+  }else{
+    // Three crystallographic needle sets are used as the visual approximation
+    // for a six-rayed star; the shader supplies the directional reflected band.
+    for(let i=0;i<count;i++)makeNeedle(0,.05);
+    for(let i=0;i<count;i++)makeNeedle(Math.PI/3,.05);
+    for(let i=0;i<count;i++)makeNeedle(2*Math.PI/3,.05);
+  }
+};
+
 const addParaibaInclusions=(THREE:any,target:any,config:any,size:any)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
@@ -219,6 +241,10 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   }
   if(String(g.id)==="alexandrita_brasil"){
     addAlexandriteInclusions(THREE,target,config,size);
+    return;
+  }
+  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && (g as any).fenomenoOptico){
+    addChrysoberylPhenomenalInclusions(THREE,target,config,size,(g as any).fenomenoOptico);
     return;
   }
 
