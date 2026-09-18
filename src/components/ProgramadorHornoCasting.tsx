@@ -23,34 +23,34 @@ type ProgramaHorno = {
 
 const PROGRAMAS: ProgramaHorno[] = [
   {
-    id: "bas-rapida-15",
-    marca: "BAS",
-    nombre: "BAS · Rampa rápida · Horno 15×15×15 cm",
+    id: "rapida-15",
+    marca: "Referencia de proyecto",
+    nombre: "Rampa rápida · Horno 15×15×15 cm",
     categoria: "BAS",
     descripcion: "Programa rápido de referencia proporcionado para este proyecto para un horno de cámara de 15 × 15 × 15 cm.",
-    fuente: "Hornos y Vacuum BAS · referencia proporcionada para este proyecto",
+    fuente: "Referencia proporcionada para este proyecto",
     etapas: [
       { nombre: "Rampa rápida 1", temperatura: 250, rampaMin: 10, sostenimientoMin: 15 },
       { nombre: "Rampa rápida 2", temperatura: 500, rampaMin: 10, sostenimientoMin: 15 },
       { nombre: "Rampa rápida 3", temperatura: 730, rampaMin: 30, sostenimientoMin: 60 },
       { nombre: "Enfriamiento a 650 °C", temperatura: 650, rampaMin: 10, sostenimientoMin: 0 },
     ],
-    nota: "Ciclo rápido indicado para este proyecto para una cámara de 15 × 15 × 15 cm. No se presenta como programa universal ni como especificación oficial publicada por BAS.",
+    nota: "Ciclo rápido indicado para este proyecto para una cámara de 15 × 15 × 15 cm. No se presenta como programa universal ni como especificación oficial de un fabricante.",
   },
   {
     id: "bas",
-    marca: "BAS",
-    nombre: "BAS · Casting de joyería",
+    marca: "Referencia de proyecto",
+    nombre: "Programa de referencia · Casting de joyería",
     categoria: "BAS",
     descripcion: "Programa de referencia proporcionado para este proyecto.",
-    fuente: "Hornos y Vacuum BAS · Medellín, Colombia",
+    fuente: "Referencia proporcionada para este proyecto",
     etapas: [
       { nombre: "Rampa 1", temperatura: 250, rampaMin: 30, sostenimientoMin: 15 },
       { nombre: "Rampa 2", temperatura: 500, rampaMin: 30, sostenimientoMin: 15 },
       { nombre: "Rampa 3", temperatura: 730, rampaMin: 60, sostenimientoMin: 60 },
       { nombre: "Enfriamiento", temperatura: 600, rampaMin: 15, sostenimientoMin: 60 },
     ],
-    nota: "El ciclo BAS mostrado procede del dato proporcionado para este proyecto; no se presenta como programa oficial publicado por BAS.",
+    nota: "Programa de referencia proporcionado para este proyecto; no se presenta como programa oficial de un fabricante.",
   },
   {
     id: "cera-dentsply",
@@ -150,7 +150,7 @@ const tiempoTexto = (min: number) => {
 
 export function ProgramadorHornoCasting() {
   const [inicio, setInicio] = useState(25);
-  const [programaId, setProgramaId] = useState("bas-rapida-15");
+  const [programaId, setProgramaId] = useState("rapida-15");
   const [etapas, setEtapas] = useState<EtapaHorno[]>(() => clonarEtapas(PROGRAMAS[0].etapas));
   const [personalizado, setPersonalizado] = useState(false);
 
@@ -222,7 +222,7 @@ export function ProgramadorHornoCasting() {
               Biblioteca de ciclos de referencia para cera y resinas castable de joyería.
             </p>
           </div>
-          <button type="button" onClick={() => { setInicio(25); cargar("bas-rapida-15"); }}
+          <button type="button" onClick={() => { setInicio(25); cargar("rapida-15"); }}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-[10px] font-semibold hover:border-gold">
             <RotateCcw className="size-3.5" /> BAS
           </button>
