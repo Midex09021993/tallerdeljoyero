@@ -129,6 +129,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     }
     if(phenomenonEnabled){
       shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
+      shader.uniforms.aurumPhenomenonAxisA={value:new THREE.Vector3(1,0,0)};
+      shader.uniforms.aurumPhenomenonAxisB={value:new THREE.Vector3(.5,.8660254,0)};
+      shader.uniforms.aurumPhenomenonAxisC={value:new THREE.Vector3(-.5,.8660254,0)};
+      shader.uniforms.aurumPhenomenonScaleNm={value:Number((phenomenon as any).scaleNm??170)};
       shader.uniforms.aurumPhenomenonMode={value:phenomenonType==="chatoyancy"?1:phenomenonType==="asterism"?2:phenomenonType==="adularescence"?3:phenomenonType==="aventurescence"?4:phenomenonType==="labradorescence"?5:phenomenonType==="schiller"?7:phenomenonType==="peristerescence"?8:phenomenonType==="iridescence"?9:phenomenonType==="opalescence"?11:phenomenonType==="overtone"?12:10};
     }
     if(pleochroismEnabled){
@@ -154,6 +158,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumPleoThirdStrength;
       uniform float aurumPhenomenonStrength;
       uniform float aurumPhenomenonMode;
+      uniform vec3 aurumPhenomenonAxisA;
+      uniform vec3 aurumPhenomenonAxisB;
+      uniform vec3 aurumPhenomenonAxisC;
+      uniform float aurumPhenomenonScaleNm;
     `+shader.fragmentShader;
     if(pleochroismEnabled){
       shader.vertexShader=`
@@ -227,7 +235,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           float aurumPhenBand=aurumPhenomenonMode<1.5 ? aurumBandA : (aurumBandA+aurumBandB+aurumBandC)*0.72;
           float aurumAngle=clamp(dot(aurumPhenR,aurumPhenV),0.0,1.0);
           float aurumSoft=smoothstep(.0,.65,1.0-aurumAngle);
-          float aurumIri=0.5+0.5*sin(dot(aurumPhenR,vec3(17.0,31.0,13.0))*9.0+aurumPhenV.z*11.0);
+          float aurumIri=0.5+0.5*sin(dot(aurumPhenR,vec3(17.0,31.0,13.0))*mix(7.0,12.0,clamp((aurumPhenomenonScaleNm-100.0)/120.0,0.0,1.0))+aurumPhenV.z*11.0);
           if(aurumPhenomenonMode>2.5 && aurumPhenomenonMode<3.5) aurumPhenBand=aurumSoft;
           if(aurumPhenomenonMode>3.5 && aurumPhenomenonMode<4.5) aurumPhenBand=pow(max(aurumIri,0.0),3.0);
           if(aurumPhenomenonMode>4.5 && aurumPhenomenonMode<5.5) aurumPhenBand=pow(max(aurumIri,0.0),2.0);
