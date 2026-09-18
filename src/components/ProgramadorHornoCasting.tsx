@@ -45,7 +45,7 @@ const PROGRAMAS: ProgramaHorno[] = [
     descripcion: "Referencia para cera y patrones convencionales; los tiempos cambian según tamaño de mufla y aleación.",
     fuente: "Dentsply Sirona · Deguvest California",
     etapas: [
-      { nombre: "Eliminación de cera", temperatura: 290, rampaMin: 13, sostenimientoMin: 30 },
+      { nombre: "Eliminación de cera", temperatura: 290, rampaMin: 38, sostenimientoMin: 30 },
       { nombre: "Precalentamiento", temperatura: 750, rampaMin: 66, sostenimientoMin: 45 },
     ],
     nota: "Referencia simplificada para una mufla pequeña. El fabricante limita la velocidad a 7 °C/min y establece tiempos según tamaño de la mufla; la temperatura final depende de la aleación.",
