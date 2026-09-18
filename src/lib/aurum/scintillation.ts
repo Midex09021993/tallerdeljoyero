@@ -44,7 +44,14 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const pleochroismThirdStrength=Math.max(0,Math.min(.20,Number(pleochroism?.thirdAxisStrength??0)));
   const pleoBlue=new THREE.Color(0x315fd0);
   const pleoThirdKey=String(pleochroism?.axisC??"");
-  const pleoViolet=pleoThirdKey==="deepGreen" ? new THREE.Color(0x3f8f75) : pleoThirdKey==="deepRose" ? new THREE.Color(0xc56a9a) : pleoThirdKey==="deepBlue" ? new THREE.Color(0x3f79a8) : new THREE.Color(0x7650c8);
+  const pleoViolet=pleoThirdKey==="deepGreen" ? new THREE.Color(0x3f8f75)
+    : pleoThirdKey==="deepRose" ? new THREE.Color(0xc56a9a)
+    : pleoThirdKey==="deepBlue" ? new THREE.Color(0x3f79a8)
+    : pleoThirdKey==="palePink" ? new THREE.Color(0xc9829f)
+    : pleoThirdKey==="golden" ? new THREE.Color(0xe4c15d)
+    : pleoThirdKey==="salmon" ? new THREE.Color(0xf0a080)
+    : pleoThirdKey==="pink" ? new THREE.Color(0xe06a9a)
+    : new THREE.Color(0x7650c8);
   const pleoThird=pleoThirdKey==="yellowGreen"
     ? new THREE.Color(0x7d8b4a)
     : pleoThirdKey==="deepGreen"
@@ -53,7 +60,13 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         ? new THREE.Color(0x8e294f)
         : pleoThirdKey==="deepBlue"
           ? new THREE.Color(0x164b70)
-          : new THREE.Color(0x9b466f);
+          : pleoThirdKey==="palePink"
+            ? new THREE.Color(0xf0c4cf)
+            : pleoThirdKey==="golden"
+              ? new THREE.Color(0xd2a83e)
+              : pleoThirdKey==="salmon"
+                ? new THREE.Color(0xe69a7c)
+                : new THREE.Color(0xd7799b);
 
   material.userData={
     ...(material.userData??{}),
