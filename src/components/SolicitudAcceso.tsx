@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 type Tipo = "taller" | "profesional" | "proveedor" | "servicio";
 
 const opciones: Array<{ value: Tipo; label: string; descripcion: string; icon: typeof Building2 }> = [
-  { value: "taller", label: "Taller / Filial", descripcion: "Empresa o taller de joyería que quiere participar.", icon: Building2 },
+  { value: "taller", label: "Taller / Joyería", descripcion: "Empresa o taller de joyería que quiere participar.", icon: Building2 },
   { value: "profesional", label: "Profesional independiente", descripcion: "Diseñador 3D, modelador u otro especialista.", icon: BriefcaseBusiness },
-  { value: "proveedor", label: "Proveedor", descripcion: "Proveedor de materiales, piedras, insumos o productos.", icon: Package },
-  { value: "servicio", label: "Servicio especializado", descripcion: "Casting, engaste, grabado, pulido, láser u otros.", icon: Wrench },
+  { value: "proveedor", label: "Proveedor del sector joyero", descripcion: "Materiales, piedras, insumos, herramientas o productos.", icon: Package },
+  { value: "servicio", label: "Servicio especializado", descripcion: "Casting, engaste, grabado, pulido, láser y otros procesos.", icon: Wrench },
 ];
 
 export function SolicitudAcceso() {
@@ -94,7 +94,7 @@ export function SolicitudAcceso() {
               <div className="mt-8 rounded-xl border border-gold/25 bg-gold/5 p-6 text-center">
                 <p className="text-lg font-semibold text-gold">Solicitud recibida</p>
                 <p className="mt-2 text-sm leading-relaxed text-white/60">
-                  Hemos registrado tus datos. La solicitud quedará pendiente de revisión y aprobación.
+                  Hemos registrado tus datos. La solicitud quedará pendiente de validación por el equipo de Aurum Lab.
                 </p>
                 <button type="button" onClick={cerrar} className="mt-6 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink">
                   Cerrar
@@ -127,7 +127,7 @@ export function SolicitudAcceso() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {[
                     ["nombre", "Nombre de contacto", true],
-                    ["empresa", tipo === "taller" ? "Nombre del taller / filial" : "Empresa (opcional)", false],
+                    ["empresa", tipo === "taller" ? "Nombre del taller / empresa" : "Empresa (opcional)", false],
                     ["email", "Correo electrónico", true],
                     ["telefono", "Teléfono / WhatsApp", false],
                     ["ciudad", "Ciudad", false],
