@@ -575,33 +575,59 @@ export function AurumRender() {
 
       // Optional performance diagnostics. Production remains silent unless
       // ?aurumPerf=1 is explicitly added to the URL.
+      // renderer.info.render is only the stats of the most recent render call;
+      // with EffectComposer that can be a fullscreen post-process pass. For
+      // scene-level totals, temporarily disable autoReset and accumulate every
+      // composer pass during the measurement window.
       const perfEnabled = typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("aurumPerf") === "1"
         : false;
       let perfLast = performance.now();
       let perfFrames = 0;
+      let perfCalls = 0;
+      let perfTriangles = 0;
+      let perfLines = 0;
+      let perfPoints = 0;
+      let perfLastFrameMs = 0;
       const perfTick = () => {
         if (!perfEnabled) return;
         perfFrames++;
         const now=performance.now();
+        const info=(renderer as any).info;
+        const frameStart=performance.now();
+
+        // renderer.info.render contains the totals for the current frame when
+        // autoReset is false. Snapshot them before the next frame.
+        perfCalls += Number(info?.render?.calls??0);
+        perfTriangles += Number(info?.render?.triangles??0);
+        perfLines += Number(info?.render?.lines??0);
+        perfPoints += Number(info?.render?.points??0);
+        perfLastFrameMs = Number((performance.now()-frameStart).toFixed(3));
+
         if(now-perfLast<2000) return;
         const seconds=(now-perfLast)/1000;
         const fps=perfFrames/seconds;
-        const info=(renderer as any).info;
+        const frames=Math.max(1,perfFrames);
         console.warn("[AURUM][PERF]",{
           fps:Number(fps.toFixed(1)),
-          calls:info?.render?.calls??null,
-          triangles:info?.render?.triangles??null,
-          lines:info?.render?.lines??null,
-          points:info?.render?.points??null,
+          frameMs:Number((1000/fps).toFixed(2)),
+          avgCalls:Number((perfCalls/frames).toFixed(1)),
+          avgTriangles:Number((perfTriangles/frames).toFixed(1)),
+          avgLines:Number((perfLines/frames).toFixed(1)),
+          avgPoints:Number((perfPoints/frames).toFixed(1)),
           geometries:info?.memory?.geometries??null,
           textures:info?.memory?.textures??null,
           pixelRatio:renderer.getPixelRatio?.(),
           transmissionScale:(renderer as any).transmissionResolutionScale??null,
           quality:renderQualityId,
+          measurement:"composer-frame-accumulated",
         });
         perfLast=now;
         perfFrames=0;
+        perfCalls=0;
+        perfTriangles=0;
+        perfLines=0;
+        perfPoints=0;
       };
 
       const viewerLoop = startAurumViewerLoop(
