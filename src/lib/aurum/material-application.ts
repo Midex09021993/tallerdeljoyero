@@ -165,7 +165,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
     // crease preservation for meshes that already carry valid facet normals.
-    const geometry=target.geometry;
+    const geometry=part.geometry;
     const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
     next.flatShading=!hasUsableNormals;
     next.thickness=partThickness;
@@ -181,7 +181,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ? part.material.map((base:any)=>apply(base,partThickness,thicknessMap))
       : apply(part.material,partThickness,thicknessMap);
     part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:partThickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:thicknessMapResult?"uv-ray-depth-v1":"local-bounds-v1",aurumGemThicknessMapDiagnostics:thicknessMapResult?{hitRatio:Number(thicknessMapResult.hitRatio.toFixed(3)),minDepth:Number(thicknessMapResult.minDepth.toFixed(4)),maxDepth:Number(thicknessMapResult.maxDepth.toFixed(4)),resolution:96}:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
-    console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
+    console.warn("[AURUM][GEM THICKNESS]", { mesh: part.name || part.uuid, geometry: part.userData.aurumGemGeometryDiagnostics, thickness: part.userData.aurumOpticalThickness, map: part.userData.aurumGemThicknessMapDiagnostics });
 
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
