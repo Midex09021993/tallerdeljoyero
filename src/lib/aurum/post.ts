@@ -129,7 +129,7 @@ export async function createAurumPostPipeline(
     }
 
     if(ssaoPass){
-      ssaoPass.enabled=Boolean(config.ssao) && (high || ultra);
+      ssaoPass.enabled=Boolean(config.ssao) && high;
       ssaoPass.kernelSize=ultra?24:high?20:12;
       const ssaoScale=ultra?.72:high?.82:.70;
       ssaoPass.setSize?.(
