@@ -711,7 +711,7 @@ export function AurumRender() {
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
             <div className="font-display text-[25px] tracking-[.22em] text-[#e5c77a]">AURUM</div>
-            <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-white/35">Render profesional para joyería</div>
+            <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-white/35">Render profesional para joyería · AURUM LIVE 2026-09-17</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
