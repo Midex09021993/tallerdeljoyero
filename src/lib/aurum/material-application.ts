@@ -13,6 +13,7 @@ import { applyAurumInternalLightResponse } from "./internal-light-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 import { applyAurumLatinGemProfile } from "./latin-gem-catalog";
 import { buildAurumThicknessMap } from "./thickness-map";
+import { resolveAurumGemPhysicalModel, attachAurumGemPhysicalModel } from "./gem-physical-core";
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
@@ -229,6 +230,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&(sameLayer||sameSlot)))targets.push(x);
   });
   if(!targets.length)targets.push(target);
+  const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
   const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
@@ -238,7 +240,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     applyAurumOpticalProfile(next,opticalProfile);
     applyAurumFamilyOpticalResponse(next,opticalProfile);
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
-    applyAurumDynamicScintillation(next,opticalProfile);
+    attachAurumGemPhysicalModel(next,physicalModel);
+    applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence});
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
