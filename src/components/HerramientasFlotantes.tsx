@@ -4,6 +4,7 @@ import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Wrench } 
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
+import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
 type Herramienta = {
@@ -21,7 +22,7 @@ const HERRAMIENTAS: Herramienta[] = [
   { id: "tallas", nombre: "Conversor de Tallas de Anillo", icono: Ruler, disponible: true },
   { id: "horno", nombre: "Programador de Rampas de Horno", icono: Wrench, disponible: false },
   { id: "volumen", nombre: "Calculadora de Volumen", icono: Calculator, disponible: false },
-  { id: "peso", nombre: "Calculadora de Peso", icono: Scale, disponible: false },
+  { id: "peso", nombre: "Peso de Gemas", icono: Scale, disponible: true },
   { id: "medidas", nombre: "Conversor de Medidas", icono: Ruler, disponible: false },
 ];
 
@@ -117,6 +118,11 @@ export function HerramientasFlotantes() {
           {activa === "tallas" ? (
             <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
               <ConversorTallasAnillo compacto />
+            </div>
+          ) : null}
+          {activa === "peso" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <CalculadoraPesoGemas compacto />
             </div>
           ) : null}
           {activa === "peso3d" ? (
