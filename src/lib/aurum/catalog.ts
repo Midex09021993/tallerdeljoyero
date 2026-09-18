@@ -107,8 +107,8 @@ export const MATERIALES: MaterialConfig[] = [
   { id: "plata950_pulida", grupo: "Plata", nombre: "Plata 950 Pulida", color: 0xe2e5e8, metalness: 1, roughness: .12, envMapIntensity: 1.66, clearcoat: .10 },
   { id: "plata970_pulida", grupo: "Plata", nombre: "Plata 970 Pulida", color: 0xe5e8eb, metalness: 1, roughness: .105, envMapIntensity: 1.72, clearcoat: .10 },
   { id: "plata_envejecida", grupo: "Plata", nombre: "Plata Envejecida", color: 0x6f7479, metalness: .96, roughness: .34, envMapIntensity: 1.48, clearcoat: .06, anisotropy: .10 },
-  { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc5cbd0, metalness: 1, roughness: .1, envMapIntensity: 1.95, clearcoat: .42 },
-  { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.35, clearcoat: .06 },
+  { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc9cdd1, metalness: 1, roughness: .085, envMapIntensity: 1.88, clearcoat: .18 },
+  { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xb2b7bc, metalness: 1, roughness: .42, envMapIntensity: 1.32, clearcoat: .06 },
   // Materiales especiales para presentaciones profesionales y configuraciones premium.
   // Perfiles LATAM: 18K = 750/1000 de oro. Los tonos son perfiles visuales;
   // la documentación técnica define la ley y el efecto del cobre/plata sobre
@@ -118,12 +118,12 @@ export const MATERIALES: MaterialConfig[] = [
   { id: "oro18_naranja", grupo: "Especiales", nombre: "Oro 18K Naranja", color: 0xd2863f, metalness: 1, roughness: .13, envMapIntensity: 1.82, clearcoat: .14, anisotropy: .05 },
   { id: "oro18_rojo", grupo: "Especiales", nombre: "Oro 18K Rojo", color: 0xc66f58, metalness: 1, roughness: .14, envMapIntensity: 1.78, clearcoat: .13, anisotropy: .06 },
   { id: "oro18_martillado", grupo: "Oro Amarillo", nombre: "Oro 18K Martillado Artesanal", color: 0xc9a04e, metalness: 1, roughness: .27, envMapIntensity: 1.48, clearcoat: .06, anisotropy: .16 },
-  { id: "oro24_pulido", grupo: "Especiales", nombre: "Oro 24K Pulido", color: 0xf2c94c, metalness: 1, roughness: .075, envMapIntensity: 3.25, clearcoat: .65 },
-  { id: "oro18_champan", grupo: "Especiales", nombre: "Oro Champán", color: 0xd9b978, metalness: 1, roughness: .13, envMapIntensity: 2.8, clearcoat: .5 },
-  { id: "oro18_verde", grupo: "Especiales", nombre: "Oro Verde", color: 0xb9bd72, metalness: 1, roughness: .14, envMapIntensity: 2.65, clearcoat: .48 },
-  { id: "paladio_pulido", grupo: "Especiales", nombre: "Paladio Pulido", color: 0xd4d8dc, metalness: 1, roughness: .09, envMapIntensity: 3.05, clearcoat: .58 },
-  { id: "rodio_negro", grupo: "Especiales", nombre: "Rodio Negro", color: 0x252a30, metalness: 1, roughness: .12, envMapIntensity: 1.8, clearcoat: .45 },
-  { id: "titanio_pulido", grupo: "Especiales", nombre: "Titanio Pulido", color: 0x8d959d, metalness: .96, roughness: .16, envMapIntensity: 1.75, clearcoat: .34 },
+  { id: "oro24_pulido", grupo: "Especiales", nombre: "Oro 24K Pulido", color: 0xe9bb3f, metalness: 1, roughness: .075, envMapIntensity: 2.35, clearcoat: .20 },
+  { id: "oro18_champan", grupo: "Especiales", nombre: "Oro Champán", color: 0xd6b875, metalness: 1, roughness: .12, envMapIntensity: 2.05, clearcoat: .16 },
+  { id: "oro18_verde", grupo: "Especiales", nombre: "Oro Verde", color: 0xb5b66f, metalness: 1, roughness: .13, envMapIntensity: 1.98, clearcoat: .15 },
+  { id: "paladio_pulido", grupo: "Especiales", nombre: "Paladio Pulido", color: 0xd1d5d9, metalness: 1, roughness: .085, envMapIntensity: 2.05, clearcoat: .18 },
+  { id: "rodio_negro", grupo: "Especiales", nombre: "Rodio Negro", color: 0x2b3035, metalness: 1, roughness: .13, envMapIntensity: 1.62, clearcoat: .16 },
+  { id: "titanio_pulido", grupo: "Especiales", nombre: "Titanio Pulido", color: 0x90989f, metalness: .96, roughness: .15, envMapIntensity: 1.68, clearcoat: .12 },
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId }[] = [
