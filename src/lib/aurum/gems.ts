@@ -156,6 +156,24 @@ const addChrysoberylPhenomenalInclusions=(THREE:any,target:any,config:any,size:a
   }
 };
 
+const addSunstoneCopperInclusions=(THREE:any,target:any,config:any,size:any)=>{
+  let seed=(config.seed>>>0)||7; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+  const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
+  const count=Math.max(12,Math.round(16+strength*38));
+  for(let i=0;i<count;i++){
+    const diameter=scale*(.00025+rnd()*.0028);
+    const length=scale*(.01+rnd()*.06);
+    const geo=new THREE.CircleGeometry(diameter,6);
+    const mat=new THREE.MeshPhysicalMaterial({color:0xb56a35,metalness:.72,roughness:.18,transmission:.02,transparent:true,opacity:.08+strength*.16,side:THREE.DoubleSide,depthWrite:false});
+    const p=new THREE.Mesh(geo,mat);
+    p.scale.x=1.5+rnd()*4.0;
+    p.position.set((rnd()-.5)*size.x*.46,(rnd()-.5)*size.y*.46,(rnd()-.5)*size.z*.46);
+    p.rotation.set(rnd()*.35,Math.PI/2+(rnd()-.5)*.25,rnd()*Math.PI);
+    p.userData={aurumInternalInclusion:true,aurumInclusionType:"oregon-sunstone-copper"};
+    target.add(p);
+  }
+};
+
 const addPhenomenalPlates=(THREE:any,target:any,config:any,size:any,phenomenon:"schiller"|"peristerescence"|"iridescence"|"orient")=>{
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
@@ -274,6 +292,11 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   }
   if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && (g as any).fenomenoOptico){
     addChrysoberylPhenomenalInclusions(THREE,target,config,size,(g as any).fenomenoOptico);
+    return;
+  }
+  if(String(g.id)==="sunstone_aventurescencia" || String(g.id)==="sunstone_schiller"){
+    addSunstoneCopperInclusions(THREE,target,config,size);
+    if(String(g.id)==="sunstone_schiller") addPhenomenalPlates(THREE,target,config,size,"schiller");
     return;
   }
   if((g as any).fenomenoOptico){
