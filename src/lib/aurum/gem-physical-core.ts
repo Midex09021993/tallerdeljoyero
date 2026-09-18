@@ -62,6 +62,7 @@ export type AurumGemPhysicalModel = {
     coating:number;
   };
   thicknessScale:number;
+  gemological:{specificGravity:number;hardnessMohs:number;isotropic:boolean;chemicalFormula:string};
 };
 
 const normalize=(v:THREE.Vector3)=>v.clone().normalize();
@@ -146,6 +147,9 @@ export const resolveAurumGemPhysicalModel=(g:any):AurumGemPhysicalModel=>{
       coating:0,
     },
     thicknessScale:Number(g?.thicknessScale??1),
+    gemological:family==="Diamante"
+      ? {specificGravity:3.52,hardnessMohs:10,isotropic:true,chemicalFormula:"C"}
+      : {specificGravity:Number(g?.specificGravity??0),hardnessMohs:Number(g?.hardnessMohs??0),isotropic:canonical.symmetry==="cubic",chemicalFormula:String(g?.chemicalFormula??"")},
   };
 };
 
