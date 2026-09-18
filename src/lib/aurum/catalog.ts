@@ -7,6 +7,9 @@
 
 export type MaterialId =
   | "oro18a_pulido" | "oro18a_satinado" | "oro18a_mate" | "oro18a_cepillado"
+  | "oro14a_pulido" | "oro14a_satinado" | "oro14a_mate"
+  | "oro14b_rodinado" | "oro14b_pulido" | "oro14b_mate"
+  | "oro14r_pulido" | "oro14r_satinado" | "oro14r_mate"
   | "oro18b_rodinado" | "oro18b_pulido" | "oro18b_mate"
   | "oro18r_pulido" | "oro18r_satinado" | "oro18r_mate"
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
@@ -97,6 +100,15 @@ export const MATERIALES: MaterialConfig[] = [
   { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 1.65, clearcoat: .20, anisotropy: .2 },
   { id: "oro18a_mate", grupo: "Oro Amarillo", nombre: "Mate", color: 0xc7a45a, metalness: 1, roughness: .52, envMapIntensity: 1.35, clearcoat: .06, anisotropy: .35 },
   { id: "oro18a_cepillado", grupo: "Oro Amarillo", nombre: "Cepillado", color: 0xcfa94e, metalness: 1, roughness: .38, envMapIntensity: 1.55, clearcoat: .10, anisotropy: .72, anisotropyRotation: .18 },
+  { id: "oro14a_pulido", grupo: "Oro Amarillo", nombre: "Oro 14K Amarillo · Pulido", color: 0xcfa342, metalness: 1, roughness: .11, envMapIntensity: 1.78, clearcoat: .15, anisotropy: .04 },
+  { id: "oro14a_satinado", grupo: "Oro Amarillo", nombre: "Oro 14K Amarillo · Satinado", color: 0xc89d46, metalness: 1, roughness: .29, envMapIntensity: 1.58, clearcoat: .10, anisotropy: .20 },
+  { id: "oro14a_mate", grupo: "Oro Amarillo", nombre: "Oro 14K Amarillo · Mate", color: 0xb98f4b, metalness: 1, roughness: .51, envMapIntensity: 1.30, clearcoat: .05, anisotropy: .32 },
+  { id: "oro14b_rodinado", grupo: "Oro Blanco", nombre: "Oro 14K Blanco · Rodinado", color: 0xe2e6ea, metalness: 1, roughness: .08, envMapIntensity: 1.88, clearcoat: .16, anisotropy: .04 },
+  { id: "oro14b_pulido", grupo: "Oro Blanco", nombre: "Oro 14K Blanco · Pulido", color: 0xd8dde2, metalness: 1, roughness: .115, envMapIntensity: 1.76, clearcoat: .13, anisotropy: .05 },
+  { id: "oro14b_mate", grupo: "Oro Blanco", nombre: "Oro 14K Blanco · Mate", color: 0xc5cbd0, metalness: 1, roughness: .51, envMapIntensity: 1.68, clearcoat: .06 },
+  { id: "oro14r_pulido", grupo: "Oro Rosa", nombre: "Oro 14K Rosa · Pulido", color: 0xc77c69, metalness: 1, roughness: .115, envMapIntensity: 1.76, clearcoat: .14, anisotropy: .05 },
+  { id: "oro14r_satinado", grupo: "Oro Rosa", nombre: "Oro 14K Rosa · Satinado", color: 0xc27868, metalness: 1, roughness: .28, envMapIntensity: 1.52, clearcoat: .09, anisotropy: .18 },
+  { id: "oro14r_mate", grupo: "Oro Rosa", nombre: "Oro 14K Rosa · Mate", color: 0xb76f62, metalness: 1, roughness: .51, envMapIntensity: 1.32, clearcoat: .05, anisotropy: .30 },
   { id: "oro18b_rodinado", grupo: "Oro Blanco", nombre: "Rodinado", color: 0xe7ebee, metalness: 1, roughness: .075, envMapIntensity: 1.92, clearcoat: .18, anisotropy: .04 },
   { id: "oro18b_pulido", grupo: "Oro Blanco", nombre: "Pulido", color: 0xdce1e5, metalness: 1, roughness: .11, envMapIntensity: 1.80, clearcoat: .15, anisotropy: .05 },
   { id: "oro18b_mate", grupo: "Oro Blanco", nombre: "Mate", color: 0xcbd0d5, metalness: 1, roughness: .5, envMapIntensity: 1.75, clearcoat: .08 },
