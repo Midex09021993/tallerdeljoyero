@@ -174,17 +174,37 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     return next;
   };
   targets.forEach((part:any)=>{
-    const thicknessMapResult=buildAurumThicknessMap(part,preset.thicknessScale,96);
-    const partThickness=thicknessMapResult?.baseThickness??thickness;
-    const thicknessMap=thicknessMapResult?.texture??null;
+    // Apply the proven scalar thickness immediately so selecting a gem never
+    // waits for the optional spatial bake.
     part.material=Array.isArray(part.material)
-      ? part.material.map((base:any)=>apply(base,partThickness,thicknessMap))
-      : apply(part.material,partThickness,thicknessMap);
-    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:partThickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:thicknessMapResult?"uv-ray-depth-v1":"local-bounds-v1",aurumGemThicknessMapDiagnostics:thicknessMapResult?{hitRatio:Number(thicknessMapResult.hitRatio.toFixed(3)),minDepth:Number(thicknessMapResult.minDepth.toFixed(4)),maxDepth:Number(thicknessMapResult.maxDepth.toFixed(4)),resolution:96}:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
-    console.warn("[AURUM][GEM THICKNESS]", { mesh: part.name || part.uuid, geometry: part.userData.aurumGemGeometryDiagnostics, thickness: part.userData.aurumOpticalThickness, map: part.userData.aurumGemThicknessMapDiagnostics });
+      ? part.material.map((base:any)=>apply(base,thickness,null))
+      : apply(part.material,thickness,null);
+    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemThicknessMapDiagnostics:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
+    console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
+
+    // Bake the spatial map after the selection has already been applied.
+    // This keeps the UI/render loop responsive and leaves the scalar fallback
+    // visible if the optional bake cannot be completed.
+    setTimeout(()=>{
+      try{
+        const result=buildAurumThicknessMap(part,preset.thicknessScale,96);
+        if(!result)return;
+        const materials=Array.isArray(part.material)?part.material:[part.material];
+        materials.forEach((mat:any)=>{
+          if(!mat)return;
+          mat.thickness=result.baseThickness;
+          mat.thicknessMap=result.texture;
+          mat.needsUpdate=true;
+        });
+        part.userData={...part.userData,aurumOpticalThickness:result.baseThickness,aurumOpticalThicknessMode:"uv-ray-depth-v1",aurumGemThicknessMapDiagnostics:{hitRatio:Number(result.hitRatio.toFixed(3)),minDepth:Number(result.minDepth.toFixed(4)),maxDepth:Number(result.maxDepth.toFixed(4)),resolution:96}};
+        console.warn("[AURUM][GEM THICKNESS]", { mesh:part.name||part.uuid, geometry:part.userData.aurumGemGeometryDiagnostics, thickness:part.userData.aurumOpticalThickness, map:part.userData.aurumGemThicknessMapDiagnostics });
+      }catch(error){
+        console.warn("[AURUM][GEM THICKNESS] spatial bake skipped", {mesh:part.name||part.uuid,error});
+      }
+    },0);
   });
   applyGemEnvironment();
   return true;
