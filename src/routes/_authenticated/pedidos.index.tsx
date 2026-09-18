@@ -21,6 +21,7 @@ import {
   estadoClases,
   estados,
   pedidoEnRecepcion,
+  pedidoPendienteAutorizacionProduccion,
   type PedidoNuevo,
 } from "@/lib/taller-db";
 
@@ -218,6 +219,7 @@ function PedidosPage() {
   const [filtroArea, setFiltroArea] = useState("Todas");
   const [filtroEstado, setFiltroEstado] = useState("Todas");
   const [filtroEntrega, setFiltroEntrega] = useState<FiltroEntrega>("Todas");
+  const soloPendientesAutorizacion = useState(() =>\n    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("autorizacion") === "pendientes",\n  )[0];
   const [busca, setBusca] = useState("");
   const [estadisticasMovilAbiertas, setEstadisticasMovilAbiertas] = useState(false);
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
@@ -257,9 +259,9 @@ function PedidosPage() {
         // Los pedidos entregados salen del flujo activo: solo aparecen al buscarlos
         // o al filtrar expresamente por ese estado (el archivo está en Gestión).
         const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
-        return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo;
+        const okAutorizacion = !soloPendientesAutorizacion || pedidoPendienteAutorizacionProduccion(p);\n        return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
       }),
-    [pedidosPorSede, filtroArea, filtroEstado, filtroEntrega, busca, soloSusAreas, misAreas],
+    [pedidosPorSede, filtroArea, filtroEstado, filtroEntrega, busca, soloSusAreas, misAreas, soloPendientesAutorizacion],
   );
 
   const activos = pedidosPorSede.filter((p) => !esEstadoFinalPedido(p.estado));
@@ -355,6 +357,20 @@ function PedidosPage() {
         </div>
       }
     >
+      {soloPendientesAutorizacion ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/25 bg-warning-soft/50 px-4 py-3 text-sm">
+          <div>
+            <p className="font-semibold text-warning">Pedidos pendientes de autorización</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Mostrando únicamente pedidos que todavía no han ingresado a Producción.
+            </p>
+          </div>
+          <button type="button" onClick={() => window.location.assign("/pedidos")} className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground">
+            Ver todos
+          </button>
+        </div>
+      ) : null}
+
       <Panel
         titulo="Seguimiento general"
         accion={
