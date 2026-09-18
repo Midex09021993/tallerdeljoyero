@@ -171,7 +171,7 @@ export function ConfiguracionCalculadoras() {
     });
   }
 
-  function actualizarTalla(index: number, campo: "diametroMm" | "europea" | "americana", valor: string) {
+  function actualizarTalla(index: number, campo: "diametroMm" | "espanola" | "europeaIso" | "americana", valor: string) {
     setCfgTallas((actual) => ({
       ...actual,
       tabla: actual.tabla.map((fila, i) => {
@@ -185,7 +185,7 @@ export function ConfiguracionCalculadoras() {
   function agregarTalla() {
     setCfgTallas((actual) => ({
       ...actual,
-      tabla: [...actual.tabla, { diametroMm: 0, europea: 0, americana: null }],
+      tabla: [...actual.tabla, { diametroMm: 0, espanola: 0, europeaIso: 0, americana: null }],
     }));
   }
 
@@ -440,22 +440,23 @@ export function ConfiguracionCalculadoras() {
       <AccordionSection
         id="tallas"
         titulo="Conversor de Tallas"
-        descripcion="Tabla de equivalencias de diámetro, Europa y USA"
+        descripcion="Tabla de equivalencias de diámetro, España, Europa ISO y USA"
         onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.tallasAnillo, cfgTallas, "Conversor de Tallas")}
         onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.tallasAnillo, DEFAULT_CONFIG_TALLAS_ANILLO, setCfgTallas, "Conversor de Tallas")}
       >
         <div className="space-y-4 p-6">
-          <p className="text-xs text-muted-foreground">Tabla maestra de equivalencias del taller. Usa el formato tradicional de joyería para USA: 6, 6 1/4, 6 1/2, 6 3/4.</p>
+          <p className="text-xs text-muted-foreground">Tabla maestra de equivalencias. La escala España se mantiene separada de Europa ISO; USA usa tallas fraccionarias de cuarto.</p><p className="text-[10px] text-muted-foreground">Referencias: tallaje España de joyería española · ISO 8653:2016 · GIA 4Cs.</p>
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full min-w-[620px] text-sm">
               <thead className="bg-surface-muted text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <tr><th className="px-3 py-3">Diámetro (mm)</th><th className="px-3 py-3">Europa</th><th className="px-3 py-3">USA</th><th className="px-3 py-3 text-right">Acción</th></tr>
+                <tr><th className="px-3 py-3">Diámetro (mm)</th><th className="px-3 py-3">España</th><th className="px-3 py-3">Europa ISO</th><th className="px-3 py-3">USA</th><th className="px-3 py-3 text-right">Acción</th></tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {cfgTallas.tabla.map((fila, index) => (
                   <tr key={index}>
                     <td className="px-3 py-2"><input type="number" step="0.1" className={inputCls} value={fila.diametroMm} onChange={(e) => actualizarTalla(index, "diametroMm", e.target.value)} /></td>
-                    <td className="px-3 py-2"><input type="number" step="1" className={inputCls} value={fila.europea} onChange={(e) => actualizarTalla(index, "europea", e.target.value)} /></td>
+                    <td className="px-3 py-2"><input type="number" step="1" className={inputCls} value={fila.espanola} onChange={(e) => actualizarTalla(index, "espanola", e.target.value)} /></td>
+                    <td className="px-3 py-2"><input type="number" step="1" className={inputCls} value={fila.europeaIso} onChange={(e) => actualizarTalla(index, "europeaIso", e.target.value)} /></td>
                     <td className="px-3 py-2"><input type="text" inputMode="text" className={inputCls} placeholder="Ej. 6 1/2" value={fila.americana ?? ""} onChange={(e) => actualizarTalla(index, "americana", e.target.value)} /></td>
                     <td className="px-3 py-2 text-right"><button type="button" onClick={() => eliminarTalla(index)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-destructive hover:border-destructive">Eliminar</button></td>
                   </tr>
