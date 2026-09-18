@@ -33,7 +33,7 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
     : family==="Diamante" || family==="Moissanita" ? {r:1.00,g:1.00,b:1.00}
     : {r:1.00,g:1.00,b:1.00};
 
-  const authoredAttenuationColor=Number(profile.attenuationColor??0xffffff);
+  const authoredAttenuationColor=0xffffff;
   const authoredColor=new THREE.Color(authoredAttenuationColor);
   const attenuationColor=new THREE.Color(
     authoredColor.r*spectral.r,
