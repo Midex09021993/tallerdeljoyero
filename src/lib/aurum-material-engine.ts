@@ -65,6 +65,44 @@ export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   };
 };
 
+const aurumSurfaceTextureCache=new Map<string,THREE.DataTexture>();
+const aurumSurfaceHash=(x:number)=>{x|=0;x=Math.imul(x^(x>>>16),0x45d9f3b);x=Math.imul(x^(x>>>16),0x45d9f3b);return ((x^(x>>>16))>>>0)/4294967296;};
+const getAurumSurfaceMicrostructure=(THREE:any,preset:AurumMetalPreset)=>{
+  const id=String(preset.id??"").toLowerCase();
+  let kind:"none"|"artisan"|"hammered"|"satin"|"brushed"="none";
+  if(id.includes("martillado"))kind="hammered";
+  else if(id.includes("artesanal"))kind="artisan";
+  else if(id.includes("satinado"))kind="satin";
+  else if(id.includes("cepillado"))kind="brushed";
+  if(kind==="none")return null;
+  const key=kind+":"+preset.color;
+  const cached=aurumSurfaceTextureCache.get(key); if(cached)return cached;
+  const size=64, data=new Uint8Array(size*size);
+  const seed=preset.color|0;
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const nx=x/size, ny=y/size;
+    const n=aurumSurfaceHash((x+1)*374761393 ^ (y+1)*668265263 ^ seed);
+    let v=128;
+    if(kind==="brushed"){
+      const bands=Math.sin(nx*Math.PI*2*18 + n*.7);
+      v=128+bands*34+(n-.5)*24;
+    }else if(kind==="satin"){
+      const bands=Math.sin(nx*Math.PI*2*7 + ny*Math.PI*2*2);
+      v=128+bands*12+(n-.5)*18;
+    }else if(kind==="hammered"){
+      const cell=Math.sin(nx*Math.PI*2*9 + Math.sin(ny*Math.PI*2*11)*1.7)*Math.cos(ny*Math.PI*2*8);
+      v=128+cell*30+(n-.5)*34;
+    }else{
+      const broad=Math.sin(nx*Math.PI*2*5+ny*3.2)+Math.sin(ny*Math.PI*2*6-nx*2.1);
+      v=128+broad*10+(n-.5)*20;
+    }
+    data[y*size+x]=Math.max(0,Math.min(255,Math.round(v)));
+  }
+  const tex=new THREE.DataTexture(data,size,size,THREE.RedFormat,THREE.UnsignedByteType);
+  tex.colorSpace=THREE.NoColorSpace; tex.wrapS=THREE.RepeatWrapping; tex.wrapT=THREE.RepeatWrapping; tex.repeat?.set?.(kind==="brushed"?3:2,kind==="hammered"?3:2); tex.minFilter=THREE.LinearFilter; tex.magFilter=THREE.LinearFilter; tex.generateMipmaps=true; tex.needsUpdate=true;
+  aurumSurfaceTextureCache.set(key,tex); return tex;
+};
+
 export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   if(!material) return material;
   material.color?.setHex(preset.color);
@@ -88,6 +126,9 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   material.clearcoatRoughness=Math.max(.045,Math.min(.14,material.roughness*.8));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
+  const surfaceMicrostructure=getAurumSurfaceMicrostructure(THREE,preset);
+  material.roughnessMap=surfaceMicrostructure;
+  material.userData={...(material.userData??{}),aurumSurfaceMicrostructure:surfaceMicrostructure?String(preset.id??"surface"):"polished-base"};
   material.anisotropyRotation=preset.anisotropyRotation??0;
   material.specularIntensity=preset.metalness>.9
     ? Math.max(.78,Math.min(1,response.highlightScale+.25))
