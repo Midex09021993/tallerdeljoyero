@@ -93,7 +93,7 @@ const opticalProfileFromCatalog=(g:any)=>{
         ? 1.00
         : Number(base.brilliance??.75);
   const colorChange=gemId==="alexandrita_brasil"
-    ? {enabled:true,fluorescent:new (await import("three")).Color(0x4e9a67),incandescent:new (await import("three")).Color(0x8a3557),strength:.58}
+    ? {enabled:true,fluorescent:new THREE.Color(0x4e9a67),incandescent:new THREE.Color(0x8a3557),strength:.58}
     : undefined;
   return {
     ...base,
