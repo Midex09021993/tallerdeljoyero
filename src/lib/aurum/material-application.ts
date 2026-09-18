@@ -173,7 +173,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   targets.forEach((part:any)=>{
     part.material=Array.isArray(part.material)?part.material.map(apply):apply(part.material);
     part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
-    console.info("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
+    console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
