@@ -44,8 +44,15 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
 
   const depthResponse=1-Math.exp(-t/absorption);
   const depthFactor=Math.max(.76,Math.min(1.04,1-depthResponse*.30));
+  const physicalModel:any=material.userData?.aurumGemPhysicalModel;
+  const spectrum=Array.isArray(physicalModel?.structure?.spectralAbsorption)?physicalModel.structure.spectralAbsorption:[];
+  const meanSpectralAbsorption=spectrum.length?spectrum.reduce((a:number,b:number)=>a+b,0)/spectrum.length:0;
+  const fieldScale=Math.max(.05,Math.min(1,Number(physicalModel?.structure?.fieldScale??.18)));
   const reflectionFactor=.94+reflection*.06;
-  const correctedDistance=Math.max(.05,absorption*familyScale*depthFactor*reflectionFactor);
+  // Couple the broad attenuation response to the shared spectral scaffold and
+  // internal-structure density. This remains a proxy until measured spectra are
+  // supplied per gem variety; it avoids pretending RGB is laboratory data.
+  const correctedDistance=Math.max(.05,absorption*familyScale*depthFactor*reflectionFactor*(1-.12*meanSpectralAbsorption*fieldScale));
 
   material.attenuationDistance=correctedDistance;
   material.userData={
@@ -60,6 +67,8 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
       internalReflection:reflection,
       spectralAbsorptionProxyVersion:"gia-visible-windows-v1",
       spectralTransmissionProxy:spectral,
+      sharedSpectralAbsorption:spectrum,
+      internalStructureFieldScale:fieldScale,
       authoredAttenuationColor:"#" + authoredAttenuationColor.toString(16).padStart(6,"0"),
     },
   };
