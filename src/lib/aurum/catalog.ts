@@ -12,6 +12,7 @@ export type MaterialId =
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
   | "platino_pulido" | "platino_mate"
   | "oro24_pulido" | "oro18_champan" | "oro18_verde"
+  | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara";
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
@@ -109,6 +110,14 @@ export const MATERIALES: MaterialConfig[] = [
   { id: "platino_pulido", grupo: "Platino", nombre: "Pulido", color: 0xc5cbd0, metalness: 1, roughness: .1, envMapIntensity: 1.95, clearcoat: .42 },
   { id: "platino_mate", grupo: "Platino", nombre: "Mate", color: 0xaeb4ba, metalness: 1, roughness: .48, envMapIntensity: 1.35, clearcoat: .06 },
   // Materiales especiales para presentaciones profesionales y configuraciones premium.
+  // Perfiles LATAM: 18K = 750/1000 de oro. Los tonos son perfiles visuales;
+  // la documentación técnica define la ley y el efecto del cobre/plata sobre
+  // el color, pero no prescribe valores RGB/PBR universales.
+  { id: "oro18a_artesanal_pulido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Artesanal", color: 0xd8ad4c, metalness: 1, roughness: .16, envMapIntensity: 1.8, clearcoat: .12, anisotropy: .08 },
+  { id: "oro18a_calido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Cálido", color: 0xe0b24b, metalness: 1, roughness: .15, envMapIntensity: 1.82, clearcoat: .12, anisotropy: .06 },
+  { id: "oro18_naranja", grupo: "Especiales", nombre: "Oro 18K Naranja", color: 0xd8893f, metalness: 1, roughness: .16, envMapIntensity: 1.78, clearcoat: .12, anisotropy: .06 },
+  { id: "oro18_rojo", grupo: "Especiales", nombre: "Oro 18K Rojo", color: 0xc96f55, metalness: 1, roughness: .17, envMapIntensity: 1.75, clearcoat: .12, anisotropy: .07 },
+  { id: "oro18_martillado", grupo: "Oro Amarillo", nombre: "Oro 18K Martillado Artesanal", color: 0xcaa254, metalness: 1, roughness: .24, envMapIntensity: 1.55, clearcoat: .07, anisotropy: .10 },
   { id: "oro24_pulido", grupo: "Especiales", nombre: "Oro 24K Pulido", color: 0xf2c94c, metalness: 1, roughness: .075, envMapIntensity: 3.25, clearcoat: .65 },
   { id: "oro18_champan", grupo: "Especiales", nombre: "Oro Champán", color: 0xd9b978, metalness: 1, roughness: .13, envMapIntensity: 2.8, clearcoat: .5 },
   { id: "oro18_verde", grupo: "Especiales", nombre: "Oro Verde", color: 0xb9bd72, metalness: 1, roughness: .14, envMapIntensity: 2.65, clearcoat: .48 },
