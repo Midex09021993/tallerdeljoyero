@@ -8,6 +8,9 @@ import {
   DEFAULT_CONFIG_VISUALIZADOR,
   DEFAULT_CONFIG_YESO,
   DEFAULT_CONFIG_TALLAS_ANILLO,
+  DEFAULT_CONFIG_PESO_GEMAS,
+  leerConfigPesoGemas,
+  type ConfigPesoGemas,
   leerConfigAleacion,
   leerConfigVisualizador,
   leerConfigYeso,
@@ -98,6 +101,7 @@ export function ConfiguracionCalculadoras() {
   const aleacion = useConfigSistema(CLAVES_CALCULADORAS.aleacion);
   const yeso = useConfigSistema(CLAVES_CALCULADORAS.yeso);
   const tallasAnillo = useConfigSistema(CLAVES_CALCULADORAS.tallasAnillo);
+  const pesoGemas = useConfigSistema(CLAVES_CALCULADORAS.pesoGemas);
   const guardar = useGuardarConfigSistema();
 
   const esDueno = Boolean(sesion?.esDueno);
@@ -107,6 +111,7 @@ export function ConfiguracionCalculadoras() {
   const [cfgAleacion, setCfgAleacion] = useState<ConfigAleacion>(clonar(DEFAULT_CONFIG_ALEACION));
   const [cfgYeso, setCfgYeso] = useState<ConfigYeso>(clonar(DEFAULT_CONFIG_YESO));
   const [cfgTallas, setCfgTallas] = useState<ConfigTallasAnillo>(clonar(DEFAULT_CONFIG_TALLAS_ANILLO));
+  const [cfgPesoGemas, setCfgPesoGemas] = useState<ConfigPesoGemas>(clonar(DEFAULT_CONFIG_PESO_GEMAS));
 
   useEffect(() => {
     if (visualizador.data) setCfgVisualizador(leerConfigVisualizador(visualizador.data.valor));
@@ -123,6 +128,10 @@ export function ConfiguracionCalculadoras() {
   useEffect(() => {
     if (tallasAnillo.data) setCfgTallas(leerConfigTallasAnillo(tallasAnillo.data.valor));
   }, [tallasAnillo.data]);
+
+  useEffect(() => {
+    if (pesoGemas.data) setCfgPesoGemas(leerConfigPesoGemas(pesoGemas.data.valor));
+  }, [pesoGemas.data]);
 
   if (!esDueno) {
     return (
@@ -465,6 +474,21 @@ export function ConfiguracionCalculadoras() {
             </table>
           </div>
           <button type="button" onClick={agregarTalla} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:border-primary">+ Agregar fila</button>
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        id="peso-gemas"
+        titulo="Peso de Gemas"
+        descripcion="Piedras, gravedad específica, factores de forma y margen de estimación"
+        onGuardar={() => void guardarSeccion(CLAVES_CALCULADORAS.pesoGemas, cfgPesoGemas, "Peso de Gemas")}
+        onRestaurar={() => void restaurarSeccion(CLAVES_CALCULADORAS.pesoGemas, DEFAULT_CONFIG_PESO_GEMAS, setCfgPesoGemas, "Peso de Gemas")}
+      >
+        <div className="space-y-5 p-6">
+          <p className="text-xs text-muted-foreground">Metodología basada en la estimación de peso de gemas por dimensiones, gravedad específica y factor de forma; el perfil puede requerir una corrección adicional. citeturn0search11</p>
+          <div className="overflow-x-auto rounded-xl border border-border"><table className="w-full min-w-[520px] text-sm"><thead className="bg-surface-muted text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="px-3 py-3">Piedra</th><th className="px-3 py-3">SG</th></tr></thead><tbody className="divide-y divide-border">{cfgPesoGemas.piedras.map((p,i)=><tr key={i}><td className="px-3 py-2"><input className={inputCls} value={p.nombre} onChange={e=>setCfgPesoGemas(a=>({...a,piedras:a.piedras.map((x,j)=>j===i?{...x,nombre:e.target.value}:x)}))}/></td><td className="px-3 py-2"><input type="number" step="0.01" min="0" className={inputCls} value={p.sg} onChange={e=>setCfgPesoGemas(a=>({...a,piedras:a.piedras.map((x,j)=>j===i?{...x,sg:Number(e.target.value)||0}:x)}))}/></td></tr>)}</tbody></table></div>
+          <div className="grid gap-3 sm:grid-cols-3">{(Object.entries(cfgPesoGemas.factores) as [keyof ConfigPesoGemas["factores"],number][]).map(([id,factor])=><label key={id} className="space-y-1.5"><span className="text-xs font-medium">{id}</span><input type="number" step="0.00001" min="0" className={inputCls} value={factor} onChange={e=>setCfgPesoGemas(a=>({...a,factores:{...a.factores,[id]:Number(e.target.value)||0}}))}/></label>)}</div>
+          <label className="block max-w-xs space-y-1.5"><span className="text-xs font-medium">Margen de estimación</span><div className="flex items-center gap-2"><input type="number" min="0" max="50" step="1" className={inputCls} value={cfgPesoGemas.margenEstimacion} onChange={e=>setCfgPesoGemas(a=>({...a,margenEstimacion:Number(e.target.value)||0}))}/><span className="text-xs text-muted-foreground">%</span></div></label>
         </div>
       </AccordionSection>
 
