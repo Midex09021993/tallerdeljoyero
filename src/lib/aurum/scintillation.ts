@@ -129,7 +129,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     }
     if(phenomenonEnabled){
       shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
-      shader.uniforms.aurumPhenomenonMode={value:phenomenonType==="chatoyancy"?1:phenomenonType==="asterism"?2:phenomenonType==="adularescence"?3:phenomenonType==="aventurescence"?4:phenomenonType==="labradorescence"?5:phenomenonType==="schiller"?7:phenomenonType==="peristerescence"?8:phenomenonType==="iridescence"?9:10};
+      shader.uniforms.aurumPhenomenonMode={value:phenomenonType==="chatoyancy"?1:phenomenonType==="asterism"?2:phenomenonType==="adularescence"?3:phenomenonType==="aventurescence"?4:phenomenonType==="labradorescence"?5:phenomenonType==="schiller"?7:phenomenonType==="peristerescence"?8:phenomenonType==="iridescence"?9:phenomenonType==="opalescence"?11:phenomenonType==="overtone"?12:10};
     }
     if(pleochroismEnabled){
       shader.uniforms.aurumPleoBlue={value:pleoBlue};
@@ -234,7 +234,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           if(aurumPhenomenonMode>5.5 && aurumPhenomenonMode<6.5) aurumPhenBand=pow(max(aurumIri,0.0),1.35);
           if(aurumPhenomenonMode>6.5 && aurumPhenomenonMode<7.5) aurumPhenBand=pow(max(dot(aurumPhenR,aurumPhenV),0.0),4.0);
           if(aurumPhenomenonMode>7.5 && aurumPhenomenonMode<8.5) aurumPhenBand=pow(max(aurumIri,0.0),2.2);
-          if(aurumPhenomenonMode>8.5) aurumPhenBand=pow(max(aurumIri,0.0),1.15);
+          if(aurumPhenomenonMode>8.5 && aurumPhenomenonMode<10.5) aurumPhenBand=pow(max(aurumIri,0.0),1.15);
+          if(aurumPhenomenonMode>10.5 && aurumPhenomenonMode<11.5) aurumPhenBand=.32+.18*sin(dot(aurumPhenV,vec3(9.0,17.0,23.0))*4.0);
+          if(aurumPhenomenonMode>11.5) aurumPhenBand=.55+.45*aurumIri;
           float aurumPhenMask=smoothstep(.18,.82,aurumPhenBand)*aurumPhenomenonStrength;
           vec3 aurumPhenColor=vec3(1.0);
           if(aurumPhenomenonMode>2.5 && aurumPhenomenonMode<3.5) aurumPhenColor=vec3(.72,.82,1.0);
@@ -243,7 +245,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           if(aurumPhenomenonMode>5.5 && aurumPhenomenonMode<6.5) aurumPhenColor=mix(vec3(.15,.65,1.0),vec3(1.0,.18,.05),aurumIri);
           if(aurumPhenomenonMode>6.5 && aurumPhenomenonMode<7.5) aurumPhenColor=vec3(1.0,.68,.25);
           if(aurumPhenomenonMode>7.5 && aurumPhenomenonMode<8.5) aurumPhenColor=mix(vec3(.55,.75,1.0),vec3(1.0,.72,.82),aurumIri);
-          if(aurumPhenomenonMode>8.5) aurumPhenColor=mix(vec3(.2,.8,1.0),vec3(1.0,.22,.55),aurumIri);
+          if(aurumPhenomenonMode>8.5 && aurumPhenomenonMode<10.5) aurumPhenColor=mix(vec3(.2,.8,1.0),vec3(1.0,.22,.55),aurumIri);
+          if(aurumPhenomenonMode>10.5 && aurumPhenomenonMode<11.5) aurumPhenColor=vec3(.82,.88,.9);
+          if(aurumPhenomenonMode>11.5) aurumPhenColor=vec3(1.0,.72,.52);
           gl_FragColor.rgb+=gl_FragColor.rgb*aurumPhenColor*aurumPhenMask*.22;
         }
         #include <dithering_fragment>
