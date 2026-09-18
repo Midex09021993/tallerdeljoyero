@@ -39,6 +39,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       : .045*brilliance;
   const contrastStrength=.075*facetContrast;
   const colorChange:any=(profile as any).colorChange;
+  const oilDrop:any=(profile as any).oilDrop;
+  const oilDropEnabled=Boolean(oilDrop?.enabled);
   const colorChangeEnabled=Boolean(colorChange?.enabled);
   const pleochroism:any=(profile as any).pleochroism;
   const pleochroismEnabled=Boolean(pleochroism?.enabled);
@@ -90,6 +92,21 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
+    if(oilDropEnabled){
+      shader.uniforms.aurumOilDropStrength={value:Number(oilDrop.strength??.1)};
+    }
+    if(oilDropEnabled){
+      shader.fragmentShader=shader.fragmentShader.replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        // Gota de aceite is modeled as soft internal light diffusion tied to
+        // viewing direction, not as a painted texture or calcite particles.
+        float aurumOilAxis=pow(abs(normalize(vViewPosition).z),2.2);
+        float aurumOilSoft=smoothstep(.18,.82,aurumOilAxis)*aurumOilDropStrength;
+        diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*(1.0+aurumOilSoft*.16),aurumOilSoft);
+        `
+      );
+    }
     if(colorChangeEnabled){
       shader.uniforms.aurumColorChangeFluorescent={value:colorChange.fluorescent};
       shader.uniforms.aurumColorChangeIncandescent={value:colorChange.incandescent};
@@ -121,6 +138,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform vec3 aurumColorChangeFluorescent;
       uniform vec3 aurumColorChangeIncandescent;
       uniform float aurumColorChangeStrength;
+      uniform float aurumOilDropStrength;
       uniform vec3 aurumPleoBlue;
       uniform vec3 aurumPleoViolet;
       uniform vec3 aurumPleoThird;
