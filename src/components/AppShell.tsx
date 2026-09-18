@@ -165,7 +165,7 @@ export function AppShell({
                   </div>
                 </div>
               );
-            })()}
+            })}
           </nav>
 
           <div className="shrink-0 border-t border-ink-foreground/5 p-6">
