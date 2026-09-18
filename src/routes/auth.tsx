@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
-import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, Sparkles, UserRound, UsersRound } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
@@ -42,6 +42,7 @@ function LoginPage() {
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
+  const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo">("ecosistema");
   const modoAlta = Boolean(estado?.vacio);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ function LoginPage() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" onClick={() => setMostrarPlataforma(true)} className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
+              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
                 Conocer la plataforma <ArrowRight className="size-4" />
               </button>
               <SolicitudAcceso />
@@ -223,55 +224,89 @@ function LoginPage() {
       </div>
 
       {mostrarPlataforma ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="plataforma-title">
-          <div className="relative max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-gold/25 bg-[#101214] shadow-2xl">
-            <button type="button" onClick={() => setMostrarPlataforma(false)} aria-label="Cerrar"
-              className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/30 p-2 text-white/60 hover:text-gold">
-              <EyeOff className="size-4" />
-            </button>
-            <div className="max-h-[90vh] overflow-y-auto p-5 sm:p-8">
-              <div className="max-w-3xl">
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gold">Aurum Lab · Ecosistema profesional</p>
-                <h2 id="plataforma-title" className="mt-2 font-display text-3xl italic text-white sm:text-4xl">Mucho más que herramientas</h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/60">
-                  Una plataforma pensada para conectar la gestión del taller, la producción, las herramientas técnicas, los colaboradores y el desarrollo profesional en un mismo ecosistema.
-                </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-3 sm:p-5 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="plataforma-title">
+          <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-gold/25 bg-[#101214] shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4 sm:px-7">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-gold">Aurum Lab · Ecosistema profesional</p>
+                <h2 id="plataforma-title" className="mt-1 font-display text-2xl italic text-white sm:text-3xl">Conoce cómo funciona</h2>
               </div>
+              <button type="button" onClick={() => setMostrarPlataforma(false)} aria-label="Cerrar" className="rounded-full border border-white/10 p-2 text-white/60 hover:text-gold"><EyeOff className="size-4" /></button>
+            </div>
 
-              <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { icon: Boxes, title: "Gestión del taller", text: "Clientes, proyectos, cotizaciones, pedidos, trabajos, inventario, pagos y entregas." },
-                  { icon: Sparkles, title: "AURUM Studio", text: "Visualización 3D, materiales, piedras, escenas y renders orientados a joyería." },
-                  { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras y conversores para apoyar decisiones de diseño, fabricación y producción." },
-                  { icon: PackageCheck, title: "Producción y trazabilidad", text: "Seguimiento de trabajos por área, ubicación, responsable, estado e historial." },
-                  { icon: Network, title: "Red profesional", text: "Conexión con profesionales, proveedores y servicios especializados del sector." },
-                  { icon: UsersRound, title: "Talento y prácticas", text: "Espacio futuro para oportunidades de prácticas, aprendices y colaboración profesional." },
-                  { icon: Headphones, title: "Formación", text: "Instituciones, cursos, capacitaciones y programas especializados para el sector joyero." },
-                  { icon: ShieldCheck, title: "Acceso seguro", text: "Cada perfil accede únicamente a las funciones y datos que le corresponden." },
-                  { icon: Gem, title: "Historial de cada joya", text: "Un proyecto puede reunir diseño, especificaciones, producción, archivos, fotos y documentación." },
-                ].map(({ icon: Icon, title, text }) => (
-                  <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35 hover:bg-white/[0.045]">
-                    <Icon className="size-6 text-gold" />
-                    <h3 className="mt-3 text-sm font-semibold text-white">{title}</h3>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p>
-                  </article>
-                ))}
-              </div>
+            <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 px-4 pt-3 sm:px-7">
+              {[
+                ["ecosistema","El ecosistema",Gem],
+                ["participantes","Quién puede participar",UsersRound],
+                ["flujo","Cómo se conecta",Grid2X2],
+              ].map(([id,label,Icon]) => (
+                <button key={String(id)} type="button" onClick={() => setSeccionPlataforma(id as typeof seccionPlataforma)}
+                  className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider transition ${seccionPlataforma===id ? "bg-gold/10 text-gold" : "text-white/45 hover:text-white"}`}>
+                  <Icon className="size-3.5" /> {String(label)}
+                </button>
+              ))}
+            </div>
 
-              <div className="mt-6 rounded-2xl border border-gold/20 bg-gold/[0.06] p-4">
-                <div className="flex items-start gap-3">
-                  <Grid2X2 className="mt-0.5 size-5 shrink-0 text-gold" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">Cómo se conecta todo</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-white/55">
-                      Cliente → Proyecto Joya → Cotización → Pedido → Producción → Inventario → Entrega. AURUM, las herramientas técnicas y la red profesional se conectan al flujo cuando corresponde.
-                    </p>
+            <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
+              {seccionPlataforma === "ecosistema" ? (
+                <>
+                  <div className="max-w-3xl">
+                    <p className="text-sm leading-relaxed text-white/60">Una plataforma especializada que conecta la gestión del taller, la producción, las herramientas técnicas, AURUM y una red profesional en un mismo entorno.</p>
                   </div>
-                </div>
-              </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {[
+                      { icon: Boxes, title: "Gestión del taller", text: "Clientes, proyectos, cotizaciones, pedidos, trabajos, inventario, pagos y entregas." },
+                      { icon: Sparkles, title: "AURUM Studio", text: "Diseño y visualización 3D, materiales, piedras, escenas y renders para joyería." },
+                      { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras y conversores para apoyar diseño, fabricación y producción." },
+                      { icon: PackageCheck, title: "Producción y trazabilidad", text: "Seguimiento por área, ubicación, responsable, estado e historial." },
+                      { icon: Network, title: "Red profesional", text: "Profesionales, proveedores, vendedores y servicios especializados." },
+                      { icon: ShieldCheck, title: "Acceso por perfil", text: "Cada participante verá las funciones y datos que correspondan a su relación con la plataforma." },
+                    ].map(({icon:Icon,title,text}) => <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 hover:border-gold/35"><Icon className="size-6 text-gold"/><h3 className="mt-3 text-sm font-semibold text-white">{title}</h3><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p></article>)}
+                  </div>
+                </>
+              ) : null}
 
-              <div className="mt-6 flex flex-wrap justify-end gap-3">
-                <button type="button" onClick={() => setMostrarPlataforma(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/70 hover:border-gold/40 hover:text-white">Cerrar</button>
+              {seccionPlataforma === "participantes" ? (
+                <>
+                  <p className="max-w-3xl text-sm leading-relaxed text-white/60">El ecosistema está pensado para distintas formas de participación, sin convertir cada actividad en un rol administrativo del taller.</p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {[
+                      {icon:Boxes,title:"Taller / Joyería",text:"Gestiona proyectos, producción y relaciones comerciales."},
+                      {icon:UserRound,title:"Profesional independiente",text:"Diseño, modelado 3D, gemología, fotografía y otras especialidades."},
+                      {icon:ShoppingBag,title:"Vendedor / Comercializador",text:"Tiendas, vendedores y representantes comerciales del sector joyero."},
+                      {icon:PackageCheck,title:"Proveedor del sector joyero",text:"Materiales, piedras, insumos, herramientas y productos."},
+                      {icon:Network,title:"Servicio especializado",text:"Casting, engaste, grabado, pulido, láser y otros procesos."},
+                      {icon:UsersRound,title:"Talento / Prácticas",text:"Futuro espacio para aprendices, practicantes y oportunidades profesionales."},
+                      {icon:Headphones,title:"Institución educativa",text:"Futuro espacio para cursos, capacitación y programas especializados."},
+                    ].map(({icon:Icon,title,text}) => <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 hover:border-gold/35"><Icon className="size-6 text-gold"/><h3 className="mt-3 text-sm font-semibold text-white">{title}</h3><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p></article>)}
+                  </div>
+                </>
+              ) : null}
+
+              {seccionPlataforma === "flujo" ? (
+                <>
+                  <div className="rounded-2xl border border-gold/20 bg-gold/[0.06] p-5">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Flujo principal</p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {["Cliente","Proyecto Joya","Cotización","Pedido","Producción","Inventario","Entrega"].map((item,i)=><span key={item} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white">{item}{i<6?<ArrowRight className="size-3 text-gold"/>:null}</span>)}
+                    </div>
+                    <p className="mt-5 text-xs leading-relaxed text-white/55">AURUM, las herramientas técnicas y la red profesional se conectan al flujo cuando aportan información o servicios al proyecto.</p>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {[
+                      {title:"Diseñar",text:"Definir la pieza, sus especificaciones y visualización."},
+                      {title:"Producir",text:"Coordinar trabajos, responsables, ubicaciones y seguimiento."},
+                      {title:"Entregar",text:"Gestionar inventario, preparación, entrega e historial."},
+                    ].map((x)=><article key={x.title} className="rounded-2xl border border-white/10 p-4"><p className="text-sm font-semibold text-gold">{x.title}</p><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{x.text}</p></article>)}
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-4 sm:px-7">
+              <p className="text-[10px] text-white/35">Aurum Lab · Plataforma especializada para el sector joyero</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setMostrarPlataforma(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/65 hover:border-gold/40 hover:text-white">Cerrar</button>
                 <SolicitudAcceso />
               </div>
             </div>
