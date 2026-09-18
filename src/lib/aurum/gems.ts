@@ -118,6 +118,34 @@ const addTourmalineInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
+const addParaibaInclusions=(THREE:any,target:any,config:any,size:any)=>{
+  let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
+  const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
+  const count=Math.max(4,Math.round(5+strength*12));
+  // GIA documents growth tubes, fluid inclusions and native copper in
+  // copper-bearing Paraiba tourmaline. The metallic inclusions are aligned
+  // so they can produce a restrained directional reflection rather than noise.
+  for(let i=0;i<count;i++){
+    const tube=new THREE.Mesh(new THREE.CylinderGeometry(scale*.002,scale*.003,scale*(.18+rnd()*.34),5),new THREE.MeshPhysicalMaterial({color:0x82928c,roughness:.25,transmission:.10,transparent:true,opacity:.08+strength*.07,depthWrite:false,envMapIntensity:.45}));
+    tube.position.set((rnd()-.5)*size.x*.44,(rnd()-.5)*size.y*.44,(rnd()-.5)*size.z*.44);
+    tube.rotation.set((rnd()-.5)*.18,rnd()*Math.PI*2,(rnd()-.5)*.18);
+    tube.userData={aurumInternalInclusion:true,aurumInclusionType:"paraiba-growth-tube"}; target.add(tube);
+    if(rnd()<.42){
+      const r=scale*(.003+rnd()*.006);
+      const copper=new THREE.Mesh(new THREE.CylinderGeometry(r*.18,r*.65,r*(.16+rnd()*.5),6),new THREE.MeshPhysicalMaterial({color:0xb8793b,metalness:.92,roughness:.16,envMapIntensity:1.25,transparent:true,opacity:.42+strength*.18,depthWrite:false}));
+      copper.position.copy(tube.position); copper.rotation.copy(tube.rotation); copper.rotation.z+=.12;
+      copper.userData={aurumInternalInclusion:true,aurumInclusionType:"paraiba-native-copper"}; target.add(copper);
+    }
+  }
+  const fluidCount=Math.max(1,Math.round(1+strength*3));
+  for(let i=0;i<fluidCount;i++){
+    const r=scale*(.006+rnd()*.009);
+    const fluid=new THREE.Mesh(new THREE.SphereGeometry(r,9,6),new THREE.MeshPhysicalMaterial({color:0x9de3df,roughness:.06,transmission:.5,transparent:true,opacity:.07+strength*.06,depthWrite:false,envMapIntensity:.5}));
+    fluid.position.set((rnd()-.5)*size.x*.45,(rnd()-.5)*size.y*.45,(rnd()-.5)*size.z*.45);
+    fluid.userData={aurumInternalInclusion:true,aurumInclusionType:"paraiba-fluid-network"}; target.add(fluid);
+  }
+};
+
 const addMorganiteInclusions=(THREE:any,target:any,config:any,size:any)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
@@ -165,7 +193,8 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
     return;
   }
   if(preset.familia==="Turmalina"){
-    addTourmalineInclusions(THREE,target,config,size);
+    if(String(g.id).includes("paraiba")) addParaibaInclusions(THREE,target,config,size);
+    else addTourmalineInclusions(THREE,target,config,size);
     return;
   }
   if(preset.familia==="Morganita"){
