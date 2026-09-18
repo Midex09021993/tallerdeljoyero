@@ -118,6 +118,22 @@ const addTourmalineInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
+const addAlexandriteInclusions=(THREE:any,target:any,config:any,size:any)=>{
+  let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
+  const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
+  const count=Math.max(8,Math.round(8+strength*18));
+  // Natural alexandrite/cat's-eye chrysoberyl commonly contains parallel
+  // rutile needles; when sufficiently dense and correctly oriented they can
+  // produce chatoyancy. Keep the inclusions sub-resolution and restrained for
+  // faceted stones, while preserving the physical origin of the phenomenon.
+  for(let i=0;i<count;i++){
+    const needle=new THREE.Mesh(new THREE.CylinderGeometry(scale*.0012,scale*.0018,scale*(.18+rnd()*.34),5),new THREE.MeshPhysicalMaterial({color:0x8b8071,roughness:.24,transmission:.08,transparent:true,opacity:.055+strength*.055,depthWrite:false,envMapIntensity:.38}));
+    needle.position.set((rnd()-.5)*size.x*.48,(rnd()-.5)*size.y*.48,(rnd()-.5)*size.z*.48);
+    needle.rotation.set((rnd()-.5)*.12,.08+(rnd()-.5)*.12,rnd()*Math.PI);
+    needle.userData={aurumInternalInclusion:true,aurumInclusionType:"alexandrite-rutile-needle"}; target.add(needle);
+  }
+};
+
 const addParaibaInclusions=(THREE:any,target:any,config:any,size:any)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
@@ -199,6 +215,10 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   }
   if(preset.familia==="Morganita"){
     addMorganiteInclusions(THREE,target,config,size);
+    return;
+  }
+  if(String(g.id)==="alexandrita_brasil"){
+    addAlexandriteInclusions(THREE,target,config,size);
     return;
   }
 
