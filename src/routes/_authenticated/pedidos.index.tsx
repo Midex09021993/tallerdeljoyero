@@ -263,7 +263,8 @@ function PedidosPage() {
         // Los pedidos entregados salen del flujo activo: solo aparecen al buscarlos
         // o al filtrar expresamente por ese estado (el archivo está en Gestión).
         const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
-        const okAutorizacion = !soloPendientesAutorizacion || pedidoPendienteAutorizacionProduccion(p);\n        return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
+        const okAutorizacion = !soloPendientesAutorizacion || pedidoPendienteAutorizacionProduccion(p);
+        return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
       }),
     [pedidosPorSede, filtroArea, filtroEstado, filtroEntrega, busca, soloSusAreas, misAreas, soloPendientesAutorizacion],
   );
