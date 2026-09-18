@@ -212,7 +212,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         float aurumContrast=mix(1.0,0.992,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
-        if(AURUM_PHENOMENON_ENABLED){
+        if(aurumPhenomenonStrength>0.0){
           vec3 aurumPhenN=normalize(normal);
           vec3 aurumPhenV=normalize(-vViewPosition);
           vec3 aurumPhenR=normalize(reflect(-aurumPhenV,aurumPhenN));
@@ -222,7 +222,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           float aurumBandA=pow(max(abs(dot(aurumPhenR,aurumAxisA)),0.0),42.0);
           float aurumBandB=pow(max(abs(dot(aurumPhenR,aurumAxisB)),0.0),42.0);
           float aurumBandC=pow(max(abs(dot(aurumPhenR,aurumAxisC)),0.0),42.0);
-          float aurumPhenBand=AURUM_PHENOMENON_BAND;
+          float aurumPhenBand=(aurumBandA+aurumBandB+aurumBandC)*0.72;
           float aurumPhenMask=smoothstep(.18,.82,aurumPhenBand)*aurumPhenomenonStrength;
           gl_FragColor.rgb+=gl_FragColor.rgb*aurumPhenMask*.22;
         }
