@@ -54,37 +54,46 @@ alter table public.participante_especialidades enable row level security;
 alter table public.participante_cuentas enable row level security;
 
 drop policy if exists "owner_manage_ecosistema_participantes" on public.ecosistema_participantes;
-create policy "owner_manage_ecosistema_participantes" on public.ecosistema_participantes for all to authenticated
-using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
-with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+drop policy if exists "account_read_own_participant_profile" on public.ecosistema_participantes;
+drop policy if exists "owner_write_ecosistema_participantes" on public.ecosistema_participantes;
+drop policy if exists "owner_update_ecosistema_participantes" on public.ecosistema_participantes;
+drop policy if exists "owner_delete_ecosistema_participantes" on public.ecosistema_participantes;
+drop policy if exists "read_ecosistema_participantes" on public.ecosistema_participantes;
+create policy "owner_write_ecosistema_participantes" on public.ecosistema_participantes for insert to authenticated with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_update_ecosistema_participantes" on public.ecosistema_participantes for update to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role))) with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_delete_ecosistema_participantes" on public.ecosistema_participantes for delete to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "read_ecosistema_participantes" on public.ecosistema_participantes for select to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)) or exists (select 1 from public.participante_cuentas pc where pc.participante_id = ecosistema_participantes.id and pc.user_id = (select auth.uid()) and pc.estado='activo'));
 
 drop policy if exists "owner_manage_especialidades" on public.especialidades;
-create policy "owner_manage_especialidades" on public.especialidades for all to authenticated
-using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
-with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+drop policy if exists "owner_write_especialidades" on public.especialidades;
+drop policy if exists "owner_update_especialidades" on public.especialidades;
+drop policy if exists "owner_delete_especialidades" on public.especialidades;
+drop policy if exists "owner_read_especialidades" on public.especialidades;
+create policy "owner_write_especialidades" on public.especialidades for insert to authenticated with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_update_especialidades" on public.especialidades for update to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role))) with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_delete_especialidades" on public.especialidades for delete to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_read_especialidades" on public.especialidades for select to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
 
 drop policy if exists "owner_manage_participante_especialidades" on public.participante_especialidades;
-create policy "owner_manage_participante_especialidades" on public.participante_especialidades for all to authenticated
-using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
-with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+drop policy if exists "owner_write_participante_especialidades" on public.participante_especialidades;
+drop policy if exists "owner_update_participante_especialidades" on public.participante_especialidades;
+drop policy if exists "owner_delete_participante_especialidades" on public.participante_especialidades;
+drop policy if exists "owner_read_participante_especialidades" on public.participante_especialidades;
+create policy "owner_write_participante_especialidades" on public.participante_especialidades for insert to authenticated with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_update_participante_especialidades" on public.participante_especialidades for update to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role))) with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_delete_participante_especialidades" on public.participante_especialidades for delete to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_read_participante_especialidades" on public.participante_especialidades for select to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
 
 drop policy if exists "owner_manage_participante_cuentas" on public.participante_cuentas;
-create policy "owner_manage_participante_cuentas" on public.participante_cuentas for all to authenticated
-using ((select public.has_role((select auth.uid()), 'dueno'::app_role)))
-with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
-
 drop policy if exists "account_read_own_participant" on public.participante_cuentas;
-create policy "account_read_own_participant" on public.participante_cuentas for select to authenticated
-using ((select auth.uid()) = user_id);
-
-drop policy if exists "account_read_own_participant_profile" on public.ecosistema_participantes;
-create policy "account_read_own_participant_profile" on public.ecosistema_participantes for select to authenticated
-using (exists (
-  select 1 from public.participante_cuentas pc
-  where pc.participante_id = ecosistema_participantes.id
-    and pc.user_id = (select auth.uid())
-    and pc.estado = 'activo'
-));
+drop policy if exists "read_participante_cuentas" on public.participante_cuentas;
+drop policy if exists "owner_write_participante_cuentas" on public.participante_cuentas;
+drop policy if exists "owner_update_participante_cuentas" on public.participante_cuentas;
+drop policy if exists "owner_delete_participante_cuentas" on public.participante_cuentas;
+create policy "owner_write_participante_cuentas" on public.participante_cuentas for insert to authenticated with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_update_participante_cuentas" on public.participante_cuentas for update to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role))) with check ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "owner_delete_participante_cuentas" on public.participante_cuentas for delete to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)));
+create policy "read_participante_cuentas" on public.participante_cuentas for select to authenticated using ((select public.has_role((select auth.uid()), 'dueno'::app_role)) or ((select auth.uid())=user_id));
 
 create or replace function public.touch_ecosistema_participantes()
 returns trigger language plpgsql set search_path = public
