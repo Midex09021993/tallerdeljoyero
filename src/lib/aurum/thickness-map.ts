@@ -41,6 +41,10 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=128):Thick
   const uv=geometry?.getAttribute?.("uv");
   if(!geometry||!position||!normal||!uv||normal.count!==position.count||uv.count!==position.count)return null;
   if(position.count<3)return null;
+  for(let i=0;i<uv.count;i++){
+    const u=uv.getX(i),v=uv.getY(i);
+    if(!Number.isFinite(u)||!Number.isFinite(v)||u<-0.001||u>1.001||v<-0.001||v>1.001)return null;
+  }
 
   const vertexCount=position.count;
   const positions:Array<THREE.Vector3>=Array.from({length:vertexCount},(_,i)=>new THREE.Vector3().fromBufferAttribute(position,i));
