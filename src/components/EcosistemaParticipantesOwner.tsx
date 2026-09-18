@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { VincularCuentaParticipante } from "@/components/VincularCuentaParticipante";
 
-type Tipo = "organizacion"|"profesional"|"proveedor"|"servicio"|"talento"|"institucion_educativa";
+type Tipo = "organizacion"|"profesional"|"vendedor"|"proveedor"|"servicio"|"talento"|"institucion_educativa";
 type Estado = "activo"|"pausado"|"inactivo";
 type Participante={id:string;tipo_participante:Tipo;nombre:string;razon_social:string|null;email:string|null;telefono:string|null;ciudad:string|null;descripcion:string|null;estado:Estado;notas_owner:string|null};
-const tipos:Record<Tipo,string>={organizacion:"Organización",profesional:"Profesional",proveedor:"Proveedor",servicio:"Servicio especializado",talento:"Talento / Prácticas",institucion_educativa:"Institución educativa"};
+const tipos:Record<Tipo,string>={organizacion:"Organización",profesional:"Profesional",vendedor:"Vendedor / Comercializador",proveedor:"Proveedor",servicio:"Servicio especializado",talento:"Talento / Prácticas",institucion_educativa:"Institución educativa"};
 const empty={tipo_participante:"profesional" as Tipo,nombre:"",razon_social:"",email:"",telefono:"",ciudad:"",descripcion:"",estado:"activo" as Estado,notas_owner:""};
 
 export function EcosistemaParticipantesOwner(){
