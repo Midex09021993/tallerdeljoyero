@@ -93,7 +93,7 @@ export const GEMAS: GemaConfig[] = [
 ];
 
 export const MATERIALES: MaterialConfig[] = [
-  { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd7ad48, metalness: 1, roughness: .12, envMapIntensity: 1.9, clearcoat: .45, anisotropy: .05 },
+  { id: "oro18a_pulido", grupo: "Oro Amarillo", nombre: "Pulido", color: 0xd8ad4c, metalness: 1, roughness: .10, envMapIntensity: 1.82, clearcoat: .18, anisotropy: .04 },
   { id: "oro18a_satinado", grupo: "Oro Amarillo", nombre: "Satinado", color: 0xd2aa55, metalness: 1, roughness: .28, envMapIntensity: 1.65, clearcoat: .20, anisotropy: .2 },
   { id: "oro18a_mate", grupo: "Oro Amarillo", nombre: "Mate", color: 0xc7a45a, metalness: 1, roughness: .52, envMapIntensity: 1.35, clearcoat: .06, anisotropy: .35 },
   { id: "oro18a_cepillado", grupo: "Oro Amarillo", nombre: "Cepillado", color: 0xcfa94e, metalness: 1, roughness: .38, envMapIntensity: 1.55, clearcoat: .10, anisotropy: .72, anisotropyRotation: .18 },
