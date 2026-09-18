@@ -5,6 +5,7 @@ import { MobileBackButton } from "@/components/AppShell";
 import { Gem } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
+import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -83,6 +84,7 @@ function HerramientasPage() {
             <CalculadoraAleacionOro />
             <VisorPesoJoyeria />
             <ConversorTallasAnillo />
+            <CalculadoraPesoGemas />
           </div>
         </section>
 
@@ -98,8 +100,8 @@ function HerramientasPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <ProximamenteCard
-              titulo="Calculadora de Peso"
-              descripcion="Cálculo técnico de peso para piezas de joyería."
+              titulo="Calculadora de Volumen"
+              descripcion="Cálculo de volumen para piezas y componentes de joyería."
             />
             <ProximamenteCard
               titulo="Conversor de Medidas"
