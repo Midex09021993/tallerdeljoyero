@@ -20,9 +20,9 @@ const HERRAMIENTAS: Herramienta[] = [
   { id: "oro", nombre: "Calculadora de Aleación de Oro", icono: Gem, disponible: true },
   { id: "peso3d", nombre: "Visualizador y Peso 3D", icono: Boxes, disponible: true },
   { id: "tallas", nombre: "Conversor de Tallas de Anillo", icono: Ruler, disponible: true },
+  { id: "peso", nombre: "Peso de Gemas", icono: Scale, disponible: true },
   { id: "horno", nombre: "Programador de Rampas de Horno", icono: Wrench, disponible: false },
   { id: "volumen", nombre: "Calculadora de Volumen", icono: Calculator, disponible: false },
-  { id: "peso", nombre: "Peso de Gemas", icono: Scale, disponible: true },
   { id: "medidas", nombre: "Conversor de Medidas", icono: Ruler, disponible: false },
 ];
 
