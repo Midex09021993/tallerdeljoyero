@@ -46,6 +46,9 @@ export type AurumGemPhysicalModel = {
     phenomenon?:AurumGemPhenomenon;
     phenomenonScaleNm:number;
     dimensionality:0|1|2|3;
+    fieldSeed:number;
+    fieldScale:number;
+    spectralAbsorption:number[];
   };
   luminescence:{
     fluorescenceStrength:number;
@@ -123,6 +126,13 @@ export const resolveAurumGemPhysicalModel=(g:any):AurumGemPhysicalModel=>{
       phenomenon,
       phenomenonScaleNm:Number(g?.phenomenonScaleNm??170),
       dimensionality,
+      fieldSeed:(Number(g?.id?.length??7)*2654435761)>>>0,
+      fieldScale:Math.max(.05,Math.min(1.0,Number(g?.inclusionStrength??0)+.18)),
+      // Compact 12-band absorption scaffold (400–730 nm). Catalog RGB values
+      // remain the visual baseline until measured spectra are supplied.
+      spectralAbsorption:Array.from({length:12},(_,i)=>Math.max(0,Math.min(1,
+        (1-Number(g?.transmission??.85))*(.65+.35*Math.sin((i+1)*.71+(Number(g?.color??0)%97)))
+      ))),
     },
     luminescence:{
       fluorescenceStrength,
