@@ -5,7 +5,6 @@ import { MobileBackButton } from "@/components/AppShell";
 import { Gem } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
-import { ProgramadorHornoCasting } from "@/components/ProgramadorHornoCasting";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -84,7 +83,6 @@ function HerramientasPage() {
             <CalculadoraAleacionOro />
             <VisorPesoJoyeria />
             <ConversorTallasAnillo />
-            <ProgramadorHornoCasting />
           </div>
         </section>
 
