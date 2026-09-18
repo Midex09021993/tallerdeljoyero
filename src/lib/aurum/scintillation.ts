@@ -129,6 +129,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     }
     if(phenomenonEnabled){
       shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
+      shader.uniforms.aurumPhenomenonMode={value:phenomenonType==="chatoyancy"?1:2};
     }
     if(pleochroismEnabled){
       shader.uniforms.aurumPleoBlue={value:pleoBlue};
@@ -152,6 +153,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumPleoStrength;
       uniform float aurumPleoThirdStrength;
       uniform float aurumPhenomenonStrength;
+      uniform float aurumPhenomenonMode;
     `+shader.fragmentShader;
     if(pleochroismEnabled){
       shader.vertexShader=`
@@ -222,7 +224,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           float aurumBandA=pow(max(abs(dot(aurumPhenR,aurumAxisA)),0.0),42.0);
           float aurumBandB=pow(max(abs(dot(aurumPhenR,aurumAxisB)),0.0),42.0);
           float aurumBandC=pow(max(abs(dot(aurumPhenR,aurumAxisC)),0.0),42.0);
-          float aurumPhenBand=(aurumBandA+aurumBandB+aurumBandC)*0.72;
+          float aurumPhenBand=aurumPhenomenonMode<1.5 ? aurumBandA : (aurumBandA+aurumBandB+aurumBandC)*0.72;
           float aurumPhenMask=smoothstep(.18,.82,aurumPhenBand)*aurumPhenomenonStrength;
           gl_FragColor.rgb+=gl_FragColor.rgb*aurumPhenMask*.22;
         }
