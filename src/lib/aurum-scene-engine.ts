@@ -64,7 +64,7 @@ export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality
   // existing fast path and use a measured middle ground for production tiers.
   low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
   high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.55},
-  ultra:{pixelRatio:1.4,shadows:true,shadowMapSize:1536,transmissionScale:.68},
+  ultra:{pixelRatio:1.6,shadows:true,shadowMapSize:1536,transmissionScale:.68},
 };
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
 
