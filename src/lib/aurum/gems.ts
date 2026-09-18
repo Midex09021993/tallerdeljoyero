@@ -156,6 +156,19 @@ const addChrysoberylPhenomenalInclusions=(THREE:any,target:any,config:any,size:a
   }
 };
 
+const addPhenomenalNeedles=(THREE:any,target:any,config:any,size:any,phenomenon:"chatoyancy"|"asterism",host:string)=>{
+  let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+  const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
+  const count=Math.max(14,Math.round(14+strength*30));
+  const addSet=(angle:number,spread:number)=>{for(let i=0;i<count;i++){
+    const n=new THREE.Mesh(new THREE.CylinderGeometry(scale*.0008,scale*.0014,scale*(.18+rnd()*.34),5),new THREE.MeshPhysicalMaterial({color:host==="esmeralda"?0x8ba58f:0x887b69,roughness:.22,transmission:.06,transparent:true,opacity:.04+strength*.05,depthWrite:false,envMapIntensity:.38}));
+    n.position.set((rnd()-.5)*size.x*.48,(rnd()-.5)*size.y*.48,(rnd()-.5)*size.z*.48); n.rotation.set((rnd()-.5)*spread,angle+(rnd()-.5)*spread,(rnd()-.5)*spread);
+    n.userData={aurumInternalInclusion:true,aurumInclusionType:host+"-"+phenomenon+"-oriented-inclusion"}; target.add(n);
+  }};
+  if(phenomenon==="chatoyancy") addSet(0,.06);
+  else { addSet(0,.05); addSet(Math.PI/3,.05); addSet(2*Math.PI/3,.05); }
+};
+
 const addParaibaInclusions=(THREE:any,target:any,config:any,size:any)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
@@ -245,6 +258,10 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   }
   if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && (g as any).fenomenoOptico){
     addChrysoberylPhenomenalInclusions(THREE,target,config,size,(g as any).fenomenoOptico);
+    return;
+  }
+  if((g as any).fenomenoOptico){
+    addPhenomenalNeedles(THREE,target,config,size,(g as any).fenomenoOptico,String(g.familia??"gem"));
     return;
   }
 
