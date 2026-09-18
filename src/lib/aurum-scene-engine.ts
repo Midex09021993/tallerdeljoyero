@@ -58,9 +58,13 @@ export const getAurumScenePreset=(id:string)=>{
 export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:number;transmissionScale:number};
 export type AurumRenderQualityId="low"|"high"|"ultra";
 export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality>={
+  // Transmission is one of the most expensive paths for jewelry glass/gems.
+  // Profiling showed the same ~1.1M scene triangles at 0.82 transmission scale
+  // running around 11 FPS, while 0.40 reached around 22 FPS. Keep Low at the
+  // existing fast path and use a measured middle ground for production tiers.
   low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
-  high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.82},
-  ultra:{pixelRatio:1.6,shadows:true,shadowMapSize:1536,transmissionScale:.82},
+  high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.55},
+  ultra:{pixelRatio:1.6,shadows:true,shadowMapSize:1536,transmissionScale:.68},
 };
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
 
