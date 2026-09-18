@@ -17,19 +17,18 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
   const absorption=Math.max(.05,Number(profile.absorptionDistance??10));
   const reflection=Math.max(0,Math.min(1,Number(profile.internalReflection??.8)));
 
-  // Family differences are kept restrained. Colored stones need stronger
-  // volumetric depth than near-clear diamond/moissanite, without changing
-  // their authored IOR, transmission or dispersion.
-  const familyScale=family==="Esmeralda" ? .86
-    : family==="Rubí" ? .90
-    : family==="Zafiro" ? .92
-    : family==="Diamante" || family==="Moissanita" ? 1.02
-    : .96;
+  // Increase only the family separation of volumetric absorption.
+  // The authored IOR, transmission, dispersion, thickness map and lighting
+  // remain untouched. Lower values produce a shorter effective attenuation
+  // distance and therefore a visibly deeper body color.
+  const familyScale=family==="Esmeralda" ? .58
+    : family==="Rubí" ? .68
+    : family==="Zafiro" ? .74
+    : family==="Diamante" || family==="Moissanita" ? 1.04
+    : .86;
 
   // Normalized depth response. This approaches 0 for very thin stones and
   // increases smoothly with thickness instead of using a fixed linear lift.
-  // It is only used to modulate attenuation distance; the material's optical
-  // constants remain unchanged.
   const depthResponse=1-Math.exp(-t/absorption);
   const depthFactor=Math.max(.76,Math.min(1.04,1-depthResponse*.30));
 
@@ -49,7 +48,7 @@ export const applyAurumInternalLightResponse=(material:any,profile:AurumOpticalP
       depthFactor,
       effectiveAttenuationDistance:correctedDistance,
       internalReflection:reflection,
-      version:"v2-beer-depth",
+      version:"v3-family-absorption",
     },
   };
   material.needsUpdate=true;
