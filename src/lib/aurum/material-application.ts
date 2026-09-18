@@ -180,6 +180,11 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ? part.material.map((base:any)=>apply(base,part,thickness,null))
       : apply(part.material,part,thickness,null);
     part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemThicknessMapDiagnostics:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
+    console.warn("[AURUM][GEM MATERIAL APPLIED]", {
+      mesh:part.name||part.uuid,
+      selectedGem:{id:String(gemConfig?.id??""),nombre:String(gemConfig?.nombre??""),familia:String(gemConfig?.familia??""),color:String(gemConfig?.color??"")},
+      material:Array.isArray(part.material)?part.material.map((m:any)=>({color:m?.color?.getHexString?.(),metalness:m?.metalness,transmission:m?.transmission,ior:m?.ior,thickness:m?.thickness})):part.material?{color:part.material.color?.getHexString?.(),metalness:part.material.metalness,transmission:part.material.transmission,ior:part.material.ior,thickness:part.material.thickness}:null
+    });
     console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
