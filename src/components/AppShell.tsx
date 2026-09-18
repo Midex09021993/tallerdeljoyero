@@ -12,6 +12,7 @@ import {
   UserRound,
   ChevronDown,
   Gem,
+  Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
@@ -35,24 +36,26 @@ type Seccion = {
   area?: string;
   roles?: Rol[];
   icono?: typeof LayoutGrid;
+  grupo?: "principal" | "produccion" | "herramientas" | "administracion";
 };
 
 type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
-  { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard },
-  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList },
-  { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid },
-  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem },
-  { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes },
-  { to: "/casting", label: "Casting", area: "Casting", icono: Landmark },
-  { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors },
-  { to: "/taller", label: "Taller", area: "Taller", icono: Hammer },
-  { to: "/ventas", label: "Área ventas", area: "Área ventas", icono: PackageCheck },
-  { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge },
-  { to: "/monitor", label: "Monitor de taller", roles: ["monitor"] },
-  { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard },
-  { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound },
+  { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
+  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "principal" },
+  { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
+  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem, grupo: "herramientas" },
+  { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes, grupo: "produccion" },
+  { to: "/casting", label: "Casting", area: "Casting", icono: Landmark, grupo: "produccion" },
+  { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
+  { to: "/taller", label: "Taller", area: "Taller", icono: Hammer, grupo: "produccion" },
+  { to: "/ventas", label: "Área ventas", area: "Área ventas", icono: PackageCheck, grupo: "principal" },
+  { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "produccion" },
+  { to: "/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
+  { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
+  { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
+  { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
 
 export const modulosAdminMovil = secciones.filter(
@@ -135,35 +138,33 @@ export function AppShell({
           </div>
 
           <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
-            {(() => {
-              const produccion = visiblesOrdenadas.filter((s) => RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
-              const resto = visiblesOrdenadas.filter((s) => !RUTAS_PRODUCCION.includes(s.to as (typeof RUTAS_PRODUCCION)[number]));
-              return <>
-                {resto.map((s) => (
-                  <Link
-                    key={s.to}
-                    to={s.to}
-                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 transition-colors hover:text-ink-foreground"
-                    activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}
-                  >
-                    {s.label}
-                  </Link>
-                ))}
-                {produccion.length > 0 && (
-                  <details className="pt-2">
-                    <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-ink-foreground/60 hover:text-ink-foreground">
-                      <span>Producción</span><ChevronDown className="size-4" aria-hidden="true" />
-                    </summary>
-                    <div className="ml-3 space-y-1 border-l border-ink-foreground/10 pl-2">
-                      {produccion.map((s) => (
-                        <Link key={s.to} to={s.to} className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-ink-foreground/55 transition-colors hover:text-ink-foreground" activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}>
+            {(["principal", "produccion", "herramientas", "administracion"] as const).map((grupo) => {
+              const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
+              if (items.length === 0) return null;
+              const nombres = {
+                principal: "Principal",
+                produccion: "Producción",
+                herramientas: "AURUM y herramientas",
+                administracion: "Administración",
+              } as const;
+              return (
+                <div key={grupo} className="pt-2 first:pt-0">
+                  <p className="px-4 pb-2 pt-2 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-foreground/30">{nombres[grupo]}</p>
+                  <div className="space-y-1">
+                    {items.map((s) => {
+                      const Icon = s.icono;
+                      return (
+                        <Link key={s.to} to={s.to}
+                          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-ink-foreground/60 transition-colors hover:bg-ink-foreground/5 hover:text-ink-foreground"
+                          activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}>
+                          {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
                           {s.label}
                         </Link>
-                      ))}
-                    </div>
-                  </details>
-                )}
-              </>;
+                      );
+                    })}
+                  </div>
+                </div>
+              );
             })()}
           </nav>
 
