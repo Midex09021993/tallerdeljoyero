@@ -95,6 +95,9 @@ const opticalProfileFromCatalog=(g:any)=>{
   const colorChange=gemId==="alexandrita_brasil"
     ? {enabled:true,fluorescent:new THREE.Color(0x4e9a67),incandescent:new THREE.Color(0x8a3557),strength:.58}
     : undefined;
+  const oilDrop=family==="Esmeralda" && String(g.perfilInterno??"")==="colombia_jardin"
+    ? {enabled:true,strength:gemId==="esmeralda_1"?.18:gemId==="esmeralda_2"?.14:.10}
+    : undefined;
   return {
     ...base,
     ior:Number(g.ior??base.ior),
@@ -103,6 +106,7 @@ const opticalProfileFromCatalog=(g:any)=>{
     absorptionDistance:Number(g.attenuationDistance??base.absorptionDistance),
     ...(pleochroism?{pleochroism}:{}),
     ...(colorChange?{colorChange}:{}),
+    ...(oilDrop?{oilDrop}:{}),
   };
 };
 
