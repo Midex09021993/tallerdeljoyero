@@ -268,6 +268,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     });
     console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
+    part.userData={...part.userData,aurumGemPhysicalModel:{...physicalModel,crystal:{...physicalModel.crystal,axisA:physicalModel.crystal.axisA.toArray(),axisB:physicalModel.crystal.axisB.toArray(),axisC:physicalModel.crystal.axisC.toArray()}}};
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
 
