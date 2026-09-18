@@ -194,7 +194,7 @@ const addPhenomenalNeedles=(THREE:any,target:any,config:any,size:any,phenomenon:
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(14,Math.round(14+strength*30));
-  const crystal=g?.userData?.aurumGemPhysicalModel?.crystal;
+  const crystal=target?.userData?.aurumGemPhysicalModel?.crystal;
   const axes=[crystal?.axisA,crystal?.axisB,crystal?.axisC].map((a:any)=>Array.isArray(a)?new THREE.Vector3().fromArray(a):null);
   const addSet=(angle:number,spread:number,axisIndex=0)=>{for(let i=0;i<count;i++){
     const n=new THREE.Mesh(new THREE.CylinderGeometry(scale*.0008,scale*.0014,scale*(.18+rnd()*.34),5),new THREE.MeshPhysicalMaterial({color:host==="esmeralda"?0x8ba58f:0x887b69,roughness:.22,transmission:.06,transparent:true,opacity:.04+strength*.05,depthWrite:false,envMapIntensity:.38}));
