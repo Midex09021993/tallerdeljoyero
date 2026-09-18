@@ -575,34 +575,35 @@ export function AurumRender() {
 
       // Optional performance diagnostics. Production remains silent unless
       // ?aurumPerf=1 is explicitly added to the URL.
-      // renderer.info.render is only the stats of the most recent render call;
-      // with EffectComposer that can be a fullscreen post-process pass. For
-      // scene-level totals, temporarily disable autoReset and accumulate every
-      // composer pass during the measurement window.
+      // With EffectComposer, renderer.info.render otherwise resets after each
+      // pass and the final snapshot can describe only a fullscreen pass.
       const perfEnabled = typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("aurumPerf") === "1"
         : false;
+      const perfInfo=(renderer as any).info;
+      if(perfEnabled && perfInfo){
+        perfInfo.autoReset=false;
+        perfInfo.reset?.();
+      }
       let perfLast = performance.now();
       let perfFrames = 0;
       let perfCalls = 0;
       let perfTriangles = 0;
       let perfLines = 0;
       let perfPoints = 0;
-      let perfLastFrameMs = 0;
       const perfTick = () => {
         if (!perfEnabled) return;
         perfFrames++;
         const now=performance.now();
         const info=(renderer as any).info;
-        const frameStart=performance.now();
 
-        // renderer.info.render contains the totals for the current frame when
-        // autoReset is false. Snapshot them before the next frame.
+        // One composed frame includes RenderPass plus every EffectComposer pass.
+        // Read the complete frame, then reset so the next frame starts at zero.
         perfCalls += Number(info?.render?.calls??0);
         perfTriangles += Number(info?.render?.triangles??0);
         perfLines += Number(info?.render?.lines??0);
         perfPoints += Number(info?.render?.points??0);
-        perfLastFrameMs = Number((performance.now()-frameStart).toFixed(3));
+        info?.reset?.();
 
         if(now-perfLast<2000) return;
         const seconds=(now-perfLast)/1000;
@@ -620,7 +621,7 @@ export function AurumRender() {
           pixelRatio:renderer.getPixelRatio?.(),
           transmissionScale:(renderer as any).transmissionResolutionScale??null,
           quality:renderQualityId,
-          measurement:"composer-frame-accumulated",
+          measurement:"complete-composer-frame",
         });
         perfLast=now;
         perfFrames=0;
