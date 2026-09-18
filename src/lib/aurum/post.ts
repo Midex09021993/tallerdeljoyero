@@ -27,38 +27,6 @@ export async function createAurumPostPipeline(
   let dofPass:any=null;
   let outputPass:any=null;
 
-  // Diagnostic opt-in: ?aurumPassPerf=1 measures CPU dispatch time per
-  // composer pass without changing pass state or render quality. It is not
-  // GPU timing; it only tells us which pass is expensive to dispatch.
-  const passPerfEnabled=true;
-  const passPerf:any={enabled:passPerfEnabled,totals:{},counts:{},lastLog:0};
-  const instrumentPass=(name:string,pass:any)=>{
-    if(!passPerfEnabled || !pass || typeof pass.render!=="function") return;
-    const original=pass.render.bind(pass);
-    pass.render=(...args:any[])=>{
-      const t0=performance.now();
-      try { return original(...args); }
-      finally {
-        const dt=performance.now()-t0;
-        passPerf.totals[name]=(passPerf.totals[name]??0)+dt;
-        passPerf.counts[name]=(passPerf.counts[name]??0)+1;
-        const now=performance.now();
-        if(now-passPerf.lastLog>=2000){
-          passPerf.lastLog=now;
-          const rows=Object.keys(passPerf.totals).map(key=>({
-            pass:key,
-            avgMs:Number((passPerf.totals[key]/Math.max(1,passPerf.counts[key])).toFixed(3)),
-            calls:passPerf.counts[key],
-            totalMs:Number(passPerf.totals[key].toFixed(2)),
-          }));
-          console.table(rows);
-          passPerf.totals={};
-          passPerf.counts={};
-        }
-      }
-    };
-  };
-
   try {
     composer=new EffectComposer(renderer);
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
@@ -138,15 +106,6 @@ export async function createAurumPostPipeline(
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
     composer.addPass(outputPass);
-
-    instrumentPass("RenderPass",renderPass);
-    instrumentPass("TAA",taaPass);
-    instrumentPass("SSAO",ssaoPass);
-    instrumentPass("Bloom",bloomPass);
-    instrumentPass("LUT",lutPass);
-    instrumentPass("DOF",dofPass);
-    instrumentPass("Vignette",vignettePass);
-    instrumentPass("Output",outputPass);
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
