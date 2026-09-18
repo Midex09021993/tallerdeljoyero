@@ -113,7 +113,7 @@ export const MATERIALES: MaterialConfig[] = [
   // Perfiles LATAM: 18K = 750/1000 de oro. Los tonos son perfiles visuales;
   // la documentación técnica define la ley y el efecto del cobre/plata sobre
   // el color, pero no prescribe valores RGB/PBR universales.
-  { id: "oro18a_artesanal_pulido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Artesanal", color: 0xd8ad4c, metalness: 1, roughness: .16, envMapIntensity: 1.8, clearcoat: .12, anisotropy: .08 },
+  { id: "oro18a_artesanal_pulido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Artesanal", color: 0xd5a84a, metalness: 1, roughness: .19, envMapIntensity: 1.68, clearcoat: .10, anisotropy: .12 },
   { id: "oro18a_calido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Cálido", color: 0xddad45, metalness: 1, roughness: .12, envMapIntensity: 1.84, clearcoat: .14, anisotropy: .05 },
   { id: "oro18_naranja", grupo: "Especiales", nombre: "Oro 18K Naranja", color: 0xd8893f, metalness: 1, roughness: .16, envMapIntensity: 1.78, clearcoat: .12, anisotropy: .06 },
   { id: "oro18_rojo", grupo: "Especiales", nombre: "Oro 18K Rojo", color: 0xc96f55, metalness: 1, roughness: .17, envMapIntensity: 1.75, clearcoat: .12, anisotropy: .07 },
