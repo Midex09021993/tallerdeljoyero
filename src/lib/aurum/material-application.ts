@@ -51,19 +51,25 @@ const opticalProfileFromCatalog=(g:any)=>{
         fire:.35,
       };
   const family=String(g.familia??"");
-  const pleochroism=family==="Tanzanita"
+  const gemId=String(g.id??"");
+  const pleochroism=(family==="Tanzanita"||family==="Turmalina"||family==="Peridoto")
     ? {
         enabled:true,
-        strength:String(g.id??"")==="tanzanita_natural"?.42:.36,
-        thirdAxisStrength:String(g.id??"")==="tanzanita_natural"?.12:.08,
-        // AURUM approximation of the three crystallographic color directions.
-        // Natural profile keeps a restrained brownish-red axis; intense profile
-        // emphasizes the blue/violet pair seen in fashioned heated tanzanite.
-        axisA:String(g.id??"")==="tanzanita_natural"?"blue":"blue",
-        axisB:"violet",
-        axisC:String(g.id??"")==="tanzanita_natural"?"yellowGreen":"redViolet",
+        strength:family==="Tanzanita" ? (gemId==="tanzanita_natural"?.42:.36) : family==="Turmalina" ? .30 : .16,
+        thirdAxisStrength:family==="Tanzanita" ? (gemId==="tanzanita_natural"?.12:.08) : family==="Turmalina" ? .07 : .04,
+        axisC:family==="Tanzanita"
+          ? (gemId==="tanzanita_natural"?"yellowGreen":"redViolet")
+          : family==="Turmalina"
+            ? (gemId==="turmalina_verde"?"deepGreen":gemId==="turmalina_rosa"?"deepRose":"deepBlue")
+            : "yellowGreen",
       }
     : undefined;
+  const familyFire=family==="Zircon"
+    ? .82
+    : gemId==="granate_demantoide"
+      ? .76
+      : Number(base.fire??.35);
+  const familyBrilliance=family==="Zircon" ? 1.02 : Number(base.brilliance??.75);
   return {
     ...base,
     ior:Number(g.ior??base.ior),
