@@ -49,7 +49,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const fluorescence:any=(profile as any).fluorescence;
   const fluorescenceEnabled=Boolean(fluorescence?.enabled);
   const fluorescenceStrength=Math.max(0,Math.min(1,Number(fluorescence?.strength??0)));
-  const phenomenon:any=(profile as any).phenomenon);
+  const phenomenon:any=(profile as any).phenomenon;
   const phenomenonEnabled=Boolean(phenomenon?.enabled);
   const phenomenonType=String(phenomenon?.type??"");
   const phenomenonStrength=Math.max(0,Math.min(1,Number(phenomenon?.strength??0)));
@@ -131,12 +131,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       );
     }
     if(phenomenonEnabled){
-      if(fluorescenceEnabled){
-      shader.uniforms.aurumFluorescenceColorLW={value:fluorescence.lw};
-      shader.uniforms.aurumFluorescenceColorSW={value:fluorescence.sw};
-      shader.uniforms.aurumFluorescenceStrength={value:fluorescenceStrength};
-      shader.uniforms.aurumUVMode={value:Number(material.userData?.aurumUVMode??0)};
-    }
+      shader.uniforms.aurumFluorescenceColorLW={value:fluorescenceEnabled?fluorescence.lw:new THREE.Color(0,0,0)};
+    shader.uniforms.aurumFluorescenceColorSW={value:fluorescenceEnabled?fluorescence.sw:new THREE.Color(0,0,0)};
+    shader.uniforms.aurumFluorescenceStrength={value:fluorescenceStrength};
+    shader.uniforms.aurumUVMode={value:Number(material.userData?.aurumUVMode??0)};
     shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
       shader.uniforms.aurumPhenomenonAxisA={value:new THREE.Vector3(1,0,0)};
       shader.uniforms.aurumPhenomenonAxisB={value:new THREE.Vector3(.5,.8660254,0)};
