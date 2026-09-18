@@ -83,8 +83,8 @@ function HerramientasPage() {
             <CalculadoraYeso />
             <CalculadoraAleacionOro />
             <VisorPesoJoyeria />
-            <ConversorTallasAnillo />
             <CalculadoraPesoGemas />
+            <ConversorTallasAnillo />
           </div>
         </section>
 
