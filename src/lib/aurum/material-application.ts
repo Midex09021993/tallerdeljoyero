@@ -61,7 +61,7 @@ const opticalProfileFromCatalog=(g:any)=>{
         // emphasizes the blue/violet pair seen in fashioned heated tanzanite.
         axisA:String(g.id??"")==="tanzanita_natural"?"blue":"blue",
         axisB:"violet",
-        axisC:String(g.id??"")==="tanzanita_natural"?"brownRed":"redViolet",
+        axisC:String(g.id??"")==="tanzanita_natural"?"yellowGreen":"redViolet",
       }
     : undefined;
   return {
