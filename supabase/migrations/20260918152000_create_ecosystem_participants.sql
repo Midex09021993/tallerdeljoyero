@@ -1,7 +1,7 @@
 -- Ecosystem participant foundation
 create table if not exists public.ecosistema_participantes (
   id uuid primary key default gen_random_uuid(),
-  tipo_participante text not null check (tipo_participante in ('organizacion','profesional','proveedor','servicio','talento','institucion_educativa')),
+  tipo_participante text not null check (tipo_participante in ('organizacion','profesional','vendedor','proveedor','servicio','talento','institucion_educativa')),
   nombre text not null,
   razon_social text,
   email text,
