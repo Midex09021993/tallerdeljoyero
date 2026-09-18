@@ -6,6 +6,7 @@ export const CLAVES_CALCULADORAS = {
   aleacion: "calculadora_aleacion_oro",
   yeso: "calculadora_yeso",
   tallasAnillo: "conversor_tallas_anillo",
+  pesoGemas: "calculadora_peso_gemas",
 } as const;
 
 export type ConfigVisualizador3D = {
@@ -171,6 +172,26 @@ export function useConfiguracionesCalculadoras() {
     [visualizador.data, aleacion.data, yeso.data, visualizador.isLoading, aleacion.isLoading, yeso.isLoading],
   );
 }
+
+export type ConfigPesoGemas = {
+  piedras: { nombre: string; sg: number }[];
+  factores: Record<TallaGema, number>;
+  margenEstimacion: number;
+};
+
+export type TallaGema = "redonda" | "oval" | "esmeralda" | "rectangular" | "marquise" | "pera" | "cuadrada" | "cushion" | "cabujon";
+
+export const DEFAULT_CONFIG_PESO_GEMAS: ConfigPesoGemas = {
+  piedras: [
+    { nombre: "Diamante", sg: 3.52 }, { nombre: "Rubí / Zafiro", sg: 4.00 }, { nombre: "Esmeralda / Aguamarina", sg: 2.72 },
+    { nombre: "Amatista / Cuarzo / Citrino", sg: 2.65 }, { nombre: "Turmalina", sg: 3.25 }, { nombre: "Peridoto", sg: 3.45 },
+    { nombre: "Topacio", sg: 3.53 }, { nombre: "Granate", sg: 4.10 }, { nombre: "Ópalo", sg: 2.25 },
+    { nombre: "Jade", sg: 3.10 }, { nombre: "Turquesa", sg: 2.80 },
+  ],
+  factores: { redonda: 0.002, oval: 0.0021, esmeralda: 0.0025, rectangular: 0.00235, marquise: 0.0016, pera: 0.0018, cuadrada: 0.00235, cushion: 0.00235, cabujon: 0.0027 },
+  margenEstimacion: 8,
+};
+
 export type TallaAnillo = {
   diametroMm: number;
   espanola: number;
@@ -254,4 +275,12 @@ export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
     .filter((item): item is TallaAnillo => item !== null)
     .sort((a, b) => a.diametroMm - b.diametroMm);
   return { tabla: filas.length ? filas : DEFAULT_CONFIG_TALLAS_ANILLO.tabla };
+}
+
+export function leerConfigPesoGemas(valor: unknown): ConfigPesoGemas {
+  const root = objeto(valor);
+  const piedras = lista(root.piedras).map((item) => { const o=objeto(item); const nombre=typeof o.nombre==="string"?o.nombre:""; const sg=numero(o.sg,NaN); return nombre&&Number.isFinite(sg)?{nombre,sg}:null; }).filter((x): x is {nombre:string;sg:number}=>x!==null);
+  const factoresRoot=objeto(root.factores); const d=DEFAULT_CONFIG_PESO_GEMAS.factores;
+  const factores = Object.fromEntries((Object.keys(d) as TallaGema[]).map(k=>[k,numero(factoresRoot[k],d[k])])) as Record<TallaGema,number>;
+  return { piedras:piedras.length?piedras:DEFAULT_CONFIG_PESO_GEMAS.piedras, factores, margenEstimacion:Math.max(0,numero(root.margenEstimacion,DEFAULT_CONFIG_PESO_GEMAS.margenEstimacion)) };
 }
