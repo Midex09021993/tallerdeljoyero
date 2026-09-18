@@ -153,7 +153,8 @@ export function AurumRender() {
       const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
-      let renderQuality = getAurumRenderQuality(renderQualityId);\n      let measuredQualityId:AurumRenderQualityId = renderQualityId;
+      let renderQuality = getAurumRenderQuality(renderQualityId);
+      let measuredQualityId: AurumRenderQualityId = renderQualityId;
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: renderQuality.pixelRatio,
         maxDistance: 100,
