@@ -4,6 +4,7 @@ import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Wrench } 
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
+import { ProgramadorHornoCasting } from "@/components/ProgramadorHornoCasting";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
 type Herramienta = {
@@ -18,10 +19,11 @@ const HERRAMIENTAS: Herramienta[] = [
   { id: "yeso", nombre: "Calculadora Yeso/Agua", icono: Droplets, disponible: true },
   { id: "oro", nombre: "Calculadora de Aleación de Oro", icono: Gem, disponible: true },
   { id: "peso3d", nombre: "Visualizador y Peso 3D", icono: Boxes, disponible: true },
+  { id: "tallas", nombre: "Conversor de Tallas de Anillo", icono: Ruler, disponible: true },
+  { id: "horno", nombre: "Programador de Rampas de Horno", icono: Wrench, disponible: true },
   { id: "volumen", nombre: "Calculadora de Volumen", icono: Calculator, disponible: false },
   { id: "peso", nombre: "Calculadora de Peso", icono: Scale, disponible: false },
   { id: "medidas", nombre: "Conversor de Medidas", icono: Ruler, disponible: false },
-  { id: "tallas", nombre: "Conversor de Tallas de Anillo", icono: Ruler, disponible: true },
 ];
 
 /** Menú lateral flotante de herramientas públicas para la pantalla de acceso. */
@@ -121,6 +123,11 @@ export function HerramientasFlotantes() {
           {activa === "peso3d" ? (
             <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
               <VisorPesoJoyeria compacto />
+            </div>
+          ) : null}
+          {activa === "horno" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <ProgramadorHornoCasting />
             </div>
           ) : null}
         </div>
