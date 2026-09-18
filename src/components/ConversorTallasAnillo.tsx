@@ -251,7 +251,6 @@ function MedidorAnillo({
             <span>Más grande</span>
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground"><span>Más pequeño</span><span>{anchoCalibracion.toFixed(1)} px · {referenciaMm.toFixed(1)} mm</span><span>Más grande</span></div>
         <button type="button" onClick={onCalibrar} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground">
           <Check className="size-4" aria-hidden="true" /> Confirmar calibración
         </button>
@@ -274,8 +273,22 @@ function MedidorAnillo({
             </div>
           </div>
 
-          <input aria-label="Ajuste del diámetro del anillo" type="range" min="60" max="520" step="1" value={diametroPx} onChange={(e) => onDiametroChange(Number(e.target.value))} className="w-full" />
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground"><span>Menor</span><span>Ajuste fino</span><span>Mayor</span></div>
+          <input
+            aria-label="Ajuste del diámetro del anillo"
+            type="range"
+            min="60"
+            max="520"
+            step="0.5"
+            value={diametroPx}
+            onInput={(e) => onDiametroChange(Number(e.currentTarget.value))}
+            onChange={(e) => onDiametroChange(Number(e.currentTarget.value))}
+            className="w-full"
+          />
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>Menor</span>
+            <span>{diametroMedido.toFixed(1)} mm · Talla {resultado?.espanola ?? "—"}</span>
+            <span>Mayor</span>
+          </div>
 
           {resultado ? (
             <>
