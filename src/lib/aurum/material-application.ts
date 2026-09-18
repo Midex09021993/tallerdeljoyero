@@ -98,6 +98,19 @@ const opticalProfileFromCatalog=(g:any)=>{
   const oilDrop=family==="Esmeralda" && String(g.perfilInterno??"")==="colombia_jardin"
     ? {enabled:true,strength:gemId==="esmeralda_1"?.18:gemId==="esmeralda_2"?.14:.10}
     : undefined;
+  const fluorescenceProfile = gemId==="alexandrita_brasil"
+    ? {enabled:true,lw:new THREE.Color(0x78ffb0),sw:new THREE.Color(0x64d8ff),strength:.28}
+    : family==="Rubí"
+      ? {enabled:true,lw:new THREE.Color(0xff1830),sw:new THREE.Color(0xff2538),strength:.78}
+      : family==="Diamante"
+        ? {enabled:true,lw:new THREE.Color(0x73a9ff),sw:new THREE.Color(0x507cff),strength:.22}
+        : family==="Esmeralda"
+          ? {enabled:true,lw:new THREE.Color(0x55ff86),sw:new THREE.Color(0x35d96b),strength:.12}
+          : family==="Zafiro"
+            ? {enabled:true,lw:new THREE.Color(0x73a8ff),sw:new THREE.Color(0x4d77c9),strength:.10}
+            : family==="Perla"
+              ? {enabled:true,lw:new THREE.Color(0xb7d9ff),sw:new THREE.Color(0x8dc7e8),strength:.08}
+              : undefined;
   const phenomenon=(g as any).fenomenoOptico;
   const phenomenonProfile=phenomenon
     ? {
@@ -119,6 +132,7 @@ const opticalProfileFromCatalog=(g:any)=>{
     ...(pleochroism?{pleochroism}:{}),
     ...(colorChange?{colorChange}:{}),
     ...(oilDrop?{oilDrop}:{}),
+    ...(fluorescenceProfile?{fluorescence:fluorescenceProfile}:{}),
     ...(phenomenonProfile?{phenomenon:phenomenonProfile}:{}),
   };
 };
