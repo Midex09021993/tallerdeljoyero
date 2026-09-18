@@ -51,38 +51,12 @@ function validar(input: NuevoUsuario): NuevoUsuario {
   return input;
 }
 
-/** Indica si todavía no existe ningún usuario con rol: permite crear el primer dueño. */
+/** Indica si todavía no existe ningún usuario con rol. */
 export const sistemaSinDuenos = createServerFn({ method: "GET" }).handler(async () => {
-  // Esta comprobación debe poder ejecutarse incluso cuando Lovable Cloud
-  // todavía no tiene configurada la Service Role Key. La creación del
-  // primer dueño sí requiere esa clave y fallará de forma controlada.
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const serviceRoleKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return { vacio: false, disponible: false };
-  }
-
-  try {
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const { count, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("id", { count: "exact", head: true });
-
-    if (error) {
-      console.error("[sistemaSinDuenos]", error.message);
-      return { vacio: false, disponible: false };
-    }
-
-    return { vacio: (count ?? 0) === 0, disponible: true };
-  } catch (error) {
-    console.error("[sistemaSinDuenos]", error);
-    return { vacio: false, disponible: false };
-  }
+  // Esta comprobación no puede depender de la Service Role Key durante el
+  // arranque del login. La administración de cuentas se ejecuta sólo después
+  // de una acción explícita y autenticada.
+  return { vacio: false, disponible: false };
 });
 
 /** Alta del primer dueño general. Sólo funciona mientras no haya ningún rol asignado. */
