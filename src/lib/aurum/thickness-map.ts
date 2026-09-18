@@ -69,7 +69,8 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=128):Thick
     const rayOrigin=origin.clone().addScaledVector(direction,1e-4);
     let nearest=Infinity;
     for(const [ia,ib,ic] of triangles){
-      if(ia===i||ib===i||ic===i)continue;
+      const originSkip=1e-10;
+      if(positions[ia].distanceToSquared(origin)<originSkip||positions[ib].distanceToSquared(origin)<originSkip||positions[ic].distanceToSquared(origin)<originSkip)continue;
       const d=rayTriangleDistance(rayOrigin,direction,positions[ia],positions[ib],positions[ic]);
       if(d<nearest)nearest=d;
     }
