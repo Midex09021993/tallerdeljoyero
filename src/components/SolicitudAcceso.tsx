@@ -82,7 +82,7 @@ export function SolicitudAcceso() {
                 <p className="text-[10px] uppercase tracking-[0.25em] text-gold">Aurum Lab · Ecosistema</p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">Solicitar acceso de prueba</h2>
                 <p className="mt-2 text-sm leading-relaxed text-white/55">
-                  Regístrate como taller, profesional, proveedor o servicio especializado. La participación se activa después de la revisión del Dueño.
+                  Regístrate como taller, profesional, proveedor o servicio especializado. La participación se activa después de la validación por el equipo de Aurum Lab.
                 </p>
               </div>
               <button type="button" onClick={cerrar} className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white" aria-label="Cerrar">
