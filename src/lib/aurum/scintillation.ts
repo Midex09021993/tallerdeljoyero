@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import type { AurumOpticalProfile } from "../aurum-material-engine";
 
 /**
@@ -37,6 +38,13 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       ? .20*brilliance
       : .045*brilliance;
   const contrastStrength=.075*facetContrast;
+  const pleochroism:any=(profile as any).pleochroism;
+  const pleochroismEnabled=Boolean(pleochroism?.enabled);
+  const pleochroismStrength=Math.max(0,Math.min(.65,Number(pleochroism?.strength??0)));
+  const pleochroismThirdStrength=Math.max(0,Math.min(.20,Number(pleochroism?.thirdAxisStrength??0)));
+  const pleoBlue=new THREE.Color(0x315fd0);
+  const pleoViolet=new THREE.Color(0x7650c8);
+  const pleoThird=String(pleochroism?.axisC??"") === "brownRed" ? new THREE.Color(0x9a5360) : new THREE.Color(0x9b466f);
 
   material.userData={
     ...(material.userData??{}),
@@ -58,12 +66,48 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
+    if(pleochroismEnabled){
+      shader.uniforms.aurumPleoBlue={value:pleoBlue};
+      shader.uniforms.aurumPleoViolet={value:pleoViolet};
+      shader.uniforms.aurumPleoThird={value:pleoThird};
+      shader.uniforms.aurumPleoStrength={value:pleochroismStrength};
+      shader.uniforms.aurumPleoThirdStrength={value:pleochroismThirdStrength};
+    }
 
     shader.fragmentShader=`
       uniform float aurumScintillationStrength;
       uniform float aurumScintillationContrast;
       uniform float aurumRuntimeDispersion;
+      uniform vec3 aurumPleoBlue;
+      uniform vec3 aurumPleoViolet;
+      uniform vec3 aurumPleoThird;
+      uniform float aurumPleoStrength;
+      uniform float aurumPleoThirdStrength;
     `+shader.fragmentShader;
+    if(pleochroismEnabled){
+      shader.vertexShader=`
+        varying vec3 vAurumLocalViewDir;
+      `+shader.vertexShader;
+      shader.vertexShader=shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>\n        vAurumLocalViewDir=normalize(transpose(mat3(modelMatrix))*(cameraPosition-modelMatrix[3].xyz));`
+      );
+      shader.fragmentShader=shader.fragmentShader.replace(
+        "#include <common>",
+        `varying vec3 vAurumLocalViewDir;\n#include <common>`
+      );
+      shader.fragmentShader=shader.fragmentShader.replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        vec3 aurumPleoDir=normalize(vAurumLocalViewDir);
+        vec3 aurumPleoW=pow(abs(aurumPleoDir),vec3(2.0));
+        aurumPleoW/=max(dot(aurumPleoW,vec3(1.0)),0.0001);
+        vec3 aurumPleoTint=aurumPleoW.x*aurumPleoBlue+aurumPleoW.y*aurumPleoViolet+aurumPleoW.z*aurumPleoThird;
+        float aurumPleoAxis=mix(aurumPleoStrength,aurumPleoThirdStrength,aurumPleoW.z);
+        diffuseColor.rgb*=mix(vec3(1.0),aurumPleoTint,aurumPleoAxis);
+        `
+      );
+    }
 
     // Three.js already performs physical volume refraction and RGB dispersion
     // inside getIBLVolumeRefraction(). Replace only its dispersion input with
@@ -104,7 +148,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v3-${family}-${familyDispersionScale}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v4-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}`;
   material.needsUpdate=true;
   return material;
 };
