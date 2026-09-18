@@ -80,8 +80,10 @@ const opticalProfileFromCatalog=(g:any)=>{
     ? .82
     : gemId==="granate_demantoide"
       ? .76
-      : Number(base.fire??.35);
-  const familyBrilliance=family==="Zircon" ? 1.02 : Number(base.brilliance??.75);
+      : family==="Turmalina" && gemId.includes("paraiba")
+        ? .34
+        : Number(base.fire??.35);
+  const familyBrilliance=family==="Zircon" ? 1.02 : family==="Turmalina" && gemId.includes("paraiba") ? 1.04 : Number(base.brilliance??.75);
   return {
     ...base,
     ior:Number(g.ior??base.ior),
