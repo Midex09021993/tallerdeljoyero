@@ -154,7 +154,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
   const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
-  const apply=(base:any,part:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
+  const apply=(base:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
     const next=base?.clone?base.clone():new THREE.MeshPhysicalMaterial();
     applyAurumGem(next,preset,partThickness);
     applyAurumOpticalProfile(next,opticalProfile);
@@ -178,8 +178,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     const partThickness=thicknessMapResult?.baseThickness??thickness;
     const thicknessMap=thicknessMapResult?.texture??null;
     part.material=Array.isArray(part.material)
-      ? part.material.map((base:any)=>apply(base,part,partThickness,thicknessMap))
-      : apply(part.material,part,partThickness,thicknessMap);
+      ? part.material.map((base:any)=>apply(base,partThickness,thicknessMap))
+      : apply(part.material,partThickness,thicknessMap);
     part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:partThickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:thicknessMapResult?"uv-ray-depth-v1":"local-bounds-v1",aurumGemThicknessMapDiagnostics:thicknessMapResult?{hitRatio:Number(thicknessMapResult.hitRatio.toFixed(3)),minDepth:Number(thicknessMapResult.minDepth.toFixed(4)),maxDepth:Number(thicknessMapResult.maxDepth.toFixed(4)),resolution:96}:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
     console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
