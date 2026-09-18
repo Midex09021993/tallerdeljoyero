@@ -44,7 +44,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const pleochroismThirdStrength=Math.max(0,Math.min(.20,Number(pleochroism?.thirdAxisStrength??0)));
   const pleoBlue=new THREE.Color(0x315fd0);
   const pleoViolet=new THREE.Color(0x7650c8);
-  const pleoThird=String(pleochroism?.axisC??"") === "brownRed" ? new THREE.Color(0x9a5360) : new THREE.Color(0x9b466f);
+  const pleoThird=String(pleochroism?.axisC??"") === "yellowGreen" ? new THREE.Color(0x7d8b4a) : new THREE.Color(0x9b466f);
 
   material.userData={
     ...(material.userData??{}),
@@ -90,7 +90,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       `+shader.vertexShader;
       shader.vertexShader=shader.vertexShader.replace(
         "#include <begin_vertex>",
-        `#include <begin_vertex>\n        vAurumLocalViewDir=normalize(transpose(mat3(modelMatrix))*(cameraPosition-modelMatrix[3].xyz));`
+        `#include <begin_vertex>\n        vec3 aurumWorldToLocal= cameraPosition-modelMatrix[3].xyz;\n        mat3 aurumModel3=mat3(modelMatrix);\n        vAurumLocalViewDir=normalize(vec3(dot(aurumWorldToLocal,aurumModel3[0]),dot(aurumWorldToLocal,aurumModel3[1]),dot(aurumWorldToLocal,aurumModel3[2])));`
       );
       shader.fragmentShader=shader.fragmentShader.replace(
         "#include <common>",
