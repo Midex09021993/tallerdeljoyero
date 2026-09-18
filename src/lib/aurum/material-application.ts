@@ -154,7 +154,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
   const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
-  const apply=(base:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
+  const apply=(base:any,partTarget:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
     const next=base?.clone?base.clone():new THREE.MeshPhysicalMaterial();
     applyAurumGem(next,preset,partThickness);
     applyAurumOpticalProfile(next,opticalProfile);
@@ -165,7 +165,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
     // crease preservation for meshes that already carry valid facet normals.
-    const geometry=part.geometry;
+    const geometry=partTarget?.geometry;
     const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
     next.flatShading=!hasUsableNormals;
     next.thickness=partThickness;
@@ -177,8 +177,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // Apply the proven scalar thickness immediately so selecting a gem never
     // waits for the optional spatial bake.
     part.material=Array.isArray(part.material)
-      ? part.material.map((base:any)=>apply(base,thickness,null))
-      : apply(part.material,thickness,null);
+      ? part.material.map((base:any)=>apply(base,part,thickness,null))
+      : apply(part.material,part,thickness,null);
     part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemThicknessMapDiagnostics:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
     console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
