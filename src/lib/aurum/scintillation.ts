@@ -38,6 +38,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       ? .20*brilliance
       : .045*brilliance;
   const contrastStrength=.075*facetContrast;
+  const colorChange:any=(profile as any).colorChange;
+  const colorChangeEnabled=Boolean(colorChange?.enabled);
   const pleochroism:any=(profile as any).pleochroism;
   const pleochroismEnabled=Boolean(pleochroism?.enabled);
   const pleochroismStrength=Math.max(0,Math.min(.65,Number(pleochroism?.strength??0)));
@@ -88,6 +90,22 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
+    if(colorChangeEnabled){
+      shader.uniforms.aurumColorChangeFluorescent={value:colorChange.fluorescent};
+      shader.uniforms.aurumColorChangeIncandescent={value:colorChange.incandescent};
+      shader.uniforms.aurumColorChangeStrength={value:Number(colorChange.strength??.5)};
+    }
+    if(colorChangeEnabled){
+      shader.fragmentShader=shader.fragmentShader.replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        float aurumWarm=clamp(dot(normalize(vViewPosition),vec3(0.0,0.0,-1.0)),0.0,1.0);
+        float aurumCool=1.0-aurumWarm;
+        vec3 aurumChangeTint=mix(aurumColorChangeIncandescent,aurumColorChangeFluorescent,aurumCool);
+        diffuseColor.rgb*=mix(vec3(1.0),aurumChangeTint,aurumColorChangeStrength);
+        `
+      );
+    }
     if(pleochroismEnabled){
       shader.uniforms.aurumPleoBlue={value:pleoBlue};
       shader.uniforms.aurumPleoViolet={value:pleoViolet};
@@ -100,6 +118,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumScintillationStrength;
       uniform float aurumScintillationContrast;
       uniform float aurumRuntimeDispersion;
+      uniform vec3 aurumColorChangeFluorescent;
+      uniform vec3 aurumColorChangeIncandescent;
+      uniform float aurumColorChangeStrength;
       uniform vec3 aurumPleoBlue;
       uniform vec3 aurumPleoViolet;
       uniform vec3 aurumPleoThird;
@@ -170,7 +191,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v4-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v5-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}`;
   material.needsUpdate=true;
   return material;
 };
