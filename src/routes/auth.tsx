@@ -326,9 +326,7 @@ function LoginPage() {
         </div>
       </footer>
 
-      <div className="max-[767px]:hidden">
-        <HerramientasFlotantes />
-      </div>
+      <HerramientasFlotantes />
     </main>
   );
 }
