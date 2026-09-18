@@ -65,6 +65,15 @@ export function pedidoEnRecepcion(valor: string | null | undefined) {
   return valor === "Recibido";
 }
 
+/** Pedido que ya fue registrado con una ruta productiva, pero aún no ha sido autorizado para entrar al flujo. */
+export function pedidoPendienteAutorizacionProduccion(pedido: Pick<Pedido, "estado" | "area_actual" | "ruta">) {
+  return (
+    pedidoEnRecepcion(pedido.estado) &&
+    areaOperativa(pedido.area_actual) === "Pedidos" &&
+    primeraAreaProduccion(pedido) != null
+  );
+}
+
 /**
  * Normaliza estados antiguos al modelo oficial:
  * Evaluación → Recibido · Área de Ventas → Listo para Entrega · Enviado → En Camino
