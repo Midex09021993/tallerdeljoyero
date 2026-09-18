@@ -169,3 +169,17 @@ export const attachAurumGemPhysicalModel=(material:any,model:AurumGemPhysicalMod
     },
   };
 };
+
+
+/**
+ * Returns the normalized internal-structure metadata used by shader/inclusion
+ * layers. The field is procedural until a measured CT/micrograph-derived field
+ * is available; it is deterministic per gemstone id.
+ */
+export const getAurumGemStructureField=(model:AurumGemPhysicalModel,position:THREE.Vector3)=>{
+  const s=(model.structure.fieldSeed>>>0)||1;
+  const p=position.clone().multiplyScalar(6+model.structure.fieldScale*14);
+  const n=Math.sin(p.x*12.9898+p.y*78.233+p.z*37.719+(s%997))*43758.5453;
+  const cell=n-Math.floor(n);
+  return Math.max(0,Math.min(1,cell*model.structure.fieldScale));
+};
