@@ -52,16 +52,28 @@ const opticalProfileFromCatalog=(g:any)=>{
       };
   const family=String(g.familia??"");
   const gemId=String(g.id??"");
-  const pleochroism=(family==="Tanzanita"||family==="Turmalina"||family==="Peridoto")
+  const pleochroism=(family==="Tanzanita"||family==="Turmalina"||family==="Peridoto"||family==="Morganita"||family==="Zafiro")
     ? {
         enabled:true,
-        strength:family==="Tanzanita" ? (gemId==="tanzanita_natural"?.42:.36) : family==="Turmalina" ? .30 : .16,
-        thirdAxisStrength:family==="Tanzanita" ? (gemId==="tanzanita_natural"?.12:.08) : family==="Turmalina" ? .07 : .04,
+        strength:family==="Tanzanita" ? (gemId==="tanzanita_natural"?.42:.36)
+          : family==="Turmalina" ? .30
+          : family==="Morganita" ? .24
+          : family==="Zafiro" ? .20
+          : .16,
+        thirdAxisStrength:family==="Tanzanita" ? (gemId==="tanzanita_natural"?.12:.08)
+          : family==="Turmalina" ? .07
+          : family==="Morganita" ? .045
+          : family==="Zafiro" ? .035
+          : .04,
         axisC:family==="Tanzanita"
           ? (gemId==="tanzanita_natural"?"yellowGreen":"redViolet")
           : family==="Turmalina"
             ? (gemId==="turmalina_verde"?"deepGreen":gemId==="turmalina_rosa"?"deepRose":"deepBlue")
-            : "yellowGreen",
+            : family==="Morganita"
+              ? "palePink"
+              : family==="Zafiro"
+                ? (gemId==="zafiro_amarillo"?"golden":gemId==="zafiro_padparadscha"?"salmon":"pink")
+                : "yellowGreen",
       }
     : undefined;
   const familyFire=family==="Zircon"
