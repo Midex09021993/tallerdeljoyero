@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ecosistema_participantes: {
+        Row: { id: string; tipo_participante: string; nombre: string; razon_social: string | null; email: string | null; telefono: string | null; ciudad: string | null; descripcion: string | null; estado: string; notas_owner: string | null; metadata: Json; created_at: string; updated_at: string }
+        Insert: { id?: string; tipo_participante?: string; nombre: string; razon_social?: string | null; email?: string | null; telefono?: string | null; ciudad?: string | null; descripcion?: string | null; estado?: string; notas_owner?: string | null; metadata?: Json; created_at?: string; updated_at?: string }
+        Update: { id?: string; tipo_participante?: string; nombre?: string; razon_social?: string | null; email?: string | null; telefono?: string | null; ciudad?: string | null; descripcion?: string | null; estado?: string; notas_owner?: string | null; metadata?: Json; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      especialidades: {
+        Row: { id: string; nombre: string; categoria: string | null; activa: boolean; created_at: string; updated_at: string }
+        Insert: { id?: string; nombre: string; categoria?: string | null; activa?: boolean; created_at?: string; updated_at?: string }
+        Update: { id?: string; nombre?: string; categoria?: string | null; activa?: boolean; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      participante_especialidades: {
+        Row: { id: string; participante_id: string; especialidad_id: string; created_at: string }
+        Insert: { id?: string; participante_id: string; especialidad_id: string; created_at?: string }
+        Update: { id?: string; participante_id?: string; especialidad_id?: string; created_at?: string }
+        Relationships: [{ foreignKeyName: "participante_especialidades_participante_id_fkey"; columns: ["participante_id"]; isOneToOne: false; referencedRelation: "ecosistema_participantes"; referencedColumns: ["id"] }, { foreignKeyName: "participante_especialidades_especialidad_id_fkey"; columns: ["especialidad_id"]; isOneToOne: false; referencedRelation: "especialidades"; referencedColumns: ["id"] }]
+      }
+      participante_cuentas: {
+        Row: { id: string; participante_id: string; user_id: string; relacion: string; estado: string; created_at: string; updated_at: string }
+        Insert: { id?: string; participante_id: string; user_id: string; relacion?: string; estado?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; participante_id?: string; user_id?: string; relacion?: string; estado?: string; created_at?: string; updated_at?: string }
+        Relationships: [{ foreignKeyName: "participante_cuentas_participante_id_fkey"; columns: ["participante_id"]; isOneToOne: false; referencedRelation: "ecosistema_participantes"; referencedColumns: ["id"] }]
+      }
+      solicitudes_acceso: {
+        Row: { id: string; tipo_solicitante: string; nombre: string; empresa: string | null; documento: string | null; email: string; telefono: string | null; ciudad: string | null; especialidades: string[]; descripcion: string | null; estado: string; notas_owner: string | null; revisado_por: string | null; revisado_at: string | null; created_at: string; updated_at: string; participante_id: string | null }
+        Insert: { id?: string; tipo_solicitante: string; nombre: string; empresa?: string | null; documento?: string | null; email: string; telefono?: string | null; ciudad?: string | null; especialidades?: string[]; descripcion?: string | null; estado?: string; notas_owner?: string | null; revisado_por?: string | null; revisado_at?: string | null; created_at?: string; updated_at?: string; participante_id?: string | null }
+        Update: { id?: string; tipo_solicitante?: string; nombre?: string; empresa?: string | null; documento?: string | null; email?: string; telefono?: string | null; ciudad?: string | null; especialidades?: string[]; descripcion?: string | null; estado?: string; notas_owner?: string | null; revisado_por?: string | null; revisado_at?: string | null; created_at?: string; updated_at?: string; participante_id?: string | null }
+        Relationships: [{ foreignKeyName: "solicitudes_acceso_participante_id_fkey"; columns: ["participante_id"]; isOneToOne: false; referencedRelation: "ecosistema_participantes"; referencedColumns: ["id"] }]
+      }
       config_areas: {
         Row: {
           alerta_activa: boolean
