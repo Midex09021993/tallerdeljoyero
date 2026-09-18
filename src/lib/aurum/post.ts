@@ -33,16 +33,10 @@ export async function createAurumPostPipeline(
     renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
 
-    // Temporal AA is deliberately kept as an optional Ultra layer. Three.js
-    // accumulates jittered samples when the camera is static; while the user
-    // moves the jewelry we temporarily reset accumulation to avoid ghosting.
     try {
       const { TAARenderPass }=await import("three/examples/jsm/postprocessing/TAARenderPass.js");
       taaPass=new TAARenderPass(scene,camera);
       taaPass.accumulate=false;
-      // A jewelry viewport benefits more from stable temporal accumulation than
-      // from a large sample burst. Keep Ultra at 4 samples; the camera is reset
-      // while moving and accumulation resumes only when the product is stable.
       taaPass.sampleLevel=2;
       taaPass.unbiased=true;
       composer.addPass(taaPass);
@@ -72,10 +66,6 @@ export async function createAurumPostPipeline(
     const { LUTPass }=await import("three/examples/jsm/postprocessing/LUTPass.js");
     const size=16;
     const data=new Uint8Array(size*size*size*4);
-    // Build the grading LUT from the active photographic profile instead of
-    // using a second hard-coded color response. This keeps the LUT aligned with
-    // AURUM_POST_CONFIG and makes the post pipeline the single authority for
-    // contrast and saturation.
     const saturation=Math.max(0,Number(config.saturation??1.018));
     const contrast=Math.max(0,Number(config.contrast??1.018));
     const warm=.0015;
@@ -97,23 +87,14 @@ export async function createAurumPostPipeline(
     lutPass=new LUTPass({lut:lutTexture});
     composer.addPass(lutPass);
 
-    // Controlled depth of field: kept very shallow because jewelry product
-    // photography should preserve the ring silhouette while giving the hero
-    // stone a photographic separation. Enabled only at Ultra.
     try {
       const { BokehPass }=await import("three/examples/jsm/postprocessing/BokehPass.js");
-      dofPass=new BokehPass(scene,camera,{
-        focus:4.0,
-        aperture:0.00065,
-        maxblur:0.006
-      });
+      dofPass=new BokehPass(scene,camera,{focus:4.0,aperture:0.00065,maxblur:0.006});
       composer.addPass(dofPass);
     } catch {
       dofPass=null;
     }
 
-    // Subtle photographic vignette: iJewel exposes vignette as a post effect;
-    // here it is intentionally restrained so the jewelry remains the subject.
     const { ShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
     vignettePass=new ShaderPass({
       uniforms:{tDiffuse:{value:null},offset:{value:config.vignetteOffset??1.0},darkness:{value:config.vignetteDarkness??.055}},
@@ -135,24 +116,20 @@ export async function createAurumPostPipeline(
     if(!composer) return;
     const q=next||{};
     const high=q.pixelRatio>=1.5;
-    // Aurum Ultra intentionally uses a lighter 1.6x render scale than the
-    // old 2x target. Keep the feature gate tied to the quality tier rather
-    // than to the obsolete pixel-ratio threshold.
     const ultra=q.pixelRatio>=1.55;
-    if(renderPass){
-      renderPass.enabled=!(ultra && config.taa!==false);
-    }
+
+    // TAA is disabled for this controlled Ultra benchmark. We keep the pass
+    // instantiated so no other post-processing behavior changes; the next
+    // optimization step can evaluate a lighter AA strategy separately.
+    if(renderPass) renderPass.enabled=true;
     if(taaPass){
-      // Ultra uses accumulation only when the scene is stable. The caller can
-      // reset it through updateTemporal() whenever the camera moves.
-      taaPass.enabled=ultra && config.taa!==false;
-      taaPass.accumulate=ultra && config.taa!==false;
+      taaPass.enabled=false;
+      taaPass.accumulate=false;
       taaPass.sampleLevel=2;
     }
+
     if(ssaoPass){
       ssaoPass.enabled=Boolean(config.ssao) && (high || ultra);
-      // SSAO is a secondary contact cue. Render it below the final drawing
-      // resolution so Ultra spends its extra budget on the jewelry itself.
       ssaoPass.kernelSize=ultra?24:high?20:12;
       const ssaoScale=ultra?.72:high?.82:.70;
       ssaoPass.setSize?.(
@@ -171,8 +148,6 @@ export async function createAurumPostPipeline(
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
-      // DOF is a capture/photography effect, not an interactive quality tax.
-      // The photographic profiles decide when it is explicitly requested.
       dofPass.enabled=ultra && config.dof===true;
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
@@ -203,18 +178,12 @@ export async function createAurumPostPipeline(
       || Math.abs(p.x-lastPX)>1e-5 || Math.abs(p.y-lastPY)>1e-5 || Math.abs(p.z-lastPZ)>1e-5
       || Math.abs(q.x-lastQX)>1e-5 || Math.abs(q.y-lastQY)>1e-5 || Math.abs(q.z-lastQZ)>1e-5 || Math.abs(q.w-lastQW)>1e-5;
     if(taaPass){
-      if(moved){
-        taaPass.accumulateIndex=-1;
-        taaPass.accumulate=false;
-      }else if(taaPass.enabled && config.taa!==false){
-        taaPass.accumulate=true;
-      }
+      taaPass.accumulate=false;
+      taaPass.accumulateIndex=-1;
     }
     lastPX=p.x; lastPY=p.y; lastPZ=p.z;
     lastQX=q.x; lastQY=q.y; lastQZ=q.z; lastQW=q.w;
     if(dofPass?.enabled && dofPass.uniforms){
-      // BokehPass focus is measured along the camera look direction. Using the
-      // camera-to-target distance keeps focus attached to the product while zooming.
       const focus=Number.isFinite(focusDistance) ? Number(focusDistance) : 4;
       dofPass.uniforms.focus.value=Math.max(.5,focus);
     }
