@@ -56,6 +56,7 @@ import { ConfiguracionCalculadoras } from "@/components/ConfiguracionCalculadora
 import { AurumRenderConfig } from "@/components/AurumRenderConfig";
 import { SolicitudesAccesoOwner } from "@/components/SolicitudesAccesoOwner";
 import { EcosistemaParticipantesOwner } from "@/components/EcosistemaParticipantesOwner";
+import { EspecialidadesOwner } from "@/components/EspecialidadesOwner";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -95,7 +96,8 @@ type Modulo =
   | "calculadoras"
   | "aurumRender"
   | "solicitudesAcceso"
-  | "ecosistema";
+  | "ecosistema"
+  | "especialidades";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -138,6 +140,7 @@ function GestionPage() {
     { id: "aurumRender", label: "AURUM Render", visible: esDueno },
     { id: "solicitudesAcceso", label: "Solicitudes de acceso", visible: esDueno },
     { id: "ecosistema", label: "Ecosistema", visible: esDueno },
+    { id: "especialidades", label: "Especialidades", visible: esDueno },
   ];
 
   return (
@@ -198,6 +201,7 @@ function GestionPage() {
       {modulo === "aurumRender" && esDueno ? <AurumRenderConfig /> : null}
       {modulo === "solicitudesAcceso" && esDueno ? <SolicitudesAccesoOwner /> : null}
       {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
+      {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
     </AppShell>
   );
 }
