@@ -114,7 +114,7 @@ export const MATERIALES: MaterialConfig[] = [
   // la documentación técnica define la ley y el efecto del cobre/plata sobre
   // el color, pero no prescribe valores RGB/PBR universales.
   { id: "oro18a_artesanal_pulido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Artesanal", color: 0xd8ad4c, metalness: 1, roughness: .16, envMapIntensity: 1.8, clearcoat: .12, anisotropy: .08 },
-  { id: "oro18a_calido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Cálido", color: 0xe0b24b, metalness: 1, roughness: .15, envMapIntensity: 1.82, clearcoat: .12, anisotropy: .06 },
+  { id: "oro18a_calido", grupo: "Oro Amarillo", nombre: "Oro 18K Amarillo Cálido", color: 0xddad45, metalness: 1, roughness: .12, envMapIntensity: 1.84, clearcoat: .14, anisotropy: .05 },
   { id: "oro18_naranja", grupo: "Especiales", nombre: "Oro 18K Naranja", color: 0xd8893f, metalness: 1, roughness: .16, envMapIntensity: 1.78, clearcoat: .12, anisotropy: .06 },
   { id: "oro18_rojo", grupo: "Especiales", nombre: "Oro 18K Rojo", color: 0xc96f55, metalness: 1, roughness: .17, envMapIntensity: 1.75, clearcoat: .12, anisotropy: .07 },
   { id: "oro18_martillado", grupo: "Oro Amarillo", nombre: "Oro 18K Martillado Artesanal", color: 0xcaa254, metalness: 1, roughness: .24, envMapIntensity: 1.55, clearcoat: .07, anisotropy: .10 },
