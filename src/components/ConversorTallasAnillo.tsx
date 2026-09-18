@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, CircleDot, Ruler, Search } from "lucide-react";
 import { CLAVES_CALCULADORAS, leerConfigTallasAnillo, formatearTallaAmericana, type TallaAnillo } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
@@ -13,7 +13,8 @@ const modos: { id: ModoBusqueda; label: string; placeholder: string }[] = [
   { id: "americana", label: "Talla americana (USA)", placeholder: "Ej. 9 3/4" },
 ];
 
-const TARJETA_MM = 85.6;
+const REFERENCIAS = { moneda: { label: "Moneda S/1", mm: 25.5 }, tarjeta: { label: "Tarjeta bancaria", mm: 85.6 } } as const;
+type ReferenciaCalibracion = keyof typeof REFERENCIAS;
 
 function normalizar(valor: string) {
   return Number(valor.replace(",", ".").trim());
@@ -44,7 +45,7 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
   const [anchoCalibracion, setAnchoCalibracion] = useState(320);
   const [diametroPx, setDiametroPx] = useState(210);
 
-  const mmPorPx = TARJETA_MM / anchoCalibracion;
+  useEffect(() => {\n    const actualizarReferencia = () => {\n      setReferencia(window.innerWidth < 768 ? "moneda" : "tarjeta");\n      setCalibrada(false);\n    };\n    actualizarReferencia();\n    window.addEventListener("resize", actualizarReferencia);\n    return () => window.removeEventListener("resize", actualizarReferencia);\n  }, []);\n\n  const referenciaMm = REFERENCIAS[referencia].mm;\n  const mmPorPx = referenciaMm / anchoCalibracion;
   const diametroMedido = diametroPx * mmPorPx;
 
   const resultadoBusqueda = useMemo(() => {
@@ -84,7 +85,7 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
       setValor("");
     } else {
       setCalibrada(false);
-      setAnchoCalibracion(320);
+      setReferencia(window.innerWidth < 768 ? "moneda" : "tarjeta");\n      setAnchoCalibracion(window.innerWidth < 768 ? 150 : 320);
       setDiametroPx(210);
     }
   };
@@ -179,7 +180,7 @@ function MedidorAnillo({
     <div className="space-y-4">
       <div className="rounded-xl border border-info/20 bg-info-soft/40 p-3 text-xs text-muted-foreground">
         <p className="font-semibold text-foreground">1. Calibra tu pantalla</p>
-        <p className="mt-1">Coloca una tarjeta bancaria estándar sobre la guía y ajusta el control hasta que los bordes coincidan. La referencia física es 85,6 mm.</p>
+        <p className="mt-1">Coloca la referencia física sobre la guía y ajusta el control hasta que coincida exactamente. En celular recomendamos la moneda peruana de S/1 (25,5 mm), porque cabe completa en la pantalla. La tarjeta bancaria de 85,6 mm queda disponible para pantallas más grandes.</p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-background p-4">
@@ -189,8 +190,8 @@ function MedidorAnillo({
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded bg-background px-2 text-[10px] font-semibold">85,6 mm</span>
           </div>
         </div>
-        <input aria-label="Ajuste de calibración de pantalla" type="range" min="180" max="520" step="1" value={anchoCalibracion} onChange={(e) => { setAnchoCalibracion(Number(e.target.value)); if (calibrada) onCalibrar(); }} className="mt-3 w-full" />
-        <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground"><span>Más pequeño</span><span>{anchoCalibracion} px</span><span>Más grande</span></div>
+        <input aria-label="Ajuste de calibración de pantalla" type="range" min={referencia === "moneda" ? 80 : 180} max={referencia === "moneda" ? 360 : 520} step="0.5" value={anchoCalibracion} onChange={(e) => { setAnchoCalibracion(Number(e.target.value)); if (calibrada) onCalibrar(); }} className="mt-3 w-full" />
+        <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground"><span>Más pequeño</span><span>{anchoCalibracion.toFixed(1)} px · {referenciaMm.toFixed(1)} mm</span><span>Más grande</span></div>
         <button type="button" onClick={onCalibrar} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground">
           <Check className="size-4" aria-hidden="true" /> Confirmar calibración
         </button>
@@ -214,7 +215,7 @@ function MedidorAnillo({
           </div>
 
           <input aria-label="Ajuste del diámetro del anillo" type="range" min="60" max="520" step="1" value={diametroPx} onChange={(e) => onDiametroChange(Number(e.target.value))} className="w-full" />
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground"><span>Menor</span><span>Ajuste fino: 0,1 mm</span><span>Mayor</span></div>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground"><span>Menor</span><span>Ajuste fino</span><span>Mayor</span></div>
 
           {resultado ? (
             <>
@@ -226,7 +227,7 @@ function MedidorAnillo({
             </>
           ) : null}
 
-          <p className="text-[10px] leading-relaxed text-muted-foreground">La medición depende de la calibración y del ajuste visual del usuario. Es una referencia orientativa; para una medida de producción o venta, verifica con un medidor físico.</p>
+          <p className="text-[10px] leading-relaxed text-muted-foreground">La medición depende de la calibración y del ajuste visual del usuario. En celular utiliza preferentemente la moneda S/1 como referencia. Es una referencia orientativa; para una medida de producción o venta, verifica con un medidor físico.</p>
         </>
       ) : null}
     </div>
