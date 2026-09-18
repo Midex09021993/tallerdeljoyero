@@ -49,7 +49,8 @@ export type GemaId =
   | "granate_almandino" | "granate_tsavorita" | "granate_demantoide"
   | "peridoto_natural" | "morganita_natural" | "zircon_azul" | "zircon_incoloro"
   | "zafiro_rosa" | "zafiro_amarillo" | "zafiro_padparadscha"
-  | "turmalina_verde" | "turmalina_rosa" | "turmalina_azul";
+  | "turmalina_verde" | "turmalina_rosa" | "turmalina_azul"
+  | "crisoberilo_gato" | "crisoberilo_estrella" | "zafiro_estrella" | "rubi_estrella";
 export type GemaOrigen = "Colombia" | "Brasil" | "Bolivia" | "Perú" | "Argentina" | "Latinoamérica" | "Global";
 export type GemaPerfilInterno = "colombia_jardin" | "brasil_jardin" | "paraiba_acicular" | "paraiba_chatoyancy" | "brasil_pegmatita" | "ametrino_zonificado" | "cuarzo_rutilado" | "opal_microestructura" | "crisocola_calcedonia" | "rodocrosita_crecimiento" | "generico";
 export type GemaConfig = {
@@ -57,6 +58,7 @@ export type GemaConfig = {
   attenuationColor:number; attenuationDistance:number; dispersion:number; iridescence:number;
   inclusionStyle:"ninguna"|"diamante"|"silk"|"velos"; inclusionStrength:number;
   origen?:GemaOrigen; perfilInterno?:GemaPerfilInterno; notaGemologica?:string;
+  fenomenoOptico?: "chatoyancy" | "asterism";
 };
 export type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number; anisotropy?: number; anisotropyRotation?: number };
 export type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
@@ -117,6 +119,10 @@ export const GEMAS: GemaConfig[] = [
   { id:"turmalina_verde", familia:"Turmalina", nombre:"Turmalina Verde", color:0x319b63, transmission:.9, ior:1.634, roughness:.024, envMapIntensity:4.0, attenuationColor:0x1c7047, attenuationDistance:2.9, dispersion:.018, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.12, origen:"Global", perfilInterno:"generico" },
   { id:"turmalina_rosa", familia:"Turmalina", nombre:"Turmalina Rosa", color:0xd95f91, transmission:.89, ior:1.634, roughness:.026, envMapIntensity:3.9, attenuationColor:0x8e3761, attenuationDistance:2.6, dispersion:.018, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.14, origen:"Global", perfilInterno:"generico" },
   { id:"turmalina_azul", familia:"Turmalina", nombre:"Turmalina Azul · Indicolita", color:0x2778a8, transmission:.9, ior:1.634, roughness:.024, envMapIntensity:4.05, attenuationColor:0x185474, attenuationDistance:2.9, dispersion:.018, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.12, origen:"Global", perfilInterno:"generico" },
+  { id:"crisoberilo_gato", familia:"Crisoberilo", nombre:"Crisoberilo · Ojo de Gato", color:0x8f9650, transmission:.82, ior:1.75, roughness:.045, envMapIntensity:3.6, attenuationColor:0x5d6330, attenuationDistance:1.9, dispersion:.015, iridescence:.004, inclusionStyle:"silk", inclusionStrength:.22, origen:"Global", perfilInterno:"generico", fenomenoOptico:"chatoyancy", notaGemologica:"Chatoyancia por inclusiones orientadas paralelas; la manifestación real depende del corte cabujón y de la orientación de las agujas." },
+  { id:"crisoberilo_estrella", familia:"Crisoberilo", nombre:"Crisoberilo · Estrella", color:0x8b9251, transmission:.8, ior:1.75, roughness:.05, envMapIntensity:3.5, attenuationColor:0x5b6030, attenuationDistance:1.8, dispersion:.015, iridescence:.004, inclusionStyle:"silk", inclusionStrength:.24, origen:"Global", perfilInterno:"generico", fenomenoOptico:"asterism", notaGemologica:"Asterismo por sistemas de inclusiones orientadas; puede producir cuatro o más rayos según la estructura y el corte." },
+  { id:"zafiro_estrella", familia:"Zafiro", nombre:"Zafiro · Estrella Natural", color:0x244f8d, transmission:.78, ior:1.77, roughness:.055, envMapIntensity:3.5, attenuationColor:0x163562, attenuationDistance:1.45, dispersion:.012, iridescence:.004, inclusionStyle:"silk", inclusionStrength:.28, origen:"Global", perfilInterno:"generico", fenomenoOptico:"asterism", notaGemologica:"Asterismo natural asociado a seda de rutilo orientada; el efecto requiere orientación y corte adecuados." },
+  { id:"rubi_estrella", familia:"Rubí", nombre:"Rubí · Estrella Natural", color:0x941d2b, transmission:.76, ior:1.77, roughness:.058, envMapIntensity:3.45, attenuationColor:0x5d0d18, attenuationDistance:1.35, dispersion:.011, iridescence:.004, inclusionStyle:"silk", inclusionStrength:.3, origen:"Global", perfilInterno:"generico", fenomenoOptico:"asterism", notaGemologica:"Asterismo natural asociado a seda orientada; el número y nitidez de los rayos dependen de la orientación interna." },
 ];
 
 export const MATERIALES: MaterialConfig[] = [
