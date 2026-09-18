@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
-import { ArrowRight, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, Sparkles, UserRound, UsersRound } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
@@ -41,6 +41,7 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
   const modoAlta = Boolean(estado?.vacio);
 
   useEffect(() => {
@@ -157,9 +158,9 @@ function LoginPage() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <a href="#herramientas" className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
-                Explorar herramientas <ArrowRight className="size-4" />
-              </a>
+              <button type="button" onClick={() => setMostrarPlataforma(true)} className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
+                Conocer la plataforma <ArrowRight className="size-4" />
+              </button>
               <SolicitudAcceso />
             </div>
           </section>
@@ -220,6 +221,63 @@ function LoginPage() {
           <p className="mt-4 hidden text-center text-[10px] tracking-wider text-white/25 md:block max-[767px]:block">Desarrollado por Fadilab</p>
         </section>
       </div>
+
+      {mostrarPlataforma ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="plataforma-title">
+          <div className="relative max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-gold/25 bg-[#101214] shadow-2xl">
+            <button type="button" onClick={() => setMostrarPlataforma(false)} aria-label="Cerrar"
+              className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/30 p-2 text-white/60 hover:text-gold">
+              <EyeOff className="size-4" />
+            </button>
+            <div className="max-h-[90vh] overflow-y-auto p-5 sm:p-8">
+              <div className="max-w-3xl">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gold">Aurum Lab · Ecosistema profesional</p>
+                <h2 id="plataforma-title" className="mt-2 font-display text-3xl italic text-white sm:text-4xl">Mucho más que herramientas</h2>
+                <p className="mt-3 text-sm leading-relaxed text-white/60">
+                  Una plataforma pensada para conectar la gestión del taller, la producción, las herramientas técnicas, los colaboradores y el desarrollo profesional en un mismo ecosistema.
+                </p>
+              </div>
+
+              <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { icon: Boxes, title: "Gestión del taller", text: "Clientes, proyectos, cotizaciones, pedidos, trabajos, inventario, pagos y entregas." },
+                  { icon: Sparkles, title: "AURUM Studio", text: "Visualización 3D, materiales, piedras, escenas y renders orientados a joyería." },
+                  { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras y conversores para apoyar decisiones de diseño, fabricación y producción." },
+                  { icon: PackageCheck, title: "Producción y trazabilidad", text: "Seguimiento de trabajos por área, ubicación, responsable, estado e historial." },
+                  { icon: Network, title: "Red profesional", text: "Conexión con profesionales, proveedores y servicios especializados del sector." },
+                  { icon: UsersRound, title: "Talento y prácticas", text: "Espacio futuro para oportunidades de prácticas, aprendices y colaboración profesional." },
+                  { icon: Headphones, title: "Formación", text: "Instituciones, cursos, capacitaciones y programas especializados para el sector joyero." },
+                  { icon: ShieldCheck, title: "Acceso seguro", text: "Cada perfil accede únicamente a las funciones y datos que le corresponden." },
+                  { icon: Gem, title: "Historial de cada joya", text: "Un proyecto puede reunir diseño, especificaciones, producción, archivos, fotos y documentación." },
+                ].map(({ icon: Icon, title, text }) => (
+                  <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35 hover:bg-white/[0.045]">
+                    <Icon className="size-6 text-gold" />
+                    <h3 className="mt-3 text-sm font-semibold text-white">{title}</h3>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p>
+                  </article>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-gold/20 bg-gold/[0.06] p-4">
+                <div className="flex items-start gap-3">
+                  <Grid2X2 className="mt-0.5 size-5 shrink-0 text-gold" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Cómo se conecta todo</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-white/55">
+                      Cliente → Proyecto Joya → Cotización → Pedido → Producción → Inventario → Entrega. AURUM, las herramientas técnicas y la red profesional se conectan al flujo cuando corresponde.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <button type="button" onClick={() => setMostrarPlataforma(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/70 hover:border-gold/40 hover:text-white">Cerrar</button>
+                <SolicitudAcceso />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <footer className="relative z-10 shrink-0 border-t border-white/10 px-5 py-3 lg:px-6 lg:py-5 max-[767px]:block">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 text-xs text-white/45 max-[767px]:flex-col max-[767px]:justify-center max-[767px]:gap-3 max-[767px]:text-center">
