@@ -44,6 +44,7 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
   const [calibrada, setCalibrada] = useState(false);
   const [anchoCalibracion, setAnchoCalibracion] = useState(320);
   const [diametroPx, setDiametroPx] = useState(210);
+  const [referencia, setReferencia] = useState<ReferenciaCalibracion>("tarjeta");
 
   useEffect(() => {
     const actualizarReferencia = () => {
