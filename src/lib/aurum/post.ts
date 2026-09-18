@@ -139,7 +139,7 @@ export async function createAurumPostPipeline(
       ssaoPass.aoClamp=Math.max(0,Math.min(1,(config.ssaoIntensity??.12)*(ultra?.92:.82)));
     }
     if(bloomPass){
-      bloomPass.enabled=Boolean(config.bloom) && (high || ultra);
+      bloomPass.enabled=Boolean(config.bloom) && high;
       bloomPass.strength=config.bloomIntensity??.035;
       bloomPass.threshold=config.bloomThreshold??1.5;
     }
