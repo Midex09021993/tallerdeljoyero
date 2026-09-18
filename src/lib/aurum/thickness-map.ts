@@ -34,7 +34,7 @@ const barycentric=(p:THREE.Vector2,a:THREE.Vector2,b:THREE.Vector2,c:THREE.Vecto
   return w1>=-1e-5&&w2>=-1e-5&&w3>=-1e-5?[w1,w2,w3] as [number,number,number]:null;
 };
 
-export const buildAurumThicknessMap=(target:any,scalarThickness:number,size=128):ThicknessMapResult|null=>{
+export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=128):ThicknessMapResult|null=>{
   const geometry=target?.geometry;
   const position=geometry?.getAttribute?.("position");
   const normal=geometry?.getAttribute?.("normal");
@@ -124,7 +124,7 @@ export const buildAurumThicknessMap=(target:any,scalarThickness:number,size=128)
 
   return {
     texture,
-    baseThickness:Math.max(.015,maxDepth*1.05*Math.max(.5,Math.min(1.5,Number((target.userData?.aurumThicknessScale)??1)))),
+    baseThickness:Math.max(.015,maxDepth*1.05*Math.max(.5,Math.min(1.5,Number(thicknessScale??1)))),
     hitRatio,
     minDepth,
     maxDepth,
