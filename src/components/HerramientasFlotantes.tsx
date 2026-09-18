@@ -33,14 +33,14 @@ export function HerramientasFlotantes() {
   const [activa, setActiva] = useState<string>("yeso");
 
   return (
-    <div className="fixed bottom-24 left-2 z-40 flex items-center md:bottom-auto md:left-0 md:top-1/2 md:-translate-y-1/2">
+    <div className="fixed bottom-20 left-0 z-50 flex items-center md:bottom-auto md:left-0 md:top-1/2 md:-translate-y-1/2">
       {/* Pestaña colapsada */}
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         aria-label={abierto ? "Cerrar herramientas" : "Abrir herramientas"}
-        className="flex h-36 w-10 flex-col items-center justify-center gap-2 rounded-r-2xl border border-l-0 border-[#d4af37] bg-ink text-ink-foreground/70 shadow-[0_0_10px_rgba(212,175,55,.85),0_0_24px_rgba(212,175,55,.5),inset_0_0_8px_rgba(212,175,55,.2)] backdrop-blur transition-all duration-300 hover:text-gold hover:shadow-[0_0_14px_rgba(212,175,55,1),0_0_32px_rgba(212,175,55,.7),inset_0_0_10px_rgba(212,175,55,.3)]"
+        className="flex h-28 w-9 flex-col items-center justify-center gap-1.5 rounded-r-2xl sm:h-36 sm:w-10 sm:gap-2 border border-l-0 border-[#d4af37] bg-ink text-ink-foreground/70 shadow-[0_0_10px_rgba(212,175,55,.85),0_0_24px_rgba(212,175,55,.5),inset_0_0_8px_rgba(212,175,55,.2)] backdrop-blur transition-all duration-300 hover:text-gold hover:shadow-[0_0_14px_rgba(212,175,55,1),0_0_32px_rgba(212,175,55,.7),inset_0_0_10px_rgba(212,175,55,.3)]"
       >
         <Wrench className="size-4" aria-hidden="true" />
         <span className="text-[10px] font-semibold uppercase tracking-[0.25em] [writing-mode:vertical-rl]">
@@ -51,10 +51,10 @@ export function HerramientasFlotantes() {
       {/* Panel desplegable */}
       <div
         className={`overflow-hidden border-y border-l border-ink-foreground/15 bg-ink/95 shadow-2xl backdrop-blur transition-all duration-300 ease-out ${
-          abierto ? "w-[min(94vw,440px)] opacity-100" : "w-0 opacity-0"
+          abierto ? "w-[calc(100vw-2.25rem)] max-w-[440px] opacity-100" : "w-0 opacity-0"
         }`}
       >
-        <div className="max-h-[80vh] w-[min(94vw,440px)] overflow-y-auto rounded-r-2xl p-4">
+        <div className="max-h-[calc(100vh-7rem)] w-full overflow-y-auto rounded-r-2xl p-3 sm:max-h-[80vh] sm:w-[min(94vw,440px)] sm:p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
               Herramientas
