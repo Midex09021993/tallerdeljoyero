@@ -100,7 +100,15 @@ const opticalProfileFromCatalog=(g:any)=>{
     : undefined;
   const phenomenon=(g as any).fenomenoOptico;
   const phenomenonProfile=phenomenon
-    ? {enabled:true,type:String(phenomenon),strength:phenomenon==="chatoyancy"?.72:.68}
+    ? {
+        enabled:true,
+        type:String(phenomenon),
+        strength:phenomenon==="chatoyancy"?.72:phenomenon==="asterism"?.68:.58,
+        axisA:new THREE.Vector3(1,0,0),
+        axisB:new THREE.Vector3(0.5,.8660254,0),
+        axisC:new THREE.Vector3(-.5,.8660254,0),
+        scaleNm:gemId.includes("opal")?Number(g.phenomenonScaleNm??170):0,
+      }
     : undefined;
   return {
     ...base,
