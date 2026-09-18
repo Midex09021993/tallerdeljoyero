@@ -60,7 +60,7 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
     edgeRight:source(.9,6.4,.17,[4.6,3.8,1.0]),
   },
   jewelry:{
-    softbox:source(13.5,9.0,1.72,[3.8,5.8,4.8]),
+    softbox:source(16.0,9.0,1.72,[3.8,5.8,4.8]),
     strip:source(3.2,11.8,.78,[-3.8,3.6,3.0]),
     front:source(7.0,5.0,.30,[0,3.1,5.8]),
     kicker:source(2.6,9.0,.62,[4.4,4.0,-3.0]),
