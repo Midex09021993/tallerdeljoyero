@@ -173,7 +173,8 @@ export function useConfiguracionesCalculadoras() {
 }
 export type TallaAnillo = {
   diametroMm: number;
-  europea: number;
+  espanola: number;
+  europeaIso: number;
   americana: string | null;
 };
 
@@ -183,73 +184,32 @@ export type ConfigTallasAnillo = {
 
 export const DEFAULT_CONFIG_TALLAS_ANILLO: ConfigTallasAnillo = {
   tabla: [
-    { diametroMm: 14.6, europea: 6, americana: null },
-    { diametroMm: 15.0, europea: 7, americana: "4" },
-    { diametroMm: 15.3, europea: 8, americana: null },
-    { diametroMm: 15.6, europea: 9, americana: "5" },
-    { diametroMm: 15.9, europea: 10, americana: null },
-    { diametroMm: 16.2, europea: 11, americana: null },
-    { diametroMm: 16.5, europea: 12, americana: "6" },
-    { diametroMm: 16.8, europea: 13, americana: null },
-    { diametroMm: 17.2, europea: 14, americana: "7" },
-    { diametroMm: 17.5, europea: 15, americana: null },
-    { diametroMm: 17.8, europea: 16, americana: null },
-    { diametroMm: 18.1, europea: 17, americana: "8" },
-    { diametroMm: 18.4, europea: 18, americana: null },
-    { diametroMm: 18.8, europea: 19, americana: null },
-    { diametroMm: 19.1, europea: 20, americana: "9" },
-    { diametroMm: 19.4, europea: 21, americana: null },
-    { diametroMm: 19.7, europea: 22, americana: "10" },
-    { diametroMm: 20.0, europea: 23, americana: null },
-    { diametroMm: 20.3, europea: 24, americana: null },
-    { diametroMm: 20.6, europea: 25, americana: "11" },
-    { diametroMm: 21.0, europea: 26, americana: null },
-    { diametroMm: 21.3, europea: 27, americana: "12" },
-    { diametroMm: 21.6, europea: 28, americana: null },
-    { diametroMm: 22.0, europea: 29, americana: null },
-    { diametroMm: 22.3, europea: 30, americana: "13" },
-    { diametroMm: 22.6, europea: 31, americana: null },
-    { diametroMm: 22.9, europea: 32, americana: null },
-    { diametroMm: 23.2, europea: 33, americana: "14" },
-    { diametroMm: 23.5, europea: 34, americana: null },
-    { diametroMm: 23.9, europea: 35, americana: "15" },
-
-    { diametroMm: 15.04, europea: 7, americana: "4 1/4" },
-    { diametroMm: 15.27, europea: 8, americana: "4 1/2" },
-    { diametroMm: 15.53, europea: 9, americana: "4 3/4" },
-    { diametroMm: 15.90, europea: 10, americana: "5 1/4" },
-    { diametroMm: 16.10, europea: 11, americana: "5 1/2" },
-    { diametroMm: 16.30, europea: 11, americana: "5 3/4" },
-    { diametroMm: 16.71, europea: 13, americana: "6 1/4" },
-    { diametroMm: 16.92, europea: 13, americana: "6 1/2" },
-    { diametroMm: 17.13, europea: 14, americana: "6 3/4" },
-    { diametroMm: 17.45, europea: 15, americana: "7 1/4" },
-    { diametroMm: 17.75, europea: 16, americana: "7 1/2" },
-    { diametroMm: 17.97, europea: 17, americana: "7 3/4" },
-    { diametroMm: 18.35, europea: 18, americana: "8 1/4" },
-    { diametroMm: 18.53, europea: 18, americana: "8 1/2" },
-    { diametroMm: 18.69, europea: 19, americana: "8 3/4" },
-    { diametroMm: 19.22, europea: 20, americana: "9 1/4" },
-    { diametroMm: 19.41, europea: 21, americana: "9 1/2" },
-    { diametroMm: 19.62, europea: 22, americana: "9 3/4" },
-    { diametroMm: 20.02, europea: 23, americana: "10 1/4" },
-    { diametroMm: 20.20, europea: 24, americana: "10 1/2" },
-    { diametroMm: 20.44, europea: 24, americana: "10 3/4" },
-    { diametroMm: 20.85, europea: 26, americana: "11 1/4" },
-    { diametroMm: 21.08, europea: 26, americana: "11 1/2" },
-    { diametroMm: 21.24, europea: 27, americana: "11 3/4" },
-    { diametroMm: 21.69, europea: 28, americana: "12 1/4" },
-    { diametroMm: 21.89, europea: 29, americana: "12 1/2" },
-    { diametroMm: 22.10, europea: 29, americana: "12 3/4" },
-    { diametroMm: 22.40, europea: 30, americana: "13 1/4" },
-    { diametroMm: 22.60, europea: 31, americana: "13 1/2" },
-    { diametroMm: 22.80, europea: 32, americana: "13 3/4" },
-    { diametroMm: 23.20, europea: 33, americana: "14 1/4" },
-    { diametroMm: 23.40, europea: 34, americana: "14 1/2" },
-    { diametroMm: 23.60, europea: 34, americana: "14 3/4" },
-    { diametroMm: 24.00, europea: 35, americana: "15 1/4" },
-    { diametroMm: 24.20, europea: 35, americana: "15 1/2" },
-    { diametroMm: 24.40, europea: 35, americana: "15 3/4" },
+    { diametroMm: 15.2, espanola: 8, europeaIso: 48, americana: "4 1/2" },
+    { diametroMm: 15.5, espanola: 9, europeaIso: 49, americana: "4 3/4" },
+    { diametroMm: 15.9, espanola: 10, europeaIso: 50, americana: "5 1/4" },
+    { diametroMm: 16.2, espanola: 11, europeaIso: 51, americana: "5 3/4" },
+    { diametroMm: 16.5, espanola: 12, europeaIso: 52, americana: "6" },
+    { diametroMm: 16.8, espanola: 13, europeaIso: 53, americana: "6 1/4" },
+    { diametroMm: 17.1, espanola: 14, europeaIso: 54, americana: "6 3/4" },
+    { diametroMm: 17.4, espanola: 15, europeaIso: 55, americana: "7 1/4" },
+    { diametroMm: 17.8, espanola: 16, europeaIso: 56, americana: "7 1/2" },
+    { diametroMm: 18.0, espanola: 17, europeaIso: 57, americana: "8" },
+    { diametroMm: 18.4, espanola: 18, europeaIso: 58, americana: "8 1/4" },
+    { diametroMm: 18.7, espanola: 19, europeaIso: 59, americana: "8 3/4" },
+    { diametroMm: 19.0, espanola: 20, europeaIso: 60, americana: "9" },
+    { diametroMm: 19.3, espanola: 21, europeaIso: 61, americana: "9 1/2" },
+    { diametroMm: 19.6, espanola: 22, europeaIso: 62, americana: "9 3/4" },
+    { diametroMm: 20.0, espanola: 23, europeaIso: 63, americana: "10 1/4" },
+    { diametroMm: 20.3, espanola: 24, europeaIso: 64, americana: "10 1/2" },
+    { diametroMm: 20.6, espanola: 25, europeaIso: 65, americana: "11" },
+    { diametroMm: 21.0, espanola: 26, europeaIso: 66, americana: "11 1/2" },
+    { diametroMm: 21.3, espanola: 27, europeaIso: 67, americana: "12" },
+    { diametroMm: 21.6, espanola: 28, europeaIso: 68, americana: "12 1/4" },
+    { diametroMm: 22.0, espanola: 29, europeaIso: 69, americana: "12 3/4" },
+    { diametroMm: 22.3, espanola: 30, europeaIso: 70, americana: "13" },
+    { diametroMm: 22.6, espanola: 31, europeaIso: 71, americana: "13 1/2" },
+    { diametroMm: 23.0, espanola: 32, europeaIso: 72, americana: "14" },
+    { diametroMm: 23.3, espanola: 33, europeaIso: 73, americana: "14 1/2" },
   ],
 };
 
@@ -284,10 +244,12 @@ export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
     .map((item) => {
       const o = objeto(item);
       const diametroMm = numero(o.diametroMm, NaN);
-      const europea = numero(o.europea, NaN);
+      // Compatibilidad con la configuración anterior: "europea" era en realidad la talla española.
+      const espanola = numero(o.espanola, numero(o.europea, NaN));
+      const europeaIso = numero(o.europeaIso, Number.isFinite(diametroMm) ? Math.round(diametroMm * Math.PI) : NaN);
       const americana = formatearTallaAmericana(o.americana);
-      if (!Number.isFinite(diametroMm) || !Number.isFinite(europea)) return null;
-      return { diametroMm, europea, americana };
+      if (!Number.isFinite(diametroMm) || !Number.isFinite(espanola) || !Number.isFinite(europeaIso)) return null;
+      return { diametroMm, espanola, europeaIso, americana };
     })
     .filter((item): item is TallaAnillo => item !== null)
     .sort((a, b) => a.diametroMm - b.diametroMm);
