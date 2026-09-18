@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Building2, BriefcaseBusiness, Package, Wrench, X } from "lucide-react";
+import { Building2, BriefcaseBusiness, Package, ShoppingBag, Wrench, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Tipo = "taller" | "profesional" | "proveedor" | "servicio";
+type Tipo = "taller" | "profesional" | "vendedor" | "proveedor" | "servicio";
 
 const opciones: Array<{ value: Tipo; label: string; descripcion: string; icon: typeof Building2 }> = [
   { value: "taller", label: "Taller / Joyería", descripcion: "Empresa o taller de joyería que quiere participar.", icon: Building2 },
   { value: "profesional", label: "Profesional independiente", descripcion: "Diseñador 3D, modelador u otro especialista.", icon: BriefcaseBusiness },
+  { value: "vendedor", label: "Vendedor / Comercializador", descripcion: "Tienda, vendedor o representante comercial de joyería.", icon: ShoppingBag },
   { value: "proveedor", label: "Proveedor del sector joyero", descripcion: "Materiales, piedras, insumos, herramientas o productos.", icon: Package },
   { value: "servicio", label: "Servicio especializado", descripcion: "Casting, engaste, grabado, pulido, láser y otros procesos.", icon: Wrench },
 ];
@@ -82,7 +83,7 @@ export function SolicitudAcceso() {
                 <p className="text-[10px] uppercase tracking-[0.25em] text-gold">Aurum Lab · Ecosistema</p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">Solicitar acceso de prueba</h2>
                 <p className="mt-2 text-sm leading-relaxed text-white/55">
-                  Regístrate como taller, profesional, proveedor o servicio especializado. La participación se activa después de la validación por el equipo de Aurum Lab.
+                  Regístrate como taller, profesional, vendedor, proveedor o servicio especializado. La participación se activa después de la validación por el equipo de Aurum Lab.
                 </p>
               </div>
               <button type="button" onClick={cerrar} className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white" aria-label="Cerrar">
