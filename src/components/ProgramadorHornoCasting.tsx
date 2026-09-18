@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Flame, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Eye, Flame, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type EtapaHorno = {
@@ -153,6 +153,7 @@ export function ProgramadorHornoCasting() {
   const [programaId, setProgramaId] = useState("rapida-15");
   const [etapas, setEtapas] = useState<EtapaHorno[]>(() => clonarEtapas(PROGRAMAS[0].etapas));
   const [personalizado, setPersonalizado] = useState(false);
+  const [modoEdicion, setModoEdicion] = useState(false);
 
   const programaSeleccionado = PROGRAMAS.find((p) => p.id === programaId) ?? PROGRAMAS[0];
 
@@ -181,6 +182,7 @@ export function ProgramadorHornoCasting() {
     setProgramaId(programa.id);
     setEtapas(clonarEtapas(programa.etapas));
     setPersonalizado(false);
+    setModoEdicion(false);
   };
 
   const cambiar = (id: string, campo: "nombre" | "temperatura" | "rampaMin" | "sostenimientoMin", valor: string) => {
@@ -224,16 +226,23 @@ export function ProgramadorHornoCasting() {
                 Diseña, revisa y adapta ciclos térmicos para patrones de joyería antes de la colada.
               </p>
             </div>
-            <button type="button" onClick={() => { setInicio(25); cargar("rapida-15"); }}
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => setModoEdicion((v) => !v)}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-border bg-background/80 px-3 text-[11px] font-semibold transition hover:border-gold hover:bg-gold/5">
+                {modoEdicion ? <Eye className="size-3.5" /> : <Pencil className="size-3.5" />}
+                {modoEdicion ? "Modo operador" : "Editar ciclo"}
+              </button>
+              <button type="button" onClick={() => { setInicio(25); cargar("rapida-15"); }}
               className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-border bg-background/80 px-3 text-[11px] font-semibold transition hover:border-gold hover:bg-gold/5">
-              <RotateCcw className="size-3.5" /> Restablecer
-            </button>
+                <RotateCcw className="size-3.5" /> Restablecer
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
             <label className="rounded-2xl border border-border bg-background/90 p-3.5">
               <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Programa / material</span>
-              <select value={programaId} onChange={(e) => cargar(e.target.value)}
+              <select disabled={!modoEdicion} value={programaId} onChange={(e) => cargar(e.target.value)}
                 className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm font-semibold outline-none transition focus:border-primary">
                 {(["Referencia de proyecto", "Cera convencional", "Castable Wax", "Castable Resin"] as const).map((categoria) => (
                   <optgroup key={categoria} label={categoria}>
@@ -267,7 +276,7 @@ export function ProgramadorHornoCasting() {
                 <h3 className="text-sm font-bold tracking-tight">Secuencia térmica</h3>
                 <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">Temperatura objetivo, rampa y sostenimiento de cada etapa.</p>
               </div>
-              <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">{personalizado ? "Personalizado" : "Referencia"}</span>
+              <span className="shrink-0 rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">{modoEdicion ? "Edición" : "Operador"}</span>
             </div>
 
             <div className="space-y-3">
@@ -277,21 +286,21 @@ export function ProgramadorHornoCasting() {
                   <div className="flex items-center justify-between gap-3 pl-1">
                     <div className="min-w-0 flex-1">
                       <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-gold">Etapa {String(i + 1).padStart(2, "0")}</span>
-                      <input value={e.nombre} onChange={(x) => cambiar(e.id, "nombre", x.target.value)}
+                      <input disabled={!modoEdicion} value={e.nombre} onChange={(x) => cambiar(e.id, "nombre", x.target.value)}
                         className="mt-1 h-8 w-full rounded-lg border border-transparent bg-transparent px-0 text-sm font-bold outline-none transition focus:border-border focus:bg-card focus:px-2" />
                     </div>
                     {etapas.length > 1 && (
                       <button type="button" onClick={() => eliminar(e.id)} aria-label="Eliminar etapa"
                         className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
-                        <Trash2 className="size-3.5" />
-                      </button>
+                          <Trash2 className="size-3.5" />
+                        </button>}
                     )}
                   </div>
                   <div className="mt-2.5 grid grid-cols-3 gap-2 pl-1">
                     <label className="rounded-xl border border-border/80 bg-card p-2.5">
                       <span className="block text-[9px] text-muted-foreground">Objetivo</span>
                       <div className="mt-1 flex items-baseline gap-1">
-                        <input type="number" min="0" value={e.temperatura} onChange={(x) => cambiar(e.id, "temperatura", x.target.value)}
+                        <input disabled={!modoEdicion} type="number" min="0" value={e.temperatura} onChange={(x) => cambiar(e.id, "temperatura", x.target.value)}
                           className="w-full min-w-0 bg-transparent text-lg font-bold outline-none" />
                         <span className="text-[9px] text-muted-foreground">°C</span>
                       </div>
@@ -299,7 +308,7 @@ export function ProgramadorHornoCasting() {
                     <label className="rounded-xl border border-border/80 bg-card p-2.5">
                       <span className="block text-[9px] text-muted-foreground">Rampa</span>
                       <div className="mt-1 flex items-baseline gap-1">
-                        <input type="number" min="0" value={e.rampaMin} onChange={(x) => cambiar(e.id, "rampaMin", x.target.value)}
+                        <input disabled={!modoEdicion} type="number" min="0" value={e.rampaMin} onChange={(x) => cambiar(e.id, "rampaMin", x.target.value)}
                           className="w-full min-w-0 bg-transparent text-lg font-bold outline-none" />
                         <span className="text-[9px] text-muted-foreground">min</span>
                       </div>
@@ -307,7 +316,7 @@ export function ProgramadorHornoCasting() {
                     <label className="rounded-xl border border-border/80 bg-card p-2.5">
                       <span className="block text-[9px] text-muted-foreground">Sostén</span>
                       <div className="mt-1 flex items-baseline gap-1">
-                        <input type="number" min="0" value={e.sostenimientoMin} onChange={(x) => cambiar(e.id, "sostenimientoMin", x.target.value)}
+                        <input disabled={!modoEdicion} type="number" min="0" value={e.sostenimientoMin} onChange={(x) => cambiar(e.id, "sostenimientoMin", x.target.value)}
                           className="w-full min-w-0 bg-transparent text-lg font-bold outline-none" />
                         <span className="text-[9px] text-muted-foreground">min</span>
                       </div>
@@ -317,10 +326,10 @@ export function ProgramadorHornoCasting() {
               ))}
             </div>
 
-            <button type="button" onClick={agregar}
+            {modoEdicion && <button type="button" onClick={agregar}
               className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-border px-3 text-[11px] font-semibold transition hover:border-gold hover:bg-gold/5">
               <Plus className="size-3.5" /> Agregar etapa
-            </button>
+            </button>}
           </div>
 
           <div className="min-w-0">
@@ -351,7 +360,7 @@ export function ProgramadorHornoCasting() {
           <label className="rounded-2xl border border-border bg-background p-3.5">
             <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Temperatura inicial</span>
             <div className="mt-2 flex items-center gap-2">
-              <input type="number" min="0" step="1" value={inicio}
+              <input disabled={!modoEdicion} type="number" min="0" step="1" value={inicio}
                 onChange={(e) => { setInicio(Math.max(0, numero(e.target.value, 25))); setPersonalizado(true); }}
                 className="h-10 w-full min-w-0 rounded-xl border border-border bg-card px-3 text-sm font-bold outline-none focus:border-primary" />
               <span className="text-xs font-medium text-muted-foreground">°C</span>
