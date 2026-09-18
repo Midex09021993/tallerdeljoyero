@@ -12,6 +12,7 @@ import { applyAurumDynamicScintillation } from "./scintillation";
 import { applyAurumInternalLightResponse } from "./internal-light-response";
 import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 import { applyAurumLatinGemProfile } from "./latin-gem-catalog";
+import { buildAurumThicknessMap } from "./thickness-map";
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
@@ -153,12 +154,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
   const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
-  const apply=(base:any)=>{
+  const apply=(base:any,part:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
     const next=base?.clone?base.clone():new THREE.MeshPhysicalMaterial();
-    applyAurumGem(next,preset,thickness);
+    applyAurumGem(next,preset,partThickness);
     applyAurumOpticalProfile(next,opticalProfile);
     applyAurumFamilyOpticalResponse(next,opticalProfile);
-    applyAurumInternalLightResponse(next,opticalProfile,thickness);
+    applyAurumInternalLightResponse(next,opticalProfile,partThickness);
     applyAurumDynamicScintillation(next,opticalProfile);
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
@@ -167,12 +168,19 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     const geometry=target.geometry;
     const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
     next.flatShading=!hasUsableNormals;
+    next.thickness=partThickness;
+    next.thicknessMap=thicknessMap;
     next.needsUpdate=true;
     return next;
   };
   targets.forEach((part:any)=>{
-    part.material=Array.isArray(part.material)?part.material.map(apply):apply(part.material);
-    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
+    const thicknessMapResult=buildAurumThicknessMap(part,preset.thicknessScale,96);
+    const partThickness=thicknessMapResult?.baseThickness??thickness;
+    const thicknessMap=thicknessMapResult?.texture??null;
+    part.material=Array.isArray(part.material)
+      ? part.material.map((base:any)=>apply(base,part,partThickness,thicknessMap))
+      : apply(part.material,part,partThickness,thicknessMap);
+    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:partThickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:thicknessMapResult?"uv-ray-depth-v1":"local-bounds-v1",aurumGemThicknessMapDiagnostics:thicknessMapResult?{hitRatio:Number(thicknessMapResult.hitRatio.toFixed(3)),minDepth:Number(thicknessMapResult.minDepth.toFixed(4)),maxDepth:Number(thicknessMapResult.maxDepth.toFixed(4)),resolution:96}:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
     console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
 
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
