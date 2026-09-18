@@ -46,6 +46,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const pleochroismEnabled=Boolean(pleochroism?.enabled);
   const pleochroismStrength=Math.max(0,Math.min(.65,Number(pleochroism?.strength??0)));
   const pleochroismThirdStrength=Math.max(0,Math.min(.20,Number(pleochroism?.thirdAxisStrength??0)));
+  const phenomenon:any=(profile as any).phenomenon;
+  const phenomenonEnabled=Boolean(phenomenon?.enabled);
+  const phenomenonType=String(phenomenon?.type??"");
+  const phenomenonStrength=Math.max(0,Math.min(1,Number(phenomenon?.strength??0)));
   const pleoBlue=new THREE.Color(0x315fd0);
   const pleoThirdKey=String(pleochroism?.axisC??"");
   const pleoViolet=pleoThirdKey==="deepGreen" ? new THREE.Color(0x3f8f75)
@@ -123,6 +127,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         `
       );
     }
+    if(phenomenonEnabled){
+      shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
+    }
     if(pleochroismEnabled){
       shader.uniforms.aurumPleoBlue={value:pleoBlue};
       shader.uniforms.aurumPleoViolet={value:pleoViolet};
@@ -144,6 +151,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform vec3 aurumPleoThird;
       uniform float aurumPleoStrength;
       uniform float aurumPleoThirdStrength;
+      uniform float aurumPhenomenonStrength;
     `+shader.fragmentShader;
     if(pleochroismEnabled){
       shader.vertexShader=`
@@ -204,12 +212,26 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         float aurumContrast=mix(1.0,0.992,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
+        if(AURUM_PHENOMENON_ENABLED){
+          vec3 aurumPhenN=normalize(normal);
+          vec3 aurumPhenV=normalize(-vViewPosition);
+          vec3 aurumPhenR=normalize(reflect(-aurumPhenV,aurumPhenN));
+          vec3 aurumAxisA=normalize(vec3(1.0,0.0,0.12));
+          vec3 aurumAxisB=normalize(vec3(-0.5,0.866,0.12));
+          vec3 aurumAxisC=normalize(vec3(-0.5,-0.866,0.12));
+          float aurumBandA=pow(max(abs(dot(aurumPhenR,aurumAxisA)),0.0),42.0);
+          float aurumBandB=pow(max(abs(dot(aurumPhenR,aurumAxisB)),0.0),42.0);
+          float aurumBandC=pow(max(abs(dot(aurumPhenR,aurumAxisC)),0.0),42.0);
+          float aurumPhenBand=AURUM_PHENOMENON_BAND;
+          float aurumPhenMask=smoothstep(.18,.82,aurumPhenBand)*aurumPhenomenonStrength;
+          gl_FragColor.rgb+=gl_FragColor.rgb*aurumPhenMask*.22;
+        }
         #include <dithering_fragment>
       `
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v5-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v6-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}`;
   material.needsUpdate=true;
   return material;
 };
