@@ -156,6 +156,22 @@ const addChrysoberylPhenomenalInclusions=(THREE:any,target:any,config:any,size:a
   }
 };
 
+const addPhenomenalPlates=(THREE:any,target:any,config:any,size:any,phenomenon:"schiller"|"peristerescence"|"iridescence"|"orient")=>{
+  let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+  const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
+  const count=Math.max(10,Math.round(10+strength*24));
+  const color=phenomenon==="orient"?0xd8c9b0:phenomenon==="iridescence"?0x6d7884:phenomenon==="peristerescence"?0xbfcbd4:0xb07a42;
+  for(let i=0;i<count;i++){
+    const g=new THREE.PlaneGeometry(scale*(.012+rnd()*.028),scale*(.003+rnd()*.008));
+    const m=new THREE.MeshPhysicalMaterial({color,roughness:.16,metalness:.02,transmission:.05,transparent:true,opacity:.025+strength*.045,side:THREE.DoubleSide,depthWrite:false,envMapIntensity:.45});
+    const p=new THREE.Mesh(g,m);
+    p.position.set((rnd()-.5)*size.x*.48,(rnd()-.5)*size.y*.48,(rnd()-.5)*size.z*.48);
+    p.rotation.set(rnd()*Math.PI,rnd()*Math.PI,rnd()*Math.PI);
+    p.userData={aurumInternalInclusion:true,aurumInclusionType:"oriented-plate-"+phenomenon};
+    target.add(p);
+  }
+};
+
 const addPhenomenalNeedles=(THREE:any,target:any,config:any,size:any,phenomenon:"chatoyancy"|"asterism",host:string)=>{
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
@@ -261,7 +277,12 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
     return;
   }
   if((g as any).fenomenoOptico){
-    addPhenomenalNeedles(THREE,target,config,size,(g as any).fenomenoOptico,String(g.familia??"gem"));
+    const phenomenon=(g as any).fenomenoOptico;
+    if(phenomenon==="chatoyancy" || phenomenon==="asterism"){
+      addPhenomenalNeedles(THREE,target,config,size,phenomenon,String(g.familia??"gem"));
+    } else if(phenomenon==="schiller" || phenomenon==="peristerescence" || phenomenon==="iridescence" || phenomenon==="orient"){
+      addPhenomenalPlates(THREE,target,config,size,phenomenon);
+    }
     return;
   }
 
