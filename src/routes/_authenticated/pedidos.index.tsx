@@ -219,7 +219,11 @@ function PedidosPage() {
   const [filtroArea, setFiltroArea] = useState("Todas");
   const [filtroEstado, setFiltroEstado] = useState("Todas");
   const [filtroEntrega, setFiltroEntrega] = useState<FiltroEntrega>("Todas");
-  const soloPendientesAutorizacion = useState(() =>\n    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("autorizacion") === "pendientes",\n  )[0];
+  const soloPendientesAutorizacion = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("autorizacion") === "pendientes",
+  )[0];
   const [busca, setBusca] = useState("");
   const [estadisticasMovilAbiertas, setEstadisticasMovilAbiertas] = useState(false);
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
