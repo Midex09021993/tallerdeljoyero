@@ -107,6 +107,7 @@ const opticalProfileFromCatalog=(g:any)=>{
     ...(pleochroism?{pleochroism}:{}),
     ...(colorChange?{colorChange}:{}),
     ...(oilDrop?{oilDrop}:{}),
+    ...(phenomenonProfile?{phenomenon:phenomenonProfile}:{}),
   };
 };
 
