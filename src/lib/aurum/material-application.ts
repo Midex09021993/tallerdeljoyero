@@ -98,6 +98,10 @@ const opticalProfileFromCatalog=(g:any)=>{
   const oilDrop=family==="Esmeralda" && String(g.perfilInterno??"")==="colombia_jardin"
     ? {enabled:true,strength:gemId==="esmeralda_1"?.18:gemId==="esmeralda_2"?.14:.10}
     : undefined;
+  const phenomenon=(g as any).fenomenoOptico;
+  const phenomenonProfile=phenomenon
+    ? {enabled:true,type:String(phenomenon),strength:phenomenon==="chatoyancy"?.72:.68}
+    : undefined;
   return {
     ...base,
     ior:Number(g.ior??base.ior),
