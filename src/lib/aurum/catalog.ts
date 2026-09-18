@@ -60,7 +60,7 @@ export type GemaConfig = {
   attenuationColor:number; attenuationDistance:number; dispersion:number; iridescence:number;
   inclusionStyle:"ninguna"|"diamante"|"silk"|"velos"; inclusionStrength:number;
   origen?:GemaOrigen; perfilInterno?:GemaPerfilInterno; notaGemologica?:string;
-  fenomenoOptico?: "chatoyancy" | "asterism" | "adularescence" | "aventurescence" | "labradorescence" | "play-of-color" | "schiller" | "peristerescence" | "iridescence" | "orient";
+  fenomenoOptico?: "chatoyancy" | "asterism" | "adularescence" | "aventurescence" | "labradorescence" | "play-of-color" | "schiller" | "peristerescence" | "iridescence" | "orient" | "opalescence" | "overtone";
 };
 export type MaterialConfig = { id: MaterialId; grupo: MaterialGrupo; nombre: string; color: number; metalness: number; roughness: number; envMapIntensity: number; clearcoat: number; anisotropy?: number; anisotropyRotation?: number };
 export type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla"; nivel: number; capa?: string; colorCapa?: string; categoria: CategoriaParte };
@@ -138,6 +138,9 @@ export const GEMAS: GemaConfig[] = [
   { id:"sunstone_schiller", familia:"Feldespato", nombre:"Sunstone · Schiller", color:0xc98543, transmission:.78, ior:1.56, roughness:.08, envMapIntensity:3.2, attenuationColor:0x8f4e25, attenuationDistance:2.0, dispersion:.012, iridescence:.10, inclusionStyle:"silk", inclusionStrength:.24, origen:"Oregon", perfilInterno:"generico", fenomenoOptico:"schiller", notaGemologica:"Schiller por interfaces planas/inclusiones orientadas; puede coexistir con aventurescencia." },
   { id:"obsidiana_fuego", familia:"Vidrio volcánico", nombre:"Obsidiana Fuego · Iridiscencia", color:0x25201d, transmission:.12, ior:1.48, roughness:.08, envMapIntensity:2.8, attenuationColor:0x17110f, attenuationDistance:.8, dispersion:.004, iridescence:.52, inclusionStyle:"velos", inclusionStrength:.12, origen:"Global", perfilInterno:"generico", fenomenoOptico:"iridescence", notaGemologica:"Iridiscencia por interferencia de luz en capas nanométricas de magnetita." },
   { id:"perla_orient", familia:"Perla", nombre:"Perla Nacarada · Orient", color:0xf0eee8, transmission:.18, ior:1.53, roughness:.18, envMapIntensity:2.6, attenuationColor:0xbcb6aa, attenuationDistance:.35, dispersion:.002, iridescence:.48, inclusionStyle:"velos", inclusionStrength:.10, origen:"Global", perfilInterno:"nacar", fenomenoOptico:"orient", notaGemologica:"Orient multicolor producido por interferencia/difracción en las capas de nácar." },
+
+  { id:"opal_comun_opalescencia", familia:"Ópalo", nombre:"Ópalo Común · Opalescencia", color:0xd9dde0, transmission:.38, ior:1.45, roughness:.20, envMapIntensity:2.2, attenuationColor:0xbec5c8, attenuationDistance:.75, dispersion:.006, iridescence:.05, inclusionStyle:"velos", inclusionStrength:.24, origen:"Global", perfilInterno:"opal_microestructura", fenomenoOptico:"opalescence", notaGemologica:"Opalescencia: aspecto lechoso o brumoso por dispersión difusa en nanopartículas; no debe mostrar play-of-color propio del ópalo precioso." },
+  { id:"perla_overtone", familia:"Perla", nombre:"Perla Nacarada · Overtone", color:0xf1eee5, transmission:.18, ior:1.53, roughness:.18, envMapIntensity:2.5, attenuationColor:0xc6bfb0, attenuationDistance:.35, dispersion:.002, iridescence:.24, inclusionStyle:"velos", inclusionStrength:.10, origen:"Global", perfilInterno:"nacar", fenomenoOptico:"overtone", notaGemologica:"Overtone: una sola tonalidad secundaria translúcida sobre el bodycolor de una perla nacarada." },
 
 ];
 
