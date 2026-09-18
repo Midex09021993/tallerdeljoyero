@@ -50,6 +50,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const fluorescenceEnabled=Boolean(fluorescence?.enabled);
   const fluorescenceStrength=Math.max(0,Math.min(1,Number(fluorescence?.strength??0)));
   const phenomenon:any=(profile as any).phenomenon;
+  const physicalModel:any=(profile as any).crystal ? {crystal:(profile as any).crystal,structure:(profile as any).structure} : material.userData?.aurumGemPhysicalModel;
   const phenomenonEnabled=Boolean(phenomenon?.enabled);
   const phenomenonType=String(phenomenon?.type??"");
   const phenomenonStrength=Math.max(0,Math.min(1,Number(phenomenon?.strength??0)));
@@ -136,9 +137,13 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumFluorescenceStrength={value:fluorescenceStrength};
     shader.uniforms.aurumUVMode={value:Number(material.userData?.aurumUVMode??0)};
     shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
-      shader.uniforms.aurumPhenomenonAxisA={value:new THREE.Vector3(1,0,0)};
-      shader.uniforms.aurumPhenomenonAxisB={value:new THREE.Vector3(.5,.8660254,0)};
-      shader.uniforms.aurumPhenomenonAxisC={value:new THREE.Vector3(-.5,.8660254,0)};
+      const crystal=physicalModel?.crystal;
+      const axisA=Array.isArray(crystal?.axisA)?new THREE.Vector3().fromArray(crystal.axisA):crystal?.axisA?.clone?.()??new THREE.Vector3(1,0,0);
+      const axisB=Array.isArray(crystal?.axisB)?new THREE.Vector3().fromArray(crystal.axisB):crystal?.axisB?.clone?.()??new THREE.Vector3(.5,.8660254,0);
+      const axisC=Array.isArray(crystal?.axisC)?new THREE.Vector3().fromArray(crystal.axisC):crystal?.axisC?.clone?.()??new THREE.Vector3(-.5,.8660254,0);
+      shader.uniforms.aurumPhenomenonAxisA={value:axisA.normalize()};
+      shader.uniforms.aurumPhenomenonAxisB={value:axisB.normalize()};
+      shader.uniforms.aurumPhenomenonAxisC={value:axisC.normalize()};
       shader.uniforms.aurumPhenomenonScaleNm={value:Number((phenomenon as any).scaleNm??170)};
       shader.uniforms.aurumPhenomenonMode={value:phenomenonType==="chatoyancy"?1:phenomenonType==="asterism"?2:phenomenonType==="adularescence"?3:phenomenonType==="aventurescence"?4:phenomenonType==="labradorescence"?5:phenomenonType==="schiller"?7:phenomenonType==="peristerescence"?8:phenomenonType==="iridescence"?9:phenomenonType==="opalescence"?11:phenomenonType==="overtone"?12:10};
     }
@@ -237,9 +242,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           vec3 aurumPhenN=normalize(normal);
           vec3 aurumPhenV=normalize(-vViewPosition);
           vec3 aurumPhenR=normalize(reflect(-aurumPhenV,aurumPhenN));
-          vec3 aurumAxisA=normalize(vec3(1.0,0.0,0.12));
-          vec3 aurumAxisB=normalize(vec3(-0.5,0.866,0.12));
-          vec3 aurumAxisC=normalize(vec3(-0.5,-0.866,0.12));
+          vec3 aurumAxisA=normalize(aurumPhenomenonAxisA);
+          vec3 aurumAxisB=normalize(aurumPhenomenonAxisB);
+          vec3 aurumAxisC=normalize(aurumPhenomenonAxisC);
           float aurumBandA=pow(max(abs(dot(aurumPhenR,aurumAxisA)),0.0),42.0);
           float aurumBandB=pow(max(abs(dot(aurumPhenR,aurumAxisB)),0.0),42.0);
           float aurumBandC=pow(max(abs(dot(aurumPhenR,aurumAxisC)),0.0),42.0);
@@ -280,7 +285,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v7-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v8-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
   material.needsUpdate=true;
   return material;
 };
