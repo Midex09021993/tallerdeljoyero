@@ -30,7 +30,7 @@ export async function createAurumPostPipeline(
   // Diagnostic opt-in: ?aurumPassPerf=1 measures CPU dispatch time per
   // composer pass without changing pass state or render quality. It is not
   // GPU timing; it only tells us which pass is expensive to dispatch.
-  const passPerfEnabled=typeof window!=="undefined" && new URLSearchParams(window.location.search).get("aurumPassPerf")==="1";
+  const passPerfEnabled=true;
   const passPerf:any={enabled:passPerfEnabled,totals:{},counts:{},lastLog:0};
   const instrumentPass=(name:string,pass:any)=>{
     if(!passPerfEnabled || !pass || typeof pass.render!=="function") return;
