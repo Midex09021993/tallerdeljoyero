@@ -14,210 +14,8 @@ export type Database = {
   }
   public: {
     Tables: {
-      config_areas: {
-        Row: {
-          alerta_activa: boolean
-          area: string
-          created_at: string
-          horas_objetivo: number
-          id: string
-          sede_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          alerta_activa?: boolean
-          area: string
-          created_at?: string
-          horas_objetivo?: number
-          id?: string
-          sede_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          alerta_activa?: boolean
-          area?: string
-          created_at?: string
-          horas_objetivo?: number
-          id?: string
-          sede_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "config_areas_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      config_sistema: {
-        Row: {
-          clave: string
-          created_at: string
-          updated_at: string
-          valor: Json
-        }
-        Insert: {
-          clave: string
-          created_at?: string
-          updated_at?: string
-          valor?: Json
-        }
-        Update: {
-          clave?: string
-          created_at?: string
-          updated_at?: string
-          valor?: Json
-        }
-        Relationships: []
-      }
-      contrato_pagos: {
-        Row: {
-          concepto: string
-          contrato_id: string | null
-          contrato_numero: string
-          created_at: string
-          fecha: string
-          id: string
-          monto: number
-          usuario_id: string | null
-        }
-        Insert: {
-          concepto?: string
-          contrato_id?: string | null
-          contrato_numero?: string
-          created_at?: string
-          fecha?: string
-          id?: string
-          monto?: number
-          usuario_id?: string | null
-        }
-        Update: {
-          concepto?: string
-          contrato_id?: string | null
-          contrato_numero?: string
-          created_at?: string
-          fecha?: string
-          id?: string
-          monto?: number
-          usuario_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contrato_pagos_contrato_id_fkey"
-            columns: ["contrato_id"]
-            isOneToOne: false
-            referencedRelation: "contratos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contrato_pagos_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      contratos: {
-        Row: {
-          abonado: number
-          cliente: string
-          created_at: string
-          id: string
-          notas: string
-          numero: string
-          origen: string
-          sede_id: string | null
-          telefono: string
-          total: number
-          updated_at: string
-        }
-        Insert: {
-          abonado?: number
-          cliente?: string
-          created_at?: string
-          id?: string
-          notas?: string
-          numero: string
-          origen?: string
-          sede_id?: string | null
-          telefono?: string
-          total?: number
-          updated_at?: string
-        }
-        Update: {
-          abonado?: number
-          cliente?: string
-          created_at?: string
-          id?: string
-          notas?: string
-          numero?: string
-          origen?: string
-          sede_id?: string | null
-          telefono?: string
-          total?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contratos_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gastos: {
-        Row: {
-          categoria: string
-          concepto: string
-          created_at: string
-          fecha: string
-          id: string
-          importe: number
-          sede_id: string | null
-          updated_at: string
-          usuario_id: string | null
-        }
-        Insert: {
-          categoria?: string
-          concepto?: string
-          created_at?: string
-          fecha?: string
-          id?: string
-          importe?: number
-          sede_id?: string | null
-          updated_at?: string
-          usuario_id?: string | null
-        }
-        Update: {
-          categoria?: string
-          concepto?: string
-          created_at?: string
-          fecha?: string
-          id?: string
-          importe?: number
-          sede_id?: string | null
-          updated_at?: string
-          usuario_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gastos_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       inventario: {
         Row: {
-          categoria: string
           created_at: string
           id: string
           material: string
@@ -228,7 +26,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          categoria?: string
           created_at?: string
           id?: string
           material: string
@@ -239,7 +36,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          categoria?: string
           created_at?: string
           id?: string
           material?: string
@@ -261,7 +57,6 @@ export type Database = {
       }
       inventario_movimientos: {
         Row: {
-          area: string
           cantidad: number
           created_at: string
           id: string
@@ -271,7 +66,6 @@ export type Database = {
           usuario_id: string | null
         }
         Insert: {
-          area?: string
           cantidad: number
           created_at?: string
           id?: string
@@ -281,7 +75,6 @@ export type Database = {
           usuario_id?: string | null
         }
         Update: {
-          area?: string
           cantidad?: number
           created_at?: string
           id?: string
@@ -300,71 +93,33 @@ export type Database = {
           },
         ]
       }
-      material_areas: {
-        Row: {
-          area: string
-          created_at: string
-          id: string
-          material_id: string
-        }
-        Insert: {
-          area: string
-          created_at?: string
-          id?: string
-          material_id: string
-        }
-        Update: {
-          area?: string
-          created_at?: string
-          id?: string
-          material_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "material_areas_material_id_fkey"
-            columns: ["material_id"]
-            isOneToOne: false
-            referencedRelation: "inventario"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       pedido_archivos: {
         Row: {
           created_at: string
           es_enlace: boolean
-          grupo: string
           id: string
           nombre: string
           pedido_id: string
-          poster: string
           tipo: string
           url: string
-          version: number
         }
         Insert: {
           created_at?: string
           es_enlace?: boolean
-          grupo?: string
           id?: string
           nombre?: string
           pedido_id: string
-          poster?: string
           tipo?: string
           url: string
-          version?: number
         }
         Update: {
           created_at?: string
           es_enlace?: boolean
-          grupo?: string
           id?: string
           nombre?: string
           pedido_id?: string
-          poster?: string
           tipo?: string
           url?: string
-          version?: number
         }
         Relationships: [
           {
@@ -424,37 +179,19 @@ export type Database = {
           cantidad_piezas: number
           cliente: string
           contrato: string
-          contrato_id: string | null
-          corte_observaciones: string
-          corte_texto: string
-          corte_tipografia: string
-          corte_ubicacion: string
           created_at: string
           entrega: string
-          entregado_at: string | null
-          enviado_at: string | null
           estado: string
           fecha_entrega: string | null
-          fecha_entregado: string | null
-          fecha_envio: string | null
           fecha_ingreso: string
-          fecha_listo_entrega: string | null
-          guia_envio: string
           id: string
           importe: number
-          listo_entrega_observaciones: string | null
           material: string
-          medio_envio: string
           notas: string
-          notas_entrega: string | null
-          notas_envio: string | null
-          notas_ventas: string
           origen: string
-          packing_estado: string
           peso_estimado: string
           piedras: string
           pieza: string
-          receptor_envio: string
           referencia: string
           ruta: string[]
           sede_id: string | null
@@ -462,12 +199,6 @@ export type Database = {
           telefono: string
           trabajo: string
           updated_at: string
-          usuario_entrega: string | null
-          usuario_envio: string | null
-          usuario_listo_entrega: string | null
-          ventas_actualizado_en: string | null
-          ventas_actualizado_por: string | null
-          ventas_estado: string
         }
         Insert: {
           area_actual?: string
@@ -475,37 +206,19 @@ export type Database = {
           cantidad_piezas?: number
           cliente: string
           contrato?: string
-          contrato_id?: string | null
-          corte_observaciones?: string
-          corte_texto?: string
-          corte_tipografia?: string
-          corte_ubicacion?: string
           created_at?: string
           entrega?: string
-          entregado_at?: string | null
-          enviado_at?: string | null
           estado?: string
           fecha_entrega?: string | null
-          fecha_entregado?: string | null
-          fecha_envio?: string | null
           fecha_ingreso?: string
-          fecha_listo_entrega?: string | null
-          guia_envio?: string
           id?: string
           importe?: number
-          listo_entrega_observaciones?: string | null
           material: string
-          medio_envio?: string
           notas?: string
-          notas_entrega?: string | null
-          notas_envio?: string | null
-          notas_ventas?: string
           origen?: string
-          packing_estado?: string
           peso_estimado?: string
           piedras?: string
           pieza: string
-          receptor_envio?: string
           referencia: string
           ruta?: string[]
           sede_id?: string | null
@@ -513,12 +226,6 @@ export type Database = {
           telefono?: string
           trabajo?: string
           updated_at?: string
-          usuario_entrega?: string | null
-          usuario_envio?: string | null
-          usuario_listo_entrega?: string | null
-          ventas_actualizado_en?: string | null
-          ventas_actualizado_por?: string | null
-          ventas_estado?: string
         }
         Update: {
           area_actual?: string
@@ -526,37 +233,19 @@ export type Database = {
           cantidad_piezas?: number
           cliente?: string
           contrato?: string
-          contrato_id?: string | null
-          corte_observaciones?: string
-          corte_texto?: string
-          corte_tipografia?: string
-          corte_ubicacion?: string
           created_at?: string
           entrega?: string
-          entregado_at?: string | null
-          enviado_at?: string | null
           estado?: string
           fecha_entrega?: string | null
-          fecha_entregado?: string | null
-          fecha_envio?: string | null
           fecha_ingreso?: string
-          fecha_listo_entrega?: string | null
-          guia_envio?: string
           id?: string
           importe?: number
-          listo_entrega_observaciones?: string | null
           material?: string
-          medio_envio?: string
           notas?: string
-          notas_entrega?: string | null
-          notas_envio?: string | null
-          notas_ventas?: string
           origen?: string
-          packing_estado?: string
           peso_estimado?: string
           piedras?: string
           pieza?: string
-          receptor_envio?: string
           referencia?: string
           ruta?: string[]
           sede_id?: string | null
@@ -564,21 +253,8 @@ export type Database = {
           telefono?: string
           trabajo?: string
           updated_at?: string
-          usuario_entrega?: string | null
-          usuario_envio?: string | null
-          usuario_listo_entrega?: string | null
-          ventas_actualizado_en?: string | null
-          ventas_actualizado_por?: string | null
-          ventas_estado?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "pedidos_contrato_id_fkey"
-            columns: ["contrato_id"]
-            isOneToOne: false
-            referencedRelation: "contratos"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "pedidos_sede_id_fkey"
             columns: ["sede_id"]
@@ -640,7 +316,6 @@ export type Database = {
           acceso_desde: string | null
           acceso_hasta: string | null
           activo: boolean
-          clave_visible: string | null
           created_at: string
           dni: string
           id: string
@@ -653,7 +328,6 @@ export type Database = {
           acceso_desde?: string | null
           acceso_hasta?: string | null
           activo?: boolean
-          clave_visible?: string | null
           created_at?: string
           dni?: string
           id: string
@@ -666,7 +340,6 @@ export type Database = {
           acceso_desde?: string | null
           acceso_hasta?: string | null
           activo?: boolean
-          clave_visible?: string | null
           created_at?: string
           dni?: string
           id?: string
@@ -744,6 +417,63 @@ export type Database = {
           id?: string
           modo?: string
           nombre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      solicitudes_acceso: {
+        Row: {
+          ciudad: string | null
+          created_at: string
+          descripcion: string | null
+          documento: string | null
+          email: string
+          empresa: string | null
+          especialidades: string[]
+          estado: string
+          id: string
+          nombre: string
+          notas_owner: string | null
+          revisado_at: string | null
+          revisado_por: string | null
+          telefono: string | null
+          tipo_solicitante: string
+          updated_at: string
+        }
+        Insert: {
+          ciudad?: string | null
+          created_at?: string
+          descripcion?: string | null
+          documento?: string | null
+          email: string
+          empresa?: string | null
+          especialidades?: string[]
+          estado?: string
+          id?: string
+          nombre: string
+          notas_owner?: string | null
+          revisado_at?: string | null
+          revisado_por?: string | null
+          telefono?: string | null
+          tipo_solicitante: string
+          updated_at?: string
+        }
+        Update: {
+          ciudad?: string | null
+          created_at?: string
+          descripcion?: string | null
+          documento?: string | null
+          email?: string
+          empresa?: string | null
+          especialidades?: string[]
+          estado?: string
+          id?: string
+          nombre?: string
+          notas_owner?: string | null
+          revisado_at?: string | null
+          revisado_por?: string | null
+          telefono?: string | null
+          tipo_solicitante?: string
           updated_at?: string
         }
         Relationships: []
@@ -856,24 +586,16 @@ export type Database = {
         Returns: boolean
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
-      normaliza_area: { Args: { _area: string }; Returns: string }
       seguimiento_pedido: {
         Args: { _ref: string }
         Returns: {
           area_actual: string
           cliente: string
-          estado: string
           fecha_entrega: string
-          fecha_entregado: string
-          fecha_envio: string
-          guia_envio: string
-          medio_envio: string
-          receptor_envio: string
           referencia: string
           ruta: string[]
           sede: string
           trabajo: string
-          ventas_estado: string
         }[]
       }
       ve_sede: {
