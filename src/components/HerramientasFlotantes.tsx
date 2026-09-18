@@ -78,7 +78,7 @@ export function HerramientasFlotantes() {
                   disabled={!h.disponible}
                   onClick={() => {
                     if (h.id === "aurum-render") {
-                      navigate({ to: "/aurum-render-public-test-broken" as any });
+                      navigate({ to: "/aurum-render-public" });
                       return;
                     }
                     setActiva(h.id);
