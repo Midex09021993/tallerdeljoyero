@@ -33,6 +33,7 @@ function LoginPage() {
   const { data: estado } = useQuery({
     queryKey: ["sistema-vacio"],
     queryFn: () => sistemaSinDuenos(),
+    retry: false,
   });
 
   const [usuario, setUsuario] = useState("");
@@ -43,7 +44,7 @@ function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo">("ecosistema");
-  const modoAlta = Boolean(estado?.vacio);
+  const modoAlta = Boolean(estado?.vacio && estado?.disponible !== false);
 
   useEffect(() => {
     if (sesion) navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
