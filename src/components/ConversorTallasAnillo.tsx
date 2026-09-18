@@ -229,10 +229,13 @@ function MedidorAnillo({
 
       <div className="overflow-hidden rounded-2xl border border-border bg-background p-4">
         <div className="mx-auto flex max-w-full justify-center">
-          <div className="relative flex h-24 items-center justify-center">
+          <div className="relative flex min-h-40 items-center justify-center overflow-visible">
             <div
               className={referencia === "moneda" ? "relative rounded-full border-2 border-dashed border-primary/60" : "relative rounded border-2 border-dashed border-primary/60"}
-              style={{ width: Math.min(anchoCalibracion, 520), height: referencia === "moneda" ? Math.min(anchoCalibracion, 520) : 56 }}
+              style={{
+                width: Math.min(anchoCalibracion, 520),
+                height: referencia === "moneda" ? Math.min(anchoCalibracion, 520) : 56,
+              }}
             >
               <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded bg-background px-2 text-[10px] font-semibold whitespace-nowrap">
                 {referenciaMm.toFixed(1)} mm
@@ -240,7 +243,14 @@ function MedidorAnillo({
             </div>
           </div>
         </div>
-        <input aria-label="Ajuste de calibración de pantalla" type="range" min={referencia === "moneda" ? 80 : 180} max={referencia === "moneda" ? 360 : 520} step="0.5" value={anchoCalibracion} onChange={(e) => onAnchoChange(Number(e.target.value))} className="mt-3 w-full" />
+        <div className="mt-2 space-y-1">
+          <input aria-label="Ajuste de calibración de pantalla" type="range" min={referencia === "moneda" ? 80 : 180} max={referencia === "moneda" ? 360 : 520} step="0.5" value={anchoCalibracion} onChange={(e) => onAnchoChange(Number(e.target.value))} className="w-full" />
+          <div className="flex items-center justify-between px-1 text-[10px] text-muted-foreground">
+            <span>Más pequeño</span>
+            <span>{anchoCalibracion.toFixed(1)} px · {referenciaMm.toFixed(1)} mm</span>
+            <span>Más grande</span>
+          </div>
+        </div>
         <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground"><span>Más pequeño</span><span>{anchoCalibracion.toFixed(1)} px · {referenciaMm.toFixed(1)} mm</span><span>Más grande</span></div>
         <button type="button" onClick={onCalibrar} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground">
           <Check className="size-4" aria-hidden="true" /> Confirmar calibración
