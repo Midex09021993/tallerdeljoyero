@@ -46,7 +46,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const pleochroismEnabled=Boolean(pleochroism?.enabled);
   const pleochroismStrength=Math.max(0,Math.min(.65,Number(pleochroism?.strength??0)));
   const pleochroismThirdStrength=Math.max(0,Math.min(.20,Number(pleochroism?.thirdAxisStrength??0)));
-  const phenomenon:any=(profile as any).phenomenon;
+  const fluorescence:any=(profile as any).fluorescence;
+  const fluorescenceEnabled=Boolean(fluorescence?.enabled);
+  const fluorescenceStrength=Math.max(0,Math.min(1,Number(fluorescence?.strength??0)));
+  const phenomenon:any=(profile as any).phenomenon);
   const phenomenonEnabled=Boolean(phenomenon?.enabled);
   const phenomenonType=String(phenomenon?.type??"");
   const phenomenonStrength=Math.max(0,Math.min(1,Number(phenomenon?.strength??0)));
@@ -128,7 +131,13 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       );
     }
     if(phenomenonEnabled){
-      shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
+      if(fluorescenceEnabled){
+      shader.uniforms.aurumFluorescenceColorLW={value:fluorescence.lw};
+      shader.uniforms.aurumFluorescenceColorSW={value:fluorescence.sw};
+      shader.uniforms.aurumFluorescenceStrength={value:fluorescenceStrength};
+      shader.uniforms.aurumUVMode={value:Number(material.userData?.aurumUVMode??0)};
+    }
+    shader.uniforms.aurumPhenomenonStrength={value:phenomenonStrength};
       shader.uniforms.aurumPhenomenonAxisA={value:new THREE.Vector3(1,0,0)};
       shader.uniforms.aurumPhenomenonAxisB={value:new THREE.Vector3(.5,.8660254,0)};
       shader.uniforms.aurumPhenomenonAxisC={value:new THREE.Vector3(-.5,.8660254,0)};
@@ -156,6 +165,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform vec3 aurumPleoThird;
       uniform float aurumPleoStrength;
       uniform float aurumPleoThirdStrength;
+      uniform vec3 aurumFluorescenceColorLW;
+      uniform vec3 aurumFluorescenceColorSW;
+      uniform float aurumFluorescenceStrength;
+      uniform float aurumUVMode;
       uniform float aurumPhenomenonStrength;
       uniform float aurumPhenomenonMode;
       uniform vec3 aurumPhenomenonAxisA;
@@ -258,12 +271,18 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           if(aurumPhenomenonMode>11.5) aurumPhenColor=vec3(1.0,.72,.52);
           gl_FragColor.rgb+=gl_FragColor.rgb*aurumPhenColor*aurumPhenMask*.22;
         }
-        #include <dithering_fragment>
+        if(aurumUVMode>0.5){
+          vec3 aurumUVColor=aurumUVMode<1.5?aurumFluorescenceColorLW:aurumFluorescenceColorSW;
+          float aurumUVFalloff=smoothstep(.05,.9,max(dot(normalize(normal),normalize(vViewPosition)),0.0));
+          float aurumFluorescence=aurumFluorescenceStrength*aurumUVFalloff;
+          gl_FragColor.rgb+=aurumUVColor*aurumFluorescence;
+        }
+                #include <dithering_fragment>
       `
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v6-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v7-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}`;
   material.needsUpdate=true;
   return material;
 };
