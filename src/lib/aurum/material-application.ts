@@ -50,12 +50,27 @@ const opticalProfileFromCatalog=(g:any)=>{
         brilliance:.75,
         fire:.35,
       };
+  const family=String(g.familia??"");
+  const pleochroism=family==="Tanzanita"
+    ? {
+        enabled:true,
+        strength:String(g.id??"")==="tanzanita_natural"?.42:.36,
+        thirdAxisStrength:String(g.id??"")==="tanzanita_natural"?.12:.08,
+        // AURUM approximation of the three crystallographic color directions.
+        // Natural profile keeps a restrained brownish-red axis; intense profile
+        // emphasizes the blue/violet pair seen in fashioned heated tanzanite.
+        axisA:String(g.id??"")==="tanzanita_natural"?"blue":"blue",
+        axisB:"violet",
+        axisC:String(g.id??"")==="tanzanita_natural"?"brownRed":"redViolet",
+      }
+    : undefined;
   return {
     ...base,
     ior:Number(g.ior??base.ior),
     transmission:Number(g.transmission??base.transmission),
     dispersion:Number(g.dispersion??base.dispersion),
     absorptionDistance:Number(g.attenuationDistance??base.absorptionDistance),
+    ...(pleochroism?{pleochroism}:{}),
   };
 };
 
