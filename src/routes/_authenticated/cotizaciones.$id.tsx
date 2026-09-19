@@ -51,6 +51,7 @@ function CotizacionDetallePage() {
   const [guardandoEstado, setGuardandoEstado] = useState(false);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [creandoVersion, setCreandoVersion] = useState(false);
   const [error, setError] = useState("");
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
@@ -145,6 +146,22 @@ function CotizacionDetallePage() {
     await cargar();
   }
 
+  async function crearVersion() {
+    if (!cotizacion || !sesion?.esAdmin || !["enviada", "rechazada", "vencida"].includes(cotizacion.estado)) return;
+    setCreandoVersion(true);
+    setError("");
+    const { data: nuevoId, error: versionError } = await supabase.rpc("crear_version_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+    });
+    if (versionError || !nuevoId) {
+      setError(versionError?.message ?? "No se pudo crear la nueva versión.");
+      setCreandoVersion(false);
+      return;
+    }
+    await navigate({ to: "/cotizaciones/$id", params: { id: nuevoId } });
+    setCreandoVersion(false);
+  }
+
   async function cambiarEstado(estado: string) {
     if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
     setGuardandoEstado(true); setError("");
@@ -162,7 +179,12 @@ function CotizacionDetallePage() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
-          {sesion?.esAdmin ? <div className="flex flex-wrap gap-2">
+          {sesion?.esAdmin ? <div className="flex flex-wrap items-center gap-2">
+            {["enviada", "rechazada", "vencida"].includes(cotizacion.estado) ? (
+              <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+                {creandoVersion ? "Creando…" : "Crear nueva versión"}
+              </button>
+            ) : null}
             {estados.map(([value, label]) => <button key={value} type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado(value)}
               className={"rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " + (cotizacion.estado === value ? "border-ink bg-ink text-ink-foreground" : "border-border text-muted-foreground hover:text-foreground")}>{label}</button>)}
           </div> : null}
