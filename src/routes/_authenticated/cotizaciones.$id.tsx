@@ -54,6 +54,8 @@ function CotizacionDetallePage() {
   const [creandoVersion, setCreandoVersion] = useState(false);
   const [convirtiendoPedido, setConvirtiendoPedido] = useState(false);
   const [pedidoId, setPedidoId] = useState<string | null>(null);
+  const [contratoId, setContratoId] = useState<string | null>(null);
+  const [contratoNumero, setContratoNumero] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
@@ -164,19 +166,22 @@ function CotizacionDetallePage() {
     setCreandoVersion(false);
   }
 
-  async function convertirAPedido() {
+  async function convertirAPedidoYContrato() {
     if (!cotizacion || cotizacion.estado !== "aprobada" || !sesion?.esAdmin) return;
     setConvirtiendoPedido(true);
     setError("");
-    const { data, error: conversionError } = await supabase.rpc("convertir_cotizacion_a_pedido", {
+    const { data, error: conversionError } = await supabase.rpc("convertir_cotizacion_a_pedido_contrato", {
       _cotizacion_id: cotizacion.id,
     });
     if (conversionError || !data) {
-      setError(conversionError?.message ?? "No se pudo convertir la cotización en pedido.");
+      setError(conversionError?.message ?? "No se pudo crear el contrato y pedido.");
       setConvirtiendoPedido(false);
       return;
     }
-    setPedidoId(data);
+    const resultado = data as { pedido_id?: string; contrato_id?: string; contrato_numero?: string };
+    setPedidoId(resultado.pedido_id ?? null);
+    setContratoId(resultado.contrato_id ?? null);
+    setContratoNumero(resultado.contrato_numero ?? null);
     setConvirtiendoPedido(false);
   }
 
@@ -324,13 +329,19 @@ function CotizacionDetallePage() {
               <div className="space-y-2 p-4">
                 {cotizacion.estado === "aprobada" ? (
                   pedidoId ? (
-                    <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
+                    <div className="space-y-2">
+                      <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+                        <p className="font-medium">✓ Operación comercial creada</p>
+                        {contratoNumero ? <p className="mt-1 text-xs text-muted-foreground">Contrato: {contratoNumero}</p> : null}
+                      </div>
+                      <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
+                    </div>
                   ) : (
-                    <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedido()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
-                      {convirtiendoPedido ? "Creando pedido…" : "Convertir en Pedido"}
+                    <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedidoYContrato()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                      {convirtiendoPedido ? "Creando contrato y pedido…" : "Crear contrato + pedido"}
                     </button>
                   )
-                ) : <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos convertirla en un pedido sin volver a ingresar los datos.</p>}
+                ) : <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el contrato y pedido sin volver a ingresar los datos.</p>
                 <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
               </div>
             </Panel>
