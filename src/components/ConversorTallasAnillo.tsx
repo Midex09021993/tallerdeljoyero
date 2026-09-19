@@ -281,8 +281,7 @@ function MedidorAnillo({
             step="0.5"
             value={diametroPx}
             onInput={(e) => onDiametroChange(Number(e.currentTarget.value))}
-            onChange={(e) => onDiametroChange(Number(e.currentTarget.value))}
-            className="w-full"
+            className="w-full touch-pan-x"
           />
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>Menor</span>
