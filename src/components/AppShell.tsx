@@ -21,6 +21,7 @@ type Seccion = {
   to:
     | "/pedidos"
     | "/cotizaciones"
+    | "/clientes"
     | "/diseno-3d"
     | "/impresion-3d"
     | "/casting"
@@ -47,6 +48,7 @@ const secciones: Seccion[] = [
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/pedidos", label: "Pedidos", roles: ["dueno", "gerente"], icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
+  { to: "/clientes", label: "Clientes", roles: ["dueno", "gerente"], icono: UserRound, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
   { to: "/aurum-render", label: "AURUM RENDER", roles: ["dueno", "gerente"], icono: Gem, grupo: "aurum" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes, grupo: "produccion" },
@@ -122,6 +124,7 @@ function rutaPermitidaPorSesion(pathname: string, roles: Rol[], areas: string[],
 const ORDEN_MENU: Record<string, number> = {
   // El flujo comercial parte de la cotización; ventas y pedidos vienen después.
   "/cotizaciones": 10,
+  "/clientes": 15,
   "/ventas": 20,
   "/pedidos": 30,
   "/inventario": 40,
