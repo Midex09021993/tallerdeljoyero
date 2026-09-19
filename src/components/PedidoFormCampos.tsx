@@ -11,20 +11,17 @@ const CAMPOS_CORTE_LASER = [
 ] as const;
 
 const CAMPOS_PEDIDO = [
-  ["cliente", "Cliente", "text"],
-  ["telefono", "WhatsApp", "tel"],
-  ["origen", "Origen / lugar", "text"],
   ["contrato", "N° contrato", "text"],
-  ["trabajo", "Trabajo solicitado", "text"],
+  ["cliente", "Nombre", "text"],
+  ["origen", "Origen / lugar", "text"],
+  ["trabajo", "Descripción / trabajo", "text"],
+  ["peso_estimado", "Peso", "text"],
   ["material", "Material", "text"],
-  ["peso_estimado", "Peso estimado (g)", "text"],
-  ["importe", "Costo (S/)", "number"],
-  ["talla", "Talla / medida", "text"],
-  ["cantidad_piezas", "Cantidad de piezas", "number"],
-  ["piedras", "Piedras / componentes", "text"],
-  ["notas", "Notas generales", "text"],
-  ["fecha_ingreso", "Fecha de ingreso", "date"],
-  ["fecha_entrega", "Fecha de entrega", "date"],
+  ["piedras", "Piedras", "text"],
+  ["talla", "Talla", "text"],
+  ["cantidad_piezas", "Cantidad", "number"],
+  ["importe", "Precio (S/)", "number"],
+  ["a_cuenta", "A cuenta (S/)", "number"],
 ] as const;
 
 export function PedidoFormCampos({
@@ -78,6 +75,55 @@ export function PedidoFormCampos({
           );
         })}
         {sedeSelect}
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Saldo (S/)
+          <input
+            type="text"
+            value={Math.max(0, (Number(form.importe) || 0) - (Number(form.a_cuenta) || 0)).toFixed(2)}
+            readOnly
+            className="mt-1 w-full rounded-lg border border-border bg-surface-muted px-3 py-3 text-base font-semibold text-foreground sm:py-2 sm:text-sm"
+          />
+        </label>
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          WhatsApp
+          <input
+            type="tel"
+            value={form.telefono}
+            onChange={(e) => onChange({ ...form, telefono: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+          />
+        </label>
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Fecha de ingreso
+          <FechaInput
+            value={form.fecha_ingreso}
+            onChangeIso={(iso) => onChange({ ...form, fecha_ingreso: iso })}
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+          />
+        </label>
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Fecha de entrega
+          <FechaInput
+            value={form.fecha_entrega}
+            onChangeIso={(iso) => onChange({ ...form, fecha_entrega: iso })}
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+          />
+        </label>
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground sm:col-span-2 lg:col-span-4">
+          Notas generales
+          <input
+            type="text"
+            value={form.notas}
+            onChange={(e) => onChange({ ...form, notas: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+          />
+        </label>
       </div>
 
       <fieldset className="mt-5">
