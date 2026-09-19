@@ -336,10 +336,10 @@ function Resumen({
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <ActionCard icon={Package} title="Materiales" text={`${inventario.length} insumos registrados`} action="Ver materiales" onClick={onMateriales} />
-        <ActionCard icon={ArrowDownToLine} title="Registrar entrada" text="Oro, plata, piedras, resina, yeso…" action="Registrar" onClick={onNuevo} />
-        <ActionCard icon={Gem} title="Producción" text="Piezas y proyectos en curso" action="Ver producción" onClick={onProduccion} />
-        <ActionCard icon={History} title="Trazabilidad" text="Revisa qué entró y qué se consumió" action="Ver movimientos" onClick={onMovimientos} />
+        <AurumActionCard icon={Package} title="Materiales" text={`${inventario.length} insumos registrados`} action="Ver materiales" onClick={onMateriales} />
+        <AurumActionCard icon={ArrowDownToLine} title="Registrar entrada" text="Oro, plata, piedras, resina, yeso…" action="Registrar" onClick={onNuevo} />
+        <AurumActionCard icon={Gem} title="Producción" text="Piezas y proyectos en curso" action="Ver producción" onClick={onProduccion} />
+        <AurumActionCard icon={History} title="Trazabilidad" text="Revisa qué entró y qué se consumió" action="Ver movimientos" onClick={onMovimientos} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
