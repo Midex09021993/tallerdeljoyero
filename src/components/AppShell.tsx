@@ -37,21 +37,21 @@ type Seccion = {
   area?: string;
   roles?: Rol[];
   icono?: typeof LayoutGrid;
-  grupo?: "principal" | "produccion" | "herramientas" | "administracion";
+  grupo?: "principal" | "comercial" | "produccion" | "aurum" | "herramientas" | "administracion";
 };
 
 type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
-  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "principal" },
+  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
-  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem, grupo: "herramientas" },
+  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem, grupo: "aurum" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes, grupo: "produccion" },
   { to: "/casting", label: "Casting", area: "Casting", icono: Landmark, grupo: "produccion" },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
   { to: "/taller", label: "Taller", area: "Taller", icono: Hammer, grupo: "produccion" },
-  { to: "/ventas", label: "Área ventas", area: "Área ventas", icono: PackageCheck, grupo: "principal" },
+  { to: "/ventas", label: "Ventas", area: "Área ventas", icono: PackageCheck, grupo: "comercial" },
   { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "produccion" },
   { to: "/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
@@ -138,7 +138,7 @@ export function AppShell({
           </div>
 
           <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
-            {(["principal", "produccion", "herramientas", "administracion"] as const).map((grupo) => {
+            {(["principal", "comercial", "produccion", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
               if (items.length === 0) return null;
               const nombres = {
