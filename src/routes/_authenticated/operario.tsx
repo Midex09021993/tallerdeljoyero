@@ -142,7 +142,7 @@ function OperarioPage() {
               <button
                 key={trabajo.id}
                 type="button"
-                onClick={() => undefined}
+                onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
                 className="rounded-xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold"
               >
                 <div className="flex items-start justify-between gap-3">
