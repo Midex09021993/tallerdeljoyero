@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, CircleAlert, Play } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, FileText, Link2, Play } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
-type Trabajo = {
+type ArchivoTecnico = {\n  id: string;\n  pedido_archivo_id: string;\n  nombre: string;\n  tipo: string;\n  url: string;\n  es_enlace: boolean;\n  grupo: string;\n};\n\ntype Trabajo = {
   id: string;
   pedido_id: string;
   area: string;
@@ -42,6 +42,54 @@ function TrabajoOperativoPage() {
   const { data: sesion } = useSesion();
   const qc = useQueryClient();
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState("");
+  const [guardandoArchivo, setGuardandoArchivo] = useState(false);
+
+  const { data: archivosTecnicos = [] } = useQuery({
+    queryKey: ["trabajo-archivos", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trabajo_archivos")
+        .select("id, pedido_archivo_id, pedido_archivos(nombre, tipo, url, es_enlace, grupo)")
+        .eq("trabajo_id", id);
+      if (error) throw error;
+      return ((data ?? []) as Array<{ id: string; pedido_archivo_id: string; pedido_archivos: ArchivoTecnico | ArchivoTecnico[] | null }>).map((row) => {
+        const archivo = Array.isArray(row.pedido_archivos) ? row.pedido_archivos[0] : row.pedido_archivos;
+        return archivo ? { id: row.id, pedido_archivo_id: row.pedido_archivo_id, ...archivo } : null;
+      }).filter(Boolean) as ArchivoTecnico[];
+    },
+  });
+
+  const { data: archivosPedido = [] } = useQuery({
+    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id],
+    enabled: Boolean(trabajo?.pedido_id && sesion?.esAdmin),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedido_archivos")
+        .select("id, nombre, tipo, url, es_enlace, grupo")
+        .eq("pedido_id", trabajo!.pedido_id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string }>;
+    },
+  });
+
+  const adjuntarArchivo = async () => {
+    if (!archivoSeleccionado) return;
+    setGuardandoArchivo(true);
+    const { error } = await supabase.from("trabajo_archivos").insert({
+      trabajo_id: id,
+      pedido_archivo_id: archivoSeleccionado,
+    });
+    setGuardandoArchivo(false);
+    if (error) {
+      setErrorAccion(error.code === "23505" ? "Ese archivo ya está vinculado." : error.message);
+      return;
+    }
+    setArchivoSeleccionado("");
+    await qc.invalidateQueries({ queryKey: ["trabajo-archivos", id] });
+  };
+
 
   const { data: trabajo, isLoading } = useQuery({
     queryKey: ["trabajo-operativo", id],
