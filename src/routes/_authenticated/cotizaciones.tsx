@@ -74,6 +74,7 @@ function CotizacionesPage() {
       const { data: q, error } = await supabase.from("cotizaciones").insert({
         cliente_id: form.cliente_id,
         proyecto_joya_id: form.proyecto_joya_id || null,
+        sede_id: sesion?.sede?.id ?? null,
         estado: "borrador",
         moneda: form.moneda,
         subtotal_costo: form.costo * form.cantidad,
