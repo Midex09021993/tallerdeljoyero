@@ -21,6 +21,7 @@ import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
+import { TrabajosPedido } from "@/components/TrabajosPedido";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 import {
@@ -1035,6 +1036,15 @@ function FichaPedido() {
                 ) : null}
               </div>
             )}
+          </Seccion>
+
+          <Seccion titulo="Trabajos de producción">
+            <TrabajosPedido
+              pedidoId={pedido.id}
+              proyectoJoyaId={pedido.proyecto_joya_id}
+              sedeId={pedido.sede_id}
+              canManage={puedeEditar}
+            />
           </Seccion>
 
           <Seccion titulo="Referencias del diseño">
