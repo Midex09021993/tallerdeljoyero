@@ -15,6 +15,7 @@ import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-pub
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
+import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
@@ -64,6 +65,11 @@ const AuthenticatedAurumRenderRoute =
     path: '/aurum-render',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCotizacionesRoute = AuthenticatedCotizacionesRouteImport.update({
+  id: '/cotizaciones',
+  path: '/cotizaciones',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
   id: '/casting',
   path: '/casting',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
+  '/cotizaciones': typeof AuthenticatedCotizacionesRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -217,6 +224,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
+  '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -367,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAurumRenderRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cotizaciones': {
+      id: '/_authenticated/cotizaciones'
+      path: '/cotizaciones'
+      fullPath: '/cotizaciones'
+      preLoaderRoute: typeof AuthenticatedCotizacionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/casting': {
       id: '/_authenticated/casting'
       path: '/casting'
@@ -511,6 +526,7 @@ const AuthenticatedPedidosRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
+  AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
@@ -530,6 +546,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
+  AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRoute,
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
