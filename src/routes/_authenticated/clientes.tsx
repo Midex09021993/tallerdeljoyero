@@ -397,7 +397,7 @@ function ClientesPage() {
 
             <div className="shrink-0 border-t border-border bg-surface-muted/40 p-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <Link to="/cotizaciones" onClick={cerrarFicha} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><Plus className="size-4" /> Nueva cotización</Link>
+                <Link to="/cotizaciones" search={{ cliente: ficha.id }} onClick={cerrarFicha} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><Plus className="size-4" /> Nueva cotización</Link>
                 <button type="button" onClick={cerrarFicha} className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold">Cerrar</button>
               </div>
             </div>
