@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
-  fecha_vencimiento: string | null; moneda: string; subtotal_costo: number; subtotal: number;
+  fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string; proyecto_joya_id: string | null;
 };
@@ -60,7 +60,7 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -221,6 +221,7 @@ function CotizacionDetallePage() {
                 <Dato label="Correo" valor={cliente?.email || "—"} />
                 <Dato label="Emisión" valor={cotizacion.fecha_emision} />
                 <Dato label="Válida hasta" valor={cotizacion.fecha_vencimiento || "Sin fecha"} />
+                <Dato label="Entrega solicitada" valor={cotizacion.fecha_entrega_solicitada || "Sin fecha"} />
                 <Dato label="Proyecto" valor={proyecto ? proyecto.codigo + " · " + proyecto.nombre : "Sin proyecto"} />
               </div>
             </Panel>
