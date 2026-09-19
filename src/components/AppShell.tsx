@@ -143,8 +143,10 @@ export function AppShell({
               if (items.length === 0) return null;
               const nombres = {
                 principal: "Principal",
+                comercial: "Comercial",
                 produccion: "Producción",
-                herramientas: "AURUM y herramientas",
+                aurum: "AURUM Studio",
+                herramientas: "Herramientas",
                 administracion: "Administración",
               } as const;
               return (
