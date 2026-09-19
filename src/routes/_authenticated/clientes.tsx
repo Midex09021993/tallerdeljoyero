@@ -226,7 +226,6 @@ function ClientesPage() {
   return (
     <AppShell
       titulo="Clientes"
-      subtitulo="La relación comercial empieza aquí."
       acciones={
         sesion?.esAdmin ? (
           <button
