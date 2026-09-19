@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { ClipboardList } from "lucide-react";
 import { PedidoFormCampos } from "@/components/PedidoFormCampos";
 import {
   SelectorSedeDueno,
@@ -174,7 +175,7 @@ function TarjetaResumen({
           ? "bg-warning/10 text-warning"
           : "bg-surface-muted text-muted-foreground";
   return (
-    <div className="flex min-w-[150px] flex-col rounded-xl border border-border bg-card p-4 shadow-card">
+    <div className="group relative flex min-w-[150px] flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10">
       <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
       <p className={`text-xl font-medium ${colorClase}`}>{String(valor)}</p>
       {subtitulo ? <p className="mt-1 text-[10px] text-muted-foreground">{subtitulo}</p> : null}
@@ -362,6 +363,29 @@ function PedidosPage() {
         </div>
       }
     >
+      <section className="mb-6 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-surface-muted/60 p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+              <ClipboardList className="size-3.5" />
+              Flujo de trabajo
+            </div>
+            <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+              Cada pedido tiene un camino. <span className="text-muted-foreground">Aquí lo ves.</span>
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              Sigue cliente, entrega, área actual y ruta de producción desde un solo lugar.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Activos</p><p className="mt-1 text-lg font-semibold tabular-nums">{activos.length}</p></div>
+            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Entregados</p><p className="mt-1 text-lg font-semibold tabular-nums">{entregados.length}</p></div>
+            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Atrasados</p><p className="mt-1 text-lg font-semibold tabular-nums text-danger">{atrasados.length}</p></div>
+            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Próximos</p><p className="mt-1 text-lg font-semibold tabular-nums">{proximos.length}</p></div>
+          </div>
+        </div>
+      </section>
+
       {soloPendientesAutorizacion ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/25 bg-warning-soft/50 px-4 py-3 text-sm">
           <div>
