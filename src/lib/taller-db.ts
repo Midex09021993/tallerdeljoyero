@@ -310,6 +310,10 @@ export type Pedido = {
   origen: string;
   contrato: string;
   contrato_id: string | null;
+  cotizacion_id: string | null;
+  proyecto_joya_id: string | null;
+  cotizacion_detalles: Json;
+  especificaciones_comerciales: Json;
   trabajo: string;
   fecha_ingreso: string;
   fecha_entrega: string | null;
@@ -436,6 +440,10 @@ export type PedidoNuevo = {
   origen: string;
   contrato: string;
   contrato_id?: string | null;
+  cotizacion_id?: string | null;
+  proyecto_joya_id?: string | null;
+  cotizacion_detalles?: Json;
+  especificaciones_comerciales?: Json;
   trabajo: string;
   fecha_ingreso: string;
   fecha_entrega: string | null;
@@ -472,7 +480,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, cotizacion_detalles, especificaciones_comerciales, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 const CAMPOS_PEDIDO_VENTAS =
   "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
@@ -554,6 +562,10 @@ export function usePedidos() {
         origen: textoCampo(p, "origen"),
         contrato: textoCampo(p, "contrato"),
         contrato_id: typeof p["contrato_id"] === "string" ? p["contrato_id"] : null,
+        cotizacion_id: typeof p["cotizacion_id"] === "string" ? p["cotizacion_id"] : null,
+        proyecto_joya_id: typeof p["proyecto_joya_id"] === "string" ? p["proyecto_joya_id"] : null,
+        cotizacion_detalles: (p["cotizacion_detalles"] as Json) ?? [],
+        especificaciones_comerciales: (p["especificaciones_comerciales"] as Json) ?? {},
         trabajo: textoCampo(p, "trabajo"),
         fecha_ingreso: textoCampo(p, "fecha_ingreso"),
         fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
