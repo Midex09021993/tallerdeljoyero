@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { toast } from "sonner";
-import { ArrowRight, CheckCircle2, Clock3, FileText, Plus, Search, Sparkles, UserRound, WalletCards, WandSparkles, XCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock3, FileText, Plus, Sparkles, WalletCards, WandSparkles, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
@@ -27,6 +27,14 @@ type Cotizacion = {
 
 function money(n: number, moneda = "PEN") {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(n);
+}
+
+function MiniStat({ icon: Icon, label, value }: { icon: typeof FileText; label: string; value: number }) {
+  return <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><div className="flex items-center gap-2 text-muted-foreground"><Icon className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">{label}</span></div><p className="mt-1 text-lg font-semibold tabular-nums">{value}</p></div>;
+}
+
+function ActionCard({ icon: Icon, title, text, onClick }: { icon: typeof Plus; title: string; text: string; onClick: () => void }) {
+  return <button type="button" onClick={onClick} className="group rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="mb-5 grid size-10 place-items-center rounded-xl bg-primary/8 text-primary"><Icon className="size-5" /></div><p className="font-semibold">{title}</p><p className="mt-1 min-h-10 text-xs leading-5 text-muted-foreground">{text}</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">Abrir <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span></button>;
 }
 
 function CotizacionesPage() {
