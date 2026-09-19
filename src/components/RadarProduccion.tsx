@@ -63,7 +63,7 @@ export function RadarProduccion() {
   });
 
   const trabajos = useMemo(() => {
-    const sedeActiva = !esDueno ? sesion?.sede_id ?? null : sedeFiltro;
+    const sedeActiva = !esDueno ? sesion?.perfil.sede_id ?? null : sedeFiltro;
     return (trabajosQuery.data ?? []).filter((t) => {
       if (sedeActiva !== TODAS_LAS_SEDES && sedeActiva && t.sede_id !== sedeActiva) return false;
       if (estadoFiltro !== "todos" && t.estado !== estadoFiltro) return false;
