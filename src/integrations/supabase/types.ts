@@ -699,6 +699,70 @@ export type Database = {
           },
         ]
       }
+      incidencias_trabajo: {
+        Row: {
+          id: string
+          trabajo_id: string
+          reportado_por: string
+          tipo: string
+          descripcion: string
+          estado: string
+          resolucion: string
+          resuelto_por: string | null
+          resuelto_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          trabajo_id: string
+          reportado_por: string
+          tipo?: string
+          descripcion: string
+          estado?: string
+          resolucion?: string
+          resuelto_por?: string | null
+          resuelto_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          trabajo_id?: string
+          reportado_por?: string
+          tipo?: string
+          descripcion?: string
+          estado?: string
+          resolucion?: string
+          resuelto_por?: string | null
+          resuelto_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidencias_trabajo_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidencias_trabajo_reportado_por_fkey"
+            columns: ["reportado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidencias_trabajo_resuelto_por_fkey"
+            columns: ["resuelto_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trabajo_archivos: {
         Row: {
           id: string
