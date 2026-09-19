@@ -250,18 +250,23 @@ function TrabajoOperativoPage() {
             <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{archivosTecnicos.length}</span>
           </div>
           <div className="mt-4 space-y-2">
-            {archivosTecnicos.map((archivo) => (
+            {archivosPedido.map((archivo) => (
               <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-3 transition hover:border-primary/40 hover:bg-primary/[0.03]">
                 <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary"><Link2 className="size-4" /></span>
                 <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium group-hover:text-primary">{archivo.nombre}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{archivo.tipo} · {archivo.grupo || "Técnico"}</span></span>
                 <ArrowLeft className="size-3.5 rotate-180 text-muted-foreground" />
               </a>
             ))}
-            {archivosTecnicos.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay archivos técnicos vinculados a este trabajo.</p> : null}
+            {archivosPedido.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay archivos técnicos en el pedido.</p> : null}
           </div>
+          {archivosTecnicos.length > 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {archivosTecnicos.length} archivo{archivosTecnicos.length === 1 ? "" : "s"} vinculado{archivosTecnicos.length === 1 ? "" : "s"} específicamente a este trabajo.
+            </p>
+          ) : null}
           {(sesion?.esAdmin || esResponsable) && archivosPedido.length > 0 ? (
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Ficha técnica del pedido</p><select value={archivoSeleccionado} onChange={(e) => setArchivoSeleccionado(e.target.value)} className="min-h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm">
+              <select value={archivoSeleccionado} onChange={(e) => setArchivoSeleccionado(e.target.value)} className="min-h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm">
                 <option value="">Vincular archivo a este trabajo…</option>
                 {archivosPedido.filter((archivo) => !archivosTecnicos.some((vinculado) => vinculado.pedido_archivo_id === archivo.id)).map((archivo) => <option key={archivo.id} value={archivo.id}>{archivo.nombre}</option>)}
               </select>
