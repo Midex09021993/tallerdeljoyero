@@ -241,7 +241,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     applyAurumFamilyOpticalResponse(next,opticalProfile);
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
     attachAurumGemPhysicalModel(next,physicalModel);
-    applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence});
+    applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
