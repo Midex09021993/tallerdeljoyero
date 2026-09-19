@@ -279,6 +279,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/aurum-render'
+    | '/cotizaciones'
     | '/casting'
     | '/corte-laser'
     | '/diseno-3d'
