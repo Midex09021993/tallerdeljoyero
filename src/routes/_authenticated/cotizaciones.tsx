@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +53,7 @@ function CotizacionesPage() {
     if (q) setCotizaciones(q);
   };
 
-  useState(() => { void cargar(); });
+  useEffect(() => { void cargar(); }, []);
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
