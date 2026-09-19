@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AREAS } from "@/lib/auth";
+import { useUsuarios } from "@/lib/taller-db";
 
 type Trabajo = {
   id: string;
@@ -61,6 +62,8 @@ export function TrabajosPedido({
   canManage: boolean;
 }) {
   const qc = useQueryClient();
+  const { data: usuarios = [] } = useUsuarios();
+  const operarios = usuarios.filter((u) => u.activo && u.roles.includes("operario") && (!sedeId || u.sede_id === sedeId));
   const [nuevo, setNuevo] = useState({
     area: "Diseño 3D",
     titulo: "",
@@ -68,6 +71,7 @@ export function TrabajosPedido({
     tipo: "interno" as "interno" | "externo",
     prioridad: "normal" as Trabajo["prioridad"],
     fecha_planificada: "",
+    responsable_user_id: "",
   });
 
   const { data: trabajos = [], isLoading } = useQuery({
@@ -105,6 +109,7 @@ export function TrabajosPedido({
         descripcion: nuevo.descripcion.trim(),
         prioridad: nuevo.prioridad,
         fecha_planificada: nuevo.fecha_planificada || null,
+        responsable_user_id: nuevo.responsable_user_id || null,
       });
       if (error) throw error;
     },
@@ -116,6 +121,7 @@ export function TrabajosPedido({
         tipo: "interno",
         prioridad: "normal",
         fecha_planificada: "",
+        responsable_user_id: "",
       });
       qc.invalidateQueries({ queryKey: ["trabajos-pedido", pedidoId] });
     },
@@ -189,11 +195,23 @@ export function TrabajosPedido({
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border pt-3 text-[11px] text-muted-foreground">
                   <span>📍 {trabajo.ubicacion || "Sin ubicación"}</span>
-                  <span>📅 {trabajo.fecha_planificada || "Sin fecha"}</span>
+                  <span>📅 {trabajo.fecha_planificada || "Sin fecha"}</span>\n                  {trabajo.responsable_user_id ? <span>👤 {operarios.find((u) => u.id === trabajo.responsable_user_id)?.nombre || "Operario asignado"}</span> : <span>👤 Sin asignar</span>}
                   {trabajo.participante_id ? <span>◇ Colaborador externo asignado</span> : null}
                 </div>
                 {canManage ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <select
+                      value={trabajo.responsable_user_id ?? ""}
+                      onChange={async (e) => {
+                        const responsable_user_id = e.target.value || null;
+                        const { error } = await supabase.from("trabajos").update({ responsable_user_id }).eq("id", trabajo.id);
+                        if (!error) qc.invalidateQueries({ queryKey: ["trabajos-pedido", pedidoId] });
+                      }}
+                      className="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs"
+                    >
+                      <option value="">Sin responsable</option>
+                      {operarios.map((u) => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+                    </select>
                     <select
                       value={trabajo.estado}
                       onChange={(e) =>
@@ -228,7 +246,7 @@ export function TrabajosPedido({
           <div className="mb-3">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Nuevo trabajo</p>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              La asignación a un colaborador externo la conectaremos en el siguiente paso.
+              Puedes asignarlo ahora a un operario interno. Los colaboradores externos los conectaremos después.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -264,6 +282,14 @@ export function TrabajosPedido({
               <option value="normal">Prioridad normal</option>
               <option value="alta">Prioridad alta</option>
               <option value="urgente">Urgente</option>
+            </select>
+            <select
+              value={nuevo.responsable_user_id}
+              onChange={(e) => setNuevo((v) => ({ ...v, responsable_user_id: e.target.value }))}
+              className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm"
+            >
+              <option value="">Sin responsable todavía</option>
+              {operarios.map((u) => <option key={u.id} value={u.id}>{u.nombre}</option>)}
             </select>
             <input
               type="date"
