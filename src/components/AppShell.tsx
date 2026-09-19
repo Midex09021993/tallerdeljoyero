@@ -141,8 +141,9 @@ export function AppShell({
             </p>
           </div>
 
-          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
-            {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
+          <div className="relative min-h-0 flex-1">
+            <nav className="aurum-sidebar-scroll h-full min-h-0 space-y-1 overflow-y-auto px-4">
+              {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
               if (items.length === 0) return null;
               const nombres = {
@@ -172,8 +173,23 @@ export function AppShell({
                   </div>
                 </div>
               );
-            })}
-          </nav>
+              })}
+            </nav>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-ink via-ink/80 to-transparent" aria-hidden="true" />
+          </div>
+
+          <style>{`
+            .aurum-sidebar-scroll {
+              scrollbar-width: none;
+              -ms-overflow-style: none;
+              overscroll-behavior: contain;
+            }
+            .aurum-sidebar-scroll::-webkit-scrollbar {
+              display: none;
+              width: 0;
+              height: 0;
+            }
+          `}</style>
 
           <div className="shrink-0 border-t border-ink-foreground/5 p-6">
             <div className="mb-4 flex items-center gap-3">
