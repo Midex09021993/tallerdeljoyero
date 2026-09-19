@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { FileText, Mail, MapPin, Pencil, Phone, Plus, Search, UserRound, UsersRound, X } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, BriefcaseBusiness, CheckCircle2, FileText, Mail, MapPin, Pencil, Phone, Plus, Search, ShoppingBag, UserRound, UsersRound, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AurumActionCard } from "@/components/AurumActionCard";
@@ -34,6 +34,13 @@ type Cliente = {
 
 type FormCliente = Omit<Cliente, "id" | "sede_id">;
 
+type HistorialCliente = {
+  cotizaciones: Array<{ id: string; numero: string; version: number; estado: string; total: number; moneda: string; fecha_emision: string }>;
+  proyectos: Array<{ id: string; codigo: string; nombre: string; descripcion: string; metal: string | null; ley: string | null; piedras: string | null; talla: string | null }>;
+  contratos: Array<{ id: string; numero: string; origen: string; total: number; abonado: number; created_at: string }>;
+  pedidos: Array<{ id: string; referencia: string; pieza: string; trabajo: string; estado: string; area_actual: string; fecha_entrega: string | null; contrato: string }>;
+};
+
 const vacio: FormCliente = {
   nombre: "",
   documento: "",
@@ -47,6 +54,28 @@ const vacio: FormCliente = {
   notas: "",
 };
 
+function moneyLocal(n: number, moneda = "PEN") {
+  return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(Number(n) || 0);
+}
+
+function FichaStat({ icon: Icon, label, value }: { icon: typeof FileText; label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5">
+      <div className="flex items-center gap-2 text-muted-foreground"><Icon className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">{label}</span></div>
+      <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function HistoriaPanel({ titulo, icon: Icon, empty, children }: { titulo: string; icon: typeof FileText; empty: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-surface-muted/30 p-4 sm:p-5">
+      <div className="mb-4 flex items-center gap-2"><div className="grid size-8 place-items-center rounded-lg bg-primary/8 text-primary"><Icon className="size-4" /></div><h3 className="font-semibold">{titulo}</h3></div>
+      <div className="space-y-2">{children ? children : <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">{empty}</p>}</div>
+    </section>
+  );
+}
+
 function ClientesPage() {
   const { data: sesion } = useSesion();
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -58,6 +87,9 @@ function ClientesPage() {
   const [form, setForm] = useState<FormCliente>(vacio);
   const [guardando, setGuardando] = useState(false);
   const [cargando, setCargando] = useState(true);
+  const [ficha, setFicha] = useState<Cliente | null>(null);
+  const [historial, setHistorial] = useState<HistorialCliente | null>(null);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
 
   const cargar = async () => {
     setCargando(true);
@@ -120,6 +152,38 @@ function ClientesPage() {
       notas: cliente.notas ?? "",
     });
     setAbierto(true);
+  }
+
+  async function abrirFicha(cliente: Cliente) {
+    setFicha(cliente);
+    setHistorial(null);
+    setCargandoHistorial(true);
+
+    const [cotizaciones, proyectos, contratos, pedidos] = await Promise.all([
+      supabase.from("cotizaciones").select("id,numero,version,estado,total,moneda,fecha_emision").eq("cliente_id", cliente.id).order("created_at", { ascending: false }),
+      supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,piedras,talla").eq("cliente_id", cliente.id).order("created_at", { ascending: false }),
+      supabase.from("contratos").select("id,numero,origen,total,abonado,created_at").eq("cliente", cliente.nombre).order("created_at", { ascending: false }),
+      supabase.from("pedidos").select("id,referencia,pieza,trabajo,estado,area_actual,fecha_entrega,contrato").eq("cliente", cliente.nombre).order("created_at", { ascending: false }),
+    ]);
+
+    const error = cotizaciones.error ?? proyectos.error ?? contratos.error ?? pedidos.error;
+    if (error) {
+      console.error(error);
+      toast.error("No se pudo cargar toda la historia del cliente.");
+    }
+
+    setHistorial({
+      cotizaciones: (cotizaciones.data ?? []) as HistorialCliente["cotizaciones"],
+      proyectos: (proyectos.data ?? []) as HistorialCliente["proyectos"],
+      contratos: (contratos.data ?? []) as HistorialCliente["contratos"],
+      pedidos: (pedidos.data ?? []) as HistorialCliente["pedidos"],
+    });
+    setCargandoHistorial(false);
+  }
+
+  function cerrarFicha() {
+    setFicha(null);
+    setHistorial(null);
   }
 
   async function guardar(e: React.FormEvent) {
@@ -230,13 +294,13 @@ function ClientesPage() {
               </tr></thead>
               <tbody className="divide-y divide-border">
                 {filtrados.map((cliente) => (
-                  <tr key={cliente.id} className="group transition-colors hover:bg-surface-muted/50">
+                  <tr key={cliente.id} onClick={() => void abrirFicha(cliente)} className="group cursor-pointer transition-colors hover:bg-surface-muted/50">
                     <td className="px-5 py-4"><div className="flex items-center gap-3"><div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary transition group-hover:bg-primary/12"><UserRound className="size-4" /></div><div><p className="font-semibold">{cliente.nombre}</p><p className="text-xs text-muted-foreground">{cliente.documento || "Sin documento"}</p></div></div></td>
                     <td className="px-5 py-4"><div className="space-y-1 text-xs">{cliente.telefono || cliente.whatsapp ? <span className="flex items-center gap-1.5"><Phone className="size-3.5 text-muted-foreground" />{cliente.telefono || cliente.whatsapp}</span> : null}{cliente.email ? <span className="flex items-center gap-1.5 text-muted-foreground"><Mail className="size-3.5" />{cliente.email}</span> : null}{!cliente.telefono && !cliente.whatsapp && !cliente.email ? <span className="text-muted-foreground">Sin contacto</span> : null}</div></td>
                     <td className="px-5 py-4 text-muted-foreground">{cliente.ciudad || "—"}</td>
                     <td className="px-5 py-4"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs">{cliente.tipo === "empresa" ? "Empresa" : "Persona"}</span></td>
                     <td className="px-5 py-4"><span className={cliente.estado === "activo" ? "rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success" : "rounded-full bg-surface-muted px-2.5 py-1 text-xs text-muted-foreground"}>{cliente.estado === "activo" ? "Activo" : "Inactivo"}</span></td>
-                    <td className="px-5 py-4 text-right"><button type="button" onClick={() => abrirEdicion(cliente)} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:border-primary/40 hover:text-primary"><Pencil className="size-3.5" /> Editar</button></td>
+                    <td className="px-5 py-4 text-right"><button type="button" onClick={(e) => { e.stopPropagation(); abrirEdicion(cliente); }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:border-primary/40 hover:text-primary"><Pencil className="size-3.5" /> Editar</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -245,7 +309,7 @@ function ClientesPage() {
 
           <div className="divide-y divide-border md:hidden">
             {filtrados.map((cliente) => (
-              <button key={cliente.id} type="button" onClick={() => abrirEdicion(cliente)} className="group flex w-full items-center gap-3 p-4 text-left transition hover:bg-surface-muted/50 active:scale-[0.995]">
+              <button key={cliente.id} type="button" onClick={() => void abrirFicha(cliente)} className="group flex w-full items-center gap-3 p-4 text-left transition hover:bg-surface-muted/50 active:scale-[0.995]">
                 <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary group-hover:bg-primary/12"><UserRound className="size-5" /></div>
                 <div className="min-w-0 flex-1"><p className="truncate font-semibold">{cliente.nombre}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{cliente.telefono || cliente.email || cliente.ciudad || "Sin datos de contacto"}</p></div>
                 <span className="text-primary">→</span>
@@ -256,6 +320,90 @@ function ClientesPage() {
           {!cargando && filtrados.length === 0 ? <div className="px-6 py-14 text-center"><div className="mx-auto grid size-12 place-items-center rounded-2xl bg-surface-muted text-muted-foreground"><UsersRound className="size-5" /></div><p className="mt-3 font-semibold">{clientes.length === 0 ? "Todavía no hay clientes" : "No encontramos coincidencias"}</p><p className="mt-1 text-sm text-muted-foreground">{clientes.length === 0 ? "Empieza registrando el primer cliente del taller." : "Prueba con otro nombre, teléfono o documento."}</p></div> : null}
         </section>
       </div>
+
+      {ficha ? (
+        <div className="fixed inset-0 z-50 bg-ink/60 p-3 sm:p-6" role="dialog" aria-modal="true">
+          <div className="mx-auto flex h-full max-h-[900px] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
+            <div className="shrink-0 border-b border-border bg-gradient-to-r from-card via-card to-surface-muted/60 p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary"><UserRound className="size-6" /></div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Ficha comercial</p>
+                    <h2 className="mt-1 truncate font-display text-2xl sm:text-3xl">{ficha.nombre}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{[ficha.documento, ficha.ciudad, ficha.telefono || ficha.whatsapp].filter(Boolean).join(" · ") || "Sin datos de contacto"}</p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  {sesion?.esAdmin ? <button type="button" onClick={() => { cerrarFicha(); abrirEdicion(ficha); }} className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold transition hover:border-primary/40 hover:text-primary"><Pencil className="size-3.5" /> Editar</button> : null}
+                  <button type="button" onClick={cerrarFicha} className="rounded-xl border border-border p-2 transition hover:border-primary/40"><X className="size-4" /></button>
+                </div>
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <FichaStat icon={FileText} label="Cotizaciones" value={historial?.cotizaciones.length ?? 0} />
+                <FichaStat icon={BriefcaseBusiness} label="Proyectos" value={historial?.proyectos.length ?? 0} />
+                <FichaStat icon={CheckCircle2} label="Contratos" value={historial?.contratos.length ?? 0} />
+                <FichaStat icon={ShoppingBag} label="Pedidos" value={historial?.pedidos.length ?? 0} />
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+              {cargandoHistorial ? <div className="grid min-h-[300px] place-items-center text-sm text-muted-foreground">Cargando historia comercial…</div> : (
+                <div className="grid gap-5 lg:grid-cols-2">
+                  <HistoriaPanel titulo="Cotizaciones" icon={FileText} empty="Todavía no hay cotizaciones para este cliente.">
+                    {historial?.cotizaciones.map((q) => (
+                      <Link key={q.id} to="/cotizaciones/$id" params={{ id: q.id }} onClick={cerrarFicha} className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm">
+                        <div className="min-w-0 flex-1"><p className="font-semibold">{q.numero} <span className="text-xs font-normal text-muted-foreground">v{q.version}</span></p><p className="mt-1 text-xs text-muted-foreground">{q.fecha_emision} · {q.estado}</p></div>
+                        <p className="text-sm font-semibold">{moneyLocal(q.total, q.moneda)}</p><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </Link>
+                    ))}
+                  </HistoriaPanel>
+
+                  <HistoriaPanel titulo="Proyectos de joyería" icon={BriefcaseBusiness} empty="Todavía no hay proyectos vinculados.">
+                    {historial?.proyectos.map((p) => (
+                      <div key={p.id} className="rounded-xl border border-border bg-card p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0"><p className="font-semibold">{p.nombre}</p><p className="mt-1 text-xs text-muted-foreground">{p.codigo}{p.metal ? " · " + p.metal : ""}{p.ley ? " " + p.ley : ""}</p></div>
+                          {p.talla ? <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">{p.talla}</span> : null}
+                        </div>
+                        {p.descripcion ? <p className="mt-2 text-xs leading-5 text-muted-foreground">{p.descripcion}</p> : null}
+                        {p.piedras ? <p className="mt-2 text-[11px] text-muted-foreground">Piedras: {p.piedras}</p> : null}
+                      </div>
+                    ))}
+                  </HistoriaPanel>
+
+                  <HistoriaPanel titulo="Contratos" icon={CheckCircle2} empty="Todavía no hay contratos registrados con este cliente.">
+                    {historial?.contratos.map((c) => (
+                      <Link key={c.id} to="/contratos/$id" params={{ id: c.id }} onClick={cerrarFicha} className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm">
+                        <div className="min-w-0 flex-1"><p className="font-semibold">{c.numero}</p><p className="mt-1 text-xs text-muted-foreground">{c.origen || "Contrato comercial"}</p></div>
+                        <div className="text-right"><p className="text-sm font-semibold">{moneyLocal(c.total, "PEN")}</p><p className="text-[10px] text-muted-foreground">Abonado {moneyLocal(c.abonado, "PEN")}</p></div>
+                        <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </Link>
+                    ))}
+                  </HistoriaPanel>
+
+                  <HistoriaPanel titulo="Pedidos" icon={ShoppingBag} empty="Todavía no hay pedidos registrados con este cliente.">
+                    {historial?.pedidos.map((p) => (
+                      <Link key={p.id} to="/pedidos/$id" params={{ id: p.id }} search={{ from: "pedidos" }} onClick={cerrarFicha} className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm">
+                        <div className="min-w-0 flex-1"><p className="font-semibold">{p.referencia}</p><p className="mt-1 truncate text-xs text-muted-foreground">{p.trabajo || p.pieza || "Trabajo de joyería"}</p><p className="mt-1 text-[10px] text-muted-foreground">{p.area_actual || "Pedidos"} · {p.estado}</p></div>
+                        {p.fecha_entrega ? <span className="hidden rounded-full bg-surface-muted px-2 py-1 text-[10px] sm:inline">{p.fecha_entrega}</span> : null}
+                        <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </Link>
+                    ))}
+                  </HistoriaPanel>
+                </div>
+              )}
+            </div>
+
+            <div className="shrink-0 border-t border-border bg-surface-muted/40 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <Link to="/cotizaciones" onClick={cerrarFicha} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><Plus className="size-4" /> Nueva cotización</Link>
+                <button type="button" onClick={cerrarFicha} className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {abierto ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4" role="dialog" aria-modal="true">
