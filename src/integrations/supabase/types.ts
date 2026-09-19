@@ -1245,6 +1245,124 @@ export type Database = {
           },
         ]
       }
+      trabajos: {
+        Row: {
+          area: string
+          created_at: string
+          creado_por: string | null
+          descripcion: string
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          fecha_planificada: string | null
+          id: string
+          metadata: Json
+          notas: string
+          pedido_id: string
+          participante_id: string | null
+          prioridad: string
+          proyecto_joya_id: string | null
+          responsable_user_id: string | null
+          sede_id: string | null
+          secuencia: number
+          tipo: string
+          titulo: string
+          ubicacion: string
+          updated_at: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          creado_por?: string | null
+          descripcion?: string
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string | null
+          fecha_planificada?: string | null
+          id?: string
+          metadata?: Json
+          notas?: string
+          pedido_id: string
+          participante_id?: string | null
+          prioridad?: string
+          proyecto_joya_id?: string | null
+          responsable_user_id?: string | null
+          sede_id?: string | null
+          secuencia?: number
+          tipo?: string
+          titulo: string
+          ubicacion?: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          creado_por?: string | null
+          descripcion?: string
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string | null
+          fecha_planificada?: string | null
+          id?: string
+          metadata?: Json
+          notas?: string
+          pedido_id?: string
+          participante_id?: string | null
+          prioridad?: string
+          proyecto_joya_id?: string | null
+          responsable_user_id?: string | null
+          sede_id?: string | null
+          secuencia?: number
+          tipo?: string
+          titulo?: string
+          ubicacion?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_proyecto_joya_id_fkey"
+            columns: ["proyecto_joya_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos_joya"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_responsable_user_id_fkey"
+            columns: ["responsable_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_areas: {
         Row: {
           area: string
