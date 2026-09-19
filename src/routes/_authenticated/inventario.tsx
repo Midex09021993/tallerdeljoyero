@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import * as XLSX from "xlsx";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -8,6 +9,8 @@ import {
   Boxes,
   ChevronRight,
   CircleDollarSign,
+  FileSpreadsheet,
+  Upload,
   Gem,
   History,
   Package,
@@ -48,7 +51,14 @@ export const Route = createFileRoute("/_authenticated/inventario")({
 const inputCls =
   "w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10";
 
-type Vista = "resumen" | "materiales" | "produccion" | "movimientos";
+type Vista = "resumen" | "materiales" | "joyas" | "produccion" | "movimientos";
+
+
+type Joya = { id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null; talla: string; piedras: string; cantidad: number; estado: string; origen: string; metadata: Record<string, unknown> };
+const excelAliases: Record<string, string[]> = { codigo: ["codigo","código","code","sku","ref","referencia"], nombre: ["nombre","joya","pieza","producto","descripcion","descripción"], metal: ["metal","material"], ley: ["ley","quilataje","karat","k"], peso: ["peso","peso g","peso_g","peso (g)"], talla: ["talla","talla us","size"], piedras: ["piedras","gemas","stones"], cantidad: ["cantidad","stock","existencia","qty"], estado: ["estado","status"] };
+function normalizarExcelHeader(v: unknown) { return String(v ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase(); }
+function excelValue(row: Record<string, unknown>, key: string) { const found = Object.keys(row).find(k => (excelAliases[key] ?? []).includes(normalizarExcelHeader(k))); return found ? row[found] : ""; }
+function numeroExcel(v: unknown) { const n = Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? n : null; }
 
 type Proyecto = {
   id: string;
@@ -72,6 +82,9 @@ function InventarioPage() {
   const [movimientoAbierto, setMovimientoAbierto] = useState(false);
   const [nuevoAbierto, setNuevoAbierto] = useState(false);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [joyas, setJoyas] = useState<Joya[]>([]);
+  const [joyasCargando, setJoyasCargando] = useState(false);
+  const [importarExcel, setImportarExcel] = useState(false);
   const [cargandoProduccion, setCargandoProduccion] = useState(false);
 
   const puedeGestionar = sesion?.esAdmin ?? false;
@@ -96,6 +109,16 @@ function InventarioPage() {
     );
   }, [buscar, inventario]);
 
+  async function abrirJoyas() {
+    setVista("joyas");
+    if (joyasCargando) return;
+    setJoyasCargando(true);
+    const { data, error } = await (supabase as any).from("inventario_joyas").select("id,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado,origen,metadata").order("created_at", { ascending: false }).limit(500);
+    setJoyasCargando(false);
+    if (error) { toast.error("No se pudo cargar el stock de joyas"); return; }
+    setJoyas((data ?? []) as Joya[]);
+  }
+
   async function abrirProduccion() {
     setVista("produccion");
     if (proyectos.length > 0 || cargandoProduccion) return;
@@ -115,7 +138,8 @@ function InventarioPage() {
 
   const nav = [
     { id: "resumen" as const, label: "Resumen", icon: Sparkles },
-    { id: "materiales" as const, label: "Materiales", icon: Package },
+    { id: "materiales" as const, label: "Insumos", icon: Package },
+    { id: "joyas" as const, label: "Joyas", icon: Gem },
     { id: "produccion" as const, label: "En producción", icon: Gem },
     { id: "movimientos" as const, label: "Movimientos", icon: History },
   ];
@@ -134,6 +158,14 @@ function InventarioPage() {
             >
               <ArrowUpFromLine className="size-4" />
               Registrar movimiento
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportarExcel(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-primary/40"
+            >
+              <Upload className="size-4" />
+              Importar Excel
             </button>
             <button
               type="button"
@@ -181,7 +213,7 @@ function InventarioPage() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => item.id === "produccion" ? void abrirProduccion() : setVista(item.id)}
+                  onClick={() => item.id === "produccion" ? void abrirProduccion() : item.id === "joyas" ? void abrirJoyas() : setVista(item.id)}
                   className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${activo ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Icon className="size-3.5" />
@@ -224,6 +256,8 @@ function InventarioPage() {
           />
         ) : null}
 
+        {vista === "joyas" ? <Joyas items={joyas} loading={joyasCargando} /> : null}
+
         {vista === "produccion" ? (
           <Produccion proyectos={proyectos} loading={cargandoProduccion} />
         ) : null}
@@ -243,6 +277,7 @@ function InventarioPage() {
           onClose={() => setNuevoAbierto(false)}
         />
       ) : null}
+      {importarExcel ? <ImportarExcel sedeId={sesion?.perfil.sede_id ?? null} onClose={() => setImportarExcel(false)} onDone={() => { setImportarExcel(false); void abrirJoyas(); }} /> : null}
       {movimientoAbierto ? (
         <MovimientoDialog
           inventario={inventario}
@@ -483,6 +518,13 @@ function Materiales({
   );
 }
 
+
+function Joyas({ items, loading }: { items: Joya[]; loading: boolean }) {
+  const [buscar, setBuscar] = useState("");
+  const filtradas = useMemo(() => { const q = buscar.trim().toLowerCase(); if (!q) return items; return items.filter(j => [j.codigo,j.nombre,j.metal,j.ley,j.talla,j.piedras].some(v => String(v ?? "").toLowerCase().includes(q))); }, [items,buscar]);
+  return <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"><div className="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">Joyas terminadas</p><p className="text-xs text-muted-foreground">Stock que ya existía en el taller y ahora puedes controlar aquí.</p></div><div className="flex items-center gap-3"><input className={inputCls + " max-w-xs"} placeholder="Buscar código, joya, metal…" value={buscar} onChange={e => setBuscar(e.target.value)} /><span className="text-xs text-muted-foreground">{filtradas.length} registros</span></div></div>{loading ? <EmptyState icon={Gem} title="Cargando joyas…" text="Estamos leyendo tu stock." /> : filtradas.length ? <div className="divide-y divide-border">{filtradas.map(j => <div key={j.id} className="grid gap-3 px-5 py-4 md:grid-cols-[1.3fr_1fr_.6fr_.7fr] md:items-center"><div><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold">{j.nombre}</p><span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold">{j.codigo}</span></div><p className="mt-1 text-xs text-muted-foreground">{[j.metal,j.ley,j.talla ? "Talla " + j.talla : "",j.piedras].filter(Boolean).join(" · ") || "Sin especificaciones"}</p></div><div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Peso</p><p className="text-sm font-semibold">{j.peso != null ? j.peso + " g" : "—"}</p></div><div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Cantidad</p><p className="text-sm font-semibold">{j.cantidad}</p></div><div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Estado</p><p className="text-sm font-semibold">{j.estado}</p><p className="text-[10px] text-muted-foreground">Origen: {j.origen === "excel" ? "Excel" : "App"}</p></div></div>)}</div> : <div className="p-8"><div className="rounded-2xl border border-dashed border-border bg-surface-muted/30 p-8 text-center"><FileSpreadsheet className="mx-auto size-8 text-primary"/><p className="mt-3 text-sm font-semibold">¿Tu stock está en Excel?</p><p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">No necesitas transcribirlo pieza por pieza. Usa “Importar Excel” para traer tu stock actual.</p></div></div>}</section>;
+}
+
 function Produccion({ proyectos, loading }: { proyectos: Proyecto[]; loading: boolean }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -638,6 +680,14 @@ function MovimientoDialog({ inventario, areasUsuario, puedeTodo, onClose }: { in
     </div>
     <ModalActions onClose={onClose} pending={registrar.isPending} label="Guardar movimiento" />
   </form></Modal>;
+}
+
+
+function ImportarExcel({ sedeId, onClose, onDone }: { sedeId: string | null; onClose: () => void; onDone: () => void }) {
+  const input = useRef<HTMLInputElement>(null); const [filas,setFilas]=useState<Record<string,unknown>[]>([]); const [nombre,setNombre]=useState(""); const [error,setError]=useState(""); const [guardando,setGuardando]=useState(false);
+  async function leer(file: File) { try { const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}); const hoja=wb.Sheets[wb.SheetNames[0]]; const raw=XLSX.utils.sheet_to_json<Record<string,unknown>>(hoja,{defval:""}); const valid=raw.filter(r=>String(excelValue(r,"codigo")||excelValue(r,"nombre")).trim()); setFilas(valid); setNombre(file.name); setError(raw.length-valid.length ? String(raw.length-valid.length) + " filas no tienen código ni nombre y no se importarán." : ""); if(!valid.length) toast.error("No encontramos registros con código o nombre"); } catch { toast.error("No se pudo leer el Excel"); } }
+  async function guardar() { if(!sedeId)return toast.error("Tu usuario no tiene sede asignada"); if(!filas.length)return toast.error("Selecciona un Excel"); setGuardando(true); const user=(await supabase.auth.getUser()).data.user; const {data:lote,error:loteError}=await (supabase as any).from("inventario_joyas_importaciones").insert({sede_id:sedeId,nombre_archivo:nombre,filas_detectadas:filas.length,creado_por:user?.id}).select("id").single(); if(loteError){setGuardando(false);toast.error(loteError.message);return;} const payload=filas.map(r=>({sede_id:sedeId,importacion_id:lote.id,codigo:String(excelValue(r,"codigo")||"").trim(),nombre:String(excelValue(r,"nombre")||excelValue(r,"codigo")||"Joya sin nombre").trim(),metal:String(excelValue(r,"metal")||""),ley:String(excelValue(r,"ley")||""),peso:numeroExcel(excelValue(r,"peso")),talla:String(excelValue(r,"talla")||""),piedras:String(excelValue(r,"piedras")||""),cantidad:numeroExcel(excelValue(r,"cantidad")) ?? 1,estado:String(excelValue(r,"estado")||"disponible").trim().toLowerCase().replace(/\\s+/g,"_"),origen:"excel",metadata:{archivo_origen:nombre}})).filter(r=>r.codigo); const {error}=await (supabase as any).from("inventario_joyas").upsert(payload,{onConflict:"sede_id,codigo"}); if(error){setGuardando(false);toast.error(error.message);return;} await (supabase as any).from("inventario_joyas_importaciones").update({filas_importadas:payload.length,filas_con_revision:error?1:0}).eq("id",lote.id); setGuardando(false); toast.success(payload.length + " joyas importadas"); onDone(); }
+  return <Modal title="Importar stock desde Excel" subtitle="Trae tu stock actual y migra progresivamente, sin borrar tu Excel." onClose={onClose}><div className="space-y-4"><div onClick={()=>input.current?.click()} className="cursor-pointer rounded-2xl border-2 border-dashed border-border bg-surface-muted/30 p-8 text-center hover:border-primary/40"><FileSpreadsheet className="mx-auto size-9 text-primary"/><p className="mt-3 text-sm font-semibold">{nombre || "Selecciona tu archivo Excel"}</p><p className="mt-1 text-xs text-muted-foreground">.xlsx o .xls · se utiliza la primera hoja</p><input ref={input} type="file" accept=".xlsx,.xls" className="hidden" onChange={e=>e.target.files?.[0] && void leer(e.target.files[0])}/></div>{filas.length ? <div className="rounded-xl border border-border p-4"><p className="text-sm font-semibold">{filas.length} registros encontrados</p><p className="mt-1 text-xs text-muted-foreground">Código · nombre · metal · ley · peso · talla · piedras · cantidad · estado</p><div className="mt-3 max-h-48 overflow-auto rounded-lg border border-border"><table className="w-full text-xs"><tbody>{filas.slice(0,10).map((r,i)=><tr key={i} className="border-b border-border"><td className="p-2 font-semibold">{String(excelValue(r,"codigo")||"—")}</td><td className="p-2">{String(excelValue(r,"nombre")||"—")}</td><td className="p-2">{String(excelValue(r,"metal")||"—")}</td><td className="p-2">{String(excelValue(r,"cantidad")||"1")}</td></tr>)}</tbody></table></div>{filas.length>10?<p className="mt-2 text-[10px] text-muted-foreground">Vista previa de 10 de {filas.length} registros.</p>:null}</div>:null}{error?<div className="rounded-xl bg-warning-soft p-3 text-xs text-warning">{error}</div>:null}<ModalActions onClose={onClose} pending={guardando} label="Importar stock"/></div></Modal>;
 }
 
 function Modal({ title, subtitle, onClose, children }: { title: string; subtitle: string; onClose: () => void; children: React.ReactNode }) {
