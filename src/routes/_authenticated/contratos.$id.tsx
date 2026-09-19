@@ -18,6 +18,9 @@ import {
 import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    nuevoPedido: search.nuevoPedido === true || search.nuevoPedido === "true",
+  }),
   head: () => ({
     meta: [
       { title: "Contrato — Aurum Lab" },
@@ -62,6 +65,7 @@ function ContratoPage() {
   const { id } = useParams({ from: "/_authenticated/contratos/$id" });
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
+  const { nuevoPedido } = Route.useSearch();
   const { data: contrato, isLoading } = useContrato(id);
   const { pedidos, isLoading: cargandoPedidos } = usePedidosContrato(contrato);
   const { data: pagos = [] } = usePagosContrato(contrato);
@@ -86,6 +90,14 @@ function ContratoPage() {
 
   const puedeCrearTrabajo = Boolean(sesion?.esAdmin);
   const contratoFinancieroReal = resumen.origen === "contrato";
+
+  useEffect(() => {
+    if (!contrato || !puedeCrearTrabajo || !nuevoPedido) return;
+    setModalAbierto(true);
+    setForm(formularioContratoVacio(contrato));
+    setRuta([]);
+    void navigate({ search: { nuevoPedido: undefined }, replace: true });
+  }, [contrato, puedeCrearTrabajo, nuevoPedido, navigate]);
 
   if (isLoading) {
     return (
@@ -142,7 +154,7 @@ function ContratoPage() {
                   onClick={() => setModalAbierto(true)}
                   className="rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground"
                 >
-                  + Agregar trabajo
+                  + Nuevo pedido
                 </button>
               ) : null
             }
@@ -181,7 +193,7 @@ function ContratoPage() {
               ))}
               {!cargandoPedidos && pedidos.length === 0 ? (
                 <p className="px-4 py-8 text-sm text-muted-foreground lg:px-6">
-                  Este contrato todavía no tiene trabajos asociados.
+                  Este contrato todavía no tiene pedidos asociados.
                 </p>
               ) : null}
             </div>
@@ -192,7 +204,7 @@ function ContratoPage() {
                   onClick={() => setModalAbierto(true)}
                   className="w-full rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-card"
                 >
-                  + Agregar trabajo
+                  + Nuevo pedido
                 </button>
               </div>
             ) : null}
@@ -367,7 +379,7 @@ function ContratoPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-base font-semibold">Agregar trabajo</h2>
+                <h2 className="text-base font-semibold">Nuevo pedido</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Se creará un nuevo pedido dentro del contrato {contrato.numero}.
                 </p>
@@ -414,7 +426,7 @@ function ContratoPage() {
                 disabled={crearTrabajo.isPending || !form.trabajo.trim() || ruta.length === 0}
                 className="rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
               >
-                {crearTrabajo.isPending ? "Creando…" : "Crear trabajo"}
+                {crearTrabajo.isPending ? "Creando…" : "Crear pedido"}
               </button>
             </div>
           </form>
