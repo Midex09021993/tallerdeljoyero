@@ -10,6 +10,8 @@ import {
   pedidoEnRecepcion,
   useActualizarPedido,
   useCrearContratoDesdePedido,
+  useContrato,
+  usePagosContrato,
   useAutorizarProduccion,
   useEnviarAArea,
   usePedidos,
@@ -272,6 +274,19 @@ function FichaPedido() {
   const autorizar = useAutorizarProduccion();
   const enviar = useEnviarAArea();
   const crearContrato = useCrearContratoDesdePedido();
+  const contratoRef = pedido?.contrato_id || pedido?.contrato || "";
+  const { data: contratoFinanciero } = useContrato(contratoRef);
+  const { data: pagosContrato = [] } = usePagosContrato(contratoFinanciero);
+  const totalFinanciero = Number(contratoFinanciero?.total ?? pedido?.importe ?? 0) || 0;
+  const abonadoFinanciero = pagosContrato.length > 0
+    ? pagosContrato.reduce((s, p) => s + (Number(p.monto) || 0), 0)
+    : Number(contratoFinanciero?.abonado ?? 0) || 0;
+  const saldoFinanciero = Math.max(0, totalFinanciero - abonadoFinanciero);
+  const estadoFinanciero = totalFinanciero > 0 && saldoFinanciero <= 0
+    ? "Pagado"
+    : abonadoFinanciero > 0
+      ? "Pago parcial"
+      : "Pendiente";
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
   const [rutaEdit, setRutaEdit] = useState<string[]>([]);
@@ -558,7 +573,24 @@ function FichaPedido() {
                 </div>
               </Panel>
 
-              <BloqueDatos
+  
+
+              <Panel titulo="Estado financiero">
+                <div className="grid gap-4 p-5 sm:grid-cols-3 lg:p-6">
+                  <DatoClave etiqueta="Total" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(totalFinanciero)} />
+                  <DatoClave etiqueta="Abonado" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(abonadoFinanciero)} />
+                  <DatoClave etiqueta="Saldo" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(saldoFinanciero)} destacado />
+                </div>
+                <div className="border-t border-border px-5 py-3 text-xs lg:px-6">
+                  <span className="text-muted-foreground">Estado: </span>
+                  <span className="font-semibold">{estadoFinanciero}</span>
+                  {contratoFinanciero ? (
+                    <span className="ml-2 text-muted-foreground">· {pagosContrato.length} pago{pagosContrato.length === 1 ? "" : "s"} registrado{pagosContrato.length === 1 ? "" : "s"}</span>
+                  ) : null}
+                </div>
+              </Panel>
+
+            <BloqueDatos
                 titulo="Información general"
                 datos={[
                   ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
