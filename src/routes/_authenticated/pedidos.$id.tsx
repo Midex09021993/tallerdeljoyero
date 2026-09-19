@@ -189,7 +189,7 @@ interface EnlaceArchivo {
   poster: string | null;
 }
 
-function TarjetaEnlace({ a, onQuitar }: { a: EnlaceArchivo; onQuitar: (id: string) => void }) {
+function TarjetaEnlace({ a, onQuitar, puedeEliminar }: { a: EnlaceArchivo; onQuitar: (id: string) => void; puedeEliminar: boolean }) {
   const [incrustado, setIncrustado] = useState(false);
   const embed = a.tipo === "visor3d" ? urlEmbedVisor(a.url) : null;
   return (
@@ -236,13 +236,15 @@ function TarjetaEnlace({ a, onQuitar }: { a: EnlaceArchivo; onQuitar: (id: strin
               {incrustado ? "Ver portada" : "Ver aquí"}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={() => onQuitar(a.id)}
-            className="text-xs text-muted-foreground hover:text-danger"
-          >
-            Quitar
-          </button>
+          {puedeEliminar ? (
+            <button
+              type="button"
+              onClick={() => onQuitar(a.id)}
+              className="text-xs text-muted-foreground hover:text-danger"
+            >
+              Quitar
+            </button>
+          ) : null}
         </div>
       </div>
     </li>
@@ -1326,6 +1328,7 @@ function FichaPedido() {
                     <TarjetaEnlace
                       key={a.id}
                       a={a}
+                      puedeEliminar={Boolean(sesion?.esAdmin)}
                       onQuitar={() =>
                         setArchivoPorEliminar({
                           id: a.id,
