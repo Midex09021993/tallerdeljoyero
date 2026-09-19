@@ -270,6 +270,18 @@ function FichaPedido() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
+  const { data: trabajosPedido = [] } = useQuery({
+    queryKey: ["trabajos-pedido", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trabajos")
+        .select("id, area, titulo, estado, prioridad, responsable_user_id")
+        .eq("pedido_id", id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const actualizar = useActualizarPedido();
   const autorizar = useAutorizarProduccion();
   const enviar = useEnviarAArea();
@@ -493,24 +505,22 @@ function FichaPedido() {
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Panel titulo="Ficha rápida">
-            <div className="space-y-6 p-5 lg:p-6">
+            <div className="space-y-5 p-5 lg:p-6">
               <div className="rounded-2xl border border-gold/30 bg-surface-sunken p-5 shadow-raised">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                      Código del pedido
+                      Pedido
                     </p>
                     <p className="mt-1 font-display text-3xl leading-tight text-foreground">
                       {pedido.referencia}
                     </p>
                     <p className="mt-1 text-sm font-medium text-muted-foreground">
-                      {pedido.trabajo || pedido.pieza || "—"}
+                      {pedido.cliente || "Sin cliente"}
                     </p>
                   </div>
                   <span
-                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/40 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] shadow-card ${
-                      estadoClases[pedido.estado] ?? "bg-accent text-foreground"
-                    }`}
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/40 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] ${estadoClases[pedido.estado] ?? "bg-accent text-foreground"}`}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-current" />
                     {pedido.estado || "—"}
@@ -518,21 +528,127 @@ function FichaPedido() {
                 </div>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  <DatoClave
-                    etiqueta="Área actual"
-                    valor={normalizarArea(pedido.area_actual)}
-                    destacado
-                  />
-                  <DatoClave
-                    etiqueta="Fecha de entrega"
-                    valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"}
-                    destacado
-                  />
-                  <DatoClave etiqueta="N° de contrato" valor={pedido.contrato || "—"} />
+                  <DatoClave etiqueta="Contrato" valor={pedido.contrato || "—"} />
+                  <DatoClave etiqueta="Área actual" valor={normalizarArea(pedido.area_actual)} destacado />
+                  <DatoClave etiqueta="Entrega" valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"} />
                 </div>
               </div>
 
-              <Panel titulo="Documento comercial">
+              <BloqueDatos
+                titulo="Trabajo solicitado"
+                datos={[
+                  ["Descripción / trabajo", pedido.trabajo || pedido.pieza || "—"],
+                  ["Origen / lugar", pedido.origen || "—"],
+                  ["Peso", pedido.peso_estimado ? `${pedido.peso_estimado}` : "—"],
+                  ["Material", pedido.material || "—"],
+                  ["Piedras", pedido.piedras || "—"],
+                  ["Talla", pedido.talla || "—"],
+                  ["Cantidad", String(pedido.cantidad_piezas ?? "—")],
+                ]}
+              />
+
+              <section>
+                <div className="mb-3 flex items-center gap-3">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+                    Producción
+                  </h3>
+                  <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <DatoClave
+                    etiqueta="Trabajos"
+                    valor={String(trabajosPedido.length)}
+                    destacado
+                  />
+                  <DatoClave
+                    etiqueta="Pendientes"
+                    valor={String(trabajosPedido.filter((t) => ["pendiente", "en_proceso", "bloqueado"].includes(t.estado)).length)}
+                  />
+                  <DatoClave
+                    etiqueta="Completados"
+                    valor={String(trabajosPedido.filter((t) => t.estado === "completado").length)}
+                  />
+                </div>
+
+                {trabajosPedido.length > 0 ? (
+                  <div className="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border">
+                    {trabajosPedido.map((trabajo) => (
+                      <button
+                        key={trabajo.id}
+                        type="button"
+                        onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
+                        className="flex w-full items-center justify-between gap-3 bg-card px-4 py-3 text-left transition hover:bg-surface-muted"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {trabajo.titulo || "Trabajo sin título"}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {normalizarArea(trabajo.area)} · {trabajo.prioridad}
+                          </p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
+                          {trabajo.estado === "en_proceso" ? "En proceso" : trabajo.estado === "completado" ? "Completado" : trabajo.estado === "bloqueado" ? "Bloqueado" : "Pendiente"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl border border-dashed border-border bg-surface-sunken px-4 py-4 text-sm text-muted-foreground">
+                    Todavía no hay trabajos registrados para este pedido.
+                  </div>
+                )}
+              </section>
+
+              <section>
+                <div className="mb-3 flex items-center gap-3">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+                    Ficha técnica
+                  </h3>
+                  <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <DatoClave etiqueta="Archivos técnicos" valor={String(archivos.length)} destacado={archivos.length > 0} />
+                  <DatoClave etiqueta="Tiempo en área" valor={tiempoEnArea(pedido.area_desde)} />
+                </div>
+                {archivos.length > 0 ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Los archivos de diseño y ficha técnica están disponibles en la sección de archivos del pedido.
+                  </p>
+                ) : (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Este pedido todavía no tiene archivos técnicos asociados.
+                  </p>
+                )}
+              </section>
+
+              <section>
+                <div className="mb-3 flex items-center gap-3">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
+                    Resumen financiero
+                  </h3>
+                  <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <DatoClave
+                    etiqueta="Precio"
+                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.importe) || 0)}
+                  />
+                  <DatoClave
+                    etiqueta="A cuenta"
+                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.a_cuenta) || 0)}
+                  />
+                  <DatoClave
+                    etiqueta="Saldo"
+                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.saldo) || 0)}
+                    destacado
+                  />
+                </div>
+              </section>
+            </div>
+          </Panel>
+
+          <Panel titulo="Documento comercial">
                 <div className="space-y-4 p-5 lg:p-6">
                   {pedido.contrato_id ? (
                     <div className="flex flex-wrap items-center justify-between gap-3">
