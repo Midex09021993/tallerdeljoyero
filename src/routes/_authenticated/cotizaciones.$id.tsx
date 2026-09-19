@@ -52,6 +52,8 @@ function CotizacionDetallePage() {
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [creandoVersion, setCreandoVersion] = useState(false);
+  const [convirtiendoPedido, setConvirtiendoPedido] = useState(false);
+  const [pedidoId, setPedidoId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
@@ -160,6 +162,22 @@ function CotizacionDetallePage() {
     }
     await navigate({ to: "/cotizaciones/$id", params: { id: nuevoId } });
     setCreandoVersion(false);
+  }
+
+  async function convertirAPedido() {
+    if (!cotizacion || cotizacion.estado !== "aprobada" || !sesion?.esAdmin) return;
+    setConvirtiendoPedido(true);
+    setError("");
+    const { data, error: conversionError } = await supabase.rpc("convertir_cotizacion_a_pedido", {
+      _cotizacion_id: cotizacion.id,
+    });
+    if (conversionError || !data) {
+      setError(conversionError?.message ?? "No se pudo convertir la cotización en pedido.");
+      setConvirtiendoPedido(false);
+      return;
+    }
+    setPedidoId(data);
+    setConvirtiendoPedido(false);
   }
 
   async function cambiarEstado(estado: string) {
@@ -303,9 +321,15 @@ function CotizacionDetallePage() {
             </Panel>
             <Panel titulo="Acciones">
               <div className="space-y-2 p-4">
-                {cotizacion.estado === "aprobada"
-                  ? <button type="button" disabled className="w-full rounded-lg bg-primary/70 px-4 py-2.5 text-sm font-semibold text-primary-foreground">Próximamente: convertir en Pedido</button>
-                  : <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos convertirla en un pedido sin volver a ingresar los datos.</p>}
+                {cotizacion.estado === "aprobada" ? (
+                  pedidoId ? (
+                    <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
+                  ) : (
+                    <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedido()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                      {convirtiendoPedido ? "Creando pedido…" : "Convertir en Pedido"}
+                    </button>
+                  )
+                ) : <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos convertirla en un pedido sin volver a ingresar los datos.</p>}
                 <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
               </div>
             </Panel>
