@@ -244,6 +244,7 @@ function PedidosPage() {
   return (
     <AppShell
       titulo="Pedidos"
+      ocultarTitulo
     >
       <section className="mb-6 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-surface-muted/60 p-6 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
