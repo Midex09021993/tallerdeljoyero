@@ -15,10 +15,9 @@ import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-pub
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
-import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
-import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
+import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
 import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authenticated/herramientas'
@@ -32,6 +31,7 @@ import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
+import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos.$id'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -66,16 +66,6 @@ const AuthenticatedAurumRenderRoute =
     path: '/aurum-render',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedCotizacionesRoute = AuthenticatedCotizacionesRouteImport.update({
-  id: '/cotizaciones',
-  path: '/cotizaciones',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCotizacionesIdRoute = AuthenticatedCotizacionesIdRouteImport.update({
-  id: '/cotizaciones/$id',
-  path: '/cotizaciones/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
   id: '/casting',
   path: '/casting',
@@ -86,6 +76,12 @@ const AuthenticatedCorteLaserRoute = AuthenticatedCorteLaserRouteImport.update({
   path: '/corte-laser',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCotizacionesRoute =
+  AuthenticatedCotizacionesRouteImport.update({
+    id: '/cotizaciones',
+    path: '/cotizaciones',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDiseno3dRoute = AuthenticatedDiseno3dRouteImport.update({
   id: '/diseno-3d',
   path: '/diseno-3d',
@@ -154,6 +150,12 @@ const AuthenticatedContratosIdRoute =
     path: '/contratos/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCotizacionesIdRoute =
+  AuthenticatedCotizacionesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedCotizacionesRoute,
+  } as any)
 const AuthenticatedPedidosIndexRoute =
   AuthenticatedPedidosIndexRouteImport.update({
     id: '/',
@@ -178,10 +180,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
-  '/cotizaciones': typeof AuthenticatedCotizacionesRoute
-  '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
   '/herramientas': typeof AuthenticatedHerramientasRoute
@@ -195,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/taller': typeof AuthenticatedTallerRoute
   '/ventas': typeof AuthenticatedVentasRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
+  '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -205,10 +207,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
-  '/cotizaciones': typeof AuthenticatedCotizacionesRoute
-  '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
   '/herramientas': typeof AuthenticatedHerramientasRoute
@@ -221,6 +222,7 @@ export interface FileRoutesByTo {
   '/taller': typeof AuthenticatedTallerRoute
   '/ventas': typeof AuthenticatedVentasRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
+  '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -233,10 +235,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
-  '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRoute
-  '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
   '/_authenticated/herramientas': typeof AuthenticatedHerramientasRoute
@@ -250,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
+  '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -262,10 +264,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/aurum-render'
-    | '/cotizaciones'
-    | '/cotizaciones/$id'
     | '/casting'
     | '/corte-laser'
+    | '/cotizaciones'
     | '/diseno-3d'
     | '/gestion'
     | '/herramientas'
@@ -279,6 +280,7 @@ export interface FileRouteTypes {
     | '/taller'
     | '/ventas'
     | '/contratos/$id'
+    | '/cotizaciones/$id'
     | '/pedidos/$id'
     | '/pedidos/'
     | '/lovable/email/transactional/preview'
@@ -289,10 +291,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/aurum-render'
-    | '/cotizaciones'
-    | '/cotizaciones/$id'
     | '/casting'
     | '/corte-laser'
+    | '/cotizaciones'
     | '/diseno-3d'
     | '/gestion'
     | '/herramientas'
@@ -305,6 +306,7 @@ export interface FileRouteTypes {
     | '/taller'
     | '/ventas'
     | '/contratos/$id'
+    | '/cotizaciones/$id'
     | '/pedidos/$id'
     | '/pedidos'
     | '/lovable/email/transactional/preview'
@@ -316,9 +318,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/_authenticated/aurum-render'
-    | '/_authenticated/cotizaciones'
     | '/_authenticated/casting'
     | '/_authenticated/corte-laser'
+    | '/_authenticated/cotizaciones'
     | '/_authenticated/diseno-3d'
     | '/_authenticated/gestion'
     | '/_authenticated/herramientas'
@@ -332,6 +334,7 @@ export interface FileRouteTypes {
     | '/_authenticated/taller'
     | '/_authenticated/ventas'
     | '/_authenticated/contratos/$id'
+    | '/_authenticated/cotizaciones/$id'
     | '/_authenticated/pedidos/$id'
     | '/_authenticated/pedidos/'
     | '/lovable/email/transactional/preview'
@@ -390,20 +393,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAurumRenderRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/cotizaciones': {
-      id: '/_authenticated/cotizaciones'
-      path: '/cotizaciones'
-      fullPath: '/cotizaciones'
-      preLoaderRoute: typeof AuthenticatedCotizacionesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cotizaciones/$id': {
-      id: '/_authenticated/cotizaciones/$id'
-      path: '/cotizaciones/$id'
-      fullPath: '/cotizaciones/$id'
-      preLoaderRoute: typeof AuthenticatedCotizacionesIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/casting': {
       id: '/_authenticated/casting'
       path: '/casting'
@@ -416,6 +405,13 @@ declare module '@tanstack/react-router' {
       path: '/corte-laser'
       fullPath: '/corte-laser'
       preLoaderRoute: typeof AuthenticatedCorteLaserRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cotizaciones': {
+      id: '/_authenticated/cotizaciones'
+      path: '/cotizaciones'
+      fullPath: '/cotizaciones'
+      preLoaderRoute: typeof AuthenticatedCotizacionesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/diseno-3d': {
@@ -509,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContratosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cotizaciones/$id': {
+      id: '/_authenticated/cotizaciones/$id'
+      path: '/$id'
+      fullPath: '/cotizaciones/$id'
+      preLoaderRoute: typeof AuthenticatedCotizacionesIdRouteImport
+      parentRoute: typeof AuthenticatedCotizacionesRoute
+    }
     '/_authenticated/pedidos/': {
       id: '/_authenticated/pedidos/'
       path: '/'
@@ -533,6 +536,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedCotizacionesRouteChildren {
+  AuthenticatedCotizacionesIdRoute: typeof AuthenticatedCotizacionesIdRoute
+}
+
+const AuthenticatedCotizacionesRouteChildren: AuthenticatedCotizacionesRouteChildren =
+  {
+    AuthenticatedCotizacionesIdRoute: AuthenticatedCotizacionesIdRoute,
+  }
+
+const AuthenticatedCotizacionesRouteWithChildren =
+  AuthenticatedCotizacionesRoute._addFileChildren(
+    AuthenticatedCotizacionesRouteChildren,
+  )
+
 interface AuthenticatedPedidosRouteChildren {
   AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
   AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
@@ -548,10 +565,9 @@ const AuthenticatedPedidosRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
-  AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRoute
-  AuthenticatedCotizacionesIdRoute: typeof AuthenticatedCotizacionesIdRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
+  AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRouteWithChildren
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
   AuthenticatedHerramientasRoute: typeof AuthenticatedHerramientasRoute
@@ -569,10 +585,9 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
-  AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRoute,
-  AuthenticatedCotizacionesIdRoute: AuthenticatedCotizacionesIdRoute,
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
+  AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRouteWithChildren,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
   AuthenticatedHerramientasRoute: AuthenticatedHerramientasRoute,

@@ -52,9 +52,10 @@ export type GemaId =
   | "turmalina_verde" | "turmalina_rosa" | "turmalina_azul"
   | "crisoberilo_gato" | "crisoberilo_estrella" | "zafiro_estrella" | "rubi_estrella"
   | "granate_estrella" | "turmalina_gato" | "espinela_estrella" | "esmeralda_gato" | "esmeralda_estrella"
-  | "moonstone_adularescencia" | "sunstone_aventurescencia" | "labradorita_labradorescencia" | "opal_precioso_playofcolor";
-export type GemaOrigen = "Colombia" | "Brasil" | "Bolivia" | "Perú" | "Argentina" | "Latinoamérica" | "Global";
-export type GemaPerfilInterno = "colombia_jardin" | "brasil_jardin" | "paraiba_acicular" | "paraiba_chatoyancy" | "brasil_pegmatita" | "ametrino_zonificado" | "cuarzo_rutilado" | "opal_microestructura" | "crisocola_calcedonia" | "rodocrosita_crecimiento" | "generico";
+  | "moonstone_adularescencia" | "sunstone_aventurescencia" | "labradorita_labradorescencia" | "opal_precioso_playofcolor"
+  | "peristerita_peristerescencia" | "sunstone_schiller" | "obsidiana_fuego" | "perla_orient" | "opal_comun_opalescencia" | "perla_overtone";
+export type GemaOrigen = "Colombia" | "Brasil" | "Bolivia" | "Perú" | "Argentina" | "Latinoamérica" | "Global" | "Oregon";
+export type GemaPerfilInterno = "colombia_jardin" | "brasil_jardin" | "paraiba_acicular" | "paraiba_chatoyancy" | "brasil_pegmatita" | "ametrino_zonificado" | "cuarzo_rutilado" | "opal_microestructura" | "crisocola_calcedonia" | "rodocrosita_crecimiento" | "generico" | "nacar";
 export type GemaConfig = {
   id:GemaId; familia:string; nombre:string; color:number; transmission:number; ior:number; roughness:number; envMapIntensity:number;
   attenuationColor:number; attenuationDistance:number; dispersion:number; iridescence:number;

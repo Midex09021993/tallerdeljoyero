@@ -124,7 +124,7 @@ export const resolveAurumGemPhysicalModel=(g:any):AurumGemPhysicalModel=>{
     structure:{
       inclusionDensity:Math.max(0,Math.min(1,Number(g?.inclusionStrength??0))),
       inclusionStyle:String(g?.inclusionStyle??"ninguna"),
-      phenomenon,
+      ...(phenomenon?{phenomenon}:{}),
       phenomenonScaleNm:Number(g?.phenomenonScaleNm??170),
       dimensionality,
       fieldSeed:(Number(g?.id?.length??7)*2654435761)>>>0,
