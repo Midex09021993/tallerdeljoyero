@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
@@ -68,6 +68,16 @@ function areasAsignadasUnicas(areas: string[]) {
 function OperarioPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
+  const queryClient = useQueryClient();
+  const [actualizandoTrabajo, setActualizandoTrabajo] = useState(false);
+  const cambiarEstadoTrabajo = async (id: string, estado: string) => {
+    setActualizandoTrabajo(true);
+    try {
+      const { error } = await supabase.rpc("cambiar_estado_trabajo", { _trabajo_id: id, _nuevo_estado: estado });
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["mis-trabajos-operario"] });
+    } finally { setActualizandoTrabajo(false); }
+  };
 
   const { data: misTrabajos = [] } = useQuery({
     queryKey: ["mis-trabajos-operario"],
@@ -132,7 +142,7 @@ function OperarioPage() {
               <button
                 key={trabajo.id}
                 type="button"
-                onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: "operario" } })}
+                onClick={() => undefined}
                 className="rounded-xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -148,7 +158,7 @@ function OperarioPage() {
                 <div className="mt-3 flex flex-wrap gap-3 border-t border-border pt-3 text-[11px] text-muted-foreground">
                   <span>Pedido: {trabajo.pedido_id.slice(0, 8)}…</span>
                   <span>Fecha: {trabajo.fecha_planificada || "Sin fecha"}</span>
-                </div>
+                </div>\n                <div className="mt-3 flex flex-wrap gap-2">\n                  {trabajo.estado === "pendiente" ? <button type="button" onClick={(e) => { e.stopPropagation(); void cambiarEstadoTrabajo(trabajo.id, "en_proceso"); }} disabled={actualizandoTrabajo} className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50">Iniciar trabajo</button> : null}\n                  {trabajo.estado === "en_proceso" ? <button type="button" onClick={(e) => { e.stopPropagation(); void cambiarEstadoTrabajo(trabajo.id, "completado"); }} disabled={actualizandoTrabajo} className="rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground disabled:opacity-50">Completar trabajo</button> : null}\n                </div>
               </button>
             ))}
           </div>
