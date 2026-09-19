@@ -224,7 +224,7 @@ const accesoRuta: Record<string, AccesoRuta> = {
   "/contratos/": "admin",
   "/gestion": "admin",
   "/inventario": "admin",
-  "/ventas": "admin",
+  "/ventas": "area:Área ventas",
   "/herramientas": "owner",
   "/aurum-render": "admin",
   "/monitor": "monitor",
