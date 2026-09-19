@@ -226,7 +226,6 @@ function PedidosPage() {
       new URLSearchParams(window.location.search).get("autorizacion") === "pendientes",
   )[0];
   const [busca, setBusca] = useState("");
-  const [estadisticasMovilAbiertas, setEstadisticasMovilAbiertas] = useState(false);
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
@@ -292,43 +291,6 @@ function PedidosPage() {
     return d !== null && d >= 0 && d <= 3;
   });
 
-  const contarPorArea = (items: typeof pedidos) =>
-    items.reduce(
-      (acc, p) => {
-        acc[p.area_actual] = (acc[p.area_actual] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-  const activosPorArea = contarPorArea(activos);
-  const entregadosPorArea = contarPorArea(entregados);
-  const atrasadosPorArea = contarPorArea(atrasados);
-  const proximosPorArea = contarPorArea(proximos);
-  const tarjetasResumen = (
-    <>
-      <TarjetaResumen etiqueta="Activos" valor={activos.length} porArea={activosPorArea} />
-      <TarjetaResumen
-        etiqueta="Entregados"
-        valor={entregados.length}
-        tono="positivo"
-        porArea={entregadosPorArea}
-      />
-      <TarjetaResumen
-        etiqueta="Atrasados"
-        valor={atrasados.length}
-        tono="negativo"
-        porArea={atrasadosPorArea}
-      />
-      <TarjetaResumen
-        etiqueta="Entrega próxima"
-        valor={proximos.length}
-        tono={proximos.length > 0 ? "warning" : "positivo"}
-        porArea={proximosPorArea}
-        subtitulo="Próximos 3 días"
-      />
-    </>
-  );
 
   return (
     <AppShell
@@ -337,30 +299,6 @@ function PedidosPage() {
         isLoading
           ? "Cargando…"
           : `${pedidosPorSede.length} pedidos · ${sesion?.esDueno ? etiquetaSede : (sesion?.sede?.nombre ?? "tu sede")}`
-      }
-      acciones={
-        <div className="w-full sm:w-auto">
-          {sesion?.esAdmin ? (
-            <div className="sm:hidden">
-              <button
-                type="button"
-                onClick={() => setEstadisticasMovilAbiertas((v) => !v)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-xs font-semibold text-foreground shadow-card"
-                aria-expanded={estadisticasMovilAbiertas}
-              >
-                {estadisticasMovilAbiertas ? "Ocultar estadísticas ▲" : "Ver estadísticas ▼"}
-              </button>
-              {estadisticasMovilAbiertas ? (
-                <div className="mt-2 grid grid-cols-2 gap-2">{tarjetasResumen}</div>
-              ) : null}
-            </div>
-          ) : null}
-          <div
-            className={`${sesion?.esAdmin ? "hidden sm:flex" : "flex"} flex-wrap items-stretch gap-3`}
-          >
-            {tarjetasResumen}
-          </div>
-        </div>
       }
     >
       <section className="mb-6 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-surface-muted/60 p-6 shadow-sm">
