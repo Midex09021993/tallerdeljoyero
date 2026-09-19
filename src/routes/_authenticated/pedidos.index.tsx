@@ -242,468 +242,249 @@ function PedidosPage() {
 
 
   return (
-    <AppShell
-      titulo="Pedidos"
-      ocultarTitulo
-    >
-      <section className="mb-6 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-surface-muted/60 p-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-              <ClipboardList className="size-3.5" />
-              Flujo de trabajo
-            </div>
-            <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
-              Cada pedido tiene un camino. <span className="text-muted-foreground">Aquí lo ves.</span>
-            </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Sigue cliente, entrega, área actual y ruta de producción desde un solo lugar.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Activos</p><p className="mt-1 text-lg font-semibold tabular-nums">{activos.length}</p></div>
-            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Entregados</p><p className="mt-1 text-lg font-semibold tabular-nums">{entregados.length}</p></div>
-            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Atrasados</p><p className="mt-1 text-lg font-semibold tabular-nums text-danger">{atrasados.length}</p></div>
-            <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Próximos</p><p className="mt-1 text-lg font-semibold tabular-nums">{proximos.length}</p></div>
-          </div>
-        </div>
-      </section>
-
-      {soloPendientesAutorizacion ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/25 bg-warning-soft/50 px-4 py-3 text-sm">
-          <div>
-            <p className="font-semibold text-warning">Pedidos pendientes de autorización</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Mostrando únicamente pedidos que todavía no han ingresado a Producción.
-            </p>
-          </div>
-          <button type="button" onClick={() => window.location.assign("/pedidos")} className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground">
-            Ver todos
-          </button>
-        </div>
-      ) : null}
-
-      <Panel
-        titulo="Seguimiento general"
-        accion={
-          <div className="flex flex-wrap items-end gap-3">
-            <SelectorSedeDueno
-              esDueno={Boolean(sesion?.esDueno)}
-              sedes={sedesFiltro}
-              value={sedeFiltro}
-              onChange={setSedeFiltro}
-            />
-            {puedeCrear ? (
-              <button
-                type="button"
-                onClick={() => setAbierto((v) => !v)}
-                className="rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors hover:bg-surface-muted"
-              >
-                {abierto ? "Cancelar" : "Nuevo pedido"}
-              </button>
-            ) : null}
-          </div>
-        }
-      >
-        {sesion?.esDueno ? (
-          <div className="border-b border-border bg-surface-muted/35 px-4 py-3 text-xs text-muted-foreground sm:px-6">
-            Mostrando: <span className="font-medium text-foreground">{etiquetaSede}</span>
-          </div>
-        ) : null}
-        {abierto ? (
-          <form
-            className="border-b border-border bg-surface-muted/40 p-4 sm:p-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (ruta.length === 0) {
-                alert("Marca al menos un área en la ruta del pedido.");
-                return;
-              }
-              const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
-              const nuevo: PedidoNuevo = {
-                referencia: siguienteReferencia(
-                  nombreSede,
-                  pedidos.map((p) => p.referencia),
-                ),
-                pieza: form.trabajo,
-                trabajo: form.trabajo,
-                cliente: form.cliente,
-                telefono: form.telefono,
-                origen: form.origen,
-                contrato: form.contrato,
-                material: form.material,
-                peso_estimado: form.peso_estimado,
-                estado: "Recibido",
-                entrega: form.fecha_entrega,
-                importe: Number(form.importe) || 0,
-                fecha_ingreso: form.fecha_ingreso || hoy(),
-                fecha_entrega: form.fecha_entrega || null,
-                sede_id: sedePorDefecto || null,
-                area_actual: "Pedidos",
-                ruta,
-                notas: form.notas,
-                talla: form.talla,
-                cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
-                piedras: form.piedras,
-                corte_texto: form.corte_texto,
-                corte_tipografia: form.corte_tipografia,
-                corte_ubicacion: form.corte_ubicacion,
-                corte_observaciones: form.corte_observaciones,
-              };
-              crear.mutate(nuevo, {
-                onSuccess: () => {
-                  setForm(nuevoPedidoVacio());
-                  setRuta([]);
-                  setAbierto(false);
-                },
-              });
-            }}
-          >
-            <PedidoFormCampos
-              form={form}
-              onChange={setForm}
-              ruta={ruta}
-              onRutaChange={setRuta}
-              sedeSelect={
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Sede
-                  <select
-                    value={sedePorDefecto}
-                    onChange={(e) => setSedeId(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                  >
-                    {sedes.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              }
-            />
-
-            <button
-              type="submit"
-              disabled={crear.isPending}
-              className="mt-5 w-full rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
-            >
-              {crear.isPending ? "Guardando…" : "Guardar pedido"}
-            </button>
-          </form>
-        ) : null}
-
-        <div className="border-b border-border px-4 py-3 sm:px-6">
-          <input
-            placeholder={
-              soloSusAreas
-                ? "Buscar en todos los pedidos (aunque ya se movieron)…"
-                : "Buscar cliente, contrato o referencia…"
-            }
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="w-full min-w-0 rounded-lg border border-border bg-card px-3 py-3 text-base outline-none focus:ring-1 focus:ring-gold sm:py-2 sm:text-sm"
-          />
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Estado
-              <select
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-              >
-                {["Todas", ...estados].map((estado) => (
-                  <option key={estado}>{estado}</option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Área actual
-              <select
-                value={filtroArea}
-                onChange={(e) => setFiltroArea(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-              >
-                {["Todas", ...(soloSusAreas ? misAreas : AREAS_SEGUIMIENTO)].map((area) => (
-                  <option key={area} value={area}>
-                    {area === "Todas" ? "Todas" : etiquetaAreaSeguimiento(area)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Entrega
-              <select
-                value={filtroEntrega}
-                onChange={(e) => setFiltroEntrega(e.target.value as FiltroEntrega)}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-              >
-                {FILTROS_ENTREGA.map((entrega) => (
-                  <option key={entrega}>{entrega}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-        {soloSusAreas && !busca.trim() ? (
-          <p className="px-6 pt-3 text-[11px] text-muted-foreground">
-            Ves los pedidos que están en tus áreas: {misAreas.join(", ")}. Usa el buscador para
-            encontrar pedidos que ya se movieron a otra área.
-          </p>
-        ) : null}
-
-        <div className="block divide-y divide-border lg:hidden">
-          {lista.map((p) => (
-            <article
-              key={p.id}
-              onClick={() =>
-                navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: "pedidos" } })
-              }
-              className="group cursor-pointer px-4 py-4 transition-colors hover:bg-surface-muted/70 active:bg-surface-muted"
-              role="button"
-              aria-label={`Abrir ficha del pedido ${p.referencia}`}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate({
-                    to: "/pedidos/$id",
-                    params: { id: p.id },
-                    search: { from: "pedidos" },
-                  });
-                }
-              }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">{p.referencia}</p>
-                  {p.contrato ? (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      Contrato {p.contrato}
-                    </p>
-                  ) : null}
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
-                >
-                  {etiquetaAreaSeguimiento(p.area_actual)}
-                </span>
+    <AppShell titulo="Pedidos" ocultarTitulo>
+      <div className="space-y-5">
+        <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-7">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                <ClipboardList className="size-3.5" />
+                Flujo de trabajo
               </div>
-              <span
-                className={`mt-2 inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
-                  estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"
-                }`}
-              >
-                {p.estado}
-              </span>
-              <p className="mt-2 truncate text-sm font-medium">{p.cliente}</p>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                {p.trabajo || p.pieza}
+              <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+                Cada pedido tiene un camino.
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                Aquí ves dónde está cada trabajo, qué sigue y cuándo debe entregarse.
               </p>
-              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                <span className="truncate">
-                  {sesion?.esDueno && p.sede_nombre ? p.sede_nombre : p.origen || "Sin origen"}
-                </span>
-                <span className="shrink-0 tabular-nums">
-                  {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}
-                </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:min-w-[330px]">
+              {[
+                ["Activos", activos.length, ""],
+                ["Próximos", proximos.length, ""],
+                ["Atrasados", atrasados.length, atrasados.length ? "text-danger" : ""],
+              ].map(([label, value, tone]) => (
+                <div key={label} className="rounded-2xl border border-border/70 bg-background/70 px-3 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+                  <p className={`mt-1 text-xl font-semibold tabular-nums ${tone}`}>{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {soloPendientesAutorizacion ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning/25 bg-warning-soft/50 px-4 py-3 text-sm">
+            <div>
+              <p className="font-semibold text-warning">Pedidos pendientes de autorización</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Mostrando pedidos que todavía no han ingresado a Producción.
+              </p>
+            </div>
+            <button type="button" onClick={() => window.location.assign("/pedidos")} className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold">
+              Ver todos
+            </button>
+          </div>
+        ) : null}
+
+        <section className="rounded-3xl border border-border bg-card shadow-sm">
+          <div className="border-b border-border p-4 sm:p-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="relative">
+                  <input
+                    placeholder={soloSusAreas ? "Buscar en todos los pedidos…" : "Buscar cliente, pedido o contrato…"}
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                  />
+                </div>
               </div>
-              {puedeCrear ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {pedidoEnRecepcion(p.estado) ? (
-                    <button
-                      type="button"
-                      disabled={autorizar.isPending || p.ruta.length === 0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        autorizar.mutate({
-                          pedido: p,
-                          usuarioId: sesion?.user.id ?? null,
-                        });
-                      }}
-                      className="rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
-                    >
-                      Autorizar Producción
-                    </button>
-                  ) : null}
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <SelectorSedeDueno
+                  esDueno={Boolean(sesion?.esDueno)}
+                  sedes={sedesFiltro}
+                  value={sedeFiltro}
+                  onChange={setSedeFiltro}
+                />
+                {puedeCrear ? (
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPorBorrar({ id: p.id, referencia: p.referencia });
-                    }}
-                    className="ml-auto rounded-lg border border-danger/30 px-3 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10"
-                    aria-label={`Eliminar pedido ${p.referencia}`}
+                    onClick={() => setAbierto((v) => !v)}
+                    className="rounded-xl bg-ink px-4 py-3 text-xs font-semibold text-ink-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
                   >
-                    Eliminar
+                    {abierto ? "Cerrar" : "+ Nuevo pedido"}
                   </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Estado
+                <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal text-foreground outline-none focus:border-primary/50">
+                  {["Todas", ...estados].map((estado) => <option key={estado}>{estado}</option>)}
+                </select>
+              </label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Área
+                <select value={filtroArea} onChange={(e) => setFiltroArea(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal text-foreground outline-none focus:border-primary/50">
+                  {["Todas", ...(soloSusAreas ? misAreas : AREAS_SEGUIMIENTO)].map((area) => (
+                    <option key={area} value={area}>{area === "Todas" ? "Todas" : etiquetaAreaSeguimiento(area)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Entrega
+                <select value={filtroEntrega} onChange={(e) => setFiltroEntrega(e.target.value as FiltroEntrega)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal text-foreground outline-none focus:border-primary/50">
+                  {FILTROS_ENTREGA.map((entrega) => <option key={entrega}>{entrega}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {abierto ? (
+            <form
+              className="border-b border-border bg-surface-muted/35 p-4 sm:p-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (ruta.length === 0) {
+                  alert("Marca al menos un área en la ruta del pedido.");
+                  return;
+                }
+                const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
+                const nuevo: PedidoNuevo = {
+                  referencia: siguienteReferencia(nombreSede, pedidos.map((p) => p.referencia)),
+                  pieza: form.trabajo,
+                  trabajo: form.trabajo,
+                  cliente: form.cliente,
+                  telefono: form.telefono,
+                  origen: form.origen,
+                  contrato: form.contrato,
+                  material: form.material,
+                  peso_estimado: form.peso_estimado,
+                  estado: "Recibido",
+                  entrega: form.fecha_entrega,
+                  importe: Number(form.importe) || 0,
+                  fecha_ingreso: form.fecha_ingreso || hoy(),
+                  fecha_entrega: form.fecha_entrega || null,
+                  sede_id: sedePorDefecto || null,
+                  area_actual: "Pedidos",
+                  ruta,
+                  notas: form.notas,
+                  talla: form.talla,
+                  cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
+                  piedras: form.piedras,
+                  corte_texto: form.corte_texto,
+                  corte_tipografia: form.corte_tipografia,
+                  corte_ubicacion: form.corte_ubicacion,
+                  corte_observaciones: form.corte_observaciones,
+                };
+                crear.mutate(nuevo, {
+                  onSuccess: () => {
+                    setForm(nuevoPedidoVacio());
+                    setRuta([]);
+                    setAbierto(false);
+                  },
+                });
+              }}
+            >
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold">Nuevo pedido</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Registra lo necesario para poner el trabajo en marcha.</p>
                 </div>
-              ) : null}
-            </article>
-          ))}
-          {!isLoading && lista.length === 0 ? (
-            <p className="px-4 py-8 text-sm text-muted-foreground">No hay pedidos que coincidan.</p>
+              </div>
+              <PedidoFormCampos
+                form={form}
+                onChange={setForm}
+                ruta={ruta}
+                onRutaChange={setRuta}
+                sedeSelect={
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Sede
+                    <select value={sedePorDefecto} onChange={(e) => setSedeId(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm">
+                      {sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                    </select>
+                  </label>
+                }
+              />
+              <button type="submit" disabled={crear.isPending} className="mt-5 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-ink-foreground disabled:opacity-50">
+                {crear.isPending ? "Guardando…" : "Crear pedido"}
+              </button>
+            </form>
           ) : null}
-        </div>
 
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-surface-muted">
-                {["Ref", "Cliente", "Trabajo", "Estado", "Área actual", "Entrega", "Acciones"].map(
-                  (h, i) => (
-                    <th
-                      key={h || i}
-                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
-                        i >= 5 ? "text-right" : ""
-                      }`}
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {lista.map((p) => (
-                <tr
-                  key={p.id}
-                  onClick={() =>
-                    navigate({
-                      to: "/pedidos/$id",
-                      params: { id: p.id },
-                      search: { from: "pedidos" },
-                    })
-                  }
-                  className="group cursor-pointer transition-colors hover:bg-surface-muted/80 active:bg-surface-muted"
-                  role="button"
-                  aria-label={`Abrir ficha del pedido ${p.referencia}`}
-                  title={`Abrir ficha del pedido ${p.referencia}`}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      navigate({
-                        to: "/pedidos/$id",
-                        params: { id: p.id },
-                        search: { from: "pedidos" },
-                      });
-                    }
-                  }}
-                >
-                  <td className="px-6 py-4 text-xs font-medium">
-                    <span className="rounded-md bg-surface-muted px-2 py-1 group-hover:bg-gold/10 group-hover:text-gold">
-                      {p.referencia}
-                    </span>
-                    {p.contrato ? (
-                      <span className="block text-[10px] text-muted-foreground">
-                        Contrato {p.contrato}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {p.cliente}
-                    {sesion?.esDueno && p.sede_nombre ? (
-                      <span className="block text-[10px] text-muted-foreground">
-                        {p.sede_nombre}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {p.trabajo || p.pieza}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
-                        estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"
-                      }`}
-                    >
-                      {p.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div
-                      className="flex flex-col gap-1.5"
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                    >
-                      <span
-                        className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
-                      >
-                        {etiquetaAreaSeguimiento(p.area_actual)}
-                      </span>
-                      <select
-                        value=""
-                        onChange={(e) => {
-                          const destino = e.target.value;
-                          if (destino)
-                            enviar.mutate({
-                              pedido: p,
-                              destino,
-                              usuarioId: sesion?.user.id ?? null,
-                            });
-                        }}
-                        disabled={enviar.isPending || pedidoEnRecepcion(p.estado)}
-                        className="w-fit rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground disabled:opacity-40"
-                      >
-                        <option value="" disabled>
-                          Enviar a…
-                        </option>
-                        {(sesion?.esAdmin ? [...AREAS] : p.ruta)
-                          .filter((a) => !areaCoincide(a, p.area_actual))
-                          .map((a) => (
-                            <option key={a} value={a}>
-                              {normalizarArea(a)}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm tabular-nums">
-                    {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "—"}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
-                      {puedeCrear && pedidoEnRecepcion(p.estado) ? (
-                        <button
-                          type="button"
-                          disabled={autorizar.isPending || p.ruta.length === 0}
-                          onClick={() =>
-                            autorizar.mutate({
-                              pedido: p,
-                              usuarioId: sesion?.user.id ?? null,
-                            })
-                          }
-                          className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
-                        >
-                          Autorizar Producción
-                        </button>
-                      ) : null}
-                      {puedeCrear ? (
-                        <button
-                          type="button"
-                          onClick={() => setPorBorrar({ id: p.id, referencia: p.referencia })}
-                          className="rounded-md border border-danger/25 px-2.5 py-1.5 text-xs font-medium text-danger opacity-80 transition-colors hover:bg-danger/10 hover:opacity-100"
-                          aria-label={`Eliminar pedido ${p.referencia}`}
-                        >
-                          Eliminar
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {!isLoading && lista.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
-                    No hay pedidos que coincidan.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
+          {soloSusAreas && !busca.trim() ? (
+            <p className="border-b border-border px-5 py-3 text-[11px] text-muted-foreground">
+              Mostrando los pedidos de tus áreas: {misAreas.join(", ")}.
+            </p>
+          ) : null}
 
+          <div className="hidden lg:block">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-border bg-surface-muted/50">
+                  {["Pedido", "Cliente", "Trabajo", "Estado", "Área actual", "Entrega"].map((h) => (
+                    <th key={h} className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {lista.map((p) => (
+                  <tr key={p.id} onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: "pedidos" } })} className="group cursor-pointer transition-colors hover:bg-primary/[0.035]">
+                    <td className="px-5 py-4">
+                      <span className="font-semibold text-sm group-hover:text-primary">{p.referencia}</span>
+                      {p.contrato ? <span className="mt-0.5 block text-[10px] text-muted-foreground">Contrato {p.contrato}</span> : null}
+                    </td>
+                    <td className="px-5 py-4 text-sm font-medium">{p.cliente || "Sin cliente"}</td>
+                    <td className="max-w-[260px] px-5 py-4 text-sm text-muted-foreground">
+                      <span className="line-clamp-2">{p.trabajo || p.pieza || "Sin descripción"}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"}`}>{p.estado}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}>{etiquetaAreaSeguimiento(p.area_actual)}</span>
+                    </td>
+                    <td className="px-5 py-4 text-sm tabular-nums text-muted-foreground">{fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="divide-y divide-border lg:hidden">
+            {lista.map((p) => (
+              <article key={p.id} onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: "pedidos" } })} className="cursor-pointer px-4 py-4 transition-colors hover:bg-surface-muted/70 active:bg-surface-muted">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{p.referencia}</p>
+                    <p className="mt-1 truncate text-sm font-medium">{p.cliente || "Sin cliente"}</p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}>{etiquetaAreaSeguimiento(p.area_actual)}</span>
+                </div>
+                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{p.trabajo || p.pieza || "Sin descripción"}</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"}`}>{p.estado}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">{fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {!isLoading && lista.length === 0 ? (
+            <div className="px-5 py-14 text-center">
+              <ClipboardList className="mx-auto size-8 text-muted-foreground/40" />
+              <p className="mt-3 text-sm font-medium">No encontramos pedidos con estos filtros.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Prueba otra búsqueda o cambia los filtros.</p>
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </AppShell>
+  );
       {porBorrar ? (
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4"
