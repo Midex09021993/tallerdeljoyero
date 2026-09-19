@@ -18,7 +18,7 @@ type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
-  notas_cliente: string; notas_internas: string; cliente_id: string; proyecto_joya_id: string | null;
+  notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
 };
 type Detalle = {
   id: string; orden: number; tipo: string; descripcion: string; cantidad: number; unidad: string;
@@ -334,7 +334,7 @@ function CotizacionDetallePage() {
                         <p className="font-medium">✓ Operación comercial creada</p>
                         {contratoNumero ? <p className="mt-1 text-xs text-muted-foreground">Contrato: {contratoNumero}</p> : null}
                       </div>
-                      <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
+                      <Link to="/pedidos/$id" params={{ id: pedidoId }} search={{ from: "cotizaciones" }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
                     </div>
                   ) : (
                     <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedidoYContrato()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
