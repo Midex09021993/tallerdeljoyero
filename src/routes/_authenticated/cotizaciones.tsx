@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { AurumActionCard } from "@/components/AurumActionCard";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones")({
+  validateSearch: (search: Record<string, unknown>) => ({ cliente: typeof search.cliente === "string" ? search.cliente : undefined }),
   head: () => ({
     meta: [
       { title: "Cotizaciones — Aurum Lab" },
@@ -40,6 +41,7 @@ function CotizacionesPage() {
   const [guardando, setGuardando] = useState(false);
   const [modoAsistido, setModoAsistido] = useState(false);
   const [textoAsistente, setTextoAsistente] = useState("");
+  const search = useSearch({ from: "/_authenticated/cotizaciones" });
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
@@ -58,6 +60,14 @@ function CotizacionesPage() {
   };
 
   useEffect(() => { void cargar(); }, []);
+
+  useEffect(() => {
+    const clienteId = search.cliente;
+    if (!clienteId || clientes.length === 0) return;
+    if (!clientes.some((cliente) => cliente.id === clienteId)) return;
+    setForm((prev) => ({ ...prev, cliente_id: clienteId }));
+    setAbierto(true);
+  }, [search.cliente, clientes]);
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
