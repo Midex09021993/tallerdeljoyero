@@ -6,7 +6,17 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
-type ArchivoTecnico = {\n  id: string;\n  pedido_archivo_id: string;\n  nombre: string;\n  tipo: string;\n  url: string;\n  es_enlace: boolean;\n  grupo: string;\n};\n\ntype Trabajo = {
+type ArchivoTecnico = {
+  id: string;
+  pedido_archivo_id: string;
+  nombre: string;
+  tipo: string;
+  url: string;
+  es_enlace: boolean;
+  grupo: string;
+};
+
+type Trabajo = {
   id: string;
   pedido_id: string;
   area: string;
@@ -43,7 +53,9 @@ function TrabajoOperativoPage() {
   const qc = useQueryClient();
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [archivoSeleccionado, setArchivoSeleccionado] = useState("");
-  const [guardandoArchivo, setGuardandoArchivo] = useState(false);\n  const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });\n  const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
+  const [guardandoArchivo, setGuardandoArchivo] = useState(false);
+  const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });
+  const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
 
   const { data: archivosTecnicos = [] } = useQuery({
     queryKey: ["trabajo-archivos", id],
@@ -57,20 +69,6 @@ function TrabajoOperativoPage() {
         const archivo = Array.isArray(row.pedido_archivos) ? row.pedido_archivos[0] : row.pedido_archivos;
         return archivo ? { id: row.id, pedido_archivo_id: row.pedido_archivo_id, ...archivo } : null;
       }).filter(Boolean) as ArchivoTecnico[];
-    },
-  });
-
-  const { data: archivosPedido = [] } = useQuery({
-    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id],
-    enabled: Boolean(trabajo?.pedido_id && sesion?.esAdmin),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pedido_archivos")
-        .select("id, nombre, tipo, url, es_enlace, grupo")
-        .eq("pedido_id", trabajo!.pedido_id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string }>;
     },
   });
 
@@ -148,6 +146,20 @@ function TrabajoOperativoPage() {
       if (error) throw error;
       if (!data) throw new Error("Este trabajo no existe o no está asignado a tu usuario.");
       return data as Trabajo;
+    },
+  });
+
+  const { data: archivosPedido = [] } = useQuery({
+    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id],
+    enabled: Boolean(trabajo?.pedido_id && sesion?.esAdmin),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedido_archivos")
+        .select("id, nombre, tipo, url, es_enlace, grupo")
+        .eq("pedido_id", trabajo!.pedido_id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string }>;
     },
   });
 
