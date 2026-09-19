@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { AppShell, Panel } from "@/components/AppShell";
 import { ClipboardList } from "lucide-react";
 import { PedidoFormCampos } from "@/components/PedidoFormCampos";
 import {
@@ -143,57 +143,6 @@ function siguienteReferencia(nombreSede: string | null | undefined, refs: string
     return m ? Math.max(acc, Number(m[1])) : acc;
   }, 0);
   return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
-}
-
-function TarjetaResumen({
-  etiqueta,
-  valor,
-  tono = "neutro",
-  porArea,
-  subtitulo,
-}: {
-  etiqueta: string;
-  valor: number;
-  tono?: "neutro" | "positivo" | "negativo" | "warning";
-  porArea?: Record<string, number>;
-  subtitulo?: string;
-}) {
-  const colorClase =
-    tono === "negativo"
-      ? "text-danger"
-      : tono === "positivo"
-        ? "text-success"
-        : tono === "warning"
-          ? "text-warning"
-          : "text-foreground";
-  const badgeClase =
-    tono === "negativo"
-      ? "bg-danger/10 text-danger"
-      : tono === "positivo"
-        ? "bg-success/10 text-success"
-        : tono === "warning"
-          ? "bg-warning/10 text-warning"
-          : "bg-surface-muted text-muted-foreground";
-  return (
-    <div className="group relative flex min-w-[150px] flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10">
-      <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
-      <p className={`text-xl font-medium ${colorClase}`}>{String(valor)}</p>
-      {subtitulo ? <p className="mt-1 text-[10px] text-muted-foreground">{subtitulo}</p> : null}
-      {porArea && Object.keys(porArea).length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {Object.entries(porArea).map(([area, n]) => (
-            <span
-              key={area}
-              className={`rounded-md px-1.5 py-0.5 text-[9px] leading-tight ${badgeClase}`}
-              title={area}
-            >
-              {area}: {n}
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
 }
 
 function PedidosPage() {
