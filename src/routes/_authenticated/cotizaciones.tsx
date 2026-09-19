@@ -29,14 +29,6 @@ function money(n: number, moneda = "PEN") {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(n);
 }
 
-function MiniStat({ icon: Icon, label, value }: { icon: typeof FileText; label: string; value: number }) {
-  return <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><div className="flex items-center gap-2 text-muted-foreground"><Icon className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">{label}</span></div><p className="mt-1 text-lg font-semibold tabular-nums">{value}</p></div>;
-}
-
-function ActionCard({ icon: Icon, title, text, onClick }: { icon: typeof Plus; title: string; text: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="group rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="mb-5 grid size-10 place-items-center rounded-xl bg-primary/8 text-primary"><Icon className="size-5" /></div><p className="font-semibold">{title}</p><p className="mt-1 min-h-10 text-xs leading-5 text-muted-foreground">{text}</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">Abrir <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span></button>;
-}
-
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -147,17 +139,17 @@ function CotizacionesPage() {
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Centraliza clientes, proyectos, precios y fechas. Cuando el cliente aprueba, la cotización puede convertirse en contrato y pedido sin volver a escribir todo.</p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <MiniStat icon={FileText} label="Total" value={cotizaciones.length} />
-              <MiniStat icon={Clock3} label="Borradores" value={borradores} />
-              <MiniStat icon={CheckCircle2} label="Aprobadas" value={cotizaciones.filter((q) => q.estado === "aprobada").length} />
-              <MiniStat icon={WalletCards} label="Pendientes" value={pendientes} />
+              <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><div className="flex items-center gap-2 text-muted-foreground"><FileText className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">Total</span></div><p className="mt-1 text-lg font-semibold tabular-nums">{cotizaciones.length}</p></div>
+              <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><div className="flex items-center gap-2 text-muted-foreground"><Clock3 className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">Borradores</span></div><p className="mt-1 text-lg font-semibold tabular-nums">{borradores}</p></div>
+              <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><div className="flex items-center gap-2 text-muted-foreground"><CheckCircle2 className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">Aprobadas</span></div><p className="mt-1 text-lg font-semibold tabular-nums">{cotizaciones.filter((q) => q.estado === "aprobada").length}</p></div>
+              <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5"><div className="flex items-center gap-2 text-muted-foreground"><WalletCards className="size-3.5" /><span className="text-[10px] uppercase tracking-wider">Pendientes</span></div><p className="mt-1 text-lg font-semibold tabular-nums">{pendientes}</p></div>
             </div>
           </div>
         </section>
         <div className="grid gap-4 md:grid-cols-3">
-          <ActionCard icon={Plus} title="Nueva cotización" text="Empieza con cliente, pieza y precio." onClick={() => setAbierto(true)} />
-          <ActionCard icon={WandSparkles} title="Cuéntaselo al asistente" text="Escribe lo que pidió el cliente y prepara un borrador." onClick={() => setModoAsistido(true)} />
-          <ActionCard icon={WalletCards} title="Aprobadas" text={totalAprobadas > 0 ? "Total aprobado: " + money(totalAprobadas) : "Todavía no hay ventas aprobadas."} onClick={() => setBusca("aprobada")} />
+          <button type="button" onClick={() => setAbierto(true)} className="group rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="mb-5 grid size-10 place-items-center rounded-xl bg-primary/8 text-primary"><Plus className="size-5" /></div><p className="font-semibold">Nueva cotización</p><p className="mt-1 min-h-10 text-xs leading-5 text-muted-foreground">Empieza con cliente, pieza y precio.</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">Abrir <ArrowRight className="size-3.5" /></span></button>
+          <button type="button" onClick={() => setModoAsistido(true)} className="group rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="mb-5 grid size-10 place-items-center rounded-xl bg-primary/8 text-primary"><WandSparkles className="size-5" /></div><p className="font-semibold">Cuéntaselo al asistente</p><p className="mt-1 min-h-10 text-xs leading-5 text-muted-foreground">Escribe lo que pidió el cliente y prepara un borrador.</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">Abrir <ArrowRight className="size-3.5" /></span></button>
+          <button type="button" onClick={() => setBusca("aprobada")} className="group rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="mb-5 grid size-10 place-items-center rounded-xl bg-primary/8 text-primary"><WalletCards className="size-5" /></div><p className="font-semibold">Aprobadas</p><p className="mt-1 min-h-10 text-xs leading-5 text-muted-foreground">{totalAprobadas > 0 ? "Total aprobado: " + money(totalAprobadas) : "Todavía no hay ventas aprobadas."}</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">Abrir <ArrowRight className="size-3.5" /></span></button>
         </div>
         <Panel titulo="Cotizaciones comerciales" accion={<span className="text-xs text-muted-foreground">{filtradas.length} registros</span>}>
           <div className="p-4">
