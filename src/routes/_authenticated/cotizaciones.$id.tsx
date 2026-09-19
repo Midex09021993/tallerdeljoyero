@@ -57,7 +57,19 @@ function CotizacionDetallePage() {
   const [contratoId, setContratoId] = useState<string | null>(null);
   const [contratoNumero, setContratoNumero] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [copiado, setCopiado] = useState(false);
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
+
+  async function copiarReferencia() {
+    if (!cotizacion) return;
+    try {
+      await navigator.clipboard.writeText(`${cotizacion.numero} · v${cotizacion.version}`);
+      setCopiado(true);
+      window.setTimeout(() => setCopiado(false), 1800);
+    } catch {
+      setError("No se pudo copiar la referencia.");
+    }
+  }
 
   const cargar = async () => {
     setCargando(true); setError("");
@@ -204,7 +216,7 @@ function CotizacionDetallePage() {
     <AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
+          <div className="flex flex-wrap items-center gap-2">\n            <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>\n            <button type="button" onClick={() => void copiarReferencia()} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground" title="Copiar referencia comercial">\n              {copiado ? "✓ Copiada" : "Copiar referencia"}\n            </button>\n          </div>
           {sesion?.esAdmin ? <div className="flex flex-wrap items-center gap-2">
             {["enviada", "rechazada", "vencida"].includes(cotizacion.estado) ? (
               <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
