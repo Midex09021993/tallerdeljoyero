@@ -66,7 +66,7 @@ function areasAsignadasUnicas(areas: string[]) {
 function OperarioPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading: isLoadingPedidos } = usePedidos();
-  const { trabajos, isLoading: isLoadingTrabajos } = useTrabajosDelOperario();
+  const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
 
@@ -100,6 +100,13 @@ function OperarioPage() {
         {isLoading ? (
           <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-card">
             Cargando tus trabajos...
+          </div>
+        ) : null}
+
+        {errorTrabajos ? (
+          <div className="rounded-2xl border border-danger/30 bg-danger-soft p-5 text-sm text-danger">
+            <p className="font-semibold">No se pudieron cargar tus trabajos</p>
+            <p className="mt-1 break-words text-xs opacity-90">{errorTrabajos}</p>
           </div>
         ) : null}
 
