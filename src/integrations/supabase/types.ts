@@ -825,6 +825,7 @@ export type Database = {
           guia_envio?: string
           id?: string
           importe?: number
+          a_cuenta?: number
           listo_entrega_observaciones?: string | null
           material: string
           medio_envio?: string
@@ -880,6 +881,7 @@ export type Database = {
           guia_envio?: string
           id?: string
           importe?: number
+          a_cuenta?: number
           listo_entrega_observaciones?: string | null
           material?: string
           medio_envio?: string
