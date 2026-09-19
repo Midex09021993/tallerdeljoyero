@@ -15,11 +15,11 @@ export const Route = createFileRoute("/_authenticated/cotizaciones")({
 });
 
 type Cliente = { id: string; nombre: string; telefono: string | null; email: string | null };
-type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string };
+type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string | null };
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
-  impuestos: number; total: number; cliente_id: string; proyecto_joya_id: string | null;
+  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null;
 };
 
 
