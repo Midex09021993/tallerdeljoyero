@@ -151,11 +151,11 @@ const tiempoTexto = (min: number) => {
 export function ProgramadorHornoCasting() {
   const [inicio, setInicio] = useState(25);
   const [programaId, setProgramaId] = useState("rapida-15");
-  const [etapas, setEtapas] = useState<EtapaHorno[]>(() => clonarEtapas(PROGRAMAS[0].etapas));
+  const [etapas, setEtapas] = useState<EtapaHorno[]>(() => clonarEtapas(PROGRAMAS[0]!.etapas));
   const [personalizado, setPersonalizado] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
 
-  const programaSeleccionado = PROGRAMAS.find((p) => p.id === programaId) ?? PROGRAMAS[0];
+  const programaSeleccionado = PROGRAMAS.find((p) => p.id === programaId) ?? PROGRAMAS[0]!;
 
   const calculo = useMemo(() => {
     const puntos = [{ minuto: 0, temperatura: inicio }];
@@ -178,7 +178,7 @@ export function ProgramadorHornoCasting() {
   }, [etapas, inicio]);
 
   const cargar = (id: string) => {
-    const programa = PROGRAMAS.find((p) => p.id === id) ?? PROGRAMAS[0];
+    const programa = PROGRAMAS.find((p) => p.id === id) ?? PROGRAMAS[0]!;
     setProgramaId(programa.id);
     setEtapas(clonarEtapas(programa.etapas));
     setPersonalizado(false);
