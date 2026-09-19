@@ -699,6 +699,45 @@ export type Database = {
           },
         ]
       }
+      trabajo_archivos: {
+        Row: {
+          id: string
+          trabajo_id: string
+          pedido_archivo_id: string
+          creado_por: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          trabajo_id: string
+          pedido_archivo_id: string
+          creado_por?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          trabajo_id?: string
+          pedido_archivo_id?: string
+          creado_por?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajo_archivos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajo_archivos_pedido_archivo_id_fkey"
+            columns: ["pedido_archivo_id"]
+            isOneToOne: false
+            referencedRelation: "pedido_archivos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedido_movimientos: {
         Row: {
           accion: string
