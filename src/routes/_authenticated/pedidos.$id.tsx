@@ -273,6 +273,8 @@ function FichaPedido() {
   const actualizar = useActualizarPedido();
   const autorizar = useAutorizarProduccion();
   const enviar = useEnviarAArea();
+  const pedido = pedidos.find((p) => p.id === id);
+
   const crearContrato = useCrearContratoDesdePedido();
   const contratoRef = pedido?.contrato_id || pedido?.contrato || "";
   const { data: contratoFinanciero } = useContrato(contratoRef);
@@ -306,8 +308,6 @@ function FichaPedido() {
       : regresoBase;
   const esFichaOperario = sesion?.rolPrincipal === "operario";
   const volver = () => void navigate({ to: regreso.ruta as never });
-
-  const pedido = pedidos.find((p) => p.id === id);
 
   const subir = useMutation({
     mutationFn: async ({
