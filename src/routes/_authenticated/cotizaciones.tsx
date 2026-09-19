@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
@@ -129,7 +129,7 @@ function CotizacionesPage() {
                   const cliente = clientes.find(c => c.id === q.cliente_id);
                   const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
                   return <tr key={q.id} className="hover:bg-surface-muted/50">
-                    <td className="px-4 py-4 font-medium">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></td>
+                    <td className="px-4 py-4 font-medium"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="hover:text-gold">{q.numero}</Link> <span className="text-xs text-muted-foreground">v{q.version}</span></td>
                     <td className="px-4 py-4">{cliente?.nombre ?? "—"}</td>
                     <td className="px-4 py-4 text-muted-foreground">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</td>
                     <td className="px-4 py-4"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs">{q.estado}</span></td>
