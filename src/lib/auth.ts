@@ -238,7 +238,15 @@ const accesoRuta: Record<string, AccesoRuta> = {
 
 function rutaRequiere(ruta: string) {
   if (ruta.startsWith("/contratos/")) return "admin" as AccesoRuta;
-  return accesoRuta[ruta] ?? null;
+
+  const exacta = accesoRuta[ruta];
+  if (exacta) return exacta;
+
+  const prefijo = Object.keys(accesoRuta)
+    .filter((base) => base !== "/inicio" && ruta.startsWith(base + "/"))
+    .sort((a, b) => b.length - a.length)[0];
+
+  return prefijo ? accesoRuta[prefijo] : null;
 }
 
 export async function obtenerSesionParaRuta() {
