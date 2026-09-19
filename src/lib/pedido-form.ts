@@ -13,6 +13,7 @@ export const pedidoFormVacio = {
   material: "",
   peso_estimado: "",
   importe: "0",
+  a_cuenta: "0",
   fecha_ingreso: "",
   fecha_entrega: "",
   talla: "",
