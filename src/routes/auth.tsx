@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
-import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
