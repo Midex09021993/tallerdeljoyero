@@ -458,6 +458,7 @@ function PedidosPage() {
                 estado: "Recibido",
                 entrega: form.fecha_entrega,
                 importe: Number(form.importe) || 0,
+                a_cuenta: Number(form.a_cuenta) || 0,
                 fecha_ingreso: form.fecha_ingreso || hoy(),
                 fecha_entrega: form.fecha_entrega || null,
                 sede_id: sedePorDefecto || null,
