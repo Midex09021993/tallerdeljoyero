@@ -7,6 +7,14 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    resolve: {
+      // Evita que Vite cargue dos instancias de React/React DOM.
+      // TanStack Router usa hooks internamente (p. ej. useAwaited) y una
+      // segunda instancia deja el React dispatcher en null en runtime.
+      dedupe: ["react", "react-dom", "@tanstack/react-router"],
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
