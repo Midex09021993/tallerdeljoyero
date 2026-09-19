@@ -1,17 +1,24 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertCircle,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Boxes,
+  ChevronRight,
+  CircleDollarSign,
+  Gem,
+  History,
+  Package,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  Warehouse,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
 import { AREAS, useSesion } from "@/lib/auth";
 import {
   CATEGORIAS_MATERIAL,
@@ -31,92 +38,360 @@ export const Route = createFileRoute("/_authenticated/inventario")({
       { title: "Inventario — Aurum Lab" },
       {
         name: "description",
-        content:
-          "Materiales, stock bajo y movimientos del taller: oro, plata, resina, piedras y soldadura con descuento automático por área.",
+        content: "Control profesional de materiales, consumos, movimientos y producción del taller joyero.",
       },
-      { property: "og:title", content: "Inventario — Aurum Lab" },
-      {
-        property: "og:description",
-        content: "Control de insumos por área con descuento automático del stock general.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: InventarioPage,
 });
 
 const inputCls =
-  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
+  "w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10";
 
-type Modulo = "materiales" | "bajo" | "movimientos";
+type Vista = "resumen" | "materiales" | "produccion" | "movimientos";
+
+type Proyecto = {
+  id: string;
+  codigo: string;
+  nombre: string;
+  estado: string;
+  metal: string | null;
+  ley: string | null;
+  peso_estimado: number | null;
+  talla: string | null;
+  piedras: string | null;
+  cantidad_piezas: number;
+};
 
 function InventarioPage() {
   const { data: sesion } = useSesion();
   const { data: inventario = [], isLoading } = useInventario();
-  const [modulo, setModulo] = useState<Modulo>("materiales");
-  const bajos = useMemo(() => inventario.filter((i) => i.stock < i.minimo), [inventario]);
+  const { data: movimientos = [] } = useMovimientosInventario();
+  const [vista, setVista] = useState<Vista>("resumen");
+  const [buscar, setBuscar] = useState("");
+  const [movimientoAbierto, setMovimientoAbierto] = useState(false);
+  const [nuevoAbierto, setNuevoAbierto] = useState(false);
+  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [cargandoProduccion, setCargandoProduccion] = useState(false);
 
   const puedeGestionar = sesion?.esAdmin ?? false;
+  const bajos = useMemo(() => inventario.filter((i) => i.stock < i.minimo), [inventario]);
+  const categorias = useMemo(
+    () => new Set(inventario.map((i) => i.categoria)).size,
+    [inventario],
+  );
+  const movimientosHoy = useMemo(() => {
+    const hoy = new Date().toDateString();
+    return movimientos.filter((m) => new Date(m.created_at).toDateString() === hoy).length;
+  }, [movimientos]);
+
+  const materialesFiltrados = useMemo(() => {
+    const q = buscar.trim().toLowerCase();
+    if (!q) return inventario;
+    return inventario.filter(
+      (m) =>
+        m.material.toLowerCase().includes(q) ||
+        m.categoria.toLowerCase().includes(q) ||
+        m.areas.some((a) => a.toLowerCase().includes(q)),
+    );
+  }, [buscar, inventario]);
+
+  async function abrirProduccion() {
+    setVista("produccion");
+    if (proyectos.length > 0 || cargandoProduccion) return;
+    setCargandoProduccion(true);
+    const { data, error } = await supabase
+      .from("proyectos_joya")
+      .select("id,codigo,nombre,estado,metal,ley,peso_estimado,talla,piedras,cantidad_piezas")
+      .order("updated_at", { ascending: false })
+      .limit(50);
+    setCargandoProduccion(false);
+    if (error) {
+      toast.error("No se pudo cargar la producción");
+      return;
+    }
+    setProyectos((data ?? []) as Proyecto[]);
+  }
+
+  const nav = [
+    { id: "resumen" as const, label: "Resumen", icon: Sparkles },
+    { id: "materiales" as const, label: "Materiales", icon: Package },
+    { id: "produccion" as const, label: "En producción", icon: Gem },
+    { id: "movimientos" as const, label: "Movimientos", icon: History },
+  ];
 
   return (
     <AppShell
       titulo="Inventario"
-      subtitulo={
-        isLoading ? "Cargando…" : `${inventario.length} materiales · ${bajos.length} bajo mínimo`
-      }
+      subtitulo="El control silencioso que mantiene el taller bajo control."
       acciones={
-        <>
-          <StatCard etiqueta="Materiales" valor={String(inventario.length)} />
-          <StatCard etiqueta="Bajo mínimo" valor={String(bajos.length)} tono="negativo" />
-        </>
+        puedeGestionar ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setMovimientoAbierto(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-primary/40"
+            >
+              <ArrowUpFromLine className="size-4" />
+              Registrar movimiento
+            </button>
+            <button
+              type="button"
+              onClick={() => setNuevoAbierto(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+            >
+              <Plus className="size-4" />
+              Nuevo material
+            </button>
+          </div>
+        ) : null
       }
     >
-      <div className="mb-5 flex flex-wrap gap-2">
-        {(
-          [
-            ["materiales", "Materiales"],
-            ["bajo", `Stock bajo${bajos.length ? ` (${bajos.length})` : ""}`],
-            ["movimientos", "Movimientos"],
-          ] as [Modulo, string][]
-        ).map(([id, etiqueta]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setModulo(id)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
-              modulo === id
-                ? "bg-primary text-primary-foreground"
-                : "bg-surface-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {etiqueta}
-          </button>
-        ))}
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-surface-muted/60 p-6 shadow-sm">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                <Warehouse className="size-3.5" />
+                Control de taller
+              </div>
+              <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+                Sabe qué tienes. <span className="text-muted-foreground">Y dónde se está usando.</span>
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                Registra entradas, consumos y recuperaciones sin llevar cuentas a mano.
+                El stock se actualiza con los movimientos del taller.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <MiniStat icon={Boxes} label="Materiales" value={inventario.length} />
+              <MiniStat icon={Gem} label="Categorías" value={categorias} />
+              <MiniStat icon={AlertCircle} label="Stock bajo" value={bajos.length} danger />
+              <MiniStat icon={History} label="Hoy" value={movimientosHoy} />
+            </div>
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex gap-1 overflow-x-auto rounded-xl bg-surface-muted p-1">
+            {nav.map((item) => {
+              const Icon = item.icon;
+              const activo = vista === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => item.id === "produccion" ? void abrirProduccion() : setVista(item.id)}
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${activo ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Icon className="size-3.5" />
+                  {item.label}
+                  {item.id === "bajo" ? null : null}
+                </button>
+              );
+            })}
+          </div>
+          {vista !== "resumen" && vista !== "produccion" ? (
+            <div className="relative w-full lg:max-w-xs">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                className={`${inputCls} pl-9`}
+                placeholder="Buscar material, categoría o área…"
+                value={buscar}
+                onChange={(e) => setBuscar(e.target.value)}
+              />
+            </div>
+          ) : null}
+        </div>
+
+        {vista === "resumen" ? (
+          <Resumen
+            inventario={inventario}
+            bajos={bajos}
+            movimientos={movimientos}
+            onMateriales={() => setVista("materiales")}
+            onMovimientos={() => setVista("movimientos")}
+            onProduccion={() => void abrirProduccion()}
+            onNuevo={() => setNuevoAbierto(true)}
+          />
+        ) : null}
+
+        {vista === "materiales" ? (
+          <Materiales
+            inventario={materialesFiltrados}
+            puedeGestionar={puedeGestionar}
+            sedeId={sesion?.perfil.sede_id ?? null}
+          />
+        ) : null}
+
+        {vista === "produccion" ? (
+          <Produccion proyectos={proyectos} loading={cargandoProduccion} />
+        ) : null}
+
+        {vista === "movimientos" ? (
+          <Movimientos
+            inventario={inventario}
+            areasUsuario={sesion?.areas ?? []}
+            puedeTodo={puedeGestionar}
+          />
+        ) : null}
       </div>
 
-      {modulo === "materiales" ? (
-        <Materiales
-          inventario={inventario}
-          puedeGestionar={puedeGestionar}
+      {nuevoAbierto ? (
+        <NuevoMaterialDialog
           sedeId={sesion?.perfil.sede_id ?? null}
+          onClose={() => setNuevoAbierto(false)}
         />
       ) : null}
-      {modulo === "bajo" ? <StockBajo bajos={bajos} /> : null}
-      {modulo === "movimientos" ? (
-        <Movimientos
+      {movimientoAbierto ? (
+        <MovimientoDialog
           inventario={inventario}
           areasUsuario={sesion?.areas ?? []}
           puedeTodo={puedeGestionar}
+          onClose={() => setMovimientoAbierto(false)}
         />
       ) : null}
     </AppShell>
   );
 }
 
-type MaterialItem = ReturnType<typeof useInventario>["data"] extends (infer T)[] | undefined
-  ? T
-  : never;
+function MiniStat({
+  icon: Icon,
+  label,
+  value,
+  danger = false,
+}: {
+  icon: typeof Boxes;
+  label: string;
+  value: number;
+  danger?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-border/70 bg-card/80 px-3 py-2.5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className={`size-3.5 ${danger ? "text-danger" : ""}`} />
+        <span className="text-[10px] uppercase tracking-wider">{label}</span>
+      </div>
+      <p className={`mt-1 text-lg font-semibold tabular-nums ${danger ? "text-danger" : ""}`}>{value}</p>
+    </div>
+  );
+}
+
+type MaterialItem = ReturnType<typeof useInventario>["data"] extends (infer T)[] | undefined ? T : never;
+
+function Resumen({
+  inventario,
+  bajos,
+  movimientos,
+  onMateriales,
+  onMovimientos,
+  onProduccion,
+  onNuevo,
+}: {
+  inventario: MaterialItem[];
+  bajos: MaterialItem[];
+  movimientos: Awaited<ReturnType<typeof useMovimientosInventario>>["data"] extends (infer T)[] | undefined ? T[] : never;
+  onMateriales: () => void;
+  onMovimientos: () => void;
+  onProduccion: () => void;
+  onNuevo: () => void;
+}) {
+  const recientes = movimientos.slice(0, 5);
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <ActionCard icon={Package} title="Materiales" text={`${inventario.length} insumos registrados`} action="Ver materiales" onClick={onMateriales} />
+        <ActionCard icon={ArrowDownToLine} title="Registrar entrada" text="Oro, plata, piedras, resina, yeso…" action="Registrar" onClick={onNuevo} />
+        <ActionCard icon={Gem} title="Producción" text="Piezas y proyectos en curso" action="Ver producción" onClick={onProduccion} />
+        <ActionCard icon={History} title="Trazabilidad" text="Revisa qué entró y qué se consumió" action="Ver movimientos" onClick={onMovimientos} />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
+        <section className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div>
+              <p className="text-sm font-semibold">Actividad reciente</p>
+              <p className="text-xs text-muted-foreground">Últimos movimientos registrados</p>
+            </div>
+            <button type="button" onClick={onMovimientos} className="text-xs font-semibold text-primary">Ver todo</button>
+          </div>
+          <div className="divide-y divide-border">
+            {recientes.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 px-5 py-3.5">
+                <div className={`grid size-9 place-items-center rounded-full ${m.tipo === "entrada" ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}>
+                  {m.tipo === "entrada" ? <ArrowDownToLine className="size-4" /> : <ArrowUpFromLine className="size-4" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{m.material}</p>
+                  <p className="text-xs text-muted-foreground">{m.area || "Taller"} · {m.motivo || "Sin motivo indicado"}</p>
+                </div>
+                <p className="text-sm font-semibold tabular-nums">{m.tipo === "entrada" ? "+" : "−"}{m.cantidad}</p>
+              </div>
+            ))}
+            {recientes.length === 0 ? (
+              <EmptyState icon={History} title="Todavía no hay movimientos" text="El primer ingreso o consumo aparecerá aquí." />
+            ) : null}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="border-b border-border px-5 py-4">
+            <p className="text-sm font-semibold">Atención del taller</p>
+            <p className="text-xs text-muted-foreground">Lo que requiere una acción</p>
+          </div>
+          <div className="p-5">
+            {bajos.length > 0 ? (
+              <div className="space-y-3">
+                {bajos.slice(0, 5).map((m) => (
+                  <div key={m.id} className="flex items-center gap-3 rounded-xl bg-danger-soft/50 p-3">
+                    <AlertCircle className="size-4 shrink-0 text-danger" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{m.material}</p>
+                      <p className="text-xs text-muted-foreground">Mínimo {m.minimo} {m.unidad}</p>
+                    </div>
+                    <span className="text-sm font-bold text-danger">{m.stock} {m.unidad}</span>
+                  </div>
+                ))}
+                <button type="button" onClick={onMateriales} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-danger">
+                  Revisar stock bajo <ChevronRight className="size-3.5" />
+                </button>
+              </div>
+            ) : (
+              <EmptyState icon={Sparkles} title="Todo en orden" text="No hay materiales por debajo del mínimo." />
+            )}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function ActionCard({
+  icon: Icon,
+  title,
+  text,
+  action,
+  onClick,
+}: {
+  icon: typeof Package;
+  title: string;
+  text: string;
+  action: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} className="group rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+      <div className="mb-5 grid size-10 place-items-center rounded-xl bg-primary/8 text-primary">
+        <Icon className="size-5" />
+      </div>
+      <p className="font-semibold">{title}</p>
+      <p className="mt-1 min-h-10 text-xs leading-5 text-muted-foreground">{text}</p>
+      <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">
+        {action} <ChevronRight className="size-3.5 transition group-hover:translate-x-0.5" />
+      </span>
+    </button>
+  );
+}
 
 function Materiales({
   inventario,
@@ -131,335 +406,118 @@ function Materiales({
   const actualizarMaterial = useActualizarMaterial();
   const asignar = useAsignarArea();
   const borrar = useBorrarMaterial();
-  const crear = useCrearMaterial();
   const [abierto, setAbierto] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState("Todas");
-  const [materialPorEliminar, setMaterialPorEliminar] = useState<MaterialItem | null>(null);
-  const [nuevo, setNuevo] = useState({
-    material: "",
-    categoria: "Oro",
-    unidad: "g",
-    stock: "",
-    minimo: "",
-    areas: [] as string[],
-  });
-
-  const lista = filtro === "Todas" ? inventario : inventario.filter((m) => m.categoria === filtro);
-
-  async function crearMaterial(e: React.FormEvent) {
-    e.preventDefault();
-    if (!nuevo.material.trim()) return;
-    try {
-      await crear.mutateAsync({
-        material: nuevo.material.trim(),
-        categoria: nuevo.categoria,
-        unidad: nuevo.unidad || "u",
-        stock: Number(nuevo.stock) || 0,
-        minimo: Number(nuevo.minimo) || 0,
-        sede_id: sedeId,
-        areas: nuevo.areas,
-      });
-      toast.success("Material agregado");
-      setNuevo({ material: "", categoria: "Oro", unidad: "g", stock: "", minimo: "", areas: [] });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo agregar");
-    }
-  }
+  const [eliminar, setEliminar] = useState<MaterialItem | null>(null);
 
   return (
-    <>
-      <div className="space-y-6">
-        {puedeGestionar ? (
-          <Panel titulo="Nuevo material">
-            <form onSubmit={crearMaterial} className="space-y-3 p-6">
-              <div className="grid gap-3 md:grid-cols-5">
-                <input
-                  className={inputCls}
-                  placeholder="Material (ej. Oro 18k)"
-                  value={nuevo.material}
-                  onChange={(e) => setNuevo({ ...nuevo, material: e.target.value })}
-                />
-                <select
-                  className={inputCls}
-                  value={nuevo.categoria}
-                  onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}
-                >
-                  {CATEGORIAS_MATERIAL.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  className={inputCls}
-                  placeholder="Unidad (g, u, ml)"
-                  value={nuevo.unidad}
-                  onChange={(e) => setNuevo({ ...nuevo, unidad: e.target.value })}
-                />
-                <input
-                  className={inputCls}
-                  type="number"
-                  step="0.01"
-                  placeholder="Stock inicial"
-                  value={nuevo.stock}
-                  onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })}
-                />
-                <input
-                  className={inputCls}
-                  type="number"
-                  step="0.01"
-                  placeholder="Mínimo"
-                  value={nuevo.minimo}
-                  onChange={(e) => setNuevo({ ...nuevo, minimo: e.target.value })}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Áreas que pueden usar este material
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {AREAS.map((a) => {
-                    const activo = nuevo.areas.includes(a);
-                    return (
-                      <button
-                        key={a}
-                        type="button"
-                        onClick={() =>
-                          setNuevo({
-                            ...nuevo,
-                            areas: activo
-                              ? nuevo.areas.filter((x) => x !== a)
-                              : [...nuevo.areas, a],
-                          })
-                        }
-                        className={`rounded-full px-3 py-1 text-[11px] ${
-                          activo
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-surface-muted text-muted-foreground"
-                        }`}
-                      >
-                        {a}
-                      </button>
-                    );
-                  })}
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold">Materiales e insumos</p>
+          <p className="text-xs text-muted-foreground">El stock se mueve mediante entradas y consumos.</p>
+        </div>
+        <span className="text-xs text-muted-foreground">{inventario.length} registros</span>
+      </div>
+      <div className="divide-y divide-border">
+        {inventario.map((m) => {
+          const bajo = m.stock < m.minimo;
+          const activo = abierto === m.id;
+          return (
+            <div key={m.id}>
+              <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-muted">
+                    {m.categoria.toLowerCase().includes("pied") ? <Gem className="size-5" /> : <Package className="size-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{m.material}</p>
+                    <p className="text-xs text-muted-foreground">{m.categoria} · {m.areas.length ? m.areas.join(" · ") : "Disponible para el taller"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:w-[360px]">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Disponible</p>
+                    <p className={`mt-1 text-sm font-bold tabular-nums ${bajo ? "text-danger" : ""}`}>{m.stock} <span className="font-normal text-muted-foreground">{m.unidad}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Mínimo</p>
+                    <p className="mt-1 text-sm tabular-nums">{m.minimo} <span className="text-muted-foreground">{m.unidad}</span></p>
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <button type="button" onClick={() => setAbierto(activo ? null : m.id)} className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold">
+                      {activo ? "Cerrar" : "Gestionar"} <ChevronRight className={`size-3.5 transition ${activo ? "rotate-90" : ""}`} />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button
-                type="submit"
-                disabled={crear.isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-              >
-                {crear.isPending ? "Agregando…" : "Agregar material"}
-              </button>
-            </form>
-          </Panel>
-        ) : null}
-
-        <Panel titulo="Materiales">
-          <div className="flex flex-wrap gap-2 px-6 pt-4">
-            {["Todas", ...CATEGORIAS_MATERIAL].map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setFiltro(c)}
-                className={`rounded-full px-3 py-1 text-[11px] ${
-                  filtro === c
-                    ? "bg-foreground text-background"
-                    : "bg-surface-muted text-muted-foreground"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-surface-muted">
-                  {["Material", "Categoría", "Stock", "Mínimo", "Áreas", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {lista.flatMap((m) => {
-                  const bajo = m.stock < m.minimo;
-                  const fila = (
-                    <tr key={m.id} className="transition-colors hover:bg-surface-muted/60">
-                      <td className="px-6 py-4 text-sm font-medium">{m.material}</td>
-                      <td className="px-6 py-4 text-xs text-muted-foreground">{m.categoria}</td>
-                      <td className="px-6 py-4 text-sm tabular-nums">
-                        <input
-                          type="number"
-                          step="0.01"
-                          defaultValue={m.stock}
-                          disabled={!puedeGestionar}
-                          onBlur={(e) => {
-                            const stock = Number(e.target.value);
-                            if (stock !== m.stock) actualizarStock.mutate({ id: m.id, stock });
-                          }}
-                          className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
-                        />
-                        <span className="ml-2 text-xs text-muted-foreground">{m.unidad}</span>
-                        {bajo ? (
-                          <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase text-danger">
-                            bajo
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="px-6 py-4 text-sm tabular-nums text-muted-foreground">
-                        <input
-                          type="number"
-                          step="0.01"
-                          defaultValue={m.minimo}
-                          disabled={!puedeGestionar}
-                          onBlur={(e) => {
-                            const minimo = Number(e.target.value);
-                            if (minimo !== m.minimo)
-                              actualizarMaterial.mutate({ id: m.id, cambios: { minimo } });
-                          }}
-                          className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-xs text-muted-foreground">
-                        {m.areas.length > 0 ? m.areas.join(", ") : "Sin asignar"}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {puedeGestionar ? (
-                          <button
-                            type="button"
-                            onClick={() => setAbierto(abierto === m.id ? null : m.id)}
-                            className="rounded-lg border border-border px-3 py-1 text-xs"
-                          >
-                            {abierto === m.id ? "Cerrar" : "Áreas"}
-                          </button>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                  if (abierto !== m.id) return [fila];
-                  return [
-                    fila,
-                    <tr key={`${m.id}-areas`} className="bg-surface-muted/40">
-                      <td colSpan={6} className="px-6 py-4">
-                        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                          Asignar {m.material} a áreas
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {AREAS.map((a) => {
-                            const activo = m.areas.includes(a);
-                            return (
-                              <button
-                                key={a}
-                                type="button"
-                                onClick={() =>
-                                  asignar.mutate({ materialId: m.id, area: a, activo: !activo })
-                                }
-                                className={`rounded-full px-3 py-1 text-[11px] ${
-                                  activo
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-card text-muted-foreground border border-border"
-                                }`}
-                              >
-                                {a}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setMaterialPorEliminar(m)}
-                          className="mt-4 rounded-lg border border-danger px-3 py-1 text-xs text-danger"
-                        >
-                          Eliminar material
+              {activo && puedeGestionar ? (
+                <div className="bg-surface-muted/50 px-5 py-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {AREAS.map((area) => {
+                      const on = m.areas.includes(area);
+                      return (
+                        <button key={area} type="button" onClick={() => asignar.mutate({ materialId: m.id, area, activo: !on })} className={`rounded-full px-3 py-1.5 text-[11px] font-medium ${on ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground"}`}>
+                          {area}
                         </button>
-                      </td>
-                    </tr>,
-                  ];
-                })}
-                {lista.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
-                      Sin materiales registrados.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
+                    <input type="number" step="0.01" defaultValue={m.stock} className={`${inputCls} max-w-36`} onBlur={(e) => { const stock = Number(e.target.value); if (stock !== m.stock) actualizarStock.mutate({ id: m.id, stock }); }} />
+                    <input type="number" step="0.01" defaultValue={m.minimo} className={`${inputCls} max-w-32`} onBlur={(e) => { const minimo = Number(e.target.value); if (minimo !== m.minimo) actualizarMaterial.mutate({ id: m.id, cambios: { minimo } }); }} />
+                    <button type="button" onClick={() => setEliminar(m)} className="ml-auto inline-flex items-center gap-1 rounded-xl border border-danger/30 px-3 py-2 text-xs font-semibold text-danger">
+                      <Trash2 className="size-3.5" /> Eliminar
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+        {inventario.length === 0 ? <EmptyState icon={Package} title="Inventario vacío" text="Registra tu primer material y empieza a construir la trazabilidad del taller." /> : null}
       </div>
-      <AlertDialog
-        open={materialPorEliminar !== null}
-        onOpenChange={(open) => {
-          if (!open && !borrar.isPending) setMaterialPorEliminar(null);
-        }}
-      >
-        <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar material</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Deseas eliminar el material "{materialPorEliminar?.material}" del inventario?
-              <span className="mt-2 block font-medium text-destructive">
-                Esta acción no se puede deshacer.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={borrar.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={!materialPorEliminar || borrar.isPending}
-              onClick={() => {
-                if (!materialPorEliminar) return;
-                borrar.mutate(materialPorEliminar.id, {
-                  onSettled: () => setMaterialPorEliminar(null),
-                });
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {borrar.isPending ? "Eliminando..." : "Eliminar material"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      {eliminar ? (
+        <ConfirmDelete material={eliminar} pending={borrar.isPending} onCancel={() => setEliminar(null)} onConfirm={() => borrar.mutate(eliminar.id, { onSettled: () => setEliminar(null) })} />
+      ) : null}
+    </section>
   );
 }
 
-function StockBajo({ bajos }: { bajos: MaterialItem[] }) {
+function Produccion({ proyectos, loading }: { proyectos: Proyecto[]; loading: boolean }) {
   return (
-    <Panel titulo="Stock bajo mínimo">
-      <div className="divide-y divide-border">
-        {bajos.map((m) => (
-          <div key={m.id} className="flex items-center justify-between px-6 py-4">
-            <div>
-              <p className="text-sm font-medium">{m.material}</p>
-              <p className="text-xs text-muted-foreground">
-                {m.categoria} · {m.areas.length > 0 ? m.areas.join(", ") : "sin área asignada"}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-semibold text-danger tabular-nums">
-                {m.stock} {m.unidad}
-              </p>
-              <p className="text-xs text-muted-foreground tabular-nums">
-                mínimo {m.minimo} {m.unidad}
-              </p>
-            </div>
-          </div>
-        ))}
-        {bajos.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-muted-foreground">
-            Todo el inventario está por encima del mínimo.
-          </p>
-        ) : null}
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="border-b border-border px-5 py-4">
+        <p className="text-sm font-semibold">Proyectos de joya</p>
+        <p className="text-xs text-muted-foreground">Base de la futura salida de producción hacia joyas terminadas.</p>
       </div>
-    </Panel>
+      {loading ? (
+        <div className="p-10 text-center text-sm text-muted-foreground">Cargando producción…</div>
+      ) : proyectos.length === 0 ? (
+        <EmptyState icon={Gem} title="Todavía no hay proyectos" text="Cuando una joya entre al flujo comercial aparecerá aquí." />
+      ) : (
+        <div className="divide-y divide-border">
+          {proyectos.map((p) => (
+            <div key={p.id} className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center">
+              <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary"><Gem className="size-5" /></div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold">{p.nombre}</p>
+                  {p.codigo ? <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold">{p.codigo}</span> : null}
+                  {p.estado ? <span className="rounded-full bg-primary/8 px-2 py-0.5 text-[10px] font-semibold text-primary">{p.estado}</span> : null}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {[p.metal, p.ley, p.talla ? `Talla ${p.talla}` : null, p.peso_estimado != null ? `${p.peso_estimado} g estimados` : null].filter(Boolean).join(" · ") || "Sin especificaciones"}
+                </p>
+              </div>
+              <div className="text-left sm:text-right">
+                <p className="text-xs text-muted-foreground">Piezas</p>
+                <p className="text-sm font-bold tabular-nums">{p.cantidad_piezas || 1}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -473,155 +531,127 @@ function Movimientos({
   puedeTodo: boolean;
 }) {
   const { data: movimientos = [] } = useMovimientosInventario();
-  const registrar = useRegistrarMovimiento();
-  const areasDisponibles = puedeTodo || areasUsuario.length === 0 ? [...AREAS] : areasUsuario;
-  const [form, setForm] = useState({
-    area: areasDisponibles[0] ?? "Taller",
-    material_id: "",
-    cantidad: "",
-    tipo: "consumo" as "consumo" | "entrada",
-    motivo: "",
-  });
-
-  // Sólo se ofrecen los materiales asignados al área elegida.
-  const materialesArea = inventario.filter(
-    (m) => m.areas.length === 0 || m.areas.includes(form.area),
-  );
-
-  async function enviar(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.material_id || !Number(form.cantidad)) {
-      toast.error("Elige material y cantidad");
-      return;
-    }
-    try {
-      await registrar.mutateAsync({
-        material_id: form.material_id,
-        cantidad: Number(form.cantidad),
-        tipo: form.tipo,
-        area: form.area,
-        motivo: form.motivo,
-      });
-      toast.success(
-        form.tipo === "consumo" ? "Consumo descontado del stock" : "Entrada registrada",
-      );
-      setForm({ ...form, cantidad: "", motivo: "" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo registrar");
-    }
-  }
-
   return (
-    <div className="space-y-6">
-      <Panel titulo="Registrar movimiento">
-        <form onSubmit={enviar} className="grid gap-3 p-6 md:grid-cols-6">
-          <select
-            className={inputCls}
-            value={form.area}
-            onChange={(e) => setForm({ ...form, area: e.target.value, material_id: "" })}
-          >
-            {areasDisponibles.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-          <select
-            className={`${inputCls} md:col-span-2`}
-            value={form.material_id}
-            onChange={(e) => setForm({ ...form, material_id: e.target.value })}
-          >
-            <option value="">Material…</option>
-            {materialesArea.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.material} ({m.stock} {m.unidad})
-              </option>
-            ))}
-          </select>
-          <select
-            className={inputCls}
-            value={form.tipo}
-            onChange={(e) => setForm({ ...form, tipo: e.target.value as "consumo" | "entrada" })}
-          >
-            <option value="consumo">Consumo (resta)</option>
-            <option value="entrada">Entrada (suma)</option>
-          </select>
-          <input
-            className={inputCls}
-            type="number"
-            step="0.01"
-            placeholder="Cantidad"
-            value={form.cantidad}
-            onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
-          />
-          <input
-            className={inputCls}
-            placeholder="Motivo / pedido"
-            value={form.motivo}
-            onChange={(e) => setForm({ ...form, motivo: e.target.value })}
-          />
-          <button
-            type="submit"
-            disabled={registrar.isPending}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 md:col-span-2"
-          >
-            {registrar.isPending ? "Registrando…" : "Registrar y actualizar stock"}
-          </button>
-        </form>
-      </Panel>
-
-      <Panel titulo="Historial de movimientos">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-surface-muted">
-                {["Fecha", "Material", "Área", "Tipo", "Cantidad", "Motivo"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {movimientos.map((mv) => (
-                <tr key={mv.id}>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">
-                    {new Date(mv.created_at).toLocaleDateString("es-PE")}
-                  </td>
-                  <td className="px-6 py-3 text-sm">{mv.material}</td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">{mv.area || "—"}</td>
-                  <td className="px-6 py-3 text-xs">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                        mv.tipo === "entrada"
-                          ? "bg-success-soft text-success"
-                          : "bg-warning-soft text-warning"
-                      }`}
-                    >
-                      {mv.tipo}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm tabular-nums">
-                    {mv.tipo === "entrada" ? "+" : "−"}
-                    {mv.cantidad}
-                  </td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">{mv.motivo || "—"}</td>
-                </tr>
-              ))}
-              {movimientos.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
-                    Sin movimientos registrados.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
+    <div className="space-y-4">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="border-b border-border px-5 py-4">
+          <p className="text-sm font-semibold">Historial de movimientos</p>
+          <p className="text-xs text-muted-foreground">Cada entrada y consumo queda registrado.</p>
         </div>
-      </Panel>
+        <div className="divide-y divide-border">
+          {movimientos.map((m) => (
+            <div key={m.id} className="flex flex-col gap-3 px-5 py-3.5 sm:flex-row sm:items-center">
+              <div className={`grid size-9 shrink-0 place-items-center rounded-full ${m.tipo === "entrada" ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}>
+                {m.tipo === "entrada" ? <ArrowDownToLine className="size-4" /> : <ArrowUpFromLine className="size-4" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">{m.material}</p>
+                <p className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("es-PE")} · {m.area || "Taller"} · {m.motivo || "Sin motivo"}</p>
+              </div>
+              <p className="text-sm font-bold tabular-nums">{m.tipo === "entrada" ? "+" : "−"}{m.cantidad}</p>
+            </div>
+          ))}
+          {movimientos.length === 0 ? <EmptyState icon={History} title="Sin movimientos" text="Registra la primera entrada o consumo del taller." /> : null}
+        </div>
+      </section>
+      <MovimientoInline inventario={inventario} areasUsuario={areasUsuario} puedeTodo={puedeTodo} />
     </div>
   );
+}
+
+function MovimientoInline({ inventario, areasUsuario, puedeTodo }: { inventario: MaterialItem[]; areasUsuario: string[]; puedeTodo: boolean }) {
+  const registrar = useRegistrarMovimiento();
+  const areas = puedeTodo || areasUsuario.length === 0 ? [...AREAS] : areasUsuario;
+  const [form, setForm] = useState({ area: areas[0] ?? "Taller", material_id: "", cantidad: "", tipo: "consumo" as "consumo" | "entrada", motivo: "" });
+  const materiales = inventario.filter((m) => m.areas.length === 0 || m.areas.includes(form.area));
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.material_id || !Number(form.cantidad)) return toast.error("Elige material y cantidad");
+    try {
+      await registrar.mutateAsync({ ...form, cantidad: Number(form.cantidad) });
+      toast.success(form.tipo === "consumo" ? "Consumo registrado" : "Entrada registrada");
+      setForm((f) => ({ ...f, cantidad: "", motivo: "" }));
+    } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo registrar"); }
+  }
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="mb-4"><p className="text-sm font-semibold">Registrar rápido</p><p className="text-xs text-muted-foreground">Para cuando estés dentro del taller y no quieras abrir otra pantalla.</p></div>
+      <form onSubmit={submit} className="grid gap-3 md:grid-cols-5">
+        <select className={inputCls} value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value, material_id: "" })}>{areas.map((a) => <option key={a}>{a}</option>)}</select>
+        <select className={`${inputCls} md:col-span-2`} value={form.material_id} onChange={(e) => setForm({ ...form, material_id: e.target.value })}><option value="">Material…</option>{materiales.map((m) => <option key={m.id} value={m.id}>{m.material} · {m.stock} {m.unidad}</option>)}</select>
+        <input className={inputCls} type="number" min="0" step="0.01" placeholder="Cantidad" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
+        <select className={inputCls} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value as "consumo" | "entrada" })}><option value="consumo">Consumo</option><option value="entrada">Entrada</option></select>
+        <input className={`${inputCls} md:col-span-4`} placeholder="Motivo / pedido (ej. PED-0250)" value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} />
+        <button disabled={registrar.isPending} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60">{registrar.isPending ? "Guardando…" : "Registrar movimiento"}</button>
+      </form>
+    </section>
+  );
+}
+
+function NuevoMaterialDialog({ sedeId, onClose }: { sedeId: string | null; onClose: () => void }) {
+  const crear = useCrearMaterial();
+  const [form, setForm] = useState({ material: "", categoria: "Oro", unidad: "g", stock: "", minimo: "", areas: [] as string[] });
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.material.trim()) return toast.error("Escribe el nombre del material");
+    try {
+      await crear.mutateAsync({ material: form.material.trim(), categoria: form.categoria, unidad: form.unidad || "u", stock: Number(form.stock) || 0, minimo: Number(form.minimo) || 0, sede_id: sedeId, areas: form.areas });
+      toast.success("Material creado");
+      onClose();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo crear"); }
+  }
+  return (
+    <Modal title="Nuevo material" subtitle="Registra lo que realmente entra al taller." onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <input className={inputCls} placeholder="Ej. Oro 18K amarillo" value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <select className={inputCls} value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}>{CATEGORIAS_MATERIAL.map((c) => <option key={c}>{c}</option>)}</select>
+          <input className={inputCls} placeholder="Unidad: g, u, ml…" value={form.unidad} onChange={(e) => setForm({ ...form, unidad: e.target.value })} />
+          <input className={inputCls} type="number" min="0" step="0.01" placeholder="Stock inicial" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+          <input className={inputCls} type="number" min="0" step="0.01" placeholder="Stock mínimo" value={form.minimo} onChange={(e) => setForm({ ...form, minimo: e.target.value })} />
+        </div>
+        <div><p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Áreas que pueden usarlo</p><div className="flex flex-wrap gap-2">{AREAS.map((a) => { const on = form.areas.includes(a); return <button key={a} type="button" onClick={() => setForm({ ...form, areas: on ? form.areas.filter((x) => x !== a) : [...form.areas, a] })} className={`rounded-full px-3 py-1.5 text-[11px] ${on ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground"}`}>{a}</button>; })}</div></div>
+        <ModalActions onClose={onClose} pending={crear.isPending} label="Crear material" />
+      </form>
+    </Modal>
+  );
+}
+
+function MovimientoDialog({ inventario, areasUsuario, puedeTodo, onClose }: { inventario: MaterialItem[]; areasUsuario: string[]; puedeTodo: boolean; onClose: () => void }) {
+  const registrar = useRegistrarMovimiento();
+  const areas = puedeTodo || areasUsuario.length === 0 ? [...AREAS] : areasUsuario;
+  const [form, setForm] = useState({ area: areas[0] ?? "Taller", material_id: "", cantidad: "", tipo: "consumo" as "consumo" | "entrada", motivo: "" });
+  const materiales = inventario.filter((m) => m.areas.length === 0 || m.areas.includes(form.area));
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.material_id || !Number(form.cantidad)) return toast.error("Elige material y cantidad");
+    try { await registrar.mutateAsync({ ...form, cantidad: Number(form.cantidad) }); toast.success("Movimiento registrado"); onClose(); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo registrar"); }
+  }
+  return <Modal title="Registrar movimiento" subtitle="Una acción sencilla: entra, sale o se consume." onClose={onClose}><form onSubmit={submit} className="space-y-4">
+    <div className="grid gap-3 sm:grid-cols-2">
+      <select className={inputCls} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value as "consumo" | "entrada" })}><option value="entrada">Entrada al inventario</option><option value="consumo">Consumo del taller</option></select>
+      <select className={inputCls} value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value, material_id: "" })}>{areas.map((a) => <option key={a}>{a}</option>)}</select>
+      <select className={`${inputCls} sm:col-span-2`} value={form.material_id} onChange={(e) => setForm({ ...form, material_id: e.target.value })}><option value="">Selecciona material…</option>{materiales.map((m) => <option key={m.id} value={m.id}>{m.material} · {m.stock} {m.unidad}</option>)}</select>
+      <input className={inputCls} type="number" min="0" step="0.01" placeholder="Cantidad" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
+      <input className={inputCls} placeholder="Motivo / pedido" value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} />
+    </div>
+    <ModalActions onClose={onClose} pending={registrar.isPending} label="Guardar movimiento" />
+  </form></Modal>;
+}
+
+function Modal({ title, subtitle, onClose, children }: { title: string; subtitle: string; onClose: () => void; children: React.ReactNode }) {
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-sm"><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-2xl"><div className="mb-5 flex items-start justify-between gap-4"><div><h3 className="text-lg font-semibold">{title}</h3><p className="mt-1 text-xs text-muted-foreground">{subtitle}</p></div><button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-muted-foreground hover:bg-surface-muted">✕</button></div>{children}</div></div>;
+}
+
+function ModalActions({ onClose, pending, label }: { onClose: () => void; pending: boolean; label: string }) {
+  return <div className="flex justify-end gap-2 border-t border-border pt-4"><button type="button" onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground">Cancelar</button><button disabled={pending} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60">{pending ? "Guardando…" : label}</button></div>;
+}
+
+function ConfirmDelete({ material, pending, onCancel, onConfirm }: { material: MaterialItem; pending: boolean; onCancel: () => void; onConfirm: () => void }) {
+  return <Modal title="Eliminar material" subtitle={`Esta acción eliminará “${material.material}”.`} onClose={onCancel}><div className="rounded-xl bg-danger-soft p-4 text-sm text-danger">Si el material ya tiene movimientos, la base de datos puede impedir su eliminación para proteger la trazabilidad.</div><ModalActions onClose={onCancel} pending={pending} label="Eliminar" /></Modal>;
+}
+
+function EmptyState({ icon: Icon, title, text }: { icon: typeof History; title: string; text: string }) {
+  return <div className="grid place-items-center px-6 py-12 text-center"><div className="mb-3 grid size-11 place-items-center rounded-2xl bg-surface-muted text-muted-foreground"><Icon className="size-5" /></div><p className="text-sm font-semibold">{title}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">{text}</p></div>;
 }
