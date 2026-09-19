@@ -3,13 +3,8 @@ import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "luci
 import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
-import {
-  esEstadoFinalPedido,
-  pedidoEnRecepcion,
-  usePedidos,
-  type Pedido,
-} from "@/lib/taller-db";
-import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
+import { usePedidos, type Pedido } from "@/lib/taller-db";
+import { useTrabajosDelOperario } from "@/hooks/use-pedidos-area";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/operario")({
@@ -18,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/operario")({
       { title: "Mi trabajo — Aurum Lab" },
       {
         name: "description",
-        content: "Inicio rápido del operario con áreas asignadas y pedidos pendientes.",
+        content: "Inicio rápido del operario con áreas asignadas y trabajos pendientes.",
       },
     ],
   }),
@@ -46,8 +41,13 @@ function diasHastaEntrega(pedido: Pedido) {
   return Math.ceil((entrega.getTime() - hoy.getTime()) / 86_400_000);
 }
 
-function esUrgente(pedido: Pedido) {
-  const dias = diasHastaEntrega(pedido);
+function esUrgenteTrabajo(
+  trabajo: { prioridad: string; pedido_id: string },
+  pedidosPorId: Map<string, Pedido>,
+) {
+  if (trabajo.prioridad === "urgente") return true;
+  const pedido = pedidosPorId.get(trabajo.pedido_id);
+  const dias = pedido ? diasHastaEntrega(pedido) : null;
   return dias !== null && dias <= 1;
 }
 
@@ -65,43 +65,41 @@ function areasAsignadasUnicas(areas: string[]) {
 
 function OperarioPage() {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: pedidos = [], isLoading: isLoadingPedidos } = usePedidos();
+  const { trabajos, isLoading: isLoadingTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
 
   const areas = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
-  const conteos = useMemo(() => {
-    // Misma base que la vista de cada área: solo trabajo activo en producción y de mi sede.
-    const activos = filtrarPedidos(pedidos).filter(
-      (pedido) =>
-        !esEstadoFinalPedido(pedido.estado) &&
-        !pedidoEnRecepcion(pedido.estado) &&
-        pedido.estado === "En Producción",
-    );
+  const pedidosPorId = useMemo(
+    () => new Map(filtrarPedidos(pedidos).map((pedido) => [pedido.id, pedido])),
+    [filtrarPedidos, pedidos],
+  );
 
-    return areas.map((area) => {
-      const asignados = activos.filter((pedido) => pedidoAsignadoAArea(pedido, area));
-      // Pendientes = lo que está realmente en el área ahora.
-      const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));
-      const programados = asignados.filter((pedido) => !pedidoEnAreaActual(pedido, area));
-      const urgentes = enTrabajo.filter(esUrgente);
-      return { area, enTrabajo, programados, urgentes };
-    });
-  }, [areas, filtrarPedidos, pedidos]);
+  const conteos = useMemo(
+    () =>
+      areas.map((area) => {
+        const asignados = trabajos.filter((trabajo) => areaCoincide(trabajo.area, area));
+        const urgentes = asignados.filter((trabajo) => esUrgenteTrabajo(trabajo, pedidosPorId));
+        return { area, asignados, urgentes };
+      }),
+    [areas, pedidosPorId, trabajos],
+  );
 
+  const isLoading = isLoadingPedidos || isLoadingTrabajos;
   const nombre = sesion?.perfil.nombre?.trim() || "Operario";
   const puedeHerramientas = areas.some((area) => areaCoincide(area, "Taller"));
 
   return (
     <AppShell
       titulo={`Hola ${nombre}`}
-      subtitulo="Tus áreas de trabajo asignadas"
+      subtitulo="Tus trabajos asignados"
       atrasMovil={false}
     >
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-card">
-            Cargando tus áreas...
+            Cargando tus trabajos...
           </div>
         ) : null}
 
@@ -114,7 +112,7 @@ function OperarioPage() {
           </div>
         ) : null}
 
-        {conteos.map(({ area, programados, enTrabajo, urgentes }) => {
+        {conteos.map(({ area, asignados, urgentes }) => {
           const Icono = iconosArea[area] ?? Hammer;
           return (
             <button
@@ -132,13 +130,8 @@ function OperarioPage() {
               <h2 className="mt-4 text-xl font-semibold">{area}</h2>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="rounded-full bg-surface-muted px-3 py-1.5 text-muted-foreground">
-                  {enTrabajo.length} pendiente{enTrabajo.length === 1 ? "" : "s"}
+                  {asignados.length} pendiente{asignados.length === 1 ? "" : "s"}
                 </span>
-                {programados.length > 0 ? (
-                  <span className="rounded-full bg-info-soft px-3 py-1.5 text-info">
-                    {programados.length} por llegar
-                  </span>
-                ) : null}
                 {urgentes.length > 0 ? (
                   <span className="rounded-full bg-danger-soft px-3 py-1.5 text-danger">
                     {urgentes.length} urgente{urgentes.length === 1 ? "" : "s"}
