@@ -158,7 +158,11 @@ function OperarioPage() {
                 <div className="mt-3 flex flex-wrap gap-3 border-t border-border pt-3 text-[11px] text-muted-foreground">
                   <span>Pedido: {trabajo.pedido_id.slice(0, 8)}…</span>
                   <span>Fecha: {trabajo.fecha_planificada || "Sin fecha"}</span>
-                </div>\n                <div className="mt-3 flex flex-wrap gap-2">\n                  {trabajo.estado === "pendiente" ? <button type="button" onClick={(e) => { e.stopPropagation(); void cambiarEstadoTrabajo(trabajo.id, "en_proceso"); }} disabled={actualizandoTrabajo} className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50">Iniciar trabajo</button> : null}\n                  {trabajo.estado === "en_proceso" ? <button type="button" onClick={(e) => { e.stopPropagation(); void cambiarEstadoTrabajo(trabajo.id, "completado"); }} disabled={actualizandoTrabajo} className="rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground disabled:opacity-50">Completar trabajo</button> : null}\n                </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {trabajo.estado === "pendiente" ? <button type="button" onClick={(e) => { e.stopPropagation(); void cambiarEstadoTrabajo(trabajo.id, "en_proceso"); }} disabled={actualizandoTrabajo} className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50">Iniciar trabajo</button> : null}
+                  {trabajo.estado === "en_proceso" ? <button type="button" onClick={(e) => { e.stopPropagation(); void cambiarEstadoTrabajo(trabajo.id, "completado"); }} disabled={actualizandoTrabajo} className="rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground disabled:opacity-50">Completar trabajo</button> : null}
+                </div>
               </button>
             ))}
           </div>
