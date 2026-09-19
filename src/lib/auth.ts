@@ -279,7 +279,7 @@ export async function obtenerSesionParaRuta() {
 export function puedeAccederRuta(pathname: string, acceso: Awaited<ReturnType<typeof obtenerSesionParaRuta>>) {
   if (!acceso) return false;
 
-  const path = pathname.replace(/\\/+$/, "") || "/";
+  const path = pathname.replace(/\/+$/, "") || "/";
   const requerida = rutaRequiere(path);
   if (!requerida) return true;
 
