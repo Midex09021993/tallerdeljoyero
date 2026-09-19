@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
   ClipboardList,
@@ -13,8 +13,8 @@ import {
   Gem,
   Wrench,
 } from "lucide-react";
-import type { ReactNode } from "react";
-import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
+import { useEffect, type ReactNode } from "react";
+import { areaCoincide, inicioSegunRol, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionProduccion";
 
 type Seccion = {
@@ -88,6 +88,36 @@ function seccionesVisibles(
   return [...inicio, ...porArea, ...perfil];
 }
 
+/**
+ * Guardia de navegación de UX.
+ * La seguridad real de los datos permanece en las políticas RLS de Supabase.
+ * Se mantiene aquí para no meter lógica compleja en TanStack routeTree.
+ */
+function rutaPermitidaPorSesion(pathname: string, roles: Rol[], areas: string[], esAdmin: boolean) {
+  if (esAdmin) {
+    if (pathname.startsWith("/herramientas")) return roles.includes("dueno");
+    return true;
+  }
+  if (roles.includes("monitor")) return pathname === "/monitor" || pathname.startsWith("/monitor/");
+  if (roles.includes("cliente")) return pathname === "/cliente" || pathname.startsWith("/cliente/");
+  if (roles.includes("operario")) {
+    if (["/operario", "/perfil", "/inicio"].some((ruta) => pathname === ruta || pathname.startsWith(ruta + "/"))) return true;
+    const areaPorRuta: Array<[string, string]> = [
+      ["/diseno-3d", "Diseño 3D"],
+      ["/impresion-3d", "Impresión 3D"],
+      ["/casting", "Casting"],
+      ["/corte-laser", "Corte Láser"],
+      ["/taller", "Taller"],
+      ["/ventas", "Área ventas"],
+    ];
+    const area = areaPorRuta.find(([ruta]) => pathname === ruta || pathname.startsWith(ruta + "/"))?.[1];
+    if (area) return areas.some((asignada) => areaCoincide(asignada, area));
+    if (pathname === "/trabajos" || pathname.startsWith("/trabajos/")) return true;
+    return false;
+  }
+  return false;
+}
+
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
 const ORDEN_MENU: Record<string, number> = {
   // El flujo comercial parte de la cotización; ventas y pedidos vienen después.
@@ -124,6 +154,21 @@ export function AppShell({
 }) {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!sesion) return;
+    if (rutaPermitidaPorSesion(location.pathname, sesion.roles, sesion.areas, sesion.esAdmin)) return;
+
+    const destino = inicioSegunRol(sesion, {
+      movilTablet: typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches,
+    });
+    if (location.pathname !== destino) {
+      void navigate({ to: destino as never, replace: true });
+    }
+  }, [location.pathname, navigate, sesion]);
+
   const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
   const visiblesOrdenadas = ordenarMenu(visibles);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
