@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          created_at: string
+          email: string | null
+          estado: string
+          id: string
+          nombre: string
+          telefono: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          estado?: string
+          id?: string
+          nombre: string
+          telefono?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          estado?: string
+          id?: string
+          nombre?: string
+          telefono?: string | null
+        }
+        Relationships: []
+      }
       config_areas: {
         Row: {
           alerta_activa: boolean
@@ -164,6 +191,156 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "contratos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotizacion_detalles: {
+        Row: {
+          cantidad: number
+          costo_unitario: number
+          cotizacion_id: string
+          created_at: string
+          descripcion: string
+          id: string
+          orden: number
+          precio_unitario: number
+          tipo: string
+          total_costo: number
+          total_precio: number
+          unidad: string
+        }
+        Insert: {
+          cantidad?: number
+          costo_unitario?: number
+          cotizacion_id: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          orden?: number
+          precio_unitario?: number
+          tipo?: string
+          total_costo?: number
+          total_precio?: number
+          unidad?: string
+        }
+        Update: {
+          cantidad?: number
+          costo_unitario?: number
+          cotizacion_id?: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          orden?: number
+          precio_unitario?: number
+          tipo?: string
+          total_costo?: number
+          total_precio?: number
+          unidad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_detalles_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotizaciones: {
+        Row: {
+          anticipo: number
+          cliente_id: string | null
+          creado_por: string | null
+          created_at: string
+          descuento: number
+          estado: string
+          fecha_emision: string
+          fecha_entrega_solicitada: string | null
+          fecha_vencimiento: string | null
+          id: string
+          impuestos: number
+          moneda: string
+          notas_cliente: string
+          notas_internas: string
+          numero: string
+          proyecto_joya_id: string | null
+          sede_id: string | null
+          subtotal: number
+          subtotal_costo: number
+          total: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          anticipo?: number
+          cliente_id?: string | null
+          creado_por?: string | null
+          created_at?: string
+          descuento?: number
+          estado?: string
+          fecha_emision?: string
+          fecha_entrega_solicitada?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          impuestos?: number
+          moneda?: string
+          notas_cliente?: string
+          notas_internas?: string
+          numero?: string
+          proyecto_joya_id?: string | null
+          sede_id?: string | null
+          subtotal?: number
+          subtotal_costo?: number
+          total?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          anticipo?: number
+          cliente_id?: string | null
+          creado_por?: string | null
+          created_at?: string
+          descuento?: number
+          estado?: string
+          fecha_emision?: string
+          fecha_entrega_solicitada?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          impuestos?: number
+          moneda?: string
+          notas_cliente?: string
+          notas_internas?: string
+          numero?: string
+          proyecto_joya_id?: string | null
+          sede_id?: string | null
+          subtotal?: number
+          subtotal_costo?: number
+          total?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizaciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_proyecto_joya_id_fkey"
+            columns: ["proyecto_joya_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos_joya"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_sede_id_fkey"
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
@@ -575,10 +752,13 @@ export type Database = {
           corte_texto: string
           corte_tipografia: string
           corte_ubicacion: string
+          cotizacion_detalles: Json | null
+          cotizacion_id: string | null
           created_at: string
           entrega: string
           entregado_at: string | null
           enviado_at: string | null
+          especificaciones_comerciales: Json | null
           estado: string
           fecha_entrega: string | null
           fecha_entregado: string | null
@@ -600,6 +780,7 @@ export type Database = {
           peso_estimado: string
           piedras: string
           pieza: string
+          proyecto_joya_id: string | null
           receptor_envio: string
           referencia: string
           ruta: string[]
@@ -626,10 +807,13 @@ export type Database = {
           corte_texto?: string
           corte_tipografia?: string
           corte_ubicacion?: string
+          cotizacion_detalles?: Json | null
+          cotizacion_id?: string | null
           created_at?: string
           entrega?: string
           entregado_at?: string | null
           enviado_at?: string | null
+          especificaciones_comerciales?: Json | null
           estado?: string
           fecha_entrega?: string | null
           fecha_entregado?: string | null
@@ -651,6 +835,7 @@ export type Database = {
           peso_estimado?: string
           piedras?: string
           pieza: string
+          proyecto_joya_id?: string | null
           receptor_envio?: string
           referencia: string
           ruta?: string[]
@@ -677,10 +862,13 @@ export type Database = {
           corte_texto?: string
           corte_tipografia?: string
           corte_ubicacion?: string
+          cotizacion_detalles?: Json | null
+          cotizacion_id?: string | null
           created_at?: string
           entrega?: string
           entregado_at?: string | null
           enviado_at?: string | null
+          especificaciones_comerciales?: Json | null
           estado?: string
           fecha_entrega?: string | null
           fecha_entregado?: string | null
@@ -702,6 +890,7 @@ export type Database = {
           peso_estimado?: string
           piedras?: string
           pieza?: string
+          proyecto_joya_id?: string | null
           receptor_envio?: string
           referencia?: string
           ruta?: string[]
@@ -723,6 +912,20 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_proyecto_joya_id_fkey"
+            columns: ["proyecto_joya_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos_joya"
             referencedColumns: ["id"]
           },
           {
@@ -827,6 +1030,56 @@ export type Database = {
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proyectos_joya: {
+        Row: {
+          cliente_id: string | null
+          codigo: string
+          created_at: string
+          descripcion: string
+          id: string
+          ley: string | null
+          metal: string | null
+          nombre: string
+          peso_estimado: number | null
+          piedras: string | null
+          talla: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          codigo?: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          ley?: string | null
+          metal?: string | null
+          nombre: string
+          peso_estimado?: number | null
+          piedras?: string | null
+          talla?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          codigo?: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          ley?: string | null
+          metal?: string | null
+          nombre?: string
+          peso_estimado?: number | null
+          piedras?: string | null
+          talla?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyectos_joya_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]
@@ -1050,7 +1303,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cambiar_estado_cotizacion: {
+        Args: { _cotizacion_id: string; _nuevo_estado: string }
+        Returns: undefined
+      }
+      convertir_cotizacion_a_pedido_contrato: {
+        Args: { _cotizacion_id: string }
+        Returns: Json
+      }
+      crear_version_cotizacion: {
+        Args: { _cotizacion_id: string }
+        Returns: string
+      }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
+      guardar_detalles_cotizacion: {
+        Args: { _cotizacion_id: string; _detalles: Json }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
