@@ -524,6 +524,52 @@ function FichaPedido() {
                 ]}
               />
 
+              {pedido.cotizacion_id ? (
+                <Panel titulo="Origen comercial">
+                  <div className="space-y-4 p-5 lg:p-6">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <DatoClave etiqueta="Origen" valor={pedido.origen || "Cotización"} destacado />
+                      <DatoClave etiqueta="Proyecto" valor={pedido.proyecto_joya_id ? "Proyecto de joya vinculado" : "Sin proyecto"} />
+                      <DatoClave etiqueta="Importe vendido" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(pedido.importe || 0)} />
+                    </div>
+                    {Array.isArray(pedido.cotizacion_detalles) && pedido.cotizacion_detalles.length > 0 ? (
+                      <div className="overflow-x-auto rounded-xl border border-border">
+                        <table className="w-full min-w-[640px] text-left text-sm">
+                          <thead className="bg-surface-muted text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <tr>
+                              <th className="px-4 py-3">Tipo</th>
+                              <th className="px-4 py-3">Descripción</th>
+                              <th className="px-4 py-3">Cantidad</th>
+                              <th className="px-4 py-3">Precio</th>
+                              <th className="px-4 py-3">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border">
+                            {pedido.cotizacion_detalles.map((item, index) => {
+                              const d = item as Record<string, unknown>;
+                              const cantidad = Number(d.cantidad) || 0;
+                              const precio = Number(d.precio_unitario) || 0;
+                              const total = Number(d.total_precio) || cantidad * precio;
+                              return (
+                                <tr key={String(d.id ?? index)}>
+                                  <td className="px-4 py-3 text-xs uppercase text-muted-foreground">{String(d.tipo ?? "otro")}</td>
+                                  <td className="px-4 py-3 font-medium">{String(d.descripcion ?? "—")}</td>
+                                  <td className="px-4 py-3">{cantidad} {String(d.unidad ?? "und")}</td>
+                                  <td className="px-4 py-3">{precio.toFixed(2)}</td>
+                                  <td className="px-4 py-3 font-semibold">{total.toFixed(2)}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Este pedido no tiene partidas comerciales registradas.</p>
+                    )}
+                  </div>
+                </Panel>
+              ) : null}
+
               <BloqueDatos
                 titulo="Información de ventas y envío"
                 datos={[
