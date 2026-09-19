@@ -18,7 +18,7 @@ type Cliente = { id: string; nombre: string; telefono: string | null; email: str
 type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string };
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
-  fecha_vencimiento: string | null; moneda: string; subtotal: number; descuento: number;
+  fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
   impuestos: number; total: number; cliente_id: string; proyecto_joya_id: string | null;
 };
 
@@ -37,7 +37,7 @@ function CotizacionesPage() {
   const [guardando, setGuardando] = useState(false);
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
-    costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "",
+    costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
     notas_cliente: "", notas_internas: "",
   });
 
@@ -45,7 +45,7 @@ function CotizacionesPage() {
     const [{ data: c }, { data: p }, { data: q }] = await Promise.all([
       supabase.from("clientes").select("id,nombre,telefono,email").eq("estado", "activo").order("nombre"),
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id").order("created_at", { ascending: false }),
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id").order("created_at", { ascending: false }),
     ]);
     if (c) setClientes(c);
     if (p) setProyectos(p);
@@ -82,6 +82,7 @@ function CotizacionesPage() {
         impuestos: form.impuestos,
         total: Math.max(0, form.precio * form.cantidad - form.descuento + form.impuestos),
         fecha_vencimiento: form.fecha_vencimiento || null,
+        fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
         notas_cliente: form.notas_cliente,
         notas_internas: form.notas_internas,
         creado_por: sesion?.user.id ?? null,
@@ -95,7 +96,7 @@ function CotizacionesPage() {
       });
       if (detalleError) throw detalleError;
       setAbierto(false);
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", notas_cliente: "", notas_internas: "" });
+      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
       await cargar();
     } finally {
       setGuardando(false);
@@ -156,7 +157,7 @@ function CotizacionesPage() {
               <label className="text-xs text-muted-foreground">Precio al cliente / unidad<input required type="number" min="0.01" step="0.01" value={form.precio} onChange={e => setForm({...form,precio:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground">Descuento<input type="number" min="0" step="0.01" value={form.descuento} onChange={e => setForm({...form,descuento:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground">Impuestos<input type="number" min="0" step="0.01" value={form.impuestos} onChange={e => setForm({...form,impuestos:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>\n              <label className="text-xs text-muted-foreground">Entrega solicitada<input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
