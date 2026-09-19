@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { AppShell, Panel } from "@/components/AppShell";
+import { toast } from "sonner";
+import { ArrowRight, CheckCircle2, Clock3, FileText, Plus, Search, Sparkles, UserRound, WalletCards, WandSparkles, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
@@ -35,6 +37,8 @@ function CotizacionesPage() {
   const [busca, setBusca] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [modoAsistido, setModoAsistido] = useState(false);
+  const [textoAsistente, setTextoAsistente] = useState("");
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
@@ -64,6 +68,20 @@ function CotizacionesPage() {
   }, [busca, clientes, cotizaciones]);
 
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
+  const borradores = cotizaciones.filter((q) => q.estado === "borrador").length;
+  const pendientes = cotizaciones.filter((q) => ["enviada", "pendiente", "en_revision"].includes(q.estado)).length;
+
+  function prepararAsistido() {
+    const texto = textoAsistente.trim();
+    if (!texto) return;
+    const textoNormalizado = texto.toLowerCase();
+    const cliente = clientes.find((c) => textoNormalizado.includes(c.nombre.toLowerCase()));
+    const cantidadMatch = texto.match(/\b(\d+)\s*(?:unidades?|piezas?|anillos?|joyas?)/i);
+    setForm((prev) => ({ ...prev, cliente_id: cliente?.id ?? prev.cliente_id, cantidad: cantidadMatch ? Math.max(1, Number(cantidadMatch[1])) : prev.cantidad, descripcion: texto }));
+    setModoAsistido(false);
+    setAbierto(true);
+    toast.success(cliente ? "Encontré el cliente y preparé el borrador." : "Preparé el borrador. Revisa los datos antes de crear.");
+  }
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
@@ -106,17 +124,34 @@ function CotizacionesPage() {
   return (
     <AppShell
       titulo="Cotizaciones"
-      subtitulo="Presupuestos comerciales conectados con clientes y proyectos de joyería."
-      acciones={
-        <>
-          <StatCard etiqueta="Cotizaciones" valor={String(cotizaciones.length)} />
-          <StatCard etiqueta="Aprobadas" valor={String(cotizaciones.filter(q => q.estado === "aprobada").length)} />
-          <StatCard etiqueta="Total aprobado" valor={money(totalAprobadas)} />
-        </>
-      }
+      subtitulo="El punto donde una idea del cliente empieza a convertirse en trabajo para el taller."
+      acciones={<div className="flex gap-2">
+        <button type="button" onClick={() => setModoAsistido(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-primary/40"><WandSparkles className="size-4" /> Preparar con asistente</button>
+        <button type="button" onClick={() => setAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"><Plus className="size-4" /> Nueva cotización</button>
+      </div>}
     >
       <div className="space-y-6">
-        <Panel titulo="Cotizaciones comerciales" accion={<button type="button" onClick={() => setAbierto(true)} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">+ Nueva cotización</button>}>
+        <section className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-surface-muted/60 p-6 shadow-sm">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary"><Sparkles className="size-3.5" /> Área comercial</div>
+              <h2 className="font-display text-3xl tracking-tight sm:text-4xl">Cotiza sin perder el hilo. <span className="text-muted-foreground">Del cliente al taller.</span></h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Centraliza clientes, proyectos, precios y fechas. Cuando el cliente aprueba, la cotización puede convertirse en contrato y pedido sin volver a escribir todo.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <MiniStat icon={FileText} label="Total" value={cotizaciones.length} />
+              <MiniStat icon={Clock3} label="Borradores" value={borradores} />
+              <MiniStat icon={CheckCircle2} label="Aprobadas" value={cotizaciones.filter((q) => q.estado === "aprobada").length} />
+              <MiniStat icon={WalletCards} label="Pendientes" value={pendientes} />
+            </div>
+          </div>
+        </section>
+        <div className="grid gap-4 md:grid-cols-3">
+          <ActionCard icon={Plus} title="Nueva cotización" text="Empieza con cliente, pieza y precio." onClick={() => setAbierto(true)} />
+          <ActionCard icon={WandSparkles} title="Cuéntaselo al asistente" text="Escribe lo que pidió el cliente y prepara un borrador." onClick={() => setModoAsistido(true)} />
+          <ActionCard icon={WalletCards} title="Aprobadas" text={totalAprobadas > 0 ? "Total aprobado: " + money(totalAprobadas) : "Todavía no hay ventas aprobadas."} onClick={() => setBusca("aprobada")} />
+        </div>
+        <Panel titulo="Cotizaciones comerciales" accion={<span className="text-xs text-muted-foreground">{filtradas.length} registros</span>}>
           <div className="p-4">
             <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por número, cliente o estado..." className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:ring-1 focus:ring-gold" />
           </div>
@@ -143,6 +178,23 @@ function CotizacionesPage() {
             </table>
           </div>
         </Panel>
+
+        {modoAsistido && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary"><WandSparkles className="size-5" /></div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div><h2 className="font-display text-2xl">Preparar cotización</h2><p className="mt-1 text-sm text-muted-foreground">Escribe como se lo dirías a una persona del taller. No se crea nada hasta que tú confirmes.</p></div>
+                  <button type="button" onClick={() => setModoAsistido(false)} className="rounded-full border border-border p-2"><XCircle className="size-4" /></button>
+                </div>
+                <textarea autoFocus value={textoAsistente} onChange={e => setTextoAsistente(e.target.value)} rows={5} placeholder="Ejemplo: Juan quiere 2 anillos de oro amarillo 18K, talla 8, con diamante. Entrega en 15 días." className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" />
+                <div className="mt-4 rounded-xl bg-surface-muted p-4 text-xs text-muted-foreground"><p className="font-semibold text-foreground">Primera etapa del asistente</p><p className="mt-1">Reconoce datos básicos como un cliente registrado y cantidad, y prepara el borrador. Más adelante este mismo espacio podrá entender piezas, metales, piedras, tallas, fechas y datos faltantes.</p></div>
+                <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setModoAsistido(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm">Cancelar</button><button type="button" onClick={prepararAsistido} disabled={!textoAsistente.trim()} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">Preparar borrador <ArrowRight className="size-4" /></button></div>
+              </div>
+            </div>
+          </div>
+        </div>}
 
         {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
           <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
