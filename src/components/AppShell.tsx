@@ -52,7 +52,7 @@ const secciones: Seccion[] = [
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
   { to: "/taller", label: "Taller", area: "Taller", icono: Hammer, grupo: "produccion" },
   { to: "/ventas", label: "Ventas", area: "Área ventas", icono: PackageCheck, grupo: "comercial" },
-  { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "produccion" },
+  { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "comercial" },
   { to: "/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
