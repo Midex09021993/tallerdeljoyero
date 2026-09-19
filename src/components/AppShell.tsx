@@ -90,10 +90,12 @@ function seccionesVisibles(
 
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
 const ORDEN_MENU: Record<string, number> = {
-  "/pedidos": 10,
+  // El flujo comercial parte de la cotización; ventas y pedidos vienen después.
+  "/cotizaciones": 10,
   "/ventas": 20,
-  "/inventario": 30,
-  "/gestion": 40,
+  "/pedidos": 30,
+  "/inventario": 40,
+  "/gestion": 50,
   "/aurum-render": 999,
 };
 
