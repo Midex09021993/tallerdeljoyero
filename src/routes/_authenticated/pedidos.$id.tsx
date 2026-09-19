@@ -9,6 +9,7 @@ import {
   destinosMovimientoPedido,
   pedidoEnRecepcion,
   useActualizarPedido,
+  useCrearContratoDesdePedido,
   useAutorizarProduccion,
   useEnviarAArea,
   usePedidos,
@@ -270,6 +271,7 @@ function FichaPedido() {
   const actualizar = useActualizarPedido();
   const autorizar = useAutorizarProduccion();
   const enviar = useEnviarAArea();
+  const crearContrato = useCrearContratoDesdePedido();
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
   const [rutaEdit, setRutaEdit] = useState<string[]>([]);
@@ -514,6 +516,47 @@ function FichaPedido() {
                   <DatoClave etiqueta="N° de contrato" valor={pedido.contrato || "—"} />
                 </div>
               </div>
+
+              <Panel titulo="Documento comercial">
+                <div className="space-y-4 p-5 lg:p-6">
+                  {pedido.contrato_id ? (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold">Contrato {pedido.contrato || "vinculado"}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          El pedido ya está conectado con su documento comercial y sus pagos.
+                        </p>
+                      </div>
+                      <Link
+                        to="/contratos/$id"
+                        params={{ id: pedido.contrato_id }}
+                        className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-muted"
+                      >
+                        Ver contrato
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold">Sin contrato asociado</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Puedes crear el documento comercial con los datos de este pedido.
+                        </p>
+                      </div>
+                      {sesion?.esAdmin ? (
+                        <button
+                          type="button"
+                          onClick={() => crearContrato.mutate(pedido)}
+                          disabled={crearContrato.isPending}
+                          className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50"
+                        >
+                          {crearContrato.isPending ? "Creando…" : "Crear contrato"}
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              </Panel>
 
               <BloqueDatos
                 titulo="Información general"
