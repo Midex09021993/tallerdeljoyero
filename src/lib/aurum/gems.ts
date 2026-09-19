@@ -307,7 +307,7 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   if((g as any).fenomenoOptico){
     const phenomenon=(g as any).fenomenoOptico;
     if(phenomenon==="chatoyancy" || phenomenon==="asterism"){
-      addPhenomenalNeedles(THREE,target,config,size,phenomenon,String(g.familia??"gem"));
+      addPhenomenalNeedles(THREE,target,config,size,phenomenon,String((g as any).familia??"gem"));
     } else if(phenomenon==="schiller" || phenomenon==="peristerescence" || phenomenon==="iridescence" || phenomenon==="orient"){
       addPhenomenalPlates(THREE,target,config,size,phenomenon);
     }
