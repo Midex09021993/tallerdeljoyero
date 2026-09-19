@@ -198,6 +198,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cliente': typeof ClienteRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
+  '/cotizaciones': typeof AuthenticatedCotizacionesRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -252,6 +253,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/aurum-render'
+    | '/cotizaciones'
     | '/casting'
     | '/corte-laser'
     | '/diseno-3d'
@@ -302,6 +304,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cliente'
     | '/_authenticated/aurum-render'
+    | '/_authenticated/cotizaciones'
     | '/_authenticated/casting'
     | '/_authenticated/corte-laser'
     | '/_authenticated/diseno-3d'
