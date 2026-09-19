@@ -43,7 +43,7 @@ function TrabajoOperativoPage() {
   const qc = useQueryClient();
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [archivoSeleccionado, setArchivoSeleccionado] = useState("");
-  const [guardandoArchivo, setGuardandoArchivo] = useState(false);
+  const [guardandoArchivo, setGuardandoArchivo] = useState(false);\n  const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });\n  const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
 
   const { data: archivosTecnicos = [] } = useQuery({
     queryKey: ["trabajo-archivos", id],
@@ -73,6 +73,52 @@ function TrabajoOperativoPage() {
       return (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string }>;
     },
   });
+
+  const { data: incidencias = [] } = useQuery({
+    queryKey: ["incidencias-trabajo", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("incidencias_trabajo")
+        .select("id, tipo, descripcion, estado, resolucion, created_at")
+        .eq("trabajo_id", id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const reportarIncidencia = async () => {
+    if (!incidencia.descripcion.trim() || !sesion?.user.id) return;
+    setReportandoIncidencia(true);
+    const { error } = await supabase.from("incidencias_trabajo").insert({
+      trabajo_id: id,
+      reportado_por: sesion.user.id,
+      tipo: incidencia.tipo,
+      descripcion: incidencia.descripcion.trim(),
+    });
+    setReportandoIncidencia(false);
+    if (error) {
+      setErrorAccion(error.message);
+      return;
+    }
+    setIncidencia({ tipo: "general", descripcion: "" });
+    await qc.invalidateQueries({ queryKey: ["incidencias-trabajo", id] });
+  };
+
+  const cambiarIncidencia = async (incidenciaId: string, estado: "en_revision" | "resuelta" | "descartada") => {
+    const { error } = await supabase
+      .from("incidencias_trabajo")
+      .update({
+        estado,
+        ...(estado === "resuelta" ? { resuelto_por: sesion?.user.id ?? null, resuelto_at: new Date().toISOString() } : {}),
+      })
+      .eq("id", incidenciaId);
+    if (error) {
+      setErrorAccion(error.message);
+      return;
+    }
+    await qc.invalidateQueries({ queryKey: ["incidencias-trabajo", id] });
+  };
 
   const adjuntarArchivo = async () => {
     if (!archivoSeleccionado) return;
