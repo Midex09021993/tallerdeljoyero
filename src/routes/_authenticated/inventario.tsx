@@ -649,7 +649,19 @@ function ModalActions({ onClose, pending, label }: { onClose: () => void; pendin
 }
 
 function ConfirmDelete({ material, pending, onCancel, onConfirm }: { material: MaterialItem; pending: boolean; onCancel: () => void; onConfirm: () => void }) {
-  return <Modal title="Eliminar material" subtitle={`Esta acción eliminará “${material.material}”.`} onClose={onCancel}><div className="rounded-xl bg-danger-soft p-4 text-sm text-danger">Si el material ya tiene movimientos, la base de datos puede impedir su eliminación para proteger la trazabilidad.</div><ModalActions onClose={onCancel} pending={pending} label="Eliminar" /></Modal>;
+  return (
+    <Modal title="Eliminar material" subtitle={`Esta acción eliminará “${material.material}”.`} onClose={onCancel}>
+      <div className="rounded-xl bg-danger-soft p-4 text-sm text-danger">
+        Si el material ya tiene movimientos, la base de datos puede impedir su eliminación para proteger la trazabilidad.
+      </div>
+      <div className="mt-4 flex justify-end gap-2 border-t border-border pt-4">
+        <button type="button" onClick={onCancel} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground">Cancelar</button>
+        <button type="button" disabled={pending} onClick={onConfirm} className="rounded-xl bg-danger px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
+          {pending ? "Eliminando…" : "Eliminar material"}
+        </button>
+      </div>
+    </Modal>
+  );
 }
 
 function EmptyState({ icon: Icon, title, text }: { icon: typeof History; title: string; text: string }) {
