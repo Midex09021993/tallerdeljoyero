@@ -49,7 +49,10 @@ function CotizacionDetallePage() {
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardandoEstado, setGuardandoEstado] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
+  const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
   const cargar = async () => {
     setCargando(true); setError("");
@@ -73,6 +76,74 @@ function CotizacionDetallePage() {
   useEffect(() => { void cargar(); }, [id]);
 
   const margen = useMemo(() => cotizacion ? Number(cotizacion.subtotal) - Number(cotizacion.subtotal_costo) : 0, [cotizacion]);
+
+  function abrirEditor() {
+    if (!cotizacion || cotizacion.estado !== "borrador") return;
+    setBorradorDetalles(detalles.map((d) => ({ ...d })));
+    setEditando(true);
+    setError("");
+  }
+
+  function agregarPartida() {
+    setBorradorDetalles((actuales) => [
+      ...actuales,
+      {
+        id: crypto.randomUUID(),
+        orden: actuales.length + 1,
+        tipo: "otro",
+        descripcion: "",
+        cantidad: 1,
+        unidad: "und",
+        costo_unitario: 0,
+        precio_unitario: 0,
+        total_costo: 0,
+        total_precio: 0,
+      },
+    ]);
+  }
+
+  function actualizarPartida(id: string, cambios: Partial<Detalle>) {
+    setBorradorDetalles((actuales) =>
+      actuales.map((d) => d.id === id ? { ...d, ...cambios } : d),
+    );
+  }
+
+  function eliminarPartida(id: string) {
+    setBorradorDetalles((actuales) =>
+      actuales.filter((d) => d.id !== id).map((d, i) => ({ ...d, orden: i + 1 })),
+    );
+  }
+
+  async function guardarPartidas() {
+    if (!cotizacion || !sesion?.esAdmin || cotizacion.estado !== "borrador") return;
+    if (borradorDetalles.length === 0 || borradorDetalles.some((d) => !d.descripcion.trim())) {
+      setError("Agrega al menos una partida y completa su descripción.");
+      return;
+    }
+    setGuardando(true);
+    setError("");
+    const payload = borradorDetalles.map((d, i) => ({
+      orden: i + 1,
+      tipo: d.tipo,
+      descripcion: d.descripcion.trim(),
+      cantidad: Number(d.cantidad) || 1,
+      unidad: d.unidad.trim() || "und",
+      costo_unitario: Math.max(0, Number(d.costo_unitario) || 0),
+      precio_unitario: Math.max(0, Number(d.precio_unitario) || 0),
+    }));
+    const { error: saveError } = await supabase.rpc("guardar_detalles_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+      _detalles: payload,
+    });
+    if (saveError) {
+      setError(saveError.message);
+      setGuardando(false);
+      return;
+    }
+    setEditando(false);
+    setGuardando(false);
+    await cargar();
+  }
 
   async function cambiarEstado(estado: string) {
     if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
@@ -122,7 +193,11 @@ function CotizacionDetallePage() {
               </div>
             </Panel> : null}
 
-            <Panel titulo="Partidas de la cotización">
+            <Panel titulo="Partidas de la cotización" accion={
+              sesion?.esAdmin && cotizacion.estado === "borrador"
+                ? <button type="button" onClick={abrirEditor} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Editar partidas</button>
+                : undefined
+            }>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <thead><tr className="border-y border-border bg-surface-muted text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -142,6 +217,44 @@ function CotizacionDetallePage() {
                 </table>
               </div>
             </Panel>
+
+        {editando ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-display text-2xl">Editar partidas</h2>
+                <p className="text-sm text-muted-foreground">Agrega, elimina o ajusta partidas. Los totales se recalculan en la base de datos.</p>
+              </div>
+              <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="rounded-full border border-border px-3 py-1">×</button>
+            </div>
+            <div className="space-y-3">
+              {borradorDetalles.map((d, i) => <div key={d.id} className="rounded-xl border border-border p-3">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Partida {i + 1}</span>
+                  <button type="button" onClick={() => eliminarPartida(d.id)} disabled={guardando || borradorDetalles.length === 1} className="text-xs text-danger disabled:opacity-40">Eliminar</button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-12">
+                  <label className="text-xs text-muted-foreground md:col-span-2">Tipo<select value={d.tipo} onChange={e => actualizarPartida(d.id, { tipo: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm">
+                    {["modelo","metal","piedras","fundicion","engaste","acabado","mano_obra","render","otro"].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select></label>
+                  <label className="text-xs text-muted-foreground md:col-span-4">Descripción<input value={d.descripcion} onChange={e => actualizarPartida(d.id, { descripcion: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground md:col-span-1">Cant.<input type="number" min="0.001" step="0.001" value={d.cantidad} onChange={e => actualizarPartida(d.id, { cantidad: Number(e.target.value) || 1 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground md:col-span-1">Unidad<input value={d.unidad} onChange={e => actualizarPartida(d.id, { unidad: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground md:col-span-2">Costo<input type="number" min="0" step="0.01" value={d.costo_unitario} onChange={e => actualizarPartida(d.id, { costo_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground md:col-span-2">Precio<input type="number" min="0" step="0.01" value={d.precio_unitario} onChange={e => actualizarPartida(d.id, { precio_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
+                </div>
+                <div className="mt-2 text-right text-xs text-muted-foreground">
+                  Total: {money((Number(d.cantidad) || 0) * (Number(d.precio_unitario) || 0), cotizacion.moneda)}
+                </div>
+              </div>)}
+              <button type="button" onClick={agregarPartida} disabled={guardando} className="w-full rounded-xl border border-dashed border-border px-4 py-3 text-sm font-medium hover:bg-surface-muted">+ Agregar partida</button>
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="rounded-lg border border-border px-4 py-2.5 text-sm">Cancelar</button>
+              <button type="button" onClick={() => void guardarPartidas()} disabled={guardando || borradorDetalles.length === 0} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">{guardando ? "Guardando…" : "Guardar partidas"}</button>
+            </div>
+          </div>
+        </div> : null}
 
             <Panel titulo="Notas">
               <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
