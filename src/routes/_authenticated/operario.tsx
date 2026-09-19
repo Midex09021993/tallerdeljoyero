@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
 import {
@@ -66,6 +68,20 @@ function areasAsignadasUnicas(areas: string[]) {
 function OperarioPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
+
+  const { data: misTrabajos = [] } = useQuery({
+    queryKey: ["mis-trabajos-operario"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trabajos")
+        .select("id, pedido_id, area, titulo, descripcion, estado, prioridad, fecha_planificada")
+        .in("estado", ["pendiente", "en_proceso", "bloqueado"])
+        .order("fecha_planificada", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
 
@@ -98,6 +114,51 @@ function OperarioPage() {
       subtitulo="Tus áreas de trabajo asignadas"
       atrasMovil={false}
     >
+      <section className="mb-6 rounded-2xl border border-gold/25 bg-surface-sunken p-5 shadow-raised">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Trabajos asignados</p>
+            <h2 className="mt-1 text-lg font-semibold">Lo que tienes que hacer</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Solo aparecen trabajos asignados directamente a ti.</p>
+          </div>
+          <span className="rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {misTrabajos.length} activo{misTrabajos.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {misTrabajos.length > 0 ? (
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {misTrabajos.map((trabajo) => (
+              <button
+                key={trabajo.id}
+                type="button"
+                onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: "operario" } })}
+                className="rounded-xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{trabajo.area}</p>
+                    <p className="mt-1 font-semibold text-foreground">{trabajo.titulo}</p>
+                    {trabajo.descripcion ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{trabajo.descripcion}</p> : null}
+                  </div>
+                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trabajo.estado === "en_proceso" ? "border-info/30 bg-info/10 text-info" : trabajo.estado === "bloqueado" ? "border-warning/30 bg-warning/10 text-warning" : "border-border bg-surface-muted text-muted-foreground"}`}>
+                    {trabajo.estado === "en_proceso" ? "En proceso" : trabajo.estado === "bloqueado" ? "Bloqueado" : "Pendiente"}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-3 border-t border-border pt-3 text-[11px] text-muted-foreground">
+                  <span>Pedido: {trabajo.pedido_id.slice(0, 8)}…</span>
+                  <span>Fecha: {trabajo.fecha_planificada || "Sin fecha"}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
+            No tienes trabajos asignados pendientes. Cuando un administrador te asigne uno aparecerá aquí.
+          </div>
+        )}
+      </section>
+
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-card">
