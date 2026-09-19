@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Building2, CheckCircle2, FileText, Mail, MapPin, Pencil, Phone, Plus, Search, UserRound, UsersRound, X } from "lucide-react";
+import { FileText, Mail, MapPin, Pencil, Phone, Plus, Search, UserRound, UsersRound, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AurumActionCard } from "@/components/AurumActionCard";
