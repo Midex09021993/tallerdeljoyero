@@ -165,7 +165,10 @@ function CotizacionDetallePage() {
   async function cambiarEstado(estado: string) {
     if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
     setGuardandoEstado(true); setError("");
-    const { error: updateError } = await supabase.from("cotizaciones").update({ estado }).eq("id", cotizacion.id);
+    const { error: updateError } = await supabase.rpc("cambiar_estado_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+      _nuevo_estado: estado,
+    });
     if (updateError) setError(updateError.message);
     else setCotizacion({ ...cotizacion, estado });
     setGuardandoEstado(false);
