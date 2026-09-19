@@ -199,3 +199,101 @@ export function useSincronizarSesion() {
     return () => subscription.unsubscribe();
   }, [qc]);
 }
+
+
+export type AccesoRuta =
+  | "admin"
+  | "owner"
+  | "monitor"
+  | "operario"
+  | "perfil"
+  | "inicio"
+  | "area:Pedidos"
+  | "area:Diseño 3D"
+  | "area:Impresión 3D"
+  | "area:Casting"
+  | "area:Corte Láser"
+  | "area:Taller"
+  | "area:Área ventas";
+
+const accesoRuta: Record<string, AccesoRuta> = {
+  "/inicio": "inicio",
+  "/perfil": "perfil",
+  "/pedidos": "admin",
+  "/cotizaciones": "admin",
+  "/contratos/": "admin",
+  "/gestion": "admin",
+  "/inventario": "admin",
+  "/ventas": "admin",
+  "/herramientas": "owner",
+  "/aurum-render": "admin",
+  "/monitor": "monitor",
+  "/operario": "operario",
+  "/diseno-3d": "area:Diseño 3D",
+  "/impresion-3d": "area:Impresión 3D",
+  "/casting": "area:Casting",
+  "/corte-laser": "area:Corte Láser",
+  "/taller": "area:Taller",
+};
+
+function rutaRequiere(ruta: string) {
+  if (ruta.startsWith("/contratos/")) return "admin" as AccesoRuta;
+  return accesoRuta[ruta] ?? null;
+}
+
+export async function obtenerSesionParaRuta() {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.user) return null;
+
+  const user = sessionData.session.user;
+  const [{ data: perfil }, { data: roles }, { data: areas }] = await Promise.all([
+    supabase.from("profiles").select("id, activo, acceso_desde, acceso_hasta").eq("id", user.id).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", user.id),
+    supabase.from("user_areas").select("area").eq("user_id", user.id),
+  ]);
+
+  const hoy = new Date().toISOString().slice(0, 10);
+  const bloqueado =
+    perfil != null &&
+    (perfil.activo === false ||
+      (perfil.acceso_desde != null && hoy < perfil.acceso_desde) ||
+      (perfil.acceso_hasta != null && hoy > perfil.acceso_hasta));
+
+  if (bloqueado) {
+    await supabase.auth.signOut();
+    return null;
+  }
+
+  const listaRoles = (roles ?? []).map((r) => r.role as Rol);
+  const listaAreas = (areas ?? []).map((a) => normalizarArea(a.area));
+
+  return {
+    user,
+    roles: listaRoles,
+    areas: listaAreas,
+    esDueno: listaRoles.includes("dueno"),
+    esAdmin: listaRoles.includes("dueno") || listaRoles.includes("gerente"),
+  };
+}
+
+export function puedeAccederRuta(pathname: string, acceso: Awaited<ReturnType<typeof obtenerSesionParaRuta>>) {
+  if (!acceso) return false;
+
+  const path = pathname.replace(/\\/+$/, "") || "/";
+  const requerida = rutaRequiere(path);
+  if (!requerida) return true;
+
+  if (requerida === "owner") return acceso.esDueno;
+  if (requerida === "admin") return acceso.esAdmin;
+  if (requerida === "monitor") return acceso.esAdmin || acceso.roles.includes("monitor");
+  if (requerida === "operario") return acceso.esAdmin || acceso.roles.includes("operario");
+  if (requerida === "perfil" || requerida === "inicio") {
+    return acceso.roles.length > 0;
+  }
+  if (requerida.startsWith("area:")) {
+    const area = requerida.slice(5);
+    return acceso.esAdmin || (acceso.roles.includes("operario") && acceso.areas.some((a) => areaCoincide(a, area)));
+  }
+
+  return false;
+}
