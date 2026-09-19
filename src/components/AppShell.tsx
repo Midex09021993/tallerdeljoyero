@@ -144,6 +144,7 @@ export function AppShell({
   ocultarNavegacion = false,
   encabezadoMovilCompacto = false,
   ocultarAccionesCelular = false,
+  ocultarTitulo = false,
   children,
 }: {
   titulo: string;
@@ -153,6 +154,7 @@ export function AppShell({
   ocultarNavegacion?: boolean;
   encabezadoMovilCompacto?: boolean;
   ocultarAccionesCelular?: boolean;
+  ocultarTitulo?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -278,9 +280,11 @@ export function AppShell({
             <div
               className={`min-w-0 max-lg:flex-1 ${encabezadoMovilCompacto ? "max-lg:hidden" : ""}`}
             >
-              <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
-                {titulo}
-              </h1>
+              {!ocultarTitulo ? (
+                <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
+                  {titulo}
+                </h1>
+              ) : null}
               {subtitulo ? (
                 <p className="hidden text-sm text-muted-foreground lg:block">{subtitulo}</p>
               ) : null}
