@@ -542,13 +542,25 @@ function FichaPedido() {
                           El pedido ya está conectado con su documento comercial y sus pagos.
                         </p>
                       </div>
-                      <Link
-                        to="/contratos/$id"
-                        params={{ id: pedido.contrato_id }}
-                        className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-muted"
-                      >
-                        Ver contrato
-                      </Link>
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to="/contratos/$id"
+                          params={{ id: pedido.contrato_id }}
+                          className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-muted"
+                        >
+                          Ver contrato
+                        </Link>
+                        {sesion?.esAdmin ? (
+                          <Link
+                            to="/contratos/$id"
+                            params={{ id: pedido.contrato_id }}
+                            search={{ nuevoPedido: true }}
+                            className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground hover:opacity-90"
+                          >
+                            + Nuevo pedido
+                          </Link>
+                        ) : null}
+                      </div>
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center justify-between gap-3">
