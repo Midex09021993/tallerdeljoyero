@@ -621,7 +621,7 @@ function FichaPedido() {
                           </thead>
                           <tbody className="divide-y divide-border">
                             {pedido.cotizacion_detalles.map((item, index) => {
-                              const d = item as Record<string, unknown>;
+                              const d = item as any;
                               const cantidad = Number(d.cantidad) || 0;
                               const precio = Number(d.precio_unitario) || 0;
                               const total = Number(d.total_precio) || cantidad * precio;

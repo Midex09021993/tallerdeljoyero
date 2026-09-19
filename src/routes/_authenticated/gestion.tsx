@@ -237,8 +237,8 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
         <button type="button" onClick={() => window.location.assign("/pedidos?autorizacion=pendientes")} className="text-left">
           <StatCard
             etiqueta="Pendientes de autorización"
-            valor={String(pedidosGestion.filter(pedidoPendienteAutorizacionProduccion).length)}
-            tono={pedidosGestion.some(pedidoPendienteAutorizacionProduccion) ? "negativo" : "neutro"}
+            valor={String(pedidos.filter(pedidoPendienteAutorizacionProduccion).length)}
+            tono={pedidos.some(pedidoPendienteAutorizacionProduccion) ? "negativo" : "neutro"}
           />
         </button>
         <StatCard etiqueta="Pedidos activos" valor={String(activos.length)} />

@@ -236,11 +236,11 @@ function LoginPage() {
             </div>
 
             <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 px-4 pt-3 sm:px-7">
-              {[
+              {([
                 ["ecosistema","El ecosistema",Gem],
                 ["participantes","Quién puede participar",UsersRound],
                 ["flujo","Cómo se conecta",Grid2X2],
-              ].map(([id,label,Icon]) => (
+              ] as [string, string, LucideIcon][]).map(([id,label,Icon]) => (
                 <button key={String(id)} type="button" onClick={() => setSeccionPlataforma(id as typeof seccionPlataforma)}
                   className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider transition ${seccionPlataforma===id ? "bg-gold/10 text-gold" : "text-white/45 hover:text-white"}`}>
                   <Icon className="size-3.5" /> {String(label)}
