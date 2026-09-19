@@ -52,18 +52,12 @@ drop policy if exists "joyas_manage" on public.inventario_joyas;
 create policy "joyas_importaciones_select" on public.inventario_joyas_importaciones
 for select to authenticated using ((select public.ve_sede((select auth.uid()), sede_id)));
 
-create policy "joyas_importaciones_manage" on public.inventario_joyas_importaciones
-for all to authenticated
-using ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)))
-with check ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));
+create policy "joyas_importaciones_insert" on public.inventario_joyas_importaciones\nfor insert to authenticated\nwith check ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));\n\ncreate policy "joyas_importaciones_update" on public.inventario_joyas_importaciones\nfor update to authenticated\nusing ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)))\nwith check ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));\n\ncreate policy "joyas_importaciones_delete" on public.inventario_joyas_importaciones\nfor delete to authenticated\nusing ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));
 
 create policy "joyas_select" on public.inventario_joyas
 for select to authenticated using ((select public.ve_sede((select auth.uid()), sede_id)));
 
-create policy "joyas_manage" on public.inventario_joyas
-for all to authenticated
-using ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)))
-with check ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));
+create policy "joyas_insert" on public.inventario_joyas\nfor insert to authenticated\nwith check ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));\n\ncreate policy "joyas_update" on public.inventario_joyas\nfor update to authenticated\nusing ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)))\nwith check ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));\n\ncreate policy "joyas_delete" on public.inventario_joyas\nfor delete to authenticated\nusing ((select public.es_admin((select auth.uid()))) and (select public.ve_sede((select auth.uid()), sede_id)));
 
 comment on table public.inventario_joyas is 'Stock de joyas terminadas, separado del inventario de insumos. Admite migracion progresiva desde Excel.';
 comment on table public.inventario_joyas_importaciones is 'Lotes de importacion de stock de joyas desde Excel para conservar trazabilidad del origen.';
