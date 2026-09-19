@@ -22,7 +22,6 @@ type Cotizacion = {
   impuestos: number; total: number; cliente_id: string; proyecto_joya_id: string | null;
 };
 
-const estados = ["borrador", "enviada", "aprobada", "rechazada", "vencida", "cancelada"];
 
 function money(n: number, moneda = "PEN") {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(n);
