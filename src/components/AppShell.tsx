@@ -98,7 +98,7 @@ function rutaPermitidaPorSesion(pathname: string, roles: Rol[], areas: string[],
     if (pathname.startsWith("/herramientas")) return roles.includes("dueno");
     return true;
   }
-  if (roles.includes("monitor")) return pathname === "/monitor" || pathname.startsWith("/monitor/");
+  if (roles.includes("monitor")) return pathname === "/monitor" || pathname.startsWith("/monitor/") || pathname === "/perfil" || pathname.startsWith("/perfil/");
   if (roles.includes("cliente")) return pathname === "/cliente" || pathname.startsWith("/cliente/");
   if (roles.includes("operario")) {
     if (["/operario", "/perfil", "/inicio"].some((ruta) => pathname === ruta || pathname.startsWith(ruta + "/"))) return true;
