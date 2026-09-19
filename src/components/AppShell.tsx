@@ -147,6 +147,7 @@ export function AppShell({
                 principal: "Principal",
                 comercial: "Comercial",
                 produccion: "Producción",
+                inventario: "Inventario",
                 aurum: "AURUM Studio",
                 herramientas: "Herramientas",
                 administracion: "Administración",
