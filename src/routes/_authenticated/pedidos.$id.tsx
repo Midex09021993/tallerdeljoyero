@@ -587,6 +587,24 @@ function FichaPedido() {
 
   
 
+              <Panel titulo="Resumen del pedido">
+                <div className="grid gap-4 p-5 sm:grid-cols-3 lg:p-6">
+                  <DatoClave
+                    etiqueta="Precio"
+                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.importe) || 0)}
+                  />
+                  <DatoClave
+                    etiqueta="A cuenta"
+                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.a_cuenta) || 0)}
+                  />
+                  <DatoClave
+                    etiqueta="Saldo"
+                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.saldo) || 0)}
+                    destacado
+                  />
+                </div>
+              </Panel>
+
               <Panel titulo="Estado financiero">
                 <div className="grid gap-4 p-5 sm:grid-cols-3 lg:p-6">
                   <DatoClave etiqueta="Total" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(totalFinanciero)} />
