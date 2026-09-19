@@ -20,6 +20,7 @@ import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionPro
 type Seccion = {
   to:
     | "/pedidos"
+    | "/cotizaciones"
     | "/diseno-3d"
     | "/impresion-3d"
     | "/casting"
