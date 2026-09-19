@@ -296,7 +296,7 @@ export type Database = {
           moneda?: string
           notas_cliente?: string
           notas_internas?: string
-          numero: string
+          numero?: string
           proyecto_joya_id?: string | null
           reemplaza_id?: string | null
           sede_id?: string | null
@@ -1321,6 +1321,7 @@ export type Database = {
           trabajo: string
         }[]
       }
+      siguiente_numero_cotizacion: { Args: never; Returns: string }
       ve_sede: {
         Args: { _sede_id: string; _user_id: string }
         Returns: boolean
