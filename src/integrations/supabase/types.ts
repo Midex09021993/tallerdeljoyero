@@ -16,30 +16,74 @@ export type Database = {
     Tables: {
       clientes: {
         Row: {
+          ciudad: string | null
           created_at: string
+          creado_por: string | null
+          direccion: string | null
+          documento: string | null
           email: string | null
           estado: string
           id: string
+          metadata: Json
           nombre: string
+          notas: string
+          sede_id: string | null
           telefono: string | null
+          tipo: string
+          updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          ciudad?: string | null
           created_at?: string
+          creado_por?: string | null
+          direccion?: string | null
+          documento?: string | null
           email?: string | null
           estado?: string
           id?: string
+          metadata?: Json
           nombre: string
+          notas?: string
+          sede_id?: string | null
           telefono?: string | null
+          tipo?: string
+          updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
-          created_at?: string
+          ciudad?: string | null
+          creado_por?: string | null
+          direccion?: string | null
+          documento?: string | null
           email?: string | null
           estado?: string
           id?: string
+          metadata?: Json
           nombre?: string
+          notas?: string
+          sede_id?: string | null
           telefono?: string | null
+          tipo?: string
+          updated_at?: string
+          whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clientes_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       config_areas: {
         Row: {
