@@ -1,28 +1,18 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { obtenerSesionParaRuta, puedeAccederRuta } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async ({ location }) => {
-    const acceso = await obtenerSesionParaRuta();
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getSession();
+    const user = data.session?.user;
 
-    if (!acceso) {
+    if (!user) {
+      if (error) console.warn("[auth] No se pudo restaurar la sesión", error.message);
       throw redirect({ to: "/auth" });
     }
 
-    if (!puedeAccederRuta(location.pathname, acceso)) {
-      const destino = acceso.esDueno || acceso.roles.includes("gerente")
-        ? "/pedidos"
-        : acceso.roles.includes("monitor")
-          ? "/monitor"
-          : acceso.roles.includes("operario")
-            ? "/operario"
-            : "/auth";
-
-      throw redirect({ to: destino });
-    }
-
-    return { user: acceso.user };
+    return { user };
   },
   component: () => <Outlet />,
 });
