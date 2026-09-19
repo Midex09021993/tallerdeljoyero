@@ -292,8 +292,8 @@ export function ProgramadorHornoCasting() {
                     {etapas.length > 1 && (
                       <button type="button" onClick={() => eliminar(e.id)} aria-label="Eliminar etapa"
                         className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
-                          <Trash2 className="size-3.5" />
-                        </button>}
+                        <Trash2 className="size-3.5" />
+                      </button>
                     )}
                   </div>
                   <div className="mt-2.5 grid grid-cols-3 gap-2 pl-1">

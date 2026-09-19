@@ -341,7 +341,9 @@ function CotizacionDetallePage() {
                       {convirtiendoPedido ? "Creando contrato y pedido…" : "Crear contrato + pedido"}
                     </button>
                   )
-                ) : <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el contrato y pedido sin volver a ingresar los datos.</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el contrato y pedido sin volver a ingresar los datos.</p>
+                )}
                 <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
               </div>
             </Panel>
