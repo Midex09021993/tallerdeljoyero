@@ -45,17 +45,17 @@ type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
-  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
+  { to: "/pedidos", label: "Pedidos", roles: ["dueno", "gerente"], icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
-  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem, grupo: "aurum" },
+  { to: "/aurum-render", label: "AURUM RENDER", roles: ["dueno", "gerente"], icono: Gem, grupo: "aurum" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes, grupo: "produccion" },
   { to: "/casting", label: "Casting", area: "Casting", icono: Landmark, grupo: "produccion" },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
   { to: "/taller", label: "Taller", area: "Taller", icono: Hammer, grupo: "produccion" },
   { to: "/ventas", label: "Ventas", area: "Área ventas", icono: PackageCheck, grupo: "comercial" },
-  { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "inventario" },
-  { to: "/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
+  { to: "/inventario", label: "Inventario", roles: ["dueno", "gerente"], icono: Gauge, grupo: "inventario" },
+  { to: "/herramientas", label: "Herramientas", roles: ["dueno"], icono: Wrench, grupo: "herramientas" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
@@ -71,7 +71,7 @@ function seccionesVisibles(
   esAdmin: boolean | undefined,
 ): Seccion[] {
   if (!roles) return [];
-  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
+  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor" || s.to === "/perfil");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
   // Los operarios ven la pantalla de cada área que el dueño/gerente les asignó
