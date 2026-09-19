@@ -71,7 +71,7 @@ function HistoriaPanel({ titulo, icon: Icon, empty, children }: { titulo: string
   return (
     <section className="rounded-2xl border border-border bg-surface-muted/30 p-4 sm:p-5">
       <div className="mb-4 flex items-center gap-2"><div className="grid size-8 place-items-center rounded-lg bg-primary/8 text-primary"><Icon className="size-4" /></div><h3 className="font-semibold">{titulo}</h3></div>
-      <div className="space-y-2">{children ? children : <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">{empty}</p>}</div>
+      <div className="space-y-2">{tieneContenido ? children : <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">{empty}</p>}</div>
     </section>
   );
 }
