@@ -513,7 +513,4 @@ function PedidosPage() {
       </div>
     </AppShell>
   );
-      ) : null}
-    </AppShell>
-  );
 }
