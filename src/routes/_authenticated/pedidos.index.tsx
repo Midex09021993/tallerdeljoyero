@@ -227,6 +227,7 @@ function PedidosPage() {
   const [busca, setBusca] = useState("");
   const [estadisticasMovilAbiertas, setEstadisticasMovilAbiertas] = useState(false);
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
+  const [ultimoContrato, setUltimoContrato] = useState<PedidoFormState | null>(null);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
   const sedeFiltradaParaCrear = sesion?.esDueno && sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : "";
@@ -403,6 +404,34 @@ function PedidosPage() {
             Mostrando: <span className="font-medium text-foreground">{etiquetaSede}</span>
           </div>
         ) : null}
+        {ultimoContrato?.contrato ? (
+          <div className="border-b border-border bg-success-soft/50 px-4 py-3 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  Pedido creado correctamente
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Contrato {ultimoContrato.contrato} · {ultimoContrato.cliente || "Cliente"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(ultimoContrato);
+                  setRuta([]);
+                  setAbierto(true);
+                  setUltimoContrato(null);
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground shadow-card hover:opacity-90"
+              >
+                <span aria-hidden="true" className="text-base leading-none">＋</span>
+                Otro pedido mismo contrato
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {abierto ? (
           <form
             className="border-b border-border bg-surface-muted/40 p-4 sm:p-6"
@@ -445,6 +474,13 @@ function PedidosPage() {
               };
               crear.mutate(nuevo, {
                 onSuccess: () => {
+                  setUltimoContrato({
+                    ...nuevoPedidoVacio(),
+                    cliente: form.cliente,
+                    telefono: form.telefono,
+                    origen: form.origen,
+                    contrato: form.contrato,
+                  });
                   setForm(nuevoPedidoVacio());
                   setRuta([]);
                   setAbierto(false);
