@@ -42,19 +42,9 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
   const [modo, setModo] = useState<ModoBusqueda>("diametro");
   const [valor, setValor] = useState("");
   const [calibrada, setCalibrada] = useState(false);
-  const [anchoCalibracion, setAnchoCalibracion] = useState(320);
+  const [anchoCalibracion, setAnchoCalibracion] = useState(150);
   const [diametroPx, setDiametroPx] = useState(210);
-  const [referencia, setReferencia] = useState<ReferenciaCalibracion>("tarjeta");
-
-  useEffect(() => {
-    const actualizarReferencia = () => {
-      setReferencia(window.innerWidth < 768 ? "moneda" : "tarjeta");
-      setCalibrada(false);
-    };
-    actualizarReferencia();
-    window.addEventListener("resize", actualizarReferencia);
-    return () => window.removeEventListener("resize", actualizarReferencia);
-  }, []);
+  const [referencia, setReferencia] = useState<ReferenciaCalibracion>("moneda");
 
   const referenciaMm = REFERENCIAS[referencia].mm;
   const mmPorPx = referenciaMm / anchoCalibracion;
@@ -95,9 +85,8 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
       setValor("");
     } else {
       setCalibrada(false);
-      const esCelular = window.innerWidth < 768;
-      setReferencia(esCelular ? "moneda" : "tarjeta");
-      setAnchoCalibracion(esCelular ? 150 : 320);
+      setReferencia("moneda");
+      setAnchoCalibracion(150);
       setDiametroPx(210);
     }
   };
@@ -251,9 +240,20 @@ function MedidorAnillo({
             <span>Más grande</span>
           </div>
         </div>
-        <button type="button" onClick={onCalibrar} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground">
-          <Check className="size-4" aria-hidden="true" /> Confirmar calibración
+        <button
+          type="button"
+          onClick={onCalibrar}
+          className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold transition ${calibrada ? "border border-success/30 bg-success-soft/50 text-foreground" : "bg-primary text-primary-foreground"}`}
+          aria-live="polite"
+        >
+          <Check className="size-4" aria-hidden="true" />
+          {calibrada ? "✓ Pantalla calibrada" : "Confirmar calibración"}
         </button>
+        {calibrada ? (
+          <p className="mt-2 text-center text-[10px] font-medium text-success">
+            Calibración confirmada. Ya puedes colocar el anillo.
+          </p>
+        ) : null}
       </div>
 
       {calibrada ? (
