@@ -304,6 +304,8 @@ export type Pedido = {
   estado: string;
   entrega: string;
   importe: number;
+  a_cuenta: number;
+  saldo: number;
   sede_id: string | null;
   sede_nombre: string | null;
   telefono: string;
@@ -435,6 +437,8 @@ export type PedidoNuevo = {
   estado: string;
   entrega: string;
   importe: number;
+  a_cuenta: number;
+  saldo?: number;
   sede_id: string | null;
   telefono: string;
   origen: string;
@@ -480,7 +484,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, cotizacion_detalles, especificaciones_comerciales, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, cotizacion_detalles, especificaciones_comerciales, trabajo, a_cuenta, saldo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 const CAMPOS_PEDIDO_VENTAS =
   "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
@@ -516,7 +520,7 @@ export function usePedidos() {
         .order("created_at", { ascending: false });
 
       const camposBaseCompat =
-        "id, referencia, pieza, cliente, material, estado, entrega, importe, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+        "id, referencia, pieza, cliente, material, estado, entrega, importe, a_cuenta, saldo, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
 
       const respuestaContratos =
         respuesta.error && esErrorCampoFaltante(respuesta.error)
