@@ -194,6 +194,182 @@ export type Database = {
           },
         ]
       }
+      cotizacion_detalles: {
+        Row: {
+          cantidad: number
+          costo_unitario: number
+          cotizacion_id: string
+          created_at: string
+          descripcion: string
+          id: string
+          metadata: Json
+          orden: number
+          precio_unitario: number
+          tipo: string
+          total_costo: number
+          total_precio: number
+          unidad: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          costo_unitario?: number
+          cotizacion_id: string
+          created_at?: string
+          descripcion: string
+          id?: string
+          metadata?: Json
+          orden?: number
+          precio_unitario?: number
+          tipo?: string
+          total_costo?: number
+          total_precio?: number
+          unidad?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          costo_unitario?: number
+          cotizacion_id?: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          metadata?: Json
+          orden?: number
+          precio_unitario?: number
+          tipo?: string
+          total_costo?: number
+          total_precio?: number
+          unidad?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_detalles_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cotizaciones: {
+        Row: {
+          anticipo: number
+          cliente_id: string
+          creado_por: string | null
+          created_at: string
+          descuento: number
+          estado: string
+          fecha_emision: string
+          fecha_vencimiento: string | null
+          id: string
+          identidad_comercial: Json
+          identidad_comercial_id: string | null
+          impuestos: number
+          moneda: string
+          notas_cliente: string
+          notas_internas: string
+          numero: string
+          proyecto_joya_id: string | null
+          reemplaza_id: string | null
+          sede_id: string | null
+          subtotal: number
+          subtotal_costo: number
+          total: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          anticipo?: number
+          cliente_id: string
+          creado_por?: string | null
+          created_at?: string
+          descuento?: number
+          estado?: string
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          identidad_comercial?: Json
+          identidad_comercial_id?: string | null
+          impuestos?: number
+          moneda?: string
+          notas_cliente?: string
+          notas_internas?: string
+          numero: string
+          proyecto_joya_id?: string | null
+          reemplaza_id?: string | null
+          sede_id?: string | null
+          subtotal?: number
+          subtotal_costo?: number
+          total?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          anticipo?: number
+          cliente_id?: string
+          creado_por?: string | null
+          created_at?: string
+          descuento?: number
+          estado?: string
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          identidad_comercial?: Json
+          identidad_comercial_id?: string | null
+          impuestos?: number
+          moneda?: string
+          notas_cliente?: string
+          notas_internas?: string
+          numero?: string
+          proyecto_joya_id?: string | null
+          reemplaza_id?: string | null
+          sede_id?: string | null
+          subtotal?: number
+          subtotal_costo?: number
+          total?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizaciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_identidad_comercial_id_fkey"
+            columns: ["identidad_comercial_id"]
+            isOneToOne: false
+            referencedRelation: "identidades_comerciales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_proyecto_joya_id_fkey"
+            columns: ["proyecto_joya_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos_joya"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_reemplaza_id_fkey"
+            columns: ["reemplaza_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ecosistema_participantes: {
         Row: {
           ciudad: string | null
@@ -265,6 +441,77 @@ export type Database = {
           nombre?: string
         }
         Relationships: []
+      }
+      identidades_comerciales: {
+        Row: {
+          activa: boolean
+          ciudad: string | null
+          color_principal: string | null
+          created_at: string
+          direccion: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          metadata: Json
+          nombre_comercial: string
+          pie_documento: string | null
+          razon_social: string | null
+          ruc: string | null
+          sede_id: string | null
+          sitio_web: string | null
+          telefono: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          activa?: boolean
+          ciudad?: string | null
+          color_principal?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          metadata?: Json
+          nombre_comercial: string
+          pie_documento?: string | null
+          razon_social?: string | null
+          ruc?: string | null
+          sede_id?: string | null
+          sitio_web?: string | null
+          telefono?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          activa?: boolean
+          ciudad?: string | null
+          color_principal?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          metadata?: Json
+          nombre_comercial?: string
+          pie_documento?: string | null
+          razon_social?: string | null
+          ruc?: string | null
+          sede_id?: string | null
+          sitio_web?: string | null
+          telefono?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identidades_comerciales_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventario: {
         Row: {
