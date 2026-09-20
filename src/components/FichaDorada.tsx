@@ -1,0 +1,76 @@
+import type { ReactNode } from "react";
+
+export type FichaDoradaProps = {
+  indicador: string;
+  titulo: string;
+  valor: ReactNode;
+  descripcion: string;
+  activa?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  icono?: ReactNode;
+};
+
+const fichaDoradaBase =
+  "group relative min-h-[150px] overflow-hidden rounded-2xl border bg-card p-5 text-left " +
+  "transition-all duration-300 ease-out " +
+  "hover:-translate-y-1 hover:border-gold/70 hover:shadow-[0_14px_36px_-18px_hsl(var(--gold)/0.65)] " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60";
+
+export function FichaDorada({
+  indicador,
+  titulo,
+  valor,
+  descripcion,
+  activa = false,
+  disabled = false,
+  onClick,
+  icono = <span className="text-xs font-bold">✦</span>,
+}: FichaDoradaProps) {
+  const interactiva = !disabled && Boolean(onClick);
+
+  return (
+    <button
+      type="button"
+      disabled={!interactiva}
+      onClick={onClick}
+      className={[
+        fichaDoradaBase,
+        disabled ? "cursor-default" : "cursor-pointer",
+        activa
+          ? "border-gold/70 shadow-[0_10px_30px_-18px_hsl(var(--gold)/0.7)]"
+          : "border-gold/20",
+      ].join(" ")}
+    >
+      <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gold/[0.025] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+      <span className="relative flex items-start justify-between gap-4">
+        <span>
+          <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-gold/75">
+            {indicador}
+          </span>
+          <span className="mt-2 block text-lg font-semibold text-foreground transition-colors duration-300 group-hover:text-gold">
+            {titulo}
+          </span>
+        </span>
+
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-125 group-hover:rotate-12">
+          {icono}
+        </span>
+      </span>
+
+      <span className="relative mt-7 flex items-end justify-between gap-3">
+        <span>
+          <span className="block text-2xl font-semibold tabular-nums">{valor}</span>
+          <span className="mt-1 block text-xs text-muted-foreground">{descripcion}</span>
+        </span>
+
+        {interactiva ? (
+          <span className="translate-x-0 text-sm text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-gold">
+            →
+          </span>
+        ) : null}
+      </span>
+    </button>
+  );
+}
