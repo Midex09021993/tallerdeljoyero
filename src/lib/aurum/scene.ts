@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { getAurumScenePreset, type AurumScenePreset } from "../aurum-scene-engine";
 import { getAurumPhotographicProfile } from "../aurum-photographic-scene-engine";
 
@@ -18,6 +19,7 @@ export function createAurumSceneController(
       const preset = getAurumScenePreset(id);
       const photo = getAurumPhotographicProfile(id);
       // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
+      renderer.toneMapping = id === "ijewelReference" ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
       renderer.toneMappingExposure = photo.exposure;
       // El controlador de Environment es la autoridad para orientación e intensidad.
       // Mantenemos el mismo resultado visual y evitamos duplicar estado en Scene.
