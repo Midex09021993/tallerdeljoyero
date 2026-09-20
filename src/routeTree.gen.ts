@@ -40,6 +40,7 @@ import { Route as AuthenticatedVentas2RouteImport } from './routes/_authenticate
 import { Route as AuthenticatedVentas2IdRouteImport } from './routes/_authenticated/ventas-2.$id'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
+import { Route as AuthenticatedCotizacionesIndexRouteImport } from './routes/_authenticated/cotizaciones.index'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos.$id'
 import { Route as AuthenticatedTrabajosIdRouteImport } from './routes/_authenticated/trabajos.$id'
@@ -202,6 +203,12 @@ const AuthenticatedContratosIdRoute =
     path: '/contratos/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCotizacionesIndexRoute =
+  AuthenticatedCotizacionesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCotizacionesRoute,
+  } as any)
 const AuthenticatedCotizacionesIdRoute =
   AuthenticatedCotizacionesIdRouteImport.update({
     id: '/$id',
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
+  '/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
+  '/_authenticated/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
@@ -696,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContratosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cotizaciones/': {
+      id: '/_authenticated/cotizaciones/'
+      path: '/'
+      fullPath: '/cotizaciones/'
+      preLoaderRoute: typeof AuthenticatedCotizacionesIndexRouteImport
+      parentRoute: typeof AuthenticatedCotizacionesRoute
+    }
     '/_authenticated/cotizaciones/$id': {
       id: '/_authenticated/cotizaciones/$id'
       path: '/$id'
@@ -750,11 +766,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedCotizacionesRouteChildren {
   AuthenticatedCotizacionesIdRoute: typeof AuthenticatedCotizacionesIdRoute
+  AuthenticatedCotizacionesIndexRoute: typeof AuthenticatedCotizacionesIndexRoute
 }
 
 const AuthenticatedCotizacionesRouteChildren: AuthenticatedCotizacionesRouteChildren =
   {
     AuthenticatedCotizacionesIdRoute: AuthenticatedCotizacionesIdRoute,
+    AuthenticatedCotizacionesIndexRoute: AuthenticatedCotizacionesIndexRoute,
   }
 
 const AuthenticatedCotizacionesRouteWithChildren =
