@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AppShell, MobileBackButton, StatCard } from "@/components/AppShell";
+import { AppShell, FichaDorada, MobileBackButton } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
 import { areaCoincide } from "@/lib/auth";
@@ -98,32 +98,21 @@ function VentasPage() {
 
   const contenido = (
     <>
-      <div className="mb-5 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Comercial</p>
-          <h1 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">Atención y cierre de ventas</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Gestiona pedidos que llegaron al área comercial, pagos, despachos y entregas desde una sola vista.
-          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Seguimiento comercial</p>
+          <h2 className="mt-1 text-xl font-semibold">Bandeja de ventas</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Pedidos que requieren seguimiento, cobro, despacho o entrega.</p>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button type="button" onClick={() => navigate({ to: "/pedidos" })} className="rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-medium text-foreground hover:border-gold/40">
-            Pedidos
-          </button>
-          <button type="button" onClick={() => navigate({ to: "/cotizaciones" })} className="rounded-xl bg-ink px-3.5 py-2 text-xs font-medium text-ink-foreground hover:opacity-90">
-            Cotizaciones
-          </button>
-        </div>
+        <input
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar pedido, cliente, contrato o guía..."
+          className="h-11 w-full rounded-xl border border-border bg-card px-3.5 text-sm shadow-[0_12px_28px_-24px_hsl(var(--gold)/.4)] outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/10 sm:w-80"
+        />
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiComercial etiqueta="Por entregar" valor={pendientesEntrega.length} detalle="Requieren atención" />
-        <KpiComercial etiqueta="En camino" valor={enviados.length} detalle="Despachos activos" />
-        <KpiComercial etiqueta="Entregados" valor={entregados.length} detalle="Histórico" />
-        <KpiComercial etiqueta="Sede" valor={esDueno ? etiquetaSede : "Actual"} detalle={esDueno ? "Filtro aplicado" : "Tu sede"} />
-      </div>
-
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Bandeja comercial</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">Pedidos que requieren seguimiento o cierre.</p>
@@ -394,9 +383,27 @@ function VentasPage() {
             value={sedeFiltro}
             onChange={setSedeFiltro}
           />
-          <StatCard etiqueta="Pendientes" valor={String(pendientesEntrega.length)} />
-          <StatCard etiqueta="En camino" valor={String(enviados.length)} />
-          <StatCard etiqueta="Entregados (histórico)" valor={String(entregados.length)} />
+          <FichaDorada
+            indicador="Atención"
+            titulo="Por entregar"
+            valor={pendientesEntrega.length}
+            descripcion="Pedidos pendientes"
+            disabled
+          />
+          <FichaDorada
+            indicador="Despacho"
+            titulo="En camino"
+            valor={enviados.length}
+            descripcion="Despachos activos"
+            disabled
+          />
+          <FichaDorada
+            indicador="Histórico"
+            titulo="Entregados"
+            valor={entregados.length}
+            descripcion="Entregas registradas"
+            disabled
+          />
         </>
       }
     >
@@ -471,19 +478,6 @@ function resumenFinancieroPedido(
   return resumenFinancieroContrato(
     contrato,
     contrato ? (pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero)) : [],
-  );
-}
-
-function KpiComercial({ etiqueta, valor, detalle }: { etiqueta: string; valor: number | string; detalle: string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{etiqueta}</p>
-        <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-      </div>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{valor}</p>
-      <p className="mt-1 text-[11px] text-muted-foreground">{detalle}</p>
-    </div>
   );
 }
 
@@ -755,7 +749,7 @@ function PedidoVentaCard({
         <button
           type="button"
           onClick={onAccion}
-          className="min-w-[140px] flex-1 rounded-xl border border-border bg-ink px-3 py-2.5 text-xs font-medium text-ink-foreground"
+          className="min-w-[140px] flex-1 rounded-xl border border-gold/25 bg-gold/[.07] px-3 py-2.5 text-xs font-semibold text-foreground shadow-[0_12px_28px_-24px_hsl(var(--gold)/.65)] transition hover:-translate-y-0.5 hover:border-gold/40 hover:bg-gold/[.11]"
           title="Registrar el envío cuando el pedido sale por encomienda"
         >
           📦 {accionPrincipal}
@@ -830,7 +824,7 @@ function FormularioListoEntrega({
         <button
           type="submit"
           disabled={guardando}
-          className="flex-1 rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
+          className="flex-1 rounded-lg border border-gold/25 bg-gold/[.08] px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-gold/[.12] disabled:opacity-50"
         >
           {guardando ? "Guardando..." : "Confirmar listo"}
         </button>
