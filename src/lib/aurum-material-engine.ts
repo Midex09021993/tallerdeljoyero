@@ -261,6 +261,57 @@ export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)
 };
 
 
+export type AurumIJEWELGemParameters = {
+  engineVersion:string;
+  materialType:"DiamondMaterial";
+  sourceRootPath?:string;
+  color:number;
+  environmentIntensity:number;
+  environmentRotationOffset:number;
+  dispersion:number;
+  squashFactor:number;
+  geometryFactor:number;
+  gammaFactor:number;
+  absorptionFactor:number;
+  reflectivity:number;
+  refractiveIndex:number;
+  rayBounces:number;
+  diamondOrientedEnvMap:number;
+  boostFactors:{x:number;y:number;z:number};
+  transmissionParameter:number;
+};
+
+/**
+ * Native iJewel parameter core.
+ *
+ * These values are intentionally kept in the same semantic space as the
+ * supplied DiamondMaterial. AURUM does not rewrite refractiveIndex 2.6 into
+ * a catalog IOR, nor does it treat transmissionParameter as Three.js
+ * MeshPhysicalMaterial.transmission. The latter is an engine-specific switch
+ * in the source material; AURUM keeps the source value and implements its
+ * visible refraction path separately.
+ */
+export const applyAurumIJEWELGemParameters=(material:any,source:AurumIJEWELGemParameters)=>{
+  if(!material)return material;
+  const p={...source,boostFactors:{...source.boostFactors}};
+  material.metalness=0;
+  material.color?.setHex(p.color);
+  // iJewel's refractiveIndex is an active renderer parameter. Keep the source
+  // value instead of substituting a gemological constant.
+  material.ior=Math.max(1.01,Number(p.refractiveIndex));
+  material.dispersion=Math.max(0,Number(p.dispersion));
+  material.envMapIntensity=Math.max(0,Number(p.environmentIntensity));
+  material.userData={
+    ...(material.userData??{}),
+    aurumIJEWELParameters:p,
+    aurumIJEWELActive:true,
+    aurumIJEWELSourceTransmission:Number(p.transmissionParameter),
+    aurumIJEWELRayBounces:Math.max(1,Math.floor(Number(p.rayBounces))),
+  };
+  material.needsUpdate=true;
+  return material;
+};
+
 export const AURUM_IJEWEL_EMERALD_REFERENCE = {
   engineVersion: "0.22.0",
   materialType: "DiamondMaterial",
@@ -290,89 +341,48 @@ export const AURUM_IJEWEL_EMERALD_REFERENCE = {
 export const applyAurumReferenceGemOptics=(material:any,family:string)=>{
   if(!material)return material;
   if(family!=="Esmeralda")return material;
-  const r=AURUM_IJEWEL_EMERALD_REFERENCE;
-  material.ior=1.58;
-  material.envMapIntensity=r.environmentIntensity;
-  material.dispersion=Math.max(0,Number(material.dispersion??0));
-  material.userData={
-    ...(material.userData??{}),
-    aurumReferenceGemOptics:{
-      engine:"iJewel/WebGi",
-      version:r.engineVersion,
-      materialType:r.materialType,
-      sourceRootPath:r.sourceRootPath,
-      reference:r,
-      physicalMapping:{
-        ior:1.58,
-        transmission:Number(material.transmission??.94),
-        attenuationDistance:Number(material.attenuationDistance??15),
-        note:"source DiamondMaterial transmission=0 is renderer-specific and is not copied literally into Three.js"
-      }
-    },
-    aurumGemReferenceEnvIntensity:r.environmentIntensity,
-    aurumGemReferenceEnvRotation:r.environmentRotationOffset,
-    aurumGemReferenceBoostFactors:[r.boostFactors.x,r.boostFactors.y,r.boostFactors.z],
-  };
-  material.needsUpdate=true;
-  return material;
+  return applyAurumIJEWELGemParameters(material,AURUM_IJEWEL_EMERALD_REFERENCE);
 };
 
 export type AurumDiamondOpticalConfig = {refractionStrength:number;dispersionStrength:number;internalReflection:number;brilliance:number;fire:number;facetContrast:number;environmentBoost:number};
 export const AURUM_DIAMOND_OPTICAL_CONFIG:AurumDiamondOpticalConfig={refractionStrength:1,dispersionStrength:1,internalReflection:.98,brilliance:1,fire:1,facetContrast:1,environmentBoost:1};
+export const AURUM_IJEWEL_DIAMOND_REFERENCE:AurumIJEWELGemParameters={
+  engineVersion:"0.22.0",
+  materialType:"DiamondMaterial",
+  sourceRootPath:"1_gem_diamond_white_1_4aa77fb087.dmat",
+  color:0xffffff,
+  environmentIntensity:1.3,
+  environmentRotationOffset:0,
+  dispersion:.01,
+  squashFactor:.98,
+  geometryFactor:.5,
+  gammaFactor:1,
+  absorptionFactor:1,
+  reflectivity:.5,
+  refractiveIndex:2.6,
+  rayBounces:5,
+  diamondOrientedEnvMap:0,
+  boostFactors:{x:1,y:1,z:1},
+  transmissionParameter:0,
+};
+
 export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_CONFIG)=>{
   if(!material)return material;
-
-  // Physical diamond baseline. The iJewel/WebGi values below are kept as
-  // renderer-reference metadata; they are not substituted for gemological
-  // constants. Three.js performs the actual transmission/refraction path.
-  material.metalness=0;
-  material.color?.setHex(0xffffff);
-  material.transmission=1;
-  material.ior=2.417;
-  material.dispersion=Math.max(0,.01*config.dispersionStrength);
+  const r=AURUM_IJEWEL_DIAMOND_REFERENCE;
+  applyAurumIJEWELGemParameters(material,r);
   material.roughness=.010;
   material.clearcoat=.26;
   material.clearcoatRoughness=.010;
-  material.envMapIntensity=1.30*config.environmentBoost;
   material.attenuationDistance=100;
   material.attenuationColor?.setHex(0xffffff);
   material.specularIntensity=1;
   material.specularColor?.setHex(0xffffff);
-  // Diamond is not modeled as a thin-film iridescent surface. Any visible
-  // spectral separation comes from dispersion/scintillation in the optical core.
   material.iridescence=0;
-
-  const reference={
-    referenceEngine:"iJewel/WebGi",
-    referenceVersion:"0.22.0",
-    referenceDiamondEnvMapIntensity:1.3,
-    referenceDispersion:.01,
-    referenceReflectivity:.5,
-    referenceRayBounces:5,
-    referenceRefractiveIndex:2.6,
-    referenceGeometryFactor:.5,
-    referenceSquashFactor:.98,
-    referenceAbsorptionFactor:1,
-    physicalIOR:2.417,
-    physicalSpecificGravity:3.52,
-  };
-
   material.userData={
     ...(material.userData??{}),
     aurumDiamondOptics:config,
-    aurumDiamondReference:reference,
-    aurumDiamondOpticalCoreVersion:"2.0.0",
-    aurumDiamondOpticalState:{
-      transmission:1,
-      ior:2.417,
-      dispersion:material.dispersion,
-      environmentIntensity:material.envMapIntensity,
-      internalReflection:config.internalReflection,
-      rayBounceReference:5,
-      geometryFactor:.5,
-      squashFactor:.98,
-      absorptionFactor:1,
-    },
+    aurumDiamondReference:r,
+    aurumDiamondOpticalCoreVersion:"3.0.0-native-ijewel-params",
   };
   material.needsUpdate=true;
   return material;
