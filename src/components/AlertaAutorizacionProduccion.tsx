@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight, X } from "lucide-react";
-import { usePedidos, pedidoPendienteAutorizacionProduccion } from "@/lib/taller-db";
+import { usePedidosSelector, pedidoPendienteAutorizacionProduccion } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
 const CLAVE = "aurum-alerta-autorizacion-produccion-v1";
 
 export function AlertaAutorizacionProduccion() {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [] } = usePedidos();
+  const { data: pedidos = [] } = usePedidosSelector();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
