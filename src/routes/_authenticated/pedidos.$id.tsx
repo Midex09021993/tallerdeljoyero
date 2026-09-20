@@ -288,28 +288,98 @@ function FichaPedido() {
   const { data: historialPedido = [] } = useQuery({
     queryKey: ["pedido-historial", id],
     queryFn: async () => {
-      const [movimientos, consumos] = await Promise.all([
-        supabase.from("pedido_movimientos").select("id, area_origen, area_destino, accion, usuario_id, nota, created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100),
-        supabase.from("inventario_movimientos").select("id, tipo, cantidad, motivo, area, usuario_id, created_at, inventario(material,unidad)").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100),
+      const [eventosProduccion, movimientos, consumos] = await Promise.all([
+        supabase
+          .from("produccion_eventos")
+          .select("id,tipo,estado_anterior,estado_nuevo,orden_produccion_id,trabajo_id,pieza_id,usuario_id,datos,created_at")
+          .eq("pedido_id", id)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase
+          .from("pedido_movimientos")
+          .select("id,area_origen,area_destino,accion,usuario_id,nota,created_at")
+          .eq("pedido_id", id)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("inventario_movimientos")
+          .select("id,tipo,cantidad,motivo,area,usuario_id,created_at,inventario(material,unidad)")
+          .eq("pedido_id", id)
+          .order("created_at", { ascending: false })
+          .limit(100),
       ]);
+      if (eventosProduccion.error) throw eventosProduccion.error;
       if (movimientos.error) throw movimientos.error;
       if (consumos.error) throw consumos.error;
+
+      const etiquetaEvento = (tipo: string) => ({
+        op_creada: ["Producción", "Orden de producción creada"],
+        op_estado: ["Producción", "Estado de OP actualizado"],
+        trabajo_creado: ["Trabajo", "Trabajo creado"],
+        trabajo_estado: ["Trabajo", "Estado de trabajo actualizado"],
+        trabajo_actualizado: ["Trabajo", "Trabajo actualizado"],
+        material_consumo: ["Material", "Material consumido"],
+        material_merma: ["Material", "Merma registrada"],
+        material_devolucion: ["Material", "Material devuelto"],
+        material_entrada: ["Material", "Movimiento de material"],
+        material_entregado: ["Material", "Material entregado a producción"],
+        control_calidad_inspeccion_final: ["Calidad", "Inspección final"],
+        control_calidad_inspeccion_operacion: ["Calidad", "Inspección de operación"],
+        control_calidad_reinspeccion: ["Calidad", "Reinspección"],
+        pieza_creada: ["Pieza", "Pieza terminada registrada"],
+        pieza_estado: ["Pieza", "Estado de pieza actualizado"],
+      } as Record<string, [string, string]>)[tipo] ?? ["Producción", "Evento de producción"];
+
       const eventos = [
-        ...(movimientos.data ?? []).map((m) => ({
-          id: `area-${m.id}`, fecha: m.created_at, tipo: "Área",
-          titulo: m.accion === "reiniciar_flujo" ? "Flujo reiniciado" : "Pedido movido de área",
-          detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino,
-          nota: m.nota, usuario: m.usuario_id,
-        })),
-        ...(consumos.data ?? []).map((m) => {
-          const material = Array.isArray(m.inventario) ? m.inventario[0] : m.inventario;
+        ...(eventosProduccion.data ?? []).map((e) => {
+          const [tipo, titulo] = etiquetaEvento(e.tipo);
+          const datos = e.datos && typeof e.datos === "object" ? e.datos as Record<string, unknown> : {};
+          const detalle = e.estado_anterior && e.estado_nuevo
+            ? `${e.estado_anterior} → ${e.estado_nuevo}`
+            : String(
+                datos.numero_pieza
+                  ? `Pieza ${datos.numero_pieza}`
+                  : datos.numero
+                    ? String(datos.numero)
+                    : datos.titulo
+                      ? String(datos.titulo)
+                      : datos.material_id
+                        ? `${datos.cantidad ?? ""} · material`
+                        : "",
+              );
           return {
-            id: `material-${m.id}`, fecha: m.created_at, tipo: "Inventario",
-            titulo: "Material consumido",
-            detalle: `${m.cantidad} ${material?.unidad ?? ""} · ${material?.material ?? "Material"}`,
-            nota: m.motivo, usuario: m.usuario_id,
+            id: `produccion-${e.id}`,
+            fecha: e.created_at,
+            tipo,
+            titulo,
+            detalle,
+            nota: String(datos.motivo ?? datos.descripcion ?? datos.area ?? ""),
+            usuario: e.usuario_id,
           };
         }),
+        ...(movimientos.data ?? []).map((m) => ({
+          id: `area-${m.id}`,
+          fecha: m.created_at,
+          tipo: "Área",
+          titulo: m.accion === "reiniciar_flujo" ? "Flujo reiniciado" : "Pedido movido de área",
+          detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino,
+          nota: m.nota,
+          usuario: m.usuario_id,
+        })),
+        ...(consumos.data ?? [])
+          .filter((m) => !(eventosProduccion.data ?? []).some((e) => e.tipo.startsWith("material_")))
+          .map((m) => {
+            const material = Array.isArray(m.inventario) ? m.inventario[0] : m.inventario;
+            return {
+              id: `material-${m.id}`,
+              fecha: m.created_at,
+              tipo: "Inventario",
+              titulo: "Movimiento de material",
+              detalle: `${m.cantidad} ${material?.unidad ?? ""} · ${material?.material ?? "Material"}`,
+              nota: m.motivo,
+              usuario: m.usuario_id,
+            };
+          }),
       ];
       return eventos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
     },
