@@ -157,7 +157,7 @@ function ContratoPage() {
                 <button
                   type="button"
                   onClick={() => setModalAbierto(true)}
-                  className="rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground"
+                  className="rounded-xl border border-gold/30 bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised"
                 >
                   + Nuevo pedido
                 </button>
@@ -240,7 +240,7 @@ function ContratoPage() {
                     type="button"
                     onClick={() => crearContrato.mutate(pedidos[0]!)}
                     disabled={crearContrato.isPending}
-                    className="mt-3 w-full rounded-lg bg-warning px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                    className="mt-3 w-full rounded-xl border border-gold/25 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep transition hover:border-gold/50 disabled:opacity-50"
                   >
                     {crearContrato.isPending ? "Creando..." : "Crear contrato"}
                   </button>
@@ -278,7 +278,7 @@ function ContratoPage() {
             <button
               type="button"
               onClick={() => setPagoAbierto((v) => !v)}
-              className="mt-5 w-full rounded-xl bg-ink px-4 py-2.5 text-xs font-medium text-ink-foreground"
+              className="mt-5 w-full rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:border-gold/50 hover:shadow-raised"
             >
               {pagoAbierto ? "Ocultar pago" : "Registrar pago"}
             </button>
