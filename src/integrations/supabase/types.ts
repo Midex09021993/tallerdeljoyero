@@ -152,6 +152,7 @@ export type Database = {
         Row: {
           abonado: number
           cliente: string
+          cotizacion_id: string | null
           created_at: string
           id: string
           notas: string
@@ -165,6 +166,7 @@ export type Database = {
         Insert: {
           abonado?: number
           cliente?: string
+          cotizacion_id?: string | null
           created_at?: string
           id?: string
           notas?: string
@@ -178,6 +180,7 @@ export type Database = {
         Update: {
           abonado?: number
           cliente?: string
+          cotizacion_id?: string | null
           created_at?: string
           id?: string
           notas?: string
@@ -189,6 +192,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contratos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contratos_sede_id_fkey"
             columns: ["sede_id"]
@@ -563,6 +573,7 @@ export type Database = {
           id: string
           material_id: string
           motivo: string
+          pedido_id: string | null
           tipo: string
           usuario_id: string | null
         }
@@ -573,6 +584,7 @@ export type Database = {
           id?: string
           material_id: string
           motivo?: string
+          pedido_id?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -583,6 +595,7 @@ export type Database = {
           id?: string
           material_id?: string
           motivo?: string
+          pedido_id?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -592,6 +605,13 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
         ]
@@ -1200,10 +1220,12 @@ export type Database = {
       }
       proyectos_joya: {
         Row: {
+          cantidad_piezas: number
           cliente_id: string | null
           codigo: string
           created_at: string
           descripcion: string
+          estado: string
           id: string
           ley: string | null
           metal: string | null
@@ -1213,10 +1235,12 @@ export type Database = {
           talla: string | null
         }
         Insert: {
+          cantidad_piezas?: number
           cliente_id?: string | null
           codigo?: string
           created_at?: string
           descripcion?: string
+          estado?: string
           id?: string
           ley?: string | null
           metal?: string | null
@@ -1226,10 +1250,12 @@ export type Database = {
           talla?: string | null
         }
         Update: {
+          cantidad_piezas?: number
           cliente_id?: string | null
           codigo?: string
           created_at?: string
           descripcion?: string
+          estado?: string
           id?: string
           ley?: string | null
           metal?: string | null
@@ -1598,6 +1624,15 @@ export type Database = {
         Returns: boolean
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
+      mover_pedido_a_area: {
+        Args: { _destino: string; _motivo?: string; _pedido_id: string }
+        Returns: {
+          area_desde: string
+          destino: string
+          estado: string
+          reinicia_flujo: boolean
+        }[]
+      }
       normaliza_area: { Args: { _area: string }; Returns: string }
       seguimiento_pedido: {
         Args: { _ref: string }
