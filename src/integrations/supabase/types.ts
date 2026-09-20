@@ -2608,14 +2608,6 @@ export type Database = {
       }
       recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
-      security_scanner_bola_lab_lookup: {
-        Args: { target_id: string }
-        Returns: {
-          id: string
-          label: string
-          owner_user_id: string
-        }[]
-      }
       seguimiento_pedido: {
         Args: { _ref: string }
         Returns: {
