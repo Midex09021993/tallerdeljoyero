@@ -543,11 +543,6 @@ function FichaPedido() {
                 ]}
               />
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <DatoClave etiqueta="Área actual" valor={normalizarArea(pedido.area_actual)} destacado />
-                <DatoClave etiqueta="Entrega" valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"} />
-              </div>
-
               <section>
                 <div className="mb-3 flex items-center gap-3">
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
@@ -698,11 +693,12 @@ function FichaPedido() {
               </Panel>
 
             <BloqueDatos
-                titulo="Información general"
+                titulo="Seguimiento"
                 datos={[
-                  ["Tipo de trabajo", pedido.trabajo || pedido.pieza || "—"],
+                  ["Área actual", normalizarArea(pedido.area_actual)],
                   ["Tiempo en área", tiempoEnArea(pedido.area_desde)],
                   ["Taller", pedido.sede_nombre || "—"],
+                  ["Entrega", fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"],
                 ]}
               />
 
