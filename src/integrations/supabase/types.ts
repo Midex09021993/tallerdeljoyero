@@ -806,7 +806,6 @@ export type Database = {
       }
       inventario_joyas: {
         Row: {
-          qr_token: string
           cantidad: number
           codigo: string
           created_at: string
@@ -825,8 +824,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          qr_token?: string
-          qr_token?: string
           cantidad?: number
           codigo?: string
           created_at?: string
@@ -886,7 +883,6 @@ export type Database = {
           referencia_externa: string
           stock_anterior: number
           stock_posterior: number
-          trabajo_id: string | null
           tipo: string
           usuario_id: string | null
         }
@@ -903,8 +899,6 @@ export type Database = {
           referencia_externa?: string
           stock_anterior?: number
           stock_posterior?: number
-          trabajo_id?: string | null
-          trabajo_id?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -944,13 +938,6 @@ export type Database = {
             columns: ["pedido_id"]
             isOneToOne: false
             referencedRelation: "pedidos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventario_movimientos_trabajo_id_fkey"
-            columns: ["trabajo_id"]
-            isOneToOne: false
-            referencedRelation: "trabajos"
             referencedColumns: ["id"]
           },
         ]
@@ -1298,87 +1285,6 @@ export type Database = {
             columns: ["participante_id"]
             isOneToOne: false
             referencedRelation: "ecosistema_participantes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      produccion_eventos: {
-        Row: {
-          created_at: string
-          datos: Json
-          estado_anterior: string
-          estado_nuevo: string
-          id: string
-          orden_produccion_id: string | null
-          pedido_id: string
-          pieza_id: string | null
-          sede_id: string
-          tipo: string
-          trabajo_id: string | null
-          usuario_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          datos?: Json
-          estado_anterior?: string
-          estado_nuevo?: string
-          id?: string
-          orden_produccion_id?: string | null
-          pedido_id: string
-          pieza_id?: string | null
-          sede_id: string
-          tipo: string
-          trabajo_id?: string | null
-          usuario_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          datos?: Json
-          estado_anterior?: string
-          estado_nuevo?: string
-          id?: string
-          orden_produccion_id?: string | null
-          pedido_id?: string
-          pieza_id?: string | null
-          sede_id?: string
-          tipo?: string
-          trabajo_id?: string | null
-          usuario_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "produccion_eventos_orden_produccion_id_fkey"
-            columns: ["orden_produccion_id"]
-            isOneToOne: false
-            referencedRelation: "ordenes_produccion"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "produccion_eventos_pedido_id_fkey"
-            columns: ["pedido_id"]
-            isOneToOne: false
-            referencedRelation: "pedidos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "produccion_eventos_pieza_id_fkey"
-            columns: ["pieza_id"]
-            isOneToOne: false
-            referencedRelation: "piezas_terminadas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "produccion_eventos_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "produccion_eventos_trabajo_id_fkey"
-            columns: ["trabajo_id"]
-            isOneToOne: false
-            referencedRelation: "trabajos"
             referencedColumns: ["id"]
           },
         ]
