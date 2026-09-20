@@ -1171,7 +1171,7 @@ export function useContrato(id: string, habilitado = true) {
         created_at: textoCampo(row, "created_at"),
       };
     },
-    enabled: Boolean(id),
+    enabled: habilitado && Boolean(id),
   });
 }
 
