@@ -1514,7 +1514,7 @@ export function useEnviarAArea() {
     mutationFn: async ({
       pedido,
       destino,
-      usuarioId,
+      usuarioId: _usuarioId,
       motivo,
     }: {
       pedido: Pick<Pedido, "id" | "area_actual" | "ruta">;
@@ -1523,41 +1523,37 @@ export function useEnviarAArea() {
       motivo?: string;
     }) => {
       if (!destino || destino === pedido.area_actual) return null;
+
       const destinoNormalizado = areaOperativa(destino);
       const areaActual = areaOperativa(pedido.area_actual);
       if (!destinoNormalizado || destinoNormalizado === areaActual) return null;
-      const ahora = new Date().toISOString();
-      const reiniciaFlujo = destinoNormalizado === "Pedidos";
-      const cambios = cambiosMovimientoDirecto(destinoNormalizado, ahora);
-      if (reiniciaFlujo) {
-        await actualizarPedidoConReinicioFlexible(pedido.id, cambios);
-      } else {
-        const { error } = await supabase.from("pedidos").update(cambios).eq("id", pedido.id);
-        if (error) {
-          console.error("[pedidos:mover] Error al actualizar pedido", {
-            pedidoId: pedido.id,
-            destino: destinoNormalizado,
-            error: detalleErrorSupabase(error),
-          });
-          throw new Error(`No se pudo mover el pedido: ${detalleErrorSupabase(error)}`);
-        }
-      }
-      await supabase.from("pedido_movimientos").insert({
-        pedido_id: pedido.id,
-        area_origen: areaActual,
-        area_destino: destinoNormalizado,
-        accion: reiniciaFlujo ? "reiniciar_flujo" : "mover",
-        usuario_id: usuarioId,
-        nota: reiniciaFlujo
-          ? motivo?.trim() || "Retorno a Pedidos para reiniciar flujo operativo."
-          : motivo?.trim() || "",
+
+      const { data, error } = await supabase.rpc("mover_pedido_a_area", {
+        _pedido_id: pedido.id,
+        _destino: destinoNormalizado,
+        _motivo: motivo?.trim() || null,
       });
+
+      if (error) {
+        console.error("[pedidos:mover] Error al mover pedido de forma atomica", {
+          pedidoId: pedido.id,
+          destino: destinoNormalizado,
+          error: detalleErrorSupabase(error),
+        });
+        throw new Error(`No se pudo mover el pedido: ${detalleErrorSupabase(error)}`);
+      }
+
+      const resultado = data?.[0];
+      if (!resultado) {
+        throw new Error("No se pudo confirmar el movimiento del pedido.");
+      }
+
       return {
         pedido,
-        destino: destinoNormalizado,
-        estado: cambios.estado ?? estadoPorDestino(destinoNormalizado, "enviar"),
-        area_desde: ahora,
-        reiniciaFlujo,
+        destino: resultado.destino,
+        estado: resultado.estado,
+        area_desde: resultado.area_desde,
+        reiniciaFlujo: resultado.reinicia_flujo,
       };
     },
     onMutate: async ({ pedido, destino }) => {
