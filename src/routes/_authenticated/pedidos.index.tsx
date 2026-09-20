@@ -200,6 +200,15 @@ function PedidosPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: clientes = [] } = useQuery({
+    queryKey: ["clientes-pedido-selector"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clientes").select("id,nombre,telefono").eq("estado", "activo").order("nombre");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: Boolean(sesion?.esAdmin),
+  });
   const { data: sedes = [] } = useSedes();
   const {
     sedeFiltro,
@@ -443,6 +452,10 @@ function PedidosPage() {
                 return;
               }
               const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
+              if (!form.cliente_id) {
+                alert("Selecciona un cliente registrado antes de crear el pedido.");
+                return;
+              }
               const nuevo: PedidoNuevo = {
                 referencia: siguienteReferencia(
                   nombreSede,
@@ -451,6 +464,7 @@ function PedidosPage() {
                 pieza: form.trabajo,
                 trabajo: form.trabajo,
                 cliente: form.cliente,
+                cliente_id: form.cliente_id,
                 telefono: form.telefono,
                 origen: form.origen,
                 contrato: form.contrato,
@@ -490,6 +504,35 @@ function PedidosPage() {
               });
             }}
           >
+            <div className="mb-4 max-w-xl">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Cliente registrado
+                <select
+                  value={form.cliente_id}
+                  required
+                  onChange={(e) => {
+                    const cliente = clientes.find((item) => item.id === e.target.value);
+                    setForm({
+                      ...form,
+                      cliente_id: e.target.value,
+                      cliente: cliente?.nombre ?? "",
+                      telefono: cliente?.telefono ?? "",
+                    });
+                  }}
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+                >
+                  <option value="">Selecciona un cliente…</option>
+                  {clientes.map((cliente) => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nombre}{cliente.telefono ? ` · ${cliente.telefono}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                El nombre y WhatsApp se toman del registro maestro del cliente.
+              </p>
+            </div>
             <PedidoFormCampos
               form={form}
               onChange={setForm}
