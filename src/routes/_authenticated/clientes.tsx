@@ -144,7 +144,7 @@ function ClientesPage() {
             disabled
             icono={<UserRound className="size-5" strokeWidth={1.7} />}
           />
-          <button type="button" onClick={nuevoCliente} className="group relative min-h-[150px] overflow-hidden rounded-2xl bg-ink px-5 py-5 text-left text-ink-foreground shadow-[0_18px_45px_-28px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_-24px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60">
+          <button type="button" onClick={nuevoCliente} className="group relative min-h-[150px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_-24px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60">
             <span className="pointer-events-none absolute -right-8 -top-8 size-28 rounded-full bg-gold/10 blur-2xl transition-all duration-500 group-hover:bg-gold/20" />
             <span className="relative flex h-full flex-col justify-between">
               <span className="grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">+</span>
@@ -166,12 +166,12 @@ function ClientesPage() {
                 <option value="todos">Todos</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option>
               </select>
             </div>
-            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nombre, teléfono o correo..." className="mt-4 h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20" />
+            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nombre, teléfono o correo..." className="mt-4 h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15" />
           </div>
           <div className="divide-y divide-border">
             {filtrados.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">No encontramos clientes con esos filtros.</p> : filtrados.map((cliente) => (
               <button key={cliente.id} type="button" onClick={() => setSeleccionado(cliente)} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-muted sm:px-5 ${seleccionado?.id === cliente.id ? "bg-gold/5" : ""}`}>
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-ink text-sm font-semibold text-gold">{cliente.nombre.charAt(0).toUpperCase()}</span>
+                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/10 text-sm font-semibold text-gold">{cliente.nombre.charAt(0).toUpperCase()}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{cliente.nombre}</span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">{cliente.telefono || cliente.email || "Sin contacto registrado"}</span>
@@ -185,13 +185,13 @@ function ClientesPage() {
         <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,0.35)]">
           {seleccionado ? (
             <div>
-              <div className="relative overflow-hidden border-b border-gold/10 bg-ink px-5 py-6 text-ink-foreground sm:px-6">
+              <div className="relative overflow-hidden border-b border-gold/10 bg-gradient-to-br from-card via-card to-gold/[0.035] px-5 py-6 text-foreground sm:px-6">
                 <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold/10 blur-3xl" />
                 <span className="pointer-events-none absolute -bottom-20 left-1/3 size-40 rounded-full bg-gold/5 blur-3xl" />
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold text-lg font-semibold text-ink shadow-[0_10px_30px_-15px_hsl(var(--gold)/0.8)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
-                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-white/45">Relación comercial · Aurum Lab</p></div>
+                    <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-lg font-semibold text-gold shadow-[0_10px_30px_-15px_hsl(var(--gold)/0.8)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
+                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-muted-foreground">Relación comercial · Aurum Lab</p></div>
                   </div>
                   <span className="rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-success">{seleccionado.estado}</span>
                 </div>
@@ -206,7 +206,7 @@ function ClientesPage() {
                   <button type="button" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Cotizaciones registradas</span></button>
                 </div>
                 <div className="mt-6 flex flex-wrap gap-2">
-                  <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
+                  <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
                   <button type="button" onClick={cambiarEstado} className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/5">{seleccionado.estado === "activo" ? "Desactivar" : "Activar"}</button>
                 </div>
                 <div className="mt-7">
@@ -225,13 +225,13 @@ function ClientesPage() {
             </div>
           ) : (
             <div className="relative flex min-h-[620px] items-center justify-center overflow-hidden p-8 text-center"><span className="pointer-events-none absolute size-64 rounded-full bg-gold/[0.035] blur-3xl" />
-              <div><span className="relative mx-auto grid size-16 place-items-center rounded-2xl border border-gold/20 bg-gold/5 text-2xl text-gold shadow-[0_16px_40px_-28px_hsl(var(--gold)/0.7)]">◇</span><h2 className="mt-4 text-lg font-semibold">Selecciona un cliente</h2><p className="mt-1 max-w-xs text-sm text-muted-foreground">Aquí verás sus datos y su relación comercial con el taller.</p></div>
+              <div><span className="relative mx-auto grid size-20 place-items-center rounded-full border border-gold/15 bg-gold/[0.025] text-2xl text-gold shadow-[0_20px_60px_-35px_hsl(var(--gold)/0.7)] before:absolute before:inset-[-14px] before:rounded-full before:border before:border-gold/10 after:absolute after:inset-[-28px] after:rounded-full after:border after:border-gold/5">◇</span><h2 className="mt-4 text-lg font-semibold">Selecciona un cliente</h2><p className="mt-1 max-w-xs text-sm text-muted-foreground">Aquí verás sus datos y su relación comercial con el taller.</p></div>
             </div>
           )}
         </section>
       </div>
 
-      {modal ? <div className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4" role="dialog" aria-modal="true">
+      {modal ? <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4" role="dialog" aria-modal="true">
         <form onSubmit={guardar} className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-raised">
           <div className="flex items-start justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Ficha comercial</p><h2 className="mt-1 text-xl font-semibold">{seleccionado ? "Editar cliente" : "Nuevo cliente"}</h2></div><button type="button" onClick={() => setModal(false)} className="rounded-lg px-2 py-1 text-muted-foreground">✕</button></div>
           <div className="mt-5 space-y-4">
@@ -239,7 +239,7 @@ function ClientesPage() {
             <Field label="Teléfono" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
             <Field label="Correo electrónico" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
           </div>
-          <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setModal(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-ink-foreground disabled:opacity-50">{guardando ? "Guardando..." : "Guardar cliente"}</button></div>
+          <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setModal(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando..." : "Guardar cliente"}</button></div>
         </form>
       </div> : null}
     </AppShell>
