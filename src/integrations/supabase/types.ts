@@ -912,6 +912,7 @@ export type Database = {
           pedido_id: string
           receptor_envio: string
           saldo: number
+          seguimiento_token: string
           telefono: string
           updated_at: string
           usuario_entrega: string
@@ -942,6 +943,7 @@ export type Database = {
           pedido_id: string
           receptor_envio?: string
           saldo?: number
+          seguimiento_token?: string
           telefono?: string
           updated_at?: string
           usuario_entrega?: string
@@ -972,6 +974,7 @@ export type Database = {
           pedido_id?: string
           receptor_envio?: string
           saldo?: number
+          seguimiento_token?: string
           telefono?: string
           updated_at?: string
           usuario_entrega?: string
