@@ -395,7 +395,7 @@ function ListaTrabajosOperario({
         <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
           <p className="text-base font-semibold">Sin trabajos asignados en {area}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Cuando Daniela te asigne un trabajo aparecerá aquí.
+            Cuando un administrador de tu sede te asigne un trabajo aparecerá aquí.
           </p>
         </div>
       ) : null}
