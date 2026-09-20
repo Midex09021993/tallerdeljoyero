@@ -42,9 +42,7 @@ function CotizacionesPage() {
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [busquedaCliente, setBusquedaCliente] = useState("");
-  const [nuevoClienteAbierto, setNuevoClienteAbierto] = useState(false);
-  const [guardandoCliente, setGuardandoCliente] = useState(false);
-  const [nuevoCliente, setNuevoCliente] = useState({ nombre: "", telefono: "", email: "" });
+  const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1,
@@ -96,39 +94,29 @@ function CotizacionesPage() {
     );
   }
 
-  async function crearClienteDesdeCotizacion(e: FormEvent) {
-    e.preventDefault();
-    const nombre = nuevoCliente.nombre.trim();
-    if (!nombre || !sesion?.sede?.id) return;
-    setGuardandoCliente(true);
-    setErrorCliente("");
-    const { data, error } = await supabase.from("clientes").insert({
-      nombre,
-      telefono: nuevoCliente.telefono.trim() || null,
-      email: nuevoCliente.email.trim() || null,
-      sede_id: sesion.sede.id,
-      estado: "activo",
-    }).select("id,nombre,telefono,email").single();
-    if (error || !data) {
-      setErrorCliente(error?.message ?? "No se pudo crear el cliente.");
-      setGuardandoCliente(false);
-      return;
-    }
-    setClientes((actuales) => [data, ...actuales.filter((c) => c.id !== data.id)]);
-    setForm((actual) => ({ ...actual, cliente_id: data.id, proyecto_joya_id: "" }));
-    setBusquedaCliente(data.nombre);
-    setNuevoCliente({ nombre: "", telefono: "", email: "" });
-    setNuevoClienteAbierto(false);
-    setGuardandoCliente(false);
-  }
-
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    if (!form.cliente_id || !form.descripcion.trim() || form.precio <= 0) return;
+    if ((!form.cliente_id && !busquedaCliente.trim()) || !form.descripcion.trim() || form.precio <= 0) return;
     setGuardando(true);
+    setErrorCliente("");
     try {
+      let clienteId = form.cliente_id;
+      if (!clienteId) {
+        if (!sesion?.sede?.id) throw new Error("No hay un taller/sede activo para registrar el cliente.");
+        const { data: clienteNuevo, error: clienteError } = await supabase.from("clientes").insert({
+          nombre: busquedaCliente.trim(),
+          telefono: nuevoCliente.telefono.trim() || null,
+          email: nuevoCliente.email.trim() || null,
+          sede_id: sesion.sede.id,
+          estado: "activo",
+        }).select("id,nombre,telefono,email").single();
+        if (clienteError || !clienteNuevo) throw clienteError ?? new Error("No se pudo registrar automáticamente el cliente.");
+        clienteId = clienteNuevo.id;
+        setClientes((actuales) => [clienteNuevo, ...actuales.filter((c) => c.id !== clienteNuevo.id)]);
+      }
+
       const { data: q, error } = await supabase.from("cotizaciones").insert({
-        cliente_id: form.cliente_id,
+        cliente_id: clienteId,
         proyecto_joya_id: form.proyecto_joya_id || null,
         sede_id: sesion?.sede?.id ?? null,
         estado: "borrador",
@@ -153,6 +141,8 @@ function CotizacionesPage() {
       });
       if (detalleError) throw detalleError;
       setAbierto(false);
+      setBusquedaCliente("");
+      setNuevoCliente({ telefono: "", email: "" });
       const cotizacionCreadaId = q.id;
       setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
       setBusquedaCliente("");
@@ -226,24 +216,6 @@ function CotizacionesPage() {
           </div>
         </section>
 
-        {nuevoClienteAbierto ? <div className="fixed inset-0 z-[60] grid place-items-center bg-foreground/15 p-4 backdrop-blur-sm">
-          <form onSubmit={crearClienteDesdeCotizacion} className="w-full max-w-md rounded-2xl border border-gold/15 bg-card p-5 shadow-2xl">
-            <div className="mb-5 flex items-start justify-between">
-              <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold/80">Alta rápida</p><h2 className="mt-1 font-display text-2xl">Nuevo cliente</h2><p className="mt-1 text-xs text-muted-foreground">Se guardará en este taller y quedará seleccionado en la cotización.</p></div>
-              <button type="button" onClick={() => setNuevoClienteAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button>
-            </div>
-            <div className="space-y-3">
-              <label className="block text-xs text-muted-foreground">Nombre completo<input required autoFocus value={nuevoCliente.nombre} onChange={e => setNuevoCliente({...nuevoCliente,nombre:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="block text-xs text-muted-foreground">Teléfono<input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({...nuevoCliente,telefono:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="block text-xs text-muted-foreground">Correo electrónico<input type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({...nuevoCliente,email:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              {errorCliente ? <p className="rounded-lg border border-danger/20 bg-danger-soft px-3 py-2 text-xs text-danger">{errorCliente}</p> : null}
-            </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setNuevoClienteAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button>
-              <button type="submit" disabled={guardandoCliente || !nuevoCliente.nombre.trim()} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{guardandoCliente ? "Creando…" : "Crear y seleccionar"}</button>
-            </div>
-          </form>
-        </div> : null}
         {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4 backdrop-blur-sm">
           <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
             <div className="mb-5 flex items-start justify-between"><div><h2 className="font-display text-2xl">Nueva cotización</h2><p className="text-sm text-muted-foreground">Costo interno separado del precio al cliente.</p></div><button type="button" onClick={() => setAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button></div>
@@ -258,12 +230,16 @@ function CotizacionesPage() {
     </button>)}
     {clientesFiltrados.length === 0 ? (
       <div className="border-t border-border p-3">
-        <p className="text-xs text-muted-foreground">No encontramos clientes.</p>
-        <button type="button" onClick={() => { setErrorCliente(""); setNuevoClienteAbierto(true); }} className="mt-2 w-full rounded-lg border border-gold/25 bg-gold/5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-gold/10">+ Crear cliente aquí</button>
+        <p className="text-xs text-muted-foreground">Cliente nuevo. Se registrará automáticamente en Clientes al guardar la cotización.</p>
       </div>
     ) : null}
   </div> : null}
-  {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
+  {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : busquedaCliente.trim() && clientesFiltrados.length === 0 ? (
+    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+      <input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({...nuevoCliente,telefono:e.target.value})} placeholder="Teléfono (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
+      <input type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({...nuevoCliente,email:e.target.value})} placeholder="Correo (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
+    </div>
+  ) : null}
 </div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Concepto<input required value={form.descripcion} onChange={e => setForm({...form, descripcion:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
