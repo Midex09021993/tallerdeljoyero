@@ -409,6 +409,13 @@ export const AURUM_IJEWEL_METAL_REFERENCES = {
     ior: 1.5,
     environmentIntensity: 0.8,
   },
+  platinum: {
+    sourceRootPath: "2_metal_platinum_polished_9976f87c18.pmat",
+    baseColorFactor: [0.48514994004665124, 0.4969329950515914, 0.5028864580233624],
+    roughness: 0,
+    ior: 1.5,
+    environmentIntensity: 0.8,
+  },
 } as const;
 
 /**
@@ -425,7 +432,9 @@ export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
       ? AURUM_IJEWEL_METAL_REFERENCES.roseGold
       : id.includes("greengold")||id.includes("green-gold")||id.includes("green_gold")||id.includes("oro-verde")||id.includes("oro_verde")
         ? AURUM_IJEWEL_METAL_REFERENCES.greenGold
-        : null;
+        : id.includes("platinum")||id.includes("platino")
+          ? AURUM_IJEWEL_METAL_REFERENCES.platinum
+          : null;
   if(!ref) return material;
   material.color?.setRGB(ref.baseColorFactor[0],ref.baseColorFactor[1],ref.baseColorFactor[2]);
   material.metalness=1;
