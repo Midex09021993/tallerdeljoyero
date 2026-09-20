@@ -22,7 +22,7 @@ export function PushDuenoCard({ sesion }: { sesion: Sesion | null | undefined })
   return (
     <section className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-card">
       <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-ink text-gold">
+        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-gold/10 text-gold-deep">
           <Bell className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
@@ -67,7 +67,7 @@ export function PushDuenoCard({ sesion }: { sesion: Sesion | null | undefined })
         type="button"
         disabled={pushDueno.cargando || pushDueno.estado === "activo"}
         onClick={() => void pushDueno.activar()}
-        className="mt-3 w-full rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-gold transition active:scale-[0.99] disabled:opacity-60"
+        className="mt-3 w-full rounded-xl border border-gold/25 bg-gold px-4 py-3 text-sm font-semibold text-gold-foreground shadow-card transition active:scale-[0.99] disabled:opacity-60"
       >
         {pushDueno.estado === "activo"
           ? "Notificaciones activas"
