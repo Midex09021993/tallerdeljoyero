@@ -240,6 +240,73 @@ export type Database = {
           },
         ]
       }
+      control_calidad: {
+        Row: {
+          created_at: string
+          descripcion: string
+          evidencia_url: string | null
+          id: string
+          inspeccionado_por: string
+          motivo: string
+          orden_produccion_id: string
+          resultado: string
+          retrabajo_trabajo_id: string | null
+          tipo: string
+          trabajo_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          evidencia_url?: string | null
+          id?: string
+          inspeccionado_por: string
+          motivo?: string
+          orden_produccion_id: string
+          resultado?: string
+          retrabajo_trabajo_id?: string | null
+          tipo?: string
+          trabajo_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          evidencia_url?: string | null
+          id?: string
+          inspeccionado_por?: string
+          motivo?: string
+          orden_produccion_id?: string
+          resultado?: string
+          retrabajo_trabajo_id?: string | null
+          tipo?: string
+          trabajo_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_calidad_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_calidad_retrabajo_trabajo_id_fkey"
+            columns: ["retrabajo_trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_calidad_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizacion_detalles: {
         Row: {
           cantidad: number
@@ -769,6 +836,129 @@ export type Database = {
           },
         ]
       }
+      orden_produccion_entregas: {
+        Row: {
+          area_destino: string
+          cantidad: number
+          created_at: string
+          entregado_por: string | null
+          id: string
+          material_id: string
+          notas: string
+          orden_produccion_id: string
+          recibido_por: string | null
+          unidad: string
+        }
+        Insert: {
+          area_destino?: string
+          cantidad: number
+          created_at?: string
+          entregado_por?: string | null
+          id?: string
+          material_id: string
+          notas?: string
+          orden_produccion_id: string
+          recibido_por?: string | null
+          unidad?: string
+        }
+        Update: {
+          area_destino?: string
+          cantidad?: number
+          created_at?: string
+          entregado_por?: string | null
+          id?: string
+          material_id?: string
+          notas?: string
+          orden_produccion_id?: string
+          recibido_por?: string | null
+          unidad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orden_produccion_entregas_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orden_produccion_entregas_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordenes_produccion: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          fecha_planificada_fin: string | null
+          fecha_planificada_inicio: string | null
+          id: string
+          notas: string
+          numero: string
+          pedido_id: string
+          prioridad: string
+          responsable_user_id: string | null
+          sede_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string | null
+          fecha_planificada_fin?: string | null
+          fecha_planificada_inicio?: string | null
+          id?: string
+          notas?: string
+          numero: string
+          pedido_id: string
+          prioridad?: string
+          responsable_user_id?: string | null
+          sede_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string | null
+          fecha_planificada_fin?: string | null
+          fecha_planificada_inicio?: string | null
+          id?: string
+          notas?: string
+          numero?: string
+          pedido_id?: string
+          prioridad?: string
+          responsable_user_id?: string | null
+          sede_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordenes_produccion_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: true
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_produccion_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participante_cuentas: {
         Row: {
           created_at: string
@@ -989,6 +1179,54 @@ export type Database = {
             foreignKeyName: "pedido_comercial_pedido_id_fkey"
             columns: ["pedido_id"]
             isOneToOne: true
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_materiales: {
+        Row: {
+          cantidad_planificada: number
+          created_at: string
+          id: string
+          material_id: string
+          notas: string
+          pedido_id: string
+          unidad: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad_planificada: number
+          created_at?: string
+          id?: string
+          material_id: string
+          notas?: string
+          pedido_id: string
+          unidad?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad_planificada?: number
+          created_at?: string
+          id?: string
+          material_id?: string
+          notas?: string
+          pedido_id?: string
+          unidad?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_materiales_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_materiales_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
             referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
@@ -1244,6 +1482,81 @@ export type Database = {
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      piezas_terminadas: {
+        Row: {
+          cantidad: number
+          created_at: string
+          estado: string
+          id: string
+          metal_estimado: string
+          metal_real: string
+          numero_pieza: string
+          observaciones: string
+          orden_produccion_id: string
+          pedido_id: string
+          peso_estimado: number | null
+          peso_final: number | null
+          piedras_estimadas: string
+          piedras_reales: string
+          registrado_por: string | null
+          unidad_peso: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          estado?: string
+          id?: string
+          metal_estimado?: string
+          metal_real?: string
+          numero_pieza: string
+          observaciones?: string
+          orden_produccion_id: string
+          pedido_id: string
+          peso_estimado?: number | null
+          peso_final?: number | null
+          piedras_estimadas?: string
+          piedras_reales?: string
+          registrado_por?: string | null
+          unidad_peso?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          estado?: string
+          id?: string
+          metal_estimado?: string
+          metal_real?: string
+          numero_pieza?: string
+          observaciones?: string
+          orden_produccion_id?: string
+          pedido_id?: string
+          peso_estimado?: number | null
+          peso_final?: number | null
+          piedras_estimadas?: string
+          piedras_reales?: string
+          registrado_por?: string | null
+          unidad_peso?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piezas_terminadas_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "piezas_terminadas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
         ]
@@ -1595,6 +1908,47 @@ export type Database = {
           },
         ]
       }
+      trabajo_tiempos: {
+        Row: {
+          created_at: string
+          fin: string | null
+          id: string
+          inicio: string
+          motivo_pausa: string
+          segundos_acumulados: number
+          trabajo_id: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          fin?: string | null
+          id?: string
+          inicio?: string
+          motivo_pausa?: string
+          segundos_acumulados?: number
+          trabajo_id: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          fin?: string | null
+          id?: string
+          inicio?: string
+          motivo_pausa?: string
+          segundos_acumulados?: number
+          trabajo_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajo_tiempos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trabajos: {
         Row: {
           area: string
@@ -1606,9 +1960,13 @@ export type Database = {
           fecha_planificada: string | null
           id: string
           notas: string
+          orden_produccion_id: string | null
+          participante_id: string | null
           pedido_id: string
           prioridad: string
           responsable_user_id: string | null
+          secuencia: number
+          sede_id: string | null
           tipo: string
           titulo: string
           ubicacion: string
@@ -1624,9 +1982,13 @@ export type Database = {
           fecha_planificada?: string | null
           id?: string
           notas?: string
+          orden_produccion_id?: string | null
+          participante_id?: string | null
           pedido_id: string
           prioridad?: string
           responsable_user_id?: string | null
+          secuencia?: number
+          sede_id?: string | null
           tipo?: string
           titulo?: string
           ubicacion?: string
@@ -1642,9 +2004,13 @@ export type Database = {
           fecha_planificada?: string | null
           id?: string
           notas?: string
+          orden_produccion_id?: string | null
+          participante_id?: string | null
           pedido_id?: string
           prioridad?: string
           responsable_user_id?: string | null
+          secuencia?: number
+          sede_id?: string | null
           tipo?: string
           titulo?: string
           ubicacion?: string
@@ -1652,10 +2018,31 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "trabajos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "trabajos_pedido_id_fkey"
             columns: ["pedido_id"]
             isOneToOne: false
             referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
             referencedColumns: ["id"]
           },
         ]
