@@ -1,6 +1,15 @@
 import type { ReactNode } from "react";
+import {
+  Boxes,
+  ChartNoAxesCombined,
+  CircleAlert,
+  Layers3,
+} from "lucide-react";
+
+export type FichaDoradaTipo = "materiales" | "bajo" | "movimientos" | "areas";
 
 export type FichaDoradaProps = {
+  tipo?: FichaDoradaTipo;
   indicador: string;
   titulo: string;
   valor: ReactNode;
@@ -11,6 +20,13 @@ export type FichaDoradaProps = {
   icono?: ReactNode;
 };
 
+const iconosPorTipo: Record<FichaDoradaTipo, ReactNode> = {
+  materiales: <Boxes className="size-5" strokeWidth={1.8} />,
+  bajo: <CircleAlert className="size-5" strokeWidth={1.8} />,
+  movimientos: <ChartNoAxesCombined className="size-5" strokeWidth={1.8} />,
+  areas: <Layers3 className="size-5" strokeWidth={1.8} />,
+};
+
 const fichaDoradaBase =
   "group relative min-h-[150px] overflow-hidden rounded-2xl border bg-card p-5 text-left " +
   "transition-all duration-300 ease-out " +
@@ -18,6 +34,7 @@ const fichaDoradaBase =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60";
 
 export function FichaDorada({
+  tipo,
   indicador,
   titulo,
   valor,
@@ -25,9 +42,10 @@ export function FichaDorada({
   activa = false,
   disabled = false,
   onClick,
-  icono = <span className="text-xs font-bold">✦</span>,
+  icono,
 }: FichaDoradaProps) {
   const interactiva = !disabled && Boolean(onClick);
+  const iconoFinal = icono ?? (tipo ? iconosPorTipo[tipo] : <span className="text-xs font-bold">✦</span>);
 
   return (
     <button
@@ -55,7 +73,7 @@ export function FichaDorada({
         </span>
 
         <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-125 group-hover:rotate-12">
-          {icono}
+          {iconoFinal}
         </span>
       </span>
 
