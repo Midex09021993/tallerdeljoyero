@@ -153,9 +153,9 @@ function Inicio() {
           {modulos.map((modulo) => {
             const Icono = modulo.icono;
             return (
-              <button key={modulo.to} type="button" onClick={() => void navigate({ to: modulo.to as never })} className="min-h-[118px] rounded-2xl border border-border bg-card p-4 text-left shadow-card transition active:scale-[0.98] focus-visible:border-gold focus-visible:outline-none">
+              <button key={modulo.to} type="button" onClick={() => void navigate({ to: modulo.to as never })} className="min-h-[118px] rounded-2xl border border-gold/20 bg-card p-4 text-left shadow-card transition active:scale-[0.98] hover:border-gold/40 hover:shadow-raised focus-visible:border-gold focus-visible:outline-none">
                 <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-10 place-items-center rounded-2xl bg-ink text-gold">{Icono ? <Icono className="size-5" aria-hidden="true" /> : null}</span>
+                  <span className="grid size-10 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold-deep">{Icono ? <Icono className="size-5" aria-hidden="true" /> : null}</span>
                   <ChevronRight className="mt-1 size-5 text-muted-foreground" aria-hidden="true" />
                 </div>
                 <h2 className="mt-4 text-base font-semibold leading-tight">{modulo.label}</h2>
@@ -174,8 +174,8 @@ function Inicio() {
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       acciones={
         <>
-          <Link to="/pedidos" className="rounded-lg bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground">Ver pedidos</Link>
-          <Link to="/cotizaciones" className="rounded-lg border border-border bg-card px-4 py-2.5 text-xs font-semibold">Nueva cotización</Link>
+          <Link to="/pedidos" className="rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised">Ver pedidos</Link>
+          <Link to="/cotizaciones" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nueva cotización</Link>
         </>
       }
     >
@@ -250,7 +250,7 @@ function Inicio() {
             ].map((item) => {
               const Icono = item.icon;
               return (
-                <Link key={item.label} to={item.to as never} className="rounded-xl border border-border bg-card p-4 transition hover:border-gold/40 hover:shadow-card">
+                <Link key={item.label} to={item.to as never} className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-raised">
                   <div className="flex items-center justify-between">
                     <Icono className="size-4 text-gold" />
                     <span className="text-xl font-semibold">{item.value}</span>
@@ -268,9 +268,9 @@ function Inicio() {
 
 function MetricHero({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+    <div className="rounded-2xl border border-gold/20 bg-card/80 px-4 py-3 shadow-card">
       <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/35">{label}</p>
-      <p className="mt-1 font-display text-2xl text-white">{value}</p>
+      <p className="mt-1 font-display text-2xl text-foreground">{value}</p>
     </div>
   );
 }
