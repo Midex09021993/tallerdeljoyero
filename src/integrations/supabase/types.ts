@@ -204,6 +204,73 @@ export type Database = {
           },
         ]
       }
+      control_calidad: {
+        Row: {
+          created_at: string
+          descripcion: string
+          evidencia_url: string | null
+          id: string
+          inspeccionado_por: string
+          motivo: string
+          orden_produccion_id: string
+          resultado: string
+          retrabajo_trabajo_id: string | null
+          tipo: string
+          trabajo_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          evidencia_url?: string | null
+          id?: string
+          inspeccionado_por: string
+          motivo?: string
+          orden_produccion_id: string
+          resultado?: string
+          retrabajo_trabajo_id?: string | null
+          tipo?: string
+          trabajo_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          evidencia_url?: string | null
+          id?: string
+          inspeccionado_por?: string
+          motivo?: string
+          orden_produccion_id?: string
+          resultado?: string
+          retrabajo_trabajo_id?: string | null
+          tipo?: string
+          trabajo_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "control_calidad_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_calidad_retrabajo_trabajo_id_fkey"
+            columns: ["retrabajo_trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "control_calidad_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizacion_detalles: {
         Row: {
           cantidad: number
@@ -1462,6 +1529,81 @@ export type Database = {
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      piezas_terminadas: {
+        Row: {
+          cantidad: number
+          created_at: string
+          estado: string
+          id: string
+          metal_estimado: string
+          metal_real: string
+          numero_pieza: string
+          observaciones: string
+          orden_produccion_id: string
+          pedido_id: string
+          peso_estimado: number | null
+          peso_final: number | null
+          piedras_estimadas: string
+          piedras_reales: string
+          registrado_por: string | null
+          unidad_peso: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          estado?: string
+          id?: string
+          metal_estimado?: string
+          metal_real?: string
+          numero_pieza: string
+          observaciones?: string
+          orden_produccion_id: string
+          pedido_id: string
+          peso_estimado?: number | null
+          peso_final?: number | null
+          piedras_estimadas?: string
+          piedras_reales?: string
+          registrado_por?: string | null
+          unidad_peso?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          estado?: string
+          id?: string
+          metal_estimado?: string
+          metal_real?: string
+          numero_pieza?: string
+          observaciones?: string
+          orden_produccion_id?: string
+          pedido_id?: string
+          peso_estimado?: number | null
+          peso_final?: number | null
+          piedras_estimadas?: string
+          piedras_reales?: string
+          registrado_por?: string | null
+          unidad_peso?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piezas_terminadas_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "piezas_terminadas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
         ]
