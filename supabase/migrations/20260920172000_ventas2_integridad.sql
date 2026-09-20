@@ -22,7 +22,7 @@ elsif _accion='despachar' then
 elsif _accion='entregar' then
  if v_pedido.estado not in ('Listo para Entrega','En Camino') then raise exception 'El pedido no está listo para ser entregado';end if;
  if nullif(trim(coalesce(_datos->>'receptor_envio','')),'') is null then raise exception 'Registra quién recibe el pedido';end if;
- if coalesce(v_pedido.saldo,0)>0 and coalesce((_datos->>'saldo_pendiente_confirmado')::boolean,false)=false then raise exception 'Confirma la entrega con saldo pendiente';end if;
+ if coalesce((select saldo from public.pedido_comercial where pedido_id=_pedido_id),0)>0 and coalesce((_datos->>'saldo_pendiente_confirmado')::boolean,false)=false then raise exception 'Confirma la entrega con saldo pendiente';end if;
  update public.pedidos set estado='Entregado',ventas_estado='Entregado',area_actual='Área ventas',packing_estado='Entregado al cliente',fecha_entregado=coalesce(nullif(_datos->>'fecha_entregado','')::date,current_date),receptor_envio=nullif(trim(_datos->>'receptor_envio'),''),notas_ventas=coalesce(_datos->>'notas_ventas',notas_ventas),notas_entrega=coalesce(_datos->>'notas_entrega',notas_entrega),evidencia_entrega_url=nullif(trim(_datos->>'evidencia_entrega_url'),''),usuario_entrega=v_uid::text,entregado_at=v_now,ventas_actualizado_por=v_uid::text,ventas_actualizado_en=v_now,updated_at=v_now where id=_pedido_id;v_tipo='entregado';
 else raise exception 'Acción de entrega no válida';end if;
 return jsonb_build_object('pedido_id',_pedido_id,'accion',_accion,'tipo',v_tipo,'at',v_now);
