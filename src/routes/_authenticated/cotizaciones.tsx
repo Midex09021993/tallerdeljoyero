@@ -148,6 +148,8 @@ function CotizacionesPage() {
       setBusquedaCliente("");
       await cargar();
       await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
+    } catch (error) {
+      setErrorCliente(error instanceof Error ? error.message : "No se pudo guardar la cotización.");
     } finally {
       setGuardando(false);
     }
@@ -254,6 +256,7 @@ function CotizacionesPage() {
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
+            {errorCliente ? <div className="mb-3 rounded-lg border border-danger/20 bg-danger-soft px-3 py-2 text-xs text-danger">{errorCliente}</div> : null}
             <div className="mt-5 flex items-center justify-between rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+impuestoCalculado), form.moneda)}</strong></div>
             <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm transition hover:border-gold/30 hover:bg-gold/5">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando…" : "Crear cotización"}</button></div>
           </form>
