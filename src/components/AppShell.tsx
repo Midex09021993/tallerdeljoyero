@@ -260,7 +260,7 @@ export function AppShell({
 
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/80 to-transparent" aria-hidden="true" />
-              <div className="flex gap-2 overflow-x-auto pb-1 pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="scrollbar-hidden flex gap-2 overflow-x-auto pb-1 pr-8">
               {visiblesOrdenadas.map((s) => (
                 <Link
                   key={s.to}
