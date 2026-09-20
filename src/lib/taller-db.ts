@@ -584,7 +584,7 @@ export function usePedidos() {
           entrega: textoCampo(p, "entrega"),
           importe: Number(comercial["importe"]) || 0,
           a_cuenta: Number(comercial["a_cuenta"]) || 0,
-          saldo: Number(comercial["saldo"]) || 0,
+          saldo: Math.max((Number(comercial["importe"]) || 0) - (Number(comercial["a_cuenta"]) || 0), 0),
           sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
           sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
           telefono: textoCampo(comercial, "telefono"),
