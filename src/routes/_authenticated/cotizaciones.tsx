@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { AppShell, Panel } from "@/components/AppShell";
+import { FichaDorada } from "@/components/FichaDorada";
+import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -126,43 +128,61 @@ function CotizacionesPage() {
       subtitulo="Presupuestos comerciales conectados con clientes y proyectos de joyería."
       acciones={
         <>
-          <StatCard etiqueta="Cotizaciones" valor={String(cotizaciones.length)} />
-          <StatCard etiqueta="Aprobadas" valor={String(cotizaciones.filter(q => q.estado === "aprobada").length)} />
-          <StatCard etiqueta="Total aprobado" valor={money(totalAprobadas)} />
+          <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizaciones.length} descripcion="Presupuestos registrados" disabled icono={<FileText className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizaciones.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" disabled icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Comercial" titulo="Total aprobado" valor={money(totalAprobadas)} descripcion="Valor de cotizaciones aprobadas" disabled icono={<BadgeDollarSign className="size-5" strokeWidth={1.7} />} />
+          <button type="button" onClick={() => setAbierto(true)} className="group relative min-h-[150px] min-w-[170px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_hsl(var(--gold)/0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_24px_50px_-24px_hsl(var(--gold)/0.38)]">
+            <span className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-gold/10 blur-2xl transition-all group-hover:bg-gold/15" />
+            <span className="relative flex h-full flex-col justify-between">
+              <span className="grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110"><Plus className="size-5" /></span>
+              <span><span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-gold/80">Acción</span><span className="mt-1 block text-lg font-semibold">Nueva cotización</span></span>
+            </span>
+          </button>
         </>
       }
     >
       <div className="space-y-6">
-        <Panel titulo="Cotizaciones comerciales" accion={<button type="button" onClick={() => setAbierto(true)} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">+ Nueva cotización</button>}>
-          <div className="p-4">
-            <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por número, cliente o estado..." className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:ring-1 focus:ring-gold" />
+        <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.28)]">
+          <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">Gestión comercial</p>
+              <h2 className="mt-1 text-lg font-semibold">Cotizaciones del taller</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Presupuestos vinculados a clientes y proyectos de joyería.</p>
+            </div>
+            <div className="hidden items-center gap-2 rounded-xl border border-gold/15 bg-gold/[0.025] px-3 py-2 text-[10px] text-muted-foreground sm:flex"><Clock3 className="size-3.5 text-gold/65" /> Seguimiento comercial</div>
+          </div>
+          <div className="border-b border-border p-4 sm:p-5">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por número, cliente o estado..." className="h-11 w-full rounded-xl border border-border bg-background pl-9 pr-4 text-sm outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/15" />
+            </label>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead><tr className="border-y border-border bg-surface-muted text-[10px] uppercase tracking-wider text-muted-foreground">
+              <thead><tr className="border-y border-border bg-surface-muted/45 text-[10px] uppercase tracking-wider text-muted-foreground">
                 {["Cotización","Cliente","Proyecto","Estado","Emisión","Total"].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
               </tr></thead>
               <tbody className="divide-y divide-border">
                 {filtradas.map(q => {
                   const cliente = clientes.find(c => c.id === q.cliente_id);
                   const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
-                  return <tr key={q.id} className="hover:bg-surface-muted/50">
-                    <td className="px-4 py-4 font-medium"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="hover:text-gold">{q.numero}</Link> <span className="text-xs text-muted-foreground">v{q.version}</span></td>
-                    <td className="px-4 py-4">{cliente?.nombre ?? "—"}</td>
-                    <td className="px-4 py-4 text-muted-foreground">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</td>
-                    <td className="px-4 py-4"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs">{q.estado}</span></td>
-                    <td className="px-4 py-4 text-muted-foreground">{q.fecha_emision}</td>
-                    <td className="px-4 py-4 font-semibold">{money(Number(q.total), q.moneda)}</td>
+                  return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.025]">
+                    <td className="px-5 py-4 font-medium"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="inline-flex items-center gap-2 transition-colors hover:text-gold">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></td>
+                    <td className="px-5 py-4"><span className="font-medium">{cliente?.nombre ?? "—"}</span></td>
+                    <td className="px-5 py-4 text-muted-foreground">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</td>
+                    <td className="px-5 py-4"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></td>
+                    <td className="px-5 py-4 text-xs text-muted-foreground">{q.fecha_emision}</td>
+                    <td className="px-5 py-4 text-right font-semibold tabular-nums">{money(Number(q.total), q.moneda)}</td>
                   </tr>;
                 })}
-                {filtradas.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Todavía no hay cotizaciones.</td></tr>}
+                {filtradas.length === 0 && <tr><td colSpan={6} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
               </tbody>
             </table>
           </div>
-        </Panel>
+        </section>
 
-        {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-          <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
+        {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4 backdrop-blur-sm">
+          <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
             <div className="mb-5 flex items-start justify-between"><div><h2 className="font-display text-2xl">Nueva cotización</h2><p className="text-sm text-muted-foreground">Costo interno separado del precio al cliente.</p></div><button type="button" onClick={() => setAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-xs text-muted-foreground">Cliente<select required value={form.cliente_id} onChange={e => setForm({...form, cliente_id:e.target.value, proyecto_joya_id:""})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Seleccionar cliente</option>{clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></label>
@@ -178,8 +198,8 @@ function CotizacionesPage() {
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
-            <div className="mt-5 flex items-center justify-between rounded-xl bg-surface-muted p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+form.impuestos), form.moneda)}</strong></div>
-            <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAbierto(false)} className="rounded-lg border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{guardando ? "Guardando…" : "Crear cotización"}</button></div>
+            <div className="mt-5 flex items-center justify-between rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+form.impuestos), form.moneda)}</strong></div>
+            <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm transition hover:border-gold/30 hover:bg-gold/5">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando…" : "Crear cotización"}</button></div>
           </form>
         </div>}
       </div>
