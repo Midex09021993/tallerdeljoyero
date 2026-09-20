@@ -127,8 +127,16 @@ function MigracionPage() {
 
   const clientesValidos = useMemo(() => filasClientes.filter((f) => f.nombre.trim()), [filasClientes]);
   const clientesSinNombre = filasClientes.length - clientesValidos.length;
-  const documentos = useMemo(() => new Set(clientesValidos.map((f) => f.documento.trim()).filter(Boolean)), [clientesValidos]);
-  const clientesDuplicadosArchivo = clientesValidos.length - documentos.size;
+  const clavesClientesArchivo = useMemo(() => {
+    return clientesValidos.map((f) => {
+      const documento = f.documento.trim();
+      return documento ? `doc:${normalizar(documento)}` : `nombre:${normalizar(f.nombre)}`;
+    });
+  }, [clientesValidos]);
+  const clientesDuplicadosArchivo = useMemo(
+    () => clavesClientesArchivo.length - new Set(clavesClientesArchivo).size,
+    [clavesClientesArchivo],
+  );
 
   const inventarioValido = useMemo(() => filasInventario.filter((f) => f.material.trim()), [filasInventario]);
   const inventarioSinMaterial = filasInventario.length - inventarioValido.length;
@@ -176,29 +184,68 @@ function MigracionPage() {
 
   async function importarClientes() {
     if (!sesion?.esDueno && !sesion?.roles.includes("gerente")) { toast.error("Solo dueño o gerente pueden importar información."); return; }
+    if (!sedeId) {
+      toast.error("La sesión debe tener una sede asignada para importar clientes.");
+      return;
+    }
     if (!clientesValidos.length) return;
     setProcesando(true);
     let importados = 0;
     let omitidos = clientesSinNombre + clientesDuplicadosArchivo;
     try {
-      const { data: existentes, error } = await supabase.from("clientes").select("id,nombre,documento").limit(5000);
+      const { data: existentes, error } = await supabase
+        .from("clientes")
+        .select("id,nombre,documento")
+        .eq("sede_id", sedeId)
+        .limit(5000);
       if (error) throw error;
-      const documentosExistentes = new Set((existentes ?? []).map((c) => c.documento).filter(Boolean).map((d) => String(d).trim()));
-      const nombresExistentes = new Set((existentes ?? []).map((c) => normalizar(String(c.nombre))));
+      const documentosExistentes = new Set(
+        (existentes ?? [])
+          .map((c) => c.documento)
+          .filter(Boolean)
+          .map((d) => normalizar(String(d))),
+      );
+      const nombresExistentes = new Set(
+        (existentes ?? [])
+          .map((c) => normalizar(String(c.nombre ?? "")))
+          .filter(Boolean),
+      );
       const vistos = new Set<string>();
+
       for (const fila of clientesValidos) {
         const documento = fila.documento.trim();
+        const documentoClave = documento ? normalizar(documento) : "";
         const nombreClave = normalizar(fila.nombre);
-        const clave = documento || nombreClave;
-        if ((documento && documentosExistentes.has(documento)) || nombresExistentes.has(nombreClave) || vistos.has(clave)) { omitidos += 1; continue; }
+        const clave = documentoClave ? `doc:${documentoClave}` : `nombre:${nombreClave}`;
+
+        if (
+          (documentoClave && documentosExistentes.has(documentoClave)) ||
+          nombresExistentes.has(nombreClave) ||
+          vistos.has(clave)
+        ) {
+          omitidos += 1;
+          continue;
+        }
+
         const { error: errorInsert } = await supabase.from("clientes").insert({
-          nombre: fila.nombre, documento: documento || null, telefono: fila.telefono || null, whatsapp: fila.whatsapp || null,
-          email: fila.email || null, ciudad: fila.ciudad || null, direccion: fila.direccion || null, notas: fila.notas || "",
-          estado: "activo", tipo: "persona", metadata: { origen: "migracion", fuente: archivo, importado_en: new Date().toISOString() },
+          sede_id: sedeId,
+          nombre: fila.nombre,
+          documento: documento || null,
+          telefono: fila.telefono || null,
+          whatsapp: fila.whatsapp || null,
+          email: fila.email || null,
+          ciudad: fila.ciudad || null,
+          direccion: fila.direccion || null,
+          notas: fila.notas || "",
+          estado: "activo",
+          tipo: "persona",
+          metadata: { origen: "migracion", fuente: archivo, importado_en: new Date().toISOString() },
         });
         if (errorInsert) throw errorInsert;
         importados += 1;
         vistos.add(clave);
+        if (documentoClave) documentosExistentes.add(documentoClave);
+        nombresExistentes.add(nombreClave);
       }
       setResultado({ importados, omitidos, errores: 0 });
       toast.success("Migración terminada: " + importados + " clientes incorporados");
