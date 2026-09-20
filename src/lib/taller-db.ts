@@ -1517,7 +1517,7 @@ export function useEnviarAArea() {
       usuarioId,
       motivo,
     }: {
-      pedido: Pedido;
+      pedido: Pick<Pedido, "id" | "area_actual" | "ruta">;
       destino: string;
       usuarioId: string | null;
       motivo?: string;
