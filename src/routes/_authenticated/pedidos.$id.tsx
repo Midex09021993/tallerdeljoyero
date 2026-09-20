@@ -552,6 +552,30 @@ function FichaPedido() {
   const estadoEntrega = mostrarEstadoVentas(pedido);
   const tieneContextoCliente = Boolean(contextoComercial?.cliente || pedido.cliente_id);
   const tieneCotizacion = Boolean(contextoComercial?.cotizacion || pedido.cotizacion_id);
+  const documentosExternos =
+    pedido.cotizacion_detalles && typeof pedido.cotizacion_detalles === "object"
+      ? (pedido.cotizacion_detalles as { cotizacion?: string; contrato?: string })
+      : {};
+  const tieneCotizacionExterna = Boolean(documentosExternos.cotizacion);
+  const tieneContratoExterno = Boolean(documentosExternos.contrato);
+  const tieneContrato = Boolean(contratoRef || tieneContratoExterno);
+  const tieneFichaTecnica = Boolean(
+    pedido.trabajo?.trim() &&
+    pedido.material?.trim() &&
+    pedido.cantidad_piezas &&
+    Number(pedido.cantidad_piezas) > 0,
+  );
+  const tieneRutaProduccion = rutaPedido.length > 0;
+  const tieneEntrega = Boolean(pedido.fecha_entrega || pedido.entrega);
+  const pendientesPedido = [
+    !tieneContextoCliente ? "Registrar cliente" : null,
+    !tieneCotizacion && !tieneCotizacionExterna ? "Asociar cotización" : null,
+    !tieneContrato ? "Completar contrato" : null,
+    !tieneFichaTecnica ? "Completar ficha técnica" : null,
+    !tieneRutaProduccion ? "Definir ruta de producción" : null,
+    !tieneEntrega ? "Definir fecha de entrega" : null,
+  ].filter(Boolean) as string[];
+  const avancePedido = Math.round(((6 - pendientesPedido.length) / 6) * 100);
 
   async function registrarConsumo(e: FormEvent) {
     e.preventDefault();
@@ -614,6 +638,31 @@ function FichaPedido() {
           </button>
         </div>
       ) : null}
+
+      <FichaAurum className="mb-6 p-5 shadow-raised">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Completar pedido</p>
+            <h2 className="mt-1 text-lg font-semibold text-foreground">{pendientesPedido.length === 0 ? "Pedido listo para trabajar" : "Información pendiente"}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">{pendientesPedido.length === 0 ? "La información comercial, técnica y productiva principal ya está conectada." : "Aurum Lab detectó los datos que todavía pueden completarse sin bloquear el trabajo."}</p>
+          </div>
+          <div className="min-w-[150px] text-right">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Completitud</p>
+            <p className="mt-1 text-2xl font-bold text-gold-deep">{avancePedido}%</p>
+          </div>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted"><div className="h-full rounded-full bg-gold transition-all" style={{ width: `${avancePedido}%` }} /></div>
+        {pendientesPedido.length > 0 ? (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {!tieneContextoCliente ? <Link to="/clientes" className="rounded-xl border border-gold/25 bg-card p-3 transition hover:border-gold/50 hover:shadow-card"><p className="text-xs font-semibold text-foreground">Registrar cliente</p><p className="mt-1 text-[10px] text-muted-foreground">Convierte el cliente pendiente en un registro real.</p></Link> : null}
+            {!tieneCotizacion && !tieneCotizacionExterna ? <Link to="/cotizaciones" className="rounded-xl border border-gold/25 bg-card p-3 transition hover:border-gold/50 hover:shadow-card"><p className="text-xs font-semibold text-foreground">Asociar cotización</p><p className="mt-1 text-[10px] text-muted-foreground">Busca o crea la cotización del pedido.</p></Link> : null}
+            {!tieneContrato ? <button type="button" onClick={() => crearContrato.mutate(pedido)} disabled={crearContrato.isPending || !puedeVerComercial} className="rounded-xl border border-gold/25 bg-card p-3 text-left transition hover:border-gold/50 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-50"><p className="text-xs font-semibold text-foreground">{crearContrato.isPending ? "Generando contrato…" : "Completar contrato"}</p><p className="mt-1 text-[10px] text-muted-foreground">Genera el contrato desde los datos actuales del pedido.</p></button> : null}
+            {!tieneFichaTecnica ? <button type="button" onClick={() => { document.getElementById("ficha-tecnica-pedido")?.scrollIntoView({ behavior: "smooth", block: "start" }); setEditando(true); setRutaEdit(pedido.ruta ?? []); }} className="rounded-xl border border-gold/25 bg-card p-3 text-left transition hover:border-gold/50 hover:shadow-card"><p className="text-xs font-semibold text-foreground">Completar ficha técnica</p><p className="mt-1 text-[10px] text-muted-foreground">Revisa trabajo, material y cantidad.</p></button> : null}
+            {!tieneRutaProduccion ? <button type="button" onClick={() => { document.getElementById("ficha-tecnica-pedido")?.scrollIntoView({ behavior: "smooth", block: "start" }); setEditando(true); setRutaEdit(pedido.ruta ?? []); }} className="rounded-xl border border-gold/25 bg-card p-3 text-left transition hover:border-gold/50 hover:shadow-card"><p className="text-xs font-semibold text-foreground">Definir ruta de producción</p><p className="mt-1 text-[10px] text-muted-foreground">Indica las áreas que necesita esta pieza.</p></button> : null}
+            {!tieneEntrega ? <button type="button" onClick={() => { document.getElementById("ficha-tecnica-pedido")?.scrollIntoView({ behavior: "smooth", block: "start" }); setEditando(true); setRutaEdit(pedido.ruta ?? []); }} className="rounded-xl border border-gold/25 bg-card p-3 text-left transition hover:border-gold/50 hover:shadow-card"><p className="text-xs font-semibold text-foreground">Definir fecha de entrega</p><p className="mt-1 text-[10px] text-muted-foreground">Completa la fecha comprometida del pedido.</p></button> : null}
+          </div>
+        ) : <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-xs font-medium text-success">✓ Pedido preparado para continuar su flujo operativo.</div>}
+      </FichaAurum>
 
       <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <div className="border-b border-border bg-surface-sunken px-5 py-4">
@@ -1205,7 +1254,7 @@ function FichaPedido() {
             </Panel>
           </div>
 
-          <Seccion titulo="Ficha técnica general">
+          <div id="ficha-tecnica-pedido"><Seccion titulo="Ficha técnica general">
             {editando && puedeEditar ? (
               <form
                 className="grid grid-cols-2 gap-3 lg:grid-cols-3"
@@ -1418,7 +1467,7 @@ function FichaPedido() {
                 ) : null}
               </div>
             )}
-          </Seccion>
+          </Seccion></div>
 
           <Seccion titulo="Referencias del diseño">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
