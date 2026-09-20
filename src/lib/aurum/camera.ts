@@ -50,7 +50,10 @@ export function applyAurumIJEWELPresentationCamera(
   const direction = new THREE.Vector3(-1.2292039067094442, 9.367439285321952, 3.2772151274423926).normalize();
   // Keep generous negative space around the product, as in the reference
   // presentation. The final viewport framing is intentionally not a tight CAD fit.
-  const distance = Math.max(radius * 3.55, 5.0);
+  // VJSON camera distance is |position| around the origin. Because the
+  // reference model is normalized to the documented autoScaleRadius=2,
+  // preserve the measured distance instead of re-fitting the camera.
+  const distance = 10.079999999999999;
   camera.fov = 25;
   camera.up.set(0, 1, 0);
   controls.target.copy(target);
