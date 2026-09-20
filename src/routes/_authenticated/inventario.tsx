@@ -159,6 +159,8 @@ function InventarioPage() {
   const activos = materiales.filter((m) => m.activo);
   const bajos = activos.filter((m) => m.stock <= m.minimo);
   const valor = activos.reduce((s, m) => s + Number(m.stock) * Number(m.costo_unitario), 0);
+  const importacionAnalisis = useMemo(() => analizarImportacionJoyas(importacionFilas, joyas, importacionConservaCodigos), [importacionFilas, joyas, importacionConservaCodigos]);
+
   const joyasVisibles = useMemo(() => {
     const q = joyaBusqueda.trim().toLowerCase();
     if (!q) return joyas;
@@ -606,10 +608,23 @@ function InventarioPage() {
             </label>
 
             {importacionFilas.length ? <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold">{importacionFilas.length} joyas listas para revisar</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold">{importacionFilas.length} joyas encontradas</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">Revisión previa: nada se guarda hasta confirmar.</p>
+                </div>
                 <label className="flex items-center gap-2 text-[11px] text-muted-foreground"><input type="checkbox" checked={importacionConservaCodigos} onChange={(e) => setImportacionConservaCodigos(e.target.checked)} /> Conservar códigos existentes</label>
               </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <ResumenImportacion label="Listas" value={importacionAnalisis.validas} />
+                <ResumenImportacion label="Código automático" value={importacionAnalisis.automaticas} />
+                <ResumenImportacion label="Requieren revisión" value={importacionAnalisis.errores.length} warning={importacionAnalisis.errores.length > 0} />
+              </div>
+              {importacionAnalisis.errores.length > 0 ? <div className="rounded-xl border border-destructive/20 bg-destructive/[.04] px-4 py-3">
+                <p className="text-xs font-semibold">Hay filas que debemos corregir antes de importar</p>
+                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">{importacionAnalisis.errores.slice(0, 6).map((error) => <li key={error}>• {error}</li>)}</ul>
+                {importacionAnalisis.errores.length > 6 ? <p className="mt-1 text-[10px] text-muted-foreground">Y {importacionAnalisis.errores.length - 6} incidencias más.</p> : null}
+              </div> : null}
               <div className="max-h-56 overflow-auto rounded-xl border border-border">
                 <table className="w-full text-left text-[11px]"><thead className="sticky top-0 bg-card"><tr className="border-b border-border"><th className="px-3 py-2">Código</th><th className="px-3 py-2">Joya</th><th className="px-3 py-2">Metal</th><th className="px-3 py-2">Peso</th></tr></thead>
                   <tbody className="divide-y divide-border">{importacionFilas.slice(0, 50).map((fila, i) => <tr key={i}><td className="px-3 py-2 font-mono text-gold">{fila.codigo || "Automático"}</td><td className="px-3 py-2">{fila.nombre || "Sin nombre"}</td><td className="px-3 py-2">{fila.metal || "—"}</td><td className="px-3 py-2">{fila.peso || "—"}</td></tr>)}</tbody>
@@ -620,7 +635,7 @@ function InventarioPage() {
 
             <div className="flex justify-end gap-2 border-t border-border pt-4">
               <button type="button" disabled={importando} onClick={() => setImportacionAbierta(false)} className="rounded-xl border border-border px-4 py-2.5 text-xs">Cancelar</button>
-              <button type="button" disabled={!importacionFilas.length || importando} onClick={() => void confirmarImportacion()} className="rounded-xl border border-gold/25 bg-gold/[.08] px-4 py-2.5 text-xs font-semibold disabled:opacity-50">{importando ? "Importando…" : `Importar ${importacionFilas.length || ""} joyas`}</button>
+              <button type="button" disabled={!importacionFilas.length || importando || importacionAnalisis.errores.length > 0} onClick={() => void confirmarImportacion()} className="rounded-xl border border-gold/25 bg-gold/[.08] px-4 py-2.5 text-xs font-semibold disabled:opacity-50">{importando ? "Importando…" : `Importar ${importacionFilas.length || ""} joyas`}</button>
             </div>
           </div>
         </Modal>
@@ -693,6 +708,48 @@ function Actions({ saving, cancel }: { saving: boolean; cancel: () => void }) {
 function Field({ label, value, onChange, type = "text", required = false, select = false, options = [], optionValues = [], step, inputMode }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; select?: boolean; options?: string[]; optionValues?: string[]; step?: string; inputMode?: "none" | "text" | "tel" | "url" | "email" | "numeric" | "decimal" | "search" }) {
   const cls = "mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15";
   return <label className="block text-xs font-medium">{label}{select ? <select required={required} value={value} onChange={(e) => onChange(e.target.value)} className={cls}>{options.map((o, i) => <option key={o} value={optionValues[i] ?? o}>{o}</option>)}</select> : <input required={required} min={type === "number" ? 0 : undefined} step={type === "number" ? step ?? "any" : undefined} inputMode={inputMode} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={cls} />}</label>;
+}
+
+function ResumenImportacion({ label, value, warning = false }: { label: string; value: number; warning?: boolean }) {
+  return (
+    <div className={`rounded-xl border px-3 py-2.5 ${warning ? "border-destructive/20 bg-destructive/[.03]" : "border-border bg-background/50"}`}>
+      <p className="text-[9px] font-semibold uppercase tracking-[.15em] text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-lg font-semibold tabular-nums ${warning ? "text-destructive" : ""}`}>{value}</p>
+    </div>
+  );
+}
+
+function analizarImportacionJoyas(filas: ImportacionJoya[], joyas: Joya[], conservarCodigos: boolean) {
+  const codigosExistentes = new Set(joyas.map((j) => j.codigo?.trim()).filter(Boolean));
+  const codigosArchivo = new Map<string, number>();
+  const errores: string[] = [];
+  let automaticas = 0;
+
+  filas.forEach((fila, index) => {
+    const filaNumero = index + 2;
+    const nombre = fila.nombre.trim();
+    const codigo = fila.codigo.trim();
+    const peso = fila.peso.trim().replace(",", ".");
+    const cantidad = fila.cantidad.trim().replace(",", ".");
+
+    if (!nombre) errores.push(`Fila ${filaNumero}: falta el nombre de la joya.`);
+    if (peso && (!Number.isFinite(Number(peso)) || Number(peso) < 0)) errores.push(`Fila ${filaNumero}: el peso "${fila.peso}" no es válido.`);
+    if (cantidad && (!Number.isFinite(Number(cantidad)) || Number(cantidad) <= 0)) errores.push(`Fila ${filaNumero}: la cantidad "${fila.cantidad}" no es válida.`);
+
+    if (!codigo || !conservarCodigos) automaticas += 1;
+    if (codigo && conservarCodigos) {
+      const veces = (codigosArchivo.get(codigo) ?? 0) + 1;
+      codigosArchivo.set(codigo, veces);
+      if (veces > 1) errores.push(`Filas con código duplicado "${codigo}". Se requiere revisión.`);
+      else if (codigosExistentes.has(codigo)) automaticas += 1;
+    }
+  });
+
+  return {
+    validas: Math.max(0, filas.length - errores.length),
+    automaticas,
+    errores: [...new Set(errores)],
+  };
 }
 
 function parsearCSVJoyas(texto: string): ImportacionJoya[] {
