@@ -15,6 +15,7 @@ import {
   Search,
   Trash2,
   Upload,
+  QrCode,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
