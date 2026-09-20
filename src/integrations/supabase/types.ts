@@ -2587,6 +2587,36 @@ export type Database = {
       }
       recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
+      registrar_inspeccion_calidad: {
+        Args: {
+          _descripcion?: string
+          _evidencia_url?: string
+          _motivo?: string
+          _orden_id: string
+          _resultado: string
+          _tipo?: string
+        }
+        Returns: {
+          created_at: string
+          descripcion: string
+          evidencia_url: string | null
+          id: string
+          inspeccionado_por: string
+          motivo: string
+          orden_produccion_id: string
+          resultado: string
+          retrabajo_trabajo_id: string | null
+          tipo: string
+          trabajo_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "control_calidad"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       seguimiento_pedido: {
         Args: { _ref: string }
         Returns: {
@@ -2636,6 +2666,34 @@ export type Database = {
       ve_sede: {
         Args: { _sede_id: string; _user_id: string }
         Returns: boolean
+      }
+      verificar_pieza_terminada: {
+        Args: { _nuevo_estado: string; _pieza_id: string }
+        Returns: {
+          cantidad: number
+          created_at: string
+          estado: string
+          id: string
+          metal_estimado: string
+          metal_real: string
+          numero_pieza: string
+          observaciones: string
+          orden_produccion_id: string
+          pedido_id: string
+          peso_estimado: number | null
+          peso_final: number | null
+          piedras_estimadas: string
+          piedras_reales: string
+          registrado_por: string | null
+          unidad_peso: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "piezas_terminadas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
