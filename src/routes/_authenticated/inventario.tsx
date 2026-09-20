@@ -264,7 +264,7 @@ function InventarioPage() {
       peso: joyaForm.peso ? Number(joyaForm.peso) : null, talla: joyaForm.talla.trim(),
       piedras: joyaForm.piedras.trim(), cantidad: Number(joyaForm.cantidad) || 1,
       estado: joyaForm.estado, origen: "app",
-    });
+    }).select("id,codigo").single();
     if (r.error) toast.error(r.error.message);
     else {
       toast.success(r.data?.codigo ? `Joya creada · ${r.data.codigo}` : "Joya agregada");
