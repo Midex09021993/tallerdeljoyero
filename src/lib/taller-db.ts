@@ -207,33 +207,32 @@ async function actualizarPedidoConReinicioFlexible(
   pedidoId: string,
   cambios: Partial<PedidoNuevo> & { area_desde: string },
 ) {
-  const intentos = [
-    cambios as PedidoUpdate,
-    omitirCampos(cambios as PedidoUpdate, camposVentasTrazables),
-    omitirCampos(omitirCampos(cambios as PedidoUpdate, camposVentasTrazables), camposVentasBase),
-  ];
-
+  const { pedido, comercial, tieneComerciales } = separarDatosComerciales(cambios);
+  const intentos = [pedido as PedidoUpdate];
   let ultimoError: { message?: string; code?: string; details?: string } | null = null;
 
   for (const payload of intentos) {
     const { error } = await supabase.from("pedidos").update(payload).eq("id", pedidoId);
-    if (!error) return;
+    if (!error) break;
     ultimoError = error;
-
     if (!esErrorCampoFaltante(error)) {
       throw new Error(`No se pudo reiniciar el flujo: ${detalleErrorSupabase(error)}`);
     }
-
-    console.warn("[pedidos:reinicio-flujo] Reintentando sin columnas no disponibles", {
-      error: detalleErrorSupabase(error),
-      campos: Object.keys(payload),
-    });
   }
 
   if (ultimoError) {
     throw new Error(`No se pudo reiniciar el flujo: ${detalleErrorSupabase(ultimoError)}`);
   }
+
+  if (tieneComerciales) {
+    const { error } = await supabase
+      .from("pedido_comercial")
+      .update(comercial)
+      .eq("pedido_id", pedidoId);
+    if (error) throw error;
+  }
 }
+
 
 function secuenciaPedido(pedido: Pedido) {
   const ruta = (Array.isArray(pedido.ruta) ? pedido.ruta : [])
@@ -1035,28 +1034,34 @@ async function sumarImporteAContrato(contratoId: string | null | undefined, impo
 async function recalcularTotalContrato(numero: string, contratoId: string | null | undefined) {
   if (!numero.trim() || !contratoId || !esUuid(contratoId)) return;
 
-  const { data, error } = await supabase
+  const { data: pedidosData, error: pedidosError } = await supabase
     .from("pedidos")
-    .select("importe")
+    .select("id")
     .eq("contrato", numero.trim());
+  if (pedidosError) throw pedidosError;
 
-  if (error) {
-    if (esErrorCampoFaltante(error)) return;
-    throw error;
+  const ids = ((pedidosData ?? []) as Array<{ id: string }>).map((p) => p.id);
+  if (ids.length === 0) {
+    const { error } = await supabase.from("contratos").update({ total: 0 }).eq("id", contratoId);
+    if (error) throw error;
+    return;
   }
 
-  const total = ((data ?? []) as Array<{ importe?: number }>).reduce(
+  const { data: comerciales, error: comercialError } = await supabase
+    .from("pedido_comercial")
+    .select("importe")
+    .in("pedido_id", ids);
+  if (comercialError) throw comercialError;
+
+  const total = ((comerciales ?? []) as Array<{ importe?: number }>).reduce(
     (acc, pedido) => acc + (Number(pedido.importe) || 0),
     0,
   );
 
-  const { error: errorUpdate } = await supabase
-    .from("contratos")
-    .update({ total })
-    .eq("id", contratoId);
-
-  if (errorUpdate && !esErrorCampoFaltante(errorUpdate)) throw errorUpdate;
+  const { error: errorUpdate } = await supabase.from("contratos").update({ total }).eq("id", contratoId);
+  if (errorUpdate) throw errorUpdate;
 }
+
 
 async function vincularPedidosPorNumeroContrato(numero: string, contratoId: string | null) {
   if (!numero.trim() || !contratoId || !esUuid(contratoId)) return;
@@ -1168,25 +1173,31 @@ export function useContrato(id: string) {
 async function contratoDesdePedidos(numeroContrato: string): Promise<Contrato | null> {
   if (!numeroContrato || esUuid(numeroContrato)) return null;
 
-  const { data, error } = await supabase
+  const { data: pedidosData, error } = await supabase
     .from("pedidos")
-    .select("contrato, cliente, telefono, origen, importe, sede_id, sedes(nombre), created_at")
+    .select("id, contrato, cliente, origen, sede_id, sedes(nombre), created_at")
     .eq("contrato", numeroContrato);
+  if (error) throw error;
 
-  if (error) {
-    if (esErrorCampoFaltante(error)) {
-      const { data: dataSinSede, error: errorSinSede } = await supabase
-        .from("pedidos")
-        .select("contrato, cliente, telefono, origen, importe, sede_id, created_at")
-        .eq("contrato", numeroContrato);
-      if (errorSinSede) throw errorSinSede;
-      return construirContratoTemporal(numeroContrato, dataSinSede ?? []);
-    }
-    throw error;
-  }
+  const ids = ((pedidosData ?? []) as Array<{ id: string }>).map((p) => p.id);
+  const { data: comerciales, error: comercialError } = ids.length
+    ? await supabase.from("pedido_comercial").select("pedido_id, telefono, importe").in("pedido_id", ids)
+    : { data: [], error: null };
+  if (comercialError) throw comercialError;
 
-  return construirContratoTemporal(numeroContrato, data ?? []);
+  const comercialesPorPedido = new Map(
+    ((comerciales ?? []) as Array<Record<string, unknown>>).map((row) => [
+      textoCampo(row, "pedido_id"), row,
+    ]),
+  );
+
+  const filas = ((pedidosData ?? []) as Array<Record<string, unknown>>).map((pedido) => ({
+    ...pedido,
+    ...(comercialesPorPedido.get(textoCampo(pedido, "id")) ?? {}),
+  }));
+  return construirContratoTemporal(numeroContrato, filas);
 }
+
 
 function construirContratoTemporal(
   numeroContrato: string,
@@ -1229,8 +1240,9 @@ export function useCrearPedido() {
     mutationFn: async (pedido: PedidoNuevo) => {
       const contrato = await asegurarContratoParaPedido(pedido);
       const pedidoConContrato = { ...pedido, contrato: contrato.numero, contrato_id: contrato.id };
-      const respuesta = await supabase.from("pedidos").insert(pedidoConContrato).select("id, referencia, cliente, sede_id").single();
-      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = pedidoConContrato;
+      const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContrato);
+      const respuesta = await supabase.from("pedidos").insert(datosOperativos).select("id, referencia, cliente, sede_id").single();
+      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
       const { data, error } =
         respuesta.error && esErrorCampoFaltante(respuesta.error) && "contrato_id" in pedidoConContrato
           ? await supabase.from("pedidos").insert(sinContratoId).select("id, referencia, cliente, sede_id").single()
@@ -1256,8 +1268,9 @@ export function useCrearTrabajoContrato() {
     mutationFn: async ({ contrato, pedido, referenciasExistentes }: { contrato: Contrato; pedido: Omit<PedidoNuevo, "referencia" | "contrato_id">; referenciasExistentes: string[] }) => {
       const referencia = siguienteReferenciaContrato(contrato.numero, referenciasExistentes);
       const nuevo: PedidoNuevo = { ...pedido, referencia, cliente: contrato.cliente, contrato: contrato.numero, contrato_id: esUuid(contrato.id) ? contrato.id : null, sede_id: contrato.sede_id };
-      const respuesta = await supabase.from("pedidos").insert(nuevo).select("id, referencia, cliente, sede_id").single();
-      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = nuevo;
+      const { pedido: datosOperativos } = separarDatosComerciales(nuevo);
+      const respuesta = await supabase.from("pedidos").insert(datosOperativos).select("id, referencia, cliente, sede_id").single();
+      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
       const { data, error } =
         respuesta.error && (esErrorCampoFaltante(respuesta.error) || respuesta.error.code === "22P02")
           ? await supabase.from("pedidos").insert(sinContratoId).select("id, referencia, cliente, sede_id").single()
