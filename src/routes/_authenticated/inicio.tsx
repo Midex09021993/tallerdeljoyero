@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
-  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();\n  const { data: materiales = [], isLoading: cargandoInventario } = useInventario();
+  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
   const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
 
@@ -71,7 +71,7 @@ function Inicio() {
     const recepcion = activos.filter((p) => pedidoEnRecepcion(p.estado));
     const urgentes = activos.filter(esUrgente);
     return { activos, produccion, recepcion, urgentes };
-  }, [pedidos, materiales]);
+  }, [pedidos]);
 
   const modulos = useMemo(() => {
     if (!esOperario) {
@@ -223,15 +223,15 @@ function Inicio() {
           <Panel titulo="Actividad del taller">
             <div className="space-y-2 p-3">
               {[
-                ["Diseño 3D", "Diseño 3D", LayoutGrid],
-                ["Impresión", "Impresión 3D", Boxes],
-                ["Casting", "Casting", Gem],
-                ["Taller", "Taller", Hammer],
-                ["Ventas", "Área ventas", PackageCheck],
-              ].map(([label, area, Icono]) => (
-                <div key={String(label)} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
+                { label: "Diseño 3D", area: "Diseño 3D", icon: LayoutGrid },
+                { label: "Impresión", area: "Impresión 3D", icon: Boxes },
+                { label: "Casting", area: "Casting", icon: Gem },
+                { label: "Taller", area: "Taller", icon: Hammer },
+                { label: "Ventas", area: "Área ventas", icon: PackageCheck },
+              ].map(({ label, area, icon: Icono }) => (
+                <div key={label} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
                   <span className="grid size-9 place-items-center rounded-lg border border-gold/20 bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
-                  <span className="flex-1 text-sm font-semibold">{String(label)}</span>
+                  <span className="flex-1 text-sm font-semibold">{label}</span>
                   <span className="font-display text-xl">{pedidos.filter((p) => p.area_actual === area).length}</span>
                 </div>
               ))}
