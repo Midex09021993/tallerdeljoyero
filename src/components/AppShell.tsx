@@ -121,9 +121,9 @@ export function AppShell({
   subtitulo?: string;
   acciones?: ReactNode;
   atrasMovil?: AtrasMovil;
-  ocultarNavegacion?: boolean;
   encabezadoMovilCompacto?: boolean;
   ocultarAccionesCelular?: boolean;
+  ocultarNavegacion?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -181,3 +181,11 @@ export function AppShell({
             })}
             </nav>
           </div>
+          </aside>
+        ) : null}
+      <main className="min-w-0 flex-1">
+        {children}
+      </main>
+    </div>
+  );
+}
