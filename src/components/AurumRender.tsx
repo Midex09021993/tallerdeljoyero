@@ -122,6 +122,9 @@ export function AurumRender() {
   const categoriaProyectoRef = useRef("Anillo");
   categoriaProyectoRef.current = categoriaProyecto;
   const [captura, setCaptura] = useState<string | null>(null);
+  const [presentationCover, setPresentationCover] = useState<string | null>(null);
+  const [presentationVisible, setPresentationVisible] = useState(false);
+  const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [parteSeleccionada, setParteSeleccionada] = useState<string | null>(null);
   const [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string | null>(null);
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
@@ -702,6 +705,10 @@ export function AurumRender() {
     })().catch(e=>vivo&&setError(e?.message||"No se pudo iniciar AURUM RENDER"));
     return()=>{
     vivo=false;
+    if (presentationTimerRef.current) {
+      clearTimeout(presentationTimerRef.current);
+      presentationTimerRef.current = null;
+    }
     if(frameRef.current!==null){
       cancelAnimationFrame(frameRef.current);
       frameRef.current=null;
@@ -716,7 +723,44 @@ export function AurumRender() {
   useEffect(()=>apiRef.current?.iluminacion(iluminacionId),[iluminacionId]);
   useEffect(()=>apiRef.current?.vista(vista),[vista]);
 
-  const cargarArchivo=useCallback(async(file:File)=>{setCargando(true);setError(null);setPaso("Procesando archivo...");try{await apiRef.current?.cargar(file,(p:string)=>setPaso(p));setArchivo(file.name);setFormatoInterno("GLB");setCaptura(null)}catch(e){setError(e instanceof Error?e.message:"No se pudo convertir el modelo");setArchivo(null);setFormatoInterno(null)}finally{setCargando(false);setPaso(null)}},[]);
+  const cargarArchivo=useCallback(async(file:File)=>{
+    setCargando(true);
+    setError(null);
+    setPaso("Procesando archivo...");
+    setPresentationCover(null);
+    setPresentationVisible(false);
+    if (presentationTimerRef.current) {
+      clearTimeout(presentationTimerRef.current);
+      presentationTimerRef.current = null;
+    }
+    try {
+      await apiRef.current?.cargar(file,(p:string)=>setPaso(p));
+      setArchivo(file.name);
+      setFormatoInterno("GLB");
+      setCaptura(null);
+
+      // iJewel presents a still cover before handing control to the live viewer.
+      // AURUM creates that cover from the actual loaded model, so it is never
+      // a stale image from another project.
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      const cover = apiRef.current?.capturar?.();
+      if (cover) {
+        setPresentationCover(cover);
+        setPresentationVisible(true);
+        presentationTimerRef.current = setTimeout(() => {
+          setPresentationVisible(false);
+          presentationTimerRef.current = null;
+        }, 1050);
+      }
+    } catch(e) {
+      setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
+      setArchivo(null);
+      setFormatoInterno(null);
+    } finally {
+      setCargando(false);
+      setPaso(null);
+    }
+  },[]);
   const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
@@ -845,7 +889,34 @@ export function AurumRender() {
         <main className="relative min-w-0 flex-1 bg-[#090b0e]">
           <div ref={visorRef} className="absolute inset-0">
             {!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span></button></div></div>}
-            {cargando&&<div className="absolute inset-0 z-30 grid place-items-center bg-black/35 backdrop-blur-sm"><div className="rounded-2xl border border-[#d4af37]/20 bg-black/70 px-7 py-5 text-center text-sm text-white/80"><div className="mx-auto mb-3 size-5 animate-spin rounded-full border-2 border-white/20 border-t-[#d4af37]"/>{paso||"Preparando visualización..."}</div></div>}
+            {(cargando || presentationVisible) && <div
+              className={"absolute inset-0 z-40 overflow-hidden transition-opacity duration-700 "+(presentationVisible?"opacity-100":"opacity-100")}
+              aria-live="polite"
+            >
+              {presentationCover
+                ? <img src={presentationCover} alt="Presentación del diseño" className={"absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] "+(presentationVisible?"scale-100":"scale-[1.015]")} />
+                : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,#ffffff_0%,#f2f2f0_48%,#d8d9d7_100%)]" />
+              }
+              <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/15 to-transparent" />
+              <div className="absolute bottom-5 left-5 flex items-center gap-2.5 rounded-full border border-black/10 bg-white/72 px-3 py-2 shadow-lg backdrop-blur-md">
+                <span className="grid size-7 place-items-center rounded-full border border-[#b99642]/40 bg-white/80">
+                  <span className="text-[11px] font-semibold tracking-[.16em] text-[#b99642]">A</span>
+                </span>
+                <span className="text-[9px] font-semibold uppercase tracking-[.24em] text-black/55">AURUM RENDER</span>
+              </div>
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center">
+                <div className={"mx-auto mb-3 grid size-10 place-items-center rounded-full border border-black/10 bg-white/65 shadow-xl backdrop-blur-sm "+(presentationCover?"opacity-0":"opacity-100")}>
+                  <div className="size-4 animate-spin rounded-full border-2 border-black/10 border-t-[#b99642]" />
+                </div>
+                <div className={"text-[10px] font-medium uppercase tracking-[.34em] text-black/45 transition-opacity duration-500 "+(presentationCover?"opacity-0":"opacity-100")}>
+                  {paso || "Preparando presentación"}
+                </div>
+              </div>
+              <div className="absolute bottom-5 right-5 h-1 w-28 overflow-hidden rounded-full bg-black/10">
+                <div className={"h-full rounded-full bg-[#b99642] transition-all duration-[1000ms] "+(presentationCover?"w-full":"w-2/5")} />
+              </div>
+            </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
             {parteSeleccionada&&<div className="absolute left-5 top-5 z-20 max-w-[65%] rounded-xl border border-[#d4af37]/40 bg-black/65 px-3 py-2 text-[10px] text-white shadow-xl backdrop-blur-xl"><span className="text-[#d4af37]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
             {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-[10px] text-white/50 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
