@@ -514,6 +514,38 @@ function textoCampo(registro: Record<string, unknown>, campo: string, fallback =
   return typeof valor === "string" ? valor : fallback;
 }
 
+export type PedidoSelector = Pick<
+  Pedido,
+  "id" | "referencia" | "cliente" | "trabajo" | "estado" | "sede_id" | "area_actual"
+>;
+
+const CAMPOS_PEDIDO_SELECTOR =
+  "id, referencia, cliente, trabajo, estado, sede_id, area_actual";
+
+export function usePedidosSelector() {
+  return useQuery({
+    queryKey: ["pedidos-selector"],
+    queryFn: async (): Promise<PedidoSelector[]> => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select(CAMPOS_PEDIDO_SELECTOR)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return (data ?? []).map((p) => ({
+        id: p.id,
+        referencia: p.referencia ?? "",
+        cliente: p.cliente ?? "",
+        trabajo: p.trabajo ?? "",
+        estado: normalizarEstadoPedido(p.estado, p.area_actual),
+        sede_id: p.sede_id ?? null,
+        area_actual: areaOperativa(p.area_actual),
+      }));
+    },
+  });
+}
+
 export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
