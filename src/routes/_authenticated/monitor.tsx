@@ -84,9 +84,9 @@ function MonitorPage() {
         />
       }
     >
-      <div className="relative overflow-hidden rounded-[28px] border border-ink/10 bg-ink px-6 py-7 text-ink-foreground shadow-[0_24px_70px_-35px_rgba(0,0,0,0.45)] sm:px-8 lg:px-10">
+      <div className="relative overflow-hidden rounded-[28px] border border-gold/20 bg-card px-6 py-7 text-foreground shadow-raised sm:px-8 lg:px-10">
         <div className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-gold/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-white/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-gold/5 blur-3xl" />
 
         <div className="relative flex flex-wrap items-start justify-between gap-6">
           <div>
@@ -100,16 +100,16 @@ function MonitorPage() {
             <h2 className="font-display text-3xl italic tracking-tight sm:text-4xl">
               El taller, de un vistazo.
             </h2>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-foreground/55">
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
               Estado operativo por área, pedidos activos y última actividad. Una pantalla pensada
               para supervisar sin entrar a cada módulo.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-sunken px-4 py-3">
             <Activity className="size-4 text-gold" />
             <div>
-              <p className="text-[9px] uppercase tracking-[0.18em] text-white/35">Estado</p>
+              <p className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">Estado</p>
               <p className="text-sm font-medium">Operación activa</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ function MonitorPage() {
                     </div>
                     <div>
                       <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
-                        activa ? "text-white/45" : "text-muted-foreground"
+                        "text-muted-foreground"
                       }`}>
                         Área
                       </p>
@@ -182,9 +182,9 @@ function MonitorPage() {
                 </div>
 
                 <div className={`mt-5 flex items-center justify-between border-t pt-4 ${
-                  activa ? "border-white/10" : "border-border"
+                  "border-border"
                 }`}>
-                  <span className={`text-xs ${activa ? "text-white/50" : "text-muted-foreground"}`}>
+                  <span className={`text-xs ${"text-muted-foreground"}`}>
                     {lista.length === 1 ? "1 pedido en proceso" : `${lista.length} pedidos en proceso`}
                   </span>
                   <ArrowUpRight
@@ -196,9 +196,9 @@ function MonitorPage() {
               </button>
 
               {activa ? (
-                <div className="border-t border-white/10 px-5 pb-5">
+                <div className="border-t border-border px-5 pb-5">
                   {lista.length === 0 ? (
-                    <div className="flex items-center gap-3 py-5 text-xs text-white/45">
+                    <div className="flex items-center gap-3 py-5 text-xs text-muted-foreground">
                       <CheckCircle2 className="size-4 text-gold" />
                       Área disponible
                     </div>
@@ -207,7 +207,7 @@ function MonitorPage() {
                       {lista.map((p) => (
                         <div
                           key={p.id}
-                          className="rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+                          className="rounded-xl border border-border bg-card px-4 py-3"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
