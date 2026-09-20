@@ -81,6 +81,7 @@ function InventarioPage() {
   const [joyas, setJoyas] = useState<Joya[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todas");
+  const [joyaBusqueda, setJoyaBusqueda] = useState("");
   const [movBusqueda, setMovBusqueda] = useState("");
   const [movTipo, setMovTipo] = useState("Todos");
   const [movMaterial, setMovMaterial] = useState("Todos");
@@ -149,6 +150,17 @@ function InventarioPage() {
   const activos = materiales.filter((m) => m.activo);
   const bajos = activos.filter((m) => m.stock <= m.minimo);
   const valor = activos.reduce((s, m) => s + Number(m.stock) * Number(m.costo_unitario), 0);
+  const joyasVisibles = useMemo(() => {
+    const q = joyaBusqueda.trim().toLowerCase();
+    if (!q) return joyas;
+    return joyas.filter((j) =>
+      [j.codigo, j.nombre, j.metal, j.ley, j.talla, j.piedras, j.estado]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [joyas, joyaBusqueda]);
+
   const movimientosVisibles = useMemo(() => {
     const q = movBusqueda.trim().toLowerCase();
     return movimientos.filter((m) => {
@@ -438,9 +450,29 @@ function InventarioPage() {
 
         {tab === "joyas" ? (
           <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
-            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p><h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2><p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p></div>{esAdmin ? <button type="button" onClick={() => { setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}</div>
+            <div className="flex flex-col gap-4 border-b border-border p-5 lg:flex-row lg:items-center">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p>
+                <h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2>
+                <p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <label className="relative w-full sm:w-[300px]">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={joyaBusqueda}
+                    onChange={(e) => setJoyaBusqueda(e.target.value)}
+                    placeholder="Buscar código, joya, metal..."
+                    aria-label="Buscar joyas"
+                    className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-9 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15"
+                  />
+                  {joyaBusqueda ? <button type="button" onClick={() => setJoyaBusqueda("")} aria-label="Limpiar búsqueda" className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-gold/[.06] hover:text-foreground"><X className="size-3.5" /></button> : null}
+                </label>
+                {esAdmin ? <button type="button" onClick={() => { setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}
+              </div>
+            </div>
             <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Código", "Joya", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
-              {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyas.map((j) => <tr key={j.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4"><span className="inline-flex items-center rounded-lg border border-gold/25 bg-gold/[.06] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-wide text-gold">{j.codigo || "Sin código"}</span></td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
+              {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyasVisibles.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Search className="mx-auto size-7 text-gold/40" /><p className="mt-3 text-sm font-medium">No encontramos esa joya</p><p className="mt-1 text-xs text-muted-foreground">Prueba con el código, nombre, metal, ley o talla.</p></td></tr> : joyasVisibles.map((j) => <tr key={j.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4"><span className="inline-flex items-center rounded-lg border border-gold/25 bg-gold/[.06] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-wide text-gold">{j.codigo || "Sin código"}</span></td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
             </tbody></table></TableWrap>
           </section>
         ) : null}
