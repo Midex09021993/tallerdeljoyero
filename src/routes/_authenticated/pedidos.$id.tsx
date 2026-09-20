@@ -269,7 +269,7 @@ function useArchivos(pedidoId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedido_archivos")
-        .select("id, tipo, nombre, url, es_enlace, grupo, version, poster, created_at")
+        .select("id, tipo, nombre, url, es_enlace, grupo, version, poster, es_vigente_fabricacion, created_at")
         .eq("pedido_id", pedidoId)
         .order("created_at");
       if (error) throw error;
@@ -568,6 +568,7 @@ function FichaPedido() {
         es_enlace: false,
         grupo: claveGrupo,
         version: siguiente,
+        es_vigente_fabricacion: false,
       });
       if (e2) throw e2;
     },
@@ -605,6 +606,28 @@ function FichaPedido() {
     onSuccess: () => {
       setEnlace({ nombre: "", url: "" });
       qc.invalidateQueries({ queryKey: ["pedido-archivos", id] });
+    },
+  });
+
+  const marcarArchivoVigente = useMutation({
+    mutationFn: async ({ archivoId, grupo }: { archivoId: string; grupo: string }) => {
+      const { error: limpiarError } = await supabase
+        .from("pedido_archivos")
+        .update({ es_vigente_fabricacion: false })
+        .eq("pedido_id", id)
+        .eq("grupo", grupo);
+      if (limpiarError) throw limpiarError;
+
+      const { error } = await supabase
+        .from("pedido_archivos")
+        .update({ es_vigente_fabricacion: true })
+        .eq("id", archivoId)
+        .eq("pedido_id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Versión marcada como vigente para fabricación");
+      void qc.invalidateQueries({ queryKey: ["pedido-archivos", id] });
     },
   });
 
@@ -2162,9 +2185,19 @@ function FichaPedido() {
                               {actual.nombre}
                             </a>
                             <div className="flex shrink-0 items-center gap-3">
-                              <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                                v{actual.version}
+                              <span className={actual.es_vigente_fabricacion ? "rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success" : "rounded-full bg-surface-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground"}>
+                                {actual.es_vigente_fabricacion ? "VIGENTE · " : ""}v{actual.version}
                               </span>
+                              {puedeEditar && !actual.es_vigente_fabricacion ? (
+                                <button
+                                  type="button"
+                                  disabled={marcarArchivoVigente.isPending}
+                                  onClick={() => marcarArchivoVigente.mutate({ archivoId: actual.id, grupo })}
+                                  className="text-xs font-semibold text-success hover:underline disabled:opacity-50"
+                                >
+                                  Marcar vigente
+                                </button>
+                              ) : null}
                               {lista.length > 1 ? (
                                 <button
                                   type="button"
