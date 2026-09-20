@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1406,7 +1406,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     ? ["dueno", "gerente", "operario", "monitor", "cliente"]
     : ["operario", "monitor", "cliente"];
 
-  async function enviar(e: React.FormEvent) {
+  async function enviar(e: FormEvent) {
     e.preventDefault();
     if (form.rol === "operario" && areas.length === 0) {
       toast.error("Elige al menos un área de trabajo para el operario");
@@ -1731,7 +1731,7 @@ function EditorUsuario({
     ? ["dueno", "gerente", "operario", "monitor", "cliente"]
     : ["operario", "monitor", "cliente"];
 
-  async function guardar(e: React.FormEvent) {
+  async function guardar(e: FormEvent) {
     e.preventDefault();
     setGuardando(true);
     try {
