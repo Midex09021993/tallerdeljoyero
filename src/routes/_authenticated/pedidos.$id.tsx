@@ -15,7 +15,9 @@ import {
   useAutorizarProduccion,
   useEnviarAArea,
   usePedidos,
+  useInventario,
 } from "@/lib/taller-db";
+import { toast } from "sonner";
 import { FechaInput } from "@/components/FechaInput";
 import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
@@ -552,8 +554,9 @@ function FichaPedido() {
 
   async function registrarConsumo(e: FormEvent) {
     e.preventDefault();
+    if (!pedido) return;
     const cantidad = Number(cantidadConsumo);
-    const material = materialesInventario.find((item) => item.id === materialConsumo);
+    const material = materialesInventario.find((item: { id: string }) => item.id === materialConsumo);
     if (!material || !Number.isFinite(cantidad) || cantidad <= 0) return;
     setGuardandoConsumo(true);
     try {
@@ -660,7 +663,7 @@ function FichaPedido() {
               {pedidoEnRecepcion(pedido.estado) && puedeAutorizar ? (
                 <button
                   type="button"
-                  onClick={() => autorizar.mutate(pedido.id)}
+                  onClick={() => autorizar.mutate({ pedido, usuarioId: sesion?.user.id ?? null })}
                   disabled={autorizar.isPending}
                   className="rounded-lg bg-gold px-4 py-2.5 text-xs font-bold text-ink transition hover:brightness-110 disabled:opacity-50"
                 >
