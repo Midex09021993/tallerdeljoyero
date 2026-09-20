@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,7 +50,7 @@ function LoginPage() {
     if (sesion) navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
   }, [sesion, navigate]);
 
-  async function entrar(e: React.FormEvent) {
+  async function entrar(e: FormEvent) {
     e.preventDefault();
     setError("");
     setCargando(true);
