@@ -443,7 +443,7 @@ function PedidosPage() {
                   setAbierto(true);
                   setUltimoContrato(null);
                 }}
-                className="inline-flex items-center gap-2 rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground shadow-card hover:opacity-90"
+                className="inline-flex items-center gap-2 rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised"
               >
                 <span aria-hidden="true" className="text-base leading-none">＋</span>
                 Otro pedido mismo contrato
@@ -667,7 +667,7 @@ function PedidosPage() {
             <button
               type="submit"
               disabled={crear.isPending}
-              className="mt-5 w-full rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
+              className="mt-5 w-full rounded-lg bg-gold px-4 py-3 text-sm font-medium text-gold-foreground shadow-card transition hover:shadow-raised disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
             >
               {crear.isPending ? "Guardando…" : "Guardar pedido"}
             </button>
@@ -955,7 +955,7 @@ function PedidosPage() {
                               usuarioId: sesion?.user.id ?? null,
                             })
                           }
-                          className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                          className="rounded-lg bg-gold px-3 py-1.5 text-xs font-medium text-gold-foreground disabled:opacity-50"
                         >
                           Autorizar Producción
                         </button>
@@ -988,7 +988,7 @@ function PedidosPage() {
 
       {porBorrar ? (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-foreground/15 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
         >
