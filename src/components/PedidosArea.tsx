@@ -73,7 +73,7 @@ export function PedidosArea({
             {pedidos.map((pedido) => {
               const enArea = pedidoEnAreaActual(pedido, area);
               return (
-                <article key={pedido.id} className={`px-4 py-4 sm:px-5 ${variante === "ficha-dorada" ? "mx-3 my-3 rounded-2xl border border-gold/25 bg-card shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-raised" : ""}`}>
+                <article key={pedido.id} className={`mx-3 my-3 rounded-2xl border border-gold/20 bg-card p-4 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-raised sm:p-5`}>
                   <button
                     type="button"
                     onClick={() =>
@@ -105,9 +105,20 @@ export function PedidosArea({
                       </span>
                     </div>
 
-                    <p className="mt-3 line-clamp-2 text-sm text-foreground">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gold-deep">
+                        {enArea ? "Estación actual" : "En ruta"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {normalizarArea(pedido.area_actual)}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 line-clamp-2 text-sm font-medium text-foreground">
                       {pedido.trabajo || pedido.pieza || "Sin trabajo definido"}
                     </p>
+
+                    <RutaProduccion pedido={pedido} area={area} />
 
                     <DetallesTecnicosArea pedido={pedido} area={area} />
 
@@ -152,7 +163,7 @@ export function PedidosArea({
                       to="/pedidos/$id"
                       params={{ id: pedido.id }}
                       search={{ from: origen }}
-                      className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border px-5 text-xs font-medium"
+                      className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-gold/25 bg-card px-5 text-xs font-semibold text-gold-deep transition hover:bg-gold/5"
                     >
                       Ficha
                     </Link>
@@ -171,6 +182,33 @@ export function PedidosArea({
         </Panel>
       </div>
     </>
+  );
+}
+
+function RutaProduccion({ pedido, area }: { pedido: PedidoOperativo; area: string }) {
+  const ruta = Array.isArray(pedido.ruta) && pedido.ruta.length
+    ? pedido.ruta.map(normalizarArea)
+    : [normalizarArea(area)];
+  const actual = normalizarArea(pedido.area_actual);
+  const indiceActual = ruta.findIndex((paso) => areaCoincide(paso, actual));
+  return (
+    <div className="mt-4 overflow-x-auto rounded-2xl border border-gold/15 bg-gold/5 px-3 py-3">
+      <div className="flex min-w-max items-center gap-2">
+        {ruta.map((paso, index) => {
+          const esActual = areaCoincide(paso, actual);
+          const terminado = indiceActual >= 0 && index < indiceActual;
+          return (
+            <div key={`${paso}-${index}`} className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${esActual ? "border border-gold/30 bg-gold text-gold-deep" : terminado ? "bg-success-soft text-success" : "bg-card text-muted-foreground"}`}>
+                <span className={`size-1.5 rounded-full ${esActual ? "bg-gold-deep" : terminado ? "bg-success" : "bg-border"}`} />
+                {paso}
+              </span>
+              {index < ruta.length - 1 ? <span className="text-muted-foreground/50">→</span> : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -199,7 +237,7 @@ function MovimientoPedidoInline({ pedido }: { pedido: PedidoOperativo }) {
             if (!areaCoincide(e.target.value, "Pedidos")) setMotivo("");
           }}
           disabled={enviar.isPending}
-          className="h-10 min-w-0 rounded-xl border border-border bg-card px-3 text-xs text-foreground disabled:opacity-50"
+          className="h-10 min-w-0 rounded-xl border border-gold/20 bg-card px-3 text-xs text-foreground shadow-card disabled:opacity-50"
         >
           <option value="">Mover pedido...</option>
           {destinos.map((area) => (
@@ -227,7 +265,7 @@ function MovimientoPedidoInline({ pedido }: { pedido: PedidoOperativo }) {
               },
             );
           }}
-          className="h-10 shrink-0 rounded-xl bg-ink px-5 text-xs font-medium text-ink-foreground disabled:opacity-50"
+          className="h-10 shrink-0 rounded-xl border border-gold/20 bg-gold px-5 text-xs font-semibold text-gold-deep shadow-card disabled:opacity-50"
         >
           Mover
         </button>
