@@ -87,6 +87,67 @@ function simplify(points: Point[], tolerance: number) {
   return dp(radialPoints);
 }
 
+function traceBoundary(component: Point[], width: number, height: number, foreground: Uint8Array) {
+  const set = new Set(component.map((p) => p.y * width + p.x));
+  const has = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height && set.has(y * width + x);
+  const dirs = [
+    [1, 0], [1, 1], [0, 1], [-1, 1],
+    [-1, 0], [-1, -1], [0, -1], [1, -1],
+  ] as const;
+
+  const boundary = component.filter((p) =>
+    dirs.some(([dx, dy]) => {
+      const nx = p.x + dx;
+      const ny = p.y + dy;
+      return nx < 0 || ny < 0 || nx >= width || ny >= height || !foreground[ny * width + nx];
+    }),
+  );
+  if (boundary.length < 8) return [];
+
+  const boundarySet = new Set(boundary.map((p) => p.y * width + p.x));
+  const start = boundary.reduce((best, p) =>
+    p.y < best.y || (p.y === best.y && p.x < best.x) ? p : best, boundary[0]);
+
+  const ordered: Point[] = [];
+  let current = start;
+  let previousDir = 4;
+  const maxSteps = boundary.length * 8 + 32;
+
+  for (let step = 0; step < maxSteps; step++) {
+    ordered.push(current);
+    let found: Point | null = null;
+    let foundDir = previousDir;
+
+    for (let offset = 0; offset < 8; offset++) {
+      const dir = (previousDir + offset + 6) % 8;
+      const [dx, dy] = dirs[dir];
+      const nx = current.x + dx;
+      const ny = current.y + dy;
+      if (boundarySet.has(ny * width + nx)) {
+        found = { x: nx, y: ny };
+        foundDir = dir;
+        break;
+      }
+    }
+
+    if (!found) break;
+    const sameStart = found.x === start.x && found.y === start.y;
+    const nextAfterStart = ordered.length > 2 && found.x === ordered[1]?.x && found.y === ordered[1]?.y;
+    if (sameStart) break;
+    if (nextAfterStart) break;
+    current = found;
+    previousDir = foundDir;
+  }
+
+  // Remove consecutive duplicates and keep only a genuine closed boundary.
+  const clean: Point[] = [];
+  for (const p of ordered) {
+    const last = clean[clean.length - 1];
+    if (!last || last.x !== p.x || last.y !== p.y) clean.push(p);
+  }
+  return clean.length >= 8 ? clean : boundary;
+}
+
 function traceContours(data: Uint8ClampedArray, width: number, height: number, threshold: number) {
   const foreground = new Uint8Array(width * height);
   for (let i = 0; i < width * height; i++) {
@@ -122,24 +183,9 @@ function traceContours(data: Uint8ClampedArray, width: number, height: number, t
       }
 
       if (component.length < 12) continue;
-
-      const boundary: Point[] = [];
-      for (const p of component) {
-        const neighbors = [[1,0],[-1,0],[0,1],[0,-1]];
-        if (neighbors.some(([dx,dy]) => {
-          const nx = p.x + dx, ny = p.y + dy;
-          return nx < 0 || ny < 0 || nx >= width || ny >= height || !foreground[ny * width + nx];
-        })) {
-          boundary.push(p);
-        }
-      }
-
-      if (boundary.length < 8) continue;
-      const cx = boundary.reduce((s, p) => s + p.x, 0) / boundary.length;
-      const cy = boundary.reduce((s, p) => s + p.y, 0) / boundary.length;
-      boundary.sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
-
-      contours.push({ points: boundary, area: component.length });
+      const points = traceBoundary(component, width, height, foreground);
+      if (points.length < 8) continue;
+      contours.push({ points, area: component.length });
     }
   }
 
@@ -158,8 +204,22 @@ function pathFromPoints(points: Point[]) {
   return d + " Z";
 }
 
+function normalizePoints(points: Point[], widthMm: number, heightMm: number) {
+  const minX = Math.min(...points.map((p) => p.x));
+  const minY = Math.min(...points.map((p) => p.y));
+  const maxX = Math.max(...points.map((p) => p.x));
+  const maxY = Math.max(...points.map((p) => p.y));
+  const spanX = Math.max(maxX - minX, 1);
+  const spanY = Math.max(maxY - minY, 1);
+  return points.map((p) => ({
+    x: ((p.x - minX) / spanX) * widthMm,
+    y: ((p.y - minY) / spanY) * heightMm,
+  }));
+}
+
 function svgFile(points: Point[], widthMm: number, heightMm: number) {
-  const d = pathFromPoints(points);
+  const normalized = normalizePoints(points, widthMm, heightMm);
+  const d = pathFromPoints(normalized);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}">
   <path d="${d}" fill="none" stroke="#000000" stroke-width="0.01"/>
@@ -167,10 +227,37 @@ function svgFile(points: Point[], widthMm: number, heightMm: number) {
 }
 
 function dxfFile(points: Point[], widthMm: number, heightMm: number) {
-  const sx = widthMm / Math.max(...points.map(p => p.x), 1);
-  const sy = heightMm / Math.max(...points.map(p => p.y), 1);
-  const body = points.map(p => `10\n${(p.x * sx).toFixed(4)}\n20\n${(heightMm - p.y * sy).toFixed(4)}\n`).join("");
-  return `0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nLASER\n90\n${points.length}\n70\n1\n${body}0\nENDSEC\n0\nEOF\n`;
+  const normalized = normalizePoints(points, widthMm, heightMm);
+  const body = normalized.map((p) =>
+    `10\\n${p.x.toFixed(4)}\\n20\\n${(heightMm - p.y).toFixed(4)}\\n`,
+  ).join("");
+  return `0\\nSECTION\\n2\\HEADER\\n9\\n$INSUNITS\\n70\\n4\\n0\\nENDSEC\\n0\\nSECTION\\n2\\ENTITIES\\n0\\nLWPOLYLINE\\n8\\nLASER\\n90\\n${normalized.length}\\n70\\n1\\n${body}0\\nENDSEC\\n0\\nEOF\\n`;
+}
+
+function hasSelfIntersection(points: Point[]) {
+  if (points.length < 4) return false;
+  const orient = (a: Point, b: Point, c: Point) =>
+    (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  const onSegment = (a: Point, b: Point, p: Point) =>
+    Math.min(a.x, b.x) <= p.x && p.x <= Math.max(a.x, b.x) &&
+    Math.min(a.y, b.y) <= p.y && p.y <= Math.max(a.y, b.y);
+  const intersects = (a: Point, b: Point, c: Point, d: Point) => {
+    const o1 = orient(a,b,c), o2 = orient(a,b,d), o3 = orient(c,d,a), o4 = orient(c,d,b);
+    if (((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) &&
+        ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0))) return true;
+    return (Math.abs(o1) < 1e-8 && onSegment(a,b,c)) ||
+      (Math.abs(o2) < 1e-8 && onSegment(a,b,d)) ||
+      (Math.abs(o3) < 1e-8 && onSegment(c,d,a)) ||
+      (Math.abs(o4) < 1e-8 && onSegment(c,d,b));
+  };
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i], b = points[(i + 1) % points.length];
+    for (let j = i + 1; j < points.length; j++) {
+      if (j === i + 1 || (i === 0 && j === points.length - 1)) continue;
+      if (intersects(a,b,points[j],points[(j + 1) % points.length])) return true;
+    }
+  }
+  return false;
 }
 
 export function VectorizadorLaser() {
@@ -181,6 +268,7 @@ export function VectorizadorLaser() {
   const [threshold, setThreshold] = useState(150);
   const [simplification, setSimplification] = useState(2);
   const [singleContour, setSingleContour] = useState(true);
+  const [widthMm, setWidthMm] = useState(30);
   const [contours, setContours] = useState<Contour[]>([]);
   const [sourceSize, setSourceSize] = useState({ width: 0, height: 0 });
   const [processing, setProcessing] = useState(false);
@@ -196,7 +284,6 @@ export function VectorizadorLaser() {
       if (previous) URL.revokeObjectURL(previous);
       return url;
     });
-    setSourceFile(file);
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(1, MAX_SIZE / Math.max(img.naturalWidth, img.naturalHeight));
@@ -224,7 +311,7 @@ export function VectorizadorLaser() {
   useEffect(() => {
     if (!sourceFile) return;
     processImage(sourceFile);
-    // The source URL is intentionally kept until a new file is selected/reset.
+    // Reprocess only when the source or threshold changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceFile, threshold]);
 
@@ -234,10 +321,15 @@ export function VectorizadorLaser() {
   );
   const outputContours = singleContour ? cleanContours.slice(0, 1) : cleanContours.slice(0, 12);
   const points = outputContours[0]?.points ?? [];
-  const widthMm = sourceSize.width ? 30 : 30;
-  const heightMm = sourceSize.width && sourceSize.height ? Math.max(0.1, widthMm * sourceSize.height / sourceSize.width) : 20;
+  const aspect = sourceSize.width && sourceSize.height ? sourceSize.height / sourceSize.width : 0.667;
+  const heightMm = Math.max(0.1, widthMm * aspect);
   const totalPoints = outputContours.reduce((sum, c) => sum + c.points.length, 0);
-  const closed = outputContours.length > 0 && outputContours.every(c => c.points.length >= 3);
+  const selfIntersecting = outputContours.some((c) => hasSelfIntersection(c.points));
+  const duplicatePoints = outputContours.some((c) => c.points.some((p, i) => {
+    const q = c.points[(i + 1) % c.points.length];
+    return p.x === q.x && p.y === q.y;
+  }));
+  const closed = outputContours.length > 0 && outputContours.every(c => c.points.length >= 3) && !selfIntersecting && !duplicatePoints;
 
   const download = (kind: "svg" | "dxf") => {
     if (!points.length) return;
@@ -308,11 +400,19 @@ export function VectorizadorLaser() {
             <input type="range" min="0.5" max="6" step="0.5" value={simplification} onChange={(e) => setSimplification(Number(e.target.value))} className="mt-2 w-full accent-[hsl(var(--gold))]" />
           </div>
 
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold">
+              <span>Ancho real de fabricación</span><span className="tabular-nums text-muted-foreground">{widthMm.toFixed(1)} mm</span>
+            </div>
+            <input type="range" min="1" max="150" step="0.5" value={widthMm} onChange={(e) => setWidthMm(Number(e.target.value))} className="mt-2 w-full accent-[hsl(var(--gold))]" />
+            <p className="mt-1 text-[10px] text-muted-foreground">La geometría exportada queda en milímetros.</p>
+          </div>
+
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3">
             <input type="checkbox" checked={singleContour} onChange={(e) => setSingleContour(e.target.checked)} className="accent-[hsl(var(--gold))]" />
             <span>
-              <span className="block text-xs font-semibold">Una curva principal</span>
-              <span className="block text-[10px] text-muted-foreground">Usa el contorno exterior dominante.</span>
+              <span className="block text-xs font-semibold">Un contorno exterior</span>
+              <span className="block text-[10px] text-muted-foreground">Ignora islas menores y conserva el contorno dominante.</span>
             </span>
           </label>
 
@@ -367,8 +467,8 @@ export function VectorizadorLaser() {
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Contornos</p><p className="mt-1 text-xl font-semibold">{outputContours.length}</p></div>
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nodos</p><p className="mt-1 text-xl font-semibold">{totalPoints}</p></div>
-          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Escala</p><p className="mt-1 text-xl font-semibold">30 mm</p></div>
-          <div className={`rounded-xl border p-4 ${closed ? "border-success/20 bg-success-soft" : "border-danger/20 bg-danger/10"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Validación</p><p className="mt-1 flex items-center gap-1 text-sm font-semibold">{closed ? <><ShieldCheck className="size-4 text-success" /> Curva cerrada</> : "Revisar geometría"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Escala</p><p className="mt-1 text-xl font-semibold">{widthMm.toFixed(1)} mm</p></div>
+          <div className={`rounded-xl border p-4 ${closed ? "border-success/20 bg-success-soft" : "border-danger/20 bg-danger/10"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Validación</p><p className="mt-1 flex items-center gap-1 text-sm font-semibold">{closed ? <><ShieldCheck className="size-4 text-success" /> Geometría válida</> : selfIntersecting ? "Autocruce detectado" : duplicatePoints ? "Segmentos duplicados" : "Revisar geometría"}</p></div>
         </div>
       ) : null}
     </section>
