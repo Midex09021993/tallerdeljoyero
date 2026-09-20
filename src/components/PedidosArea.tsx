@@ -114,10 +114,10 @@ export function PedidosArea({
                     <dl className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
                       <div>
                         <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          Contrato
+                          Sede
                         </dt>
                         <dd className="mt-0.5 truncate text-foreground">
-                          {pedido.contrato || "-"}
+                          {pedido.sede_nombre || "-"}
                         </dd>
                       </div>
                       <div>
