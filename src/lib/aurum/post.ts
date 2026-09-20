@@ -113,7 +113,7 @@ export async function createAurumPostPipeline(
     const { UnrealBloomPass }=await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
     bloomPass=new UnrealBloomPass(
       {x:renderer.domElement.width,y:renderer.domElement.height} as any,
-      config.bloomIntensity??.035,.35,config.bloomThreshold??1.5
+      config.bloomIntensity??.035,Number(config.bloomRadius??.35),config.bloomThreshold??1.5
     );
     composer.addPass(bloomPass);
 
@@ -230,6 +230,7 @@ export async function createAurumPostPipeline(
       bloomPass.enabled=Boolean(config.bloom) && high;
       bloomPass.strength=config.bloomIntensity??.035;
       bloomPass.threshold=config.bloomThreshold??1.5;
+      bloomPass.radius=Math.max(0,Math.min(1,Number(config.bloomRadius??.35)));
     }
     if(gradingPass){
       gradingPass.enabled=Boolean(config.gradeEnabled);
