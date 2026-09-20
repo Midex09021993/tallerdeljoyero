@@ -241,6 +241,7 @@ function PedidosPage() {  const navigate = useNavigate();
   const [filtroArea, setFiltroArea] = useState("Todas");
   const [filtroEstado, setFiltroEstado] = useState("Todas");
   const [filtroEntrega, setFiltroEntrega] = useState<FiltroEntrega>("Todas");
+  const [filtroVista, setFiltroVista] = useState<"todos" | "atencion" | "produccion" | "entrega">("todos");
   const soloPendientesAutorizacion = useState(
     () =>
       typeof window !== "undefined" &&
@@ -281,6 +282,15 @@ function PedidosPage() {  const navigate = useNavigate();
         const okArea = filtroArea === "Todas" || areaCoincide(p.area_actual, filtroArea);
         const okEstado = filtroEstado === "Todas" || p.estado === filtroEstado;
         const okEntrega = coincideEntrega(p.fecha_entrega ?? p.entrega, filtroEntrega);
+        const diasEntrega = diasHastaEntrega(p.fecha_entrega ?? p.entrega);
+        const requiereAtencion =
+          pedidoPendienteAutorizacionProduccion(p) ||
+          (diasEntrega !== null && diasEntrega < 0 && !esEstadoFinalPedido(p.estado));
+        const okVista =
+          filtroVista === "todos" ||
+          (filtroVista === "atencion" && requiereAtencion) ||
+          (filtroVista === "produccion" && p.estado === "En Producción") ||
+          (filtroVista === "entrega" && (p.estado === "Listo para Entrega" || p.estado === "En Camino"));
         const t = busca.trim().toLowerCase();
         const okTexto =
           !t ||
@@ -299,9 +309,9 @@ function PedidosPage() {  const navigate = useNavigate();
         // o al filtrar expresamente por ese estado (el archivo está en Gestión).
         const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
         const okAutorizacion = !soloPendientesAutorizacion || pedidoPendienteAutorizacionProduccion(p);
-        return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
+        return okVista && okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
       }),
-    [pedidosPorSede, filtroArea, filtroEstado, filtroEntrega, busca, soloSusAreas, misAreas, soloPendientesAutorizacion],
+    [pedidosPorSede, filtroArea, filtroEstado, filtroEntrega, filtroVista, busca, soloSusAreas, misAreas, soloPendientesAutorizacion],
   );
 
   const activos = pedidosPorSede.filter((p) => !esEstadoFinalPedido(p.estado));
@@ -764,54 +774,56 @@ function PedidosPage() {  const navigate = useNavigate();
         ) : null}
 
         <div className="border-b border-border px-4 py-3 sm:px-6">
-          <input
-            placeholder={
-              soloSusAreas
-                ? "Buscar en todos los pedidos (aunque ya se movieron)…"
-                : "Buscar referencia, cliente o trabajo…"
-            }
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="w-full min-w-0 rounded-lg border border-border bg-card px-3 py-3 text-base outline-none focus:ring-1 focus:ring-gold sm:py-2 sm:text-sm"
-          />
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Estado
-              <select
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+          <div className="mb-3 flex flex-wrap gap-1.5 rounded-xl bg-surface-muted p-1">
+            {([
+              ["todos", "Todos", pedidosPorSede.length],
+              ["atencion", "Requieren atención", atrasados.length],
+              ["produccion", "En producción", pedidosPorSede.filter((p) => p.estado === "En Producción").length],
+              ["entrega", "Por entregar", pedidosPorSede.filter((p) => p.estado === "Listo para Entrega" || p.estado === "En Camino").length],
+            ] as const).map(([valor, etiqueta, cantidad]) => (
+              <button
+                key={valor}
+                type="button"
+                onClick={() => setFiltroVista(valor)}
+                className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition ${filtroVista === valor ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground"}`}
               >
-                {["Todas", ...estados].map((estado) => (
-                  <option key={estado}>{estado}</option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Área actual
-              <select
-                value={filtroArea}
-                onChange={(e) => setFiltroArea(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-              >
-                {["Todas", ...(soloSusAreas ? misAreas : AREAS_SEGUIMIENTO)].map((area) => (
-                  <option key={area} value={area}>
-                    {area === "Todas" ? "Todas" : etiquetaAreaSeguimiento(area)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Entrega
-              <select
-                value={filtroEntrega}
-                onChange={(e) => setFiltroEntrega(e.target.value as FiltroEntrega)}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-              >
-                {FILTROS_ENTREGA.map((entrega) => (
-                  <option key={entrega}>{entrega}</option>
-                ))}
-              </select>            </label>
+                {etiqueta} <span className="ml-1 text-[10px] opacity-60">{cantidad}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 lg:flex-row">
+            <input
+              placeholder={
+                soloSusAreas
+                  ? "Buscar en todos los pedidos (aunque ya se movieron)…"
+                  : "Buscar referencia, cliente o trabajo…"
+              }
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-3 text-base outline-none focus:ring-1 focus:ring-gold sm:py-2 sm:text-sm"
+            />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:w-[660px]">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Estado
+                <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground">
+                  {["Todas", ...estados].map((estado) => <option key={estado}>{estado}</option>)}
+                </select>
+              </label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Área actual
+                <select value={filtroArea} onChange={(e) => setFiltroArea(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground">
+                  {["Todas", ...(soloSusAreas ? misAreas : AREAS_SEGUIMIENTO)].map((area) => (
+                    <option key={area} value={area}>{area === "Todas" ? "Todas" : etiquetaAreaSeguimiento(area)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Entrega
+                <select value={filtroEntrega} onChange={(e) => setFiltroEntrega(e.target.value as FiltroEntrega)} className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground">
+                  {FILTROS_ENTREGA.map((entrega) => <option key={entrega}>{entrega}</option>)}
+                </select>
+              </label>
+            </div>
           </div>
         </div>
         {soloSusAreas && !busca.trim() ? (
