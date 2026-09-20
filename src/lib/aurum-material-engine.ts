@@ -411,7 +411,9 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
 export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
 
 /** iJewel/WebGi metal references extracted from the supplied GLB scene. */
-export { AURUM_IJEWEL_DAROS_GEMS, AURUM_IJEWEL_DAROS2_GEMS };\n\nexport const AURUM_IJEWEL_METAL_REFERENCES = {
+export { AURUM_IJEWEL_DAROS_GEMS, AURUM_IJEWEL_DAROS2_GEMS };
+
+export const AURUM_IJEWEL_METAL_REFERENCES = {
   roseGold: { sourceRootPath:"metal-rosegold-polished.pmat", baseColorFactor:[0.7835377915215659,0.450785782828426,0.1844749944900301], roughness:0, ior:1.5, environmentIntensity:1 },
   roseGoldPack: { sourceRootPath:"1_metal_rosegold_polished_a05ee2dd11.pmat", baseColorFactor:[0.8879231178794776,0.4286904966038916,0.22696587349938613], roughness:0, ior:1.5, environmentIntensity:1 },
   roseGoldPack2: { sourceRootPath:"2_metal_rosegold_polished_1bc982c0a0.pmat", baseColorFactor:[0.6938717612856897,0.3712376804636741,0.22696587349938613], roughness:0, ior:1.5, environmentIntensity:0.8 },
@@ -876,7 +878,9 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
 export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
 
 /** iJewel/WebGi metal references extracted from the supplied GLB scene. */
-export { AURUM_IJEWEL_DAROS_GEMS };\n\nexport const AURUM_IJEWEL_METAL_REFERENCES = {
+export { AURUM_IJEWEL_DAROS_GEMS };
+
+export const AURUM_IJEWEL_METAL_REFERENCES = {
   roseGold: { sourceRootPath:"metal-rosegold-polished.pmat", baseColorFactor:[0.7835377915215659,0.450785782828426,0.1844749944900301], roughness:0, ior:1.5, environmentIntensity:1 },
   roseGoldPack: { sourceRootPath:"1_metal_rosegold_polished_a05ee2dd11.pmat", baseColorFactor:[0.8879231178794776,0.4286904966038916,0.22696587349938613], roughness:0, ior:1.5, environmentIntensity:1 },
   roseGoldPack2: { sourceRootPath:"2_metal_rosegold_polished_1bc982c0a0.pmat", baseColorFactor:[0.6938717612856897,0.3712376804636741,0.22696587349938613], roughness:0, ior:1.5, environmentIntensity:0.8 },
