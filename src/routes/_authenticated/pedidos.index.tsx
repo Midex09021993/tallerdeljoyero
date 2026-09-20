@@ -250,6 +250,7 @@ function PedidosPage() {  const navigate = useNavigate();
   const [estadisticasMovilAbiertas, setEstadisticasMovilAbiertas] = useState(false);
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
   const [ultimoContrato, setUltimoContrato] = useState<PedidoFormState | null>(null);
+  const [datosVinculadosAbiertos, setDatosVinculadosAbiertos] = useState(false);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
   const clientesCoincidentes = useMemo(() => {
@@ -525,9 +526,53 @@ function PedidosPage() {  const navigate = useNavigate();
               });
             }}
           >
+            <PedidoFormCampos
+              form={form}
+              onChange={setForm}
+              camposBloqueados={["cliente"]}
+              ruta={ruta}
+              onRutaChange={setRuta}
+              sedeSelect={
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Sede del pedido
+                  <select
+                    value={sedePorDefecto}
+                    onChange={(e) => setSedeId(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+                  >
+                    {sedes.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre}
+                      </option>                    ))}
+                  </select>
+                </label>
+              }
+            />
+
+            <div className="mt-4 rounded-xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setDatosVinculadosAbiertos((v) => !v)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                aria-expanded={datosVinculadosAbiertos}
+              >
+                <span>
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Datos vinculados <span className="normal-case tracking-normal">(opcional)</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Proyecto y documentación comercial relacionada.
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground" aria-hidden="true">
+                  {datosVinculadosAbiertos ? "Ocultar" : "Mostrar"}
+                </span>
+              </button>
+              {datosVinculadosAbiertos ? (
+                <div className="border-t border-border px-4 py-4">
             <div className="mb-4 max-w-xl">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Cliente registrado <span className="normal-case tracking-normal">(opcional)</span>
+                Cliente <span className="normal-case tracking-normal">(opcional)</span>
               </div>
               <div className="relative mt-1">
                 <input
@@ -703,28 +748,10 @@ function PedidosPage() {  const navigate = useNavigate();
             <div className="mb-4 rounded-lg border border-dashed border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
               Documentación externa: Aurum Lab no obliga a reemplazar el formato actual del taller. Puedes seguir usando su cotización y contrato y conectarlos al pedido.
             </div>
-            <PedidoFormCampos
-              form={form}
-              onChange={setForm}
-              camposBloqueados={["cliente"]}
-              ruta={ruta}
-              onRutaChange={setRuta}
-              sedeSelect={
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Sede del pedido
-                  <select
-                    value={sedePorDefecto}
-                    onChange={(e) => setSedeId(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                  >
-                    {sedes.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre}
-                      </option>                    ))}
-                  </select>
-                </label>
-              }
-            />
+
+                </div>
+              ) : null}
+            </div>
 
             <button
               type="submit"
