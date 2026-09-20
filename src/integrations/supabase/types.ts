@@ -821,6 +821,7 @@ export type Database = {
       inventario_movimientos: {
         Row: {
           cantidad: number
+          costo_unitario: number
           created_at: string
           id: string
           material_id: string
@@ -834,6 +835,7 @@ export type Database = {
         }
         Insert: {
           cantidad: number
+          costo_unitario?: number
           created_at?: string
           id?: string
           material_id: string
@@ -847,6 +849,7 @@ export type Database = {
         }
         Update: {
           cantidad?: number
+          costo_unitario?: number
           created_at?: string
           id?: string
           material_id?: string
