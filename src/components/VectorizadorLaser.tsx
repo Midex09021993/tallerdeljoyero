@@ -176,6 +176,7 @@ function dxfFile(points: Point[], widthMm: number, heightMm: number) {
 export function VectorizadorLaser() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceName, setSourceName] = useState("diseño");
   const [threshold, setThreshold] = useState(150);
   const [simplification, setSimplification] = useState(2);
@@ -217,14 +218,11 @@ export function VectorizadorLaser() {
   };
 
   useEffect(() => {
-    if (!imageUrl) return;
-    fetch(imageUrl).then(async () => {
-      const input = inputRef.current;
-      const file = input?.files?.[0];
-      if (file) processImage(file);
-    }).catch(() => undefined);
-    return () => URL.revokeObjectURL(imageUrl);
-  }, [threshold]);
+    if (!sourceFile) return;
+    processImage(sourceFile);
+    // The source URL is intentionally kept until a new file is selected/reset.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceFile, threshold]);
 
   const cleanContours = useMemo(
     () => contours.map(c => ({ ...c, points: simplify(c.points, simplification) })).filter(c => c.points.length >= 3),
