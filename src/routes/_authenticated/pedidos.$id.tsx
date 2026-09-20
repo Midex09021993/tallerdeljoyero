@@ -357,6 +357,17 @@ function FichaPedido() {
       return data;
     },
   });
+  const { data: controlesCalidad = [] } = useQuery({
+    queryKey: ["control-calidad-op", ordenProduccion?.id],
+    enabled: Boolean(ordenProduccion?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("control_calidad")
+        .select("id,trabajo_id,resultado,tipo,descripcion,motivo,evidencia_url,retrabajo_trabajo_id,created_at")
+        .eq("orden_produccion_id", ordenProduccion!.id).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const { data: entregasProduccion = [] } = useQuery({
     queryKey: ["orden-produccion-entregas", ordenProduccion?.id],
     enabled: Boolean(ordenProduccion?.id),
@@ -981,6 +992,17 @@ function FichaPedido() {
             <QuickStatus label="Producción" value={normalizarArea(pedido.area_actual)} ok={!pedidoEnRecepcion(pedido.estado)} />
             <QuickStatus label="Entrega" value={estadoEntrega} ok={estadoEntrega === "Entregado"} />
           </div>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Control de calidad</p><h2 className="mt-1 text-lg font-semibold">Inspecciones y liberación</h2><p className="mt-1 text-xs text-muted-foreground">Historial permanente de aprobaciones, observaciones, rechazos y retrabajos.</p></div>
+          <span className="rounded-full bg-surface-muted px-3 py-1.5 text-[10px] font-bold">{controlesCalidad.length} registro{controlesCalidad.length===1?"":"s"}</span>
+        </div>
+        <div className="mt-4 space-y-2">
+          {controlesCalidad.slice(0,6).map((c) => <div key={c.id} className="rounded-xl border border-border bg-background p-3"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-semibold">{c.tipo.replace("_"," ")}</span><span className="rounded-full bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase">{c.resultado}</span></div>{c.motivo ? <p className="mt-1 text-xs text-muted-foreground">{c.motivo}</p> : null}</div>)}
+          {controlesCalidad.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay inspecciones registradas.</p> : null}
         </div>
       </div>
 
