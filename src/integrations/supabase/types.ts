@@ -1883,6 +1883,7 @@ export type Database = {
           id: string
           metadata: Json
           notas: string
+          orden_produccion_id: string | null
           participante_id: string | null
           pedido_id: string
           prioridad: string
@@ -1907,6 +1908,7 @@ export type Database = {
           id?: string
           metadata?: Json
           notas?: string
+          orden_produccion_id?: string | null
           participante_id?: string | null
           pedido_id: string
           prioridad?: string
@@ -1931,6 +1933,7 @@ export type Database = {
           id?: string
           metadata?: Json
           notas?: string
+          orden_produccion_id?: string | null
           participante_id?: string | null
           pedido_id?: string
           prioridad?: string
@@ -1944,6 +1947,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trabajos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trabajos_participante_id_fkey"
             columns: ["participante_id"]
@@ -2050,6 +2060,7 @@ export type Database = {
           id: string
           metadata: Json
           notas: string
+          orden_produccion_id: string | null
           participante_id: string | null
           pedido_id: string
           prioridad: string
