@@ -427,6 +427,8 @@ export type MovimientoInventario = {
   tipo: string;
   motivo: string;
   area: string;
+  pedido_id: string | null;
+  pedido_referencia: string;
   created_at: string;
 };
 
@@ -1915,7 +1917,7 @@ export function useMovimientosInventario() {
     queryFn: async (): Promise<MovimientoInventario[]> => {
       const { data, error } = await supabase
         .from("inventario_movimientos")
-        .select("id, material_id, cantidad, tipo, motivo, area, created_at, inventario(material)")
+        .select("id, material_id, cantidad, tipo, motivo, area, pedido_id, created_at, inventario(material), pedidos(referencia)")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
@@ -1927,6 +1929,8 @@ export function useMovimientosInventario() {
           ...resto,
           cantidad: Number(resto.cantidad),
           material: inventario?.material ?? "",
+          pedido_id: typeof resto.pedido_id === "string" ? resto.pedido_id : null,
+          pedido_referencia: (resto as typeof resto & { pedidos?: { referencia: string } | null }).pedidos?.referencia ?? "",
         };
       });
     },
@@ -1943,6 +1947,7 @@ export function useRegistrarMovimiento() {
       tipo: "entrada" | "consumo";
       area: string;
       motivo: string;
+      pedido_id?: string | null;
     }) => {
       const { data: userData } = await supabase.auth.getUser();
       const { error } = await supabase.from("inventario_movimientos").insert({
@@ -1951,6 +1956,7 @@ export function useRegistrarMovimiento() {
         tipo: mov.tipo,
         area: mov.area,
         motivo: mov.motivo,
+        pedido_id: mov.pedido_id ?? null,
         usuario_id: userData.user?.id ?? null,
       });
       if (error) throw error;
