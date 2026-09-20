@@ -332,7 +332,7 @@ function MigracionPage() {
                   ["Inventario", "Traer existencias, lotes y costos por sede", Boxes],
                   ["Pedidos históricos", "Conectar el pasado con los pedidos nuevos", History],
                   ["Documentos", "Mantener contratos y archivos externos", FileSpreadsheet],
-                ].map(([titulo, detalle, Icon]) => <div key={titulo as string} className="flex gap-3 rounded-xl border border-border p-3"><div className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold/[.06] text-gold"><Icon className="size-4" /></div><div><p className="text-sm font-medium">{titulo as string}</p><p className="mt-0.5 text-xs leading-5 text-muted-foreground">{detalle as string}</p></div></div>)}
+                ].map(([titulo, detalle, Icon]) => { const IconCmp = Icon as typeof Users; return <div key={titulo as string} className="flex gap-3 rounded-xl border border-border p-3"><div className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold/[.06] text-gold"><IconCmp className="size-4" /></div><div><p className="text-sm font-medium">{titulo as string}</p><p className="mt-0.5 text-xs leading-5 text-muted-foreground">{detalle as string}</p></div></div>; })}
               </div>
             </section>
             <section className="rounded-2xl border border-gold/15 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]"><div className="flex gap-3"><AlertTriangle className="mt-0.5 size-4 shrink-0 text-gold" /><div><p className="text-sm font-semibold">Regla de Aurum</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Primero absorbemos la forma actual de trabajar del taller. Después conectamos, ordenamos y automatizamos. No necesitas migrarlo todo para empezar a trabajar.</p></div></div></section>

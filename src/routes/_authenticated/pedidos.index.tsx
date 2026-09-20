@@ -572,7 +572,7 @@ function PedidosPage() {
                 <div className="mt-3 rounded-lg border border-gold/15 bg-gold/[.03] px-3 py-2 text-xs text-muted-foreground">
                   Cliente y teléfono tomados del registro seleccionado.
                 </div>
-              )
+              )}
               <p className="mt-1 text-[10px] text-muted-foreground">
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
