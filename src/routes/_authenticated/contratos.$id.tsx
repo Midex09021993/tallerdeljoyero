@@ -96,7 +96,12 @@ function ContratoPage() {
     setModalAbierto(true);
     setForm(formularioContratoVacio(contrato));
     setRuta([]);
-    void navigate({ search: () => ({ nuevoPedido: false }), replace: true });
+    void navigate({
+      to: "/contratos/$id",
+      params: { id },
+      search: { nuevoPedido: false },
+      replace: true,
+    });
   }, [contrato, puedeCrearTrabajo, nuevoPedido, navigate]);
 
   if (isLoading) {
