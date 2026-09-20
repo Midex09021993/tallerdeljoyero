@@ -31,7 +31,11 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   galeria:{id:"galeria",background:0x18191c,ground:0x24262a,groundRoughness:.34,groundMetalness:.025,groundVisible:true,environmentIntensity:.68,environmentRotation:.62,shadowIntensity:.36,shadowSoftness:.90,exposure:.68,lighting:"studioHard"},
   oroCalido:{id:"oroCalido",background:0x302216,ground:0x3b2a1b,groundRoughness:.38,groundMetalness:.02,groundVisible:true,environmentIntensity:.58,environmentRotation:.42,shadowIntensity:.28,shadowSoftness:.92,exposure:.61,lighting:"luxury"},
   // Gem scene: brighter neutral set, but not a global exposure push.
-  gemaClara:{id:"gemaClara",background:0xf0f3f5,ground:0xe5eaee,groundRoughness:.48,groundMetalness:.01,groundVisible:true,environmentIntensity:.42,environmentRotation:.08,shadowIntensity:.13,shadowSoftness:.985,exposure:.66,lighting:"jewelry"}
+  gemaClara:{id:"gemaClara",background:0xf0f3f5,ground:0xe5eaee,groundRoughness:.48,groundMetalness:.01,groundVisible:true,environmentIntensity:.42,environmentRotation:.08,shadowIntensity:.13,shadowSoftness:.985,exposure:.66,lighting:"jewelry"},
+  // Reference presentation reconstructed from the supplied WebGi/iJewel VJSON.
+  // The VJSON contains one scene object (not a scenes[] library): white background,
+  // scene environment intensity 1, fixed environment direction and FOV 25.
+  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:1,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"jewelry"}
 };
 
 /** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */
@@ -67,6 +71,9 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
 ];
 
 /** Escena maestra para comparar materiales bajo condiciones constantes. No cambia el visor público. */
+/** Reference scene from the supplied iJewel/WebGi configuration. Use this for side-by-side material calibration. */
+export const AURUM_IJEWEL_REFERENCE_SCENE: AurumScenePreset = AURUM_SCENE_PRESETS.ijewelReference;
+
 export const AURUM_MATERIAL_CALIBRATION_SCENE: AurumScenePreset = {
   id:"material-calibration",
   background:0xe7e7e4,
