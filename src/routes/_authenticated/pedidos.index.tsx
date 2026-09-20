@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { PedidoFormCampos } from "@/components/PedidoFormCampos";
 import {
@@ -217,8 +217,7 @@ function PedidosPage() {
     sedes: sedesFiltro,
     filtrarPedidos,
     etiquetaSede,
-  } = useSedeFiltroDueno();
-  const crear = useCrearPedido();
+  } = useSedeFiltroDueno();  const crear = useCrearPedido();
   const borrar = useBorrarPedido();
   const enviar = useEnviarAArea();
   const autorizar = useAutorizarProduccion();
@@ -437,8 +436,7 @@ function PedidosPage() {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setForm(ultimoContrato);
+                onClick={() => {                  setForm(ultimoContrato);
                   setRuta([]);
                   setAbierto(true);
                   setUltimoContrato(null);
@@ -657,8 +655,7 @@ function PedidosPage() {
                     {sedes.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.nombre}
-                      </option>
-                    ))}
+                      </option>                    ))}
                   </select>
                 </label>
               }
@@ -679,7 +676,7 @@ function PedidosPage() {
             placeholder={
               soloSusAreas
                 ? "Buscar en todos los pedidos (aunque ya se movieron)…"
-                : "Buscar cliente, contrato o referencia…"
+                : "Buscar referencia, cliente o trabajo…"
             }
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
@@ -758,11 +755,6 @@ function PedidosPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{p.referencia}</p>
-                  {p.contrato ? (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      Contrato {p.contrato}
-                    </p>
-                  ) : null}
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
@@ -878,146 +870,3 @@ function PedidosPage() {
                     </span>
                     {p.contrato ? (
                       <span className="block text-[10px] text-muted-foreground">
-                        Contrato {p.contrato}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {p.cliente}
-                    {sesion?.esDueno && p.sede_nombre ? (
-                      <span className="block text-[10px] text-muted-foreground">
-                        {p.sede_nombre}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {p.trabajo || p.pieza}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
-                        estadoClases[p.estado] ?? "bg-surface-muted text-muted-foreground"
-                      }`}
-                    >
-                      {p.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div
-                      className="flex flex-col gap-1.5"
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                    >
-                      <span
-                        className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${areaClase(p.area_actual)}`}
-                      >
-                        {etiquetaAreaSeguimiento(p.area_actual)}
-                      </span>
-                      <select
-                        value=""
-                        onChange={(e) => {
-                          const destino = e.target.value;
-                          if (destino)
-                            enviar.mutate({
-                              pedido: p,
-                              destino,
-                              usuarioId: sesion?.user.id ?? null,
-                            });
-                        }}
-                        disabled={enviar.isPending || pedidoEnRecepcion(p.estado)}
-                        className="w-fit rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground disabled:opacity-40"
-                      >
-                        <option value="" disabled>
-                          Enviar a…
-                        </option>
-                        {(sesion?.esAdmin ? [...AREAS] : p.ruta)
-                          .filter((a) => !areaCoincide(a, p.area_actual))
-                          .map((a) => (
-                            <option key={a} value={a}>
-                              {normalizarArea(a)}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm tabular-nums">
-                    {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "—"}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
-                      {puedeCrear && pedidoEnRecepcion(p.estado) ? (
-                        <button
-                          type="button"
-                          disabled={autorizar.isPending || p.ruta.length === 0}
-                          onClick={() =>
-                            autorizar.mutate({
-                              pedido: p,
-                              usuarioId: sesion?.user.id ?? null,
-                            })
-                          }
-                          className="rounded-lg bg-gold px-3 py-1.5 text-xs font-medium text-gold-foreground disabled:opacity-50"
-                        >
-                          Autorizar Producción
-                        </button>
-                      ) : null}
-                      {puedeCrear ? (
-                        <button
-                          type="button"
-                          onClick={() => setPorBorrar({ id: p.id, referencia: p.referencia })}
-                          className="rounded-md border border-danger/25 px-2.5 py-1.5 text-xs font-medium text-danger opacity-80 transition-colors hover:bg-danger/10 hover:opacity-100"
-                          aria-label={`Eliminar pedido ${p.referencia}`}
-                        >
-                          Eliminar
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {!isLoading && lista.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
-                    No hay pedidos que coincidan.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      {porBorrar ? (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-foreground/15 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-lg">
-            <h2 className="text-base font-semibold">Eliminar pedido</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              ¿Seguro que quieres eliminar el pedido {porBorrar.referencia}? Esta acción no se puede
-              deshacer.
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPorBorrar(null)}
-                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-surface-muted"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                disabled={borrar.isPending}
-                onClick={() => borrar.mutate(porBorrar.id, { onSettled: () => setPorBorrar(null) })}
-                className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                {borrar.isPending ? "Eliminando…" : "Eliminar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </AppShell>
-  );
-}
