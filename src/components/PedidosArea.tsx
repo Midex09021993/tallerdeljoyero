@@ -371,7 +371,7 @@ function ListaTrabajosOperario({
               key={trabajo.id}
               type="button"
               onClick={() => onAbrir(trabajo.id)}
-              className={`w-full rounded-2xl border bg-card p-4 text-left shadow-card transition-all duration-300 focus-visible:outline-none ${variante === "ficha-dorada" ? "border-gold/25 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-raised active:border-gold active:bg-gold/5" : "border-border hover:border-gold active:border-gold active:bg-surface-muted focus-visible:border-gold"}`}
+              className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-card transition-all duration-300 hover:border-gold active:border-gold active:bg-surface-muted focus-visible:border-gold focus-visible:outline-none"
               aria-label={`Abrir trabajo ${trabajo.titulo || "sin título"}`}
             >
               <div className="flex items-start justify-between gap-3">
