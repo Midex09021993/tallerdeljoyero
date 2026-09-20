@@ -32,8 +32,8 @@ function Ventas2Page() {
   const enCamino = pedidosVenta.filter((p) => p.estado === "En Camino" || p.ventas_estado === "En Camino");
   const entregados = pedidosVenta.filter((p) => p.estado === "Entregado" || p.ventas_estado === "Entregado");
 
-  const finanzas = useMemo(() => contratos.map((c) => resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id))), [contratos, pagos]);
-  const finanzasPorContrato = useMemo(() => new Map(finanzas.map((f) => [f.contrato_id ?? "", f])), [finanzas]);
+  const finanzas = useMemo(() => contratos.map((c) => ({ contratoId: c.id, ...resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id)) })), [contratos, pagos]);
+  const finanzasPorContrato = useMemo(() => new Map(finanzas.map((f) => [f.contratoId, f])), [finanzas]);
   const saldoPedido = (p: Pedido) => {
     const financiero = p.contrato_id ? finanzasPorContrato.get(p.contrato_id) : undefined;
     return financiero ? financiero.saldo : p.saldo;
