@@ -424,11 +424,6 @@ function PedidosPage() {
           </div>
         }
       >
-        {sesion?.esDueno ? (
-          <div className="border-b border-border bg-surface-muted/35 px-4 py-3 text-xs text-muted-foreground sm:px-6">
-            Mostrando: <span className="font-medium text-foreground">{etiquetaSede}</span>
-          </div>
-        ) : null}
         {ultimoContrato?.contrato ? (
           <div className="border-b border-border bg-success-soft/50 px-4 py-3 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -552,26 +547,32 @@ function PedidosPage() {
                   ))}
                 </select>
               </label>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Nombre del cliente
-                  <input
-                    value={form.cliente}
-                    onChange={(e) => setForm({ ...form, cliente: e.target.value })}
-                    placeholder="Puede quedar pendiente"
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
-                  />
-                </label>
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  WhatsApp / teléfono
-                  <input
-                    value={form.telefono}
-                    onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-                    placeholder="Opcional"
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
-                  />
-                </label>
-              </div>
+              {!form.cliente_id ? (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Nombre del cliente
+                    <input
+                      value={form.cliente}
+                      onChange={(e) => setForm({ ...form, cliente: e.target.value })}
+                      placeholder="Puede quedar pendiente"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
+                    />
+                  </label>
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    WhatsApp / teléfono
+                    <input
+                      value={form.telefono}
+                      onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                      placeholder="Opcional"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-lg border border-gold/15 bg-gold/[.03] px-3 py-2 text-xs text-muted-foreground">
+                  Cliente y teléfono tomados del registro seleccionado.
+                </div>
+              )
               <p className="mt-1 text-[10px] text-muted-foreground">
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
@@ -647,7 +648,7 @@ function PedidosPage() {
               onRutaChange={setRuta}
               sedeSelect={
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Sede
+                  Sede del pedido
                   <select
                     value={sedePorDefecto}
                     onChange={(e) => setSedeId(e.target.value)}
