@@ -53,7 +53,7 @@ export function applyAurumIJEWELPresentationCamera(
   // VJSON camera distance is |position| around the origin. Because the
   // reference model is normalized to the documented autoScaleRadius=2,
   // preserve the measured distance instead of re-fitting the camera.
-  const distance = 10.079999999999999;
+  const distance = 10;
   camera.fov = 25;
   camera.up.set(0, 1, 0);
   controls.target.copy(target);
