@@ -328,6 +328,22 @@ function FichaPedido() {
     },
   });
   const { data: materialesInventario = [] } = useInventario();
+  const { data: materialesPlanificados = [] } = useQuery({
+    queryKey: ["pedido-materiales-planificados", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedido_materiales")
+        .select("id,material_id,cantidad_planificada,unidad,notas,inventario(material,unidad,stock)")
+        .eq("pedido_id", id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; material_id: string; cantidad_planificada: number; unidad: string; notas: string;
+        inventario: { material: string; unidad: string; stock: number } | null;
+      }>;
+    },
+  });
   const { data: movimientosPedido = [] } = useQuery({
     queryKey: ["inventario-movimientos-pedido", id],
     enabled: Boolean(id),
@@ -408,6 +424,10 @@ function FichaPedido() {
   const [materialConsumo, setMaterialConsumo] = useState("");
   const [cantidadConsumo, setCantidadConsumo] = useState("");
   const [motivoConsumo, setMotivoConsumo] = useState("");
+  const [materialPlan, setMaterialPlan] = useState("");
+  const [cantidadPlan, setCantidadPlan] = useState("");
+  const [notasPlan, setNotasPlan] = useState("");
+  const [guardandoPlan, setGuardandoPlan] = useState(false);
   const [guardandoConsumo, setGuardandoConsumo] = useState(false);
   const [motivoRetornoPedidos, setMotivoRetornoPedidos] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
@@ -606,6 +626,46 @@ function FichaPedido() {
     !tieneEntrega ? "Definir fecha de entrega" : null,
   ].filter(Boolean) as string[];
   const avancePedido = Math.round(((6 - pendientesPedido.length) / 6) * 100);
+
+  async function registrarMaterialPlanificado(e: FormEvent) {
+    e.preventDefault();
+    if (!pedido) return;
+    const cantidad = Number(cantidadPlan);
+    const material = materialesInventario.find((item: { id: string }) => item.id === materialPlan);
+    if (!material || !Number.isFinite(cantidad) || cantidad <= 0) {
+      toast.error("Selecciona un material y una cantidad válida");
+      return;
+    }
+    setGuardandoPlan(true);
+    try {
+      const { error } = await supabase.from("pedido_materiales").upsert({
+        pedido_id: pedido.id,
+        material_id: material.id,
+        cantidad_planificada: cantidad,
+        unidad: material.unidad,
+        notas: notasPlan.trim(),
+      }, { onConflict: "pedido_id,material_id" });
+      if (error) throw error;
+      toast.success(`${material.material} añadido al plan de producción`);
+      setMaterialPlan("");
+      setCantidadPlan("");
+      setNotasPlan("");
+      void qc.invalidateQueries({ queryKey: ["pedido-materiales-planificados", id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo planificar el material");
+    } finally {
+      setGuardandoPlan(false);
+    }
+  }
+
+  async function eliminarMaterialPlanificado(planId: string) {
+    const { error } = await supabase.from("pedido_materiales").delete().eq("id", planId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Material retirado del plan");
+      void qc.invalidateQueries({ queryKey: ["pedido-materiales-planificados", id] });
+    }
+  }
 
   async function registrarConsumo(e: FormEvent) {
     e.preventDefault();
@@ -833,6 +893,43 @@ function FichaPedido() {
       <div className="mb-6 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <Panel titulo="Materiales utilizados en el pedido">
           <div className="p-5">
+            <form onSubmit={registrarMaterialPlanificado} className="rounded-2xl border border-border bg-surface-sunken p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-gold-deep">Plan de producción</p><p className="mt-1 text-xs text-muted-foreground">Define lo previsto antes de descontar stock.</p></div>
+                <span className="rounded-full border border-gold/15 bg-gold/[.05] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{materialesPlanificados.length} materiales</span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+                <select value={materialPlan} onChange={(e) => setMaterialPlan(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm" required>
+                  <option value="">Añadir material al plan...</option>
+                  {materialesInventario.filter((m) => m.activo && !materialesPlanificados.some((p) => p.material_id === m.id)).map((m) => (
+                    <option key={m.id} value={m.id}>{m.material} · stock {m.stock} {m.unidad}</option>
+                  ))}
+                </select>
+                <input type="number" min="0.001" step="any" value={cantidadPlan} onChange={(e) => setCantidadPlan(e.target.value)} placeholder="Cantidad prevista" className="h-10 rounded-xl border border-border bg-card px-3 text-sm" required />
+              </div>
+              <div className="mt-3 flex gap-3">
+                <input value={notasPlan} onChange={(e) => setNotasPlan(e.target.value)} placeholder="Nota: tolerancia, piedra, lote..." className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-card px-3 text-sm" />
+                <button type="submit" disabled={guardandoPlan || !materialPlan || !cantidadPlan} className="h-10 shrink-0 rounded-xl border border-gold/25 bg-gold/[.08] px-4 text-xs font-bold text-gold-deep disabled:opacity-50">{guardandoPlan ? "Guardando…" : "Añadir al plan"}</button>
+              </div>
+            </form>
+            {materialesPlanificados.length ? (
+              <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+                <div className="grid grid-cols-[1.4fr_.8fr_.8fr_auto] gap-3 border-b border-border bg-surface-sunken px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground"><span>Material</span><span>Plan</span><span>Consumido</span><span /></div>
+                <div className="divide-y divide-border">
+                  {materialesPlanificados.map((plan) => {
+                    const consumido = movimientosPedido.filter((mov) => mov.material_id === plan.material_id && mov.tipo === "consumo").reduce((sum, mov) => sum + Number(mov.cantidad || 0), 0);
+                    const diferencia = Number(plan.cantidad_planificada) - consumido;
+                    return <div key={plan.id} className="grid grid-cols-[1.4fr_.8fr_.8fr_auto] items-center gap-3 px-4 py-3">
+                      <div className="min-w-0"><p className="truncate text-xs font-semibold">{plan.inventario?.material ?? "Material"}</p><p className="text-[10px] text-muted-foreground">{plan.notas || "Sin nota"}</p></div>
+                      <span className="text-xs tabular-nums">{plan.cantidad_planificada} {plan.unidad}</span>
+                      <div><p className="text-xs font-semibold tabular-nums">{consumido} {plan.unidad}</p><p className={diferencia < 0 ? "text-[9px] text-danger" : "text-[9px] text-muted-foreground"}>{diferencia >= 0 ? `${diferencia} ${plan.unidad} pendientes` : `${Math.abs(diferencia)} ${plan.unidad} sobre plan`}</p></div>
+                      <button type="button" onClick={() => void eliminarMaterialPlanificado(plan.id)} className="rounded-lg border border-border px-2 py-1 text-[9px] text-muted-foreground hover:border-danger/25 hover:text-danger">Quitar</button>
+                    </div>;
+                  })}
+                </div>
+              </div>
+            ) : null}
+            <div className="my-4 flex items-center gap-3"><span className="h-px flex-1 bg-border" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-muted-foreground">Consumo real</span><span className="h-px flex-1 bg-border" /></div>
             <form onSubmit={registrarConsumo} className="rounded-2xl border border-gold/15 bg-gold/[.025] p-4">
               <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
                 <select value={materialConsumo} onChange={(e) => setMaterialConsumo(e.target.value)} className="h-10 rounded-xl border border-gold/20 bg-card px-3 text-sm" required>
@@ -844,7 +941,7 @@ function FichaPedido() {
                 <input type="number" min="0.001" step="any" value={cantidadConsumo} onChange={(e) => setCantidadConsumo(e.target.value)} placeholder="Cantidad" className="h-10 rounded-xl border border-gold/20 bg-card px-3 text-sm" required />
               </div>
               <div className="mt-3 flex gap-3">
-                <input value={motivoConsumo} onChange={(e) => setMotivoConsumo(e.target.value)} placeholder={`Ej. Consumo para ${normalizarArea(pedido.area_actual)}`} className="h-10 min-w-0 flex-1 rounded-xl border border-gold/20 bg-card px-3 text-sm" />
+                <input value={motivoConsumo} onChange={(e) => setMotivoConsumo(e.target.value)} placeholder={`Motivo del consumo en ${normalizarArea(pedido.area_actual)}`} className="h-10 min-w-0 flex-1 rounded-xl border border-gold/20 bg-card px-3 text-sm" required />
                 <button type="submit" disabled={guardandoConsumo || !materialConsumo || !cantidadConsumo} className="h-10 shrink-0 rounded-xl bg-gold px-4 text-xs font-bold text-gold-deep shadow-card disabled:opacity-50">
                   {guardandoConsumo ? "Registrando…" : "Registrar consumo"}
                 </button>
