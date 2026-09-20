@@ -30,7 +30,7 @@ const iconosArea: Record<string, typeof Hammer> = {
   Pedidos: LayoutGrid,
 };
 
-function diasHastaEntrega(pedido: Pedido) {
+function diasHastaEntrega(pedido: PedidoSelector) {
   const fechaIso = pedido.fecha_entrega ?? pedido.entrega;
   if (!fechaIso) return null;
   const hoy = new Date();
@@ -43,7 +43,7 @@ function diasHastaEntrega(pedido: Pedido) {
 
 function esUrgenteTrabajo(
   trabajo: { prioridad: string; pedido_id: string },
-  pedidosPorId: Map<string, Pedido>,
+  pedidosPorId: Map<string, PedidoSelector>,
 ) {
   if (trabajo.prioridad === "urgente") return true;
   const pedido = pedidosPorId.get(trabajo.pedido_id);

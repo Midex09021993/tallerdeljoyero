@@ -175,7 +175,7 @@ function areasAsignadasUnicas(areas: string[]) {
     });
 }
 
-function diasHastaEntrega(pedido: Pedido) {
+function diasHastaEntrega(pedido: PedidoSelector) {
   const fechaIso = pedido.fecha_entrega ?? pedido.entrega;
   if (!fechaIso) return null;
   const hoy = new Date();
@@ -186,7 +186,7 @@ function diasHastaEntrega(pedido: Pedido) {
   return Math.ceil((entrega.getTime() - hoy.getTime()) / 86_400_000);
 }
 
-function esUrgente(pedido: Pedido) {
+function esUrgente(pedido: PedidoSelector) {
   const dias = diasHastaEntrega(pedido);
   return dias !== null && dias <= 1;
 }
