@@ -74,8 +74,12 @@ const canonicalCrystal=(family:string)=>{
   const f=family.toLowerCase();
   if(f.includes("diamante")||f.includes("espinela")||f.includes("granate"))
     return {symmetry:"cubic" as const,a:new THREE.Vector3(1,0,0),b:new THREE.Vector3(0,1,0),c:new THREE.Vector3(0,0,1)};
-  if(f.includes("zafiro")||f.includes("rubí")||f.includes("esmeralda"))
+  if(f.includes("zafiro")||f.includes("rubí"))
     return {symmetry:"trigonal" as const,a:new THREE.Vector3(1,0,0),b:new THREE.Vector3(-.5,.8660254,0),c:new THREE.Vector3(0,0,1)};
+  // Beryl (the host mineral of emerald) has hexagonal crystal symmetry.
+  // Keep this separate from corundum: ruby/sapphire remain trigonal.
+  if(f.includes("esmeralda")||f.includes("berilo"))
+    return {symmetry:"hexagonal" as const,a:new THREE.Vector3(1,0,0),b:new THREE.Vector3(-.5,.8660254,0),c:new THREE.Vector3(0,0,1)};
   if(f.includes("tanzanita")||f.includes("crisoberilo"))
     return {symmetry:"orthorhombic" as const,a:new THREE.Vector3(1,0,0),b:new THREE.Vector3(0,1,0),c:new THREE.Vector3(0,0,1)};
   if(f.includes("turmalina")||f.includes("cuarzo"))
