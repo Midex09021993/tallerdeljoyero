@@ -7,6 +7,18 @@
 /*
  * Design system — Taller de joyería "Aurum Lab".
  * Dirección: Artisanal precision luxe (oro apagado sobre neutros cálidos).
+ *
+ * ESTÁNDAR DE FICHAS AURUM LAB — ERP:
+ * - Fondo de ficha: bg-card / superficie clara.
+ * - Fondo secundario: bg-surface-sunken.
+ * - Acento: gold / gold-deep.
+ * - Estados: success, warning, danger, info mediante tokens semánticos.
+ * - Bordes: border / gold con baja opacidad.
+ * - Elevación: shadow-card / shadow-raised.
+ * - Componentes: preferir FichaAurum o FichaDorada antes de crear una ficha nueva.
+ * - NO usar bg-ink, fondos negros, text-white ni gradientes oscuros en fichas del ERP.
+ * - Excepciones: AURUM Render y pantallas de autenticación pueden conservar su identidad
+ *   visual propia porque son experiencias independientes del sistema de fichas del ERP.
  */
 /* PRUEBA MIGUEL */
 @theme inline {
