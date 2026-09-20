@@ -230,17 +230,15 @@ function CotizacionesPage() {
     {clientesFiltrados.map(c => <button type="button" key={c.id} onClick={() => { setForm({...form, cliente_id:c.id, proyecto_joya_id:""}); setBusquedaCliente(c.nombre); }} className="block w-full border-b border-border px-3 py-3 text-left hover:bg-surface-muted">
       <span className="block text-sm font-medium">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.telefono || c.email || "Sin contacto"}</span>
     </button>)}
-    {clientesFiltrados.length === 0 ? (
-      <div className="border-t border-border p-3">
-        <p className="text-xs text-muted-foreground">Cliente nuevo. Se registrará automáticamente en Clientes al guardar la cotización.</p>
-      </div>
-    ) : null}
   </div> : null}
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : busquedaCliente.trim() && clientesFiltrados.length === 0 ? (
-    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+    <>
+    <p className="mt-1 text-[10px] text-muted-foreground/80">Cliente nuevo · se agregará automáticamente al guardar.</p>
+    <div className="mt-1 grid gap-2 sm:grid-cols-2">
       <input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({...nuevoCliente,telefono:e.target.value})} placeholder="Teléfono (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
       <input type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({...nuevoCliente,email:e.target.value})} placeholder="Correo (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
     </div>
+    </>
   ) : null}
 </div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
