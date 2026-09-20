@@ -18,7 +18,6 @@ import { AREAS, useSesion } from "@/lib/auth";
 import {
   CATEGORIAS_MATERIAL,
   useActualizarMaterial,
-  useActualizarStock,
   useAsignarArea,
   useBorrarMaterial,
   useCrearMaterial,
@@ -478,7 +477,6 @@ function Materiales({
   puedeGestionar: boolean;
   sedeId: string | null;
 }) {
-  const actualizarStock = useActualizarStock();
   const actualizarMaterial = useActualizarMaterial();
   const asignar = useAsignarArea();
   const borrar = useBorrarMaterial();
@@ -645,17 +643,7 @@ function Materiales({
                       <td className="px-6 py-4 text-sm font-medium">{m.material}</td>
                       <td className="px-6 py-4 text-xs text-muted-foreground">{m.categoria}</td>
                       <td className="px-6 py-4 text-sm tabular-nums">
-                        <input
-                          type="number"
-                          step="0.01"
-                          defaultValue={m.stock}
-                          disabled={!puedeGestionar}
-                          onBlur={(e) => {
-                            const stock = Number(e.target.value);
-                            if (stock !== m.stock) actualizarStock.mutate({ id: m.id, stock });
-                          }}
-                          className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
-                        />
+                        <span className="font-semibold tabular-nums">{m.stock}</span>
                         <span className="ml-2 text-xs text-muted-foreground">{m.unidad}</span>
                         {bajo ? (
                           <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase text-danger">
