@@ -32,6 +32,7 @@ function money(n: number, moneda = "PEN") {
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
   const navigate = useNavigate();
+  const navigate = useNavigate();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
     Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
@@ -177,7 +178,7 @@ function CotizacionesPage() {
                 {filtradas.map(q => {
                   const cliente = clientes.find(c => c.id === q.cliente_id);
                   const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
-                  return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.025]">
+                  return <tr key={q.id} onClick={() => void navigate({ to: "/cotizaciones/$id", params: { id: q.id } })} className="group cursor-pointer transition-colors hover:bg-gold/[0.04]" role="link" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") void navigate({ to: "/cotizaciones/$id", params: { id: q.id } }); }}>
                     <td className="px-5 py-4 font-medium"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="inline-flex items-center gap-2 transition-colors hover:text-gold">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></Link></td>
                     <td className="px-5 py-4"><span className="font-medium">{cliente?.nombre ?? "—"}</span></td>
                     <td className="px-5 py-4 text-muted-foreground">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</td>
