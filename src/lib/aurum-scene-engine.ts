@@ -15,7 +15,7 @@ export type AurumScenePreset = {
   shadowIntensity:number;
   shadowSoftness:number;
   exposure:number;
-  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft";
+  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference";
 };
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
