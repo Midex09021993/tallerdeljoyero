@@ -283,7 +283,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // visible if the optional bake cannot be completed.
     setTimeout(()=>{
       try{
-        const result=buildAurumThicknessMap(part,preset.thicknessScale,96);
+        const thicknessResolution=preset.familia==="Diamante" ? 512 : preset.familia==="Moissanita" ? 384 : 256;
+        const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
         if(!result)return;
         const materials=Array.isArray(part.material)?part.material:[part.material];
         materials.forEach((mat:any)=>{
@@ -292,7 +293,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
           mat.thicknessMap=result.texture;
           mat.needsUpdate=true;
         });
-        part.userData={...part.userData,aurumOpticalThickness:result.baseThickness,aurumOpticalThicknessMode:"uv-ray-depth-v1",aurumGemThicknessMapDiagnostics:{hitRatio:Number(result.hitRatio.toFixed(3)),minDepth:Number(result.minDepth.toFixed(4)),maxDepth:Number(result.maxDepth.toFixed(4)),resolution:96}};
+        part.userData={...part.userData,aurumOpticalThickness:result.baseThickness,aurumOpticalThicknessMode:"uv-ray-depth-v1",aurumGemThicknessMapDiagnostics:{hitRatio:Number(result.hitRatio.toFixed(3)),minDepth:Number(result.minDepth.toFixed(4)),maxDepth:Number(result.maxDepth.toFixed(4)),resolution:thicknessResolution}};
         console.warn("[AURUM][GEM THICKNESS]", { mesh:part.name||part.uuid, geometry:part.userData.aurumGemGeometryDiagnostics, thickness:part.userData.aurumOpticalThickness, map:part.userData.aurumGemThicknessMapDiagnostics });
       }catch(error){
         console.warn("[AURUM][GEM THICKNESS] spatial bake skipped", {mesh:part.name||part.uuid,error});
