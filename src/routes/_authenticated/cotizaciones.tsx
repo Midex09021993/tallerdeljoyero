@@ -39,7 +39,8 @@ function CotizacionesPage() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [busca, setBusca] = useState("");
   const [abierto, setAbierto] = useState(false);
-  const [guardando, setGuardando] = useState(false);\n  const [busquedaCliente, setBusquedaCliente] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [busquedaCliente, setBusquedaCliente] = useState("");
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
@@ -121,7 +122,8 @@ function CotizacionesPage() {
       });
       if (detalleError) throw detalleError;
       setAbierto(false);
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });\n      setBusquedaCliente("");
+      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
+      setBusquedaCliente("");
       await cargar();
     } finally {
       setGuardando(false);
