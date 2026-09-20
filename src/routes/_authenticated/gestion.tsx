@@ -132,7 +132,7 @@ function GestionPage() {
     { id: "resumen", label: "Resumen", visible: true },
     { id: "flujo", label: "Flujo", visible: true },
     { id: "entregados", label: "Pedidos Entregados", visible: puedeUsuarios },
-    { id: "finanzas", label: "Finanzas", visible: true },
+    { id: "finanzas", label: "Finanzas", visible: esDueno || sesion?.roles.includes("gerente") },
     { id: "respaldo", label: "Respaldo", visible: puedeUsuarios },
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
@@ -185,7 +185,7 @@ function GestionPage() {
       ) : null}
       {modulo === "flujo" ? <ModuloFlujo pedidos={pedidosGestion} /> : null}
       {modulo === "entregados" ? <ModuloEntregados pedidos={pedidosGestion} /> : null}
-      {modulo === "finanzas" ? (
+      {modulo === "finanzas" && (esDueno || sesion?.roles.includes("gerente")) ? (
         <ModuloFinanzas pedidos={pedidosGestion} sedePropia={sedeActiva} />
       ) : null}
       {modulo === "respaldo" && puedeUsuarios ? (
@@ -209,7 +209,7 @@ function GestionPage() {
 
 /* ---------------- Resumen ---------------- */
 
-function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {
+function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {\n  const { data: sesion } = useSesion();
   const navigate = useNavigate();
   const { data: materiales = [] } = useInventario();
   const { data: sedes = [] } = useSedes();
@@ -252,7 +252,7 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
           valor={String(entregadosMes.length)}
           tono="positivo"
         />
-        <StatCard etiqueta="Ingresos del mes" valor={eur.format(ingresosMes)} tono="positivo" />
+        {sesion?.roles.includes("dueno") || sesion?.roles.includes("gerente") ? (\n          <StatCard etiqueta="Ingresos del mes" valor={eur.format(ingresosMes)} tono="positivo" />\n        ) : null}
         <StatCard
           etiqueta="Stock bajo"
           valor={String(stockBajo.length)}
