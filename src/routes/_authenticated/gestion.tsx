@@ -253,7 +253,9 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
           valor={String(entregadosMes.length)}
           tono="positivo"
         />
-        {sesion?.roles.includes("dueno") || sesion?.roles.includes("gerente") ? (\n          <StatCard etiqueta="Ingresos del mes" valor={eur.format(ingresosMes)} tono="positivo" />\n        ) : null}
+        {sesion?.roles.includes("dueno") || sesion?.roles.includes("gerente") ? (
+          <StatCard etiqueta="Ingresos del mes" valor={eur.format(ingresosMes)} tono="positivo" />
+        ) : null}
         <StatCard
           etiqueta="Stock bajo"
           valor={String(stockBajo.length)}
