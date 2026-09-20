@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
 import { PedidoFormCampos } from "@/components/PedidoFormCampos";
 import {
   SelectorSedeDueno,
