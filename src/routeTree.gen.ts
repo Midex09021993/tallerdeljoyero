@@ -264,10 +264,14 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/pedidos-2': typeof AuthenticatedPedidos2Route
   '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
+  '/pedidos-2': typeof AuthenticatedPedidos2Route
+  '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRoute
+  '/ventas-2': typeof AuthenticatedVentas2Route
+  '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/ventas-2': typeof AuthenticatedVentas2Route
   '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -379,10 +383,18 @@ export interface FileRouteTypes {
     | '/monitor'
     | '/operario'
     | '/pedidos'
+    | '/pedidos-2'
+    | '/pedidos-2/$id'
+    | '/pedidos-2'
+    | '/pedidos-2/$id'
     | '/perfil'
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
+    | '/ventas-2'
+    | '/ventas-2/$id'
+    | '/ventas-2'
+    | '/ventas-2/$id'
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
@@ -674,7 +686,7 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated/ventas-2/$id'
       path: '/ventas-2/$id'
       fullPath: '/ventas-2/$id'
-      preLoaderRoute: typeof AuthenticatedVentas2RouteImport
+      preLoaderRoute: typeof AuthenticatedVentas2IdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/contratos/$id': {
