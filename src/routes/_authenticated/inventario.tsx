@@ -45,6 +45,7 @@ type Movimiento = {
   referencia_externa: string; pedido_id: string | null; created_at: string; inventario?: { material: string; unidad: string } | null;
 };
 type ImportacionJoya = { codigo: string; nombre: string; metal: string; ley: string; peso: string; talla: string; piedras: string; cantidad: string; estado: string; };
+type ResultadoCSVJoyas = { filas: ImportacionJoya[]; mapa: Record<string, string> };
 
 type Joya = {
   id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
@@ -90,6 +91,7 @@ function InventarioPage() {
   const [importacionFilas, setImportacionFilas] = useState<ImportacionJoya[]>([]);
   const [importacionNombre, setImportacionNombre] = useState("");
   const [importacionConservaCodigos, setImportacionConservaCodigos] = useState(true);
+  const [importacionMapa, setImportacionMapa] = useState<Record<string, string>>({});
   const [importando, setImportando] = useState(false);
   const [movBusqueda, setMovBusqueda] = useState("");
   const [movTipo, setMovTipo] = useState("Todos");
@@ -191,10 +193,11 @@ function InventarioPage() {
 
   async function leerArchivoImportacion(file: File) {
     const texto = await file.text();
-    const filas = parsearCSVJoyas(texto);
+    const resultado = parsearCSVJoyas(texto);
     setImportacionNombre(file.name);
-    setImportacionFilas(filas);
-    if (!filas.length) toast.error("No encontramos filas válidas en el archivo.");
+    setImportacionFilas(resultado.filas);
+    setImportacionMapa(resultado.mapa);
+    if (!resultado.filas.length) toast.error("No encontramos filas válidas en el archivo.");
   }
 
   async function confirmarImportacion() {
@@ -620,6 +623,12 @@ function InventarioPage() {
                 <ResumenImportacion label="Código automático" value={importacionAnalisis.automaticas} />
                 <ResumenImportacion label="Requieren revisión" value={importacionAnalisis.errores.length} warning={importacionAnalisis.errores.length > 0} />
               </div>
+              <div className="rounded-xl border border-border bg-background/40 px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[.15em] text-muted-foreground">Columnas reconocidas</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {Object.entries(importacionMapa).map(([campo, origen]) => <span key={campo} className="rounded-lg border border-border bg-card px-2.5 py-1 text-[10px]"><span className="font-semibold">{campo}</span><span className="mx-1 text-muted-foreground">←</span>{origen}</span>)}
+                </div>
+              </div>
               {importacionAnalisis.errores.length > 0 ? <div className="rounded-xl border border-destructive/20 bg-destructive/[.04] px-4 py-3">
                 <p className="text-xs font-semibold">Hay filas que debemos corregir antes de importar</p>
                 <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">{importacionAnalisis.errores.slice(0, 6).map((error) => <li key={error}>• {error}</li>)}</ul>
@@ -752,25 +761,42 @@ function analizarImportacionJoyas(filas: ImportacionJoya[], joyas: Joya[], conse
   };
 }
 
-function parsearCSVJoyas(texto: string): ImportacionJoya[] {
+function parsearCSVJoyas(texto: string): ResultadoCSVJoyas {
   const lineas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linea) => linea.trim());
-  if (lineas.length < 2) return [];
+  if (lineas.length < 2) return { filas: [], mapa: {} };
+
   const separador = (lineas[0].match(/;/g) ?? []).length > (lineas[0].match(/,/g) ?? []).length ? ";" : ",";
   const filas = lineas.map((linea) => separarCSV(linea, separador));
   const encabezados = filas[0].map((h) => normalizarEncabezado(h));
-  const indice = (variantes: string[]) => variantes.map((v) => encabezados.indexOf(v)).find((i) => i >= 0) ?? -1;
-  const col = {
-    codigo: indice(["codigo", "codigodejoya", "sku", "referencia"]),
-    nombre: indice(["nombre", "joya", "descripcion", "descripcionjoya"]),
-    metal: indice(["metal"]),
-    ley: indice(["ley", "quilataje"]),
-    peso: indice(["peso", "pesog", "gramos"]),
-    talla: indice(["talla", "tallaanillo"]),
-    piedras: indice(["piedras", "gemas"]),
-    cantidad: indice(["cantidad", "stock"]),
-    estado: indice(["estado", "estatus"]),
+
+  const definirColumna = (campo: keyof ImportacionJoya, variantes: string[]) => {
+    const posicion = variantes.map((v) => encabezados.indexOf(v)).find((i) => i >= 0);
+    return posicion === undefined ? -1 : posicion;
   };
-  return filas.slice(1).map((fila) => ({
+
+  const col = {
+    codigo: definirColumna("codigo", ["codigo", "codigodejoya", "sku", "referencia", "ref"]),
+    nombre: definirColumna("nombre", ["nombre", "joya", "descripcion", "descripcionjoya", "nombrepieza", "pieza"]),
+    metal: definirColumna("metal", ["metal", "material"]),
+    ley: definirColumna("ley", ["ley", "quilataje", "quilates", "karat", "k"]),
+    peso: definirColumna("peso", ["peso", "pesog", "pesogr", "gramos", "gramaje"]),
+    talla: definirColumna("talla", ["talla", "tallaanillo", "medida"]),
+    piedras: definirColumna("piedras", ["piedras", "gemas", "piedraspreciosas"]),
+    cantidad: definirColumna("cantidad", ["cantidad", "stock", "unidades", "existencia"]),
+    estado: definirColumna("estado", ["estado", "estatus", "situacion"]),
+  };
+
+  const etiquetas: Record<string, string> = {
+    codigo: "Código", nombre: "Nombre", metal: "Metal", ley: "Ley", peso: "Peso",
+    talla: "Talla", piedras: "Piedras", cantidad: "Cantidad", estado: "Estado",
+  };
+  const mapa = Object.fromEntries(
+    Object.entries(col)
+      .filter(([, indice]) => indice >= 0)
+      .map(([campo, indice]) => [campo, encabezados[indice] || etiquetas[campo] || campo]),
+  );
+
+  const salida = filas.slice(1).map((fila) => ({
     codigo: valorCSV(fila, col.codigo),
     nombre: valorCSV(fila, col.nombre),
     metal: valorCSV(fila, col.metal),
@@ -781,6 +807,8 @@ function parsearCSVJoyas(texto: string): ImportacionJoya[] {
     cantidad: valorCSV(fila, col.cantidad) || "1",
     estado: valorCSV(fila, col.estado) || "disponible",
   })).filter((fila) => fila.nombre);
+
+  return { filas: salida, mapa };
 }
 
 function separarCSV(linea: string, separador: string) {
