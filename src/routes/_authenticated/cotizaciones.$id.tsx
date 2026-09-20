@@ -42,7 +42,7 @@ function etiquetaEstado(estado: string) {
 function CotizacionDetallePage() {
   const { id } = useParams({ from: "/_authenticated/cotizaciones/$id" });
   const navigate = useNavigate();
-  const { data: sesion } = useSesion();
+  const { data: sesion, isPending: cargandoSesion } = useSesion();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
     Boolean(sesion?.areas.some((area) => area.trim().toLowerCase() === "área ventas"));
@@ -93,8 +93,13 @@ function CotizacionDetallePage() {
   };
 
   useEffect(() => {
-    if (puedeGestionarCotizaciones) void cargar();
-  }, [id, puedeGestionarCotizaciones]);
+    if (cargandoSesion) return;
+    if (!puedeGestionarCotizaciones) {
+      setCargando(false);
+      return;
+    }
+    void cargar();
+  }, [id, cargandoSesion, puedeGestionarCotizaciones]);
 
   const margen = useMemo(() => cotizacion ? Number(cotizacion.subtotal) - Number(cotizacion.subtotal_costo) : 0, [cotizacion]);
 
