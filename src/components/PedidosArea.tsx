@@ -451,7 +451,7 @@ function ListaTrabajosOperario({
                 <span className="truncate text-xs text-muted-foreground">
                   {area}
                 </span>
-                <span className="rounded-full bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">
+                <span className="rounded-full border border-gold/25 bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground shadow-card">
                   Abrir trabajo
                 </span>
               </div>
@@ -554,7 +554,7 @@ function ListaTrabajosMovil({
                 <span className="truncate text-xs text-muted-foreground">
                   {pedido.sede_nombre || area}
                 </span>
-                <span className="rounded-full bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">
+                <span className="rounded-full border border-gold/25 bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground shadow-card">
                   Abrir
                 </span>
               </div>
