@@ -81,6 +81,7 @@ function CotizacionesPage() {
   }, [busquedaCliente, clientes]);
   const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
+  const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   if (!puedeGestionarCotizaciones) {
     return (
@@ -161,9 +162,9 @@ function CotizacionesPage() {
       subtitulo="Presupuestos comerciales conectados con clientes y proyectos de joyería."
       acciones={
         <>
-          <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizaciones.length} descripcion="Presupuestos registrados" disabled icono={<FileText className="size-5" strokeWidth={1.7} />} />
-          <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizaciones.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" disabled icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
-          <FichaDorada indicador="Comercial" titulo="Total aprobado" valor={money(totalAprobadas)} descripcion="Valor de cotizaciones aprobadas" disabled icono={<BadgeDollarSign className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizaciones.length} descripcion="Presupuestos registrados" onClick={irALista} icono={<FileText className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizaciones.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Comercial" titulo="Total aprobado" valor={money(totalAprobadas)} descripcion="Valor de cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<BadgeDollarSign className="size-5" strokeWidth={1.7} />} />
           <button type="button" onClick={() => setAbierto(true)} className="group relative min-h-[150px] min-w-[170px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_hsl(var(--gold)/0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_24px_50px_-24px_hsl(var(--gold)/0.38)]">
             <span className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-gold/10 blur-2xl transition-all group-hover:bg-gold/15" />
             <span className="relative flex h-full flex-col justify-between">
@@ -175,7 +176,7 @@ function CotizacionesPage() {
       }
     >
       <div className="space-y-6">
-        <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.28)]">
+        <section id="lista-cotizaciones" className="scroll-mt-6 overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.28)]">
           <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">Gestión comercial</p>
