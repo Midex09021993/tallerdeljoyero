@@ -295,6 +295,10 @@ export const applyAurumIJEWELGemParameters=(material:any,source:AurumIJEWELGemPa
   if(!material)return material;
   const p={...source,boostFactors:{...source.boostFactors}};
   material.metalness=0;
+  // DiamondMaterial uses its own screen-space/refraction solver; the supplied
+  // iJewel references explicitly carry transmission=0. Disable Three's volume
+  // transmission path here to avoid rendering the source twice.
+  material.transmission=0;
   material.color?.setHex(p.color);
   // iJewel's refractiveIndex is an active renderer parameter. Keep the source
   // value instead of substituting a gemological constant.
