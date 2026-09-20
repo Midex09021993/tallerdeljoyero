@@ -4,6 +4,7 @@ import {
   applyAurumGem,
   applyAurumOpticalProfile,
   applyAurumDiamondOptics,
+  applyAurumReferenceGemOptics,
   getAurumOpticalProfile,
   metalPresetFromConfig,
 } from "../aurum-material-engine";
@@ -243,6 +244,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     attachAurumGemPhysicalModel(next,physicalModel);
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
+    // The new scene shows iJewel using its specialized DiamondMaterial even
+    // for the emerald asset. Preserve that reference behavior while keeping
+    // Aurum's physical emerald transmission model in Three.js.
+    if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
     // crease preservation for meshes that already carry valid facet normals.
