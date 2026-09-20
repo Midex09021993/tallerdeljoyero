@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
-  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
+  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();\n  const { data: materiales = [], isLoading: cargandoInventario } = useInventario();
   const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
 
@@ -71,7 +71,7 @@ function Inicio() {
     const recepcion = activos.filter((p) => pedidoEnRecepcion(p.estado));
     const urgentes = activos.filter(esUrgente);
     return { activos, produccion, recepcion, urgentes };
-  }, [pedidos]);
+  }, [pedidos, materiales]);
 
   const modulos = useMemo(() => {
     if (!esOperario) {
@@ -220,7 +220,7 @@ function Inicio() {
             </div>
           </Panel>
 
-          <Panel titulo="Accesos principales">
+          <Panel titulo="Actividad del taller">
             <div className="grid gap-2 p-3">
               {modulos.slice(0, 6).map((modulo) => {
                 const Icono = modulo.icono;
@@ -263,6 +263,15 @@ function Inicio() {
         </Panel>
       </div>
     </AppShell>
+  );
+}
+
+function MetricHero({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className="mt-1 font-display text-2xl text-white">{value}</p>
+    </div>
   );
 }
 
