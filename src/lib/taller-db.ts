@@ -516,11 +516,11 @@ function textoCampo(registro: Record<string, unknown>, campo: string, fallback =
 
 export type PedidoSelector = Pick<
   Pedido,
-  "id" | "referencia" | "pieza" | "cliente" | "trabajo" | "contrato" | "estado" | "sede_id" | "sede_nombre" | "area_actual" | "fecha_entrega" | "entrega"
+  "id" | "referencia" | "pieza" | "cliente" | "trabajo" | "contrato" | "estado" | "sede_id" | "sede_nombre" | "area_actual" | "ruta" | "fecha_entrega" | "entrega"
 >;
 
 const CAMPOS_PEDIDO_SELECTOR =
-  "id, referencia, pieza, cliente, trabajo, contrato, estado, sede_id, fecha_entrega, entrega, area_actual, sedes(nombre)";
+  "id, referencia, pieza, cliente, trabajo, contrato, estado, sede_id, fecha_entrega, entrega, area_actual, ruta, sedes(nombre)";
 
 export function usePedidosSelector() {
   return useQuery({
@@ -546,6 +546,7 @@ export function usePedidosSelector() {
         fecha_entrega: p.fecha_entrega ?? null,
         entrega: p.entrega ?? null,
         area_actual: areaOperativa(p.area_actual),
+        ruta: Array.isArray(p.ruta) ? p.ruta.filter((item): item is string => typeof item === "string") : [],
       }));
     },
   });
