@@ -119,7 +119,7 @@ function InventarioPage() {
                 activa ? "border-gold/70 shadow-[0_10px_30px_-18px_hsl(var(--gold)/0.7)]" : "border-gold/20",
               ].join(" ")}
             >
-              <span className="pointer-events-none absolute -inset-y-10 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-gold/20 to-transparent opacity-0 blur-sm transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100" />
+              
               <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gold/[0.025] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <div className="relative flex items-start justify-between gap-4">
@@ -131,7 +131,7 @@ function InventarioPage() {
                     {ficha.etiqueta}
                   </h2>
                 </div>
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-125 group-hover:rotate-12">
                   <span className="text-xs font-bold">✦</span>
                 </span>
               </div>
