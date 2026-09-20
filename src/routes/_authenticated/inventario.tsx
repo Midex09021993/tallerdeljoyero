@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
+import { QRJoya } from "@/components/QRJoya";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
@@ -87,6 +88,7 @@ function InventarioPage() {
   const [categoria, setCategoria] = useState("Todas");
   const [joyaBusqueda, setJoyaBusqueda] = useState("");
   const [joyaSeleccionada, setJoyaSeleccionada] = useState<Joya | null>(null);
+  const [joyaQR, setJoyaQR] = useState<Joya | null>(null);
   const [importacionAbierta, setImportacionAbierta] = useState(false);
   const [importacionFilas, setImportacionFilas] = useState<ImportacionJoya[]>([]);
   const [importacionNombre, setImportacionNombre] = useState("");
@@ -592,9 +594,19 @@ function InventarioPage() {
               <p className="mt-1 text-xs text-muted-foreground">{joyaSeleccionada.created_at ? new Date(joyaSeleccionada.created_at).toLocaleDateString("es-PE") : "Fecha no disponible"}</p>
             </div>
 
-            <p className="text-[11px] leading-5 text-muted-foreground">Esta ficha será el punto de entrada para el historial, movimientos, pedidos y QR de la joya.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/15 bg-gold/[.025] px-4 py-3">
+              <div><p className="text-xs font-semibold">Identificación física</p><p className="mt-1 text-[10px] text-muted-foreground">Genera un QR con el código y taller de esta joya.</p></div>
+              <button type="button" onClick={() => setJoyaQR(joyaSeleccionada)} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[.08] px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/[.12]"><QrCode className="size-4 text-gold" /> Generar QR</button>
+            </div>
           </div>
         </Modal>
+      ) : null}
+
+      {joyaQR ? (
+        <QRJoya
+          joya={{ ...joyaQR, taller: sesion?.sede?.nombre ?? "Sede no disponible" }}
+          onClose={() => setJoyaQR(null)}
+        />
       ) : null}
 
       {importacionAbierta ? (
