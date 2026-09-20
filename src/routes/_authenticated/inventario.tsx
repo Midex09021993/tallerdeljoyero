@@ -299,9 +299,9 @@ function InventarioPage() {
       <div className="space-y-5">
         <nav className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-gold/15 bg-card p-2 shadow-[0_14px_40px_-32px_hsl(var(--gold)/.4)]">
           <Tab active={tab === "resumen"} onClick={() => setTab("resumen")} icon={<Boxes className="size-4" />} label="Resumen" />
-          <Tab active={tab === "materiales"} onClick={() => setTab("materiales")} icon={<Package className="size-4" />} label="Materiales" />
-          <Tab active={tab === "movimientos"} onClick={() => setTab("movimientos")} icon={<History className="size-4" />} label="Movimientos" />
-          <Tab active={tab === "joyas"} onClick={() => setTab("joyas")} icon={<Gem className="size-4" />} label="Joyas terminadas" />
+          <Tab active={tab === "materiales"} onClick={() => setTab("materiales")} icon={<Package className="size-4" />} label="Materiales" badge={activos.length} />
+          <Tab active={tab === "movimientos"} onClick={() => setTab("movimientos")} icon={<History className="size-4" />} label="Movimientos" badge={movimientos.length} />
+          <Tab active={tab === "joyas"} onClick={() => setTab("joyas")} icon={<Gem className="size-4" />} label="Joyas terminadas" badge={joyas.length} />
           <span className="ml-auto hidden items-center gap-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground sm:flex"><MapPin className="size-3.5 text-gold" />{sesion.sede?.nombre ?? "Sede"}</span>
         </nav>
 
@@ -321,6 +321,23 @@ function InventarioPage() {
                 <p className="mt-2 text-3xl font-semibold tabular-nums">{money(valor)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">Stock actual × costo unitario registrado.</p>
               </div>
+              <div className="mt-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">Acciones rápidas</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <button type="button" onClick={nuevoMaterial} className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-3 text-left transition hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/[.03]">
+                    <span className="grid size-9 place-items-center rounded-lg bg-gold/[.08] text-gold"><Plus className="size-4" /></span>
+                    <span><span className="block text-xs font-semibold">Nuevo material</span><span className="text-[10px] text-muted-foreground">Crear ficha</span></span>
+                  </button>
+                  <button type="button" onClick={() => { setMovimientoForm({ material_id: "", tipo: "entrada", cantidad: "", motivo: "", referencia_externa: "" }); setModal("movimiento"); }} className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-3 text-left transition hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/[.03]">
+                    <span className="grid size-9 place-items-center rounded-lg bg-gold/[.08] text-gold"><ArrowDownLeft className="size-4" /></span>
+                    <span><span className="block text-xs font-semibold">Registrar entrada</span><span className="text-[10px] text-muted-foreground">Actualizar stock</span></span>
+                  </button>
+                  <button type="button" onClick={() => setTab("movimientos")} className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-3 text-left transition hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/[.03]">
+                    <span className="grid size-9 place-items-center rounded-lg bg-gold/[.08] text-gold"><History className="size-4" /></span>
+                    <span><span className="block text-xs font-semibold">Ver kardex</span><span className="text-[10px] text-muted-foreground">Trazabilidad</span></span>
+                  </button>
+                </div>
+              </div>
             </section>
             <section className="rounded-2xl border border-gold/15 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
               <div className="flex items-center justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Kardex</p><h2 className="mt-1 text-lg font-semibold">Actividad reciente</h2></div><History className="size-5 text-gold/60" /></div>
@@ -335,6 +352,7 @@ function InventarioPage() {
                 {movimientos.length === 0 ? <p className="py-12 text-center text-xs text-muted-foreground">Aún no hay movimientos registrados.</p> : null}
               </div>
               <button type="button" onClick={() => setTab("movimientos")} className="mt-3 w-full rounded-xl border border-border px-3 py-2.5 text-xs font-medium transition hover:border-gold/30 hover:bg-gold/[.03]">Ver kardex completo</button>
+              {bajos.length > 0 ? <button type="button" onClick={() => setTab("materiales")} className="mt-2 w-full rounded-xl border border-warning/20 bg-warning-soft px-3 py-2.5 text-left text-xs font-medium text-warning transition hover:border-warning/35">⚠ {bajos.length} material{bajos.length === 1 ? "" : "es"} con stock igual o inferior al mínimo</button> : null}
             </section>
           </div>
         ) : null}
@@ -442,8 +460,8 @@ function InventarioPage() {
   );
 }
 
-function Tab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: ReactNode; label: string }) {
-  return <button type="button" onClick={onClick} className={active ? "inline-flex items-center gap-2 rounded-xl bg-gold/[.10] px-3.5 py-2.5 text-xs font-semibold text-foreground ring-1 ring-gold/20" : "inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-medium text-muted-foreground transition hover:bg-gold/[.04] hover:text-foreground"}>{icon}{label}</button>;
+function Tab({ active, onClick, icon, label, badge }: { active: boolean; onClick: () => void; icon: ReactNode; label: string; badge?: number }) {
+  return <button type="button" onClick={onClick} className={active ? "inline-flex items-center gap-2 rounded-xl bg-gold/[.10] px-3.5 py-2.5 text-xs font-semibold text-foreground ring-1 ring-gold/20" : "inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-medium text-muted-foreground transition hover:bg-gold/[.04] hover:text-foreground"}>{icon}{label}{badge !== undefined ? <span className="rounded-full bg-background px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-muted-foreground ring-1 ring-border">{badge}</span> : null}</button>;
 }
 
 function MiniCard({ label, value, onClick, warning = false }: { label: string; value: number; onClick: () => void; warning?: boolean }) {
