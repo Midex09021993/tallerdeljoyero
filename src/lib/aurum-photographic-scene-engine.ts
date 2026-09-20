@@ -20,7 +20,7 @@ export type AurumPhotographicProfile = {
     ssao:boolean; ssaoIntensity:number;
     bloom:boolean; bloomIntensity:number; bloomThreshold:number;
     lut:boolean; lutIntensity:number;
-    taa?:boolean; dof?:boolean; dofAperture?:number; dofMaxBlur?:number;
+    taa?:boolean; progressiveFrameCount?:number; ssr?:boolean; ssrIntensity?:number; ssrMaxDistance?:number; ssrThickness?:number; dof?:boolean; dofAperture?:number; dofMaxBlur?:number;
     vignette?:boolean; vignetteDarkness?:number;
   };
 };
@@ -65,7 +65,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   // VJSON reference: scene environment 1.0, fixed direction, white background.
   // The original UUID environment is not embedded as a local HDR asset, so Aurum
   // uses its closest local white-studio HDR while preserving the measured control values.
-  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:1,lighting:"ijewelReference",post:{ssao:true,ssaoIntensity:.25,bloom:true,bloomIntensity:.2,bloomThreshold:2,lut:false,lutIntensity:0,taa:true,dof:false,vignette:false}},
+  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:1,lighting:"ijewelReference",post:{ssao:true,ssaoIntensity:.25,bloom:true,bloomIntensity:.2,bloomThreshold:2,lut:false,lutIntensity:0,taa:true,progressiveFrameCount:32,ssr:true,ssrIntensity:1,ssrMaxDistance:1,ssrThickness:.018,dof:false,vignette:false}},
 };
 
 export const getAurumPhotographicProfile=(id:string):AurumPhotographicProfile=>AURUM_PHOTOGRAPHIC_PROFILES[id]??AURUM_PHOTOGRAPHIC_PROFILES["producto"]!;
