@@ -23,6 +23,7 @@ import {
   useCrearMaterial,
   useInventario,
   useMovimientosInventario,
+  usePedidos,
   useRegistrarMovimiento,
 } from "@/lib/taller-db";
 
@@ -445,7 +446,7 @@ function Materiales({
                 })}
                 {lista.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
+                    <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
                       Sin materiales registrados.
                     </td>
                   </tr>
@@ -534,6 +535,7 @@ function Movimientos({
   puedeTodo: boolean;
 }) {
   const { data: movimientos = [] } = useMovimientosInventario();
+  const { data: pedidos = [] } = usePedidos();
   const registrar = useRegistrarMovimiento();
   const areasDisponibles = puedeTodo || areasUsuario.length === 0 ? [...AREAS] : areasUsuario;
   const [form, setForm] = useState({
@@ -541,6 +543,7 @@ function Movimientos({
     material_id: "",
     cantidad: "",
     tipo: "consumo" as "consumo" | "entrada",
+    pedido_id: "",
     motivo: "",
   });
 
@@ -561,12 +564,13 @@ function Movimientos({
         cantidad: Number(form.cantidad),
         tipo: form.tipo,
         area: form.area,
+        pedido_id: form.pedido_id || null,
         motivo: form.motivo,
       });
       toast.success(
         form.tipo === "consumo" ? "Consumo descontado del stock" : "Entrada registrada",
       );
-      setForm({ ...form, cantidad: "", motivo: "" });
+      setForm({ ...form, cantidad: "", pedido_id: "", motivo: "" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo registrar");
     }
@@ -615,9 +619,21 @@ function Movimientos({
             value={form.cantidad}
             onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
           />
+          <select
+            className={inputCls}
+            value={form.pedido_id}
+            onChange={(e) => setForm({ ...form, pedido_id: e.target.value })}
+          >
+            <option value="">Sin pedido asociado</option>
+            {pedidos.map((pedido) => (
+              <option key={pedido.id} value={pedido.id}>
+                {pedido.referencia} · {pedido.cliente || pedido.trabajo || "Pedido"}
+              </option>
+            ))}
+          </select>
           <input
             className={inputCls}
-            placeholder="Motivo / pedido"
+            placeholder="Motivo / detalle"
             value={form.motivo}
             onChange={(e) => setForm({ ...form, motivo: e.target.value })}
           />
@@ -636,7 +652,7 @@ function Movimientos({
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Fecha", "Material", "Área", "Tipo", "Cantidad", "Motivo"].map((h) => (
+                {["Fecha", "Material", "Área", "Pedido", "Tipo", "Cantidad", "Motivo"].map((h) => (
                   <th
                     key={h}
                     className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
@@ -654,6 +670,7 @@ function Movimientos({
                   </td>
                   <td className="px-6 py-3 text-sm">{mv.material}</td>
                   <td className="px-6 py-3 text-xs text-muted-foreground">{mv.area || "—"}</td>
+                  <td className="px-6 py-3 text-xs font-medium">{mv.pedido_referencia || "—"}</td>
                   <td className="px-6 py-3 text-xs">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
