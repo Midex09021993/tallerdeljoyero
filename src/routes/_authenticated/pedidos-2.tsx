@@ -48,7 +48,7 @@ function Pedidos2Page() {
     <AppShell
       titulo="Pedidos 2"
       subtitulo={isLoading ? "Cargando operación…" : `${activos.length} pedidos activos · ${sesion?.esDueno ? etiquetaSede : sesion?.sede?.nombre ?? "Tu sede"}`}
-      acciones={<div className="flex flex-wrap items-center gap-2"><SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} /><Link to="/pedidos" className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground">Pedidos anterior</Link>{sesion?.esAdmin ? <button type="button" onClick={() => navigate({ to: "/pedidos" })} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground shadow-card"><Plus className="size-4" /> Nuevo pedido</button> : null}</div>}
+      acciones={<div className="flex flex-wrap items-center gap-2"><SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />{sesion?.esAdmin ? <button type="button" onClick={() => navigate({ to: "/pedidos-2/nuevo" })} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground shadow-card"><Plus className="size-4" /> Nuevo pedido</button> : null}</div>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={ClipboardList} label="Activos" value={activos.length} />
