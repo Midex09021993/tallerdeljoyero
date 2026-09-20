@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
 import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, X } from "lucide-react";
@@ -31,6 +31,7 @@ function money(n: number, moneda = "PEN") {
 
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
+  const navigate = useNavigate();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
     Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
@@ -42,7 +43,7 @@ function CotizacionesPage() {
   const [guardando, setGuardando] = useState(false);
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [form, setForm] = useState({
-    cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
+    cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
     notas_cliente: "", notas_internas: "", tasaImpuesto: 18,
   });
@@ -93,7 +94,7 @@ function CotizacionesPage() {
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    if (!form.cliente_id || form.precio <= 0) return;
+    if (!form.cliente_id || !form.descripcion.trim() || form.precio <= 0) return;
     setGuardando(true);
     try {
       const { data: q, error } = await supabase.from("cotizaciones").insert({
@@ -122,9 +123,11 @@ function CotizacionesPage() {
       });
       if (detalleError) throw detalleError;
       setAbierto(false);
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
+      const cotizacionCreadaId = q.id;
+      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
       setBusquedaCliente("");
       await cargar();
+      await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
     } finally {
       setGuardando(false);
     }
