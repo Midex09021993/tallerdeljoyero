@@ -60,6 +60,7 @@ export function PedidosArea({
 
       <div className="hidden lg:block">
         <Panel titulo={`${titulo} · ${pedidos.length}`}>
+          {variante === "ficha-dorada" && pedidos.length === 0 ? <FichaDoradaPrueba /> : null}
           <div className="divide-y divide-border">
             {isLoading ? (
               <p className="px-5 py-8 text-sm text-muted-foreground">Cargando...</p>
@@ -169,6 +170,31 @@ export function PedidosArea({
         </Panel>
       </div>
     </>
+  );
+}
+
+function FichaDoradaPrueba() {
+  return (
+    <article className="mx-3 my-3 rounded-2xl border border-gold/25 bg-card p-4 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-gold/70 hover:shadow-raised">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">Prueba controlada</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">Ficha dorada</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Esta tarjeta existe solo para comprobar el efecto visual.</p>
+        </div>
+        <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-semibold uppercase text-gold">Corte Láser</span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-xl bg-surface-muted p-3">
+          <p className="text-[10px] font-semibold uppercase text-muted-foreground">Movimiento</p>
+          <p className="mt-1 font-medium text-foreground">Hover / elevación</p>
+        </div>
+        <div className="rounded-xl bg-surface-muted p-3">
+          <p className="text-[10px] font-semibold uppercase text-muted-foreground">Color</p>
+          <p className="mt-1 font-medium text-foreground">Dorado</p>
+        </div>
+      </div>
+    </article>
   );
 }
 
