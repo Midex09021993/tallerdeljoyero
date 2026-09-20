@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
@@ -294,6 +294,33 @@ function FichaPedido() {
       return data ?? [];
     },
   });
+  const { data: materialesInventario = [] } = useInventario();
+  const { data: movimientosPedido = [] } = useQuery({
+    queryKey: ["inventario-movimientos-pedido", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("inventario_movimientos")
+        .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,area,created_at,inventario(material,unidad)")
+        .eq("pedido_id", id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        material_id: string;
+        tipo: string;
+        cantidad: number;
+        stock_anterior: number | null;
+        stock_posterior: number | null;
+        motivo: string;
+        area: string;
+        created_at: string;
+        inventario: { material: string; unidad: string } | null;
+      }>;
+    },
+  });
+
   const actualizar = useActualizarPedido();
   const autorizar = useAutorizarProduccion();
   const enviar = useEnviarAArea();
@@ -345,6 +372,10 @@ function FichaPedido() {
   const [grupoDestino, setGrupoDestino] = useState("");
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
   const [destinoMovimiento, setDestinoMovimiento] = useState("");
+  const [materialConsumo, setMaterialConsumo] = useState("");
+  const [cantidadConsumo, setCantidadConsumo] = useState("");
+  const [motivoConsumo, setMotivoConsumo] = useState("");
+  const [guardandoConsumo, setGuardandoConsumo] = useState(false);
   const [motivoRetornoPedidos, setMotivoRetornoPedidos] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
   const [progreso, setProgreso] = useState<{ nombre: string; valor: number } | null>(null);
@@ -519,6 +550,36 @@ function FichaPedido() {
   const tieneContextoCliente = Boolean(contextoComercial?.cliente || pedido.cliente_id);
   const tieneCotizacion = Boolean(contextoComercial?.cotizacion || pedido.cotizacion_id);
 
+  async function registrarConsumo(e: FormEvent) {
+    e.preventDefault();
+    const cantidad = Number(cantidadConsumo);
+    const material = materialesInventario.find((item) => item.id === materialConsumo);
+    if (!material || !Number.isFinite(cantidad) || cantidad <= 0) return;
+    setGuardandoConsumo(true);
+    try {
+      const { error } = await supabase.from("inventario_movimientos").insert({
+        material_id: material.id,
+        tipo: "consumo",
+        cantidad,
+        motivo: motivoConsumo.trim() || `Consumo de ${normalizarArea(pedido.area_actual)}`,
+        area: normalizarArea(pedido.area_actual),
+        pedido_id: pedido.id,
+      } as never);
+      if (error) throw error;
+      toast.success(`${cantidad} ${material.unidad} descontados de ${material.material}`);
+      setMaterialConsumo("");
+      setCantidadConsumo("");
+      setMotivoConsumo("");
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos-pedido", id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar el consumo");
+    } finally {
+      setGuardandoConsumo(false);
+    }
+  }
+
   const tieneCorteLaser =
     rutaPedido.some((area) => areaCoincide(area, "Corte Láser")) ||
     areaCoincide(pedido.area_actual, "Corte Láser") ||
@@ -643,6 +704,67 @@ function FichaPedido() {
             <QuickStatus label="Entrega" value={estadoEntrega} ok={estadoEntrega === "Entregado"} />
           </div>
         </div>
+      </div>
+
+      <div className="mb-6 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <Panel titulo="Materiales utilizados en el pedido">
+          <div className="p-5">
+            <form onSubmit={registrarConsumo} className="rounded-2xl border border-gold/15 bg-gold/[.025] p-4">
+              <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+                <select value={materialConsumo} onChange={(e) => setMaterialConsumo(e.target.value)} className="h-10 rounded-xl border border-gold/20 bg-card px-3 text-sm" required>
+                  <option value="">Seleccionar material...</option>
+                  {materialesInventario.filter((m) => m.stock > 0).map((m) => (
+                    <option key={m.id} value={m.id}>{m.material} · {m.stock} {m.unidad} disponibles</option>
+                  ))}
+                </select>
+                <input type="number" min="0.001" step="any" value={cantidadConsumo} onChange={(e) => setCantidadConsumo(e.target.value)} placeholder="Cantidad" className="h-10 rounded-xl border border-gold/20 bg-card px-3 text-sm" required />
+              </div>
+              <div className="mt-3 flex gap-3">
+                <input value={motivoConsumo} onChange={(e) => setMotivoConsumo(e.target.value)} placeholder={`Ej. Consumo para ${normalizarArea(pedido.area_actual)}`} className="h-10 min-w-0 flex-1 rounded-xl border border-gold/20 bg-card px-3 text-sm" />
+                <button type="submit" disabled={guardandoConsumo || !materialConsumo || !cantidadConsumo} className="h-10 shrink-0 rounded-xl bg-gold px-4 text-xs font-bold text-gold-deep shadow-card disabled:opacity-50">
+                  {guardandoConsumo ? "Registrando…" : "Registrar consumo"}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-4 divide-y divide-border">
+              {movimientosPedido.map((mov) => (
+                <div key={mov.id} className="flex items-center gap-3 py-3">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gold/10 text-gold-deep">
+                    <span className="text-xs font-bold">−</span>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold">{mov.inventario?.material ?? "Material"}</p>
+                    <p className="text-[10px] text-muted-foreground">{mov.area || "Producción"} · {new Date(mov.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold tabular-nums">−{mov.cantidad} {mov.inventario?.unidad ?? ""}</p>
+                    <p className="text-[10px] text-muted-foreground">Stock {mov.stock_posterior ?? "—"}</p>
+                  </div>
+                </div>
+              ))}
+              {!movimientosPedido.length ? <p className="py-8 text-center text-xs text-muted-foreground">Todavía no hay consumos registrados para este pedido.</p> : null}
+            </div>
+          </div>
+        </Panel>
+
+        <Panel titulo="Trazabilidad de materiales">
+          <div className="p-5">
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Resumen</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Cada consumo queda asociado al pedido y al área que lo realizó. El inventario actualiza el stock automáticamente.
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <DatoClave etiqueta="Movimientos" valor={String(movimientosPedido.length)} />
+                <DatoClave etiqueta="Área actual" valor={normalizarArea(pedido.area_actual)} destacado />
+              </div>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Si el stock disponible no alcanza, Aurum rechazará el consumo para evitar inventario negativo.
+            </p>
+          </div>
+        </Panel>
       </div>
 
       {puedeVerComercial ? (
