@@ -576,6 +576,26 @@ function PedidoVentaCard({
             </dd>
           </div>
         </dl>
+
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+          <div className="rounded-xl bg-surface-muted p-2.5">
+            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Contrato</dt>
+            <dd className="mt-1 truncate font-medium text-foreground">{pedido.contrato || "—"}</dd>
+          </div>
+          <div className="rounded-xl bg-surface-muted p-2.5">
+            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Origen</dt>
+            <dd className="mt-1 truncate font-medium text-foreground">{pedido.origen || "—"}</dd>
+          </div>
+          <div className="rounded-xl bg-surface-muted p-2.5">
+            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Precio pedido</dt>
+            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(Number(pedido.importe) || 0)}</dd>
+          </div>
+          <div className="rounded-xl bg-surface-muted p-2.5">
+            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">A cuenta</dt>
+            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(Number(pedido.a_cuenta) || 0)}</dd>
+          </div>
+        </dl>
+
         {tieneContratoFinanciero ? (
           <div
             className={`mt-3 rounded-xl border p-3 text-xs ${
