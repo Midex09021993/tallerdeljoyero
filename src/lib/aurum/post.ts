@@ -21,6 +21,8 @@ export async function createAurumPostPipeline(
   let renderPass:any=null;
   let taaPass:any=null;
   let ssrPass:any=null;
+  let ssrSavePass:any=null;
+  let ssrCompositePass:any=null;
   let ssaoPass:any=null;
   let bloomPass:any=null;
   let lutPass:any=null;
@@ -35,27 +37,6 @@ export async function createAurumPostPipeline(
     composer.addPass(renderPass);
 
     try {
-      const { SSRPass }=await import("three/examples/jsm/postprocessing/SSRPass.js");
-      ssrPass=new SSRPass({
-        renderer,
-        scene,
-        camera,
-        width:Math.max(1,renderer.domElement.width),
-        height:Math.max(1,renderer.domElement.height),
-        selects:[],
-      });
-      ssrPass.opacity=1;
-      ssrPass.blur=true;
-      ssrPass.fresnel=true;
-      ssrPass.distanceAttenuation=true;
-      ssrPass.resolutionScale=.65;
-      ssrPass.enabled=false;
-      composer.addPass(ssrPass);
-    } catch {
-      ssrPass=null;
-    }
-
-    try {
       const { TAARenderPass }=await import("three/examples/jsm/postprocessing/TAARenderPass.js");
       taaPass=new TAARenderPass(scene,camera);
       taaPass.accumulate=false;
@@ -64,6 +45,57 @@ export async function createAurumPostPipeline(
       composer.addPass(taaPass);
     } catch {
       taaPass=null;
+    }
+
+    try {
+      // Save the converged TAA beauty before SSR. SSRPass r185 rerenders the
+      // scene internally, so this saved beauty lets us compose its reflection
+      // result over the progressive image instead of discarding TAA.
+      const { SavePass }=await import("three/examples/jsm/postprocessing/SavePass.js");
+      const { ShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
+      const { SSRPass }=await import("three/examples/jsm/postprocessing/SSRPass.js");
+
+      ssrSavePass=new SavePass();
+      ssrSavePass.enabled=false;
+      composer.addPass(ssrSavePass);
+
+      ssrPass=new SSRPass({
+        renderer,
+        scene,
+        camera,
+        width:Math.max(1,renderer.domElement.width),
+        height:Math.max(1,renderer.domElement.height),
+        selects:[],
+      });
+      ssrPass.output=SSRPass.OUTPUT.SSR;
+      ssrPass.opacity=1;
+      ssrPass.blur=true;
+      ssrPass.fresnel=true;
+      ssrPass.distanceAttenuation=true;
+      ssrPass.resolutionScale=.65;
+      ssrPass.enabled=false;
+      composer.addPass(ssrPass);
+
+      ssrCompositePass=new ShaderPass({
+        uniforms:{
+          tDiffuse:{value:null},
+          tBeauty:{value:null},
+          intensity:{value:1},
+        },
+        vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+        fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tBeauty; uniform float intensity; varying vec2 vUv;
+          void main(){
+            vec4 beauty=texture2D(tBeauty,vUv);
+            vec4 reflection=texture2D(tDiffuse,vUv);
+            gl_FragColor=vec4(beauty.rgb+reflection.rgb*reflection.a*intensity,beauty.a);
+          }`,
+      });
+      ssrCompositePass.enabled=false;
+      composer.addPass(ssrCompositePass);
+    } catch {
+      ssrPass=null;
+      ssrSavePass=null;
+      ssrCompositePass=null;
     }
 
     ssaoPass=new SSAOPass(scene,camera,
@@ -131,7 +163,7 @@ export async function createAurumPostPipeline(
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
-    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; dofPass=null; outputPass=null;
+    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
   const applyQuality=(next:any)=>{
@@ -141,12 +173,22 @@ export async function createAurumPostPipeline(
     const ultra=q.pixelRatio>=1.55;
 
     // iJewel VJSON explicitly enables progressive jitter + TAA. In Three r185,
-    // sampleLevel=5 provides the 32 jitter samples used by TAARenderPass.
+    // sampleLevel=5 gives the 32-jitter sequence. SSR is composed over the
+    // saved TAA beauty so neither stage is silently discarded.
     const taaEnabled=config.taa!==false;
-    const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass);
-    if(renderPass) renderPass.enabled=!ssrEnabled;
+    const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
+    if(renderPass) renderPass.enabled=true;
+    if(taaPass){
+      taaPass.enabled=taaEnabled;
+      taaPass.accumulate=taaEnabled;
+      taaPass.sampleLevel=ultra||high?5:3;
+    }
+    if(ssrSavePass){
+      ssrSavePass.enabled=ssrEnabled;
+    }
     if(ssrPass){
       ssrPass.enabled=ssrEnabled;
+      ssrPass.output=(ssrPass.constructor as any).OUTPUT?.SSR ?? 1;
       ssrPass.opacity=Math.max(0,Number(config.ssrIntensity??1));
       ssrPass.blur=true;
       ssrPass.fresnel=true;
@@ -155,10 +197,10 @@ export async function createAurumPostPipeline(
       if(Number.isFinite(Number(config.ssrMaxDistance))) ssrPass.maxDistance=Math.max(.05,Number(config.ssrMaxDistance));
       if(Number.isFinite(Number(config.ssrThickness))) ssrPass.thickness=Math.max(.001,Number(config.ssrThickness));
     }
-    if(taaPass){
-      taaPass.enabled=taaEnabled;
-      taaPass.accumulate=taaEnabled;
-      taaPass.sampleLevel=ultra||high?5:3;
+    if(ssrCompositePass){
+      ssrCompositePass.enabled=ssrEnabled;
+      ssrCompositePass.uniforms.intensity.value=Math.max(0,Number(config.ssrIntensity??1));
+      ssrCompositePass.uniforms.tBeauty.value=ssrSavePass?.renderTarget?.texture??null;
     }
 
     if(ssaoPass){
@@ -195,6 +237,12 @@ export async function createAurumPostPipeline(
     const finalPixelRatio=Math.max(1,Math.min(1.75,Number(q.pixelRatio??1.5)));
     composer.setPixelRatio?.(finalPixelRatio);
     composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
+    if(ssrSavePass){
+      ssrSavePass.setSize?.(
+        renderer.domElement.width||renderer.domElement.clientWidth||1,
+        renderer.domElement.height||renderer.domElement.clientHeight||1
+      );
+    }
     if(ssrPass){
       ssrPass.setSize?.(
         renderer.domElement.width||renderer.domElement.clientWidth||1,
