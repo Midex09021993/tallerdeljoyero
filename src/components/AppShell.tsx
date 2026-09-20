@@ -12,6 +12,7 @@ import {
   UserRound,
   Users,
   Gem,
+  FileSpreadsheet,
   Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";

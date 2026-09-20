@@ -203,7 +203,7 @@ function Inicio() {
                 </div>
               ) : (
                 resumen.activos.slice(0, 7).map((pedido) => (
-                  <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-muted/40 lg:px-6">
+                  <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-muted/40 lg:px-6">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{pedido.referencia || pedido.pieza || pedido.trabajo || "Pedido sin referencia"}</p>
                       <p className="mt-1 truncate text-xs text-muted-foreground">{pedido.cliente || "Sin cliente"} · {pedido.estado}</p>
