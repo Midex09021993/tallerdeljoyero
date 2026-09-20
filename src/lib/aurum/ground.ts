@@ -6,6 +6,7 @@ export interface AurumGroundController {
   setHdriGroundEnabled: (enabled:boolean) => void;
   updateFromPreset: (preset: any) => void;
   positionUnderModel: (box: any) => void;
+  positionBakedShadow: (box:any) => void;
   dispose: () => void;
 }
 
@@ -28,6 +29,12 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   let hdriGround:any = null;
   let hdriGroundTexture:any = null;
   let hdriGroundEnabled = false;
+  const bakedShadowMaterial = new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.22,depthWrite:false,depthTest:true});
+  const bakedShadow = new THREE.Mesh(new THREE.PlaneGeometry(1,1),bakedShadowMaterial);
+  bakedShadow.rotation.x = -Math.PI / 2;
+  bakedShadow.renderOrder = -0.5;
+  bakedShadow.visible = false;
+  scene.add(bakedShadow);
 
   const updateHdriGround = () => {
     if (hdriGround) {
@@ -64,6 +71,17 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       hdriGroundEnabled = enabled;
       updateHdriGround();
     },
+    positionBakedShadow(box) {
+      if (!box) return;
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      bakedShadow.position.set(center.x, mesh.position.y + .002, center.z);
+      const sx=Math.max(size.x*1.45,.12), sz=Math.max(size.z*1.45,.12);
+      bakedShadow.scale.set(sx,sz,1);
+      bakedShadow.visible = mesh.visible && size.x > .001 && size.z > .001;
+    },
     updateFromPreset(preset) {
       if (!preset) return;
       mesh.visible = preset.groundVisible !== false;
@@ -81,6 +99,9 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       scene.remove(mesh);
       mesh.geometry?.dispose?.();
       mesh.material?.dispose?.();
+      scene.remove(bakedShadow);
+      bakedShadow.geometry?.dispose?.();
+      bakedShadow.material?.dispose?.();
       if (hdriGround) {
         scene.remove(hdriGround);
         hdriGround.geometry?.dispose?.();
