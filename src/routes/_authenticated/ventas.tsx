@@ -43,6 +43,9 @@ export const Route = createFileRoute("/_authenticated/ventas")({
 function VentasPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
+  const esAdmin = Boolean(sesion?.esAdmin);
+  const puedeRegistrarPago =
+    esAdmin || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const { data: pedidos = [] } = usePedidos();
   const { data: contratos = [] } = useContratos(puedeRegistrarPago);
   const { data: pagos = [] } = usePagosContratos(contratos, puedeRegistrarPago);
@@ -57,9 +60,6 @@ function VentasPage() {
   const [entregaId, setEntregaId] = useState<string | null>(null);
   const [pagoId, setPagoId] = useState<string | null>(null);
   const [historialPagosId, setHistorialPagosId] = useState<string | null>(null);
-  const esAdmin = Boolean(sesion?.esAdmin);
-  const puedeRegistrarPago =
-    esAdmin || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const usuarioId = sesion?.user.id ?? null;
 
   const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
