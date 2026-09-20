@@ -1506,6 +1506,16 @@ export type Database = {
         Returns: boolean
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
+      mover_pedido_a_area: {
+        Args: { _destino: string; _motivo?: string; _pedido_id: string }
+        Returns: {
+          area_desde: string
+          destino: string
+          estado: string
+          pedido_id: string
+          reinicia_flujo: boolean
+        }[]
+      }
       normaliza_area: { Args: { _area: string }; Returns: string }
       seguimiento_pedido: {
         Args: { _ref: string }
