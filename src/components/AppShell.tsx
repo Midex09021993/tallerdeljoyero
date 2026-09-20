@@ -46,6 +46,7 @@ type Seccion = {
 type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
+  { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
@@ -65,7 +66,7 @@ const secciones: Seccion[] = [
 ];
 
 export const modulosAdminMovil = secciones.filter(
-  (s) => !["/monitor", "/operario", "/perfil"].includes(s.to),
+  (s) => !["/inicio", "/monitor", "/operario", "/perfil"].includes(s.to),
 );
 
 function seccionesVisibles(
@@ -94,6 +95,7 @@ function seccionesVisibles(
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
 const ORDEN_MENU: Record<string, number> = {
   // El flujo comercial parte de la cotización; ventas y pedidos vienen después.
+  "/inicio": 0,
   "/clientes": 5,
   "/cotizaciones": 10,
   "/ventas": 20,
