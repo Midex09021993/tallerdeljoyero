@@ -282,6 +282,22 @@ function FichaPedido() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
+  const { data: trabajosPedido = [] } = useQuery({
+    queryKey: ["trabajos-pedido", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trabajos")
+        .select("id, area, titulo, estado, prioridad, responsable_user_id")
+        .eq("pedido_id", id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const actualizar = useActualizarPedido();
+  const autorizar = useAutorizarProduccion();
+  const enviar = useEnviarAArea();
+  const pedido = pedidos.find((p) => p.id === id);
   const { data: contextoComercial } = useQuery({
     queryKey: ["pedido-contexto-comercial", id, pedido?.cliente_id, pedido?.cotizacion_id, pedido?.proyecto_joya_id],
     enabled: Boolean(pedido),
@@ -304,22 +320,6 @@ function FichaPedido() {
       };
     },
   });
-  const { data: trabajosPedido = [] } = useQuery({
-    queryKey: ["trabajos-pedido", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("trabajos")
-        .select("id, area, titulo, estado, prioridad, responsable_user_id")
-        .eq("pedido_id", id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  const actualizar = useActualizarPedido();
-  const autorizar = useAutorizarProduccion();
-  const enviar = useEnviarAArea();
-  const pedido = pedidos.find((p) => p.id === id);
 
   const crearContrato = useCrearContratoDesdePedido();
   const puedeVerComercial =
