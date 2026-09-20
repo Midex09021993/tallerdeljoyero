@@ -1642,7 +1642,6 @@ export type Usuario = {
   activo: boolean;
   acceso_desde: string | null;
   acceso_hasta: string | null;
-  clave_visible: string | null;
   roles: string[];
   areas: string[];
 };
@@ -1655,7 +1654,7 @@ export function useUsuarios() {
         supabase
           .from("profiles")
           .select(
-            "id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta, clave_visible",
+            "id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta",
           )
           .order("nombre"),
         supabase.from("user_roles").select("user_id, role"),
