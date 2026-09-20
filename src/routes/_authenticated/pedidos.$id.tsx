@@ -288,9 +288,12 @@ function FichaPedido() {
   const pedido = pedidos.find((p) => p.id === id);
 
   const crearContrato = useCrearContratoDesdePedido();
+  const puedeVerComercial =
+    Boolean(sesion?.esAdmin) ||
+    Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const contratoRef = pedido?.contrato_id || pedido?.contrato || "";
-  const { data: contratoFinanciero } = useContrato(contratoRef);
-  const { data: pagosContrato = [] } = usePagosContrato(contratoFinanciero);
+  const { data: contratoFinanciero } = useContrato(contratoRef, puedeVerComercial);
+  const { data: pagosContrato = [] } = usePagosContrato(contratoFinanciero, puedeVerComercial);
   const totalFinanciero = Number(contratoFinanciero?.total ?? pedido?.importe ?? 0) || 0;
   const abonadoFinanciero = pagosContrato.length > 0
     ? pagosContrato.reduce((s, p) => s + (Number(p.monto) || 0), 0)
