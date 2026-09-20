@@ -118,13 +118,12 @@ export async function createAurumPostPipeline(
     const high=q.pixelRatio>=1.5;
     const ultra=q.pixelRatio>=1.55;
 
-    // TAA is disabled for this controlled Ultra benchmark. We keep the pass
-    // instantiated so no other post-processing behavior changes; the next
-    // optimization step can evaluate a lighter AA strategy separately.
+    // iJewel VJSON explicitly enables TAA. Keep it active whenever the
+    // photographic profile requests it instead of disabling it globally.
     if(renderPass) renderPass.enabled=true;
     if(taaPass){
-      taaPass.enabled=false;
-      taaPass.accumulate=false;
+      taaPass.enabled=config.taa!==false;
+      taaPass.accumulate=config.taa!==false;
       taaPass.sampleLevel=2;
     }
 
