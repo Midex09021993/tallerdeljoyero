@@ -44,8 +44,8 @@ function VentasPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
-  const { data: contratos = [] } = useContratos();
-  const { data: pagos = [] } = usePagosContratos(contratos);
+  const { data: contratos = [] } = useContratos(puedeRegistrarPago);
+  const { data: pagos = [] } = usePagosContratos(contratos, puedeRegistrarPago);
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
   const actualizar = useActualizarPedido();
