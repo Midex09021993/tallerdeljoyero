@@ -115,7 +115,7 @@ export async function createAurumPostPipeline(
   const applyQuality=(next:any)=>{
     if(!composer) return;
     const q=next||{};
-    const high=q.pixelRatio>=1.5;
+    const high=q.pixelRatio>=1.4;
     const ultra=q.pixelRatio>=1.55;
 
     // iJewel VJSON explicitly enables TAA. Keep it active whenever the
