@@ -57,6 +57,20 @@ function TrabajoOperativoPage() {
   const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });
   const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
 
+  const { data: pedidoTrabajo } = useQuery({
+    queryKey: ["pedido-trabajo", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select("id, referencia, cliente, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_entrega")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: archivosTecnicos = [] } = useQuery({
     queryKey: ["trabajo-archivos", id],
     queryFn: async () => {
@@ -195,7 +209,7 @@ function TrabajoOperativoPage() {
   return (
     <AppShell
       titulo={trabajo.titulo}
-      subtitulo={`${trabajo.area} · Pedido ${trabajo.pedido_id.slice(0, 8)}…`}
+      subtitulo={`${trabajo.area} · Pedido ${pedidoTrabajo?.referencia ?? trabajo.pedido_id.slice(0, 8) + "…"}`}
       ocultarNavegacion
       encabezadoMovilCompacto
       atrasMovil={{ to: "/operario" }}
@@ -204,6 +218,40 @@ function TrabajoOperativoPage() {
         <button type="button" onClick={() => void navigate({ to: "/operario" })} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" /> Mi trabajo
         </button>
+
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Pedido asociado</p>
+              <h2 className="mt-1 text-lg font-semibold">{pedidoTrabajo?.referencia ?? "Pedido"}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {pedidoTrabajo?.trabajo || "Trabajo sin descripción"}
+                {pedidoTrabajo?.cliente ? ` · ${pedidoTrabajo.cliente}` : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id } })}
+              className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
+            >
+              Ver pedido
+            </button>
+          </div>
+          <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {[
+              ["Material", pedidoTrabajo?.material || "—"],
+              ["Talla", pedidoTrabajo?.talla || "—"],
+              ["Piedras", pedidoTrabajo?.piedras || "—"],
+              ["Peso", pedidoTrabajo?.peso_estimado || "—"],
+              ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
+            ].map(([etiqueta, valor]) => (
+              <div key={etiqueta} className="rounded-xl bg-surface-sunken p-3">
+                <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt>
+                <dd className="mt-1 truncate text-sm font-medium">{valor}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
 
         <section className="rounded-2xl border border-gold/25 bg-card p-5 shadow-raised">
           <div className="flex flex-wrap items-start justify-between gap-3">
