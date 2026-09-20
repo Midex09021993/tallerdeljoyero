@@ -467,10 +467,16 @@ function PedidosPage() {
                 return;
               }
               const nombreSede = sedes.find((s) => s.id === sedePorDefecto)?.nombre ?? null;
-              if (!form.cliente_id) {
-                alert("Selecciona un cliente registrado antes de crear el pedido.");
-                return;
-              }
+              const clienteNombre = form.cliente.trim() || "Cliente pendiente de registrar";
+              const documentosExternos = {
+                ...(form.cotizacion_externa.trim()
+                  ? { cotizacion: form.cotizacion_externa.trim() }
+                  : {}),
+                ...(form.contrato_externo.trim()
+                  ? { contrato: form.contrato_externo.trim() }
+                  : {}),
+                estado: "externos",
+              };
               const nuevo: PedidoNuevo = {
                 referencia: siguienteReferencia(
                   nombreSede,
@@ -478,12 +484,13 @@ function PedidosPage() {
                 ),
                 pieza: form.trabajo,
                 trabajo: form.trabajo,
-                cliente: form.cliente,
-                cliente_id: form.cliente_id,
+                cliente: clienteNombre,
+                cliente_id: form.cliente_id || null,
                 proyecto_joya_id: form.proyecto_joya_id || null,
                 telefono: form.telefono,
                 origen: form.origen,
                 contrato: form.contrato,
+                cotizacion_detalles: documentosExternos,
                 material: form.material,
                 peso_estimado: form.peso_estimado,
                 estado: "Recibido",
@@ -522,10 +529,9 @@ function PedidosPage() {
           >
             <div className="mb-4 max-w-xl">
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Cliente registrado
+                Cliente registrado <span className="normal-case tracking-normal">(opcional)</span>
                 <select
                   value={form.cliente_id}
-                  required
                   onChange={(e) => {
                     const cliente = clientes.find((item) => item.id === e.target.value);
                     setForm({
@@ -538,7 +544,7 @@ function PedidosPage() {
                   }}
                   className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
                 >
-                  <option value="">Selecciona un cliente…</option>
+                  <option value="">Sin registrar todavía</option>
                   {clientes.map((cliente) => (
                     <option key={cliente.id} value={cliente.id}>
                       {cliente.nombre}{cliente.telefono ? ` · ${cliente.telefono}` : ""}
@@ -546,8 +552,28 @@ function PedidosPage() {
                   ))}
                 </select>
               </label>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Nombre del cliente
+                  <input
+                    value={form.cliente}
+                    onChange={(e) => setForm({ ...form, cliente: e.target.value })}
+                    placeholder="Puede quedar pendiente"
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
+                  />
+                </label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  WhatsApp / teléfono
+                  <input
+                    value={form.telefono}
+                    onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                    placeholder="Opcional"
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
+                  />
+                </label>
+              </div>
               <p className="mt-1 text-[10px] text-muted-foreground">
-                El nombre y WhatsApp se toman del registro maestro del cliente.
+                Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
             </div>
             <div className="mb-4 max-w-xl">
@@ -589,6 +615,29 @@ function PedidosPage() {
               <p className="mt-1 text-[10px] text-muted-foreground">
                 Si eliges un proyecto, sus datos técnicos se copian al pedido como snapshot.
               </p>
+            </div>
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Cotización externa <span className="normal-case tracking-normal">(opcional)</span>
+                <input
+                  value={form.cotizacion_externa}
+                  onChange={(e) => setForm({ ...form, cotizacion_externa: e.target.value })}
+                  placeholder="N.º, WhatsApp, archivo o referencia"
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
+                />
+              </label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Contrato externo <span className="normal-case tracking-normal">(opcional)</span>
+                <input
+                  value={form.contrato_externo}
+                  onChange={(e) => setForm({ ...form, contrato_externo: e.target.value })}
+                  placeholder="N.º o referencia de su contrato"
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
+                />
+              </label>
+            </div>
+            <div className="mb-4 rounded-lg border border-dashed border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
+              Documentación externa: Aurum Lab no obliga a reemplazar el formato actual del taller. Puedes seguir usando su cotización y contrato y conectarlos al pedido.
             </div>
             <PedidoFormCampos
               form={form}
