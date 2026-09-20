@@ -176,12 +176,14 @@ export async function createAurumPostPipeline(
     // sampleLevel=5 gives the 32-jitter sequence. SSR is composed over the
     // saved TAA beauty so neither stage is silently discarded.
     const taaEnabled=config.taa!==false;
+    const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
+    const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
     if(taaPass){
       taaPass.enabled=taaEnabled;
       taaPass.accumulate=taaEnabled;
-      taaPass.sampleLevel=ultra||high?5:3;
+      taaPass.sampleLevel=ultra||high?taaSampleLevel:Math.min(3,taaSampleLevel);
     }
     if(ssrSavePass){
       ssrSavePass.enabled=ssrEnabled;
