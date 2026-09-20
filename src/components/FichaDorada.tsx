@@ -28,7 +28,7 @@ const iconosPorTipo: Record<FichaDoradaTipo, ReactNode> = {
 };
 
 const fichaDoradaBase =
-  "group relative min-h-[150px] overflow-hidden rounded-2xl border bg-card p-5 text-left " +
+  "group relative min-h-[150px] overflow-visible rounded-2xl border bg-card p-5 text-left " +
   "transition-all duration-300 ease-out " +
   "hover:-translate-y-1 hover:border-gold/70 hover:shadow-[0_14px_36px_-18px_hsl(var(--gold)/0.65)] " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60";
