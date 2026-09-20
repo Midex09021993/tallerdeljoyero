@@ -357,17 +357,21 @@ function FichaPedido() {
       return data;
     },
   });
-  const { data: controlesCalidad = [] } = useQuery({
-    queryKey: ["control-calidad-op", ordenProduccion?.id],
+  const { data: piezasTerminadas = [] } = useQuery({
+    queryKey: ["piezas-terminadas-op", ordenProduccion?.id],
     enabled: Boolean(ordenProduccion?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("control_calidad")
-        .select("id,trabajo_id,resultado,tipo,descripcion,motivo,evidencia_url,retrabajo_trabajo_id,created_at")
-        .eq("orden_produccion_id", ordenProduccion!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("piezas_terminadas").select("id,numero_pieza,cantidad,peso_estimado,peso_final,unidad_peso,metal_estimado,metal_real,piedras_estimadas,piedras_reales,estado,observaciones,created_at").eq("orden_produccion_id", ordenProduccion!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
   });
+  const registrarPiezaTerminada = async () => {
+    if (!ordenProduccion || !sesion?.user.id || !pedido) return;
+    const numero = "P-" + Date.now().toString().slice(-6);
+    const { error } = await supabase.from("piezas_terminadas").insert({ orden_produccion_id: ordenProduccion.id, pedido_id: pedido.id, numero_pieza: numero, cantidad: Number(pedido.cantidad_piezas) || 1, peso_estimado: Number(pedido.peso_estimado) || null, metal_estimado: pedido.material || "", piedras_estimadas: pedido.piedras || "", estado: "recibida", registrado_por: sesion.user.id } as never);
+    if (error) toast.error(error.message); else { toast.success("Pieza terminada registrada"); void qc.invalidateQueries({ queryKey: ["piezas-terminadas-op", ordenProduccion.id] }); }
+  };
   const { data: entregasProduccion = [] } = useQuery({
     queryKey: ["orden-produccion-entregas", ordenProduccion?.id],
     enabled: Boolean(ordenProduccion?.id),
@@ -1004,6 +1008,11 @@ function FichaPedido() {
           {controlesCalidad.slice(0,6).map((c) => <div key={c.id} className="rounded-xl border border-border bg-background p-3"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-semibold">{c.tipo.replace("_"," ")}</span><span className="rounded-full bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase">{c.resultado}</span></div>{c.motivo ? <p className="mt-1 text-xs text-muted-foreground">{c.motivo}</p> : null}</div>)}
           {controlesCalidad.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay inspecciones registradas.</p> : null}
         </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-gold/25 bg-card p-5 shadow-card">
+        <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">Pieza terminada</p><h2 className="mt-1 text-lg font-semibold">Recepción y verificación física</h2><p className="mt-1 text-xs text-muted-foreground">Registra la pieza fabricada y conserva estimados frente a datos reales.</p></div>{ordenProduccion ? <button type="button" onClick={() => void registrarPiezaTerminada()} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground">Registrar pieza</button> : null}</div>
+        <div className="mt-4 space-y-2">{piezasTerminadas.map((p) => <div key={p.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-semibold">{p.numero_pieza}</p><p className="text-[10px] text-muted-foreground">{p.cantidad} pieza{p.cantidad===1?"":"s"} · {p.metal_real || p.metal_estimado || "Metal por verificar"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{p.estado}</span></div><div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"><span>Peso est. <b>{p.peso_estimado ?? "—"} g</b></span><span>Peso real <b>{p.peso_final ?? "Pendiente"} g</b></span><span>Piedras <b>{p.piedras_reales || p.piedras_estimadas || "—"}</b></span><span>Metal <b>{p.metal_real || p.metal_estimado || "—"}</b></span></div></div>)}{piezasTerminadas.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay pieza terminada registrada.</p> : null}</div>
       </div>
 
       <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
