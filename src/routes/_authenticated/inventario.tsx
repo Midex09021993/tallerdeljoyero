@@ -141,18 +141,60 @@ function InventarioPage() {
     e.preventDefault();
     if (!sedeId || !materialForm.material.trim()) return;
     setGuardando(true);
+
     const payload = {
-      sede_id: sedeId, codigo: materialForm.codigo.trim(), material: materialForm.material.trim(),
-      categoria: materialForm.categoria, unidad: materialForm.unidad.trim() || "g",
-      stock: Number(materialForm.stock) || 0, minimo: Number(materialForm.minimo) || 0,
-      lote: materialForm.lote.trim(), ubicacion: materialForm.ubicacion.trim(),
-      proveedor: materialForm.proveedor.trim(), costo_unitario: Number(materialForm.costo_unitario) || 0,
+      sede_id: sedeId,
+      codigo: materialForm.codigo.trim(),
+      material: materialForm.material.trim(),
+      categoria: materialForm.categoria,
+      unidad: materialForm.unidad.trim() || "g",
+      minimo: Number(materialForm.minimo) || 0,
+      lote: materialForm.lote.trim(),
+      ubicacion: materialForm.ubicacion.trim(),
+      proveedor: materialForm.proveedor.trim(),
+      costo_unitario: Number(materialForm.costo_unitario) || 0,
     };
-    const r = editando
-      ? await supabase.from("inventario").update(payload).eq("id", editando.id)
-      : await supabase.from("inventario").insert(payload);
-    if (r.error) toast.error(r.error.message);
-    else { toast.success(editando ? "Material actualizado" : "Material creado"); setModal(null); await cargar(); }
+
+    if (editando) {
+      const r = await supabase.from("inventario").update(payload).eq("id", editando.id);
+      if (r.error) toast.error(r.error.message);
+      else {
+        toast.success("Material actualizado");
+        setModal(null);
+        await cargar();
+      }
+      setGuardando(false);
+      return;
+    }
+
+    const r = await supabase.from("inventario").insert(payload).select("id").single();
+    if (r.error || !r.data) {
+      toast.error(r.error?.message ?? "No se pudo crear el material");
+      setGuardando(false);
+      return;
+    }
+
+    const stockInicial = Number(materialForm.stock) || 0;
+    if (stockInicial > 0) {
+      const movimiento = await supabase.from("inventario_movimientos").insert({
+        material_id: r.data.id,
+        tipo: "entrada",
+        cantidad: stockInicial,
+        motivo: "Stock inicial",
+        referencia_externa: "",
+      });
+
+      if (movimiento.error) {
+        await supabase.from("inventario").delete().eq("id", r.data.id);
+        toast.error(`No se pudo registrar el stock inicial: ${movimiento.error.message}`);
+        setGuardando(false);
+        return;
+      }
+    }
+
+    toast.success(stockInicial > 0 ? "Material creado y stock inicial registrado" : "Material creado");
+    setModal(null);
+    await cargar();
     setGuardando(false);
   }
 
@@ -321,7 +363,11 @@ function InventarioPage() {
         {modal === "material" ? <form onSubmit={guardarMaterial} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2"><Field label="Material" value={materialForm.material} onChange={(v) => setMaterialForm({ ...materialForm, material: v })} required /><Field label="Código" value={materialForm.codigo} onChange={(v) => setMaterialForm({ ...materialForm, codigo: v })} /></div>
           <div className="grid gap-3 sm:grid-cols-3"><Field label="Categoría" value={materialForm.categoria} onChange={(v) => setMaterialForm({ ...materialForm, categoria: v })} select options={CATEGORIAS} /><Field label="Unidad" value={materialForm.unidad} onChange={(v) => setMaterialForm({ ...materialForm, unidad: v })} /><Field label="Costo unitario" value={materialForm.costo_unitario} onChange={(v) => setMaterialForm({ ...materialForm, costo_unitario: v })} type="number" /></div>
-          <div className="grid gap-3 sm:grid-cols-2"><Field label={editando ? "Stock actual" : "Stock inicial"} value={materialForm.stock} onChange={(v) => setMaterialForm({ ...materialForm, stock: v })} type="number" /><Field label="Stock mínimo" value={materialForm.minimo} onChange={(v) => setMaterialForm({ ...materialForm, minimo: v })} type="number" /></div>
+          <div className={editando ? "grid gap-3" : "grid gap-3 sm:grid-cols-2"}>
+            {!editando ? <Field label="Stock inicial (entrada)" value={materialForm.stock} onChange={(v) => setMaterialForm({ ...materialForm, stock: v })} type="number" /> : null}
+            <Field label="Stock mínimo" value={materialForm.minimo} onChange={(v) => setMaterialForm({ ...materialForm, minimo: v })} type="number" />
+          </div>
+          {!editando ? <p className="rounded-xl border border-gold/10 bg-gold/[.025] px-3 py-2.5 text-[11px] leading-5 text-muted-foreground">El stock inicial se registra automáticamente como una entrada en el kardex. El stock actual no se edita directamente.</p> : <p className="rounded-xl border border-gold/10 bg-gold/[.025] px-3 py-2.5 text-[11px] leading-5 text-muted-foreground">El stock actual no se edita desde la ficha. Para cambiarlo, registra un movimiento en el kardex.</p>}
           <div className="grid gap-3 sm:grid-cols-2"><Field label="Lote" value={materialForm.lote} onChange={(v) => setMaterialForm({ ...materialForm, lote: v })} /><Field label="Ubicación" value={materialForm.ubicacion} onChange={(v) => setMaterialForm({ ...materialForm, ubicacion: v })} /></div>
           <Field label="Proveedor" value={materialForm.proveedor} onChange={(v) => setMaterialForm({ ...materialForm, proveedor: v })} />
           <Actions saving={guardando} cancel={() => setModal(null)} />
