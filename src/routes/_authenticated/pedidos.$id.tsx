@@ -924,7 +924,6 @@ function FichaPedido() {
                 </button>
               </div>
             </div>
-          </Panel>
 
           <div className="hidden sm:block">
             <Panel titulo="Seguimiento del pedido">
