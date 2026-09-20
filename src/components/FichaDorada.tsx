@@ -92,3 +92,43 @@ export function FichaDorada({
     </button>
   );
 }
+
+
+/**
+ * FichaAurum: contenedor estándar para cualquier módulo del ERP.
+ * Regla UX: fondo claro, borde neutro/dorado, sombra suave. No usar bg-ink,
+ * fondos negros ni text-white en fichas del ERP. Los estados se expresan
+ * con los tokens semánticos success/warning/danger/info.
+ */
+export function FichaAurum({
+  children,
+  className = "",
+  interactiva = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  interactiva?: boolean;
+}) {
+  return (
+    <section
+      className={[
+        "relative overflow-hidden rounded-2xl border border-gold/20 bg-card text-foreground shadow-card",
+        interactiva
+          ? "transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-raised"
+          : "",
+        className,
+      ].join(" ")}
+    >
+      {children}
+    </section>
+  );
+}
+
+export const AURUM_FICHA_UI = {
+  card: "rounded-2xl border border-gold/20 bg-card text-foreground shadow-card",
+  cardRaised: "rounded-2xl border border-gold/25 bg-card text-foreground shadow-raised",
+  sunken: "rounded-xl border border-border bg-surface-sunken",
+  primaryAction: "rounded-xl border border-gold/30 bg-gold text-gold-foreground shadow-card transition hover:shadow-raised",
+  secondaryAction: "rounded-xl border border-gold/25 bg-card text-gold-deep shadow-card transition hover:border-gold/50 hover:bg-gold/5",
+  status: "rounded-full border border-gold/25 bg-gold/10 text-gold-deep",
+} as const;
