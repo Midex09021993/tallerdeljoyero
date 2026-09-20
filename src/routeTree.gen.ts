@@ -35,6 +35,8 @@ import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos.$id'
 import { Route as AuthenticatedTrabajosIdRouteImport } from './routes/_authenticated/trabajos.$id'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -173,6 +175,16 @@ const AuthenticatedTrabajosIdRoute = AuthenticatedTrabajosIdRouteImport.update({
   path: '/trabajos/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -206,6 +218,8 @@ export interface FileRoutesByFullPath {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
@@ -233,6 +247,8 @@ export interface FileRoutesByTo {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
@@ -263,6 +279,8 @@ export interface FileRoutesById {
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
@@ -293,6 +311,8 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/trabajos/$id'
     | '/pedidos/'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -320,6 +340,8 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/trabajos/$id'
     | '/pedidos'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
   id:
     | '__root__'
@@ -349,6 +371,8 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos/$id'
     | '/_authenticated/trabajos/$id'
     | '/_authenticated/pedidos/'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
@@ -358,6 +382,8 @@ export interface RootRouteChildren {
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
   AuthRoute: typeof AuthRoute
   ClienteRoute: typeof ClienteRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -545,6 +571,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrabajosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -633,6 +673,8 @@ const rootRouteChildren: RootRouteChildren = {
   AurumRenderPublicRoute: AurumRenderPublicRoute,
   AuthRoute: AuthRoute,
   ClienteRoute: ClienteRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
