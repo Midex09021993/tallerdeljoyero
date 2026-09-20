@@ -889,8 +889,8 @@ export function AurumRender() {
         <main className="relative min-w-0 flex-1 bg-[#090b0e]">
           <div ref={visorRef} className="absolute inset-0">
             {!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span></button></div></div>}
-            {(cargando || presentationVisible) && <div
-              className={"absolute inset-0 z-40 overflow-hidden transition-opacity duration-700 "+(presentationVisible?"opacity-100":"opacity-100")}
+            {(cargando || presentationCover) && <div
+              className={"absolute inset-0 z-40 overflow-hidden transition-opacity duration-700 "+((cargando || presentationVisible)?"pointer-events-auto opacity-100":"pointer-events-none opacity-0")}
               aria-live="polite"
             >
               {presentationCover
