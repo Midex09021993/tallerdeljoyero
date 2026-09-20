@@ -68,7 +68,8 @@ export function createAurumGemEnvironment(
         // environment. A very small family-specific rotation offset is applied
         // to the gem light field only; it does not alter geometry or IOR.
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale));
-        const effectiveRotation = rotation + profile.rotationOffset;
+        const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
+        const effectiveRotation = rotation + (Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset);
 
         if (m.envMapRotation?.set) {
           m.envMapRotation.set(0, effectiveRotation, 0);
@@ -80,7 +81,7 @@ export function createAurumGemEnvironment(
           ...(m.userData ?? {}),
           aurumGemEnvironmentRotation: effectiveRotation,
           aurumGemEnvironmentBaseRotation: rotation,
-          aurumGemEnvironmentRotationOffset: profile.rotationOffset,
+          aurumGemEnvironmentRotationOffset: Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset,
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
