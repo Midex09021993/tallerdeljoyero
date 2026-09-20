@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
-import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidos, type Pedido } from "@/lib/taller-db";
+import { esEstadoFinalPedido, pedidoEnRecepcion, type Pedido } from "@/lib/taller-db";
 
 export type TrabajoBandeja = {
   id: string;
@@ -28,19 +28,65 @@ const ESTADOS_TRABAJO_ACTIVOS: TrabajoBandeja["estado"][] = [
   "bloqueado",
 ];
 
-export function pedidoAsignadoAArea(pedido: Pedido, area: string) {
+export type PedidoOperativo = Pick<Pedido,
+  | "id" | "referencia" | "pieza" | "cliente" | "material" | "estado" | "entrega"
+  | "sede_id" | "sede_nombre" | "trabajo" | "fecha_entrega" | "area_actual" | "ruta"
+  | "area_desde" | "notas" | "talla" | "cantidad_piezas" | "piedras" | "peso_estimado"
+  | "corte_texto" | "corte_tipografia" | "corte_ubicacion" | "corte_observaciones"
+>;
+
+const CAMPOS_PEDIDO_OPERATIVO =
+  "id, referencia, pieza, cliente, material, estado, entrega, sede_id, trabajo, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
+
+export function pedidoAsignadoAArea(pedido: Pick<PedidoOperativo, "ruta" | "area_actual">, area: string) {
   const ruta = Array.isArray(pedido.ruta) ? pedido.ruta : [];
   return ruta.some((item) => areaCoincide(item, area)) || areaCoincide(pedido.area_actual, area);
 }
 
-export function pedidoEnAreaActual(pedido: Pedido, area: string) {
+export function pedidoEnAreaActual(pedido: Pick<PedidoOperativo, "area_actual">, area: string) {
   return areaCoincide(pedido.area_actual, area);
 }
 
 export function usePedidosDeArea(area: string) {
-  const { data: pedidos = [], isLoading } = usePedidos();
   const { data: sesion } = useSesion();
   const { filtrarPedidos } = useSedeFiltroDueno();
+
+  const query = useQuery({
+    queryKey: ["pedidos-area-operativa", area, sesion?.user.id],
+    queryFn: async (): Promise<PedidoOperativo[]> => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select(CAMPOS_PEDIDO_OPERATIVO)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((pedido) => {
+        const sedes = pedido.sedes as { nombre: string } | null;
+        return {
+          ...pedido,
+          sede_nombre: sedes?.nombre ?? null,
+          cliente: pedido.cliente ?? "",
+          material: pedido.material ?? "",
+          trabajo: pedido.trabajo ?? "",
+          pieza: pedido.pieza ?? "",
+          estado: pedido.estado ?? "",
+          entrega: pedido.entrega ?? "",
+          fecha_entrega: pedido.fecha_entrega ?? null,
+          area_actual: pedido.area_actual ?? "Pedidos",
+          ruta: Array.isArray(pedido.ruta) ? pedido.ruta.filter((item): item is string => typeof item === "string") : [],
+          area_desde: pedido.area_desde ?? pedido.fecha_entrega ?? new Date().toISOString(),
+          notas: pedido.notas ?? "",
+          talla: pedido.talla ?? "",
+          cantidad_piezas: Number(pedido.cantidad_piezas) || 1,
+          piedras: pedido.piedras ?? "",
+          peso_estimado: pedido.peso_estimado ?? "",
+          corte_texto: pedido.corte_texto ?? "",
+          corte_tipografia: pedido.corte_tipografia ?? "",
+          corte_ubicacion: pedido.corte_ubicacion ?? "",
+          corte_observaciones: pedido.corte_observaciones ?? "",
+        } as PedidoOperativo;
+      });
+    },
+  });
 
   const lista = useMemo(() => {
     const areasUsuario = sesion?.areas ?? [];
@@ -48,10 +94,9 @@ export function usePedidosDeArea(area: string) {
       sesion?.rolPrincipal === "operario" &&
       areasUsuario.length > 0 &&
       !areasUsuario.some((asignada) => areaCoincide(asignada, area));
+    if (operarioSinArea) return [] as PedidoOperativo[];
 
-    if (operarioSinArea) return [];
-
-    return filtrarPedidos(pedidos)
+    return filtrarPedidos(query.data ?? [])
       .filter((pedido) => !esEstadoFinalPedido(pedido.estado))
       .filter((pedido) => !pedidoEnRecepcion(pedido.estado))
       .filter((pedido) => pedido.estado === "En Producción")
@@ -62,13 +107,13 @@ export function usePedidosDeArea(area: string) {
         if (aEnArea !== bEnArea) return aEnArea - bEnArea;
         return new Date(a.area_desde).getTime() - new Date(b.area_desde).getTime();
       });
-  }, [area, filtrarPedidos, pedidos, sesion?.areas, sesion?.rolPrincipal]);
+  }, [area, filtrarPedidos, query.data, sesion?.areas, sesion?.rolPrincipal]);
 
   return {
     pedidos: lista,
     enTrabajo: lista.filter((pedido) => pedidoEnAreaActual(pedido, area)),
     programados: lista.filter((pedido) => !pedidoEnAreaActual(pedido, area)),
-    isLoading,
+    isLoading: query.isLoading,
   };
 }
 
