@@ -1219,7 +1219,7 @@ export type Database = {
           pedido_id: string
           prioridad: string
           responsable_user_id: string | null
-          sede_id: string | null
+          sede_id: string
           updated_at: string
         }
         Insert: {
@@ -1236,7 +1236,7 @@ export type Database = {
           pedido_id: string
           prioridad?: string
           responsable_user_id?: string | null
-          sede_id?: string | null
+          sede_id: string
           updated_at?: string
         }
         Update: {
@@ -1253,7 +1253,7 @@ export type Database = {
           pedido_id?: string
           prioridad?: string
           responsable_user_id?: string | null
-          sede_id?: string | null
+          sede_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -1625,7 +1625,7 @@ export type Database = {
           referencia: string
           ruta: string[]
           saldo: number | null
-          sede_id: string | null
+          sede_id: string
           talla: string
           telefono: string
           trabajo: string
@@ -1683,7 +1683,7 @@ export type Database = {
           referencia: string
           ruta?: string[]
           saldo?: number | null
-          sede_id?: string | null
+          sede_id: string
           talla?: string
           telefono?: string
           trabajo?: string
@@ -1741,7 +1741,7 @@ export type Database = {
           referencia?: string
           ruta?: string[]
           saldo?: number | null
-          sede_id?: string | null
+          sede_id?: string
           talla?: string
           telefono?: string
           trabajo?: string
@@ -2360,7 +2360,7 @@ export type Database = {
           proyecto_joya_id: string | null
           responsable_user_id: string | null
           secuencia: number
-          sede_id: string | null
+          sede_id: string
           tipo: string
           titulo: string
           ubicacion: string
@@ -2385,7 +2385,7 @@ export type Database = {
           proyecto_joya_id?: string | null
           responsable_user_id?: string | null
           secuencia?: number
-          sede_id?: string | null
+          sede_id: string
           tipo?: string
           titulo: string
           ubicacion?: string
@@ -2410,7 +2410,7 @@ export type Database = {
           proyecto_joya_id?: string | null
           responsable_user_id?: string | null
           secuencia?: number
-          sede_id?: string | null
+          sede_id?: string
           tipo?: string
           titulo?: string
           ubicacion?: string
@@ -2537,7 +2537,7 @@ export type Database = {
           proyecto_joya_id: string | null
           responsable_user_id: string | null
           secuencia: number
-          sede_id: string | null
+          sede_id: string
           tipo: string
           titulo: string
           ubicacion: string
@@ -2607,6 +2607,32 @@ export type Database = {
         }[]
       }
       siguiente_numero_cotizacion: { Args: never; Returns: string }
+      transicionar_orden_produccion: {
+        Args: { _nuevo_estado: string; _orden_id: string }
+        Returns: {
+          creado_por: string | null
+          created_at: string
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          fecha_planificada_fin: string | null
+          fecha_planificada_inicio: string | null
+          id: string
+          notas: string
+          numero: string
+          pedido_id: string
+          prioridad: string
+          responsable_user_id: string | null
+          sede_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ordenes_produccion"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       ve_sede: {
         Args: { _sede_id: string; _user_id: string }
         Returns: boolean
