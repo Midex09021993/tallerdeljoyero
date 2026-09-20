@@ -241,8 +241,122 @@ function Dato({ label, value }: { label: string; value: string }) { return <div 
 
 function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias }: { pedido: any; trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; dias: number | null }) {
   const completados = trabajos.filter((t) => t.estado === "completado").length;
-  return <div className="space-y-5"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Dato label="Trabajo" value={pedido.trabajo || pedido.pieza || "—"} /><Dato label="Material" value={pedido.material || "—"} /><Dato label="Piedras" value={pedido.piedras || "—"} /><Dato label="Talla" value={pedido.talla || "—"} /></div><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Mini icon={Factory} title="Producción" value={ordenes.length ? ordenes[0].estado : "No configurada"} detail={`${completados}/${trabajos.length} trabajos completados`} /><Mini icon={PackageCheck} title="Calidad" value={controles[0]?.resultado || "Pendiente"} detail={controles.length ? `${controles.length} inspecciones · ${controles[0]?.tipo || "inspección"}` : "Sin inspecciones"} /><Mini icon={Box} title="Piezas" value={`${piezas.filter((p) => ["verificada","liberada"].includes(p.estado)).length}/${piezas.length}`} detail="Verificadas o liberadas" /><Mini icon={CalendarClock} title="Entrega" value={dias === null ? "Sin fecha" : dias < 0 ? "Atrasado" : dias === 0 ? "Hoy" : `${dias} días`} detail={fmtFecha(pedido.fecha_entrega) || "Sin fecha"} /></div><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Ficha técnica</h3><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Dato label="Peso estimado" value={pedido.peso_estimado ? `${pedido.peso_estimado} g` : "—"} /><Dato label="Cantidad" value={String(pedido.cantidad_piezas ?? "—")} /><Dato label="Origen" value={pedido.origen || "—"} /><Dato label="Sede" value={pedido.sede_nombre || "—"} /></div></section></div>;
+  const rechazadas = piezas.filter((p) => p.estado === "rechazada").length;
+  const piezasValidas = piezas.filter((p) => ["verificada", "liberada"].includes(p.estado));
+  const cantidadRequerida = Math.max(1, Number(pedido.cantidad_piezas) || 1);
+  const cantidadVerificada = piezasValidas.reduce((sum, p) => sum + Number(p.cantidad || 1), 0);
+  const avanceTrabajos = trabajos.length ? Math.round((completados / trabajos.length) * 100) : 0;
+  const avancePiezas = Math.min(100, Math.round((cantidadVerificada / cantidadRequerida) * 100));
+  const avanceGeneral = Math.round((avanceTrabajos + avancePiezas) / 2);
+  const ultimaCalidad = controles[0];
+  const op = ordenes[0];
+
+  const siguienteAccion =
+    op?.estado === "borrador" ? "Liberar la orden de producción" :
+    ["liberada", "pausada"].includes(op?.estado) ? "Iniciar la producción" :
+    op?.estado === "en_produccion" && !completados ? "Completar las operaciones pendientes" :
+    op?.estado === "en_produccion" ? "Enviar la orden a control de calidad" :
+    op?.estado === "control_calidad" && !cantidadVerificada ? "Verificar las piezas terminadas" :
+    op?.estado === "control_calidad" ? "Registrar la inspección final" :
+    pedido.estado === "Listo para Entrega" ? "Continuar con la entrega" :
+    "Revisar el siguiente paso del pedido";
+
+  const estadoEntrega = dias === null ? "Sin fecha definida" : dias < 0 ? "Fecha vencida" : dias === 0 ? "Entrega hoy" : `Entrega en ${dias} días`;
+
+  return (
+    <div className="space-y-5">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">Estado operativo</p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-display text-3xl tracking-tight">{avanceGeneral}%</span>
+              <span className="text-sm text-muted-foreground">avance estimado del pedido</span>
+            </div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div className="h-full rounded-full bg-gold transition-all" style={{ width: `${avanceGeneral}%` }} />
+            </div>
+          </div>
+          <div className="rounded-xl border border-gold/20 bg-gold/[.06] px-4 py-3 lg:min-w-[320px]">
+            <p className="text-[9px] font-bold uppercase tracking-[.16em] text-gold-deep">Próxima acción</p>
+            <p className="mt-1 text-sm font-semibold">{siguienteAccion}</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-2 sm:grid-cols-3">
+          <Dato label="Producción" value={`${completados}/${trabajos.length} operaciones`} />
+          <Dato label="Piezas" value={`${cantidadVerificada}/${cantidadRequerida} verificadas`} />
+          <Dato label="Entrega" value={estadoEntrega} />
+        </div>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Mini icon={Factory} title="Producción" value={op?.estado || "No configurada"} detail={`${avanceTrabajos}% de operaciones completadas`} />
+        <Mini icon={PackageCheck} title="Calidad" value={ultimaCalidad?.resultado || "Pendiente"} detail={ultimaCalidad ? `${ultimaCalidad.tipo} · ${fmtFecha(ultimaCalidad.created_at)}` : "Aún no hay inspecciones"} />
+        <Mini icon={Box} title="Piezas" value={`${cantidadVerificada}/${cantidadRequerida}`} detail={rechazadas ? `${rechazadas} rechazada(s)` : "Sin piezas rechazadas"} />
+        <Mini icon={CalendarClock} title="Entrega" value={dias === null ? "Sin fecha" : dias < 0 ? "Atrasado" : dias === 0 ? "Hoy" : `${dias} días`} detail={fmtFecha(pedido.fecha_entrega) || "Fecha pendiente"} />
+      </div>
+
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[.16em]">Ficha técnica</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Especificaciones principales con las que debe trabajar el taller.</p>
+          </div>
+          <span className="text-[10px] font-semibold text-muted-foreground">{pedido.sede_nombre || "Taller no asignado"}</span>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Dato label="Trabajo / pieza" value={pedido.trabajo || pedido.pieza || "—"} />
+          <Dato label="Material" value={pedido.material || "—"} />
+          <Dato label="Piedras" value={pedido.piedras || "—"} />
+          <Dato label="Talla" value={pedido.talla || "—"} />
+          <Dato label="Peso estimado" value={pedido.peso_estimado ? `${pedido.peso_estimado} g` : "—"} />
+          <Dato label="Cantidad" value={String(pedido.cantidad_piezas ?? "—")} />
+          <Dato label="Origen" value={pedido.origen || "—"} />
+          <Dato label="Taller / sede" value={pedido.sede_nombre || "—"} />
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.15fr_.85fr]">
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-[.16em]">Avance de fabricación</h3>
+              <p className="mt-1 text-xs text-muted-foreground">Seguimiento de operaciones y piezas, separado para no ocultar cuellos de botella.</p>
+            </div>
+            <Factory className="size-5 text-gold" />
+          </div>
+          <div className="mt-5 space-y-4">
+            <ProgressRow label="Operaciones" value={avanceTrabajos} detail={`${completados} de ${trabajos.length} completadas`} />
+            <ProgressRow label="Piezas verificadas" value={avancePiezas} detail={`${cantidadVerificada} de ${cantidadRequerida} requeridas`} />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Control del pedido</p>
+          <div className="mt-4 space-y-3">
+            <ControlLine label="Orden de producción" value={op?.numero || "Pendiente"} ok={Boolean(op)} />
+            <ControlLine label="Calidad final" value={calidadFinalResumen(controles)} ok={controles.some((c) => c.tipo === "inspeccion_final" && c.resultado === "aprobado")} />
+            <ControlLine label="Piezas" value={`${cantidadVerificada}/${cantidadRequerida} verificadas`} ok={cantidadVerificada >= cantidadRequerida} />
+            <ControlLine label="Taller" value={pedido.sede_nombre || "No asignado"} ok={Boolean(pedido.sede_nombre)} />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
+
+function ProgressRow({ label, value, detail }: { label: string; value: number; detail: string }) {
+  return <div><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{label}</span><span className="text-xs font-bold">{value}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted"><div className="h-full rounded-full bg-gold" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /></div><p className="mt-1 text-[10px] text-muted-foreground">{detail}</p></div>;
+}
+
+function ControlLine({ label, value, ok }: { label: string; value: string; ok: boolean }) {
+  return <div className="flex items-center justify-between gap-3 rounded-xl bg-surface-muted px-3 py-2.5"><div><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-0.5 text-xs font-semibold">{value}</p></div><span className={`size-2 rounded-full ${ok ? "bg-emerald-500" : "bg-gold"}`} /></div>;
+}
+
+function calidadFinalResumen(controles: any[]) {
+  const final = controles.find((c) => c.tipo === "inspeccion_final");
+  return final?.resultado || "Pendiente";
+}
+
 function Mini({ icon: Icon, title, value, detail }: { icon: typeof Factory; title: string; value: string; detail: string }) { return <div className="rounded-2xl border border-border bg-card p-5"><Icon className="size-5 text-gold" /><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p><p className="mt-1 text-base font-semibold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>; }
 
 function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, ordenPrincipal, trabajosCompletos, piezaVerificada, calidadFinalAprobada, transicionando, transicionar, verificarPieza, resultadoCalidad, setResultadoCalidad, tipoCalidad, setTipoCalidad, descripcionCalidad, setDescripcionCalidad, motivoCalidad, setMotivoCalidad, guardandoCalidad, registrarCalidad, cantidadRequerida }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean; ordenPrincipal: any; trabajosCompletos: boolean; piezaVerificada: boolean; calidadFinalAprobada: boolean; transicionando: boolean; transicionar: (estado: string) => Promise<void>; verificarPieza: (id: string, estado: "verificada"|"liberada"|"rechazada") => Promise<void>; resultadoCalidad: string; setResultadoCalidad: (v:string)=>void; tipoCalidad:string; setTipoCalidad:(v:string)=>void; descripcionCalidad:string; setDescripcionCalidad:(v:string)=>void; motivoCalidad:string; setMotivoCalidad:(v:string)=>void; guardandoCalidad:boolean; registrarCalidad:()=>Promise<void>; cantidadRequerida:number }) {
