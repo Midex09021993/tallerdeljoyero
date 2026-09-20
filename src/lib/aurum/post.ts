@@ -29,6 +29,7 @@ export async function createAurumPostPipeline(
   let vignettePass:any=null;
   let dofPass:any=null;
   let outputPass:any=null;
+  let gradingPass:any=null;
 
   try {
     composer=new EffectComposer(renderer);
@@ -141,6 +142,15 @@ export async function createAurumPostPipeline(
     lutPass=new LUTPass({lut:lutTexture});
     composer.addPass(lutPass);
 
+    const { ShaderPass: GradingShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
+    gradingPass=new GradingShaderPass({
+      uniforms:{tDiffuse:{value:null},contrast:{value:Number(config.gradeContrast??1)},saturation:{value:Number(config.gradeSaturation??1)}},
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`uniform sampler2D tDiffuse; uniform float contrast; uniform float saturation; varying vec2 vUv; void main(){vec4 c=texture2D(tDiffuse,vUv); float l=dot(c.rgb,vec3(.2126,.7152,.0722)); c.rgb=mix(vec3(l),c.rgb,saturation); c.rgb=(c.rgb-.5)*contrast+.5; gl_FragColor=c;}`,
+    });
+    gradingPass.enabled=Boolean(config.gradeEnabled);
+    composer.addPass(gradingPass);
+
     try {
       const { BokehPass }=await import("three/examples/jsm/postprocessing/BokehPass.js");
       dofPass=new BokehPass(scene,camera,{focus:4.0,aperture:0.00065,maxblur:0.006});
@@ -163,7 +173,7 @@ export async function createAurumPostPipeline(
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
-    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; dofPass=null; outputPass=null;
+    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
   const applyQuality=(next:any)=>{
@@ -219,6 +229,11 @@ export async function createAurumPostPipeline(
       bloomPass.enabled=Boolean(config.bloom) && high;
       bloomPass.strength=config.bloomIntensity??.035;
       bloomPass.threshold=config.bloomThreshold??1.5;
+    }
+    if(gradingPass){
+      gradingPass.enabled=Boolean(config.gradeEnabled);
+      gradingPass.uniforms.contrast.value=Math.max(.5,Math.min(1.8,Number(config.gradeContrast??1)));
+      gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
     if(lutPass){
       lutPass.enabled=config.lut!==false;
