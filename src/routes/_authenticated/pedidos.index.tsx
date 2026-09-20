@@ -802,7 +802,7 @@ function PedidosPage() {
                           usuarioId: sesion?.user.id ?? null,
                         });
                       }}
-                      className="rounded-lg bg-ink px-3 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
+                      className="rounded-lg bg-gold px-3 py-2 text-xs font-medium text-gold-foreground disabled:opacity-50"
                     >
                       Autorizar Producción
                     </button>
