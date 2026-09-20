@@ -122,6 +122,16 @@ function coincideEntrega(fechaIso: string | null | undefined, filtro: FiltroEntr
   return true;
 }
 
+function diasHastaEntrega(fechaIso: string | null | undefined): number | null {
+  if (!fechaIso) return null;
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const entrega = new Date(fechaIso);
+  entrega.setHours(0, 0, 0, 0);
+  if (Number.isNaN(entrega.getTime())) return null;
+  return Math.ceil((entrega.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 /** Prefijo de referencia: dos primeras iniciales del taller (sede). */
 function prefijoSede(nombre: string | null | undefined) {
   const limpio = (nombre ?? "").replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g, "").trim();
@@ -317,15 +327,6 @@ function PedidosPage() {  const navigate = useNavigate();
   const activos = pedidosPorSede.filter((p) => !esEstadoFinalPedido(p.estado));
   const entregados = pedidosPorSede.filter((p) => p.estado === "Entregado");
 
-  const diasHastaEntrega = (fechaIso: string | null | undefined): number | null => {
-    if (!fechaIso) return null;
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const entrega = new Date(fechaIso);
-    entrega.setHours(0, 0, 0, 0);
-    return Math.ceil((entrega.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-  };
-
   const atrasados = activos.filter((p) => {
     const d = diasHastaEntrega(p.fecha_entrega);
     return d !== null && d < 0;
@@ -349,6 +350,11 @@ function PedidosPage() {  const navigate = useNavigate();
   const entregadosPorArea = contarPorArea(entregados);
   const atrasadosPorArea = contarPorArea(atrasados);
   const proximosPorArea = contarPorArea(proximos);
+  const pendientesAutorizacion = pedidosPorSede.filter((p) => pedidoPendienteAutorizacionProduccion(p));
+  const pedidosAtencion = pedidosPorSede.filter((p) => {
+    const dias = diasHastaEntrega(p.fecha_entrega ?? p.entrega);
+    return pedidoPendienteAutorizacionProduccion(p) || (dias !== null && dias < 0 && !esEstadoFinalPedido(p.estado));
+  });
   const tarjetasResumen = (
     <>
       <TarjetaResumen etiqueta="Activos" valor={activos.length} porArea={activosPorArea} />
@@ -777,7 +783,7 @@ function PedidosPage() {  const navigate = useNavigate();
           <div className="mb-3 flex flex-wrap gap-1.5 rounded-xl bg-surface-muted p-1">
             {([
               ["todos", "Todos", pedidosPorSede.length],
-              ["atencion", "Requieren atención", atrasados.length],
+              ["atencion", "Requieren atención", pedidosAtencion.length],
               ["produccion", "En producción", pedidosPorSede.filter((p) => p.estado === "En Producción").length],
               ["entrega", "Por entregar", pedidosPorSede.filter((p) => p.estado === "Listo para Entrega" || p.estado === "En Camino").length],
             ] as const).map(([valor, etiqueta, cantidad]) => (
