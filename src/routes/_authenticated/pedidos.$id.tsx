@@ -357,6 +357,28 @@ function FichaPedido() {
       return data;
     },
   });
+  const { data: resumenCostos } = useQuery({
+    queryKey: ["resumen-costos-op", ordenProduccion?.id],
+    enabled: Boolean(ordenProduccion?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("orden_produccion_resumen_costos").select("costo_estimado,costo_materiales,costo_mano_obra,costo_externo,costo_indirecto,costo_ajustes,costo_real,venta,margen,margen_porcentaje,moneda,calculado_at").eq("orden_produccion_id", ordenProduccion!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const recalcularCostos = async () => {
+    if (!ordenProduccion) return;
+    const { error } = await supabase.rpc("recalcular_costos_orden", { _orden_id: ordenProduccion.id });
+    if (error) toast.error(error.message);
+    else { toast.success("Costo real recalculado"); void qc.invalidateQueries({ queryKey: ["resumen-costos-op", ordenProduccion.id] }); }
+  };
+  const [costoManual, setCostoManual] = useState({ categoria: "externo", concepto: "", importe: "" });
+  const registrarCostoManual = async () => {
+    if (!ordenProduccion || !costoManual.concepto.trim() || Number(costoManual.importe) <= 0) return;
+    const { error } = await supabase.from("orden_produccion_costos").insert({ orden_produccion_id: ordenProduccion.id, categoria: costoManual.categoria, concepto: costoManual.concepto.trim(), cantidad: 1, unidad: "servicio", costo_unitario: Number(costoManual.importe), importe: Number(costoManual.importe), origen: "manual" } as never);
+    if (error) toast.error(error.message);
+    else { setCostoManual({ categoria: "externo", concepto: "", importe: "" }); await recalcularCostos(); }
+  };
   const { data: piezasTerminadas = [] } = useQuery({
     queryKey: ["piezas-terminadas-op", ordenProduccion?.id],
     enabled: Boolean(ordenProduccion?.id),
@@ -997,6 +1019,13 @@ function FichaPedido() {
             <QuickStatus label="Entrega" value={estadoEntrega} ok={estadoEntrega === "Entregado"} />
           </div>
         </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Costeo real</p><h2 className="mt-1 text-lg font-semibold">Costo de fabricación y margen</h2><p className="mt-1 text-xs text-muted-foreground">Materiales y mano de obra calculados desde el movimiento real y el tiempo registrado.</p></div><button type="button" onClick={() => void recalcularCostos()} disabled={!ordenProduccion} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50">Recalcular costo</button></div>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Materiales</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.costo_materiales||0).toFixed(2)}</p></div><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Mano de obra</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.costo_mano_obra||0).toFixed(2)}</p></div><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Costo real</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.costo_real||0).toFixed(2)}</p></div><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Margen</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.margen||0).toFixed(2)} · {resumenCostos?.margen_porcentaje == null ? "—" : Number(resumenCostos.margen_porcentaje).toFixed(1)+"%"}</p></div></div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><select value={costoManual.categoria} onChange={e => setCostoManual(v => ({...v,categoria:e.target.value}))} className="rounded-xl border border-border bg-background px-3 py-2 text-xs"><option value="externo">Proceso externo</option><option value="indirecto">Costo indirecto</option><option value="ajuste">Ajuste</option></select><input value={costoManual.concepto} onChange={e => setCostoManual(v => ({...v,concepto:e.target.value}))} placeholder="Ej. Baño, grabado, láser…" className="rounded-xl border border-border bg-background px-3 py-2 text-xs"/><div className="flex gap-2"><input type="number" min="0" step="0.01" value={costoManual.importe} onChange={e => setCostoManual(v => ({...v,importe:e.target.value}))} placeholder="S/" className="w-24 rounded-xl border border-border bg-background px-3 py-2 text-xs"/><button type="button" onClick={() => void registrarCostoManual()} className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold">Añadir</button></div></div>
+        <p className="mt-2 text-[10px] text-muted-foreground">Los costos manuales permanecen al recalcular; los costos calculados por el sistema se regeneran.</p>
       </div>
 
       <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
