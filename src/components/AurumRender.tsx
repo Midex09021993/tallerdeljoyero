@@ -902,3 +902,93 @@ export function AurumRender() {
                 </div>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
+                  <p className="truncate text-[10px] text-white/65">{gemaActiva.nombre}</p>
+                </div>
+              </div>}
+            </section>
+
+            <section className="border-b border-white/10 px-5 py-2">
+              <button type="button" onClick={()=>setUxSection(uxSection==="escena"?"":"escena")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
+                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="escena"?"rotate-0":"-rotate-90")}/><span>Escenas</span></span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{ESCENARIOS.length}</span>
+              </button>
+              {uxSection==="escena"&&<div className="grid grid-cols-3 gap-3 pb-5">
+                {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
+                  <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}><span className={"block h-full w-full "+e.clase}/></span>
+                  <span className="mt-2 block text-[10px]">{e.nombre}</span>
+                </button>)}
+              </div>}
+            </section>
+            <div className="px-5 pb-6">
+              <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-3 py-3 text-left hover:border-[#d4af37]/40">
+                <span><span className="block text-[9px] uppercase tracking-[.16em] text-white/35">Más control</span><span className="mt-1 block text-xs text-white/75">Iluminación y render</span></span>
+                <SlidersHorizontal className="size-4 text-[#d4af37]"/>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <main className="relative min-w-0 flex-1 bg-[#090b0e]">
+          <div ref={visorRef} className="absolute inset-0">
+            {!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span></button></div></div>}
+            {(cargando || presentationCover) && <div
+              className={"absolute inset-0 z-40 overflow-hidden transition-opacity duration-700 "+((cargando || presentationVisible)?"pointer-events-auto opacity-100":"pointer-events-none opacity-0")}
+              aria-live="polite"
+            >
+              {presentationCover
+                ? <img src={presentationCover} alt="Presentación del diseño" className={"absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] "+(presentationVisible?"scale-100":"scale-[1.015]")} />
+                : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,#ffffff_0%,#f2f2f0_48%,#d8d9d7_100%)]" />
+              }
+              <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/15 to-transparent" />
+              <div className="absolute bottom-5 left-5 flex items-center gap-2.5 rounded-full border border-black/10 bg-white/72 px-3 py-2 shadow-lg backdrop-blur-md">
+                <span className="grid size-7 place-items-center rounded-full border border-[#b99642]/40 bg-white/80">
+                  <span className="text-[11px] font-semibold tracking-[.16em] text-[#b99642]">A</span>
+                </span>
+                <span className="text-[9px] font-semibold uppercase tracking-[.24em] text-black/55">AURUM RENDER</span>
+              </div>
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center">
+                <div className={"mx-auto mb-3 grid size-10 place-items-center rounded-full border border-black/10 bg-white/65 shadow-xl backdrop-blur-sm "+(presentationCover?"opacity-0":"opacity-100")}>
+                  <div className="size-4 animate-spin rounded-full border-2 border-black/10 border-t-[#b99642]" />
+                </div>
+                <div className={"text-[10px] font-medium uppercase tracking-[.34em] text-black/45 transition-opacity duration-500 "+(presentationCover?"opacity-0":"opacity-100")}>
+                  {paso || "Preparando presentación"}
+                </div>
+              </div>
+              <div className="absolute bottom-5 right-5 h-1 w-28 overflow-hidden rounded-full bg-black/10">
+                <div className={"h-full rounded-full bg-[#b99642] transition-all duration-[1000ms] "+(presentationCover?"w-full":"w-2/5")} />
+              </div>
+            </div>}
+            {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
+            {parteSeleccionada&&<div className="absolute left-5 top-5 z-20 max-w-[65%] rounded-xl border border-[#d4af37]/40 bg-black/65 px-3 py-2 text-[10px] text-white shadow-xl backdrop-blur-xl"><span className="text-[#d4af37]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
+            {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-[10px] text-white/50 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
+
+            <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-[#111416]/85 px-3 py-2 shadow-2xl backdrop-blur-xl">
+              <span className="px-2 text-[10px] text-white/70">◉ &nbsp;Órbita</span><span className="px-2 text-[10px] text-white/70">✋ &nbsp;Pan</span><span className="px-2 text-[10px] text-white/70">⌕ &nbsp;Zoom</span><button type="button" onClick={()=>apiRef.current?.reset()} className="px-2 text-[10px] text-white/70 hover:text-white">⌗ &nbsp;Ajustar</button>
+            </div>
+            <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/10 bg-white/65 p-1 text-black/55 backdrop-blur">
+              <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
+              <button type="button" onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Expand className="size-3.5"/></button>
+            </div>
+
+            <div className="absolute right-5 top-1/2 z-30 -translate-y-1/2">
+              <div className="flex flex-col items-center gap-1 rounded-2xl border border-[#d4af37]/75 bg-white/90 p-1.5 shadow-[0_0_10px_rgba(212,175,55,.5),0_12px_35px_rgba(0,0,0,.18)]">
+                <button type="button" title="Calidad de render" onClick={()=>setQualityOpen(v=>!v)} className={"grid size-10 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-black/5")}><Sparkles className="size-[18px]"/></button>
+                <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><RotateCcw className="size-[18px]"/></button>
+                <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><Expand className="size-[18px]"/></button>
+                <div className="my-0.5 h-px w-6 bg-black/10"/>
+                <button type="button" title="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-[#d4af37] hover:bg-[#d4af37]/10"><Camera className="size-[18px]"/></button>
+              </div>
+            </div>
+
+            {qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-xl border border-[#d4af37]/50 bg-[#111416]/96 p-2 text-white shadow-2xl backdrop-blur-xl">
+              <div className="px-2 pb-2 text-[8px] font-semibold uppercase tracking-[.18em] text-white/35">Calidad de render</div>
+              {([["low","Baja","Vista rápida"],["high","Alta","Producción"],["ultra","Ultra","Máximo detalle"]] as const).map(([id,nombre,desc])=><button key={id} type="button" onClick={()=>cambiarCalidad(id)} className={"mb-1 w-full rounded-lg border px-2.5 py-2 text-left "+(renderQualityId===id?"border-[#d4af37]/60 bg-[#d4af37]/10":"border-white/10 bg-white/[.03]")}><span className="block text-[10px] font-semibold">{nombre}</span><span className="text-[8px] text-white/40">{desc}</span></button>)}
+            </div>}
+            {lightingOpen && lightingPanel}
+          </div>
+        </main>
+      </div>
+    </div>
+  </>);
+}
