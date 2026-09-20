@@ -57,3 +57,7 @@ $$;
 revoke all on function private.registrar_evento_entrega() from public,anon,authenticated;
 drop trigger if exists trg_pedidos_evento_entrega on public.pedidos;
 create trigger trg_pedidos_evento_entrega after update on public.pedidos for each row execute function private.registrar_evento_entrega();
+
+
+-- La transición comercial se ejecuta con privilegio controlado y validaciones explícitas.
+-- La función valida autenticación, sede y pertenencia al Área ventas antes de modificar pedidos.
