@@ -52,10 +52,15 @@ function Pedido2Detalle() {
   });
 
   const { data: controles = [] } = useQuery({
-    queryKey: ["pedidos-2-qc", id],
-    enabled: Boolean(id),
+    queryKey: ["pedidos-2-qc", id, ordenes.map((o) => o.id).join(",")],
+    enabled: Boolean(id) && ordenes.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("control_calidad").select("id,tipo,estado,resultado,observaciones,created_at,usuario_id").eq("pedido_id", id).order("created_at", { ascending: false });
+      const ordenIds = ordenes.map((o) => o.id);
+      const { data, error } = await supabase
+        .from("control_calidad")
+        .select("id,orden_produccion_id,trabajo_id,tipo,resultado,descripcion,motivo,evidencia_url,created_at,inspeccionado_por")
+        .in("orden_produccion_id", ordenIds)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
