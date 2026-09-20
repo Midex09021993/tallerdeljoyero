@@ -57,20 +57,6 @@ function TrabajoOperativoPage() {
   const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });
   const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
 
-  const { data: pedidoTrabajo } = useQuery({
-    queryKey: ["pedido-trabajo", id],
-    enabled: Boolean(id),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pedidos")
-        .select("id, referencia, cliente, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_entrega")
-        .eq("id", id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: archivosTecnicos = [] } = useQuery({
     queryKey: ["trabajo-archivos", id],
     queryFn: async () => {
@@ -160,6 +146,20 @@ function TrabajoOperativoPage() {
       if (error) throw error;
       if (!data) throw new Error("Este trabajo no existe o no está asignado a tu usuario.");
       return data as Trabajo;
+    },
+  });
+
+  const { data: pedidoTrabajo } = useQuery({
+    queryKey: ["pedido-trabajo", trabajo?.pedido_id],
+    enabled: Boolean(trabajo?.pedido_id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select("id, referencia, cliente, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_entrega")
+        .eq("id", trabajo!.pedido_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
     },
   });
 
