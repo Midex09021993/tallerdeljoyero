@@ -526,50 +526,6 @@ function PedidosPage() {  const navigate = useNavigate();
               });
             }}
           >
-            <PedidoFormCampos
-              form={form}
-              onChange={setForm}
-              camposBloqueados={["cliente"]}
-              ruta={ruta}
-              onRutaChange={setRuta}
-              sedeSelect={
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Sede del pedido
-                  <select
-                    value={sedePorDefecto}
-                    onChange={(e) => setSedeId(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                  >
-                    {sedes.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre}
-                      </option>                    ))}
-                  </select>
-                </label>
-              }
-            />
-
-            <div className="mt-4 rounded-xl border border-border bg-card">
-              <button
-                type="button"
-                onClick={() => setDatosVinculadosAbiertos((v) => !v)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                aria-expanded={datosVinculadosAbiertos}
-              >
-                <span>
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Datos vinculados <span className="normal-case tracking-normal">(opcional)</span>
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    Proyecto y documentación comercial relacionada.
-                  </span>
-                </span>
-                <span className="text-xs text-muted-foreground" aria-hidden="true">
-                  {datosVinculadosAbiertos ? "Ocultar" : "Mostrar"}
-                </span>
-              </button>
-              {datosVinculadosAbiertos ? (
-                <div className="border-t border-border px-4 py-4">
             <div className="mb-4 max-w-xl">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Cliente <span className="normal-case tracking-normal">(opcional)</span>
@@ -687,6 +643,50 @@ function PedidosPage() {  const navigate = useNavigate();
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
             </div>
+            <PedidoFormCampos
+              form={form}
+              onChange={setForm}
+              camposBloqueados={["cliente"]}
+              ruta={ruta}
+              onRutaChange={setRuta}
+              sedeSelect={
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Sede del pedido
+                  <select
+                    value={sedePorDefecto}
+                    onChange={(e) => setSedeId(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
+                  >
+                    {sedes.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre}
+                      </option>                    ))}
+                  </select>
+                </label>
+              }
+            />
+
+            <div className="mt-4 rounded-xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setDatosVinculadosAbiertos((v) => !v)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                aria-expanded={datosVinculadosAbiertos}
+              >
+                <span>
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Datos vinculados <span className="normal-case tracking-normal">(opcional)</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Proyecto y documentación comercial relacionada.
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground" aria-hidden="true">
+                  {datosVinculadosAbiertos ? "Ocultar" : "Mostrar"}
+                </span>
+              </button>
+              {datosVinculadosAbiertos ? (
+                <div className="border-t border-border px-4 py-4">
             <div className="mb-4 max-w-xl">
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Proyecto de joyería
