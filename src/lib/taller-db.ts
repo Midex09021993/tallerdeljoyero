@@ -804,16 +804,18 @@ async function asegurarContratoComercial({
   return { id: data.id, numero: numeroLimpio, creado: true };
 }
 
-export function useContratos() {
+export function useContratos(incluirFinanzas = true) {
   return useQuery({
-    queryKey: ["contratos"],
+    queryKey: ["contratos", incluirFinanzas],
     refetchInterval: 15000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato[]> => {
       const { data, error } = await supabase
         .from("contratos")
         .select(
-          "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)",
+          incluirFinanzas
+            ? "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)"
+            : "id, numero, cliente, origen, sede_id, notas, created_at, sedes(nombre)",
         )
         .order("created_at", { ascending: false });
       if (error) {
@@ -827,11 +829,11 @@ export function useContratos() {
           id: textoCampo(c, "id"),
           numero: textoCampo(c, "numero"),
           cliente: textoCampo(c, "cliente"),
-          telefono: textoCampo(c, "telefono"),
+          telefono: incluirFinanzas ? textoCampo(c, "telefono") : "",
           origen: textoCampo(c, "origen"),
-          total,
-          abonado,
-          saldo: Math.max(0, total - abonado),
+          total: incluirFinanzas ? total : 0,
+          abonado: incluirFinanzas ? abonado : 0,
+          saldo: incluirFinanzas ? Math.max(0, total - abonado) : 0,
           sede_id: typeof c["sede_id"] === "string" ? c["sede_id"] : null,
           sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
           notas: textoCampo(c, "notas"),
@@ -917,7 +919,10 @@ export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | nul
   });
 }
 
-export function usePagosContratos(contratos: Pick<Contrato, "id" | "numero">[]) {
+export function usePagosContratos(
+  contratos: Pick<Contrato, "id" | "numero">[],
+  habilitado = true,
+) {
   const ids = contratos.map((c) => c.id).filter(esUuid);
   const numeros = contratos.map((c) => c.numero).filter(Boolean);
   return useQuery({
@@ -960,7 +965,7 @@ export function usePagosContratos(contratos: Pick<Contrato, "id" | "numero">[]) 
         (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
       );
     },
-    enabled: contratos.length > 0,
+    enabled: habilitado && contratos.length > 0,
   });
 }
 
