@@ -53,6 +53,10 @@ type Joya = {
   id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
   talla: string; piedras: string; cantidad: number; estado: string; created_at?: string | null;
 };
+type EventoJoya = {
+  id: string; tipo: string; estado_anterior: string; estado_nuevo: string;
+  nota: string; created_at: string;
+};
 
 const CATEGORIAS = ["Oro", "Plata", "Piedras", "Resina", "Soldadura", "Herramientas", "Otros insumos"];
 const TIPOS: [string, string][] = [
@@ -90,6 +94,8 @@ function InventarioPage() {
   const [joyaBusqueda, setJoyaBusqueda] = useState("");
   const [joyaSeleccionada, setJoyaSeleccionada] = useState<Joya | null>(null);
   const [joyaQR, setJoyaQR] = useState<Joya | null>(null);
+  const [joyaEventos, setJoyaEventos] = useState<EventoJoya[]>([]);
+  const [cargandoEventos, setCargandoEventos] = useState(false);
   const [importacionAbierta, setImportacionAbierta] = useState(false);
   const [importacionFilas, setImportacionFilas] = useState<ImportacionJoya[]>([]);
   const [importacionNombre, setImportacionNombre] = useState("");
@@ -152,6 +158,29 @@ function InventarioPage() {
   }
 
   useEffect(() => { void cargar(); }, [sedeId]);
+
+  useEffect(() => {
+    if (!joyaSeleccionada) {
+      setJoyaEventos([]);
+      return;
+    }
+    let activo = true;
+    setCargandoEventos(true);
+    void supabase
+      .from("inventario_joya_eventos")
+      .select("id,tipo,estado_anterior,estado_nuevo,nota,created_at")
+      .eq("joya_id", joyaSeleccionada.id)
+      .eq("sede_id", sedeId ?? "")
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data, error }) => {
+        if (!activo) return;
+        if (error) toast.error("No se pudo cargar el historial de la joya.");
+        setJoyaEventos((data ?? []) as EventoJoya[]);
+        setCargandoEventos(false);
+      });
+    return () => { activo = false; };
+  }, [joyaSeleccionada?.id, sedeId]);
 
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -598,6 +627,30 @@ function InventarioPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/15 bg-gold/[.025] px-4 py-3">
               <div><p className="text-xs font-semibold">Identificación física</p><p className="mt-1 text-[10px] text-muted-foreground">Genera un QR con el código y taller de esta joya.</p></div>
               <button type="button" onClick={() => setJoyaQR(joyaSeleccionada)} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[.08] px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/[.12]"><QrCode className="size-4 text-gold" /> Generar QR</button>
+            </div>
+
+            <div className="rounded-xl border border-border bg-background/40 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold">Historial de trazabilidad</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">Registro automático de ingresos, cambios y estados de esta joya.</p>
+                </div>
+                <History className="size-4 text-gold/70" />
+              </div>
+              <div className="mt-4 space-y-3">
+                {cargandoEventos ? <p className="py-3 text-center text-[11px] text-muted-foreground">Cargando historial…</p> : joyaEventos.length === 0 ? <p className="py-3 text-center text-[11px] text-muted-foreground">Aún no hay eventos registrados.</p> : joyaEventos.map((evento) => (
+                  <div key={evento.id} className="relative rounded-xl border border-border bg-card px-3.5 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold capitalize">{evento.tipo.replaceAll("_", " ")}</p>
+                        {evento.estado_anterior || evento.estado_nuevo ? <p className="mt-1 text-[10px] text-muted-foreground">{evento.estado_anterior || "—"} <span className="px-1 text-gold">→</span> {evento.estado_nuevo || "—"}</p> : null}
+                        <p className="mt-1 text-[10px] text-muted-foreground">{evento.nota}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] text-muted-foreground">{new Date(evento.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </Modal>
