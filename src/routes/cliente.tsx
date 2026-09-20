@@ -90,7 +90,7 @@ function SeguimientoCliente() {
   const consulta = useMutation({
     mutationFn: async (seguimientoToken: string): Promise<Seguimiento | null> => {
       const { data, error } = await supabase.rpc("seguimiento_pedido", {
-        _token: seguimientoToken,
+        _ref: seguimientoToken,
       });
       if (error) throw error;
       return ((data as Seguimiento[] | null) ?? [])[0] ?? null;
