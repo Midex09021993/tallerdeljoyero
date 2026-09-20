@@ -892,7 +892,7 @@ function pagosDesdeRows(rows: Array<Record<string, unknown>>): PagoContrato[] {
   }));
 }
 
-export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined) {
+export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined, habilitado = true) {
   return useQuery({
     queryKey: ["contrato_pagos", contrato?.id, contrato?.numero],
     refetchInterval: 15000,
@@ -915,7 +915,7 @@ export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | nul
       }
       return pagosDesdeRows((data ?? []) as Array<Record<string, unknown>>);
     },
-    enabled: Boolean(contrato),
+    enabled: habilitado && Boolean(contrato),
   });
 }
 
@@ -1134,7 +1134,7 @@ export function useCrearContratoDesdePedido() {
   });
 }
 
-export function useContrato(id: string) {
+export function useContrato(id: string, habilitado = true) {
   return useQuery({
     queryKey: ["contrato", id],
     refetchInterval: 15000,
