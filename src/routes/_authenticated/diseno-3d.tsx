@@ -12,9 +12,9 @@ import { areaCoincide, useSesion } from "@/lib/auth";
 import {
   pedidoEnRecepcion,
   useArchivosPedidos,
-  usePedidos,
+  usePedidosSelector,
   type ArchivoPedido,
-  type Pedido,
+  type PedidoSelector,
 } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/diseno-3d")({
@@ -54,7 +54,7 @@ function Diseno3D() {
 }
 
 function Diseno3DCompleto() {
-  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
+  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
   const { data: archivos = [], isLoading: cargandoArchivos } = useArchivosPedidos();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
@@ -87,7 +87,7 @@ function Diseno3DCompleto() {
   /** Pedidos con al menos un modelo (STL/3MF/visor 3D). */
   const atendidos = useMemo(() => {
     const vistos = new Set<string>();
-    const lista: Pedido[] = [];
+    const lista: PedidoSelector[] = [];
     for (const a of archivos) {
       if (!esModelo(a) || vistos.has(a.pedido_id)) continue;
       const pedido = pedidosFiltrados.find((p) => p.id === a.pedido_id);
