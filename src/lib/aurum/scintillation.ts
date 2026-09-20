@@ -239,13 +239,11 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.fragmentShader=shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `
-        if(ijewelEnabled){
         #ifdef USE_ENVMAP
         #ifdef ENVMAP_TYPE_CUBE_UV
-        // Native iJewel parameter path. The source renderer exposes rayBounces
-        // as a material parameter; AURUM uses a bounded iterative internal
-        // reflection/refraction path against the same PMREM environment rather
-        // than collapsing the value into a different IOR or transmission value.
+        // Native iJewel parameter path. This source file is compiled per
+        // material, so only materials carrying the supplied parameters receive
+        // the bounded iterative environment contribution.
         vec3 ijView=normalize(-vViewPosition);
         vec3 ijNormal=normalize(normal);
         float ijEta=1.0/max(aurumIJEWELRefractiveIndex,1.0001);
@@ -260,24 +258,22 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
           float ijDepth=exp(-float(ijB)*max(aurumIJEWELAbsorptionFactor,0.001)*.18);
           ijAccum+=ijEnv*ijWeight*ijDepth;
           ijWeight*=.62;
-          // Internal bounce: reflect inside the stone, then refract again.
           ijDir=reflect(ijDir,ijNormal);
           ijDir=normalize(mix(ijDir,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.2)));
         }
-        float ijNorm=max(ijWeight,0.0001);
         ijAccum/=max(1.0,ijMaxBounces*.35);
         ijAccum*=aurumIJEWELBoostFactors;
         ijAccum=pow(max(ijAccum,vec3(0.0)),vec3(max(aurumIJEWELGammaFactor,.01)));
         float ijFacet=clamp(.5+.5*dot(ijNormal,ijView),0.0,1.0);
         float ijGeometry=mix(1.0,ijFacet,clamp(aurumIJEWELGeometryFactor,0.0,1.0));
         float ijReflect=clamp(aurumIJEWELReflectivity,0.0,1.0);
-        // transmissionParameter=0 is preserved as the original iJewel value;
-        // it is not mapped to MeshPhysicalMaterial.transmission. The custom
-        // optical contribution is blended here using the source reflectivity.
+        // transmissionParameter stays in the original iJewel semantic space;
+        // it is not guessed as MeshPhysicalMaterial.transmission.
         gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijAccum*ijReflect,ijGeometry);
         #endif
         #endif
-      }
+      `
+    );
 
       // Use the physical surface normal and view direction already present
         // in the PBR pipeline. No synthetic RGB sparkle or emissive overlay.
