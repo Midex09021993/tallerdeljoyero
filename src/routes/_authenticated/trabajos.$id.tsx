@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, CircleAlert, FileText, Link2, Play, Paperclip } from "lucide-react";
@@ -56,6 +56,44 @@ function TrabajoOperativoPage() {
   const [guardandoArchivo, setGuardandoArchivo] = useState(false);
   const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });
   const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
+  const [relojAhora, setRelojAhora] = useState(Date.now());
+
+  const { data: sesionesTiempo = [] } = useQuery({
+    queryKey: ["trabajo-tiempos", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("trabajo_tiempos")
+        .select("id,usuario_id,inicio,fin,segundos_acumulados,motivo_pausa")
+        .eq("trabajo_id", id).order("inicio", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRelojAhora(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const sesionActiva = sesionesTiempo.find((s) => !s.fin && s.usuario_id === sesion?.user.id);
+  const segundosTotales = useMemo(() => sesionesTiempo.reduce((total, s) => {
+    const extra = s.fin ? 0 : Math.max(0, Math.floor((relojAhora - new Date(s.inicio).getTime()) / 1000));
+    return total + Number(s.segundos_acumulados || 0) + extra;
+  }, 0), [sesionesTiempo, relojAhora]);
+
+  const iniciarReloj = async () => {
+    if (!sesion?.user.id || sesionActiva) return;
+    const { error } = await supabase.from("trabajo_tiempos").insert({ trabajo_id: id, usuario_id: sesion.user.id });
+    if (error) setErrorAccion(error.message);
+    else { await qc.invalidateQueries({ queryKey: ["trabajo-tiempos", id] }); await qc.invalidateQueries({ queryKey: ["trabajo-operativo", id] }); }
+  };
+
+  const detenerReloj = async () => {
+    if (!sesionActiva) return;
+    const segundos = Math.max(0, Math.floor((Date.now() - new Date(sesionActiva.inicio).getTime()) / 1000));
+    const { error } = await supabase.from("trabajo_tiempos").update({ fin: new Date().toISOString(), segundos_acumulados: segundos }).eq("id", sesionActiva.id);
+    if (error) setErrorAccion(error.message);
+    else await qc.invalidateQueries({ queryKey: ["trabajo-tiempos", id] });
+  };
 
   const { data: archivosTecnicos = [] } = useQuery({
     queryKey: ["trabajo-archivos", id],
@@ -270,6 +308,12 @@ function TrabajoOperativoPage() {
           </div>
         </section>
 
+        <section className="rounded-2xl border border-gold/25 bg-card p-5 shadow-raised">
+          <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Tiempo de producción</p><h2 className="mt-1 text-lg font-semibold">{Math.floor(segundosTotales / 3600)}h {Math.floor((segundosTotales % 3600) / 60)}m</h2></div><span className={sesionActiva ? "rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-semibold text-success" : "rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground"}>{sesionActiva ? "Reloj activo" : "Pausado"}</span></div>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted"><div className="h-full w-1/3 rounded-full bg-gold" /></div>
+          <p className="mt-3 text-xs text-muted-foreground">{sesionesTiempo.length} sesión{sesionesTiempo.length === 1 ? "" : "es"} registrada{sesionesTiempo.length === 1 ? "" : "s"}. El tiempo queda asociado al operario.</p>
+        </section>
+
         <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
           <h2 className="text-xs font-bold uppercase tracking-[0.18em]">Instrucciones</h2>
           <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{trabajo.descripcion || "No hay instrucciones adicionales registradas."}</p>
@@ -280,6 +324,8 @@ function TrabajoOperativoPage() {
           <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
             <h2 className="text-xs font-bold uppercase tracking-[0.18em]">Acciones</h2>
             <div className="mt-4 flex flex-wrap gap-2">
+              {trabajo.estado === "en_proceso" && !sesionActiva ? <button type="button" onClick={() => void iniciarReloj()} className="rounded-lg border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs font-semibold text-gold-deep">▶ Iniciar reloj</button> : null}
+              {sesionActiva ? <button type="button" onClick={() => void detenerReloj()} className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs font-semibold text-warning">⏸ Pausar reloj</button> : null}
               {trabajo.estado === "pendiente" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
               {trabajo.estado === "en_proceso" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("completado")} className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2.5 text-xs font-semibold text-success-foreground disabled:opacity-50"><Check className="size-4" /> Completar trabajo</button> : null}
               {trabajo.estado !== "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("bloqueado")} className="inline-flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs font-semibold text-warning disabled:opacity-50"><CircleAlert className="size-4" /> Bloquear</button> : null}
