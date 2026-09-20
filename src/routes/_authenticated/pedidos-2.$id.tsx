@@ -229,15 +229,8 @@ function Pedido2Detalle() {
       </div>
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} /> : null}
-      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
-      {ordenPrincipal && piezas.length ? (
-        <section className="mt-5 rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between gap-4"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Verificación de piezas</h3><p className="mt-1 text-xs text-muted-foreground">Requeridas: {pedido.cantidad_piezas ?? 1} · Verificadas/liberadas: {piezas.filter((p) => ["verificada","liberada"].includes(p.estado)).reduce((sum, p) => sum + Number(p.cantidad || 1), 0)}</p></div><PackageCheck className="size-5 text-gold" /></div>
-          <div className="mt-4 space-y-2">{piezas.map((p) => <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"><div><p className="text-sm font-semibold">Pieza {p.numero_pieza}</p><p className="text-xs text-muted-foreground">{p.estado} · {p.peso_final ? `${p.peso_final} g` : "Peso final pendiente"}</p></div><div className="flex gap-2">{["pendiente","recibida"].includes(p.estado) ? <button type="button" onClick={() => void verificarPieza(p.id,"verificada")} className="rounded-lg bg-gold px-3 py-2 text-[11px] font-bold text-black">Verificar</button> : null}{p.estado === "verificada" ? <button type="button" onClick={() => void verificarPieza(p.id,"liberada")} className="rounded-lg border border-gold/40 px-3 py-2 text-[11px] font-bold text-gold-deep">Liberar</button> : null}{!["rechazada","liberada"].includes(p.estado) ? <button type="button" onClick={() => void verificarPieza(p.id,"rechazada")} className="rounded-lg border border-danger/30 px-3 py-2 text-[11px] font-bold text-danger">Rechazar</button> : null}</div></div>)}</div>
-        </section>
-      ) : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
     </AppShell>
