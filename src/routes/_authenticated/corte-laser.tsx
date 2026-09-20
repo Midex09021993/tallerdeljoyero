@@ -48,7 +48,7 @@ function CorteLaserCompleto() {
         </>
       }
     >
-      <PedidosArea area="Corte Láser" titulo="Pedidos asignados a Corte Láser" />
+      <PedidosArea area="Corte Láser" titulo="Pedidos asignados a Corte Láser" variante="ficha-dorada" />
     </AppShell>
   );
 }
