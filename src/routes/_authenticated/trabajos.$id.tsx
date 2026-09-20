@@ -193,7 +193,7 @@ function TrabajoOperativoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedidos")
-        .select("id, referencia, cliente, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_entrega")
+        .select("id, referencia, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_entrega, notas, ruta, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones")
         .eq("id", trabajo!.pedido_id)
         .maybeSingle();
       if (error) throw error;
@@ -221,13 +221,22 @@ function TrabajoOperativoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedido_archivos")
-        .select("id, nombre, tipo, url, es_enlace, grupo")
+        .select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion")
         .eq("pedido_id", trabajo!.pedido_id)
+        .eq("es_enlace", false)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string }>;
+      return (data ?? []) as Array<{
+        id: string; nombre: string; tipo: string; url: string; es_enlace: boolean;
+        grupo: string; version: number; es_vigente_fabricacion: boolean;
+      }>;
     },
   });
+
+  const archivosVigentes = useMemo(
+    () => archivosPedido.filter((a) => a.es_vigente_fabricacion),
+    [archivosPedido],
+  );
 
   const cambiarEstado = useMutation({
     mutationFn: async (estado: "en_proceso" | "completado" | "bloqueado") => {
@@ -380,6 +389,35 @@ function TrabajoOperativoPage() {
               </div>
             </div>
           ) : null}
+        </section>
+
+        <section className="rounded-2xl border-2 border-success/20 bg-success/[0.03] p-5 shadow-raised">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-success">Archivo vigente para fabricación</p>
+              <h2 className="mt-1 text-lg font-semibold">Diseño aprobado</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Esta es la versión que debe utilizarse para ejecutar el trabajo.</p>
+            </div>
+            <span className="rounded-full bg-success/10 px-3 py-1.5 text-[10px] font-bold text-success">
+              {archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}
+            </span>
+          </div>
+          <div className="mt-4 space-y-2">
+            {archivosVigentes.length > 0 ? archivosVigentes.map((archivo) => (
+              <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer"
+                className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-background p-3 hover:border-success/40">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{archivo.nombre}</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Versión {archivo.version} · {archivo.grupo}</p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-success">Abrir</span>
+              </a>
+            )) : (
+              <p className="rounded-xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+                Aún no hay un archivo aprobado para fabricación. El administrador debe marcar una versión vigente.
+              </p>
+            )}
+          </div>
         </section>
 
         <section className="rounded-2xl border border-gold/25 bg-card p-5 shadow-raised">
