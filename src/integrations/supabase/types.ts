@@ -746,6 +746,107 @@ export type Database = {
           },
         ]
       }
+      pedido_comercial: {
+        Row: {
+          a_cuenta: number
+          cotizacion_detalles: Json
+          created_at: string
+          entregado_at: string | null
+          enviado_at: string | null
+          especificaciones_comerciales: Json
+          fecha_entregado: string | null
+          fecha_envio: string | null
+          fecha_listo_entrega: string | null
+          guia_envio: string
+          importe: number
+          listo_entrega_observaciones: string
+          medio_envio: string
+          notas_entrega: string
+          notas_envio: string
+          notas_ventas: string
+          packing_estado: string
+          pedido_id: string
+          receptor_envio: string
+          saldo: number
+          telefono: string
+          updated_at: string
+          usuario_entrega: string
+          usuario_envio: string
+          usuario_listo_entrega: string
+          ventas_actualizado_en: string | null
+          ventas_actualizado_por: string
+          ventas_estado: string
+        }
+        Insert: {
+          a_cuenta?: number
+          cotizacion_detalles?: Json
+          created_at?: string
+          entregado_at?: string | null
+          enviado_at?: string | null
+          especificaciones_comerciales?: Json
+          fecha_entregado?: string | null
+          fecha_envio?: string | null
+          fecha_listo_entrega?: string | null
+          guia_envio?: string
+          importe?: number
+          listo_entrega_observaciones?: string
+          medio_envio?: string
+          notas_entrega?: string
+          notas_envio?: string
+          notas_ventas?: string
+          packing_estado?: string
+          pedido_id: string
+          receptor_envio?: string
+          saldo?: number
+          telefono?: string
+          updated_at?: string
+          usuario_entrega?: string
+          usuario_envio?: string
+          usuario_listo_entrega?: string
+          ventas_actualizado_en?: string | null
+          ventas_actualizado_por?: string
+          ventas_estado?: string
+        }
+        Update: {
+          a_cuenta?: number
+          cotizacion_detalles?: Json
+          created_at?: string
+          entregado_at?: string | null
+          enviado_at?: string | null
+          especificaciones_comerciales?: Json
+          fecha_entregado?: string | null
+          fecha_envio?: string | null
+          fecha_listo_entrega?: string | null
+          guia_envio?: string
+          importe?: number
+          listo_entrega_observaciones?: string
+          medio_envio?: string
+          notas_entrega?: string
+          notas_envio?: string
+          notas_ventas?: string
+          packing_estado?: string
+          pedido_id?: string
+          receptor_envio?: string
+          saldo?: number
+          telefono?: string
+          updated_at?: string
+          usuario_entrega?: string
+          usuario_envio?: string
+          usuario_listo_entrega?: string
+          ventas_actualizado_en?: string | null
+          ventas_actualizado_por?: string
+          ventas_estado?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_comercial_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: true
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedido_movimientos: {
         Row: {
           accion: string
@@ -794,6 +895,7 @@ export type Database = {
           area_desde: string
           cantidad_piezas: number
           cliente: string
+          cliente_id: string | null
           contrato: string
           contrato_id: string | null
           corte_observaciones: string
@@ -851,6 +953,7 @@ export type Database = {
           area_desde?: string
           cantidad_piezas?: number
           cliente: string
+          cliente_id?: string | null
           contrato?: string
           contrato_id?: string | null
           corte_observaciones?: string
@@ -908,6 +1011,7 @@ export type Database = {
           area_desde?: string
           cantidad_piezas?: number
           cliente?: string
+          cliente_id?: string | null
           contrato?: string
           contrato_id?: string | null
           corte_observaciones?: string
@@ -960,6 +1064,13 @@ export type Database = {
           ventas_estado?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pedidos_contrato_id_fkey"
             columns: ["contrato_id"]
