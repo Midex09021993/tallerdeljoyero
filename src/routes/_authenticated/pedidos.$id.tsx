@@ -833,14 +833,13 @@ function FichaPedido() {
     }
     setGuardandoEntrega(true);
     try {
-      const { error } = await supabase.from("orden_produccion_entregas").insert({
-        orden_produccion_id: ordenProduccion.id,
-        material_id: material.id,
-        cantidad,
-        unidad: material.unidad,
-        area_destino: normalizarArea(pedido.area_actual),
-        notas: notasEntrega.trim(),
-      } as never);
+      const { error } = await supabase.rpc("registrar_entrega_material_produccion", {
+        _orden_id: ordenProduccion.id,
+        _material_id: material.id,
+        _cantidad: cantidad,
+        _area_destino: normalizarArea(pedido.area_actual),
+        _notas: notasEntrega.trim(),
+      });
       if (error) throw error;
       toast.success(`Entrega registrada: ${cantidad} ${material.unidad} de ${material.material}`);
       setMaterialEntrega("");
@@ -908,15 +907,18 @@ function FichaPedido() {
         toast.error("El motivo es obligatorio");
         return;
       }
-      const { error } = await supabase.from("inventario_movimientos").insert({
-        material_id: material.id,
-        tipo: tipoMovimientoProduccion,
-        cantidad,
-        motivo,
-        area: normalizarArea(pedido.area_actual),
-        pedido_id: pedido.id,
-        referencia_externa: `Pedido ${pedido.referencia}`,
-      } as never);
+      if (!ordenProduccion) {
+        toast.error("Primero debes crear una orden de producción");
+        return;
+      }
+      const { error } = await supabase.rpc("registrar_movimiento_produccion", {
+        _orden_id: ordenProduccion.id,
+        _material_id: material.id,
+        _tipo: tipoMovimientoProduccion,
+        _cantidad: cantidad,
+        _motivo: motivo,
+        _referencia_externa: `Pedido ${pedido.referencia} · OP ${ordenProduccion.numero}`,
+      });
       if (error) throw error;
       const verbo = tipoMovimientoProduccion === "devolucion" ? "devueltos al stock" : "registrados";
       toast.success(`${etiquetas[tipoMovimientoProduccion]}: ${cantidad} ${material.unidad} de ${material.material} ${verbo}`);
