@@ -516,11 +516,11 @@ function textoCampo(registro: Record<string, unknown>, campo: string, fallback =
 
 export type PedidoSelector = Pick<
   Pedido,
-  "id" | "referencia" | "cliente" | "trabajo" | "estado" | "sede_id" | "area_actual"
+  "id" | "referencia" | "pieza" | "cliente" | "trabajo" | "contrato" | "estado" | "sede_id" | "sede_nombre" | "area_actual" | "fecha_entrega" | "entrega"
 >;
 
 const CAMPOS_PEDIDO_SELECTOR =
-  "id, referencia, cliente, trabajo, estado, sede_id, area_actual";
+  "id, referencia, pieza, cliente, trabajo, contrato, estado, sede_id, fecha_entrega, entrega, area_actual, sedes(nombre)";
 
 export function usePedidosSelector() {
   return useQuery({
@@ -536,10 +536,15 @@ export function usePedidosSelector() {
       return (data ?? []).map((p) => ({
         id: p.id,
         referencia: p.referencia ?? "",
+        pieza: p.pieza ?? "",
         cliente: p.cliente ?? "",
         trabajo: p.trabajo ?? "",
+        contrato: p.contrato ?? "",
         estado: normalizarEstadoPedido(p.estado, p.area_actual),
         sede_id: p.sede_id ?? null,
+        sede_nombre: p.sedes?.nombre ?? "",
+        fecha_entrega: p.fecha_entrega ?? null,
+        entrega: p.entrega ?? null,
         area_actual: areaOperativa(p.area_actual),
       }));
     },
