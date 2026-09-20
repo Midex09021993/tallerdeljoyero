@@ -696,7 +696,7 @@ function Field({ label, value, onChange, type = "text", required = false, select
 }
 
 function parsearCSVJoyas(texto: string): ImportacionJoya[] {
-  const lineas = texto.replace(/^\\uFEFF/, "").split(/\\r?\\n/).filter((linea) => linea.trim());
+  const lineas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linea) => linea.trim());
   if (lineas.length < 2) return [];
   const separador = (lineas[0].match(/;/g) ?? []).length > (lineas[0].match(/,/g) ?? []).length ? ";" : ",";
   const filas = lineas.map((linea) => separarCSV(linea, separador));
@@ -742,7 +742,7 @@ function separarCSV(linea: string, separador: string) {
 }
 
 function normalizarEncabezado(valor: string) {
-  return valor.trim().toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  return valor.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
 }
 
 function valorCSV(fila: string[], indice: number) {
