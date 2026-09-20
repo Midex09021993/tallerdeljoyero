@@ -94,7 +94,7 @@ function Venta2Detalle() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:w-[560px]"><Dato label="Venta" value={money(pedido.importe)}/><Dato label="Cobrado" value={money(resumen.abonado)}/><Dato label="Saldo" value={money(saldo)}/><Dato label="Entrega" value={fmtFecha(pedido.fecha_entrega)||"—"}/></div>
         </div>
         {puede ? <div className="mt-5 flex flex-wrap gap-2">
-          {estado === "En Producción" ? <button type="button" onClick={() => void ejecutar("listo_entrega", { fecha_listo_entrega: new Date().toISOString().slice(0, 10) })} disabled={guardando} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black">Marcar listo para entrega</button> : null}
+          {estado === "En Producción" ? <Link to="/pedidos-2/$id" params={{id}} className="inline-flex items-center rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep">Ver proceso de producción</Link> : null}
           {estado === "Listo para Entrega" && pedido.packing_estado !== "Preparado" ? <button type="button" onClick={() => void ejecutar("packing")} disabled={guardando} className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold">Preparar packing</button> : null}
           {estado === "Listo para Entrega" && pedido.packing_estado === "Preparado" ? <button type="button" onClick={() => setAccion("despachar")} className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold">Despachar</button> : null}
           {estado === "En Camino" ? <button type="button" onClick={() => setAccion("entregar")} className="rounded-xl bg-success px-4 py-2.5 text-xs font-bold text-white">Registrar entrega</button> : null}
