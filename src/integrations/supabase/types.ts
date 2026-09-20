@@ -1265,7 +1265,6 @@ export type Database = {
           acceso_desde: string | null
           acceso_hasta: string | null
           activo: boolean
-          clave_visible: string | null
           created_at: string
           dni: string
           id: string
@@ -1278,7 +1277,6 @@ export type Database = {
           acceso_desde?: string | null
           acceso_hasta?: string | null
           activo?: boolean
-          clave_visible?: string | null
           created_at?: string
           dni?: string
           id: string
@@ -1291,7 +1289,6 @@ export type Database = {
           acceso_desde?: string | null
           acceso_hasta?: string | null
           activo?: boolean
-          clave_visible?: string | null
           created_at?: string
           dni?: string
           id?: string
