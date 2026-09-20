@@ -948,6 +948,7 @@ export type Database = {
           id: string
           material_id: string
           motivo: string
+          orden_produccion_id: string | null
           pedido_id: string | null
           referencia_externa: string
           stock_anterior: number | null
@@ -962,6 +963,7 @@ export type Database = {
           id?: string
           material_id: string
           motivo?: string
+          orden_produccion_id?: string | null
           pedido_id?: string | null
           referencia_externa?: string
           stock_anterior?: number | null
@@ -976,6 +978,7 @@ export type Database = {
           id?: string
           material_id?: string
           motivo?: string
+          orden_produccion_id?: string | null
           pedido_id?: string | null
           referencia_externa?: string
           stock_anterior?: number | null
@@ -989,6 +992,13 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
             referencedColumns: ["id"]
           },
           {
@@ -2587,6 +2597,33 @@ export type Database = {
       }
       recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
+      registrar_entrega_material_produccion: {
+        Args: {
+          _area_destino: string
+          _cantidad: number
+          _material_id: string
+          _notas?: string
+          _orden_id: string
+        }
+        Returns: {
+          area_destino: string
+          cantidad: number
+          created_at: string
+          entregado_por: string | null
+          id: string
+          material_id: string
+          notas: string
+          orden_produccion_id: string
+          recibido_por: string | null
+          unidad: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orden_produccion_entregas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       registrar_inspeccion_calidad: {
         Args: {
           _descripcion?: string
@@ -2613,6 +2650,37 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "control_calidad"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      registrar_movimiento_produccion: {
+        Args: {
+          _cantidad: number
+          _material_id: string
+          _motivo: string
+          _orden_id: string
+          _referencia_externa?: string
+          _tipo: string
+        }
+        Returns: {
+          cantidad: number
+          costo_unitario: number
+          created_at: string
+          id: string
+          material_id: string
+          motivo: string
+          orden_produccion_id: string | null
+          pedido_id: string | null
+          referencia_externa: string
+          stock_anterior: number | null
+          stock_posterior: number | null
+          tipo: string
+          usuario_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "inventario_movimientos"
           isOneToOne: true
           isSetofReturn: false
         }
