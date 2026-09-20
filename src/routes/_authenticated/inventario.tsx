@@ -273,8 +273,14 @@ function JoyasTerminadas({
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    if (!sedeId) return toast.error("Tu usuario no tiene una sede asignada");
-    if (!form.codigo.trim() || !form.nombre.trim()) return toast.error("Código y nombre son obligatorios");
+    if (!sedeId) {
+      toast.error("Tu usuario no tiene una sede asignada");
+      return;
+    }
+    if (!form.codigo.trim() || !form.nombre.trim()) {
+      toast.error("Código y nombre son obligatorios");
+      return;
+    }
     const payload = {
       codigo: form.codigo.trim(), nombre: form.nombre.trim(), metal: form.metal.trim(), ley: form.ley.trim(),
       peso: form.peso === "" ? null : Number(form.peso), talla: form.talla.trim(), piedras: form.piedras.trim(),

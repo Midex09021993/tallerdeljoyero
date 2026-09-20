@@ -2112,7 +2112,7 @@ export type MovimientoInventarioReal = {
 export type JoyaInventario = {
   id: string;
   sede_id: string;
-  importacion_id: string | null;
+  importacion_id: string;
   codigo: string;
   nombre: string;
   metal: string;

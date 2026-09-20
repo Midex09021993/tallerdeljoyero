@@ -523,41 +523,124 @@ export type Database = {
       }
       inventario: {
         Row: {
+          activo: boolean
           categoria: string
+          codigo: string
+          costo_unitario: number
           created_at: string
           id: string
+          lote: string
           material: string
           minimo: number
+          proveedor: string
           sede_id: string | null
           stock: number
+          ubicacion: string
           unidad: string
           updated_at: string
         }
         Insert: {
+          activo?: boolean
           categoria?: string
+          codigo?: string
+          costo_unitario?: number
           created_at?: string
           id?: string
+          lote?: string
           material: string
           minimo?: number
+          proveedor?: string
           sede_id?: string | null
           stock?: number
+          ubicacion?: string
           unidad?: string
           updated_at?: string
         }
         Update: {
+          activo?: boolean
           categoria?: string
+          codigo?: string
+          costo_unitario?: number
           created_at?: string
           id?: string
+          lote?: string
           material?: string
           minimo?: number
+          proveedor?: string
           sede_id?: string | null
           stock?: number
+          ubicacion?: string
           unidad?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "inventario_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventario_joyas: {
+        Row: {
+          cantidad: number
+          codigo: string
+          created_at: string
+          estado: string
+          id: string
+          importacion_id: string
+          ley: string
+          metadata: Json
+          metal: string
+          nombre: string
+          origen: string
+          peso: number | null
+          piedras: string
+          sede_id: string | null
+          talla: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          codigo?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          importacion_id?: string
+          ley?: string
+          metadata?: Json
+          metal?: string
+          nombre?: string
+          origen?: string
+          peso?: number | null
+          piedras?: string
+          sede_id?: string | null
+          talla?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          codigo?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          importacion_id?: string
+          ley?: string
+          metadata?: Json
+          metal?: string
+          nombre?: string
+          origen?: string
+          peso?: number | null
+          piedras?: string
+          sede_id?: string | null
+          talla?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_joyas_sede_id_fkey"
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
@@ -574,6 +657,9 @@ export type Database = {
           material_id: string
           motivo: string
           pedido_id: string | null
+          referencia_externa: string
+          stock_anterior: number
+          stock_posterior: number
           tipo: string
           usuario_id: string | null
         }
@@ -585,6 +671,9 @@ export type Database = {
           material_id: string
           motivo?: string
           pedido_id?: string | null
+          referencia_externa?: string
+          stock_anterior?: number
+          stock_posterior?: number
           tipo?: string
           usuario_id?: string | null
         }
@@ -596,6 +685,9 @@ export type Database = {
           material_id?: string
           motivo?: string
           pedido_id?: string | null
+          referencia_externa?: string
+          stock_anterior?: number
+          stock_posterior?: number
           tipo?: string
           usuario_id?: string | null
         }
