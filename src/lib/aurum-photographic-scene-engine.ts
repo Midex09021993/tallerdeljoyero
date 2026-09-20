@@ -15,7 +15,7 @@ export type AurumPhotographicProfile = {
   metalEnvironmentScale:number;
   highlightProtection:number;
   exposure:number;
-  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft";
+  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference";
   post:{
     ssao:boolean; ssaoIntensity:number;
     bloom:boolean; bloomIntensity:number; bloomThreshold:number;
