@@ -911,14 +911,6 @@ function FichaPedido() {
                     {normalizarArea(pedido.area_actual)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-border bg-surface-sunken p-4 shadow-card">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Estado de ventas
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-foreground">
-                    {mostrarEstadoVentas(pedido)}
-                  </p>
-                </div>
               </div>
             </Panel>
           </div>
