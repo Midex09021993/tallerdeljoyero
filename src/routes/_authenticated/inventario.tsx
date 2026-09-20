@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FichaDorada, type FichaDoradaTipo } from "@/components/FichaDorada";
 import {
@@ -25,6 +26,10 @@ import {
   useMovimientosInventario,
   usePedidosSelector,
   useRegistrarMovimiento,
+  useInventarioJoyas,
+  useCrearJoyaInventario,
+  useActualizarJoyaInventario,
+  useBorrarJoyaInventario,
 } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/inventario")({
@@ -51,7 +56,7 @@ export const Route = createFileRoute("/_authenticated/inventario")({
 const inputCls =
   "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
 
-type Modulo = "materiales" | "bajo" | "movimientos";
+type Modulo = "materiales" | "bajo" | "movimientos" | "joyas";
 
 type FichaInventario = {
   id: Modulo | null;
@@ -139,6 +144,7 @@ function InventarioPage() {
           [
             ["materiales", "Materiales"],
             ["bajo", `Stock bajo${bajos.length ? ` (${bajos.length})` : ""}`],
+            ["joyas", "Joyas terminadas"],
             ["movimientos", "Movimientos"],
           ] as [Modulo, string][]
         ).map(([id, etiqueta]) => (
@@ -172,7 +178,234 @@ function InventarioPage() {
           puedeTodo={puedeGestionar}
         />
       ) : null}
+      {modulo === "joyas" ? <JoyasTerminadas puedeGestionar={puedeGestionar} sedeId={sesion?.perfil.sede_id ?? null} /> : null}
     </AppShell>
+  );
+}
+
+
+function JoyasTerminadas({
+  puedeGestionar,
+  sedeId,
+}: {
+  puedeGestionar: boolean;
+  sedeId: string | null;
+}) {
+  const { data: joyas = [], isLoading } = useInventarioJoyas();
+  const crear = useCrearJoyaInventario();
+  const actualizar = useActualizarJoyaInventario();
+  const borrar = useBorrarJoyaInventario();
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [importando, setImportando] = useState(false);
+  const [editando, setEditando] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [form, setForm] = useState({
+    codigo: "",
+    nombre: "",
+    metal: "",
+    ley: "",
+    peso: "",
+    talla: "",
+    piedras: "",
+    cantidad: "1",
+    estado: "disponible",
+  });
+
+  const lista = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return joyas.filter((j) =>
+      !q ||
+      j.codigo.toLowerCase().includes(q) ||
+      j.nombre.toLowerCase().includes(q) ||
+      j.metal.toLowerCase().includes(q) ||
+      j.piedras.toLowerCase().includes(q)
+    );
+  }, [joyas, busqueda]);
+
+  async function guardar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!sedeId) return toast.error("Tu usuario no tiene una sede asignada");
+    if (!form.codigo.trim() || !form.nombre.trim()) {
+      return toast.error("Código y nombre son obligatorios");
+    }
+    const payload = {
+      codigo: form.codigo.trim(),
+      nombre: form.nombre.trim(),
+      metal: form.metal.trim(),
+      ley: form.ley.trim(),
+      peso: form.peso === "" ? null : Number(form.peso),
+      talla: form.talla.trim(),
+      piedras: form.piedras.trim(),
+      cantidad: Math.max(1, Number(form.cantidad) || 1),
+      estado: form.estado,
+    };
+    try {
+      if (editando) {
+        await actualizar.mutateAsync({ id: editando, cambios: payload });
+        toast.success("Joya actualizada");
+      } else {
+        await crear.mutateAsync({ ...payload, sede_id: sedeId });
+        toast.success("Joya agregada al inventario");
+      }
+      setEditando(null);
+      setForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo guardar la joya");
+    }
+  }
+
+  function editar(j: (typeof joyas)[number]) {
+    setEditando(j.id);
+    setForm({
+      codigo: j.codigo,
+      nombre: j.nombre,
+      metal: j.metal,
+      ley: j.ley,
+      peso: j.peso == null ? "" : String(j.peso),
+      talla: j.talla,
+      piedras: j.piedras,
+      cantidad: String(j.cantidad),
+      estado: j.estado,
+    });
+  }
+
+  async function importar() {
+    if (!archivo) return;
+    setImportando(true);
+    try {
+      const body = new FormData();
+      body.append("archivo", archivo);
+      const { data, error } = await supabase.functions.invoke("importar-inventario-joyas", { body });
+      if (error) throw error;
+      toast.success("Importación: " + String(data?.filas_importadas ?? 0) + " joyas actualizadas");
+      setArchivo(null);
+      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo importar el Excel");
+    } finally {
+      setImportando(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Panel titulo="Joyas terminadas">
+        <div className="flex flex-col gap-3 border-b border-border p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              Stock de producto terminado por código, metal, ley, talla y piedras.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {puedeGestionar ? (
+              <>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+                  />
+                  Importar Excel
+                </label>
+                {archivo ? (
+                  <button type="button" className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground" onClick={() => void importar()} disabled={importando}>
+                    {importando ? "Importando…" : "Confirmar importación"}
+                  </button>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        {puedeGestionar ? (
+          <form onSubmit={guardar} className="grid gap-3 border-b border-border p-6 md:grid-cols-4">
+            <input className={inputCls} placeholder="Código / SKU" value={form.codigo} onChange={(e) => setForm({ ...form, codigo: e.target.value })} />
+            <input className={inputCls} placeholder="Nombre de la pieza" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+            <input className={inputCls} placeholder="Metal" value={form.metal} onChange={(e) => setForm({ ...form, metal: e.target.value })} />
+            <input className={inputCls} placeholder="Ley" value={form.ley} onChange={(e) => setForm({ ...form, ley: e.target.value })} />
+            <input className={inputCls} type="number" step="0.001" placeholder="Peso g" value={form.peso} onChange={(e) => setForm({ ...form, peso: e.target.value })} />
+            <input className={inputCls} placeholder="Talla" value={form.talla} onChange={(e) => setForm({ ...form, talla: e.target.value })} />
+            <input className={inputCls} placeholder="Piedras" value={form.piedras} onChange={(e) => setForm({ ...form, piedras: e.target.value })} />
+            <input className={inputCls} type="number" min="1" placeholder="Cantidad" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
+            <select className={inputCls} value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })}>
+              <option value="disponible">Disponible</option>
+              <option value="reservada">Reservada</option>
+              <option value="en exhibición">En exhibición</option>
+              <option value="vendida">Vendida</option>
+              <option value="no disponible">No disponible</option>
+            </select>
+            <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={crear.isPending || actualizar.isPending}>
+              {editando ? "Guardar cambios" : "Agregar al inventario"}
+            </button>
+            {editando ? (
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm" onClick={() => {
+                setEditando(null);
+                setForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" });
+              }}>
+                Cancelar
+              </button>
+            ) : null}
+          </form>
+        ) : null}
+
+        <div className="border-b border-border p-4">
+          <input className={inputCls} placeholder="Buscar código, pieza, metal o piedra…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1050px] border-collapse text-left">
+            <thead>
+              <tr className="bg-surface-muted">
+                {["Código", "Pieza", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado", "Acciones"].map((h) => (
+                  <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {lista.map((j) => (
+                <tr key={j.id}>
+                  <td className="px-6 py-3 font-mono text-xs">{j.codigo}</td>
+                  <td className="px-6 py-3 text-sm font-medium">{j.nombre}</td>
+                  <td className="px-6 py-3 text-sm">{j.metal || "—"} {j.ley ? "· " + j.ley : ""}</td>
+                  <td className="px-6 py-3 text-sm">{j.peso == null ? "—" : String(j.peso) + " g"}</td>
+                  <td className="px-6 py-3 text-sm">{j.talla || "—"}</td>
+                  <td className="px-6 py-3 text-sm">{j.piedras || "—"}</td>
+                  <td className="px-6 py-3 text-sm font-semibold">{j.cantidad}</td>
+                  <td className="px-6 py-3 text-xs">{j.estado}</td>
+                  <td className="px-6 py-3">
+                    {puedeGestionar ? (
+                      <div className="flex gap-1">
+                        <button type="button" className="rounded-lg px-2 py-1 text-xs hover:bg-muted" onClick={() => editar(j)}>Editar</button>
+                        <button
+                          type="button"
+                          className="rounded-lg px-2 py-1 text-xs text-danger hover:bg-danger-soft"
+                          onClick={async () => {
+                            if (!window.confirm("¿Eliminar " + j.codigo + " del inventario?")) return;
+                            try {
+                              await borrar.mutateAsync(j.id);
+                              toast.success("Joya eliminada");
+                            } catch (error) {
+                              toast.error(error instanceof Error ? error.message : "No se pudo eliminar");
+                            }
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+              {!lista.length ? (
+                <tr><td colSpan={9} className="px-6 py-10 text-sm text-muted-foreground">No hay joyas terminadas registradas.</td></tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+        {isLoading ? <p className="p-4 text-sm text-muted-foreground">Cargando inventario de joyas…</p> : null}
+      </Panel>
+    </div>
   );
 }
 
