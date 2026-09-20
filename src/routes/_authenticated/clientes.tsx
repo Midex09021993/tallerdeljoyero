@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,7 +86,7 @@ function ClientesPage() {
     setModal(true);
   }
 
-  async function guardar(e: React.FormEvent) {
+  async function guardar(e: FormEvent) {
     e.preventDefault();
     if (!form.nombre.trim()) return;
     setGuardando(true);
