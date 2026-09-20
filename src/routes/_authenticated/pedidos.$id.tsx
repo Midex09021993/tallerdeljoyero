@@ -823,7 +823,6 @@ function FichaPedido() {
         _tipo: "inspeccion_final",
         _motivo: motivoCalidad.trim(),
         _descripcion: resultadoCalidad === "aprobado" ? "Inspección final conforme" : "Inspección final con observaciones",
-        _evidencia_url: undefined,
       });
       if (error) throw error;
       toast.success(resultadoCalidad === "aprobado" ? "Calidad aprobada y OP liberada" : "Resultado de calidad registrado");
