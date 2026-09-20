@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { MobileBackButton } from "@/components/AppShell";
-import { Gem } from "lucide-react";
+import { Gem, ScanLine } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
@@ -85,6 +85,24 @@ function HerramientasPage() {
             <VisorPesoJoyeria />
             <CalculadoraPesoGemas />
             <ConversorTallasAnillo />
+            <Link
+              to="/vectorizador-laser"
+              className="group block rounded-2xl border border-gold/25 bg-card p-5 shadow-card transition hover:border-gold/60 hover:shadow-raised"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Corte Láser</p>
+                  <h2 className="mt-1 text-xl font-semibold">Vectorizador Láser</h2>
+                  <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                    Convierte imágenes en contornos cerrados y exporta geometría SVG o DXF para fabricación.
+                  </p>
+                </div>
+                <ScanLine className="size-6 shrink-0 text-gold transition group-hover:scale-105" />
+              </div>
+              <span className="mt-4 inline-flex rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground">
+                Abrir vectorizador →
+              </span>
+            </Link>
           </div>
         </section>
 
