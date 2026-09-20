@@ -15,7 +15,7 @@ export function PedidosArea({
   area: string;
   titulo?: string;
   from?: string;
-  variante?: "completa" | "operario";
+  variante?: "completa" | "operario" | "ficha-dorada";
 }) {
   const { data: sesion } = useSesion();
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export function PedidosArea({
             {pedidos.map((pedido) => {
               const enArea = pedidoEnAreaActual(pedido, area);
               return (
-                <article key={pedido.id} className="px-4 py-4 sm:px-5">
+                <article key={pedido.id} className={`px-4 py-4 sm:px-5 ${variante === "ficha-dorada" ? "mx-3 my-3 rounded-2xl border border-gold/25 bg-card shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-raised" : ""}`}>
                   <button
                     type="button"
                     onClick={() =>
@@ -312,7 +312,7 @@ function ListaTrabajosOperario({
               key={trabajo.id}
               type="button"
               onClick={() => onAbrir(trabajo.id)}
-              className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold active:border-gold active:bg-surface-muted focus-visible:border-gold focus-visible:outline-none"
+              className={`w-full rounded-2xl border bg-card p-4 text-left shadow-card transition-all duration-300 focus-visible:outline-none ${variante === "ficha-dorada" ? "border-gold/25 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-raised active:border-gold active:bg-gold/5" : "border-border hover:border-gold active:border-gold active:bg-surface-muted focus-visible:border-gold"}`}
               aria-label={`Abrir trabajo ${trabajo.titulo || "sin título"}`}
             >
               <div className="flex items-start justify-between gap-3">
