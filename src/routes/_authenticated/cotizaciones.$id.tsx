@@ -356,6 +356,23 @@ function CotizacionDetallePage() {
             </Panel>
             <Panel titulo="Acciones">
               <div className="space-y-2 p-4">
+                <div className="rounded-xl border border-gold/15 bg-gold/[0.025] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/80">Flujo comercial</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Revisa la cotización, envíala al cliente y apruébala para convertirla en operación.</p>
+                </div>
+                {cotizacion.estado === "borrador" ? (
+                  <>
+                    <button type="button" onClick={abrirEditor} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">Editar cotización</button>
+                    <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("enviada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                      {guardandoEstado ? "Procesando…" : "Enviar al cliente"}
+                    </button>
+                  </>
+                ) : null}
+                {cotizacion.estado === "enviada" ? (
+                  <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("aprobada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                    {guardandoEstado ? "Procesando…" : "Aprobar cotización"}
+                  </button>
+                ) : null}
                 {cotizacion.estado === "aprobada" ? (
                   pedidoId ? (
                     <div className="space-y-2">
