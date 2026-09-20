@@ -129,7 +129,7 @@ function InventarioPage() {
             descripcion={ficha.descripcion}
             activa={ficha.id !== null && modulo === ficha.id}
             disabled={ficha.id === null}
-            onClick={ficha.id ? () => setModulo(ficha.id as Modulo) : undefined}
+            {...(ficha.id ? { onClick: () => setModulo(ficha.id as Modulo) } : {})}
           />
         ))}
       </div>
