@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, MoreHorizontal } from "lucide-react";
+import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -110,6 +110,28 @@ function ClientesPage() {
     } finally { setGuardando(false); }
   }
 
+  async function eliminarCliente() {
+    if (!seleccionado || !sesion?.esDueno) return;
+    const confirmado = window.confirm(
+      `¿Eliminar definitivamente a "${seleccionado.nombre}"? Esta acción no se puede deshacer.`,
+    );
+    if (!confirmado) return;
+
+    setGuardando(true);
+    try {
+      const { error } = await supabase.from("clientes").delete().eq("id", seleccionado.id);
+      if (error) throw error;
+      setSeleccionado(null);
+      await cargar();
+      alert("Cliente eliminado correctamente.");
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo eliminar el cliente. Puede tener información relacionada que debe conservarse.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   async function cambiarEstado() {
     if (!seleccionado) return;
     const nuevo = seleccionado.estado === "activo" ? "inactivo" : "activo";
@@ -208,6 +230,7 @@ function ClientesPage() {
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
                   <button type="button" onClick={cambiarEstado} className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/5">{seleccionado.estado === "activo" ? "Desactivar" : "Activar"}</button>
+                  {sesion?.esDueno ? <button type="button" onClick={() => void eliminarCliente()} disabled={guardando} className="inline-flex items-center gap-2 rounded-xl border border-danger/25 px-4 py-2.5 text-xs font-semibold text-danger transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger/5 disabled:opacity-50"><Trash2 className="size-3.5" /> Eliminar cliente</button> : null}
                 </div>
                 <div className="mt-7">
                   <SectionTitle title="Cotizaciones recientes" />
