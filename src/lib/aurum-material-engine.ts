@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { AURUM_IJEWEL_DAROS_GEMS, getAurumIJEWELDAROSReference } from "./aurum/ijewel-daros-reference";
 
 /**
  * AURUM MATERIAL ENGINE v1.2
@@ -291,6 +292,17 @@ export type AurumIJEWELGemParameters = {
  * in the source material; AURUM keeps the source value and implements its
  * visible refraction path separately.
  */
+export const getAurumIJEWELGemReference=(sourceRootPath:string)=>getAurumIJEWELDAROSReference(sourceRootPath);
+
+export const applyAurumIJEWELReferenceFromMaterial=(material:any)=>{
+  if(!material)return material;
+  const ud=material.userData??{};
+  const sourceRootPath=String(ud.rootPath??ud.aurumRootPath??ud.WEBGI_rootPath??"");
+  const ref=getAurumIJEWELGemReference(sourceRootPath);
+  if(!ref)return material;
+  return applyAurumIJEWELGemParameters(material,ref);
+};
+
 export const applyAurumIJEWELGemParameters=(material:any,source:AurumIJEWELGemParameters)=>{
   if(!material)return material;
   const p={...source,boostFactors:{...source.boostFactors}};
@@ -396,7 +408,7 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
 export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
 
 /** iJewel/WebGi metal references extracted from the supplied GLB scene. */
-export const AURUM_IJEWEL_METAL_REFERENCES = {
+export { AURUM_IJEWEL_DAROS_GEMS };\n\nexport const AURUM_IJEWEL_METAL_REFERENCES = {
   whiteGold: {
     sourceRootPath: "1_metal_whitegold_polished_0db3fb834b.pmat",
     baseColorFactor: [0.5394794890033748, 0.5394794890033748, 0.5457244613615395],
