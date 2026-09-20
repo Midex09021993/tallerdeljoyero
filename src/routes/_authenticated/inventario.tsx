@@ -14,6 +14,7 @@ import {
   Plus,
   Search,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -43,6 +44,8 @@ type Movimiento = {
   stock_anterior: number | null; stock_posterior: number | null; motivo: string;
   referencia_externa: string; pedido_id: string | null; created_at: string; inventario?: { material: string; unidad: string } | null;
 };
+type ImportacionJoya = { codigo: string; nombre: string; metal: string; ley: string; peso: string; talla: string; piedras: string; cantidad: string; estado: string; };
+
 type Joya = {
   id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
   talla: string; piedras: string; cantidad: number; estado: string; created_at?: string | null;
@@ -83,6 +86,11 @@ function InventarioPage() {
   const [categoria, setCategoria] = useState("Todas");
   const [joyaBusqueda, setJoyaBusqueda] = useState("");
   const [joyaSeleccionada, setJoyaSeleccionada] = useState<Joya | null>(null);
+  const [importacionAbierta, setImportacionAbierta] = useState(false);
+  const [importacionFilas, setImportacionFilas] = useState<ImportacionJoya[]>([]);
+  const [importacionNombre, setImportacionNombre] = useState("");
+  const [importacionConservaCodigos, setImportacionConservaCodigos] = useState(true);
+  const [importando, setImportando] = useState(false);
   const [movBusqueda, setMovBusqueda] = useState("");
   const [movTipo, setMovTipo] = useState("Todos");
   const [movMaterial, setMovMaterial] = useState("Todos");
@@ -171,6 +179,71 @@ function InventarioPage() {
         && (movMaterial === "Todos" || m.material_id === movMaterial);
     });
   }, [movimientos, movBusqueda, movTipo, movMaterial]);
+
+  function abrirImportacion() {
+    setImportacionFilas([]);
+    setImportacionNombre("");
+    setImportacionConservaCodigos(true);
+    setImportacionAbierta(true);
+  }
+
+  async function leerArchivoImportacion(file: File) {
+    const texto = await file.text();
+    const filas = parsearCSVJoyas(texto);
+    setImportacionNombre(file.name);
+    setImportacionFilas(filas);
+    if (!filas.length) toast.error("No encontramos filas válidas en el archivo.");
+  }
+
+  async function confirmarImportacion() {
+    if (!sedeId || !importacionFilas.length) return;
+    setImportando(true);
+
+    const existentes = joyas;
+    const filas = [...importacionFilas];
+    const usadas = new Set(
+      existentes.map((j) => j.codigo?.trim()).filter(Boolean),
+    );
+
+    const payload = filas.map((fila, index) => {
+      let codigo = importacionConservaCodigos ? fila.codigo.trim() : "";
+      if (!codigo || usadas.has(codigo)) {
+        codigo = siguienteCodigoJoya(sesion?.sede?.nombre, [
+          ...existentes,
+          ...filas.slice(0, index).map((f, i) => ({
+            id: `import-${i}`, codigo: f.codigo, nombre: f.nombre, metal: f.metal, ley: f.ley,
+            peso: Number(f.peso) || null, talla: f.talla, piedras: f.piedras, cantidad: Number(f.cantidad) || 1, estado: f.estado,
+          })),
+        ]);
+      }
+      usadas.add(codigo);
+      return {
+        sede_id: sedeId,
+        codigo,
+        nombre: fila.nombre.trim(),
+        metal: fila.metal.trim(),
+        ley: fila.ley.trim(),
+        peso: fila.peso.trim() ? Number(fila.peso.replace(",", ".")) : null,
+        talla: fila.talla.trim(),
+        piedras: fila.piedras.trim(),
+        cantidad: Math.max(1, Number(fila.cantidad.replace(",", ".")) || 1),
+        estado: fila.estado.trim() || "disponible",
+        origen: "importacion",
+      };
+    });
+
+    const resultado = await supabase.from("inventario_joyas").insert(payload).select("id");
+    if (resultado.error) {
+      toast.error(resultado.error.message);
+      setImportando(false);
+      return;
+    }
+
+    toast.success(`${payload.length} joyas importadas correctamente`);
+    setImportando(false);
+    setImportacionAbierta(false);
+    await cargar();
+  }
 
   function nuevoMaterial() {
     setEditando(null);
@@ -469,7 +542,10 @@ function InventarioPage() {
                   />
                   {joyaBusqueda ? <button type="button" onClick={() => setJoyaBusqueda("")} aria-label="Limpiar búsqueda" className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-gold/[.06] hover:text-foreground"><X className="size-3.5" /></button> : null}
                 </label>
-                {esAdmin ? <button type="button" onClick={() => { setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}
+                {esAdmin ? <div className="flex gap-2">
+                  <button type="button" onClick={abrirImportacion} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:border-gold/30 hover:bg-gold/[.03]"><Upload className="size-4 text-gold" /> Importar inventario</button>
+                  <button type="button" onClick={() => { setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button>
+                </div> : null}
               </div>
             </div>
             <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Código", "Joya", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
@@ -511,6 +587,41 @@ function InventarioPage() {
             </div>
 
             <p className="text-[11px] leading-5 text-muted-foreground">Esta ficha será el punto de entrada para el historial, movimientos, pedidos y QR de la joya.</p>
+          </div>
+        </Modal>
+      ) : null}
+
+      {importacionAbierta ? (
+        <Modal title="Importar joyas" onClose={() => !importando && setImportacionAbierta(false)}>
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-gold/15 bg-gold/[.025] p-4">
+              <p className="text-sm font-semibold">Trae tu inventario actual</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga un archivo CSV exportado desde Excel. Revisamos las filas antes de incorporarlas al inventario de esta sede.</p>
+            </div>
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-gold/25 bg-background/50 px-5 py-8 text-center hover:border-gold/45 hover:bg-gold/[.02]">
+              <Upload className="size-7 text-gold/70" />
+              <span className="mt-2 text-sm font-semibold">{importacionNombre || "Seleccionar archivo CSV"}</span>
+              <span className="mt-1 text-[11px] text-muted-foreground">Columnas: código, nombre, metal, ley, peso, talla, piedras, cantidad, estado</span>
+              <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { const file = e.target.files?.[0]; if (file) void leerArchivoImportacion(file); }} />
+            </label>
+
+            {importacionFilas.length ? <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold">{importacionFilas.length} joyas listas para revisar</p>
+                <label className="flex items-center gap-2 text-[11px] text-muted-foreground"><input type="checkbox" checked={importacionConservaCodigos} onChange={(e) => setImportacionConservaCodigos(e.target.checked)} /> Conservar códigos existentes</label>
+              </div>
+              <div className="max-h-56 overflow-auto rounded-xl border border-border">
+                <table className="w-full text-left text-[11px]"><thead className="sticky top-0 bg-card"><tr className="border-b border-border"><th className="px-3 py-2">Código</th><th className="px-3 py-2">Joya</th><th className="px-3 py-2">Metal</th><th className="px-3 py-2">Peso</th></tr></thead>
+                  <tbody className="divide-y divide-border">{importacionFilas.slice(0, 50).map((fila, i) => <tr key={i}><td className="px-3 py-2 font-mono text-gold">{fila.codigo || "Automático"}</td><td className="px-3 py-2">{fila.nombre || "Sin nombre"}</td><td className="px-3 py-2">{fila.metal || "—"}</td><td className="px-3 py-2">{fila.peso || "—"}</td></tr>)}</tbody>
+                </table>
+              </div>
+              {importacionFilas.length > 50 ? <p className="text-[10px] text-muted-foreground">Mostrando las primeras 50 filas. Se importarán las {importacionFilas.length}.</p> : null}
+            </div> : null}
+
+            <div className="flex justify-end gap-2 border-t border-border pt-4">
+              <button type="button" disabled={importando} onClick={() => setImportacionAbierta(false)} className="rounded-xl border border-border px-4 py-2.5 text-xs">Cancelar</button>
+              <button type="button" disabled={!importacionFilas.length || importando} onClick={() => void confirmarImportacion()} className="rounded-xl border border-gold/25 bg-gold/[.08] px-4 py-2.5 text-xs font-semibold disabled:opacity-50">{importando ? "Importando…" : `Importar ${importacionFilas.length || ""} joyas`}</button>
+            </div>
           </div>
         </Modal>
       ) : null}
@@ -582,6 +693,60 @@ function Actions({ saving, cancel }: { saving: boolean; cancel: () => void }) {
 function Field({ label, value, onChange, type = "text", required = false, select = false, options = [], optionValues = [], step, inputMode }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; select?: boolean; options?: string[]; optionValues?: string[]; step?: string; inputMode?: "none" | "text" | "tel" | "url" | "email" | "numeric" | "decimal" | "search" }) {
   const cls = "mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15";
   return <label className="block text-xs font-medium">{label}{select ? <select required={required} value={value} onChange={(e) => onChange(e.target.value)} className={cls}>{options.map((o, i) => <option key={o} value={optionValues[i] ?? o}>{o}</option>)}</select> : <input required={required} min={type === "number" ? 0 : undefined} step={type === "number" ? step ?? "any" : undefined} inputMode={inputMode} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={cls} />}</label>;
+}
+
+function parsearCSVJoyas(texto: string): ImportacionJoya[] {
+  const lineas = texto.replace(/^\\uFEFF/, "").split(/\\r?\\n/).filter((linea) => linea.trim());
+  if (lineas.length < 2) return [];
+  const separador = (lineas[0].match(/;/g) ?? []).length > (lineas[0].match(/,/g) ?? []).length ? ";" : ",";
+  const filas = lineas.map((linea) => separarCSV(linea, separador));
+  const encabezados = filas[0].map((h) => normalizarEncabezado(h));
+  const indice = (variantes: string[]) => variantes.map((v) => encabezados.indexOf(v)).find((i) => i >= 0) ?? -1;
+  const col = {
+    codigo: indice(["codigo", "codigodejoya", "sku", "referencia"]),
+    nombre: indice(["nombre", "joya", "descripcion", "descripcionjoya"]),
+    metal: indice(["metal"]),
+    ley: indice(["ley", "quilataje"]),
+    peso: indice(["peso", "pesog", "gramos"]),
+    talla: indice(["talla", "tallaanillo"]),
+    piedras: indice(["piedras", "gemas"]),
+    cantidad: indice(["cantidad", "stock"]),
+    estado: indice(["estado", "estatus"]),
+  };
+  return filas.slice(1).map((fila) => ({
+    codigo: valorCSV(fila, col.codigo),
+    nombre: valorCSV(fila, col.nombre),
+    metal: valorCSV(fila, col.metal),
+    ley: valorCSV(fila, col.ley),
+    peso: valorCSV(fila, col.peso),
+    talla: valorCSV(fila, col.talla),
+    piedras: valorCSV(fila, col.piedras),
+    cantidad: valorCSV(fila, col.cantidad) || "1",
+    estado: valorCSV(fila, col.estado) || "disponible",
+  })).filter((fila) => fila.nombre);
+}
+
+function separarCSV(linea: string, separador: string) {
+  const resultado: string[] = [];
+  let actual = "", comillas = false;
+  for (let i = 0; i < linea.length; i += 1) {
+    const caracter = linea[i];
+    if (caracter === '"') {
+      if (comillas && linea[i + 1] === '"') { actual += '"'; i += 1; } else comillas = !comillas;
+    } else if (caracter === separador && !comillas) {
+      resultado.push(actual.trim()); actual = "";
+    } else actual += caracter;
+  }
+  resultado.push(actual.trim());
+  return resultado;
+}
+
+function normalizarEncabezado(valor: string) {
+  return valor.trim().toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+function valorCSV(fila: string[], indice: number) {
+  return indice >= 0 ? (fila[indice] ?? "").trim() : "";
 }
 
 function prefijoSede(nombreSede: string | null | undefined) {
