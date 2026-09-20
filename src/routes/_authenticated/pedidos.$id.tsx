@@ -1098,7 +1098,7 @@ function FichaPedido() {
                         usuarioId: sesion?.user.id ?? null,
                       })
                     }
-                    className="mt-3 w-full rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
+                    className="mt-3 w-full rounded-lg bg-gold px-4 py-3 text-sm font-medium text-gold-foreground shadow-card transition hover:shadow-raised disabled:opacity-50 sm:w-auto sm:py-2 sm:text-xs"
                   >
                     {autorizar.isPending ? "Autorizando..." : "Autorizar Producción"}
                   </button>
