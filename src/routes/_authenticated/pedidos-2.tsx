@@ -71,7 +71,7 @@ function Pedidos2Page() {
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full text-left">
             <thead className="border-b border-border bg-surface-muted/60"><tr>{["Pedido", "Cliente", "Pieza", "Estado", "Ubicación", "Entrega", ""].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
-            <tbody className="divide-y divide-border">{lista.map((p) => <PedidoRow key={p.id} pedido={p} onOpen={() => navigate({ to: "/pedidos/$id", params: { id: p.id }, search: { from: "pedidos" } })} />)}</tbody>
+            <tbody className="divide-y divide-border">{lista.map((p) => <PedidoRow key={p.id} pedido={p} onOpen={() => navigate({ to: "/pedidos-2/$id", params: { id: p.id } })} />)}</tbody>
           </table>
         </div>
 
