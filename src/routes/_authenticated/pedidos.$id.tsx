@@ -511,6 +511,7 @@ function FichaPedido() {
   const [notasPlan, setNotasPlan] = useState("");
   const [guardandoPlan, setGuardandoPlan] = useState(false);
   const [guardandoOrden, setGuardandoOrden] = useState(false);
+  const [transicionandoOrden, setTransicionandoOrden] = useState(false);
   const [guardandoEntrega, setGuardandoEntrega] = useState(false);
   const [materialEntrega, setMaterialEntrega] = useState("");
   const [cantidadEntrega, setCantidadEntrega] = useState("");
@@ -745,7 +746,7 @@ function FichaPedido() {
         pedido_id: pedido.id,
         sede_id: pedido.sede_id,
         numero: `OP-${pedido.referencia}`,
-        estado: "liberada",
+        estado: "borrador",
         prioridad: "normal",
         notas: "",
       } as never);
@@ -756,6 +757,28 @@ function FichaPedido() {
       toast.error(error instanceof Error ? error.message : "No se pudo crear la orden de producción");
     } finally {
       setGuardandoOrden(false);
+    }
+  }
+
+  async function transicionarOrdenProduccion(nuevoEstado: "liberada" | "en_produccion" | "pausada" | "control_calidad" | "terminada" | "cancelada") {
+    if (!ordenProduccion || transicionandoOrden) return;
+    setTransicionandoOrden(true);
+    try {
+      const { data, error } = await supabase.rpc("transicionar_orden_produccion", {
+        _orden_id: ordenProduccion.id,
+        _nuevo_estado: nuevoEstado,
+      });
+      if (error) throw error;
+      toast.success(`Producción: ${nuevoEstado.replaceAll("_", " ")}`);
+      void qc.invalidateQueries({ queryKey: ["orden-produccion-pedido", id] });
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["trabajos-pedido", id] });
+      void qc.invalidateQueries({ queryKey: ["piezas-terminadas-op", ordenProduccion.id] });
+      return data;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo cambiar el estado de producción");
+    } finally {
+      setTransicionandoOrden(false);
     }
   }
 
@@ -1094,9 +1117,27 @@ function FichaPedido() {
             <p className="mt-1 text-xs text-muted-foreground">La OP coordina la fabricación; los trabajos existentes serán sus operaciones.</p>
           </div>
           {ordenProduccion ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <span className="rounded-full border border-gold/20 bg-gold/[.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gold-deep">{ordenProduccion.estado.replaceAll("_", " ")}</span>
               <span className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Prioridad {ordenProduccion.prioridad}</span>
+              {ordenProduccion.estado === "borrador" ? (
+                <button type="button" onClick={() => void transicionarOrdenProduccion("liberada")} disabled={transicionandoOrden} className="rounded-xl bg-gold px-3 py-2 text-[10px] font-bold text-gold-foreground disabled:opacity-50">Liberar OP</button>
+              ) : null}
+              {ordenProduccion.estado === "liberada" || ordenProduccion.estado === "pausada" ? (
+                <button type="button" onClick={() => void transicionarOrdenProduccion("en_produccion")} disabled={transicionandoOrden} className="rounded-xl bg-success px-3 py-2 text-[10px] font-bold text-success-foreground disabled:opacity-50">Iniciar producción</button>
+              ) : null}
+              {ordenProduccion.estado === "en_produccion" ? (
+                <>
+                  <button type="button" onClick={() => void transicionarOrdenProduccion("pausada")} disabled={transicionandoOrden} className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-[10px] font-bold text-warning disabled:opacity-50">Pausar</button>
+                  <button type="button" onClick={() => void transicionarOrdenProduccion("control_calidad")} disabled={transicionandoOrden} className="rounded-xl border border-info/30 bg-info/10 px-3 py-2 text-[10px] font-bold text-info disabled:opacity-50">Enviar a calidad</button>
+                </>
+              ) : null}
+              {ordenProduccion.estado === "control_calidad" ? (
+                <span className="rounded-xl border border-info/20 bg-info/10 px-3 py-2 text-[10px] font-bold text-info">Esperando inspección final</span>
+              ) : null}
+              {ordenProduccion.estado === "terminada" ? (
+                <span className="rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-[10px] font-bold text-success">Producción terminada</span>
+              ) : null}
             </div>
           ) : (
             <button type="button" onClick={() => void crearOrdenProduccion()} disabled={guardandoOrden} className="rounded-xl border border-gold/25 bg-gold/[.08] px-4 py-2.5 text-xs font-bold text-gold-deep disabled:opacity-50">
