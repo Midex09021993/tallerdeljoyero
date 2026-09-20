@@ -200,17 +200,20 @@ function CotizacionesPage() {
                 {filtradas.map(q => {
                   const cliente = clientes.find(c => c.id === q.cliente_id);
                   const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
-                  return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.04]">
-                    <td className="px-5 py-4 font-medium">
-                      <Link to="/cotizaciones/$id" params={{ id: q.id }} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 py-1 -mx-2 transition-colors hover:bg-gold/10 hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/30">
-                        {q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span>
-                      </Link>
-                    </td>
-                    <td className="px-5 py-4"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block rounded-lg px-2 py-1 -mx-2 hover:bg-gold/10"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
-                    <td className="px-5 py-4 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block rounded-lg px-2 py-1 -mx-2 hover:bg-gold/10">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
-                    <td className="px-5 py-4"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="inline-block rounded-lg px-2 py-1 -mx-2 hover:bg-gold/10"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></Link></td>
-                    <td className="px-5 py-4 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block rounded-lg px-2 py-1 -mx-2 hover:bg-gold/10">{q.fecha_emision}</Link></td>
-                    <td className="px-5 py-4 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block rounded-lg px-2 py-1 -mx-2 hover:bg-gold/10">{money(Number(q.total), q.moneda)}</Link></td>
+                  return <tr
+                    key={q.id}
+                    tabIndex={0}
+                    role="link"
+                    onClick={() => navigate({ to: "/cotizaciones/$id", params: { id: q.id } })}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/cotizaciones/$id", params: { id: q.id } }); } }}
+                    className="group cursor-pointer transition-colors hover:bg-gold/[0.06] focus:outline-none focus:bg-gold/[0.06]"
+                  >
+                    <td className="px-5 py-4 font-medium">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></td>
+                    <td className="px-5 py-4"><span className="font-medium">{cliente?.nombre ?? "—"}</span></td>
+                    <td className="px-5 py-4 text-muted-foreground">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</td>
+                    <td className="px-5 py-4"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></td>
+                    <td className="px-5 py-4 text-xs text-muted-foreground">{q.fecha_emision}</td>
+                    <td className="px-5 py-4 text-right font-semibold tabular-nums">{money(Number(q.total), q.moneda)}</td>
                   </tr>;
                 })}
                 {filtradas.length === 0 && <tr><td colSpan={6} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
