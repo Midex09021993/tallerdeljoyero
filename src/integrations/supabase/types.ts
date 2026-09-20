@@ -73,6 +73,128 @@ export type Database = {
           },
         ]
       }
+      compra_detalles: {
+        Row: {
+          cantidad: number
+          cantidad_recibida: number
+          compra_id: string
+          costo_unitario: number
+          created_at: string
+          descripcion: string
+          id: string
+          impuesto: number
+          material_id: string
+          unidad: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad: number
+          cantidad_recibida?: number
+          compra_id: string
+          costo_unitario: number
+          created_at?: string
+          descripcion?: string
+          id?: string
+          impuesto?: number
+          material_id: string
+          unidad?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          cantidad_recibida?: number
+          compra_id?: string
+          costo_unitario?: number
+          created_at?: string
+          descripcion?: string
+          id?: string
+          impuesto?: number
+          material_id?: string
+          unidad?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compra_detalles_compra_id_fkey"
+            columns: ["compra_id"]
+            isOneToOne: false
+            referencedRelation: "compras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compra_detalles_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          estado: string
+          fecha_emision: string
+          fecha_entrega: string | null
+          id: string
+          impuestos: number
+          moneda: string
+          notas: string
+          numero: string
+          proveedor_nombre: string
+          proveedor_participante_id: string | null
+          sede_id: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_emision?: string
+          fecha_entrega?: string | null
+          id?: string
+          impuestos?: number
+          moneda?: string
+          notas?: string
+          numero: string
+          proveedor_nombre?: string
+          proveedor_participante_id?: string | null
+          sede_id: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_emision?: string
+          fecha_entrega?: string | null
+          id?: string
+          impuestos?: number
+          moneda?: string
+          notas?: string
+          numero?: string
+          proveedor_nombre?: string
+          proveedor_participante_id?: string | null
+          sede_id?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       config_areas: {
         Row: {
           alerta_activa: boolean
@@ -751,6 +873,7 @@ export type Database = {
         Row: {
           area: string
           cantidad: number
+          costo_unitario: number | null
           created_at: string
           id: string
           material_id: string
@@ -765,6 +888,7 @@ export type Database = {
         Insert: {
           area?: string
           cantidad: number
+          costo_unitario?: number | null
           created_at?: string
           id?: string
           material_id: string
@@ -779,6 +903,7 @@ export type Database = {
         Update: {
           area?: string
           cantidad?: number
+          costo_unitario?: number | null
           created_at?: string
           id?: string
           material_id?: string
@@ -836,6 +961,59 @@ export type Database = {
           },
         ]
       }
+      orden_produccion_costos: {
+        Row: {
+          cantidad: number
+          categoria: string
+          concepto: string
+          costo_unitario: number
+          created_at: string
+          id: string
+          importe: number
+          moneda: string
+          orden_produccion_id: string
+          origen: string
+          referencia_id: string | null
+          unidad: string
+        }
+        Insert: {
+          cantidad?: number
+          categoria: string
+          concepto: string
+          costo_unitario?: number
+          created_at?: string
+          id?: string
+          importe?: number
+          moneda?: string
+          orden_produccion_id: string
+          origen?: string
+          referencia_id?: string | null
+          unidad?: string
+        }
+        Update: {
+          cantidad?: number
+          categoria?: string
+          concepto?: string
+          costo_unitario?: number
+          created_at?: string
+          id?: string
+          importe?: number
+          moneda?: string
+          orden_produccion_id?: string
+          origen?: string
+          referencia_id?: string | null
+          unidad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orden_produccion_costos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orden_produccion_entregas: {
         Row: {
           area_destino: string
@@ -885,6 +1063,74 @@ export type Database = {
             foreignKeyName: "orden_produccion_entregas_orden_produccion_id_fkey"
             columns: ["orden_produccion_id"]
             isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orden_produccion_resumen_costos: {
+        Row: {
+          calculado_at: string
+          calculado_por: string | null
+          costo_ajustes: number
+          costo_estimado: number
+          costo_externo: number
+          costo_indirecto: number
+          costo_mano_obra: number
+          costo_materiales: number
+          costo_real: number
+          created_at: string
+          id: string
+          margen: number
+          margen_porcentaje: number | null
+          moneda: string
+          orden_produccion_id: string
+          updated_at: string
+          venta: number
+        }
+        Insert: {
+          calculado_at?: string
+          calculado_por?: string | null
+          costo_ajustes?: number
+          costo_estimado?: number
+          costo_externo?: number
+          costo_indirecto?: number
+          costo_mano_obra?: number
+          costo_materiales?: number
+          costo_real?: number
+          created_at?: string
+          id?: string
+          margen?: number
+          margen_porcentaje?: number | null
+          moneda?: string
+          orden_produccion_id: string
+          updated_at?: string
+          venta?: number
+        }
+        Update: {
+          calculado_at?: string
+          calculado_por?: string | null
+          costo_ajustes?: number
+          costo_estimado?: number
+          costo_externo?: number
+          costo_indirecto?: number
+          costo_mano_obra?: number
+          costo_materiales?: number
+          costo_real?: number
+          created_at?: string
+          id?: string
+          margen?: number
+          margen_porcentaje?: number | null
+          moneda?: string
+          orden_produccion_id?: string
+          updated_at?: string
+          venta?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orden_produccion_resumen_costos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: true
             referencedRelation: "ordenes_produccion"
             referencedColumns: ["id"]
           },
@@ -1872,6 +2118,56 @@ export type Database = {
           },
         ]
       }
+      tarifas_mano_obra: {
+        Row: {
+          activo: boolean
+          area: string
+          created_at: string
+          id: string
+          moneda: string
+          notas: string
+          sede_id: string | null
+          tarifa_hora: number
+          usuario_id: string | null
+          vigente_desde: string
+          vigente_hasta: string | null
+        }
+        Insert: {
+          activo?: boolean
+          area?: string
+          created_at?: string
+          id?: string
+          moneda?: string
+          notas?: string
+          sede_id?: string | null
+          tarifa_hora: number
+          usuario_id?: string | null
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Update: {
+          activo?: boolean
+          area?: string
+          created_at?: string
+          id?: string
+          moneda?: string
+          notas?: string
+          sede_id?: string | null
+          tarifa_hora?: number
+          usuario_id?: string | null
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarifas_mano_obra_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trabajo_archivos: {
         Row: {
           created_at: string
@@ -2145,6 +2441,7 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      recibir_compra: { Args: { _compra_id: string }; Returns: Json }
       seguimiento_pedido: {
         Args: { _ref: string }
         Returns: {
