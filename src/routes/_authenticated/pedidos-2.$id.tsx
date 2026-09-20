@@ -23,6 +23,11 @@ function Pedido2Detalle() {
   const pedido = pedidos.find((p) => p.id === id);
   const [tab, setTab] = useState<Tab>("resumen");
   const [transicionando, setTransicionando] = useState(false);
+  const [resultadoCalidad, setResultadoCalidad] = useState("aprobado");
+  const [tipoCalidad, setTipoCalidad] = useState("inspeccion_final");
+  const [descripcionCalidad, setDescripcionCalidad] = useState("");
+  const [motivoCalidad, setMotivoCalidad] = useState("");
+  const [guardandoCalidad, setGuardandoCalidad] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: trabajos = [], isLoading: loadingTrabajos } = useQuery({
@@ -115,6 +120,52 @@ function Pedido2Detalle() {
   const piezaVerificada = piezas.some((p) => ["verificada", "liberada"].includes(p.estado));
   const calidadFinalAprobada = controles.some((c) => c.tipo === "inspeccion_final" && c.resultado === "aprobado");
 
+  const registrarCalidad = async () => {
+    if (!ordenPrincipal || guardandoCalidad) return;
+    setGuardandoCalidad(true);
+    try {
+      const { error } = await supabase.rpc("registrar_inspeccion_calidad", {
+        _orden_id: ordenPrincipal.id,
+        _resultado: resultadoCalidad,
+        _tipo: tipoCalidad,
+        _motivo: motivoCalidad.trim(),
+        _descripcion: descripcionCalidad.trim(),
+        _evidencia_url: null,
+      });
+      if (error) throw error;
+      toast.success(resultadoCalidad === "aprobado" ? "Inspección aprobada y registrada." : "Inspección de calidad registrada.");
+      setDescripcionCalidad("");
+      setMotivoCalidad("");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-qc", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
+      ]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar la inspección.");
+    } finally {
+      setGuardandoCalidad(false);
+    }
+  };
+
+  const verificarPieza = async (piezaId: string, nuevoEstado: "verificada" | "liberada" | "rechazada") => {
+    try {
+      const { error } = await supabase.rpc("verificar_pieza_terminada", {
+        _pieza_id: piezaId,
+        _nuevo_estado: nuevoEstado,
+      });
+      if (error) throw error;
+      toast.success(nuevoEstado === "verificada" ? "Pieza verificada." : nuevoEstado === "liberada" ? "Pieza liberada." : "Pieza rechazada.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
+      ]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo actualizar la pieza.");
+    }
+  };
+
   const transicionar = async (nuevoEstado: string) => {
     if (!ordenPrincipal || transicionando) return;
     setTransicionando(true);
@@ -179,6 +230,22 @@ function Pedido2Detalle() {
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} /> : null}
+      {ordenPrincipal && ordenPrincipal.estado === "control_calidad" ? (
+        <section className="mt-5 rounded-2xl border border-border bg-card p-5 shadow-raised">
+          <div className="flex items-start justify-between gap-4">
+            <div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Control de calidad</h3><p className="mt-1 text-xs text-muted-foreground">Registra la inspección directamente sobre la OP. La aprobación final cerrará la fabricación solo si las piezas requeridas ya están verificadas o liberadas.</p></div>
+            <CheckCircle2 className="size-5 text-gold" />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <label className="text-xs font-semibold">Tipo<select value={tipoCalidad} onChange={(e) => setTipoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"><option value="inspeccion_final">Inspección final</option><option value="inspeccion_operacion">Inspección de operación</option><option value="reinspeccion">Reinspección</option></select></label>
+            <label className="text-xs font-semibold">Resultado<select value={resultadoCalidad} onChange={(e) => setResultadoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"><option value="aprobado">Aprobado</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option><option value="pendiente">Pendiente</option></select></label>
+            <label className="text-xs font-semibold">Motivo<input value={motivoCalidad} onChange={(e) => setMotivoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm" placeholder="Motivo u observación" /></label>
+          </div>
+          <label className="mt-3 block text-xs font-semibold">Descripción<textarea value={descripcionCalidad} onChange={(e) => setDescripcionCalidad(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm" placeholder="Resultado de la inspección, hallazgos y criterios revisados." /></label>
+          <div className="mt-4 flex justify-end"><button type="button" disabled={guardandoCalidad} onClick={() => void registrarCalidad()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{guardandoCalidad ? "Registrando…" : "Registrar inspección"}</button></div>
+        </section>
+      ) : null}
+            {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} /> : null}
       {ordenPrincipal ? (
         <section className="mt-5 rounded-2xl border border-gold/20 bg-card p-5 shadow-raised">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -201,6 +268,12 @@ function Pedido2Detalle() {
         </section>
       ) : null}
       {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
+      {ordenPrincipal && piezas.length ? (
+        <section className="mt-5 rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-4"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Verificación de piezas</h3><p className="mt-1 text-xs text-muted-foreground">Requeridas: {pedido.cantidad_piezas ?? 1} · Verificadas/liberadas: {piezas.filter((p) => ["verificada","liberada"].includes(p.estado)).reduce((sum, p) => sum + Number(p.cantidad || 1), 0)}</p></div><PackageCheck className="size-5 text-gold" /></div>
+          <div className="mt-4 space-y-2">{piezas.map((p) => <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"><div><p className="text-sm font-semibold">Pieza {p.numero_pieza}</p><p className="text-xs text-muted-foreground">{p.estado} · {p.peso_final ? `${p.peso_final} g` : "Peso final pendiente"}</p></div><div className="flex gap-2">{["pendiente","recibida"].includes(p.estado) ? <button type="button" onClick={() => void verificarPieza(p.id,"verificada")} className="rounded-lg bg-gold px-3 py-2 text-[11px] font-bold text-black">Verificar</button> : null}{p.estado === "verificada" ? <button type="button" onClick={() => void verificarPieza(p.id,"liberada")} className="rounded-lg border border-gold/40 px-3 py-2 text-[11px] font-bold text-gold-deep">Liberar</button> : null}{!["rechazada","liberada"].includes(p.estado) ? <button type="button" onClick={() => void verificarPieza(p.id,"rechazada")} className="rounded-lg border border-danger/30 px-3 py-2 text-[11px] font-bold text-danger">Rechazar</button> : null}</div></div>)}</div>
+        </section>
+      ) : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
     </AppShell>
