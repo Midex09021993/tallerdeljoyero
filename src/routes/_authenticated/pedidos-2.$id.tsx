@@ -245,8 +245,7 @@ function Pedido2Detalle() {
           <div className="mt-4 flex justify-end"><button type="button" disabled={guardandoCalidad} onClick={() => void registrarCalidad()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{guardandoCalidad ? "Registrando…" : "Registrar inspección"}</button></div>
         </section>
       ) : null}
-            {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} /> : null}
-      {ordenPrincipal ? (
+            {ordenPrincipal ? (
         <section className="mt-5 rounded-2xl border border-gold/20 bg-card p-5 shadow-raised">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
