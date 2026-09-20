@@ -109,6 +109,8 @@ export function PedidosArea({
                       {pedido.trabajo || pedido.pieza || "Sin trabajo definido"}
                     </p>
 
+                    <DetallesTecnicosArea pedido={pedido} area={area} />
+
                     <dl className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
                       <div>
                         <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -240,6 +242,63 @@ function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
         />
       ) : null}
     </div>
+  );
+}
+
+function detallesTecnicosArea(pedido: Pedido, area: string) {
+  const normalizada = normalizarArea(area);
+  if (areaCoincide(normalizada, "Diseño 3D")) {
+    return [
+      ["Talla", pedido.talla || "—"],
+      ["Material", pedido.material || "—"],
+      ["Piedras", pedido.piedras || "—"],
+      ["Peso", pedido.peso_estimado || "—"],
+    ] as const;
+  }
+  if (areaCoincide(normalizada, "Impresión 3D")) {
+    return [
+      ["Material", pedido.material || "—"],
+      ["Cantidad", String(pedido.cantidad_piezas || 1)],
+      ["Peso", pedido.peso_estimado || "—"],
+      ["Talla", pedido.talla || "—"],
+    ] as const;
+  }
+  if (areaCoincide(normalizada, "Casting")) {
+    return [
+      ["Metal", pedido.material || "—"],
+      ["Peso", pedido.peso_estimado || "—"],
+      ["Cantidad", String(pedido.cantidad_piezas || 1)],
+      ["Piedras", pedido.piedras || "—"],
+    ] as const;
+  }
+  if (areaCoincide(normalizada, "Corte Láser")) {
+    return [
+      ["Texto", pedido.corte_texto || "—"],
+      ["Ubicación", pedido.corte_ubicacion || "—"],
+      ["Tipografía", pedido.corte_tipografia || "—"],
+      ["Observaciones", pedido.corte_observaciones || "—"],
+    ] as const;
+  }
+  return [
+    ["Material", pedido.material || "—"],
+    ["Talla", pedido.talla || "—"],
+    ["Piedras", pedido.piedras || "—"],
+    ["Peso", pedido.peso_estimado || "—"],
+  ] as const;
+}
+
+function DetallesTecnicosArea({ pedido, area }: { pedido: Pedido; area: string }) {
+  return (
+    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+      {detallesTecnicosArea(pedido, area).map(([etiqueta, valor]) => (
+        <div key={etiqueta} className="rounded-xl bg-surface-muted p-2.5">
+          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {etiqueta}
+          </dt>
+          <dd className="mt-1 truncate font-medium text-foreground">{valor}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -435,6 +494,8 @@ function ListaTrabajosMovil({
               <p className="mt-3 line-clamp-2 text-sm text-foreground">
                 {pedido.trabajo || pedido.pieza || "Sin trabajo definido"}
               </p>
+
+              <DetallesTecnicosArea pedido={pedido} area={area} />
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-xl bg-surface-muted p-3">
