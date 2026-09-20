@@ -49,7 +49,7 @@ type Joya = {
 };
 
 const CATEGORIAS = ["Oro", "Plata", "Piedras", "Resina", "Soldadura", "Herramientas", "Otros insumos"];
-const TIPOS = [
+const TIPOS: [string, string][] = [
   ["entrada", "Entrada"],
   ["consumo", "Consumo"],
   ["devolucion", "Devolución"],

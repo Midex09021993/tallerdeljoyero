@@ -1810,15 +1810,6 @@ function EditorUsuario({
             </option>
           ))}
         </select>
-        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-          Contraseña actual
-          <input
-            className={inputCls}
-            readOnly
-            value={usuario.clave_visible ?? "(no registrada)"}
-            onFocus={(e) => e.currentTarget.select()}
-          />
-        </label>
         <input
           className={inputCls}
           type="text"
