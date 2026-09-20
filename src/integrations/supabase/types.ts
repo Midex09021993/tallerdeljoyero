@@ -1870,6 +1870,47 @@ export type Database = {
           },
         ]
       }
+      trabajo_tiempos: {
+        Row: {
+          created_at: string
+          fin: string | null
+          id: string
+          inicio: string
+          motivo_pausa: string
+          segundos_acumulados: number
+          trabajo_id: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          fin?: string | null
+          id?: string
+          inicio?: string
+          motivo_pausa?: string
+          segundos_acumulados?: number
+          trabajo_id: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          fin?: string | null
+          id?: string
+          inicio?: string
+          motivo_pausa?: string
+          segundos_acumulados?: number
+          trabajo_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajo_tiempos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trabajos: {
         Row: {
           area: string
