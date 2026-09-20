@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
 import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, MoreHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
