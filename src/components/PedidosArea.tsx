@@ -411,7 +411,7 @@ function ListaTrabajosOperario({
 
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="truncate text-xs text-muted-foreground">
-                  {pedido?.contrato ? `Contrato ${pedido.contrato}` : area}
+                  {area}
                 </span>
                 <span className="rounded-full bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">
                   Abrir trabajo
