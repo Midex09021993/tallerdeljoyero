@@ -209,7 +209,8 @@ function GestionPage() {
 
 /* ---------------- Resumen ---------------- */
 
-function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {\n  const { data: sesion } = useSesion();
+function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva: string | null }) {
+  const { data: sesion } = useSesion();
   const navigate = useNavigate();
   const { data: materiales = [] } = useInventario();
   const { data: sedes = [] } = useSedes();
