@@ -201,6 +201,21 @@ function PedidosPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: proyectos = [] } = useQuery({
+    queryKey: ["proyectos-pedido-selector", form.cliente_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("proyectos_joya")
+        .select("id,codigo,nombre,cliente_id,metal,ley,peso_estimado,talla,cantidad_piezas,piedras")
+        .eq("cliente_id", form.cliente_id)
+        .eq("estado", "activo")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: Boolean(sesion?.esAdmin && form.cliente_id),
+  });
+
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes-pedido-selector"],
     queryFn: async () => {
@@ -466,6 +481,7 @@ function PedidosPage() {
                 trabajo: form.trabajo,
                 cliente: form.cliente,
                 cliente_id: form.cliente_id,
+                proyecto_joya_id: form.proyecto_joya_id || null,
                 telefono: form.telefono,
                 origen: form.origen,
                 contrato: form.contrato,
@@ -532,6 +548,46 @@ function PedidosPage() {
               </label>
               <p className="mt-1 text-[10px] text-muted-foreground">
                 El nombre y WhatsApp se toman del registro maestro del cliente.
+              </p>
+            </div>
+            <div className="mb-4 max-w-xl">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Proyecto de joyería
+                <select
+                  value={form.proyecto_joya_id}
+                  onChange={(e) => {
+                    const proyecto = proyectos.find((item) => item.id === e.target.value);
+                    if (!proyecto) {
+                      setForm({ ...form, proyecto_joya_id: "" });
+                      return;
+                    }
+                    setForm({
+                      ...form,
+                      proyecto_joya_id: proyecto.id,
+                      trabajo: proyecto.nombre || form.trabajo,
+                      material: proyecto.metal || form.material,
+                      peso_estimado:
+                        proyecto.peso_estimado != null
+                          ? String(proyecto.peso_estimado)
+                          : form.peso_estimado,
+                      talla: proyecto.talla || form.talla,
+                      cantidad_piezas: String(proyecto.cantidad_piezas || 1),
+                      piedras: proyecto.piedras || form.piedras,
+                    });
+                  }}
+                  disabled={!form.cliente_id}
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground disabled:cursor-not-allowed disabled:bg-surface-muted sm:py-2 sm:text-sm"
+                >
+                  <option value="">Sin proyecto asociado</option>
+                  {proyectos.map((proyecto) => (
+                    <option key={proyecto.id} value={proyecto.id}>
+                      {proyecto.codigo} · {proyecto.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Si eliges un proyecto, sus datos técnicos se copian al pedido como snapshot.
               </p>
             </div>
             <PedidoFormCampos
