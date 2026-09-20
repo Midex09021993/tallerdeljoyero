@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database, Json, TablesInsert } from "@/integrations/supabase/types";
 import { normalizarArea } from "@/lib/auth";
 import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
 
