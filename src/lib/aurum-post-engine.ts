@@ -14,7 +14,11 @@ export type AurumPostConfig={
   ssao:boolean;
   ssaoIntensity:number;
   ssr:boolean;
+  ssrIntensity:number;
+  ssrMaxDistance:number;
+  ssrThickness:number;
   temporalAA:boolean;
+  progressiveFrameCount:number;
   lut:boolean;
   lutIntensity:number;
   vignette:boolean;
@@ -24,7 +28,7 @@ export type AurumPostConfig={
 export const AURUM_POST_CONFIG:AurumPostConfig={
   toneMapping:"AgX", exposure:.62, contrast:1.018, saturation:1.018,
   bloom:false, bloomIntensity:.08, bloomThreshold:1.35,
-  ssao:false, ssaoIntensity:.22, ssr:false, temporalAA:false,
+  ssao:false, ssaoIntensity:.22, ssr:false, ssrIntensity:1, ssrMaxDistance:1, ssrThickness:.018, temporalAA:false, progressiveFrameCount:32,
   lut:true, lutIntensity:.12,
   vignette:true, vignetteDarkness:.055, vignetteOffset:1.02
 };
