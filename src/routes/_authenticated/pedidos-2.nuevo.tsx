@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ClipboardList, Factory, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -81,7 +81,7 @@ function NuevoPedido2() {
 
   const toggleRuta = (area: string) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area]);
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!sesion?.esAdmin) {
       toast.error("No tienes permisos para registrar pedidos.");
