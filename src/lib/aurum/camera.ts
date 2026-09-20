@@ -22,6 +22,38 @@ export const getAurumProductCameraProfile = (category: string) =>
   AURUM_PRODUCT_CAMERA_PROFILES.Otro;
 
 /**
+ * Presentación inicial inspirada directamente en la cámara del VJSON iJewel
+ * suministrado por el usuario. El VJSON usa FOV 25 y una posición
+ * [-1.2292, 9.3674, 3.2772] mirando al origen. AURUM conserva esa dirección
+ * y la escala automáticamente al volumen normalizado de cada joya.
+ */
+export function applyAurumIJEWELPresentationCamera(
+  camera: THREE.PerspectiveCamera,
+  controls: { target: THREE.Vector3; update: () => void },
+  model: THREE.Object3D | null,
+) {
+  const target = model
+    ? new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3())
+    : new THREE.Vector3(0, 0, 0);
+  const size = model
+    ? new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3())
+    : new THREE.Vector3(2.6, 2.6, 2.6);
+  const radius = Math.max(size.length() * .5, 1.3);
+  const direction = new THREE.Vector3(-1.2292039067094442, 9.367439285321952, 3.2772151274423926).normalize();
+  // The supplied VJSON camera sits at roughly 5x its model radius. After
+  // AURUM normalizes imported models to a 2.6-unit envelope, 3.25x keeps the
+  // same product scale in the viewport while leaving the soft presentation air.
+  const distance = Math.max(radius * 3.25, 4.6);
+  camera.fov = 25;
+  camera.up.set(0, 1, 0);
+  controls.target.copy(target);
+  camera.position.copy(target).add(direction.multiplyScalar(distance));
+  camera.lookAt(target);
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+
+/**
  * Calcula la composición de cámara usando el volumen real de la joya.
  * El encuadre mantiene una escala coherente entre todas las vistas.
  */
