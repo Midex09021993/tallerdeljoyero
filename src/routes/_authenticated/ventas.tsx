@@ -4,6 +4,8 @@ import { AppShell, MobileBackButton } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { areaCoincide } from "@/lib/auth";
 import {
   esEstadoFinalPedido,
@@ -67,7 +69,7 @@ function VentasPage() {
     const { error } = await supabase.rpc("transicionar_entrega_pedido", {
       _pedido_id: pedidoId,
       _accion: accion,
-      _datos: datos,
+      _datos: datos as never,
     });
     if (error) {
       toast.error(error.message);

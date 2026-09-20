@@ -295,7 +295,8 @@ function PedidosPage() {  const navigate = useNavigate();
           ].some((v) => (v ?? "").toLowerCase().includes(t));
         const okOperario =          !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
         // Los pedidos entregados salen del flujo activo: solo aparecen al buscarlos
-        // o al filtrar expresamente por ese estado (el archivo está en Gestión).        const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
+        // o al filtrar expresamente por ese estado (el archivo está en Gestión).
+        const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
         const okAutorizacion = !soloPendientesAutorizacion || pedidoPendienteAutorizacionProduccion(p);
         return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
       }),

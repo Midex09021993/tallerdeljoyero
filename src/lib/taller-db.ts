@@ -406,6 +406,7 @@ export type Material = {
   unidad: string;
   minimo: number;
   categoria: string;
+  activo: boolean;
   sede_id: string | null;
   areas: string[];
 };
@@ -1696,7 +1697,7 @@ export function useInventario() {
     queryFn: async (): Promise<Material[]> => {
       const { data, error } = await supabase
         .from("inventario")
-        .select("id, material, stock, unidad, minimo, categoria, sede_id")
+        .select("id, material, stock, unidad, minimo, categoria, activo, sede_id")
         .order("material");
       if (error) throw error;
       const { data: asignaciones } = await supabase
