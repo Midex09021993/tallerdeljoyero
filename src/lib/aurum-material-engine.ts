@@ -378,3 +378,61 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
   return material;
 };
 export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
+
+/** iJewel/WebGi metal references extracted from the supplied GLB scene. */
+export const AURUM_IJEWEL_METAL_REFERENCES = {
+  redGold: {
+    sourceRootPath: "2_metal_redgold_polished_448aec7bd1.pmat",
+    baseColorFactor: [0.5058823529411764, 0.23529411764705882, 0.12156862745098039],
+    roughness: 0,
+    ior: 1.5,
+    environmentIntensity: 0.8,
+  },
+  roseGold: {
+    sourceRootPath: "metal-rosegold-polished.pmat",
+    baseColorFactor: [0.7835377915215659, 0.450785782828426, 0.1844749944900301],
+    roughness: 0,
+    ior: 1.5,
+    environmentIntensity: 1,
+  },
+  greenGold: {
+    sourceRootPath: "2_metal_greengold_polished_7c9dfd65ef.pmat",
+    baseColorFactor: [0.5583403896257968, 0.4178850708380236, 0.17788841597328695],
+    roughness: 0,
+    ior: 1.5,
+    environmentIntensity: 0.8,
+  },
+} as const;
+
+/**
+ * Applies only renderer-reference values that were actually present in the
+ * supplied iJewel GLB. The source values are visual calibration data, not
+ * alloy composition or metallurgical constants.
+ */
+export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
+  if(!material) return material;
+  const id=String(materialId??"").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
+  const ref=id.includes("redgold")||id.includes("red-gold")||id.includes("oro-rojo")||id.includes("oro_rojo")
+    ? AURUM_IJEWEL_METAL_REFERENCES.redGold
+    : id.includes("rosegold")||id.includes("rose-gold")||id.includes("rose_gold")||id.includes("oro-rosa")||id.includes("oro_rosa")
+      ? AURUM_IJEWEL_METAL_REFERENCES.roseGold
+      : id.includes("greengold")||id.includes("green-gold")||id.includes("green_gold")||id.includes("oro-verde")||id.includes("oro_verde")
+        ? AURUM_IJEWEL_METAL_REFERENCES.greenGold
+        : null;
+  if(!ref) return material;
+  material.color?.setRGB(ref.baseColorFactor[0],ref.baseColorFactor[1],ref.baseColorFactor[2]);
+  material.metalness=1;
+  material.roughness=ref.roughness;
+  material.ior=ref.ior;
+  material.envMapIntensity=ref.environmentIntensity;
+  material.clearcoat=0;
+  material.clearcoatRoughness=0;
+  material.userData={
+    ...(material.userData??{}),
+    aurumIJEWELMetalReference:{...ref,materialId,source:"supplied GLB",renderer:"iJewel/WebGi"},
+    aurumMetalBaseEnvMapIntensity:ref.environmentIntensity,
+  };
+  material.needsUpdate=true;
+  return material;
+};
+
