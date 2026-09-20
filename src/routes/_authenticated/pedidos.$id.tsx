@@ -320,7 +320,7 @@ function FichaPedido() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trabajos")
-        .select("id, area, titulo, estado, prioridad, responsable_user_id")
+        .select("id, orden_produccion_id, area, titulo, estado, prioridad, responsable_user_id")
         .eq("pedido_id", id)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -1003,7 +1003,15 @@ function FichaPedido() {
           )}
         </div>
         {ordenProduccion ? (
-          <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_.85fr]">
+          <>
+          <div className="mb-5 rounded-2xl border border-border bg-surface-sunken p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Operaciones de fabricación</p><p className="mt-1 text-xs text-muted-foreground">Los trabajos del pedido forman parte de esta orden.</p></div>
+              <div className="flex gap-2"><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-semibold">{trabajosPedido.length} operaciones</span><span className="rounded-full border border-gold/20 bg-gold/[.06] px-2.5 py-1 text-[9px] font-semibold text-gold-deep">{trabajosPedido.filter((t) => t.estado === "completado").length}/{trabajosPedido.length || 0} completas</span></div>
+            </div>
+            {trabajosPedido.length ? <div className="mt-3 grid gap-2 md:grid-cols-2">{trabajosPedido.map((trabajo) => <button key={trabajo.id} type="button" onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-3 text-left transition hover:border-gold/30"><div className="min-w-0"><p className="truncate text-xs font-semibold">{trabajo.titulo || "Operación"}</p><p className="mt-1 text-[10px] text-muted-foreground">{normalizarArea(trabajo.area)} · {trabajo.prioridad}</p></div><span className="shrink-0 rounded-full bg-surface-muted px-2 py-1 text-[9px] font-semibold text-muted-foreground">{trabajo.estado === "en_proceso" ? "En proceso" : trabajo.estado === "completado" ? "Completado" : trabajo.estado === "bloqueado" ? "Bloqueado" : "Pendiente"}</span></button>)}</div> : <p className="mt-3 rounded-xl border border-dashed border-border px-4 py-5 text-center text-xs text-muted-foreground">Aún no hay operaciones.</p>}
+          </div>
+          <div className="grid gap-5 xl:grid-cols-[1fr_.85fr]">
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Entrega de materiales</p><p className="mt-1 text-xs text-muted-foreground">Registra quién recibe material para trabajar en la OP.</p></div>
@@ -1035,6 +1043,7 @@ function FichaPedido() {
               </div>
             </div>
           </div>
+          </>
         ) : null}
       </div>
 
