@@ -169,8 +169,8 @@ function svgFile(points: Point[], widthMm: number, heightMm: number) {
 function dxfFile(points: Point[], widthMm: number, heightMm: number) {
   const sx = widthMm / Math.max(...points.map(p => p.x), 1);
   const sy = heightMm / Math.max(...points.map(p => p.y), 1);
-  const body = points.map(p => `10\\n${(p.x * sx).toFixed(4)}\\n20\\n${(heightMm - p.y * sy).toFixed(4)}\\n`).join("");
-  return `0\\nSECTION\\n2\\nHEADER\\n0\\nENDSEC\\n0\\nSECTION\\n2\\nENTITIES\\n0\\nLWPOLYLINE\\n8\\nLASER\\n90\\n${points.length}\\n70\\n1\\n${body}0\\nENDSEC\\n0\\nEOF\\n`;
+  const body = points.map(p => `10\n${(p.x * sx).toFixed(4)}\n20\n${(heightMm - p.y * sy).toFixed(4)}\n`).join("");
+  return `0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nLASER\n90\n${points.length}\n70\n1\n${body}0\nENDSEC\n0\nEOF\n`;
 }
 
 export function VectorizadorLaser() {
@@ -192,7 +192,10 @@ export function VectorizadorLaser() {
     setProcessing(true);
     setSourceName(file.name.replace(/\.[^.]+$/, "") || "diseño");
     const url = URL.createObjectURL(file);
-    setImageUrl((previous) => {\n      if (previous) URL.revokeObjectURL(previous);\n      return url;\n    });\n    setSourceFile(file);
+    setImageUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return url;
+    });\n    setSourceFile(file);
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(1, MAX_SIZE / Math.max(img.naturalWidth, img.naturalHeight));
