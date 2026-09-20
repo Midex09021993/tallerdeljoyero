@@ -62,7 +62,9 @@ export type AurumHdriResource = {
   license:"CC0";
 };
 
-export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[
+export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[  {id:"ijewelMetal003",name:"iJewel Metal 003",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-003.hdr",sourceUrl:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-003.hdr",purpose:"specular-product",license:"CC0"},
+  {id:"ijewelGem003",name:"iJewel Gem 003",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",sourceUrl:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",purpose:"specular-product",license:"CC0"},
+
   {id:"storyStudio02",name:"Story Studio 02",url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_02_1k.hdr",sourceUrl:"https://polyhaven.com/a/story_studio_02",purpose:"soft-product",license:"CC0"},
   {id:"storyStudio04",name:"Story Studio 04",url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_04_1k.hdr",sourceUrl:"https://polyhaven.com/a/story_studio_04",purpose:"soft-product",license:"CC0"},
   {id:"storyStudio05",name:"Story Studio 05",url:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/story_studio_05_1k.hdr",sourceUrl:"https://polyhaven.com/a/story_studio_05",purpose:"specular-product",license:"CC0"},
