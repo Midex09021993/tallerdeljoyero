@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
-  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();\n  const { data: materiales = [], isLoading: cargandoInventario } = useInventario();
+  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
   const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
 
