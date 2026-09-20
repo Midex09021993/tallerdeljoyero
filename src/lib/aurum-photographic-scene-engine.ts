@@ -33,6 +33,9 @@ export const AURUM_HDRI_URLS:Record<string,string>={
   monochrome:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/monochrome_studio_02_2k.hdr",
   warm:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   white:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/white_studio_06_2k.hdr",
+  // Exact iJewel/WebGi environment references found in the supplied VJSON.
+  ijewelMetal:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-003.hdr",
+  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",
 };
 export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS["jewelry"]!;
 
@@ -42,6 +45,8 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemNeutral:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/monochrome_studio_02_2k.hdr",
   gemColor:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   gemLuxury:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_03_2k.hdr",
+  // Exact iJewel/WebGi gem environment reference.
+  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_URLS["gemDiamond"]!;
 
@@ -60,7 +65,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   // VJSON reference: scene environment 1.0, fixed direction, white background.
   // The original UUID environment is not embedded as a local HDR asset, so Aurum
   // uses its closest local white-studio HDR while preserving the measured control values.
-  ijewelReference:{environmentKey:"white",gemEnvironmentKey:"gemWhite",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:.8,highlightProtection:.98,exposure:1,lighting:"jewelry",post:{ssao:true,ssaoIntensity:.25,bloom:true,bloomIntensity:.2,bloomThreshold:2,lut:false,lutIntensity:0,taa:true,dof:false,vignette:false}},
+  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:1,lighting:"jewelry",post:{ssao:true,ssaoIntensity:.25,bloom:true,bloomIntensity:.2,bloomThreshold:2,lut:false,lutIntensity:0,taa:true,dof:false,vignette:false}},
 };
 
 export const getAurumPhotographicProfile=(id:string):AurumPhotographicProfile=>AURUM_PHOTOGRAPHIC_PROFILES[id]??AURUM_PHOTOGRAPHIC_PROFILES["producto"]!;
