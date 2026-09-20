@@ -160,6 +160,13 @@ export function AurumRender() {
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
+      // Orbit controls calibrated to the supplied iJewel VJSON reference.
+      if (controles) {
+        controles.enableDamping = true;
+        controles.dampingFactor = 0.08;
+        controles.zoomSpeed = 0.15;
+        controles.rotateSpeed = 2;
+      }
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       const shadowConfig=getAurumShadowConfig();
