@@ -39,11 +39,15 @@ export function applyAurumIJEWELPresentationCamera(
     ? new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3())
     : new THREE.Vector3(2.6, 2.6, 2.6);
   const radius = Math.max(size.length() * .5, 1.3);
-  const direction = new THREE.Vector3(-1.2292039067094442, 9.367439285321952, 3.2772151274423926).normalize();
-  // The supplied VJSON camera sits at roughly 5x its model radius. After
-  // AURUM normalizes imported models to a 2.6-unit envelope, 3.25x keeps the
-  // same product scale in the viewport while leaving the soft presentation air.
-  const distance = Math.max(radius * 3.25, 4.6);
+  // The VJSON coordinates are stored in the viewer coordinate system; after
+  // AURUM normalizes Rhino/Three models, using them literally produces an
+  // excessively top-down shot. The supplied iJewel screenshot shows a gentle
+  // 3/4 elevation, so preserve the VJSON FOV while calibrating the direction
+  // to that photographed presentation.
+  const direction = new THREE.Vector3(-0.26, 0.34, 0.902).normalize();
+  // Keep generous negative space around the product, as in the reference
+  // presentation. The final viewport framing is intentionally not a tight CAD fit.
+  const distance = Math.max(radius * 3.55, 5.0);
   camera.fov = 25;
   camera.up.set(0, 1, 0);
   controls.target.copy(target);
