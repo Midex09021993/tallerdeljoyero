@@ -230,7 +230,7 @@ function Inicio() {
                 ["Ventas", "Área ventas", PackageCheck],
               ].map(([label, area, Icono]) => (
                 <div key={String(label)} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
-                  <span className="grid size-9 place-items-center rounded-lg bg-ink text-gold"><Icono className="size-4" /></span>
+                  <span className="grid size-9 place-items-center rounded-lg border border-gold/20 bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
                   <span className="flex-1 text-sm font-semibold">{String(label)}</span>
                   <span className="font-display text-xl">{pedidos.filter((p) => p.area_actual === area).length}</span>
                 </div>
