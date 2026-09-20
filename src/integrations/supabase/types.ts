@@ -2560,6 +2560,32 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cerrar_orden_produccion: {
+        Args: { _observaciones?: string; _orden_id: string }
+        Returns: {
+          creado_por: string | null
+          created_at: string
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          fecha_planificada_fin: string | null
+          fecha_planificada_inicio: string | null
+          id: string
+          notas: string
+          numero: string
+          pedido_id: string
+          prioridad: string
+          responsable_user_id: string | null
+          sede_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ordenes_produccion"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       convertir_cotizacion_a_pedido: {
         Args: { _cotizacion_id: string }
         Returns: string
