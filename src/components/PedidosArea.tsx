@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell, MobileBackButton, Panel } from "@/components/AppShell";
-import { usePedidosDeArea, pedidoEnAreaActual, useTrabajosDelOperario, type TrabajoBandeja } from "@/hooks/use-pedidos-area";
+import { usePedidosDeArea, pedidoEnAreaActual, useTrabajosDelOperario, type PedidoOperativo, type TrabajoBandeja } from "@/hooks/use-pedidos-area";
 import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
-import { destinosMovimientoPedido, useEnviarAArea, type Pedido } from "@/lib/taller-db";
+import { destinosMovimientoPedido, useEnviarAArea } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 
 export function PedidosArea({
@@ -174,7 +174,7 @@ export function PedidosArea({
   );
 }
 
-function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
+function MovimientoPedidoInline({ pedido }: { pedido: PedidoOperativo }) {
   const { data: sesion } = useSesion();
   const enviar = useEnviarAArea();
   const [destino, setDestino] = useState("");
@@ -245,7 +245,7 @@ function MovimientoPedidoInline({ pedido }: { pedido: Pedido }) {
   );
 }
 
-function detallesTecnicosArea(pedido: Pedido, area: string) {
+function detallesTecnicosArea(pedido: PedidoOperativo, area: string) {
   const normalizada = normalizarArea(area);
   if (areaCoincide(normalizada, "Diseño 3D")) {
     return [
@@ -287,7 +287,7 @@ function detallesTecnicosArea(pedido: Pedido, area: string) {
   ] as const;
 }
 
-function DetallesTecnicosArea({ pedido, area }: { pedido: Pedido; area: string }) {
+function DetallesTecnicosArea({ pedido, area }: { pedido: PedidoOperativo; area: string }) {
   return (
     <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
       {detallesTecnicosArea(pedido, area).map(([etiqueta, valor]) => (
@@ -514,7 +514,7 @@ function ListaTrabajosMovil({
 
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="truncate text-xs text-muted-foreground">
-                  {pedido.contrato ? `Contrato ${pedido.contrato}` : pedido.sede_nombre || ""}
+                  {pedido.sede_nombre || area}
                 </span>
                 <span className="rounded-full bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">
                   Abrir
