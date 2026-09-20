@@ -344,6 +344,32 @@ function FichaPedido() {
       }>;
     },
   });
+  const { data: ordenProduccion } = useQuery({
+    queryKey: ["orden-produccion-pedido", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ordenes_produccion")
+        .select("id,numero,estado,prioridad,fecha_planificada_inicio,fecha_planificada_fin,fecha_inicio,fecha_fin,notas,responsable_user_id,created_at")
+        .eq("pedido_id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const { data: entregasProduccion = [] } = useQuery({
+    queryKey: ["orden-produccion-entregas", ordenProduccion?.id],
+    enabled: Boolean(ordenProduccion?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orden_produccion_entregas")
+        .select("id,material_id,cantidad,unidad,area_destino,notas,created_at,inventario(material,unidad)")
+        .eq("orden_produccion_id", ordenProduccion!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const { data: movimientosPedido = [] } = useQuery({
     queryKey: ["inventario-movimientos-pedido", id],
     enabled: Boolean(id),
@@ -429,6 +455,11 @@ function FichaPedido() {
   const [cantidadPlan, setCantidadPlan] = useState("");
   const [notasPlan, setNotasPlan] = useState("");
   const [guardandoPlan, setGuardandoPlan] = useState(false);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
+  const [guardandoEntrega, setGuardandoEntrega] = useState(false);
+  const [materialEntrega, setMaterialEntrega] = useState("");
+  const [cantidadEntrega, setCantidadEntrega] = useState("");
+  const [notasEntrega, setNotasEntrega] = useState("");
   const [guardandoConsumo, setGuardandoConsumo] = useState(false);
   const [motivoRetornoPedidos, setMotivoRetornoPedidos] = useState("");
   const [archivoPorEliminar, setArchivoPorEliminar] = useState<ArchivoPorEliminar | null>(null);
@@ -627,6 +658,60 @@ function FichaPedido() {
     !tieneEntrega ? "Definir fecha de entrega" : null,
   ].filter(Boolean) as string[];
   const avancePedido = Math.round(((6 - pendientesPedido.length) / 6) * 100);
+
+  async function crearOrdenProduccion() {
+    if (!pedido) return;
+    setGuardandoOrden(true);
+    try {
+      const { error } = await supabase.from("ordenes_produccion").insert({
+        pedido_id: pedido.id,
+        sede_id: pedido.sede_id,
+        numero: `OP-${pedido.referencia}`,
+        estado: "liberada",
+        prioridad: "normal",
+        notas: "",
+      } as never);
+      if (error) throw error;
+      toast.success("Orden de producción creada");
+      void qc.invalidateQueries({ queryKey: ["orden-produccion-pedido", id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo crear la orden de producción");
+    } finally {
+      setGuardandoOrden(false);
+    }
+  }
+
+  async function registrarEntregaProduccion(e: FormEvent) {
+    e.preventDefault();
+    if (!pedido || !ordenProduccion) return;
+    const cantidad = Number(cantidadEntrega);
+    const material = materialesInventario.find((item: { id: string }) => item.id === materialEntrega);
+    if (!material || !Number.isFinite(cantidad) || cantidad <= 0) {
+      toast.error("Selecciona un material y una cantidad válida");
+      return;
+    }
+    setGuardandoEntrega(true);
+    try {
+      const { error } = await supabase.from("orden_produccion_entregas").insert({
+        orden_produccion_id: ordenProduccion.id,
+        material_id: material.id,
+        cantidad,
+        unidad: material.unidad,
+        area_destino: normalizarArea(pedido.area_actual),
+        notas: notasEntrega.trim(),
+      } as never);
+      if (error) throw error;
+      toast.success(`Entrega registrada: ${cantidad} ${material.unidad} de ${material.material}`);
+      setMaterialEntrega("");
+      setCantidadEntrega("");
+      setNotasEntrega("");
+      void qc.invalidateQueries({ queryKey: ["orden-produccion-entregas", ordenProduccion.id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar la entrega");
+    } finally {
+      setGuardandoEntrega(false);
+    }
+  }
 
   async function registrarMaterialPlanificado(e: FormEvent) {
     e.preventDefault();
@@ -897,6 +982,60 @@ function FichaPedido() {
             <QuickStatus label="Entrega" value={estadoEntrega} ok={estadoEntrega === "Entregado"} />
           </div>
         </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">Orden de producción</p>
+            <h2 className="mt-1 text-lg font-semibold">{ordenProduccion?.numero ?? "Sin orden de producción"}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">La OP coordina la fabricación; los trabajos existentes serán sus operaciones.</p>
+          </div>
+          {ordenProduccion ? (
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-gold/20 bg-gold/[.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gold-deep">{ordenProduccion.estado.replaceAll("_", " ")}</span>
+              <span className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Prioridad {ordenProduccion.prioridad}</span>
+            </div>
+          ) : (
+            <button type="button" onClick={() => void crearOrdenProduccion()} disabled={guardandoOrden} className="rounded-xl border border-gold/25 bg-gold/[.08] px-4 py-2.5 text-xs font-bold text-gold-deep disabled:opacity-50">
+              {guardandoOrden ? "Creando…" : "Crear orden de producción"}
+            </button>
+          )}
+        </div>
+        {ordenProduccion ? (
+          <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_.85fr]">
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Entrega de materiales</p><p className="mt-1 text-xs text-muted-foreground">Registra quién recibe material para trabajar en la OP.</p></div>
+                <span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-semibold text-muted-foreground">{entregasProduccion.length} entregas</span>
+              </div>
+              <form onSubmit={registrarEntregaProduccion} className="rounded-2xl border border-border bg-surface-sunken p-4">
+                <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+                  <select value={materialEntrega} onChange={(e) => setMaterialEntrega(e.target.value)} className="h-10 rounded-xl border border-border bg-card px-3 text-sm" required>
+                    <option value="">Material a entregar...</option>
+                    {materialesInventario.filter((m) => m.activo).map((m) => <option key={m.id} value={m.id}>{m.material} · {m.stock} {m.unidad}</option>)}
+                  </select>
+                  <input type="number" min="0.001" step="any" value={cantidadEntrega} onChange={(e) => setCantidadEntrega(e.target.value)} placeholder="Cantidad" className="h-10 rounded-xl border border-border bg-card px-3 text-sm" required />
+                </div>
+                <div className="mt-3 flex gap-3">
+                  <input value={notasEntrega} onChange={(e) => setNotasEntrega(e.target.value)} placeholder="Lote, responsable, observación..." className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-card px-3 text-sm" />
+                  <button type="submit" disabled={guardandoEntrega} className="h-10 rounded-xl border border-gold/25 bg-gold/[.08] px-4 text-xs font-bold text-gold-deep disabled:opacity-50">{guardandoEntrega ? "Guardando…" : "Registrar entrega"}</button>
+                </div>
+              </form>
+            </div>
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <div className="border-b border-border bg-surface-sunken px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Últimas entregas</div>
+              <div className="divide-y divide-border">
+                {entregasProduccion.length ? entregasProduccion.slice(0, 6).map((entrega: any) => (
+                  <div key={entrega.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0"><p className="truncate text-xs font-semibold">{entrega.inventario?.material ?? "Material"}</p><p className="text-[10px] text-muted-foreground">{entrega.area_destino || "Producción"} · {new Date(entrega.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</p></div>
+                    <span className="shrink-0 text-xs font-bold tabular-nums">{entrega.cantidad} {entrega.unidad}</span>
+                  </div>
+                )) : <p className="px-4 py-6 text-center text-xs text-muted-foreground">Todavía no hay materiales entregados.</p>}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-6 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
