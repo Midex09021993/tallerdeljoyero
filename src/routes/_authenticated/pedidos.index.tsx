@@ -536,6 +536,7 @@ function PedidosPage() {
             <PedidoFormCampos
               form={form}
               onChange={setForm}
+              camposBloqueados={["cliente"]}
               ruta={ruta}
               onRutaChange={setRuta}
               sedeSelect={
