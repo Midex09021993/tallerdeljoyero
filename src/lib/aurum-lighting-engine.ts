@@ -26,6 +26,7 @@ export const AURUM_LIGHTING_RENDER_PRESETS={
   studioSoft:{key:.55,fill:.13,rim:.21,gem:.46,softbox:.88,strip:.54,front:.46,kicker:.56,edgeLeft:.50,edgeRight:.48},
   studioHard:{key:.46,fill:.05,rim:.28,gem:.12,softbox:.54,strip:.30,front:.14,kicker:.82,edgeLeft:.28,edgeRight:.34},
   jewelry:{key:.58,fill:.14,rim:.25,gem:.52,softbox:.90,strip:.58,front:.38,kicker:.62,edgeLeft:.46,edgeRight:.44},
+  ijewelReference:{key:.42,fill:.10,rim:.18,gem:.62,softbox:.92,strip:.72,front:.30,kicker:.52,edgeLeft:.34,edgeRight:.34},
   luxury:{key:.36,fill:.045,rim:.30,gem:.12,softbox:.42,strip:.22,front:.09,kicker:.82,edgeLeft:.20,edgeRight:.25},
 } as const;
 export type AurumLightingRenderPresetId=keyof typeof AURUM_LIGHTING_RENDER_PRESETS;
