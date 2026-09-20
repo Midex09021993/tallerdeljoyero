@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AREAS, areaCoincide } from "@/lib/auth";
-import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidos } from "@/lib/taller-db";
+import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidosSelector } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/monitor")({
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/monitor")({
 });
 
 function MonitorPage() {
-  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: pedidos = [], isLoading } = usePedidosSelector();
   const { data: sesion } = useSesion();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
     useSedeFiltroDueno();
