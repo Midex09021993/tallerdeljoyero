@@ -35,7 +35,7 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   // Reference presentation reconstructed from the supplied WebGi/iJewel VJSON.
   // The VJSON contains one scene object (not a scenes[] library): white background,
   // scene environment intensity 1, fixed environment direction and FOV 25.
-  ijewelReference:{id:"ijewelReference",background:0xe2e2e2,ground:0xe2e2e2,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:1,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"jewelry"}
+  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:1,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"ijewelReference"}
 };
 
 /** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */
