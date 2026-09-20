@@ -5,6 +5,7 @@ import {
   applyAurumOpticalProfile,
   applyAurumDiamondOptics,
   applyAurumReferenceGemOptics,
+  applyAurumReferenceMetalOptics,
   getAurumOpticalProfile,
   metalPresetFromConfig,
 } from "../aurum-material-engine";
@@ -198,6 +199,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   const selectedSlot=selectedMeta.matrixSlot;
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
+  applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
   let applied=0;
   model.traverse((x:any)=>{
     if(!x.isMesh)return;
