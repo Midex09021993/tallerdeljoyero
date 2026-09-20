@@ -1,0 +1,15 @@
+create table if not exists public.control_calidad (
+ id uuid primary key default gen_random_uuid(), orden_produccion_id uuid not null references public.ordenes_produccion(id) on delete cascade, trabajo_id uuid references public.trabajos(id) on delete set null, inspeccionado_por uuid not null, resultado text not null default 'pendiente', tipo text not null default 'inspeccion_final', descripcion text not null default '', motivo text not null default '', evidencia_url text, retrabajo_trabajo_id uuid references public.trabajos(id) on delete set null, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), constraint control_calidad_resultado_check check (resultado in ('pendiente','aprobado','observado','rechazado')), constraint control_calidad_tipo_check check (tipo in ('inspeccion_operacion','inspeccion_final','reinspeccion')), constraint control_calidad_retrabajo_check check ((resultado in ('observado','rechazado')) or retrabajo_trabajo_id is null));
+create index if not exists control_calidad_op_idx on public.control_calidad(orden_produccion_id, created_at desc);
+create index if not exists control_calidad_trabajo_idx on public.control_calidad(trabajo_id, created_at desc);
+alter table public.control_calidad enable row level security;
+drop policy if exists "calidad leer sede" on public.control_calidad;
+create policy "calidad leer sede" on public.control_calidad for select to authenticated using (exists (select 1 from public.ordenes_produccion op where op.id=orden_produccion_id and ve_sede(auth.uid(),op.sede_id)));
+drop policy if exists "calidad crear sede" on public.control_calidad;
+create policy "calidad crear sede" on public.control_calidad for insert to authenticated with check (exists (select 1 from public.ordenes_produccion op where op.id=orden_produccion_id and ve_sede(auth.uid(),op.sede_id)) and inspeccionado_por=auth.uid());
+drop policy if exists "calidad actualizar sede" on public.control_calidad;
+create policy "calidad actualizar sede" on public.control_calidad for update to authenticated using (exists (select 1 from public.ordenes_produccion op where op.id=orden_produccion_id and ve_sede(auth.uid(),op.sede_id))) with check (exists (select 1 from public.ordenes_produccion op where op.id=orden_produccion_id and ve_sede(auth.uid(),op.sede_id)));
+create or replace function public.touch_control_calidad() returns trigger language plpgsql set search_path='' as $$ begin new.updated_at=now(); return new; end; $$;
+drop trigger if exists trg_touch_control_calidad on public.control_calidad;
+create trigger trg_touch_control_calidad before update on public.control_calidad for each row execute function public.touch_control_calidad();
+revoke execute on function public.touch_control_calidad() from public,anon,authenticated;
