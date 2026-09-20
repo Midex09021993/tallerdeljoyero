@@ -904,6 +904,59 @@ export type Database = {
           },
         ]
       }
+      orden_produccion_costos: {
+        Row: {
+          cantidad: number
+          categoria: string
+          concepto: string
+          costo_unitario: number
+          created_at: string
+          id: string
+          importe: number
+          moneda: string
+          orden_produccion_id: string
+          origen: string
+          referencia_id: string | null
+          unidad: string
+        }
+        Insert: {
+          cantidad?: number
+          categoria: string
+          concepto: string
+          costo_unitario?: number
+          created_at?: string
+          id?: string
+          importe?: number
+          moneda?: string
+          orden_produccion_id: string
+          origen?: string
+          referencia_id?: string | null
+          unidad?: string
+        }
+        Update: {
+          cantidad?: number
+          categoria?: string
+          concepto?: string
+          costo_unitario?: number
+          created_at?: string
+          id?: string
+          importe?: number
+          moneda?: string
+          orden_produccion_id?: string
+          origen?: string
+          referencia_id?: string | null
+          unidad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orden_produccion_costos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orden_produccion_entregas: {
         Row: {
           area_destino: string
@@ -953,6 +1006,74 @@ export type Database = {
             foreignKeyName: "orden_produccion_entregas_orden_produccion_id_fkey"
             columns: ["orden_produccion_id"]
             isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orden_produccion_resumen_costos: {
+        Row: {
+          calculado_at: string
+          calculado_por: string | null
+          costo_ajustes: number
+          costo_estimado: number
+          costo_externo: number
+          costo_indirecto: number
+          costo_mano_obra: number
+          costo_materiales: number
+          costo_real: number
+          created_at: string
+          id: string
+          margen: number
+          margen_porcentaje: number | null
+          moneda: string
+          orden_produccion_id: string
+          updated_at: string
+          venta: number
+        }
+        Insert: {
+          calculado_at?: string
+          calculado_por?: string | null
+          costo_ajustes?: number
+          costo_estimado?: number
+          costo_externo?: number
+          costo_indirecto?: number
+          costo_mano_obra?: number
+          costo_materiales?: number
+          costo_real?: number
+          created_at?: string
+          id?: string
+          margen?: number
+          margen_porcentaje?: number | null
+          moneda?: string
+          orden_produccion_id: string
+          updated_at?: string
+          venta?: number
+        }
+        Update: {
+          calculado_at?: string
+          calculado_por?: string | null
+          costo_ajustes?: number
+          costo_estimado?: number
+          costo_externo?: number
+          costo_indirecto?: number
+          costo_mano_obra?: number
+          costo_materiales?: number
+          costo_real?: number
+          created_at?: string
+          id?: string
+          margen?: number
+          margen_porcentaje?: number | null
+          moneda?: string
+          orden_produccion_id?: string
+          updated_at?: string
+          venta?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orden_produccion_resumen_costos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: true
             referencedRelation: "ordenes_produccion"
             referencedColumns: ["id"]
           },
@@ -1973,6 +2094,56 @@ export type Database = {
           },
         ]
       }
+      tarifas_mano_obra: {
+        Row: {
+          activo: boolean
+          area: string
+          created_at: string
+          id: string
+          moneda: string
+          notas: string
+          sede_id: string | null
+          tarifa_hora: number
+          usuario_id: string | null
+          vigente_desde: string
+          vigente_hasta: string | null
+        }
+        Insert: {
+          activo?: boolean
+          area?: string
+          created_at?: string
+          id?: string
+          moneda?: string
+          notas?: string
+          sede_id?: string | null
+          tarifa_hora: number
+          usuario_id?: string | null
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Update: {
+          activo?: boolean
+          area?: string
+          created_at?: string
+          id?: string
+          moneda?: string
+          notas?: string
+          sede_id?: string | null
+          tarifa_hora?: number
+          usuario_id?: string | null
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarifas_mano_obra_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trabajo_archivos: {
         Row: {
           creado_por: string | null
@@ -2298,6 +2469,7 @@ export type Database = {
           reinicia_flujo: boolean
         }[]
       }
+      recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       security_scanner_bola_lab_lookup: {
         Args: { target_id: string }
         Returns: {
