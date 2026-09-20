@@ -34,6 +34,21 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   gemaClara:{id:"gemaClara",background:0xf0f3f5,ground:0xe5eaee,groundRoughness:.48,groundMetalness:.01,groundVisible:true,environmentIntensity:.42,environmentRotation:.08,shadowIntensity:.13,shadowSoftness:.985,exposure:.66,lighting:"jewelry"}
 };
 
+/** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */
+export const AURUM_IJEWEL_REFERENCE_CALIBRATION = {
+  version: "0.22.0",
+  camera: { fov: 25, damping: 0.08, zoomSpeed: 0.15, rotateSpeed: 2 },
+  tonemap: { exposure: 1, saturation: 1, contrast: 1.1 },
+  progressive: { referenceFrameCount: 10, highQualityFrameCount: 32, jitter: true },
+  ssr: { intensity: 1, power: 1.1, stepCount: 16, tolerance: 0.5 },
+  ssao: { intensity: 0.25, worldRadius: 1, bias: 0.001, falloff: 1.3 },
+  taa: { feedback: [0.88, 0.97] as [number, number] },
+  bloom: { threshold: 2, softThreshold: 0.5, intensity: 0.2, iterations: 4, radius: 0.6 },
+  ground: { bakedShadows: true, reflection: false, physicalReflections: false },
+  diamond: { environmentIntensity: 1.3, dispersion: 0.01, reflectivity: 0.5, rayBounces: 5, referenceIOR: 2.6, physicalIOR: 2.417 },
+  disabledInReference: ["SSGI","DepthOfField","SSContactShadows","SSBevel","ReliefParallax","VelocityBuffer"] as const,
+} as const;
+
 export type AurumHdriResource = {
   id:string;
   name:string;
