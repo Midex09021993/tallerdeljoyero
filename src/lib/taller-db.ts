@@ -1422,6 +1422,7 @@ export function useMoverPedido() {
         area_origen: areaActual,
         area_destino: destino,
         accion: direccion,
+        nota: "",
         usuario_id: usuarioId,
       });
       return { pedido, destino, estado, area_desde: ahora };
