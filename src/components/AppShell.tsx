@@ -234,7 +234,7 @@ export function AppShell({
           </div>
           {acciones ? (
             <div
-              className={`flex w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:flex-wrap lg:gap-4 ${
+              className={`flex w-full gap-2 max-lg:overflow-x-auto overflow-visible pb-1 lg:w-auto lg:flex-wrap lg:gap-4 ${
                 encabezadoMovilCompacto ? "max-lg:hidden" : ""
               } ${ocultarAccionesCelular ? "max-sm:hidden" : ""}`}
             >
