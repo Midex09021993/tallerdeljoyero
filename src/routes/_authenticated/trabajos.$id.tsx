@@ -201,6 +201,20 @@ function TrabajoOperativoPage() {
     },
   });
 
+  const { data: materialesPlanificados = [] } = useQuery({
+    queryKey: ["pedido-materiales-trabajo", trabajo?.pedido_id],
+    enabled: Boolean(trabajo?.pedido_id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedido_materiales")
+        .select("id,cantidad_planificada,unidad,notas,inventario(material,codigo,unidad)")
+        .eq("pedido_id", trabajo!.pedido_id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: archivosPedido = [] } = useQuery({
     queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id],
     enabled: Boolean(trabajo?.pedido_id && (sesion?.esAdmin || trabajo?.responsable_user_id === sesion?.user.id)),
@@ -264,16 +278,17 @@ function TrabajoOperativoPage() {
               <h2 className="mt-1 text-lg font-semibold">{pedidoTrabajo?.referencia ?? "Pedido"}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {pedidoTrabajo?.trabajo || "Trabajo sin descripción"}
-                {pedidoTrabajo?.cliente ? ` · ${pedidoTrabajo.cliente}` : ""}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: undefined } })}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
-            >
-              Ver pedido
-            </button>
+            {sesion?.esAdmin ? (
+              <button
+                type="button"
+                onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: undefined } })}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
+              >
+                Ver pedido
+              </button>
+            ) : null}
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
             {[
@@ -289,6 +304,82 @@ function TrabajoOperativoPage() {
               </div>
             ))}
           </dl>
+        </section>
+
+        <section className="rounded-3xl border-2 border-gold/30 bg-gradient-to-br from-card to-gold/[0.04] p-5 shadow-raised">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">Ficha técnica de fabricación</p>
+              <h2 className="mt-1 text-xl font-semibold">Qué se debe fabricar</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Información técnica necesaria para ejecutar este trabajo. Los datos comerciales no forman parte de esta ficha.</p>
+            </div>
+            <span className="rounded-full border border-gold/20 bg-gold/[0.08] px-3 py-1.5 text-[10px] font-bold text-gold-deep">{trabajo.area}</span>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["Trabajo", pedidoTrabajo?.trabajo || trabajo.titulo || "—"],
+              ["Material / metal", pedidoTrabajo?.material || "—"],
+              ["Talla", pedidoTrabajo?.talla || "—"],
+              ["Piedras", pedidoTrabajo?.piedras || "—"],
+              ["Peso estimado", pedidoTrabajo?.peso_estimado || "—"],
+              ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
+              ["Entrega", pedidoTrabajo?.fecha_entrega || "—"],
+              ["Referencia", pedidoTrabajo?.referencia || "—"],
+            ].map(([etiqueta, valor]) => (
+              <div key={etiqueta} className="rounded-2xl border border-border bg-background p-4">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
+                <p className="mt-1 text-sm font-semibold">{valor}</p>
+              </div>
+            ))}
+          </div>
+
+          {pedidoTrabajo?.notas ? (
+            <div className="mt-4 rounded-2xl border border-border bg-background p-4">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Especificaciones / notas</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{pedidoTrabajo.notas}</p>
+            </div>
+          ) : null}
+
+          {Array.isArray(pedidoTrabajo?.ruta) && pedidoTrabajo.ruta.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Ruta de producción</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {pedidoTrabajo.ruta.map((area) => (
+                  <span key={area} className={area === trabajo.area ? "rounded-full bg-gold px-3 py-1.5 text-[10px] font-bold text-gold-foreground" : "rounded-full bg-surface-muted px-3 py-1.5 text-[10px] font-semibold text-muted-foreground"}>
+                    {area}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {materialesPlanificados.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Materiales previstos para este trabajo</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {materialesPlanificados.map((item: any) => (
+                  <div key={item.id} className="rounded-2xl border border-border bg-background p-3">
+                    <p className="text-sm font-semibold">{item.inventario?.material || "Material"}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.cantidad_planificada} {item.unidad || item.inventario?.unidad || ""}{item.inventario?.codigo ? ` · ${item.inventario.codigo}` : ""}</p>
+                    {item.notas ? <p className="mt-1 text-xs text-muted-foreground">{item.notas}</p> : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {trabajo.area === "Corte Láser" && (pedidoTrabajo?.corte_texto || pedidoTrabajo?.corte_tipografia || pedidoTrabajo?.corte_ubicacion || pedidoTrabajo?.corte_observaciones) ? (
+            <div className="mt-4 rounded-2xl border border-border bg-background p-4">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Especificaciones de Corte Láser</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm">
+                <p><span className="font-semibold">Texto:</span> {pedidoTrabajo.corte_texto || "—"}</p>
+                <p><span className="font-semibold">Tipografía:</span> {pedidoTrabajo.corte_tipografia || "—"}</p>
+                <p><span className="font-semibold">Ubicación:</span> {pedidoTrabajo.corte_ubicacion || "—"}</p>
+                <p className="sm:col-span-2"><span className="font-semibold">Observaciones:</span> {pedidoTrabajo.corte_observaciones || "—"}</p>
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className="rounded-2xl border border-gold/25 bg-card p-5 shadow-raised">
