@@ -11,6 +11,8 @@ export const pedidoFormVacio = {
   telefono: "",
   origen: "",
   contrato: "",
+  cotizacion_externa: "",
+  contrato_externo: "",
   trabajo: "",
   material: "",
   peso_estimado: "",
