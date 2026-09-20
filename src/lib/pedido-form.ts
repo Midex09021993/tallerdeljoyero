@@ -6,6 +6,7 @@ export const RUTA_AREAS_PEDIDO = AREAS.filter(
 
 export const pedidoFormVacio = {
   cliente: "",
+  cliente_id: "",
   telefono: "",
   origen: "",
   contrato: "",
