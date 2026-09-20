@@ -78,7 +78,8 @@ function Inicio() {
       return [
         { to: "/clientes", label: "Clientes", icono: Users, subtitulo: "Cartera y fichas" },
         { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, subtitulo: "Propuestas comerciales" },
-        { to: "/pedidos", label: "Pedidos", icono: PackageCheck, subtitulo: "Seguimiento central" },
+        { to: "/pedidos-2", label: "Pedidos 2", icono: PackageCheck, subtitulo: "Centro operativo" },
+        { to: "/pedidos", label: "Pedidos anterior", icono: ClipboardList, subtitulo: "Seguimiento legado" },
         { to: "/inventario", label: "Inventario", icono: Boxes, subtitulo: "Stock y movimientos" },
         { to: "/ventas", label: "Ventas", icono: PackageCheck, subtitulo: "Ventas y entregas" },
         { to: "/gestion", label: "Gestión", icono: Wrench, subtitulo: "Administración del taller" },
