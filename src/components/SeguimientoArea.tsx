@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Panel } from "@/components/AppShell";
 import { fmtFecha } from "@/lib/utils";
 import { areaCoincide, useSesion } from "@/lib/auth";
-import { usePedidos } from "@/lib/taller-db";
+import { usePedidosSelector } from "@/lib/taller-db";
 
 /**
  * Seguimiento general para las pantallas de área (mismo formato que Pedidos:
@@ -14,7 +14,7 @@ import { usePedidos } from "@/lib/taller-db";
  */
 export function SeguimientoArea({ area }: { area: string }) {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [] } = usePedidos();
+  const { data: pedidos = [] } = usePedidosSelector();
   const navigate = useNavigate();
   const [busca, setBusca] = useState("");
 
