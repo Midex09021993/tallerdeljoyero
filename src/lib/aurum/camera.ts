@@ -56,6 +56,7 @@ export function applyAurumIJEWELPresentationCamera(
   const distance = 10;
   camera.fov = 25;
   camera.up.set(0, 1, 0);
+  if (model) target.set(0,0,0);
   controls.target.copy(target);
   camera.position.copy(target).add(direction.multiplyScalar(distance));
   camera.lookAt(target);
