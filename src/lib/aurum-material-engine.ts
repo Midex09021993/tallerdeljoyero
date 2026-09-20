@@ -381,6 +381,13 @@ export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:n
 
 /** iJewel/WebGi metal references extracted from the supplied GLB scene. */
 export const AURUM_IJEWEL_METAL_REFERENCES = {
+  whiteGold: {
+    sourceRootPath: "1_metal_whitegold_polished_0db3fb834b.pmat",
+    baseColorFactor: [0.5394794890033748, 0.5394794890033748, 0.5457244613615395],
+    roughness: 0,
+    ior: 1.5,
+    environmentIntensity: 1,
+  },
   redGold: {
     sourceRootPath: "2_metal_redgold_polished_448aec7bd1.pmat",
     baseColorFactor: [0.5058823529411764, 0.23529411764705882, 0.12156862745098039],
@@ -412,7 +419,7 @@ export const AURUM_IJEWEL_METAL_REFERENCES = {
 export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
   if(!material) return material;
   const id=String(materialId??"").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
-  const ref=id.includes("redgold")||id.includes("red-gold")||id.includes("oro-rojo")||id.includes("oro_rojo")
+  const ref=id.includes("whitegold")||id.includes("white-gold")||id.includes("white_gold")||id.includes("oro-blanco")||id.includes("oro_blanco") ? AURUM_IJEWEL_METAL_REFERENCES.whiteGold : id.includes("redgold")||id.includes("red-gold")||id.includes("oro-rojo")||id.includes("oro_rojo")
     ? AURUM_IJEWEL_METAL_REFERENCES.redGold
     : id.includes("rosegold")||id.includes("rose-gold")||id.includes("rose_gold")||id.includes("oro-rosa")||id.includes("oro_rosa")
       ? AURUM_IJEWEL_METAL_REFERENCES.roseGold
