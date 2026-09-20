@@ -105,7 +105,7 @@ export async function createAurumPostPipeline(
     );
     ssaoPass.kernelRadius=Math.max(.01,config.radius??.20);
     ssaoPass.minDistance=Math.max(.001,config.bias??.018);
-    ssaoPass.maxDistance=Math.max(.02,ssaoPass.kernelRadius*2.5);
+    ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
     ssaoPass.output=(SSAOPass as any).OUTPUT.Default;
     ssaoPass.aoClamp=Math.max(0,Math.min(1,config.ssaoIntensity??config.intensity??.12));
     composer.addPass(ssaoPass);
@@ -224,6 +224,7 @@ export async function createAurumPostPipeline(
         Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
       );
       ssaoPass.aoClamp=Math.max(0,Math.min(1,(config.ssaoIntensity??.12)*(ultra?.92:.82)));
+      ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
     }
     if(bloomPass){
       bloomPass.enabled=Boolean(config.bloom) && high;
