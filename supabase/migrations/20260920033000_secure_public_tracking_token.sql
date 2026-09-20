@@ -6,7 +6,7 @@ create unique index if not exists pedido_comercial_seguimiento_token_uidx
 
 drop function if exists public.seguimiento_pedido(text);
 
-create function public.seguimiento_pedido(_token text)
+create function public.seguimiento_pedido(_ref text)
 returns table (
   referencia text,
   trabajo text,
@@ -46,7 +46,7 @@ as $$
   from public.pedido_comercial pc
   join public.pedidos p on p.id = pc.pedido_id
   left join public.sedes s on s.id = p.sede_id
-  where pc.seguimiento_token::text = lower(trim(_token))
+  where pc.seguimiento_token::text = lower(trim(_ref))
   limit 1;
 $$;
 
