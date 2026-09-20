@@ -1469,6 +1469,111 @@ function FichaPedido() {
             )}
           </Seccion></div>
 
+          <Seccion titulo="Documentación comercial">
+            <div className="space-y-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-gold/20 bg-surface-sunken p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Cotización</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {tieneCotizacion ? "Vinculada a Aurum Lab" : tieneCotizacionExterna ? "Documento externo" : "Pendiente"}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-gold/20 bg-gold/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-gold-deep">
+                      {tieneCotizacion ? "Aurum" : tieneCotizacionExterna ? "Externa" : "Pendiente"}
+                    </span>
+                  </div>
+                  {contextoComercial?.cotizacion ? (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      {contextoComercial.cotizacion.numero} · v{contextoComercial.cotizacion.version} · {contextoComercial.cotizacion.estado}
+                    </p>
+                  ) : documentosExternos.cotizacion ? (
+                    <p className="mt-3 break-all text-xs text-muted-foreground">{documentosExternos.cotizacion}</p>
+                  ) : (
+                    <p className="mt-3 text-xs text-muted-foreground">Este pedido puede continuar aunque la cotización todavía no esté formalizada.</p>
+                  )}
+                  {!tieneCotizacion && puedeEditar ? (
+                    <label className="mt-3 inline-flex cursor-pointer items-center rounded-xl border border-gold/25 bg-card px-3 py-2 text-xs font-semibold text-gold-deep transition hover:border-gold/50">
+                      Adjuntar cotización
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) subir.mutate({ file, tipo: "cotizacion", grupo: "cotizacion" });
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  ) : null}
+                </div>
+
+                <div className="rounded-2xl border border-gold/20 bg-surface-sunken p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Contrato</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {contratoRef ? "Vinculado a Aurum Lab" : tieneContratoExterno ? "Documento externo" : "Pendiente"}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-gold/20 bg-gold/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-gold-deep">
+                      {contratoRef ? "Aurum" : tieneContratoExterno ? "Externo" : "Pendiente"}
+                    </span>
+                  </div>
+                  {contratoRef ? (
+                    <p className="mt-3 text-xs text-muted-foreground">Contrato {pedido.contrato || contratoRef}</p>
+                  ) : documentosExternos.contrato ? (
+                    <p className="mt-3 break-all text-xs text-muted-foreground">{documentosExternos.contrato}</p>
+                  ) : (
+                    <p className="mt-3 text-xs text-muted-foreground">Puedes conservar el contrato propio del taller y formalizarlo después.</p>
+                  )}
+                  {!contratoRef && puedeEditar ? (
+                    <label className="mt-3 inline-flex cursor-pointer items-center rounded-xl border border-gold/25 bg-card px-3 py-2 text-xs font-semibold text-gold-deep transition hover:border-gold/50">
+                      Adjuntar contrato
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) subir.mutate({ file, tipo: "contrato", grupo: "contrato" });
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Documentos conservados del taller</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Los documentos externos permanecen dentro del pedido durante la transición a Aurum Lab.
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-border bg-surface-sunken px-2.5 py-1 text-[9px] font-semibold text-muted-foreground">
+                    {archivos.filter((a) => a.tipo === "cotizacion" || a.tipo === "contrato").length} documentos
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {archivos.filter((a) => a.tipo === "cotizacion" || a.tipo === "contrato").map((a) => (
+                    <div key={a.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-sunken p-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-foreground">{a.nombre}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{a.tipo} · v{a.version}</p>
+                      </div>
+                      <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-semibold text-info hover:underline">Abrir</a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Seccion>
+
           <Seccion titulo="Referencias del diseño">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {VISTAS.map((vista) => {
