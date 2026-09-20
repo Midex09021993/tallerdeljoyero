@@ -1345,29 +1345,41 @@ export type Database = {
         Row: {
           created_at: string
           es_enlace: boolean
+          es_vigente_fabricacion: boolean
+          grupo: string
           id: string
           nombre: string
           pedido_id: string
+          poster: string | null
           tipo: string
           url: string
+          version: number
         }
         Insert: {
           created_at?: string
           es_enlace?: boolean
+          es_vigente_fabricacion?: boolean
+          grupo?: string
           id?: string
           nombre?: string
           pedido_id: string
+          poster?: string | null
           tipo?: string
           url: string
+          version?: number
         }
         Update: {
           created_at?: string
           es_enlace?: boolean
+          es_vigente_fabricacion?: boolean
+          grupo?: string
           id?: string
           nombre?: string
           pedido_id?: string
+          poster?: string | null
           tipo?: string
           url?: string
+          version?: number
         }
         Relationships: [
           {
