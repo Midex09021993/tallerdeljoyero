@@ -1,5 +1,5 @@
 import type { Object3D, PerspectiveCamera, Vector3 } from "three";
-import { applyAurumCameraView } from "./camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "./camera";
 
 export interface AurumViewerFrame {
   camera: PerspectiveCamera;
@@ -44,7 +44,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     }
     applyScene(sceneId);
     model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
-    applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+    if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
 
     // AurumRender actualiza el estado de vista al cargar. Ese estado puede
     // intentar aplicar "perspectiva" inmediatamente después del encuadre.
