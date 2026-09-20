@@ -464,9 +464,26 @@ export function AurumRender() {
         // Presentación inicial determinista: producto + studioSoft + framing.
         // iJewel separates scene, camera and material configuration; Aurum does
         // the same at load time so the user sees a finished product preview.
-        const presetProducto = sceneController.apply("producto");
-        lightingController.applyPreset(presetProducto.lighting);
-        calibrarReflejosMetalEscena(getAurumPhotographicProfile("producto"));
+        const presetInicialModelo = sceneController.apply("ijewelReference");
+        lightingController.applyPreset(presetInicialModelo.lighting);
+        const photoInicialModelo = getAurumPhotographicProfile("ijewelReference");
+        calibrarReflejosMetalEscena(photoInicialModelo);
+        Object.assign(postRuntimeConfig, {
+          ssao: photoInicialModelo.post.ssao,
+          ssaoIntensity: photoInicialModelo.post.ssaoIntensity,
+          bloom: photoInicialModelo.post.bloom,
+          bloomIntensity: photoInicialModelo.post.bloomIntensity,
+          bloomThreshold: photoInicialModelo.post.bloomThreshold,
+          lut: photoInicialModelo.post.lut,
+          lutIntensity: photoInicialModelo.post.lutIntensity,
+          taa: photoInicialModelo.post.taa,
+          dof: photoInicialModelo.post.dof,
+          vignette: photoInicialModelo.post.vignette,
+          vignetteDarkness: photoInicialModelo.post.vignetteDarkness,
+          radius: 1,
+          bias: 0.001,
+        });
+        applyPostQuality?.(renderQuality);
         encuadrar();
         setVista("perspectiva");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
