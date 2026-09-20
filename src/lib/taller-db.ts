@@ -6,6 +6,8 @@ import { normalizarArea } from "@/lib/auth";
 import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
 
 type PedidoUpdate = Database["public"]["Tables"]["pedidos"]["Update"];
+type PedidoComercialInsert = Database["public"]["Tables"]["pedido_comercial"]["Insert"];
+type PedidoComercialUpdate = Database["public"]["Tables"]["pedido_comercial"]["Update"];
 type ContratoInsert = Database["public"]["Tables"]["contratos"]["Insert"];
 type PagoContratoInsert = Database["public"]["Tables"]["contrato_pagos"]["Insert"];
 
@@ -488,13 +490,10 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, importe, sede_id, telefono, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, cotizacion_detalles, especificaciones_comerciales, trabajo, a_cuenta, saldo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
+  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
-const CAMPOS_PEDIDO_VENTAS =
-  "ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas";
-
-const CAMPOS_PEDIDO = `${CAMPOS_PEDIDO_BASE}, ${CAMPOS_PEDIDO_VENTAS}, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at`;
-
+const CAMPOS_PEDIDO_COMERCIAL =
+  "pedido_id, telefono, importe, a_cuenta, saldo, cotizacion_detalles, especificaciones_comerciales, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at";
 function esErrorCampoFaltante(error: { message?: string; code?: string }) {
   const mensaje = (error.message ?? "").toLowerCase();
   return (
@@ -556,115 +555,115 @@ export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
     queryFn: async (): Promise<Pedido[]> => {
-      const respuesta = await supabase
-        .from("pedidos")
-        .select(CAMPOS_PEDIDO)
-        .order("created_at", { ascending: false });
+      const [{ data: pedidosData, error: pedidosError }, { data: comercialesData, error: comercialesError }] =
+        await Promise.all([
+          supabase.from("pedidos").select(CAMPOS_PEDIDO_BASE).order("created_at", { ascending: false }),
+          supabase.from("pedido_comercial").select(CAMPOS_PEDIDO_COMERCIAL),
+        ]);
+      if (pedidosError) throw pedidosError;
+      if (comercialesError && !esErrorCampoFaltante(comercialesError)) throw comercialesError;
 
-      const camposBaseCompat =
-        "id, referencia, pieza, cliente, material, estado, entrega, importe, a_cuenta, saldo, sede_id, telefono, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+      const comercialesPorPedido = new Map(
+        ((comercialesData ?? []) as Array<Record<string, unknown>>).map((comercial) => [
+          textoCampo(comercial, "pedido_id"), comercial,
+        ]),
+      );
 
-      const respuestaContratos =
-        respuesta.error && esErrorCampoFaltante(respuesta.error)
-          ? await supabase
-              .from("pedidos")
-              .select(`${camposBaseCompat}, ${CAMPOS_PEDIDO_VENTAS}`)
-              .order("created_at", { ascending: false })
-          : respuesta;
-
-      const respuestaVentas =
-        respuestaContratos.error && esErrorCampoFaltante(respuestaContratos.error)
-          ? await supabase
-              .from("pedidos")
-              .select(`${camposBaseCompat}, ${CAMPOS_PEDIDO_VENTAS}`)
-              .order("created_at", { ascending: false })
-          : respuestaContratos;
-
-      const { data, error } =
-        respuestaVentas.error && esErrorCampoFaltante(respuestaVentas.error)
-          ? await supabase
-              .from("pedidos")
-              .select(camposBaseCompat)
-              .order("created_at", { ascending: false })
-          : respuestaVentas;
-
-      if (error) throw error;
-      return ((data ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...p }) => ({
-        ...p,
-        id: textoCampo(p, "id"),
-        referencia: textoCampo(p, "referencia"),
-        pieza: textoCampo(p, "pieza"),
-        cliente: textoCampo(p, "cliente"),
-        cliente_id: typeof p["cliente_id"] === "string" ? p["cliente_id"] : null,
-        material: textoCampo(p, "material"),
-        estado: normalizarEstadoPedido(
-          textoCampo(p, "estado"),
-          textoCampo(p, "area_actual", "Pedidos"),
-        ),
-        entrega: textoCampo(p, "entrega"),
-        importe: Number(p["importe"]) || 0,
-        a_cuenta: Number(p["a_cuenta"]) || 0,
-        saldo: Number(p["saldo"]) || 0,
-        sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
-        sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
-        telefono: textoCampo(p, "telefono"),
-        origen: textoCampo(p, "origen"),
-        contrato: textoCampo(p, "contrato"),
-        contrato_id: typeof p["contrato_id"] === "string" ? p["contrato_id"] : null,
-        cotizacion_id: typeof p["cotizacion_id"] === "string" ? p["cotizacion_id"] : null,
-        proyecto_joya_id: typeof p["proyecto_joya_id"] === "string" ? p["proyecto_joya_id"] : null,
-        cotizacion_detalles: (p["cotizacion_detalles"] as Json) ?? [],
-        especificaciones_comerciales: (p["especificaciones_comerciales"] as Json) ?? {},
-        trabajo: textoCampo(p, "trabajo"),
-        fecha_ingreso: textoCampo(p, "fecha_ingreso"),
-        fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
-        area_actual: areaOperativa(textoCampo(p, "area_actual", "Pedidos")),
-        ruta: Array.isArray(p["ruta"])
-          ? p["ruta"]
-              .filter((area) => typeof area === "string")
-              .map(areaOperativa)
-              .filter((area) => area !== "Pedidos" && area !== "Área ventas")
-          : [],
-        area_desde: textoCampo(
-          p,
-          "area_desde",
-          textoCampo(p, "fecha_ingreso", new Date().toISOString()),
-        ),
-        notas: textoCampo(p, "notas"),
-        talla: textoCampo(p, "talla"),
-        cantidad_piezas: Number(p["cantidad_piezas"]) || 1,
-        piedras: textoCampo(p, "piedras"),
-        peso_estimado: textoCampo(p, "peso_estimado"),
-        corte_texto: textoCampo(p, "corte_texto"),
-        corte_tipografia: textoCampo(p, "corte_tipografia"),
-        corte_ubicacion: textoCampo(p, "corte_ubicacion"),
-        corte_observaciones: textoCampo(p, "corte_observaciones"),
-        ventas_estado: normalizarEstadoVentas(textoCampo(p, "ventas_estado")),
-        packing_estado: textoCampo(p, "packing_estado", "Pendiente"),
-        medio_envio: textoCampo(p, "medio_envio"),
-        guia_envio: textoCampo(p, "guia_envio"),
-        fecha_envio: typeof p["fecha_envio"] === "string" ? p["fecha_envio"] : null,
-        fecha_entregado: typeof p["fecha_entregado"] === "string" ? p["fecha_entregado"] : null,
-        fecha_listo_entrega:
-          typeof p["fecha_listo_entrega"] === "string" ? p["fecha_listo_entrega"] : null,
-        listo_entrega_observaciones: textoCampo(p, "listo_entrega_observaciones"),
-        receptor_envio: textoCampo(p, "receptor_envio"),
-        notas_ventas: textoCampo(p, "notas_ventas"),
-        notas_envio: textoCampo(p, "notas_envio"),
-        notas_entrega: textoCampo(p, "notas_entrega"),
-        usuario_listo_entrega:
-          typeof p["usuario_listo_entrega"] === "string" ? p["usuario_listo_entrega"] : null,
-        usuario_envio: typeof p["usuario_envio"] === "string" ? p["usuario_envio"] : null,
-        usuario_entrega: typeof p["usuario_entrega"] === "string" ? p["usuario_entrega"] : null,
-        ventas_actualizado_por:
-          typeof p["ventas_actualizado_por"] === "string" ? p["ventas_actualizado_por"] : null,
-        ventas_actualizado_en:
-          typeof p["ventas_actualizado_en"] === "string" ? p["ventas_actualizado_en"] : null,
-        enviado_at: typeof p["enviado_at"] === "string" ? p["enviado_at"] : null,
-        entregado_at: typeof p["entregado_at"] === "string" ? p["entregado_at"] : null,
-      }));
+      return ((pedidosData ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...p }) => {
+        const comercial = comercialesPorPedido.get(textoCampo(p, "id")) ?? {};
+        return {
+          ...p,
+          id: textoCampo(p, "id"),
+          referencia: textoCampo(p, "referencia"),
+          pieza: textoCampo(p, "pieza"),
+          cliente: textoCampo(p, "cliente"),
+          cliente_id: typeof p["cliente_id"] === "string" ? p["cliente_id"] : null,
+          material: textoCampo(p, "material"),
+          estado: normalizarEstadoPedido(textoCampo(p, "estado"), textoCampo(p, "area_actual", "Pedidos")),
+          entrega: textoCampo(p, "entrega"),
+          importe: Number(comercial["importe"]) || 0,
+          a_cuenta: Number(comercial["a_cuenta"]) || 0,
+          saldo: Number(comercial["saldo"]) || 0,
+          sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
+          sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
+          telefono: textoCampo(comercial, "telefono"),
+          origen: textoCampo(p, "origen"),
+          contrato: textoCampo(p, "contrato"),
+          contrato_id: typeof p["contrato_id"] === "string" ? p["contrato_id"] : null,
+          cotizacion_id: typeof p["cotizacion_id"] === "string" ? p["cotizacion_id"] : null,
+          proyecto_joya_id: typeof p["proyecto_joya_id"] === "string" ? p["proyecto_joya_id"] : null,
+          cotizacion_detalles: (comercial["cotizacion_detalles"] as Json) ?? [],
+          especificaciones_comerciales: (comercial["especificaciones_comerciales"] as Json) ?? {},
+          trabajo: textoCampo(p, "trabajo"),
+          fecha_ingreso: textoCampo(p, "fecha_ingreso"),
+          fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
+          area_actual: areaOperativa(textoCampo(p, "area_actual", "Pedidos")),
+          ruta: Array.isArray(p["ruta"]) ? p["ruta"].filter((area) => typeof area === "string").map(areaOperativa).filter((area) => area !== "Pedidos" && area !== "Área ventas") : [],
+          area_desde: textoCampo(p, "area_desde", textoCampo(p, "fecha_ingreso", new Date().toISOString())),
+          notas: textoCampo(p, "notas"),
+          talla: textoCampo(p, "talla"),
+          cantidad_piezas: Number(p["cantidad_piezas"]) || 1,
+          piedras: textoCampo(p, "piedras"),
+          peso_estimado: textoCampo(p, "peso_estimado"),
+          corte_texto: textoCampo(p, "corte_texto"),
+          corte_tipografia: textoCampo(p, "corte_tipografia"),
+          corte_ubicacion: textoCampo(p, "corte_ubicacion"),
+          corte_observaciones: textoCampo(p, "corte_observaciones"),
+          ventas_estado: normalizarEstadoVentas(textoCampo(comercial, "ventas_estado")),
+          packing_estado: textoCampo(comercial, "packing_estado", "Pendiente"),
+          medio_envio: textoCampo(comercial, "medio_envio"),
+          guia_envio: textoCampo(comercial, "guia_envio"),
+          fecha_envio: typeof comercial["fecha_envio"] === "string" ? comercial["fecha_envio"] : null,
+          fecha_entregado: typeof comercial["fecha_entregado"] === "string" ? comercial["fecha_entregado"] : null,
+          fecha_listo_entrega: typeof comercial["fecha_listo_entrega"] === "string" ? comercial["fecha_listo_entrega"] : null,
+          listo_entrega_observaciones: textoCampo(comercial, "listo_entrega_observaciones"),
+          receptor_envio: textoCampo(comercial, "receptor_envio"),
+          notas_ventas: textoCampo(comercial, "notas_ventas"),
+          notas_envio: textoCampo(comercial, "notas_envio"),
+          notas_entrega: textoCampo(comercial, "notas_entrega"),
+          usuario_listo_entrega: typeof comercial["usuario_listo_entrega"] === "string" ? comercial["usuario_listo_entrega"] : null,
+          usuario_envio: typeof comercial["usuario_envio"] === "string" ? comercial["usuario_envio"] : null,
+          usuario_entrega: typeof comercial["usuario_entrega"] === "string" ? comercial["usuario_entrega"] : null,
+          ventas_actualizado_por: typeof comercial["ventas_actualizado_por"] === "string" ? comercial["ventas_actualizado_por"] : null,
+          ventas_actualizado_en: typeof comercial["ventas_actualizado_en"] === "string" ? comercial["ventas_actualizado_en"] : null,
+          enviado_at: typeof comercial["enviado_at"] === "string" ? comercial["enviado_at"] : null,
+          entregado_at: typeof comercial["entregado_at"] === "string" ? comercial["entregado_at"] : null,
+        };
+      });
     },
   });
+}
+
+
+function separarDatosComerciales(cambios: Partial<PedidoNuevo>) {
+  const campos = new Set([
+    "telefono", "importe", "a_cuenta", "saldo", "cotizacion_detalles", "especificaciones_comerciales",
+    "ventas_estado", "packing_estado", "medio_envio", "guia_envio", "fecha_envio", "fecha_entregado",
+    "receptor_envio", "notas_ventas", "fecha_listo_entrega", "listo_entrega_observaciones", "notas_envio",
+    "notas_entrega", "usuario_listo_entrega", "usuario_envio", "usuario_entrega", "ventas_actualizado_por",
+    "ventas_actualizado_en", "enviado_at", "entregado_at",
+  ]);
+  const comercial: PedidoComercialUpdate = {};
+  const pedido: Record<string, unknown> = { ...cambios };
+  let tieneComerciales = false;
+  for (const campo of campos) {
+    if (Object.prototype.hasOwnProperty.call(cambios, campo)) {
+      (comercial as Record<string, unknown>)[campo] = (cambios as Record<string, unknown>)[campo];
+      delete pedido[campo];
+      tieneComerciales = true;
+    }
+  }
+  return { pedido: pedido as Partial<PedidoNuevo>, comercial, tieneComerciales };
+}
+
+async function upsertPedidoComercial(pedidoId: string, cambios: Partial<PedidoNuevo>) {
+  const { comercial, tieneComerciales } = separarDatosComerciales(cambios);
+  if (!tieneComerciales) return;
+  const { error } = await supabase.from("pedido_comercial").upsert(
+    { ...comercial, pedido_id: pedidoId },
+    { onConflict: "pedido_id" },
+  );
+  if (error) throw error;
 }
 
 async function generarNumeroContratoAutomatico() {
@@ -1229,29 +1228,16 @@ export function useCrearPedido() {
   return useMutation({
     mutationFn: async (pedido: PedidoNuevo) => {
       const contrato = await asegurarContratoParaPedido(pedido);
-      const pedidoConContrato = {
-        ...pedido,
-        contrato: contrato.numero,
-        contrato_id: contrato.id,
-      };
-      const respuesta = await supabase
-        .from("pedidos")
-        .insert(pedidoConContrato)
-        .select("id, referencia, cliente, sede_id")
-        .single();
-
+      const pedidoConContrato = { ...pedido, contrato: contrato.numero, contrato_id: contrato.id };
+      const respuesta = await supabase.from("pedidos").insert(pedidoConContrato).select("id, referencia, cliente, sede_id").single();
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = pedidoConContrato;
       const { data, error } =
-        respuesta.error &&
-        esErrorCampoFaltante(respuesta.error) &&
-        "contrato_id" in pedidoConContrato
-          ? await supabase
-              .from("pedidos")
-              .insert(sinContratoId)
-              .select("id, referencia, cliente, sede_id")
-              .single()
+        respuesta.error && esErrorCampoFaltante(respuesta.error) && "contrato_id" in pedidoConContrato
+          ? await supabase.from("pedidos").insert(sinContratoId).select("id, referencia, cliente, sede_id").single()
           : respuesta;
       if (error) throw error;
+      if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
+      await upsertPedidoComercial(data.id, pedidoConContrato);
       if (!contrato.creado) await sumarImporteAContrato(contrato.id, pedido.importe);
       return data;
     },
@@ -1263,44 +1249,22 @@ export function useCrearPedido() {
   });
 }
 
+
 export function useCrearTrabajoContrato() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      contrato,
-      pedido,
-      referenciasExistentes,
-    }: {
-      contrato: Contrato;
-      pedido: Omit<PedidoNuevo, "referencia" | "contrato_id">;
-      referenciasExistentes: string[];
-    }) => {
+    mutationFn: async ({ contrato, pedido, referenciasExistentes }: { contrato: Contrato; pedido: Omit<PedidoNuevo, "referencia" | "contrato_id">; referenciasExistentes: string[] }) => {
       const referencia = siguienteReferenciaContrato(contrato.numero, referenciasExistentes);
-      const nuevo: PedidoNuevo = {
-        ...pedido,
-        referencia,
-        cliente: contrato.cliente,
-        contrato: contrato.numero,
-        contrato_id: esUuid(contrato.id) ? contrato.id : null,
-        sede_id: contrato.sede_id,
-      };
-      const respuesta = await supabase
-        .from("pedidos")
-        .insert(nuevo)
-        .select("id, referencia, cliente, sede_id")
-        .single();
-
+      const nuevo: PedidoNuevo = { ...pedido, referencia, cliente: contrato.cliente, contrato: contrato.numero, contrato_id: esUuid(contrato.id) ? contrato.id : null, sede_id: contrato.sede_id };
+      const respuesta = await supabase.from("pedidos").insert(nuevo).select("id, referencia, cliente, sede_id").single();
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = nuevo;
       const { data, error } =
-        respuesta.error &&
-        (esErrorCampoFaltante(respuesta.error) || respuesta.error.code === "22P02")
-          ? await supabase
-              .from("pedidos")
-              .insert(sinContratoId)
-              .select("id, referencia, cliente, sede_id")
-              .single()
+        respuesta.error && (esErrorCampoFaltante(respuesta.error) || respuesta.error.code === "22P02")
+          ? await supabase.from("pedidos").insert(sinContratoId).select("id, referencia, cliente, sede_id").single()
           : respuesta;
       if (error) throw error;
+      if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
+      await upsertPedidoComercial(data.id, nuevo);
       await sumarImporteAContrato(esUuid(contrato.id) ? contrato.id : null, nuevo.importe);
       return data;
     },
@@ -1312,60 +1276,50 @@ export function useCrearTrabajoContrato() {
   });
 }
 
+
 export function useActualizarPedido() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...cambios
-    }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
-      let payload = cambios as PedidoUpdate;
+    mutationFn: async ({ id, ...cambios }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
+      const { pedido: cambiosPedido, comercial, tieneComerciales } = separarDatosComerciales(cambios);
+      let payload = cambiosPedido as PedidoUpdate;
       let contratoVinculado: { id: string | null; numero: string } | null = null;
 
       if (Object.prototype.hasOwnProperty.call(cambios, "contrato")) {
         const numero = String(cambios.contrato ?? "").trim();
-
         if (numero) {
-          const { data: pedidoActual, error: errorPedido } = await supabase
-            .from("pedidos")
-            .select("cliente, telefono, origen, importe, sede_id")
-            .eq("id", id)
-            .maybeSingle();
+          const [{ data: pedidoActual, error: errorPedido }, { data: comercialActual, error: errorComercial }] = await Promise.all([
+            supabase.from("pedidos").select("cliente, origen, sede_id").eq("id", id).maybeSingle(),
+            supabase.from("pedido_comercial").select("telefono, importe").eq("pedido_id", id).maybeSingle(),
+          ]);
           if (errorPedido) throw errorPedido;
-
+          if (errorComercial && !esErrorCampoFaltante(errorComercial)) throw errorComercial;
           const base = (pedidoActual ?? {}) as Record<string, unknown>;
+          const baseComercial = (comercialActual ?? {}) as Record<string, unknown>;
           const contrato = await asegurarContratoComercial({
             numero,
             cliente: String(cambios.cliente ?? base["cliente"] ?? ""),
-            telefono: String(cambios.telefono ?? base["telefono"] ?? ""),
+            telefono: String(cambios.telefono ?? baseComercial["telefono"] ?? ""),
             origen: String(cambios.origen ?? base["origen"] ?? ""),
-            importe: Number(cambios.importe ?? base["importe"] ?? 0) || 0,
-            sede_id:
-              typeof (cambios.sede_id ?? base["sede_id"]) === "string"
-                ? String(cambios.sede_id ?? base["sede_id"])
-                : null,
+            importe: Number(cambios.importe ?? baseComercial["importe"] ?? 0) || 0,
+            sede_id: typeof (cambios.sede_id ?? base["sede_id"]) === "string" ? String(cambios.sede_id ?? base["sede_id"]) : null,
             notas: "Documento comercial creado o vinculado desde ficha técnica.",
           });
-
-          payload = {
-            ...payload,
-            contrato: contrato.numero,
-            contrato_id: contrato.id,
-          } as PedidoUpdate;
+          payload = { ...payload, contrato: contrato.numero, contrato_id: contrato.id } as PedidoUpdate;
           contratoVinculado = { id: contrato.id, numero: contrato.numero };
         } else {
           payload = { ...payload, contrato: "", contrato_id: null } as PedidoUpdate;
         }
       }
 
-      const respuesta = await supabase.from("pedidos").update(payload).eq("id", id);
-      const { contrato_id: _contratoIdOmitido, ...payloadSinContratoId } = payload;
-      const { error } =
-        respuesta.error && esErrorCampoFaltante(respuesta.error) && "contrato_id" in payload
-          ? await supabase.from("pedidos").update(payloadSinContratoId).eq("id", id)
-          : respuesta;
-      if (error) throw error;
-
+      if (Object.keys(payload).length > 0) {
+        const { error } = await supabase.from("pedidos").update(payload).eq("id", id);
+        if (error) throw error;
+      }
+      if (tieneComerciales) {
+        const { error } = await supabase.from("pedido_comercial").update(comercial).eq("pedido_id", id);
+        if (error) throw error;
+      }
       if (contratoVinculado?.id) {
         await vincularPedidosPorNumeroContrato(contratoVinculado.numero, contratoVinculado.id);
         await recalcularTotalContrato(contratoVinculado.numero, contratoVinculado.id);
@@ -1378,6 +1332,7 @@ export function useActualizarPedido() {
     },
   });
 }
+
 
 export function useBorrarPedido() {
   const qc = useQueryClient();
