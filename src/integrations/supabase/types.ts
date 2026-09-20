@@ -563,6 +563,7 @@ export type Database = {
           id: string
           material_id: string
           motivo: string
+          pedido_id: string | null
           tipo: string
           usuario_id: string | null
         }
@@ -573,6 +574,7 @@ export type Database = {
           id?: string
           material_id: string
           motivo?: string
+          pedido_id?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -583,6 +585,7 @@ export type Database = {
           id?: string
           material_id?: string
           motivo?: string
+          pedido_id?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -592,6 +595,13 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
         ]
