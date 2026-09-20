@@ -15,6 +15,17 @@ export const Route = createFileRoute("/_authenticated/compras")({
 
 function ComprasPage() {
   const { data: sesion } = useSesion();
+
+  if (sesion && !sesion.esAdmin) {
+    return (
+      <AppShell titulo="Compras" subtitulo="Acceso restringido">
+        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+          <p className="text-base font-semibold">Compras restringidas</p>
+          <p className="mt-2 text-sm text-muted-foreground">Este módulo está reservado para administración y gestión.</p>
+        </div>
+      </AppShell>
+    );
+  }
   const qc = useQueryClient();
   const [proveedor, setProveedor] = useState("");
   const [notas, setNotas] = useState("");
