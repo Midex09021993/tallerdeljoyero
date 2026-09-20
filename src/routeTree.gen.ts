@@ -17,6 +17,7 @@ import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated/compras'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
+import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
@@ -79,6 +81,11 @@ const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedComprasRoute = AuthenticatedComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCorteLaserRoute = AuthenticatedCorteLaserRouteImport.update({
@@ -154,6 +161,12 @@ const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
   path: '/taller',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVectorizadorLaserRoute =
+  AuthenticatedVectorizadorLaserRouteImport.update({
+    id: '/vectorizador-laser',
+    path: '/vectorizador-laser',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedVentasRoute = AuthenticatedVentasRouteImport.update({
   id: '/ventas',
   path: '/ventas',
@@ -212,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -226,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -244,6 +259,7 @@ export interface FileRoutesByTo {
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -257,6 +273,7 @@ export interface FileRoutesByTo {
   '/operario': typeof AuthenticatedOperarioRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -277,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/compras': typeof AuthenticatedComprasRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -291,6 +309,7 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
+  '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -311,6 +330,7 @@ export interface FileRouteTypes {
     | '/aurum-render'
     | '/casting'
     | '/clientes'
+    | '/compras'
     | '/corte-laser'
     | '/cotizaciones'
     | '/diseno-3d'
@@ -325,6 +345,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/taller'
+    | '/vectorizador-laser'
     | '/ventas'
     | '/contratos/$id'
     | '/cotizaciones/$id'
@@ -343,6 +364,7 @@ export interface FileRouteTypes {
     | '/aurum-render'
     | '/casting'
     | '/clientes'
+    | '/compras'
     | '/corte-laser'
     | '/cotizaciones'
     | '/diseno-3d'
@@ -356,6 +378,7 @@ export interface FileRouteTypes {
     | '/operario'
     | '/perfil'
     | '/taller'
+    | '/vectorizador-laser'
     | '/ventas'
     | '/contratos/$id'
     | '/cotizaciones/$id'
@@ -375,6 +398,7 @@ export interface FileRouteTypes {
     | '/_authenticated/aurum-render'
     | '/_authenticated/casting'
     | '/_authenticated/clientes'
+    | '/_authenticated/compras'
     | '/_authenticated/corte-laser'
     | '/_authenticated/cotizaciones'
     | '/_authenticated/diseno-3d'
@@ -389,6 +413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos'
     | '/_authenticated/perfil'
     | '/_authenticated/taller'
+    | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
     | '/_authenticated/contratos/$id'
     | '/_authenticated/cotizaciones/$id'
@@ -467,6 +492,13 @@ declare module '@tanstack/react-router' {
       path: '/clientes'
       fullPath: '/clientes'
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/compras': {
+      id: '/_authenticated/compras'
+      path: '/compras'
+      fullPath: '/compras'
+      preLoaderRoute: typeof AuthenticatedComprasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/corte-laser': {
@@ -567,6 +599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTallerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/vectorizador-laser': {
+      id: '/_authenticated/vectorizador-laser'
+      path: '/vectorizador-laser'
+      fullPath: '/vectorizador-laser'
+      preLoaderRoute: typeof AuthenticatedVectorizadorLaserRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ventas': {
       id: '/_authenticated/ventas'
       path: '/ventas'
@@ -664,6 +703,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRouteWithChildren
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
@@ -678,6 +718,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
+  AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRoute
   AuthenticatedContratosIdRoute: typeof AuthenticatedContratosIdRoute
   AuthenticatedTrabajosIdRoute: typeof AuthenticatedTrabajosIdRoute
@@ -687,6 +728,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedComprasRoute: AuthenticatedComprasRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRouteWithChildren,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
@@ -701,6 +743,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
+  AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRoute,
   AuthenticatedContratosIdRoute: AuthenticatedContratosIdRoute,
   AuthenticatedTrabajosIdRoute: AuthenticatedTrabajosIdRoute,
