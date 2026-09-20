@@ -623,29 +623,6 @@ function FichaPedido() {
                 )}
               </section>
 
-              <section>
-                <div className="mb-3 flex items-center gap-3">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
-                    Resumen financiero
-                  </h3>
-                  <span className="h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent" />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <DatoClave
-                    etiqueta="Precio"
-                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.importe) || 0)}
-                  />
-                  <DatoClave
-                    etiqueta="A cuenta"
-                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.a_cuenta) || 0)}
-                  />
-                  <DatoClave
-                    etiqueta="Saldo"
-                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.saldo) || 0)}
-                    destacado
-                  />
-                </div>
-              </section>
             </div>
           </Panel>
 
@@ -704,24 +681,6 @@ function FichaPedido() {
               </Panel>
 
   
-
-              <Panel titulo="Resumen del pedido">
-                <div className="grid gap-4 p-5 sm:grid-cols-3 lg:p-6">
-                  <DatoClave
-                    etiqueta="Precio"
-                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.importe) || 0)}
-                  />
-                  <DatoClave
-                    etiqueta="A cuenta"
-                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.a_cuenta) || 0)}
-                  />
-                  <DatoClave
-                    etiqueta="Saldo"
-                    valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.saldo) || 0)}
-                    destacado
-                  />
-                </div>
-              </Panel>
 
               <Panel titulo="Estado financiero">
                 <div className="grid gap-4 p-5 sm:grid-cols-3 lg:p-6">
