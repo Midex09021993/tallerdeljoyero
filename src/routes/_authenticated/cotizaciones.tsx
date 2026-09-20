@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,7 +82,7 @@ function CotizacionesPage() {
 
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
 
-  async function guardar(e: React.FormEvent) {
+  async function guardar(e: FormEvent) {
     e.preventDefault();
     if (!form.cliente_id || form.precio <= 0) return;
     setGuardando(true);
