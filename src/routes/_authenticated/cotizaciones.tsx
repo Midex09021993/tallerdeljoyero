@@ -204,8 +204,19 @@ function CotizacionesPage() {
                     key={q.id}
                     tabIndex={0}
                     role="link"
-                    onClick={() => navigate({ to: "/cotizaciones/$id", params: { id: q.id } })}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/cotizaciones/$id", params: { id: q.id } }); } }}
+                    onClick={() => {
+                      void navigate({ to: "/cotizaciones/$id", params: { id: q.id } }).catch(() => {
+                        window.location.assign(`/cotizaciones/${q.id}`);
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        void navigate({ to: "/cotizaciones/$id", params: { id: q.id } }).catch(() => {
+                          window.location.assign(`/cotizaciones/${q.id}`);
+                        });
+                      }
+                    }}
                     className="group cursor-pointer transition-colors hover:bg-gold/[0.06] focus:outline-none focus:bg-gold/[0.06]"
                   >
                     <td className="px-5 py-4 font-medium">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></td>
