@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, CheckCircle2, CreditCard, FileText, History, PackageCheck, Truck, UserRound } from "lucide-react";
+import { ArrowLeft, Banknote, CheckCircle2, CreditCard, History, PackageCheck, Truck, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useContratos, usePagosContratos, usePedidos, resumenFinancieroContrato, estadoClases } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
+import { areaCoincide, useSesion } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ventas-2/$id")({
   head: () => ({ meta: [{ title: "Ficha comercial — Ventas 2" }, { name: "description", content: "Ficha comercial y de entrega del pedido." }] }),
@@ -15,14 +17,48 @@ export const Route = createFileRoute("/_authenticated/ventas-2/$id")({
 function Venta2Detalle() {
   const { id } = useParams({ from: "/_authenticated/ventas-2/$id" });
   const navigate = useNavigate();
+  const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
   const pedido = pedidos.find((p) => p.id === id);
-  const puede = true;
+  const puede = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
   const { data: contratos = [] } = useContratos(puede);
   const { data: pagos = [] } = usePagosContratos(contratos, puede);
   const contrato = pedido?.contrato_id ? contratos.find((c) => c.id === pedido.contrato_id) : pedido?.contrato ? contratos.find((c) => c.numero === pedido.contrato) : undefined;
   const pagosPedido = contrato ? pagos.filter((p) => p.contrato_id === contrato.id) : [];
   const resumen = resumenFinancieroContrato(contrato, pagosPedido);
+  const [accion, setAccion] = useState<"pago" | "despachar" | "entregar" | null>(null);
+  const [monto, setMonto] = useState("");
+  const [concepto, setConcepto] = useState("Abono");
+  const [fechaPago, setFechaPago] = useState(new Date().toISOString().slice(0,10));
+  const [medio, setMedio] = useState(pedido?.medio_envio ?? "Entrega en taller");
+  const [guia, setGuia] = useState(pedido?.guia_envio ?? "");
+  const [receptor, setReceptor] = useState(pedido?.receptor_envio ?? "");
+  const [evidencia, setEvidencia] = useState("");
+  const [guardando, setGuardando] = useState(false);
+
+  const ejecutar = async (accionEntrega: string, datos: Record<string, unknown> = {}) => {
+    setGuardando(true);
+    const { error } = await supabase.rpc("transicionar_entrega_pedido", { _pedido_id: id, _accion: accionEntrega, _datos: datos as never });
+    setGuardando(false);
+    if (error) { toast.error(error.message); return false; }
+    toast.success(accionEntrega === "packing" ? "Packing preparado" : accionEntrega === "despachar" ? "Pedido despachado" : accionEntrega === "entregar" ? "Entrega registrada" : "Pedido listo para entrega");
+    setAccion(null);
+    window.location.reload();
+    return true;
+  };
+
+  const registrarPago = async () => {
+    if (!contrato || !sesion?.user.id) return;
+    const valor = Number(monto);
+    if (!(valor > 0)) { toast.error("Ingresa un monto válido."); return; }
+    if (valor > resumen.saldo) { toast.error("El abono supera el saldo pendiente."); return; }
+    setGuardando(true);
+    const { error } = await supabase.from("contrato_pagos").insert({ contrato_id: contrato.id, contrato_numero: contrato.numero ?? "", fecha: fechaPago, concepto: concepto.trim() || "Abono", monto: valor, usuario_id: sesion.user.id });
+    setGuardando(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Pago registrado");
+    setMonto(""); setAccion(null); window.location.reload();
+  };
 
   const { data: entregaEventos = [] } = useQuery({
     queryKey: ["ventas-2-entrega-eventos", id],
