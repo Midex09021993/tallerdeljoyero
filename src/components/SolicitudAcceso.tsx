@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Building2, BriefcaseBusiness, Package, ShoppingBag, Wrench, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,7 +35,7 @@ export function SolicitudAcceso() {
     setError("");
   }
 
-  async function enviar(e: React.FormEvent) {
+  async function enviar(e: FormEvent) {
     e.preventDefault();
     setError("");
     setCargando(true);
