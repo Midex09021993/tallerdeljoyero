@@ -42,6 +42,10 @@ function CotizacionesPage() {
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [busquedaCliente, setBusquedaCliente] = useState("");
+  const [nuevoClienteAbierto, setNuevoClienteAbierto] = useState(false);
+  const [guardandoCliente, setGuardandoCliente] = useState(false);
+  const [nuevoCliente, setNuevoCliente] = useState({ nombre: "", telefono: "", email: "" });
+  const [errorCliente, setErrorCliente] = useState("");
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
@@ -92,6 +96,32 @@ function CotizacionesPage() {
     );
   }
 
+  async function crearClienteDesdeCotizacion(e: FormEvent) {
+    e.preventDefault();
+    const nombre = nuevoCliente.nombre.trim();
+    if (!nombre || !sesion?.sede?.id) return;
+    setGuardandoCliente(true);
+    setErrorCliente("");
+    const { data, error } = await supabase.from("clientes").insert({
+      nombre,
+      telefono: nuevoCliente.telefono.trim() || null,
+      email: nuevoCliente.email.trim() || null,
+      sede_id: sesion.sede.id,
+      estado: "activo",
+    }).select("id,nombre,telefono,email").single();
+    if (error || !data) {
+      setErrorCliente(error?.message ?? "No se pudo crear el cliente.");
+      setGuardandoCliente(false);
+      return;
+    }
+    setClientes((actuales) => [data, ...actuales.filter((c) => c.id !== data.id)]);
+    setForm((actual) => ({ ...actual, cliente_id: data.id, proyecto_joya_id: "" }));
+    setBusquedaCliente(data.nombre);
+    setNuevoCliente({ nombre: "", telefono: "", email: "" });
+    setNuevoClienteAbierto(false);
+    setGuardandoCliente(false);
+  }
+
   async function guardar(e: FormEvent) {
     e.preventDefault();
     if (!form.cliente_id || !form.descripcion.trim() || form.precio <= 0) return;
@@ -107,7 +137,7 @@ function CotizacionesPage() {
         subtotal: form.precio * form.cantidad,
         descuento: form.descuento,
         impuestos: impuestoCalculado,
-        total: Math.max(0, form.precio * form.cantidad - form.descuento + form.impuestos),
+        total: Math.max(0, form.precio * form.cantidad - form.descuento + impuestoCalculado),
         fecha_vencimiento: form.fecha_vencimiento || null,
         fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
         notas_cliente: form.notas_cliente,
@@ -196,6 +226,24 @@ function CotizacionesPage() {
           </div>
         </section>
 
+        {nuevoClienteAbierto ? <div className="fixed inset-0 z-[60] grid place-items-center bg-foreground/15 p-4 backdrop-blur-sm">
+          <form onSubmit={crearClienteDesdeCotizacion} className="w-full max-w-md rounded-2xl border border-gold/15 bg-card p-5 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between">
+              <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold/80">Alta rápida</p><h2 className="mt-1 font-display text-2xl">Nuevo cliente</h2><p className="mt-1 text-xs text-muted-foreground">Se guardará en este taller y quedará seleccionado en la cotización.</p></div>
+              <button type="button" onClick={() => setNuevoClienteAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button>
+            </div>
+            <div className="space-y-3">
+              <label className="block text-xs text-muted-foreground">Nombre completo<input required autoFocus value={nuevoCliente.nombre} onChange={e => setNuevoCliente({...nuevoCliente,nombre:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <label className="block text-xs text-muted-foreground">Teléfono<input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({...nuevoCliente,telefono:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <label className="block text-xs text-muted-foreground">Correo electrónico<input type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({...nuevoCliente,email:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              {errorCliente ? <p className="rounded-lg border border-danger/20 bg-danger-soft px-3 py-2 text-xs text-danger">{errorCliente}</p> : null}
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setNuevoClienteAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button>
+              <button type="submit" disabled={guardandoCliente || !nuevoCliente.nombre.trim()} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{guardandoCliente ? "Creando…" : "Crear y seleccionar"}</button>
+            </div>
+          </form>
+        </div> : null}
         {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4 backdrop-blur-sm">
           <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
             <div className="mb-5 flex items-start justify-between"><div><h2 className="font-display text-2xl">Nueva cotización</h2><p className="text-sm text-muted-foreground">Costo interno separado del precio al cliente.</p></div><button type="button" onClick={() => setAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button></div>
@@ -208,7 +256,12 @@ function CotizacionesPage() {
     {clientesFiltrados.map(c => <button type="button" key={c.id} onClick={() => { setForm({...form, cliente_id:c.id, proyecto_joya_id:""}); setBusquedaCliente(c.nombre); }} className="block w-full border-b border-border px-3 py-3 text-left hover:bg-surface-muted">
       <span className="block text-sm font-medium">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.telefono || c.email || "Sin contacto"}</span>
     </button>)}
-    {clientesFiltrados.length === 0 ? <p className="px-3 py-4 text-xs text-muted-foreground">No encontramos clientes. Puedes crearlo desde Clientes.</p> : null}
+    {clientesFiltrados.length === 0 ? (
+      <div className="border-t border-border p-3">
+        <p className="text-xs text-muted-foreground">No encontramos clientes.</p>
+        <button type="button" onClick={() => { setErrorCliente(""); setNuevoClienteAbierto(true); }} className="mt-2 w-full rounded-lg border border-gold/25 bg-gold/5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-gold/10">+ Crear cliente aquí</button>
+      </div>
+    ) : null}
   </div> : null}
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
 </div>
