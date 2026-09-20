@@ -26,6 +26,7 @@ export type Database = {
           metadata: Json
           nombre: string
           notas: string
+          sede_id: string
           telefono: string | null
           tipo: string
           whatsapp: string | null
@@ -41,6 +42,7 @@ export type Database = {
           metadata?: Json
           nombre: string
           notas?: string
+          sede_id: string
           telefono?: string | null
           tipo?: string
           whatsapp?: string | null
@@ -56,11 +58,20 @@ export type Database = {
           metadata?: Json
           nombre?: string
           notas?: string
+          sede_id?: string
           telefono?: string | null
           tipo?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clientes_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       config_areas: {
         Row: {
