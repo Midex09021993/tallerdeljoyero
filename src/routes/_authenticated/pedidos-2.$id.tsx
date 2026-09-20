@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardList, Factory, FileText, History, PackageCheck, UserRound } from "lucide-react";
@@ -6,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePedidos, estadoClases, esEstadoFinalPedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos-2/$id")({
   head: () => ({ meta: [{ title: "Pedido 2 — Taller del Joyero" }, { name: "description", content: "Ficha operativa del pedido." }] }),
@@ -20,6 +22,8 @@ function Pedido2Detalle() {
   const { data: pedidos = [] } = usePedidos();
   const pedido = pedidos.find((p) => p.id === id);
   const [tab, setTab] = useState<Tab>("resumen");
+  const [transicionando, setTransicionando] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: trabajos = [], isLoading: loadingTrabajos } = useQuery({
     queryKey: ["pedidos-2-trabajos", id],
@@ -106,6 +110,35 @@ function Pedido2Detalle() {
     },
   });
 
+  const ordenPrincipal = ordenes[0];
+  const trabajosCompletos = trabajos.length > 0 && trabajos.every((t) => t.estado === "completado");
+  const piezaVerificada = piezas.some((p) => ["verificada", "liberada"].includes(p.estado));
+  const calidadFinalAprobada = controles.some((c) => c.tipo === "inspeccion_final" && c.resultado === "aprobado");
+
+  const transicionar = async (nuevoEstado: string) => {
+    if (!ordenPrincipal || transicionando) return;
+    setTransicionando(true);
+    try {
+      const { error } = await supabase.rpc("transicionar_orden_produccion", {
+        _orden_id: ordenPrincipal.id,
+        _nuevo_estado: nuevoEstado,
+      });
+      if (error) throw error;
+      toast.success(`Orden ${ordenPrincipal.numero}: ${nuevoEstado.replaceAll("_", " ")}`);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-qc", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
+      ]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo cambiar el estado de la orden.");
+    } finally {
+      setTransicionando(false);
+    }
+  };
+
   if (!pedido) {
     return <AppShell titulo="Pedido 2"><div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">No se encontró el pedido.</div></AppShell>;
   }
@@ -146,6 +179,27 @@ function Pedido2Detalle() {
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} /> : null}
+      {ordenPrincipal ? (
+        <section className="mt-5 rounded-2xl border border-gold/20 bg-card p-5 shadow-raised">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Control de producción</p>
+              <p className="mt-1 text-sm font-semibold">{ordenPrincipal.numero} · {ordenPrincipal.estado}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {trabajosCompletos ? "Todos los trabajos están completados." : `${trabajos.filter((t) => t.estado === "completado").length}/${trabajos.length} trabajos completados`}
+                {calidadFinalAprobada ? " · Calidad final aprobada." : ""}
+                {piezaVerificada ? " · Pieza verificada/liberada." : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {ordenPrincipal.estado === "borrador" ? <button type="button" disabled={transicionando} onClick={() => transicionar("liberada")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Liberar OP</button> : null}
+              {["liberada", "pausada"].includes(ordenPrincipal.estado) ? <button type="button" disabled={transicionando} onClick={() => transicionar("en_produccion")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Iniciar producción</button> : null}
+              {ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando} onClick={() => transicionar("pausada")} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Pausar</button> : null}
+              {ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando || !trabajosCompletos} onClick={() => transicionar("control_calidad")} title={!trabajosCompletos ? "Completa todos los trabajos antes de enviar a calidad." : undefined} className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep disabled:cursor-not-allowed disabled:opacity-50">Enviar a calidad</button> : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
       {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
@@ -162,7 +216,7 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias }: { pedid
 function Mini({ icon: Icon, title, value, detail }: { icon: typeof Factory; title: string; value: string; detail: string }) { return <div className="rounded-2xl border border-border bg-card p-5"><Icon className="size-5 text-gold" /><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p><p className="mt-1 text-base font-semibold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>; }
 
 function Produccion({ trabajos, ordenes, controles, piezas, costo, loading }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean }) {
-  return <div className="space-y-5">{loading ? <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">Cargando producción…</div> : null}<section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trabajos</h3><p className="mt-1 text-xs text-muted-foreground">{trabajos.length} operaciones registradas</p></div><Factory className="size-5 text-gold" /></div><div className="mt-4 space-y-2">{trabajos.length ? trabajos.map((t) => <div key={t.id} className="flex flex-col gap-2 rounded-xl border border-border bg-surface-sunken p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">{t.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{t.area} · {t.prioridad || "normal"} · Responsable {t.responsable_user_id ? "asignado" : "pendiente"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{t.estado}</span></div>) : <Empty text="No hay trabajos registrados." />}</div></section><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Órdenes de producción</h3><div className="mt-4 space-y-2">{ordenes.length ? ordenes.map((o) => <div key={o.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold">{o.numero}</p><p className="mt-1 text-xs text-muted-foreground">{o.estado} · Prioridad {o.prioridad || "normal"}</p></div><span className="text-xs text-muted-foreground">{o.fecha_planificada_fin ? fmtFecha(o.fecha_planificada_fin) : "Sin fecha planificada"}</span></div></div>) : <Empty text="No hay orden de producción." />}</div></section><div className="grid gap-4 md:grid-cols-2"><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Calidad</h3><div className="mt-4 space-y-2">{controles.length ? controles.map((c) => <div key={c.id} className="rounded-xl border border-border p-3"><div className="flex justify-between gap-3"><span className="text-xs font-semibold">{c.tipo}</span><span className="text-[10px] font-bold uppercase">{c.estado}</span></div><p className="mt-1 text-xs text-muted-foreground">{c.observaciones || "Sin observaciones"}</p></div>) : <Empty text="Sin inspecciones." />}</div></section><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Piezas terminadas</h3><div className="mt-4 space-y-2">{piezas.length ? piezas.map((p) => <div key={p.id} className="flex items-center justify-between rounded-xl border border-border p-3"><span className="text-xs font-semibold">Pieza {p.numero_pieza}</span><span className="text-[10px] font-bold uppercase">{p.estado}</span></div>) : <Empty text="Sin piezas registradas." />}</div></section></div>{costo ? <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Costeo real</h3><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Dato label="Materiales" value={money(costo.costo_materiales,costo.moneda)} /><Dato label="Mano de obra" value={money(costo.costo_mano_obra,costo.moneda)} /><Dato label="Costo real" value={money(costo.costo_real,costo.moneda)} /><Dato label="Margen" value={money(costo.margen,costo.moneda)} /></div></section> : null}</div>;
+  return <div className="space-y-5">{loading ? <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">Cargando producción…</div> : null}<section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trabajos</h3><p className="mt-1 text-xs text-muted-foreground">{trabajos.length} operaciones registradas</p></div><Factory className="size-5 text-gold" /></div><div className="mt-4 space-y-2">{trabajos.length ? trabajos.map((t) => <div key={t.id} className="flex flex-col gap-2 rounded-xl border border-border bg-surface-sunken p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">{t.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{t.area} · {t.prioridad || "normal"} · Responsable {t.responsable_user_id ? "asignado" : "pendiente"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{t.estado}</span></div>) : <Empty text="No hay trabajos registrados." />}</div></section><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Órdenes de producción</h3><div className="mt-4 space-y-2">{ordenes.length ? ordenes.map((o) => <div key={o.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold">{o.numero}</p><p className="mt-1 text-xs text-muted-foreground">{o.estado} · Prioridad {o.prioridad || "normal"}</p></div><span className="text-xs text-muted-foreground">{o.fecha_planificada_fin ? fmtFecha(o.fecha_planificada_fin) : "Sin fecha planificada"}</span></div></div>) : <Empty text="No hay orden de producción." />}</div></section><div className="grid gap-4 md:grid-cols-2"><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Calidad</h3><div className="mt-4 space-y-2">{controles.length ? controles.map((c) => <div key={c.id} className="rounded-xl border border-border p-3"><div className="flex justify-between gap-3"><span className="text-xs font-semibold">{c.tipo}</span><span className="text-[10px] font-bold uppercase">{c.resultado}</span></div><p className="mt-1 text-xs text-muted-foreground">{c.descripcion || c.motivo || "Sin observaciones"}</p></div>) : <Empty text="Sin inspecciones." />}</div></section><section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Piezas terminadas</h3><div className="mt-4 space-y-2">{piezas.length ? piezas.map((p) => <div key={p.id} className="flex items-center justify-between rounded-xl border border-border p-3"><span className="text-xs font-semibold">Pieza {p.numero_pieza}</span><span className="text-[10px] font-bold uppercase">{p.estado}</span></div>) : <Empty text="Sin piezas registradas." />}</div></section></div>{costo ? <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Costeo real</h3><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Dato label="Materiales" value={money(costo.costo_materiales,costo.moneda)} /><Dato label="Mano de obra" value={money(costo.costo_mano_obra,costo.moneda)} /><Dato label="Costo real" value={money(costo.costo_real,costo.moneda)} /><Dato label="Margen" value={money(costo.margen,costo.moneda)} /></div></section> : null}</div>;
 }
 function Comercial({ pedido }: { pedido: any }) { return <div className="grid gap-4 md:grid-cols-2"><section className="rounded-2xl border border-border bg-card p-5"><UserRound className="size-5 text-gold" /><h3 className="mt-3 text-xs font-bold uppercase tracking-[.16em]">Cliente</h3><div className="mt-4 grid gap-3 sm:grid-cols-2"><Dato label="Cliente" value={pedido.cliente || "Sin cliente"} /><Dato label="Contrato" value={pedido.contrato || "Sin contrato"} /><Dato label="Origen" value={pedido.origen || "—"} /><Dato label="Sede" value={pedido.sede_nombre || "—"} /></div></section><section className="rounded-2xl border border-border bg-card p-5"><FileText className="size-5 text-gold" /><h3 className="mt-3 text-xs font-bold uppercase tracking-[.16em]">Importes</h3><div className="mt-4 grid gap-3 sm:grid-cols-3"><Dato label="Importe" value={money(pedido.importe,"PEN")} /><Dato label="A cuenta" value={money(pedido.a_cuenta,"PEN")} /><Dato label="Saldo" value={money((Number(pedido.importe)||0)-(Number(pedido.a_cuenta)||0),"PEN")} /></div></section></div>; }
 function Archivos({ archivos }: { archivos: any[] }) { return <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Documentos del pedido</h3><p className="mt-1 text-xs text-muted-foreground">{archivos.length} archivos registrados</p></div><FileText className="size-5 text-gold" /></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{archivos.map((a) => <div key={a.id} className="overflow-hidden rounded-xl border border-border"><div className="grid aspect-video place-items-center bg-surface-muted">{a.poster ? <img src={a.poster} alt="" className="size-full object-cover" /> : <FileText className="size-8 text-muted-foreground" />}</div><div className="p-3"><p className="truncate text-sm font-semibold">{a.nombre}</p><p className="mt-1 text-[10px] text-muted-foreground">{a.grupo || a.tipo || "Archivo"} · v{a.version ?? 1}{a.es_vigente_fabricacion ? " · Vigente" : ""}</p></div></div>)}</div>{!archivos.length ? <Empty text="No hay archivos registrados." /> : null}</section>; }
