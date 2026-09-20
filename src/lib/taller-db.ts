@@ -560,6 +560,8 @@ export function usePedidos() {
         ),
         entrega: textoCampo(p, "entrega"),
         importe: Number(p["importe"]) || 0,
+        a_cuenta: Number(p["a_cuenta"]) || 0,
+        saldo: Number(p["saldo"]) || 0,
         sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
         sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
         telefono: textoCampo(p, "telefono"),

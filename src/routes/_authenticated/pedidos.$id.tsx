@@ -662,6 +662,7 @@ function FichaPedido() {
                         <Link
                           to="/contratos/$id"
                           params={{ id: pedido.contrato_id }}
+                          search={{ nuevoPedido: false }}
                           className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-muted"
                         >
                           Ver contrato
@@ -820,6 +821,7 @@ function FichaPedido() {
                   <Link
                     to="/contratos/$id"
                     params={{ id: pedido.contrato_id || pedido.contrato }}
+                    search={{ nuevoPedido: false }}
                     className="inline-flex items-center rounded-lg border border-gold/40 bg-card px-4 py-2 text-xs font-semibold text-gold-deep shadow-card transition-colors hover:bg-surface-sunken"
                   >
                     Ver contrato
