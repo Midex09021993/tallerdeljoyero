@@ -967,7 +967,7 @@ function FichaPedido() {
                     className="text-[10px] uppercase tracking-wider text-muted-foreground"
                   >
                     {label}
-                    {tipo === "date" ? (
+                    {(tipo as string) === "date" ? (
                       <FechaInput
                         name={name}
                         defaultValue={val}

@@ -1539,10 +1539,11 @@ export function useEnviarAArea() {
       const areaActual = areaOperativa(pedido.area_actual);
       if (!destinoNormalizado || destinoNormalizado === areaActual) return null;
 
+      const motivoLimpio = motivo?.trim();
       const { data, error } = await supabase.rpc("mover_pedido_a_area", {
         _pedido_id: pedido.id,
         _destino: destinoNormalizado,
-        _motivo: motivo?.trim() || undefined,
+        ...(motivoLimpio ? { _motivo: motivoLimpio } : {}),
       });
 
       if (error) {
