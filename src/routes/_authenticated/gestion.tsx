@@ -305,9 +305,11 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
           </ul>
         </Panel>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Gastos registrados este mes: {eur.format(gastosMes)}
-      </p>
+      {sesion?.roles.includes("dueno") || sesion?.roles.includes("gerente") ? (
+        <p className="text-xs text-muted-foreground">
+          Gastos registrados este mes: {eur.format(gastosMes)}
+        </p>
+      ) : null}
     </div>
   );
 }
