@@ -515,9 +515,6 @@ function FichaPedido() {
                     <p className="mt-1 font-display text-3xl leading-tight text-foreground">
                       {pedido.referencia}
                     </p>
-                    <p className="mt-1 text-sm font-medium text-muted-foreground">
-                      {pedido.cliente || "Sin cliente"}
-                    </p>
                   </div>
                   <span
                     className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/40 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] ${estadoClases[pedido.estado] ?? "bg-accent text-foreground"}`}
@@ -526,26 +523,30 @@ function FichaPedido() {
                     {pedido.estado || "—"}
                   </span>
                 </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  <DatoClave etiqueta="Contrato" valor={pedido.contrato || "—"} />
-                  <DatoClave etiqueta="Área actual" valor={normalizarArea(pedido.area_actual)} destacado />
-                  <DatoClave etiqueta="Entrega" valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"} />
-                </div>
               </div>
 
               <BloqueDatos
-                titulo="Trabajo solicitado"
+                titulo="Datos principales del pedido"
                 datos={[
-                  ["Descripción / trabajo", pedido.trabajo || pedido.pieza || "—"],
+                  ["Contrato", pedido.contrato || "—"],
+                  ["Nombre", pedido.cliente || "Sin cliente"],
                   ["Origen / lugar", pedido.origen || "—"],
+                  ["Descripción / trabajo", pedido.trabajo || pedido.pieza || "—"],
                   ["Peso", pedido.peso_estimado ? `${pedido.peso_estimado}` : "—"],
                   ["Material", pedido.material || "—"],
                   ["Piedras", pedido.piedras || "—"],
                   ["Talla", pedido.talla || "—"],
                   ["Cantidad", String(pedido.cantidad_piezas ?? "—")],
+                  ["Precio", new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.importe) || 0)],
+                  ["A cuenta", new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.a_cuenta) || 0)],
+                  ["Saldo", new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.saldo) || 0)],
                 ]}
               />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <DatoClave etiqueta="Área actual" valor={normalizarArea(pedido.area_actual)} destacado />
+                <DatoClave etiqueta="Entrega" valor={fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "—"} />
+              </div>
 
               <section>
                 <div className="mb-3 flex items-center gap-3">
