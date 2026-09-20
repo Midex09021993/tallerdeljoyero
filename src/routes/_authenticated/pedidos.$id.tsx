@@ -955,17 +955,21 @@ function FichaPedido() {
               </div>
 
               <BloqueDatos
-                titulo="Datos principales del pedido"
+                titulo="Ficha técnica"
                 datos={[
-                  ["Contrato", pedido.contrato || "—"],
-                  ["Nombre", pedido.cliente || "Sin cliente"],
-                  ["Origen / lugar", pedido.origen || "—"],
                   ["Descripción / trabajo", pedido.trabajo || pedido.pieza || "—"],
                   ["Peso", pedido.peso_estimado ? `${pedido.peso_estimado}` : "—"],
                   ["Material", pedido.material || "—"],
                   ["Piedras", pedido.piedras || "—"],
                   ["Talla", pedido.talla || "—"],
                   ["Cantidad", String(pedido.cantidad_piezas ?? "—")],
+                ]}
+              />
+              <BloqueDatos
+                titulo="Datos comerciales"
+                datos={[
+                  ["Contrato", pedido.contrato || "—"],
+                  ["Origen / lugar", pedido.origen || "—"],
                   ["Precio", new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.importe) || 0)],
                   ["A cuenta", new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.a_cuenta) || 0)],
                   ["Saldo", new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(pedido.saldo) || 0)],
