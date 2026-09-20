@@ -1007,7 +1007,8 @@ async function importarPedidosCsv(registros: CsvRegistro[]) {
       ventas_actualizado_en: fila.ventas_actualizado_en,
       enviado_at: fila.enviado_at,
       entregado_at: fila.entregado_at,
-    }));
+    }))
+    .filter((fila) => fila.pedido_id);
 
   if (comerciales.length > 0) {
     const { error: errorComercial } = await supabase
