@@ -4,6 +4,8 @@ import { AppShell, MobileBackButton } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { areaCoincide } from "@/lib/auth";
 import {
   esEstadoFinalPedido,
