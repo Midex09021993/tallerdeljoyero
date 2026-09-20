@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { areaCoincide, useSesion } from "@/lib/auth";
+import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -45,7 +45,7 @@ function CotizacionDetallePage() {
   const { data: sesion } = useSesion();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
-    Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
+    Boolean(sesion?.areas.some((area) => area.trim().toLowerCase() === "área ventas"));
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [detalles, setDetalles] = useState<Detalle[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
