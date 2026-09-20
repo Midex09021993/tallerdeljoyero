@@ -44,7 +44,7 @@ export function PedidoFormCampos({
   return (
     <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {CAMPOS_PEDIDO.map(([campo, etiqueta, tipo]) => {
+        {CAMPOS_PEDIDO.filter(([campo]) => campo !== "cliente" || !bloqueados.has(campo)).map(([campo, etiqueta, tipo]) => {
           const bloqueado = bloqueados.has(campo);
           return (
             <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -77,15 +77,6 @@ export function PedidoFormCampos({
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          WhatsApp
-          <input
-            type="tel"
-            value={form.telefono}
-            onChange={(e) => onChange({ ...form, telefono: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-          />
-        </label>
         <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
           Fecha de ingreso
           <FechaInput
