@@ -270,6 +270,28 @@ function FichaPedido() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
+  const { data: contextoComercial } = useQuery({
+    queryKey: ["pedido-contexto-comercial", id, pedido?.cliente_id, pedido?.cotizacion_id, pedido?.proyecto_joya_id],
+    enabled: Boolean(pedido),
+    queryFn: async () => {
+      const [clienteRes, cotizacionRes, proyectoRes] = await Promise.all([
+        pedido?.cliente_id
+          ? supabase.from("clientes").select("id,nombre,telefono,email").eq("id", pedido.cliente_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        pedido?.cotizacion_id
+          ? supabase.from("cotizaciones").select("id,numero,version,estado,total,moneda").eq("id", pedido.cotizacion_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        pedido?.proyecto_joya_id
+          ? supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras").eq("id", pedido.proyecto_joya_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      return {
+        cliente: clienteRes.data,
+        cotizacion: cotizacionRes.data,
+        proyecto: proyectoRes.data,
+      };
+    },
+  });
   const { data: trabajosPedido = [] } = useQuery({
     queryKey: ["trabajos-pedido", id],
     queryFn: async () => {
@@ -502,6 +524,46 @@ function FichaPedido() {
           >
             ← Volver a {regreso.etiqueta}
           </button>
+        </div>
+      ) : null}
+
+      {puedeVerComercial ? (
+        <div className="mb-6 overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-card">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-sunken px-5 py-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Origen comercial</p>
+              <p className="mt-1 text-sm font-semibold">Cliente → proyecto → cotización → pedido</p>
+            </div>
+            <span className="rounded-full border border-border bg-card px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Pedido central
+            </span>
+          </div>
+          <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4">
+            <div className="bg-card p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</p>
+              <p className="mt-1 truncate text-sm font-semibold">{contextoComercial?.cliente?.nombre ?? pedido.cliente ?? "—"}</p>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{contextoComercial?.cliente?.telefono || contextoComercial?.cliente?.email || "Sin contacto"}</p>
+            </div>
+            <div className="bg-card p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Proyecto</p>
+              <p className="mt-1 truncate text-sm font-semibold">{contextoComercial?.proyecto ? `${contextoComercial.proyecto.codigo} · ${contextoComercial.proyecto.nombre}` : "Sin proyecto vinculado"}</p>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{contextoComercial?.proyecto?.metal || pedido.material || "—"}{contextoComercial?.proyecto?.ley ? ` · ${contextoComercial.proyecto.ley}` : ""}</p>
+            </div>
+            <div className="bg-card p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cotización</p>
+              {contextoComercial?.cotizacion ? (
+                <Link to="/cotizaciones/$id" params={{ id: contextoComercial.cotizacion.id }} className="mt-1 block truncate text-sm font-semibold text-gold-deep hover:underline">
+                  {contextoComercial.cotizacion.numero} · v{contextoComercial.cotizacion.version}
+                </Link>
+              ) : <p className="mt-1 text-sm font-semibold">Sin cotización vinculada</p>}
+              <p className="mt-1 truncate text-xs text-muted-foreground">{contextoComercial?.cotizacion?.estado ?? "Pedido directo"}</p>
+            </div>
+            <div className="bg-card p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Producción</p>
+              <p className="mt-1 truncate text-sm font-semibold">{normalizarArea(pedido.area_actual)}</p>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{pedido.estado} · {trabajosPedido.length} trabajo{trabajosPedido.length === 1 ? "" : "s"}</p>
+            </div>
+          </div>
         </div>
       ) : null}
 
