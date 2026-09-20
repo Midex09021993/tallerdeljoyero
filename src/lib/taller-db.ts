@@ -822,7 +822,7 @@ export function useContratos(incluirFinanzas = true) {
         if (esErrorCampoFaltante(error)) return [];
         throw error;
       }
-      return ((data ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...c }) => {
+      return ((data ?? []) as unknown as Array<Record<string, unknown>>).map(({ sedes, ...c }) => {
         const total = Number(c["total"]) || 0;
         const abonado = Number(c["abonado"]) || 0;
         return {
@@ -1246,11 +1246,11 @@ export function useCrearPedido() {
       const contrato = await asegurarContratoParaPedido(pedido);
       const pedidoConContrato = { ...pedido, contrato: contrato.numero, contrato_id: contrato.id };
       const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContrato);
-      const respuesta = await supabase.from("pedidos").insert(datosOperativos).select("id, referencia, cliente, sede_id").single();
+      const respuesta = await supabase.from("pedidos").insert(datosOperativos as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single();
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
       const { data, error } =
         respuesta.error && esErrorCampoFaltante(respuesta.error) && "contrato_id" in pedidoConContrato
-          ? await supabase.from("pedidos").insert(sinContratoId).select("id, referencia, cliente, sede_id").single()
+          ? await supabase.from("pedidos").insert(sinContratoId as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single()
           : respuesta;
       if (error) throw error;
       if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
@@ -1274,11 +1274,11 @@ export function useCrearTrabajoContrato() {
       const referencia = siguienteReferenciaContrato(contrato.numero, referenciasExistentes);
       const nuevo: PedidoNuevo = { ...pedido, referencia, cliente: contrato.cliente, contrato: contrato.numero, contrato_id: esUuid(contrato.id) ? contrato.id : null, sede_id: contrato.sede_id };
       const { pedido: datosOperativos } = separarDatosComerciales(nuevo);
-      const respuesta = await supabase.from("pedidos").insert(datosOperativos).select("id, referencia, cliente, sede_id").single();
+      const respuesta = await supabase.from("pedidos").insert(datosOperativos as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single();
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
       const { data, error } =
         respuesta.error && (esErrorCampoFaltante(respuesta.error) || respuesta.error.code === "22P02")
-          ? await supabase.from("pedidos").insert(sinContratoId).select("id, referencia, cliente, sede_id").single()
+          ? await supabase.from("pedidos").insert(sinContratoId as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single()
           : respuesta;
       if (error) throw error;
       if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
@@ -1542,7 +1542,7 @@ export function useEnviarAArea() {
       const { data, error } = await supabase.rpc("mover_pedido_a_area", {
         _pedido_id: pedido.id,
         _destino: destinoNormalizado,
-        _motivo: motivo?.trim() || null,
+        _motivo: motivo?.trim() || undefined,
       });
 
       if (error) {
