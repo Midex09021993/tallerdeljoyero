@@ -2,7 +2,7 @@ export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; 
   // The gem environment is intentionally independent from the metal environment.
   // Small family offsets improve the way the same HDR light field crosses
   // different optical responses without changing IOR, color or dispersion.
-  Diamante: { intensity: 1.28, rotationOffset: 0.00 },
+  Diamante: { intensity: 1.30, rotationOffset: 0.00 },
   Moissanita: { intensity: 1.24, rotationOffset: 0.025 },
   Esmeralda: { intensity: 1.12, rotationOffset: -0.035 },
   Rubi: { intensity: 1.16, rotationOffset: -0.020 },
