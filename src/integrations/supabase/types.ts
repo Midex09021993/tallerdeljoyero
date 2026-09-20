@@ -1443,6 +1443,51 @@ export type Database = {
           },
         ]
       }
+      pedido_entrega_eventos: {
+        Row: {
+          created_at: string
+          datos: Json
+          id: string
+          pedido_id: string
+          sede_id: string
+          tipo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          datos?: Json
+          id?: string
+          pedido_id: string
+          sede_id: string
+          tipo: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          datos?: Json
+          id?: string
+          pedido_id?: string
+          sede_id?: string
+          tipo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_entrega_eventos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_entrega_eventos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedido_materiales: {
         Row: {
           cantidad_planificada: number
@@ -1554,6 +1599,7 @@ export type Database = {
           enviado_at: string | null
           especificaciones_comerciales: Json | null
           estado: string
+          evidencia_entrega_url: string | null
           fecha_entrega: string | null
           fecha_entregado: string | null
           fecha_envio: string | null
@@ -1571,6 +1617,8 @@ export type Database = {
           notas_ventas: string
           origen: string
           packing_estado: string
+          packing_preparado_at: string | null
+          packing_preparado_por: string | null
           peso_estimado: string
           piedras: string
           pieza: string
@@ -1612,6 +1660,7 @@ export type Database = {
           enviado_at?: string | null
           especificaciones_comerciales?: Json | null
           estado?: string
+          evidencia_entrega_url?: string | null
           fecha_entrega?: string | null
           fecha_entregado?: string | null
           fecha_envio?: string | null
@@ -1629,6 +1678,8 @@ export type Database = {
           notas_ventas?: string
           origen?: string
           packing_estado?: string
+          packing_preparado_at?: string | null
+          packing_preparado_por?: string | null
           peso_estimado?: string
           piedras?: string
           pieza: string
@@ -1670,6 +1721,7 @@ export type Database = {
           enviado_at?: string | null
           especificaciones_comerciales?: Json | null
           estado?: string
+          evidencia_entrega_url?: string | null
           fecha_entrega?: string | null
           fecha_entregado?: string | null
           fecha_envio?: string | null
@@ -1687,6 +1739,8 @@ export type Database = {
           notas_ventas?: string
           origen?: string
           packing_estado?: string
+          packing_preparado_at?: string | null
+          packing_preparado_por?: string | null
           peso_estimado?: string
           piedras?: string
           pieza?: string
@@ -2589,6 +2643,10 @@ export type Database = {
           trabajo: string
           ventas_estado: string
         }[]
+      }
+      transicionar_entrega_pedido: {
+        Args: { _accion: string; _datos?: Json; _pedido_id: string }
+        Returns: Json
       }
       transicionar_orden_produccion: {
         Args: { _nuevo_estado: string; _orden_id: string }
