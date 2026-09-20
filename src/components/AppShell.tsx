@@ -141,7 +141,7 @@ export function AppShell({
             </p>
           </div>
 
-          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
+          <nav className="scrollbar-hidden min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
             {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
               if (items.length === 0) return null;
