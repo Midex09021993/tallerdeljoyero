@@ -38,3 +38,22 @@ return jsonb_build_object('pedido_id',_pedido_id,'accion',_accion,'tipo',v_tipo,
 end;$$;
 revoke all on function public.transicionar_entrega_pedido(uuid,text,jsonb) from public,anon;
 grant execute on function public.transicionar_entrega_pedido(uuid,text,jsonb) to authenticated;
+-- Endurecimiento: la bitácora se registra internamente desde el cambio de estado.
+create or replace function private.registrar_evento_entrega()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare v_uid uuid := (select auth.uid()); v_tipo text; v_datos jsonb;
+begin
+ if v_uid is null then return new; end if;
+ if new.estado='Listo para Entrega' and old.estado is distinct from new.estado then v_tipo:='listo_entrega'; v_datos:=jsonb_build_object('fecha_listo_entrega',new.fecha_listo_entrega,'observaciones',new.listo_entrega_observaciones);
+ elsif new.packing_estado='Preparado' and old.packing_estado is distinct from new.packing_estado then v_tipo:='packing_preparado'; v_datos:=jsonb_build_object('packing_preparado_at',new.packing_preparado_at);
+ elsif new.estado='En Camino' and old.estado is distinct from new.estado then v_tipo:='despachado'; v_datos:=jsonb_build_object('medio_envio',new.medio_envio,'guia_envio',new.guia_envio,'fecha_envio',new.fecha_envio);
+ elsif new.estado='Entregado' and old.estado is distinct from new.estado then v_tipo:='entregado'; v_datos:=jsonb_build_object('fecha_entregado',new.fecha_entregado,'receptor_envio',new.receptor_envio,'evidencia_entrega_url',new.evidencia_entrega_url);
+ end if;
+ if v_tipo is not null then insert into public.pedido_entrega_eventos(pedido_id,sede_id,tipo,usuario_id,datos) values(new.id,new.sede_id,v_tipo,v_uid,coalesce(v_datos,'{}'::jsonb)); end if;
+ return new;
+end;
+$$;
+revoke all on function private.registrar_evento_entrega() from public,anon,authenticated;
+drop trigger if exists trg_pedidos_evento_entrega on public.pedidos;
+create trigger trg_pedidos_evento_entrega after update on public.pedidos for each row execute function private.registrar_evento_entrega();
