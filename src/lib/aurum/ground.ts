@@ -95,6 +95,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     updateFromPreset(preset) {
       if (!preset) return;
       mesh.visible = preset.groundVisible !== false;
+      bakedShadow.visible = mesh.visible && preset.id === "ijewelReference";
       if (preset.ground != null) mesh.material.color.setHex(preset.ground);
       if (preset.groundRoughness != null) mesh.material.roughness = preset.groundRoughness;
       if (preset.groundMetalness != null) mesh.material.metalness = preset.groundMetalness;
