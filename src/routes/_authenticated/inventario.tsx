@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -271,7 +271,7 @@ function JoyasTerminadas({
     setPaso("lista");
   }
 
-  async function guardar(e: React.FormEvent) {
+  async function guardar(e: FormEvent) {
     e.preventDefault();
     if (!sedeId) return toast.error("Tu usuario no tiene una sede asignada");
     if (!form.codigo.trim() || !form.nombre.trim()) return toast.error("Código y nombre son obligatorios");
@@ -491,7 +491,7 @@ function Materiales({
 
   const lista = filtro === "Todas" ? inventario : inventario.filter((m) => m.categoria === filtro);
 
-  async function crearMaterial(e: React.FormEvent) {
+  async function crearMaterial(e: FormEvent) {
     e.preventDefault();
     if (!nuevo.material.trim()) return;
     try {
@@ -835,7 +835,7 @@ function Movimientos({
     (m) => m.areas.length === 0 || m.areas.includes(form.area),
   );
 
-  async function enviar(e: React.FormEvent) {
+  async function enviar(e: FormEvent) {
     e.preventDefault();
     if (!form.material_id || !Number(form.cantidad)) {
       toast.error("Elige material y cantidad");
