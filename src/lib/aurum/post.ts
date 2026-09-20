@@ -186,7 +186,8 @@ export async function createAurumPostPipeline(
     // iJewel VJSON explicitly enables progressive jitter + TAA. In Three r185,
     // sampleLevel=5 gives the 32-jitter sequence. SSR is composed over the
     // saved TAA beauty so neither stage is silently discarded.
-    const taaEnabled=config.taa!==false;
+    const isLowQuality=String(q?.qualityId??"") === "low" || Number(q?.pixelRatio??1.5) <= 1.01;
+    const taaEnabled=config.taa!==false && !isLowQuality;
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
@@ -239,7 +240,7 @@ export async function createAurumPostPipeline(
       gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
     if(lutPass){
-      lutPass.enabled=config.lut!==false;
+      lutPass.enabled=config.lut!==false && !isLowQuality;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
@@ -250,7 +251,7 @@ export async function createAurumPostPipeline(
       }
     }
     if(vignettePass){
-      vignettePass.enabled=config.vignette!==false;
+      vignettePass.enabled=config.vignette!==false && !isLowQuality;
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
       vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
