@@ -45,7 +45,7 @@ type Movimiento = {
 };
 type Joya = {
   id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
-  talla: string; piedras: string; cantidad: number; estado: string;
+  talla: string; piedras: string; cantidad: number; estado: string; created_at?: string | null;
 };
 
 const CATEGORIAS = ["Oro", "Plata", "Piedras", "Resina", "Soldadura", "Herramientas", "Otros insumos"];
@@ -82,6 +82,7 @@ function InventarioPage() {
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todas");
   const [joyaBusqueda, setJoyaBusqueda] = useState("");
+  const [joyaSeleccionada, setJoyaSeleccionada] = useState<Joya | null>(null);
   const [movBusqueda, setMovBusqueda] = useState("");
   const [movTipo, setMovTipo] = useState("Todos");
   const [movMaterial, setMovMaterial] = useState("Todos");
@@ -110,7 +111,7 @@ function InventarioPage() {
         .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,pedido_id,created_at,inventario(material,unidad)")
         .order("created_at", { ascending: false }).limit(100),
       supabase.from("inventario_joyas")
-        .select("id,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado")
+        .select("id,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado,created_at")
         .eq("sede_id", sedeId).order("nombre"),
     ]);
     if (a.error) toast.error(a.error.message);
@@ -472,11 +473,47 @@ function InventarioPage() {
               </div>
             </div>
             <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Código", "Joya", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
-              {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyasVisibles.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Search className="mx-auto size-7 text-gold/40" /><p className="mt-3 text-sm font-medium">No encontramos esa joya</p><p className="mt-1 text-xs text-muted-foreground">Prueba con el código, nombre, metal, ley o talla.</p></td></tr> : joyasVisibles.map((j) => <tr key={j.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4"><span className="inline-flex items-center rounded-lg border border-gold/25 bg-gold/[.06] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-wide text-gold">{j.codigo || "Sin código"}</span></td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
+              {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyasVisibles.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Search className="mx-auto size-7 text-gold/40" /><p className="mt-3 text-sm font-medium">No encontramos esa joya</p><p className="mt-1 text-xs text-muted-foreground">Prueba con el código, nombre, metal, ley o talla.</p></td></tr> : joyasVisibles.map((j) => <tr key={j.id} onClick={() => setJoyaSeleccionada(j)} className="cursor-pointer transition-colors hover:bg-gold/[.04]"><td className="px-5 py-4"><span className="inline-flex items-center rounded-lg border border-gold/25 bg-gold/[.06] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-wide text-gold">{j.codigo || "Sin código"}</span></td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
             </tbody></table></TableWrap>
           </section>
         ) : null}
       </div>
+
+      {joyaSeleccionada ? (
+        <Modal title={joyaSeleccionada.codigo || "Ficha de joya"} onClose={() => setJoyaSeleccionada(null)}>
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-gold/15 bg-gold/[.025] p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Identificación</p>
+                  <h3 className="mt-1 text-xl font-semibold">{joyaSeleccionada.nombre}</h3>
+                  <p className="mt-1 font-mono text-xs font-semibold text-gold">{joyaSeleccionada.codigo || "Código pendiente"}</p>
+                </div>
+                <span className="rounded-full border border-gold/20 bg-background px-3 py-1 text-[10px] font-semibold uppercase">{joyaSeleccionada.estado.replace("_", " ")}</span>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">Características</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <FichaDato label="Metal" value={joyaSeleccionada.metal || "—"} />
+                <FichaDato label="Ley" value={joyaSeleccionada.ley || "—"} />
+                <FichaDato label="Peso" value={joyaSeleccionada.peso == null ? "—" : num(joyaSeleccionada.peso) + " g"} />
+                <FichaDato label="Talla" value={joyaSeleccionada.talla || "—"} />
+                <FichaDato label="Piedras" value={joyaSeleccionada.piedras || "—"} />
+                <FichaDato label="Cantidad" value={num(joyaSeleccionada.cantidad)} />
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-background/50 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Registro</p>
+              <p className="mt-1 text-xs text-muted-foreground">{joyaSeleccionada.created_at ? new Date(joyaSeleccionada.created_at).toLocaleDateString("es-PE") : "Fecha no disponible"}</p>
+            </div>
+
+            <p className="text-[11px] leading-5 text-muted-foreground">Esta ficha será el punto de entrada para el historial, movimientos, pedidos y QR de la joya.</p>
+          </div>
+        </Modal>
+      ) : null}
 
       {modal ? <Modal title={modal === "material" ? (editando ? "Editar material" : "Nuevo material") : modal === "movimiento" ? "Registrar movimiento" : "Nueva joya"} onClose={() => setModal(null)}>
         {modal === "material" ? <form onSubmit={guardarMaterial} className="space-y-4">
@@ -606,6 +643,15 @@ function normalizarCodigosJoyas(joyas: Joya[], nombreSede: string | null | undef
   });
 
   return { joyas: resultado, cambios };
+}
+
+function FichaDato({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/50 px-4 py-3">
+      <p className="text-[9px] font-semibold uppercase tracking-[.16em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-medium">{value}</p>
+    </div>
+  );
 }
 
 function positive(tipo: string) {
