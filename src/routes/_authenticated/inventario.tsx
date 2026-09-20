@@ -634,9 +634,17 @@ function InventarioPage() {
                 <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">{importacionAnalisis.errores.slice(0, 6).map((error) => <li key={error}>• {error}</li>)}</ul>
                 {importacionAnalisis.errores.length > 6 ? <p className="mt-1 text-[10px] text-muted-foreground">Y {importacionAnalisis.errores.length - 6} incidencias más.</p> : null}
               </div> : null}
-              <div className="max-h-56 overflow-auto rounded-xl border border-border">
-                <table className="w-full text-left text-[11px]"><thead className="sticky top-0 bg-card"><tr className="border-b border-border"><th className="px-3 py-2">Código</th><th className="px-3 py-2">Joya</th><th className="px-3 py-2">Metal</th><th className="px-3 py-2">Peso</th></tr></thead>
-                  <tbody className="divide-y divide-border">{importacionFilas.slice(0, 50).map((fila, i) => <tr key={i}><td className="px-3 py-2 font-mono text-gold">{fila.codigo || "Automático"}</td><td className="px-3 py-2">{fila.nombre || "Sin nombre"}</td><td className="px-3 py-2">{fila.metal || "—"}</td><td className="px-3 py-2">{fila.peso || "—"}</td></tr>)}</tbody>
+              <div className="max-h-64 overflow-auto rounded-xl border border-border">
+                <table className="w-full text-left text-[11px]"><thead className="sticky top-0 bg-card"><tr className="border-b border-border"><th className="px-3 py-2">Código</th><th className="px-3 py-2">Joya</th><th className="px-3 py-2">Metal</th><th className="px-3 py-2">Peso</th><th className="px-3 py-2">Estado</th></tr></thead>
+                  <tbody className="divide-y divide-border">
+                    {importacionFilas.slice(0, 50).map((fila, i) => <tr key={i}>
+                      <td className="px-3 py-2 font-mono text-gold">{fila.codigo || "Automático"}</td>
+                      <td className="px-3 py-2"><input value={fila.nombre} onChange={(e) => setImportacionFilas((filas) => filas.map((actual, indice) => indice === i ? { ...actual, nombre: e.target.value } : actual))} className="h-8 min-w-[150px] rounded-lg border border-border bg-background px-2 text-[11px] outline-none focus:border-gold/40" /></td>
+                      <td className="px-3 py-2"><input value={fila.metal} onChange={(e) => setImportacionFilas((filas) => filas.map((actual, indice) => indice === i ? { ...actual, metal: e.target.value } : actual))} className="h-8 min-w-[100px] rounded-lg border border-border bg-background px-2 text-[11px] outline-none focus:border-gold/40" /></td>
+                      <td className="px-3 py-2"><input value={fila.peso} onChange={(e) => setImportacionFilas((filas) => filas.map((actual, indice) => indice === i ? { ...actual, peso: e.target.value } : actual))} className="h-8 w-24 rounded-lg border border-border bg-background px-2 text-[11px] outline-none focus:border-gold/40" /></td>
+                      <td className="px-3 py-2"><span className={`rounded-full border px-2 py-1 text-[9px] font-semibold ${fila.nombre.trim() && (!fila.peso.trim() || Number(fila.peso.replace(",", ".")) >= 0) ? "border-gold/20 text-gold" : "border-destructive/20 text-destructive"}`}>{fila.nombre.trim() && (!fila.peso.trim() || Number(fila.peso.replace(",", ".")) >= 0) ? "Lista" : "Revisar"}</span></td>
+                    </tr>)}
+                  </tbody>
                 </table>
               </div>
               {importacionFilas.length > 50 ? <p className="text-[10px] text-muted-foreground">Mostrando las primeras 50 filas. Se importarán las {importacionFilas.length}.</p> : null}
