@@ -826,7 +826,6 @@ function FichaPedido() {
                   </Link>
                 </div>
               ) : null}
-            </div>
 
             <div className="border-t-2 border-gold/25 bg-surface-sunken px-6 py-5">
               {puedeAutorizar ? (
@@ -925,7 +924,6 @@ function FichaPedido() {
                 </button>
               </div>
             </div>
-          </Panel>
 
           <div className="hidden sm:block">
             <Panel titulo="Seguimiento del pedido">

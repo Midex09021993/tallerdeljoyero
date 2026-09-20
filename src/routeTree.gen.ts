@@ -34,6 +34,7 @@ import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos.$id'
+import { Route as AuthenticatedTrabajosIdRouteImport } from './routes/_authenticated/trabajos.$id'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -167,6 +168,11 @@ const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedPedidosRoute,
 } as any)
+const AuthenticatedTrabajosIdRoute = AuthenticatedTrabajosIdRouteImport.update({
+  id: '/trabajos/$id',
+  path: '/trabajos/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -282,6 +291,7 @@ export interface FileRouteTypes {
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
+    | '/trabajos/$id'
     | '/pedidos/'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
+    | '/trabajos/$id'
     | '/pedidos'
     | '/lovable/email/transactional/preview'
   id:
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contratos/$id'
     | '/_authenticated/cotizaciones/$id'
     | '/_authenticated/pedidos/$id'
+    | '/_authenticated/trabajos/$id'
     | '/_authenticated/pedidos/'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -526,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosIdRouteImport
       parentRoute: typeof AuthenticatedPedidosRoute
     }
+    '/_authenticated/trabajos/$id': {
+      id: '/_authenticated/trabajos/$id'
+      path: '/trabajos/$id'
+      fullPath: '/trabajos/$id'
+      preLoaderRoute: typeof AuthenticatedTrabajosIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -581,6 +600,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRoute
   AuthenticatedContratosIdRoute: typeof AuthenticatedContratosIdRoute
+  AuthenticatedTrabajosIdRoute: typeof AuthenticatedTrabajosIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -601,6 +621,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRoute,
   AuthenticatedContratosIdRoute: AuthenticatedContratosIdRoute,
+  AuthenticatedTrabajosIdRoute: AuthenticatedTrabajosIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
