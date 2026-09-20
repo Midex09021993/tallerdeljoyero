@@ -357,6 +357,22 @@ function FichaPedido() {
       return data;
     },
   });
+  const { data: tarifasManoObra = [] } = useQuery({
+    queryKey: ["tarifas-mano-obra-sede", pedido?.sede_id],
+    enabled: Boolean(pedido?.sede_id && sesion?.esAdmin),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("tarifas_mano_obra").select("id,area,tarifa_hora,moneda,vigente_desde,activo").eq("sede_id", pedido!.sede_id).order("vigente_desde", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const guardarTarifa = async () => {
+    const valor = Number(tarifaHora);
+    if (!pedido?.sede_id || !sesion?.esAdmin || !Number.isFinite(valor) || valor < 0) return;
+    const { error } = await supabase.from("tarifas_mano_obra").insert({ sede_id: pedido.sede_id, area: areaTarifa.trim(), tarifa_hora: valor, moneda: "PEN", activo: true });
+    if (error) toast.error(error.message);
+    else { toast.success("Tarifa de mano de obra guardada"); setTarifaHora(""); setAreaTarifa(""); void qc.invalidateQueries({ queryKey: ["tarifas-mano-obra-sede", pedido.sede_id] }); }
+  };
   const { data: resumenCostos } = useQuery({
     queryKey: ["resumen-costos-op", ordenProduccion?.id],
     enabled: Boolean(ordenProduccion?.id),
@@ -372,6 +388,8 @@ function FichaPedido() {
     if (error) toast.error(error.message);
     else { toast.success("Costo real recalculado"); void qc.invalidateQueries({ queryKey: ["resumen-costos-op", ordenProduccion.id] }); }
   };
+  const [tarifaHora, setTarifaHora] = useState("");
+  const [areaTarifa, setAreaTarifa] = useState("");
   const [costoManual, setCostoManual] = useState({ categoria: "externo", concepto: "", importe: "" });
   const registrarCostoManual = async () => {
     if (!ordenProduccion || !costoManual.concepto.trim() || Number(costoManual.importe) <= 0) return;
@@ -1026,6 +1044,7 @@ function FichaPedido() {
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Materiales</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.costo_materiales||0).toFixed(2)}</p></div><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Mano de obra</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.costo_mano_obra||0).toFixed(2)}</p></div><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Costo real</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.costo_real||0).toFixed(2)}</p></div><div className="rounded-xl bg-surface-sunken p-3"><p className="text-[9px] uppercase text-muted-foreground">Margen</p><p className="mt-1 font-semibold">S/ {Number(resumenCostos?.margen||0).toFixed(2)} · {resumenCostos?.margen_porcentaje == null ? "—" : Number(resumenCostos.margen_porcentaje).toFixed(1)+"%"}</p></div></div>
         <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><select value={costoManual.categoria} onChange={e => setCostoManual(v => ({...v,categoria:e.target.value}))} className="rounded-xl border border-border bg-background px-3 py-2 text-xs"><option value="externo">Proceso externo</option><option value="indirecto">Costo indirecto</option><option value="ajuste">Ajuste</option></select><input value={costoManual.concepto} onChange={e => setCostoManual(v => ({...v,concepto:e.target.value}))} placeholder="Ej. Baño, grabado, láser…" className="rounded-xl border border-border bg-background px-3 py-2 text-xs"/><div className="flex gap-2"><input type="number" min="0" step="0.01" value={costoManual.importe} onChange={e => setCostoManual(v => ({...v,importe:e.target.value}))} placeholder="S/" className="w-24 rounded-xl border border-border bg-background px-3 py-2 text-xs"/><button type="button" onClick={() => void registrarCostoManual()} className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold">Añadir</button></div></div>
         <p className="mt-2 text-[10px] text-muted-foreground">Los costos manuales permanecen al recalcular; los costos calculados por el sistema se regeneran.</p>
+        {sesion?.esAdmin ? <div className="mt-4 rounded-xl border border-border bg-surface-sunken p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tarifa de mano de obra</p><div className="mt-2 grid gap-2 sm:grid-cols-[1fr_120px_auto]"><input value={areaTarifa} onChange={e => setAreaTarifa(e.target.value)} placeholder="Área general o Engaste…" className="rounded-lg border border-border bg-background px-3 py-2 text-xs"/><input type="number" min="0" step="0.01" value={tarifaHora} onChange={e => setTarifaHora(e.target.value)} placeholder="S/ por hora" className="rounded-lg border border-border bg-background px-3 py-2 text-xs"/><button type="button" onClick={() => void guardarTarifa()} className="rounded-lg bg-background px-3 py-2 text-xs font-semibold">Guardar tarifa</button></div><div className="mt-2 flex flex-wrap gap-2">{tarifasManoObra.slice(0,5).map(t => <span key={t.id} className="rounded-full bg-background px-2.5 py-1 text-[10px]">{t.area || "General"} · S/ {Number(t.tarifa_hora).toFixed(2)}/h</span>)}</div></div> : null}
       </div>
 
       <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
