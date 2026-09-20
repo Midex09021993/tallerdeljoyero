@@ -52,7 +52,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     // Reafirmamos el frontal en el siguiente frame, sin tocar materiales ni escena.
     requestAnimationFrame(() => {
       if (model.userData?.["aurumInitialFrameApplied"]) {
-        applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+        if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
       }
     });
     return;
