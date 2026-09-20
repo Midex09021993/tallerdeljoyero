@@ -207,7 +207,6 @@ export interface FileRoutesByFullPath {
   '/casting': typeof AuthenticatedCastingRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
-  '/clientes': typeof AuthenticatedClientesRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
@@ -237,6 +236,7 @@ export interface FileRoutesByTo {
   '/cliente': typeof ClienteRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
+  '/clientes': typeof AuthenticatedClientesRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
@@ -303,7 +303,6 @@ export interface FileRouteTypes {
     | '/casting'
     | '/clientes'
     | '/corte-laser'
-    | '/clientes'
     | '/cotizaciones'
     | '/diseno-3d'
     | '/gestion'
