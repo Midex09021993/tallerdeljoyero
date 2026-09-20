@@ -251,7 +251,7 @@ function hasSelfIntersection(points: Point[]) {
       (Math.abs(o4) < 1e-8 && onSegment(c,d,b));
   };
   for (let i = 0; i < points.length; i++) {
-    const a = points[i], b = points[(i + 1) % points.length];
+    const a = points[i]!, b = points[(i + 1) % points.length]!;
     for (let j = i + 1; j < points.length; j++) {
       if (j === i + 1 || (i === 0 && j === points.length - 1)) continue;
       if (intersects(a,b,points[j]!,points[(j + 1) % points.length]!)) return true;
