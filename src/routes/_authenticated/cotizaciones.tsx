@@ -233,7 +233,6 @@ function CotizacionesPage() {
   </div> : null}
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : busquedaCliente.trim() && clientesFiltrados.length === 0 ? (
     <>
-    <p className="mt-1 text-[10px] text-muted-foreground/80">Cliente nuevo · se agregará automáticamente al guardar.</p>
     <div className="mt-1 grid gap-2 sm:grid-cols-2">
       <input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({...nuevoCliente,telefono:e.target.value})} placeholder="Teléfono (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
       <input type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({...nuevoCliente,email:e.target.value})} placeholder="Correo (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
