@@ -98,47 +98,41 @@ function VentasPage() {
 
   const contenido = (
     <>
-      <section className="mb-5 overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-card">
-        <div className="relative overflow-hidden bg-ink px-5 py-5 text-ink-foreground sm:px-6">
-          <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
-          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gold">Área comercial</p>
-              <h1 className="mt-1 font-display text-2xl sm:text-3xl">Ventas y atención al cliente</h1>
-              <p className="mt-1 max-w-2xl text-sm text-ink-foreground/70">
-                Una sola vista para recibir pedidos, coordinar entregas, controlar pagos y cerrar la venta.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => navigate({ to: "/pedidos" })} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-medium hover:bg-white/15">
-                Ver pedidos
-              </button>
-              <button type="button" onClick={() => navigate({ to: "/cotizaciones" })} className="rounded-xl bg-gold px-3 py-2 text-xs font-semibold text-ink hover:opacity-90">
-                Cotizaciones
-              </button>
-            </div>
-          </div>
+      <div className="mb-5 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Comercial</p>
+          <h1 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">Atención y cierre de ventas</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Gestiona pedidos que llegaron al área comercial, pagos, despachos y entregas desde una sola vista.
+          </p>
         </div>
-        <div className="grid grid-cols-2 divide-x divide-border sm:grid-cols-4">
-          <ResumenComercial etiqueta="Por entregar" valor={pendientesEntrega.length} detalle="Atención inmediata" />
-          <ResumenComercial etiqueta="En camino" valor={enviados.length} detalle="Despachos activos" />
-          <ResumenComercial etiqueta="Entregados" valor={entregados.length} detalle="Histórico filtrado" />
-          <ResumenComercial etiqueta="Sede" valor={esDueno ? etiquetaSede : "Actual"} detalle={esDueno ? "Filtro comercial" : "Tu sede"} />
+        <div className="flex shrink-0 gap-2">
+          <button type="button" onClick={() => navigate({ to: "/pedidos" })} className="rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-medium text-foreground hover:border-gold/40">
+            Pedidos
+          </button>
+          <button type="button" onClick={() => navigate({ to: "/cotizaciones" })} className="rounded-xl bg-ink px-3.5 py-2 text-xs font-medium text-ink-foreground hover:opacity-90">
+            Cotizaciones
+          </button>
         </div>
-      </section>
+      </div>
+
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiComercial etiqueta="Por entregar" valor={pendientesEntrega.length} detalle="Requieren atención" />
+        <KpiComercial etiqueta="En camino" valor={enviados.length} detalle="Despachos activos" />
+        <KpiComercial etiqueta="Entregados" valor={entregados.length} detalle="Histórico" />
+        <KpiComercial etiqueta="Sede" valor={esDueno ? etiquetaSede : "Actual"} detalle={esDueno ? "Filtro aplicado" : "Tu sede"} />
+      </div>
 
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 font-medium text-gold">Pedidos → Venta</span>
-          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">Pago</span>
-          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">Despacho</span>
-          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">Entrega</span>
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Bandeja comercial</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Pedidos que requieren seguimiento o cierre.</p>
         </div>
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar pedido, cliente, contrato o guía..."
-          className="h-10 w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-1 focus:ring-gold sm:w-80"
+          className="h-10 w-full rounded-xl border border-border bg-card px-3.5 text-sm outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 sm:w-80"
         />
       </div>
 
@@ -297,8 +291,7 @@ function VentasPage() {
                 pedido={pedido}
                 resumenFinanciero={resumenFinancieroPedido(
                   pedido,
-                  contratosPorClave,
-                  pagosPorContrato,
+                  contratosPorClave,                  pagosPorContrato,
                 )}
                 pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
                 puedeRegistrarPago={puedeRegistrarPago}
@@ -481,12 +474,15 @@ function resumenFinancieroPedido(
   );
 }
 
-function ResumenComercial({ etiqueta, valor, detalle }: { etiqueta: string; valor: number | string; detalle: string }) {
+function KpiComercial({ etiqueta, valor, detalle }: { etiqueta: string; valor: number | string; detalle: string }) {
   return (
-    <div className="px-4 py-4 sm:px-5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{etiqueta}</p>
-      <p className="mt-1 text-xl font-semibold text-foreground">{valor}</p>
-      <p className="mt-0.5 text-[10px] text-muted-foreground">{detalle}</p>
+    <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{etiqueta}</p>
+        <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+      </div>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{valor}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">{detalle}</p>
     </div>
   );
 }
@@ -597,8 +593,7 @@ function PedidoVentaCard({
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Entrega</dt>
-            <dd className="mt-0.5 text-foreground">
-              {fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "Sin fecha"}
+            <dd className="mt-0.5 text-foreground">              {fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "Sin fecha"}
             </dd>
           </div>
           <div>
@@ -897,8 +892,7 @@ function FormularioEnvio({
         </label>
         <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
           Guía / comprobante
-          <input
-            name="guia_envio"
+          <input            name="guia_envio"
             defaultValue={pedido.guia_envio}
             className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
           />
