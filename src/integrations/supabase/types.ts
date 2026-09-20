@@ -1474,6 +1474,7 @@ export type Database = {
         Returns: string
       }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
+      es_interno: { Args: { _user_id: string }; Returns: boolean }
       guardar_detalles_cotizacion: {
         Args: { _cotizacion_id: string; _detalles: Json }
         Returns: undefined
