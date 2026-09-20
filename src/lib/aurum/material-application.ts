@@ -209,7 +209,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const sameSlot=selectedSlot!=null&&meta.matrixSlot===selectedSlot&&category===selectedCategory;
     const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&(sameLayer||sameSlot));
     if(shouldApply){
-      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));return next;};
+      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);applied++;
     }
   });
