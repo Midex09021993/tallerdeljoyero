@@ -1,982 +1,395 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Boxes,
+  CircleAlert,
+  FilePlus2,
+  Gem,
+  History,
+  MapPin,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
+import { AppShell } from "@/components/AppShell";
+import { FichaDorada } from "@/components/FichaDorada";
 import { supabase } from "@/integrations/supabase/client";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { FichaDorada, type FichaDoradaTipo } from "@/components/FichaDorada";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { AREAS, useSesion } from "@/lib/auth";
-import {
-  CATEGORIAS_MATERIAL,
-  useActualizarMaterial,
-  useAsignarArea,
-  useBorrarMaterial,
-  useCrearMaterial,
-  useInventario,
-  useMovimientosInventario,
-  usePedidosSelector,
-  useRegistrarMovimiento,
-  useInventarioJoyas,
-  useCrearJoyaInventario,
-  useActualizarJoyaInventario,
-  useBorrarJoyaInventario,
-} from "@/lib/taller-db";
+import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/inventario")({
   head: () => ({
     meta: [
       { title: "Inventario — Aurum Lab" },
-      {
-        name: "description",
-        content:
-          "Materiales, stock bajo y movimientos del taller: oro, plata, resina, piedras y soldadura con descuento automático por área.",
-      },
-      { property: "og:title", content: "Inventario — Aurum Lab" },
-      {
-        property: "og:description",
-        content: "Control de insumos por área con descuento automático del stock general.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "description", content: "Inventario profesional de materiales, movimientos y joyas terminadas." },
     ],
   }),
   component: InventarioPage,
 });
 
-const inputCls =
-  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary";
-
-type Modulo = "materiales" | "bajo" | "movimientos" | "joyas";
-
-type FichaInventario = {
-  id: Modulo | null;
-  tipo: FichaDoradaTipo;
-  etiqueta: string;
-  valor: number | string;
-  descripcion: string;
-  indicador: string;
+type Tab = "resumen" | "materiales" | "movimientos" | "joyas";
+type Material = {
+  id: string; sede_id: string | null; codigo: string; material: string; categoria: string;
+  unidad: string; stock: number; minimo: number; lote: string; ubicacion: string;
+  proveedor: string; costo_unitario: number; activo: boolean;
 };
+type Movimiento = {
+  id: string; material_id: string; tipo: string; cantidad: number;
+  stock_anterior: number | null; stock_posterior: number | null; motivo: string;
+  referencia_externa: string; created_at: string; inventario?: { material: string; unidad: string } | null;
+};
+type Joya = {
+  id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
+  talla: string; piedras: string; cantidad: number; estado: string;
+};
+
+const CATEGORIAS = ["Oro", "Plata", "Piedras", "Resina", "Soldadura", "Herramientas", "Otros insumos"];
+const TIPOS = [
+  ["entrada", "Entrada"],
+  ["consumo", "Consumo"],
+  ["devolucion", "Devolución"],
+  ["merma", "Merma"],
+  ["ajuste_positivo", "Ajuste positivo"],
+  ["ajuste_negativo", "Ajuste negativo"],
+];
 
 function InventarioPage() {
   const { data: sesion } = useSesion();
-  const { data: inventario = [], isLoading } = useInventario();
-  const [modulo, setModulo] = useState<Modulo>("materiales");
-  const bajos = useMemo(() => inventario.filter((i) => i.stock < i.minimo), [inventario]);
+  const sedeId = sesion?.perfil.sede_id ?? null;
+  const esAdmin = Boolean(sesion?.esAdmin);
+  const puedeMover = esAdmin || Boolean(sesion?.roles.includes("operario") || sesion?.roles.includes("monitor"));
 
-  const puedeGestionar = sesion?.esAdmin ?? false;
+  const [tab, setTab] = useState<Tab>("resumen");
+  const [materiales, setMateriales] = useState<Material[]>([]);
+  const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
+  const [joyas, setJoyas] = useState<Joya[]>([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [categoria, setCategoria] = useState("Todas");
+  const [cargando, setCargando] = useState(true);
+  const [modal, setModal] = useState<"material" | "movimiento" | "joya" | null>(null);
+  const [editando, setEditando] = useState<Material | null>(null);
+  const [guardando, setGuardando] = useState(false);
 
-  const fichas: FichaInventario[] = [
-    {
-      id: "materiales",
-      tipo: "materiales",
-      etiqueta: "Materiales",
-      valor: inventario.length,
-      descripcion: "Control del stock del taller",
-      indicador: "Inventario",
-    },
-    {
-      id: "bajo",
-      tipo: "bajo",
-      etiqueta: "Stock bajo",
-      valor: bajos.length,
-      descripcion: bajos.length ? "Requieren atención" : "Todo dentro del mínimo",
-      indicador: bajos.length ? "Atención" : "Estable",
-    },
-    {
-      id: "movimientos",
-      tipo: "movimientos",
-      etiqueta: "Movimientos",
-      valor: "Ver",
-      descripcion: "Entradas y consumos del taller",
-      indicador: "Trazabilidad",
-    },
-    {
-      id: null,
-      tipo: "areas",
-      etiqueta: "Áreas",
-      valor: AREAS.length,
-      descripcion: "Áreas disponibles para el taller",
-      indicador: "Operación",
-    },
-  ];
+  const [materialForm, setMaterialForm] = useState({
+    codigo: "", material: "", categoria: "Oro", unidad: "g", stock: "", minimo: "",
+    lote: "", ubicacion: "", proveedor: "", costo_unitario: "",
+  });
+  const [movimientoForm, setMovimientoForm] = useState({
+    material_id: "", tipo: "entrada", cantidad: "", motivo: "", referencia_externa: "",
+  });
+  const [joyaForm, setJoyaForm] = useState({
+    codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible",
+  });
+
+  async function cargar() {
+    if (!sedeId) return;
+    setCargando(true);
+    const [a, b, c] = await Promise.all([
+      supabase.from("inventario").select("*").eq("sede_id", sedeId).order("material"),
+      supabase.from("inventario_movimientos")
+        .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,created_at,inventario(material,unidad)")
+        .order("created_at", { ascending: false }).limit(100),
+      supabase.from("inventario_joyas")
+        .select("id,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado")
+        .eq("sede_id", sedeId).order("nombre"),
+    ]);
+    if (a.error) toast.error(a.error.message);
+    if (b.error) toast.error(b.error.message);
+    if (c.error) toast.error(c.error.message);
+    setMateriales((a.data ?? []) as Material[]);
+    setMovimientos((b.data ?? []) as unknown as Movimiento[]);
+    setJoyas((c.data ?? []) as Joya[]);
+    setCargando(false);
+  }
+
+  useEffect(() => { void cargar(); }, [sedeId]);
+
+  const visibles = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return materiales.filter((m) => {
+      const texto = [m.codigo, m.material, m.categoria, m.lote, m.ubicacion, m.proveedor].join(" ").toLowerCase();
+      return (!q || texto.includes(q)) && (categoria === "Todas" || m.categoria === categoria);
+    });
+  }, [materiales, busqueda, categoria]);
+
+  const activos = materiales.filter((m) => m.activo);
+  const bajos = activos.filter((m) => m.stock <= m.minimo);
+  const valor = activos.reduce((s, m) => s + Number(m.stock) * Number(m.costo_unitario), 0);
+
+  function nuevoMaterial() {
+    setEditando(null);
+    setMaterialForm({ codigo: "", material: "", categoria: "Oro", unidad: "g", stock: "", minimo: "", lote: "", ubicacion: "", proveedor: "", costo_unitario: "" });
+    setModal("material");
+  }
+
+  function editarMaterial(m: Material) {
+    setEditando(m);
+    setMaterialForm({
+      codigo: m.codigo, material: m.material, categoria: m.categoria, unidad: m.unidad,
+      stock: String(m.stock), minimo: String(m.minimo), lote: m.lote, ubicacion: m.ubicacion,
+      proveedor: m.proveedor, costo_unitario: String(m.costo_unitario),
+    });
+    setModal("material");
+  }
+
+  async function guardarMaterial(e: FormEvent) {
+    e.preventDefault();
+    if (!sedeId || !materialForm.material.trim()) return;
+    setGuardando(true);
+    const payload = {
+      sede_id: sedeId, codigo: materialForm.codigo.trim(), material: materialForm.material.trim(),
+      categoria: materialForm.categoria, unidad: materialForm.unidad.trim() || "g",
+      stock: Number(materialForm.stock) || 0, minimo: Number(materialForm.minimo) || 0,
+      lote: materialForm.lote.trim(), ubicacion: materialForm.ubicacion.trim(),
+      proveedor: materialForm.proveedor.trim(), costo_unitario: Number(materialForm.costo_unitario) || 0,
+    };
+    const r = editando
+      ? await supabase.from("inventario").update(payload).eq("id", editando.id)
+      : await supabase.from("inventario").insert(payload);
+    if (r.error) toast.error(r.error.message);
+    else { toast.success(editando ? "Material actualizado" : "Material creado"); setModal(null); await cargar(); }
+    setGuardando(false);
+  }
+
+  async function borrarMaterial(m: Material) {
+    if (!esAdmin || !window.confirm(`¿Eliminar “${m.material}”? Esta acción solo será posible si no tiene movimientos.`)) return;
+    const r = await supabase.from("inventario").delete().eq("id", m.id);
+    if (r.error) toast.error(r.error.message); else { toast.success("Material eliminado"); await cargar(); }
+  }
+
+  async function guardarMovimiento(e: FormEvent) {
+    e.preventDefault();
+    if (!movimientoForm.material_id || !Number(movimientoForm.cantidad)) return;
+    setGuardando(true);
+    const r = await supabase.from("inventario_movimientos").insert({
+      material_id: movimientoForm.material_id, tipo: movimientoForm.tipo,
+      cantidad: Number(movimientoForm.cantidad), motivo: movimientoForm.motivo.trim(),
+      referencia_externa: movimientoForm.referencia_externa.trim(),
+    });
+    if (r.error) toast.error(r.error.message);
+    else { toast.success("Movimiento registrado y stock actualizado"); setModal(null); await cargar(); }
+    setGuardando(false);
+  }
+
+  async function guardarJoya(e: FormEvent) {
+    e.preventDefault();
+    if (!sedeId || !joyaForm.codigo.trim() || !joyaForm.nombre.trim()) return;
+    setGuardando(true);
+    const r = await supabase.from("inventario_joyas").insert({
+      sede_id: sedeId, codigo: joyaForm.codigo.trim(), nombre: joyaForm.nombre.trim(),
+      metal: joyaForm.metal.trim(), ley: joyaForm.ley.trim(),
+      peso: joyaForm.peso ? Number(joyaForm.peso) : null, talla: joyaForm.talla.trim(),
+      piedras: joyaForm.piedras.trim(), cantidad: Number(joyaForm.cantidad) || 1,
+      estado: joyaForm.estado, origen: "app",
+    });
+    if (r.error) toast.error(r.error.message);
+    else { toast.success("Joya agregada"); setModal(null); await cargar(); }
+    setGuardando(false);
+  }
+
+  async function cambiarEstado(id: string, estado: string) {
+    const r = await supabase.from("inventario_joyas").update({ estado }).eq("id", id);
+    if (r.error) toast.error(r.error.message); else await cargar();
+  }
+
+  if (!sesion) return null;
 
   return (
     <AppShell
       titulo="Inventario"
-      subtitulo={
-        isLoading ? "Cargando…" : `${inventario.length} materiales · ${bajos.length} bajo mínimo`
-      }
+      subtitulo="Control profesional de materiales, trazabilidad y joyas terminadas."
       acciones={
-        <>
-          <StatCard etiqueta="Materiales" valor={String(inventario.length)} />
-          <StatCard etiqueta="Bajo mínimo" valor={String(bajos.length)} tono="negativo" />
-        </>
+        <div className="flex flex-wrap items-stretch gap-3">
+          <FichaDorada indicador="Catálogo" titulo="Materiales" valor={activos.length} descripcion="Insumos activos" disabled icono={<Boxes className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Atención" titulo="Stock bajo" valor={bajos.length} descripcion={bajos.length ? "Requieren revisión" : "Todo estable"} disabled icono={<CircleAlert className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Valorización" titulo="Stock" valor={money(valor)} descripcion="Costo registrado" disabled icono={<Package className="size-5" strokeWidth={1.7} />} />
+          <button type="button" onClick={nuevoMaterial} className="group relative min-h-[150px] min-w-[170px] overflow-visible rounded-2xl border border-gold/25 bg-card p-5 text-left text-foreground shadow-[0_18px_45px_-28px_hsl(var(--gold)/0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_24px_50px_-24px_hsl(var(--gold)/0.38)]">
+            <span className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-gold/10 blur-2xl" />
+            <span className="relative flex h-full flex-col justify-between">
+              <span className="grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><Plus className="size-5" /></span>
+              <span><span className="block text-[10px] font-semibold uppercase tracking-[.18em] text-gold/80">Acción</span><span className="mt-1 block text-lg font-semibold">Nuevo material</span></span>
+            </span>
+          </button>
+        </div>
       }
     >
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {fichas.map((ficha) => (
-          <FichaDorada
-            key={ficha.etiqueta}
-            tipo={ficha.tipo}
-            indicador={ficha.indicador}
-            titulo={ficha.etiqueta}
-            valor={ficha.valor}
-            descripcion={ficha.descripcion}
-            activa={ficha.id !== null && modulo === ficha.id}
-            disabled={ficha.id === null}
-            {...(ficha.id ? { onClick: () => setModulo(ficha.id as Modulo) } : {})}
-          />
-        ))}
+      <div className="space-y-5">
+        <nav className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-gold/15 bg-card p-2 shadow-[0_14px_40px_-32px_hsl(var(--gold)/.4)]">
+          <Tab active={tab === "resumen"} onClick={() => setTab("resumen")} icon={<Boxes className="size-4" />} label="Resumen" />
+          <Tab active={tab === "materiales"} onClick={() => setTab("materiales")} icon={<Package className="size-4" />} label="Materiales" />
+          <Tab active={tab === "movimientos"} onClick={() => setTab("movimientos")} icon={<History className="size-4" />} label="Movimientos" />
+          <Tab active={tab === "joyas"} onClick={() => setTab("joyas")} icon={<Gem className="size-4" />} label="Joyas terminadas" />
+          <span className="ml-auto hidden items-center gap-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground sm:flex"><MapPin className="size-3.5 text-gold" />{sesion.sede?.nombre ?? "Sede"}</span>
+        </nav>
+
+        {tab === "resumen" ? (
+          <div className="grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
+            <section className="rounded-2xl border border-gold/15 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Centro de control</p>
+              <h2 className="mt-1 text-xl font-semibold">Estado del inventario</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Una vista limpia para controlar existencias, reposición y trazabilidad sin mezclar el inventario nuevo con el sistema anterior.</p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <MiniCard label="Materiales activos" value={activos.length} onClick={() => setTab("materiales")} />
+                <MiniCard label="Stock bajo" value={bajos.length} warning={bajos.length > 0} onClick={() => setTab("materiales")} />
+                <MiniCard label="Joyas terminadas" value={joyas.length} onClick={() => setTab("joyas")} />
+              </div>
+              <div className="mt-5 rounded-2xl border border-gold/10 bg-gold/[.025] p-5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Valor estimado de materiales</p>
+                <p className="mt-2 text-3xl font-semibold tabular-nums">{money(valor)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Stock actual × costo unitario registrado.</p>
+              </div>
+            </section>
+            <section className="rounded-2xl border border-gold/15 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
+              <div className="flex items-center justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Kardex</p><h2 className="mt-1 text-lg font-semibold">Actividad reciente</h2></div><History className="size-5 text-gold/60" /></div>
+              <div className="mt-4 divide-y divide-border">
+                {movimientos.slice(0, 6).map((m) => (
+                  <div key={m.id} className="flex items-center gap-3 py-3">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gold/[.05] text-gold">{positive(m.tipo) ? <ArrowDownLeft className="size-3.5" /> : <ArrowUpRight className="size-3.5" />}</span>
+                    <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{m.inventario?.material ?? "Material"}</p><p className="text-[10px] text-muted-foreground">{labelTipo(m.tipo)} · {new Date(m.created_at).toLocaleDateString("es-PE")}</p></div>
+                    <span className="text-xs font-semibold tabular-nums">{num(m.cantidad)} {m.inventario?.unidad ?? ""}</span>
+                  </div>
+                ))}
+                {movimientos.length === 0 ? <p className="py-12 text-center text-xs text-muted-foreground">Aún no hay movimientos registrados.</p> : null}
+              </div>
+              <button type="button" onClick={() => setTab("movimientos")} className="mt-3 w-full rounded-xl border border-border px-3 py-2.5 text-xs font-medium transition hover:border-gold/30 hover:bg-gold/[.03]">Ver kardex completo</button>
+            </section>
+          </div>
+        ) : null}
+
+        {tab === "materiales" ? (
+          <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
+            <div className="border-b border-border p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+                <div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Catálogo</p><h2 className="mt-1 text-lg font-semibold">Materiales del taller</h2><p className="mt-1 text-xs text-muted-foreground">Oro, plata, piedras, resina, soldadura, herramientas y otros insumos.</p></div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <label className="relative min-w-[260px]"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar material, código, lote..." className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15" /></label>
+                  <select value={categoria} onChange={(e) => setCategoria(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40">{["Todas", ...CATEGORIAS].map((c) => <option key={c}>{c}</option>)}</select>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[950px] text-left">
+                <thead><tr className="border-b border-border bg-gold/[.02]">{["Material", "Código", "Stock", "Mínimo", "Ubicación", "Proveedor", "Estado", ""].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
+                <tbody className="divide-y divide-border">
+                  {cargando ? <tr><td colSpan={8} className="px-5 py-14 text-center text-sm text-muted-foreground">Cargando inventario nuevo…</td></tr> : visibles.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Boxes className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Todavía no hay materiales</p><p className="mt-1 text-xs text-muted-foreground">El inventario está limpio. Registra el primer material del taller.</p></td></tr> : visibles.map((m) => {
+                    const bajo = m.activo && m.stock <= m.minimo;
+                    return <tr key={m.id} className="group transition-colors hover:bg-gold/[.02]">
+                      <td className="px-5 py-4"><p className="text-sm font-semibold">{m.material}</p><p className="mt-0.5 text-[10px] text-muted-foreground">{m.categoria} · {m.lote || "Sin lote"}</p></td>
+                      <td className="px-5 py-4 text-xs text-muted-foreground">{m.codigo || "—"}</td>
+                      <td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(m.stock)} <span className="text-[10px] font-normal text-muted-foreground">{m.unidad}</span></td>
+                      <td className="px-5 py-4 text-xs tabular-nums text-muted-foreground">{num(m.minimo)} {m.unidad}</td>
+                      <td className="px-5 py-4 text-xs text-muted-foreground">{m.ubicacion || "—"}</td>
+                      <td className="px-5 py-4 text-xs text-muted-foreground">{m.proveedor || "—"}</td>
+                      <td className="px-5 py-4">{bajo ? <Badge text="Stock bajo" warning /> : <Badge text={m.activo ? "Activo" : "Inactivo"} />}</td>
+                      <td className="px-5 py-4"><div className="flex justify-end gap-1"><button type="button" onClick={() => editarMaterial(m)} className="grid size-8 place-items-center rounded-lg border border-border transition hover:border-gold/30 hover:bg-gold/[.03] hover:text-gold" title="Editar"><Pencil className="size-3.5" /></button><button type="button" disabled={!esAdmin} onClick={() => void borrarMaterial(m)} className="grid size-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:border-danger/25 hover:text-danger disabled:opacity-30" title="Eliminar"><Trash2 className="size-3.5" /></button></div></td>
+                    </tr>;
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        {tab === "movimientos" ? (
+          <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
+            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center">
+              <div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Kardex</p><h2 className="mt-1 text-lg font-semibold">Movimientos de inventario</h2><p className="mt-1 text-xs text-muted-foreground">Cada movimiento actualiza el stock de forma atómica.</p></div>
+              {puedeMover ? <button type="button" onClick={() => { setMovimientoForm({ material_id: "", tipo: "entrada", cantidad: "", motivo: "", referencia_externa: "" }); setModal("movimiento"); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Registrar movimiento</button> : null}
+            </div>
+            <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Fecha", "Material", "Tipo", "Cantidad", "Stock resultante", "Motivo", "Referencia"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
+              {movimientos.length === 0 ? <tr><td colSpan={7} className="px-5 py-16 text-center text-sm text-muted-foreground">Todavía no hay movimientos.</td></tr> : movimientos.map((m) => <tr key={m.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4 text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</td><td className="px-5 py-4 text-sm font-medium">{m.inventario?.material ?? "Material"}</td><td className="px-5 py-4"><Badge text={labelTipo(m.tipo)} warning={!positive(m.tipo)} /></td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(m.cantidad)} {m.inventario?.unidad ?? ""}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.stock_posterior == null ? "—" : num(m.stock_posterior)} {m.inventario?.unidad ?? ""}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.motivo || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.referencia_externa || "—"}</td></tr>)}
+            </tbody></table></TableWrap>
+          </section>
+        ) : null}
+
+        {tab === "joyas" ? (
+          <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
+            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p><h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2><p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p></div>{esAdmin ? <button type="button" onClick={() => { setJoyaForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}</div>
+            <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Código", "Joya", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
+              {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyas.map((j) => <tr key={j.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4 text-xs font-semibold">{j.codigo}</td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
+            </tbody></table></TableWrap>
+          </section>
+        ) : null}
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-2">
-        {(
-          [
-            ["materiales", "Materiales"],
-            ["bajo", `Stock bajo${bajos.length ? ` (${bajos.length})` : ""}`],
-            ["joyas", "Joyas terminadas"],
-            ["movimientos", "Movimientos"],
-          ] as [Modulo, string][]
-        ).map(([id, etiqueta]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setModulo(id)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-              modulo === id
-                ? "bg-primary text-primary-foreground shadow-[0_8px_22px_-14px_hsl(var(--gold)/0.8)]"
-                : "bg-surface-muted text-muted-foreground hover:border hover:border-gold/30 hover:text-gold"
-            }`}
-          >
-            {etiqueta}
-          </button>
-        ))}
-      </div>
-
-      {modulo === "materiales" ? (
-        <Materiales
-          inventario={inventario}
-          puedeGestionar={puedeGestionar}
-          sedeId={sesion?.perfil.sede_id ?? null}
-        />
-      ) : null}
-      {modulo === "bajo" ? <StockBajo bajos={bajos} /> : null}
-      {modulo === "movimientos" ? (
-        <Movimientos
-          inventario={inventario}
-          areasUsuario={sesion?.areas ?? []}
-          puedeTodo={puedeGestionar}
-        />
-      ) : null}
-      {modulo === "joyas" ? <JoyasTerminadas puedeGestionar={puedeGestionar} sedeId={sesion?.perfil.sede_id ?? null} /> : null}
+      {modal ? <Modal title={modal === "material" ? (editando ? "Editar material" : "Nuevo material") : modal === "movimiento" ? "Registrar movimiento" : "Nueva joya"} onClose={() => setModal(null)}>
+        {modal === "material" ? <form onSubmit={guardarMaterial} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2"><Field label="Material" value={materialForm.material} onChange={(v) => setMaterialForm({ ...materialForm, material: v })} required /><Field label="Código" value={materialForm.codigo} onChange={(v) => setMaterialForm({ ...materialForm, codigo: v })} /></div>
+          <div className="grid gap-3 sm:grid-cols-3"><Field label="Categoría" value={materialForm.categoria} onChange={(v) => setMaterialForm({ ...materialForm, categoria: v })} select options={CATEGORIAS} /><Field label="Unidad" value={materialForm.unidad} onChange={(v) => setMaterialForm({ ...materialForm, unidad: v })} /><Field label="Costo unitario" value={materialForm.costo_unitario} onChange={(v) => setMaterialForm({ ...materialForm, costo_unitario: v })} type="number" /></div>
+          <div className="grid gap-3 sm:grid-cols-2"><Field label={editando ? "Stock actual" : "Stock inicial"} value={materialForm.stock} onChange={(v) => setMaterialForm({ ...materialForm, stock: v })} type="number" /><Field label="Stock mínimo" value={materialForm.minimo} onChange={(v) => setMaterialForm({ ...materialForm, minimo: v })} type="number" /></div>
+          <div className="grid gap-3 sm:grid-cols-2"><Field label="Lote" value={materialForm.lote} onChange={(v) => setMaterialForm({ ...materialForm, lote: v })} /><Field label="Ubicación" value={materialForm.ubicacion} onChange={(v) => setMaterialForm({ ...materialForm, ubicacion: v })} /></div>
+          <Field label="Proveedor" value={materialForm.proveedor} onChange={(v) => setMaterialForm({ ...materialForm, proveedor: v })} />
+          <Actions saving={guardando} cancel={() => setModal(null)} />
+        </form> : null}
+        {modal === "movimiento" ? <form onSubmit={guardarMovimiento} className="space-y-4">
+          <Field label="Material" value={movimientoForm.material_id} onChange={(v) => setMovimientoForm({ ...movimientoForm, material_id: v })} select options={materiales.filter((m) => m.activo).map((m) => m.material)} optionValues={materiales.filter((m) => m.activo).map((m) => m.id)} />
+          <Field label="Tipo de movimiento" value={movimientoForm.tipo} onChange={(v) => setMovimientoForm({ ...movimientoForm, tipo: v })} select options={TIPOS.map((t) => t[1])} optionValues={TIPOS.map((t) => t[0])} />
+          <div className="grid gap-3 sm:grid-cols-2"><Field label="Cantidad" value={movimientoForm.cantidad} onChange={(v) => setMovimientoForm({ ...movimientoForm, cantidad: v })} type="number" /><Field label="Referencia" value={movimientoForm.referencia_externa} onChange={(v) => setMovimientoForm({ ...movimientoForm, referencia_externa: v })} /></div>
+          <Field label="Motivo / detalle" value={movimientoForm.motivo} onChange={(v) => setMovimientoForm({ ...movimientoForm, motivo: v })} />
+          <p className="rounded-xl border border-gold/10 bg-gold/[.025] px-3 py-2.5 text-[11px] leading-5 text-muted-foreground">El stock se actualiza en la base de datos y nunca puede quedar negativo.</p>
+          <Actions saving={guardando} cancel={() => setModal(null)} />
+        </form> : null}
+        {modal === "joya" ? <form onSubmit={guardarJoya} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2"><Field label="Código" value={joyaForm.codigo} onChange={(v) => setJoyaForm({ ...joyaForm, codigo: v })} required /><Field label="Nombre de pieza" value={joyaForm.nombre} onChange={(v) => setJoyaForm({ ...joyaForm, nombre: v })} required /></div>
+          <div className="grid gap-3 sm:grid-cols-2"><Field label="Metal" value={joyaForm.metal} onChange={(v) => setJoyaForm({ ...joyaForm, metal: v })} /><Field label="Ley" value={joyaForm.ley} onChange={(v) => setJoyaForm({ ...joyaForm, ley: v })} /></div>
+          <div className="grid gap-3 sm:grid-cols-3"><Field label="Peso (g)" value={joyaForm.peso} onChange={(v) => setJoyaForm({ ...joyaForm, peso: v })} type="number" /><Field label="Talla" value={joyaForm.talla} onChange={(v) => setJoyaForm({ ...joyaForm, talla: v })} /><Field label="Cantidad" value={joyaForm.cantidad} onChange={(v) => setJoyaForm({ ...joyaForm, cantidad: v })} type="number" /></div>
+          <Field label="Piedras" value={joyaForm.piedras} onChange={(v) => setJoyaForm({ ...joyaForm, piedras: v })} />
+          <Field label="Estado" value={joyaForm.estado} onChange={(v) => setJoyaForm({ ...joyaForm, estado: v })} select options={["disponible", "reservada", "vendida", "en_produccion", "apartada", "otro"]} />
+          <Actions saving={guardando} cancel={() => setModal(null)} />
+        </form> : null}
+      </Modal> : null}
     </AppShell>
   );
 }
 
+function Tab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: ReactNode; label: string }) {
+  return <button type="button" onClick={onClick} className={active ? "inline-flex items-center gap-2 rounded-xl bg-gold/[.10] px-3.5 py-2.5 text-xs font-semibold text-foreground ring-1 ring-gold/20" : "inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-medium text-muted-foreground transition hover:bg-gold/[.04] hover:text-foreground"}>{icon}{label}</button>;
+}
 
-function JoyasTerminadas({
-  puedeGestionar,
-  sedeId,
-}: {
-  puedeGestionar: boolean;
-  sedeId: string | null;
-}) {
-  const { data: joyas = [], isLoading } = useInventarioJoyas();
-  const crear = useCrearJoyaInventario();
-  const actualizar = useActualizarJoyaInventario();
-  const borrar = useBorrarJoyaInventario();
+function MiniCard({ label, value, onClick, warning = false }: { label: string; value: number; onClick: () => void; warning?: boolean }) {
+  return <button type="button" onClick={onClick} className="rounded-2xl border border-border bg-card p-4 text-left transition hover:-translate-y-0.5 hover:border-gold/30 hover:shadow-[0_16px_34px_-26px_hsl(var(--gold)/.55)]"><p className={warning ? "text-danger" : "text-gold"}><span className="text-2xl font-semibold tabular-nums">{value}</span></p><p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p></button>;
+}
 
-  type Preview = {
-    archivo: string;
-    columnas: string[];
-    mapping: Record<string, string>;
-    campos: { key: string; label: string }[];
-    filas: number;
-    validas: number;
-    sinCodigo: number;
-    duplicados: number;
-    muestra: Array<Record<string, unknown>>;
-    advertencias: string[];
-  };
+function Badge({ text, warning = false }: { text: string; warning?: boolean }) {
+  return <span className={warning ? "rounded-full border border-warning/20 bg-warning-soft px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-warning" : "rounded-full border border-gold/15 bg-gold/[.035] px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground"}>{text}</span>;
+}
 
-  const [archivo, setArchivo] = useState<File | null>(null);
-  const [preview, setPreview] = useState<Preview | null>(null);
-  const [paso, setPaso] = useState<"lista" | "analizando" | "mapeo" | "revision" | "importando">("lista");
-  const [busqueda, setBusqueda] = useState("");
-  const [editando, setEditando] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible",
-  });
+function TableWrap({ children }: { children: ReactNode }) {
+  return <div className="overflow-x-auto">{children}</div>;
+}
 
-  const lista = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    return joyas.filter((j) =>
-      !q || j.codigo.toLowerCase().includes(q) || j.nombre.toLowerCase().includes(q) ||
-      j.metal.toLowerCase().includes(q) || j.piedras.toLowerCase().includes(q)
-    );
-  }, [joyas, busqueda]);
-
-  async function analizarArchivo(file: File) {
-    setArchivo(file);
-    setPaso("analizando");
-    try {
-      const body = new FormData();
-      body.append("archivo", file);
-      body.append("modo", "preview");
-      const { data, error } = await supabase.functions.invoke("importar-inventario-joyas", { body });
-      if (error) throw error;
-      setPreview(data as Preview);
-      setPaso("mapeo");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo analizar el Excel");
-      setArchivo(null);
-      setPaso("lista");
-    }
-  }
-
-  async function confirmarImportacion() {
-    if (!archivo || !preview) return;
-    setPaso("importando");
-    try {
-      const body = new FormData();
-      body.append("archivo", archivo);
-      body.append("modo", "confirm");
-      body.append("mapping", JSON.stringify(preview.mapping));
-      const { data, error } = await supabase.functions.invoke("importar-inventario-joyas", { body });
-      if (error) throw error;
-      toast.success(`Migración completada: ${data?.filas_importadas ?? 0} registros importados`);
-      setArchivo(null);
-      setPreview(null);
-      setPaso("lista");
-      window.location.reload();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo completar la migración");
-      setPaso("revision");
-    }
-  }
-
-  function cancelarImportacion() {
-    setArchivo(null);
-    setPreview(null);
-    setPaso("lista");
-  }
-
-  async function guardar(e: FormEvent) {
-    e.preventDefault();
-    if (!sedeId) {
-      toast.error("Tu usuario no tiene una sede asignada");
-      return;
-    }
-    if (!form.codigo.trim() || !form.nombre.trim()) {
-      toast.error("Código y nombre son obligatorios");
-      return;
-    }
-    const payload = {
-      codigo: form.codigo.trim(), nombre: form.nombre.trim(), metal: form.metal.trim(), ley: form.ley.trim(),
-      peso: form.peso === "" ? null : Number(form.peso), talla: form.talla.trim(), piedras: form.piedras.trim(),
-      cantidad: Math.max(1, Number(form.cantidad) || 1), estado: form.estado,
-    };
-    try {
-      if (editando) {
-        await actualizar.mutateAsync({ id: editando, cambios: payload });
-        toast.success("Joya actualizada");
-      } else {
-        await crear.mutateAsync({ ...payload, sede_id: sedeId });
-        toast.success("Joya agregada al inventario");
-      }
-      setEditando(null);
-      setForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo guardar la joya");
-    }
-  }
-
-  function editar(j: (typeof joyas)[number]) {
-    setEditando(j.id);
-    setForm({
-      codigo: j.codigo, nombre: j.nombre, metal: j.metal, ley: j.ley,
-      peso: j.peso == null ? "" : String(j.peso), talla: j.talla, piedras: j.piedras,
-      cantidad: String(j.cantidad), estado: j.estado,
-    });
-  }
-
-  if (paso !== "lista") {
-    return (
-      <Panel titulo="Asistente de migración de inventario">
-        <div className="space-y-6 p-6">
-          {paso === "analizando" ? (
-            <div className="rounded-2xl border border-border bg-muted/30 p-8 text-center">
-              <p className="text-lg font-semibold">Analizando tu Excel…</p>
-              <p className="mt-2 text-sm text-muted-foreground">No se está modificando ningún dato.</p>
-            </div>
-          ) : null}
-
-          {preview && paso !== "analizando" ? (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Paso {paso === "mapeo" ? "2" : "3"} de 3</p>
-                  <h3 className="mt-1 text-xl font-semibold">{preview.archivo}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {preview.filas} filas · {preview.validas} listas para importar
-                  </p>
-                </div>
-                <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm" onClick={cancelarImportacion}>Cancelar</button>
-              </div>
-
-              {paso === "mapeo" ? (
-                <>
-                  <div className="rounded-2xl bg-muted/40 p-4 text-sm">
-                    <p className="font-semibold">Mapea tu Excel</p>
-                    <p className="mt-1 text-muted-foreground">No necesitas cambiar tu archivo. Dinos qué representa cada columna.</p>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {preview.campos.map((campo) => (
-                      <label key={campo.key} className="space-y-1.5">
-                        <span className="text-xs font-medium text-muted-foreground">{campo.label}</span>
-                        <select
-                          className={inputCls}
-                          value={preview.mapping[campo.key] ?? ""}
-                          onChange={(e) => setPreview({ ...preview, mapping: { ...preview.mapping, [campo.key]: e.target.value } })}
-                        >
-                          <option value="">No importar</option>
-                          {preview.columnas.map((col) => <option key={col} value={col}>{col}</option>)}
-                        </select>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex justify-end">
-                    <button type="button" className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground" onClick={() => setPaso("revision")}>
-                      Revisar importación
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-border p-4"><p className="text-2xl font-semibold">{preview.validas}</p><p className="text-xs text-muted-foreground">Registros listos</p></div>
-                    <div className="rounded-xl border border-border p-4"><p className="text-2xl font-semibold">{preview.sinCodigo}</p><p className="text-xs text-muted-foreground">Sin código</p></div>
-                    <div className="rounded-xl border border-border p-4"><p className="text-2xl font-semibold">{preview.duplicados}</p><p className="text-xs text-muted-foreground">Duplicados internos</p></div>
-                  </div>
-                  {preview.advertencias.length ? (
-                    <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm">
-                      {preview.advertencias.map((a) => <p key={a}>⚠ {a}</p>)}
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-success/30 bg-success-soft p-4 text-sm">✓ El archivo está listo para importar.</div>
-                  )}
-                  <div className="overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full min-w-[800px] text-sm">
-                      <thead className="bg-muted/40"><tr>{preview.campos.map((c) => <th key={c.key} className="px-3 py-2 text-left text-xs">{c.label}</th>)}</tr></thead>
-                      <tbody className="divide-y divide-border">
-                        {preview.muestra.map((row, i) => (
-                          <tr key={i}>{preview.campos.map((c) => <td key={c.key} className="px-3 py-2">{String(row[c.key] ?? "—")}</td>)}</tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <button type="button" className="rounded-lg border border-border px-4 py-2.5 text-sm" onClick={() => setPaso("mapeo")}>Volver al mapeo</button>
-                    <button type="button" className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground" onClick={() => void confirmarImportacion()} disabled={paso === "importando"}>
-                      {paso === "importando" ? "Importando…" : `Importar ${preview.validas} registros`}
-                    </button>
-                  </div>
-                </>
-              )}
-            </>
-          ) : null}
-        </div>
-      </Panel>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <Panel titulo="Joyas terminadas">
-        <div className="flex flex-col gap-3 border-b border-border p-6 lg:flex-row lg:items-center lg:justify-between">
-          <div><p className="text-sm text-muted-foreground">Producto terminado por código, metal, ley, talla y piedras.</p></div>
-          <div className="flex flex-wrap gap-2">
-            {puedeGestionar ? (
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
-                <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void analizarArchivo(file);
-                }} />
-                Importar Excel
-              </label>
-            ) : null}
-          </div>
-        </div>
-
-        {puedeGestionar ? (
-          <form onSubmit={guardar} className="grid gap-3 border-b border-border p-6 md:grid-cols-4">
-            <input className={inputCls} placeholder="Código / SKU" value={form.codigo} onChange={(e) => setForm({ ...form, codigo: e.target.value })} />
-            <input className={inputCls} placeholder="Nombre de la pieza" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
-            <input className={inputCls} placeholder="Metal" value={form.metal} onChange={(e) => setForm({ ...form, metal: e.target.value })} />
-            <input className={inputCls} placeholder="Ley" value={form.ley} onChange={(e) => setForm({ ...form, ley: e.target.value })} />
-            <input className={inputCls} type="number" step="0.001" placeholder="Peso g" value={form.peso} onChange={(e) => setForm({ ...form, peso: e.target.value })} />
-            <input className={inputCls} placeholder="Talla" value={form.talla} onChange={(e) => setForm({ ...form, talla: e.target.value })} />
-            <input className={inputCls} placeholder="Piedras" value={form.piedras} onChange={(e) => setForm({ ...form, piedras: e.target.value })} />
-            <input className={inputCls} type="number" min="1" placeholder="Cantidad" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
-            <select className={inputCls} value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })}>
-              <option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="en exhibición">En exhibición</option><option value="vendida">Vendida</option><option value="no disponible">No disponible</option>
-            </select>
-            <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={crear.isPending || actualizar.isPending}>{editando ? "Guardar cambios" : "Agregar al inventario"}</button>
-            {editando ? <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm" onClick={() => {
-              setEditando(null); setForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" });
-            }}>Cancelar</button> : null}
-          </form>
-        ) : null}
-
-        <div className="border-b border-border p-4"><input className={inputCls} placeholder="Buscar código, pieza, metal o piedra…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} /></div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px] border-collapse text-left">
-            <thead><tr className="bg-surface-muted">{["Código","Pieza","Metal / ley","Peso","Talla","Piedras","Cantidad","Estado","Acciones"].map((h) => <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
-            <tbody className="divide-y divide-border">
-              {lista.map((j) => <tr key={j.id}>
-                <td className="px-6 py-3 font-mono text-xs">{j.codigo}</td><td className="px-6 py-3 text-sm font-medium">{j.nombre}</td>
-                <td className="px-6 py-3 text-sm">{j.metal || "—"} {j.ley ? "· " + j.ley : ""}</td><td className="px-6 py-3 text-sm">{j.peso == null ? "—" : String(j.peso) + " g"}</td>
-                <td className="px-6 py-3 text-sm">{j.talla || "—"}</td><td className="px-6 py-3 text-sm">{j.piedras || "—"}</td><td className="px-6 py-3 text-sm font-semibold">{j.cantidad}</td>
-                <td className="px-6 py-3 text-xs">{j.estado}</td><td className="px-6 py-3">{puedeGestionar ? <div className="flex gap-1">
-                  <button type="button" className="rounded-lg px-2 py-1 text-xs hover:bg-muted" onClick={() => editar(j)}>Editar</button>
-                  <button type="button" className="rounded-lg px-2 py-1 text-xs text-danger hover:bg-danger-soft" onClick={async () => {
-                    if (!window.confirm("¿Eliminar " + j.codigo + " del inventario?")) return;
-                    try { await borrar.mutateAsync(j.id); toast.success("Joya eliminada"); } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo eliminar"); }
-                  }}>Eliminar</button>
-                </div> : null}</td>
-              </tr>)}
-              {!lista.length ? <tr><td colSpan={9} className="px-6 py-10 text-sm text-muted-foreground">No hay joyas terminadas registradas.</td></tr> : null}
-            </tbody>
-          </table>
-        </div>
-        {isLoading ? <p className="p-4 text-sm text-muted-foreground">Cargando inventario de joyas…</p> : null}
-      </Panel>
+function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_30px_80px_-35px_hsl(var(--gold)/.35)]">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4"><div><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-gold/75">Inventario nuevo</p><h2 className="mt-1 text-lg font-semibold">{title}</h2></div><button type="button" onClick={onClose} className="grid size-9 place-items-center rounded-xl border border-border hover:border-gold/30 hover:text-gold"><X className="size-4" /></button></div>
+      <div className="p-5">{children}</div>
     </div>
-  );
+  </div>;
 }
 
-type MaterialItem = ReturnType<typeof useInventario>["data"] extends (infer T)[] | undefined
-  ? T
-  : never;
-
-function Materiales({
-  inventario,
-  puedeGestionar,
-  sedeId,
-}: {
-  inventario: MaterialItem[];
-  puedeGestionar: boolean;
-  sedeId: string | null;
-}) {
-  const actualizarMaterial = useActualizarMaterial();
-  const asignar = useAsignarArea();
-  const borrar = useBorrarMaterial();
-  const crear = useCrearMaterial();
-  const [abierto, setAbierto] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState("Todas");
-  const [materialPorEliminar, setMaterialPorEliminar] = useState<MaterialItem | null>(null);
-  const [nuevo, setNuevo] = useState({
-    material: "",
-    categoria: "Oro",
-    unidad: "g",
-    stock: "",
-    minimo: "",
-    areas: [] as string[],
-  });
-
-  const lista = filtro === "Todas" ? inventario : inventario.filter((m) => m.categoria === filtro);
-
-  async function crearMaterial(e: FormEvent) {
-    e.preventDefault();
-    if (!nuevo.material.trim()) return;
-    try {
-      await crear.mutateAsync({
-        material: nuevo.material.trim(),
-        categoria: nuevo.categoria,
-        unidad: nuevo.unidad || "u",
-        stock: Number(nuevo.stock) || 0,
-        minimo: Number(nuevo.minimo) || 0,
-        sede_id: sedeId,
-        areas: nuevo.areas,
-      });
-      toast.success("Material agregado");
-      setNuevo({ material: "", categoria: "Oro", unidad: "g", stock: "", minimo: "", areas: [] });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo agregar");
-    }
-  }
-
-  return (
-    <>
-      <div className="space-y-6">
-        {puedeGestionar ? (
-          <Panel titulo="Nuevo material">
-            <form onSubmit={crearMaterial} className="space-y-3 p-6">
-              <div className="grid gap-3 md:grid-cols-5">
-                <input
-                  className={inputCls}
-                  placeholder="Material (ej. Oro 18k)"
-                  value={nuevo.material}
-                  onChange={(e) => setNuevo({ ...nuevo, material: e.target.value })}
-                />
-                <select
-                  className={inputCls}
-                  value={nuevo.categoria}
-                  onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}
-                >
-                  {CATEGORIAS_MATERIAL.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  className={inputCls}
-                  placeholder="Unidad (g, u, ml)"
-                  value={nuevo.unidad}
-                  onChange={(e) => setNuevo({ ...nuevo, unidad: e.target.value })}
-                />
-                <input
-                  className={inputCls}
-                  type="number"
-                  step="0.01"
-                  placeholder="Stock inicial"
-                  value={nuevo.stock}
-                  onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })}
-                />
-                <input
-                  className={inputCls}
-                  type="number"
-                  step="0.01"
-                  placeholder="Mínimo"
-                  value={nuevo.minimo}
-                  onChange={(e) => setNuevo({ ...nuevo, minimo: e.target.value })}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Áreas que pueden usar este material
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {AREAS.map((a) => {
-                    const activo = nuevo.areas.includes(a);
-                    return (
-                      <button
-                        key={a}
-                        type="button"
-                        onClick={() =>
-                          setNuevo({
-                            ...nuevo,
-                            areas: activo
-                              ? nuevo.areas.filter((x) => x !== a)
-                              : [...nuevo.areas, a],
-                          })
-                        }
-                        className={`rounded-full px-3 py-1 text-[11px] ${
-                          activo
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-surface-muted text-muted-foreground"
-                        }`}
-                      >
-                        {a}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={crear.isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-              >
-                {crear.isPending ? "Agregando…" : "Agregar material"}
-              </button>
-            </form>
-          </Panel>
-        ) : null}
-
-        <Panel titulo="Materiales">
-          <div className="flex flex-wrap gap-2 px-6 pt-4">
-            {["Todas", ...CATEGORIAS_MATERIAL].map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setFiltro(c)}
-                className={`rounded-full px-3 py-1 text-[11px] ${
-                  filtro === c
-                    ? "bg-foreground text-background"
-                    : "bg-surface-muted text-muted-foreground"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-surface-muted">
-                  {["Material", "Categoría", "Stock", "Mínimo", "Áreas", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {lista.flatMap((m) => {
-                  const bajo = m.stock < m.minimo;
-                  const fila = (
-                    <tr key={m.id} className="transition-colors hover:bg-surface-muted/60">
-                      <td className="px-6 py-4 text-sm font-medium">{m.material}</td>
-                      <td className="px-6 py-4 text-xs text-muted-foreground">{m.categoria}</td>
-                      <td className="px-6 py-4 text-sm tabular-nums">
-                        <span className="font-semibold tabular-nums">{m.stock}</span>
-                        <span className="ml-2 text-xs text-muted-foreground">{m.unidad}</span>
-                        {bajo ? (
-                          <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase text-danger">
-                            bajo
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="px-6 py-4 text-sm tabular-nums text-muted-foreground">
-                        <input
-                          type="number"
-                          step="0.01"
-                          defaultValue={m.minimo}
-                          disabled={!puedeGestionar}
-                          onBlur={(e) => {
-                            const minimo = Number(e.target.value);
-                            if (minimo !== m.minimo)
-                              actualizarMaterial.mutate({ id: m.id, cambios: { minimo } });
-                          }}
-                          className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-sm tabular-nums"
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-xs text-muted-foreground">
-                        {m.areas.length > 0 ? m.areas.join(", ") : "Sin asignar"}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {puedeGestionar ? (
-                          <button
-                            type="button"
-                            onClick={() => setAbierto(abierto === m.id ? null : m.id)}
-                            className="rounded-lg border border-border px-3 py-1 text-xs"
-                          >
-                            {abierto === m.id ? "Cerrar" : "Áreas"}
-                          </button>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                  if (abierto !== m.id) return [fila];
-                  return [
-                    fila,
-                    <tr key={`${m.id}-areas`} className="bg-surface-muted/40">
-                      <td colSpan={6} className="px-6 py-4">
-                        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                          Asignar {m.material} a áreas
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {AREAS.map((a) => {
-                            const activo = m.areas.includes(a);
-                            return (
-                              <button
-                                key={a}
-                                type="button"
-                                onClick={() =>
-                                  asignar.mutate({ materialId: m.id, area: a, activo: !activo })
-                                }
-                                className={`rounded-full px-3 py-1 text-[11px] ${
-                                  activo
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-card text-muted-foreground border border-border"
-                                }`}
-                              >
-                                {a}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setMaterialPorEliminar(m)}
-                          className="mt-4 rounded-lg border border-danger px-3 py-1 text-xs text-danger"
-                        >
-                          Eliminar material
-                        </button>
-                      </td>
-                    </tr>,
-                  ];
-                })}
-                {lista.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
-                      Sin materiales registrados.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-      </div>
-      <AlertDialog
-        open={materialPorEliminar !== null}
-        onOpenChange={(open) => {
-          if (!open && !borrar.isPending) setMaterialPorEliminar(null);
-        }}
-      >
-        <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar material</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Deseas eliminar el material "{materialPorEliminar?.material}" del inventario?
-              <span className="mt-2 block font-medium text-destructive">
-                Esta acción no se puede deshacer.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={borrar.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={!materialPorEliminar || borrar.isPending}
-              onClick={() => {
-                if (!materialPorEliminar) return;
-                borrar.mutate(materialPorEliminar.id, {
-                  onSettled: () => setMaterialPorEliminar(null),
-                });
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {borrar.isPending ? "Eliminando..." : "Eliminar material"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
+function Actions({ saving, cancel }: { saving: boolean; cancel: () => void }) {
+  return <div className="flex justify-end gap-2 border-t border-border pt-4"><button type="button" onClick={cancel} className="rounded-xl border border-border px-4 py-2.5 text-xs transition hover:border-gold/30 hover:bg-gold/[.03]">Cancelar</button><button type="submit" disabled={saving} className="rounded-xl border border-gold/25 bg-gold/[.08] px-4 py-2.5 text-xs font-semibold transition hover:bg-gold/[.12] disabled:opacity-50">{saving ? "Guardando…" : "Guardar"}</button></div>;
 }
 
-function StockBajo({ bajos }: { bajos: MaterialItem[] }) {
-  return (
-    <Panel titulo="Stock bajo mínimo">
-      <div className="divide-y divide-border">
-        {bajos.map((m) => (
-          <div key={m.id} className="flex items-center justify-between px-6 py-4">
-            <div>
-              <p className="text-sm font-medium">{m.material}</p>
-              <p className="text-xs text-muted-foreground">
-                {m.categoria} · {m.areas.length > 0 ? m.areas.join(", ") : "sin área asignada"}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-semibold text-danger tabular-nums">
-                {m.stock} {m.unidad}
-              </p>
-              <p className="text-xs text-muted-foreground tabular-nums">
-                mínimo {m.minimo} {m.unidad}
-              </p>
-            </div>
-          </div>
-        ))}
-        {bajos.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-muted-foreground">
-            Todo el inventario está por encima del mínimo.
-          </p>
-        ) : null}
-      </div>
-    </Panel>
-  );
+function Field({ label, value, onChange, type = "text", required = false, select = false, options = [], optionValues = [] }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; select?: boolean; options?: string[]; optionValues?: string[] }) {
+  const cls = "mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15";
+  return <label className="block text-xs font-medium">{label}{select ? <select required={required} value={value} onChange={(e) => onChange(e.target.value)} className={cls}>{options.map((o, i) => <option key={o} value={optionValues[i] ?? o}>{o}</option>)}</select> : <input required={required} min={type === "number" ? 0 : undefined} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={cls} />}</label>;
 }
 
-function Movimientos({
-  inventario,
-  areasUsuario,
-  puedeTodo,
-}: {
-  inventario: MaterialItem[];
-  areasUsuario: string[];
-  puedeTodo: boolean;
-}) {
-  const { data: movimientos = [] } = useMovimientosInventario();
-  const { data: pedidos = [] } = usePedidosSelector();
-  const registrar = useRegistrarMovimiento();
-  const areasDisponibles = puedeTodo || areasUsuario.length === 0 ? [...AREAS] : areasUsuario;
-  const [form, setForm] = useState({
-    area: areasDisponibles[0] ?? "Taller",
-    material_id: "",
-    cantidad: "",
-    tipo: "consumo" as "consumo" | "entrada",
-    pedido_id: "",
-    motivo: "",
-  });
-
-  // Sólo se ofrecen los materiales asignados al área elegida.
-  const materialesArea = inventario.filter(
-    (m) => m.areas.length === 0 || m.areas.includes(form.area),
-  );
-
-  async function enviar(e: FormEvent) {
-    e.preventDefault();
-    if (!form.material_id || !Number(form.cantidad)) {
-      toast.error("Elige material y cantidad");
-      return;
-    }
-    try {
-      await registrar.mutateAsync({
-        material_id: form.material_id,
-        cantidad: Number(form.cantidad),
-        tipo: form.tipo,
-        area: form.area,
-        pedido_id: form.pedido_id || null,
-        motivo: form.motivo,
-      });
-      toast.success(
-        form.tipo === "consumo" ? "Consumo descontado del stock" : "Entrada registrada",
-      );
-      setForm({ ...form, cantidad: "", pedido_id: "", motivo: "" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo registrar");
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      <Panel titulo="Registrar movimiento">
-        <form onSubmit={enviar} className="grid gap-3 p-6 md:grid-cols-6">
-          <select
-            className={inputCls}
-            value={form.area}
-            onChange={(e) => setForm({ ...form, area: e.target.value, material_id: "" })}
-          >
-            {areasDisponibles.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-          <select
-            className={`${inputCls} md:col-span-2`}
-            value={form.material_id}
-            onChange={(e) => setForm({ ...form, material_id: e.target.value })}
-          >
-            <option value="">Material…</option>
-            {materialesArea.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.material} ({m.stock} {m.unidad})
-              </option>
-            ))}
-          </select>
-          <select
-            className={inputCls}
-            value={form.tipo}
-            onChange={(e) => setForm({ ...form, tipo: e.target.value as "consumo" | "entrada" })}
-          >
-            <option value="consumo">Consumo (resta)</option>
-            <option value="entrada">Entrada (suma)</option>
-          </select>
-          <input
-            className={inputCls}
-            type="number"
-            step="0.01"
-            placeholder="Cantidad"
-            value={form.cantidad}
-            onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
-          />
-          <select
-            className={inputCls}
-            value={form.pedido_id}
-            onChange={(e) => setForm({ ...form, pedido_id: e.target.value })}
-          >
-            <option value="">Sin pedido asociado</option>
-            {pedidos.map((pedido) => (
-              <option key={pedido.id} value={pedido.id}>
-                {pedido.referencia} · {pedido.cliente || pedido.trabajo || "Pedido"}
-              </option>
-            ))}
-          </select>
-          <input
-            className={inputCls}
-            placeholder="Motivo / detalle"
-            value={form.motivo}
-            onChange={(e) => setForm({ ...form, motivo: e.target.value })}
-          />
-          <button
-            type="submit"
-            disabled={registrar.isPending}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 md:col-span-2"
-          >
-            {registrar.isPending ? "Registrando…" : "Registrar y actualizar stock"}
-          </button>
-        </form>
-      </Panel>
-
-      <Panel titulo="Historial de movimientos">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-surface-muted">
-                {["Fecha", "Material", "Área", "Pedido", "Tipo", "Cantidad", "Motivo"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {movimientos.map((mv) => (
-                <tr key={mv.id}>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">
-                    {new Date(mv.created_at).toLocaleDateString("es-PE")}
-                  </td>
-                  <td className="px-6 py-3 text-sm">{mv.material}</td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">{mv.area || "—"}</td>
-                  <td className="px-6 py-3 text-xs font-medium">{mv.pedido_referencia || "—"}</td>
-                  <td className="px-6 py-3 text-xs">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                        mv.tipo === "entrada"
-                          ? "bg-success-soft text-success"
-                          : "bg-warning-soft text-warning"
-                      }`}
-                    >
-                      {mv.tipo}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm tabular-nums">
-                    {mv.tipo === "entrada" ? "+" : "−"}
-                    {mv.cantidad}
-                  </td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">{mv.motivo || "—"}</td>
-                </tr>
-              ))}
-              {movimientos.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-sm text-muted-foreground">
-                    Sin movimientos registrados.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </div>
-  );
+function positive(tipo: string) {
+  return ["entrada", "devolucion", "ajuste_positivo"].includes(tipo);
+}
+function labelTipo(tipo: string) {
+  return TIPOS.find((t) => t[0] === tipo)?.[1] ?? tipo.replaceAll("_", " ");
+}
+function num(value: number) {
+  return new Intl.NumberFormat("es-PE", { maximumFractionDigits: 3 }).format(Number(value) || 0);
+}
+function money(value: number) {
+  return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN", maximumFractionDigits: 2 }).format(Number(value) || 0);
 }
