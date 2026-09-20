@@ -45,8 +45,8 @@ function simplify(points: Point[], tolerance: number) {
   };
 
   const radial = (input: Point[]) => {
-    const prev = input[0];
-    const out = [prev];
+    const prev = input[0]!;
+    const out: Point[] = [prev];
     let previous = prev;
     for (let i = 1; i < input.length; i++) {
       const point = input[i]!;
@@ -55,7 +55,7 @@ function simplify(points: Point[], tolerance: number) {
         previous = point;
       }
     }
-    if (previous !== input[input.length - 1]) out.push(input[input.length - 1]);
+    if (previous !== input[input.length - 1]) out.push(input[input.length - 1]!);
     return out;
   };
 
