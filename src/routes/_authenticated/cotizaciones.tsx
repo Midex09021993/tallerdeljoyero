@@ -32,7 +32,6 @@ function money(n: number, moneda = "PEN") {
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
   const navigate = useNavigate();
-  const navigate = useNavigate();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
     Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
