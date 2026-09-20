@@ -25,6 +25,7 @@ import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authent
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
+import { Route as AuthenticatedMigracionRouteImport } from './routes/_authenticated/migracion'
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
@@ -123,6 +124,11 @@ const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
   path: '/inventario',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMigracionRoute = AuthenticatedMigracionRouteImport.update({
+  id: '/migracion',
+  path: '/migracion',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMonitorRoute = AuthenticatedMonitorRouteImport.update({
   id: '/monitor',
   path: '/monitor',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
+  '/migracion': typeof AuthenticatedMigracionRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
+  '/migracion': typeof AuthenticatedMigracionRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -277,6 +285,7 @@ export interface FileRoutesById {
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
+  '/_authenticated/migracion': typeof AuthenticatedMigracionRoute
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
@@ -310,6 +319,7 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
+    | '/migracion'
     | '/monitor'
     | '/operario'
     | '/pedidos'
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
+    | '/migracion'
     | '/monitor'
     | '/operario'
     | '/perfil'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inicio'
     | '/_authenticated/inventario'
+    | '/_authenticated/migracion'
     | '/_authenticated/monitor'
     | '/_authenticated/operario'
     | '/_authenticated/pedidos'
@@ -511,6 +523,13 @@ declare module '@tanstack/react-router' {
       path: '/inventario'
       fullPath: '/inventario'
       preLoaderRoute: typeof AuthenticatedInventarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/migracion': {
+      id: '/_authenticated/migracion'
+      path: '/migracion'
+      fullPath: '/migracion'
+      preLoaderRoute: typeof AuthenticatedMigracionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/monitor': {
@@ -653,6 +672,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
+  AuthenticatedMigracionRoute: typeof AuthenticatedMigracionRoute
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
@@ -675,6 +695,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
+  AuthenticatedMigracionRoute: AuthenticatedMigracionRoute,
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
