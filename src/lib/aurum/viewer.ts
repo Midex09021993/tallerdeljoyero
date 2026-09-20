@@ -21,6 +21,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     const prepared=prepare(model,2.6);
     const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
     viewer.groundController.positionUnderModel(bounds);
+    viewer.groundController.positionBakedShadow?.(bounds);
     const radius=Math.max(size.length()*.5,.8);
     const lightDistance=Math.max(radius*6,12);
     if (viewer.lightingController?.scaleToModel) {
