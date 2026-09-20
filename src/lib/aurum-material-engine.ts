@@ -185,8 +185,8 @@ export const gemPresetFromConfig=(g:any):AurumGemPreset=>({
 });
 
 export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
-  diamante:{id:"diamante",familia:"Diamante",variante:"Natural",color:0xffffff,transmission:1,ior:2.417,roughness:.012,envMapIntensity:1.9,attenuationColor:0xffffff,attenuationDistance:100,dispersion:.035,iridescence:.03,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"},
-  diamante_inclusiones:{id:"diamante_inclusiones",familia:"Diamante",variante:"Con inclusiones",color:0xf8f8f8,transmission:1,ior:2.417,roughness:.018,envMapIntensity:1.8,attenuationColor:0xf5f5f5,attenuationDistance:65,dispersion:.035,iridescence:.04,thicknessScale:1,inclusions:true,inclusionDensity:.18,inclusionType:"crystal"},
+  diamante:{id:"diamante",familia:"Diamante",variante:"Natural",color:0xffffff,transmission:1,ior:2.417,roughness:.012,envMapIntensity:1.3,attenuationColor:0xffffff,attenuationDistance:100,dispersion:.01,iridescence:.03,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"},
+  diamante_inclusiones:{id:"diamante_inclusiones",familia:"Diamante",variante:"Con inclusiones",color:0xf8f8f8,transmission:1,ior:2.417,roughness:.018,envMapIntensity:1.3,attenuationColor:0xf5f5f5,attenuationDistance:65,dispersion:.01,iridescence:.04,thicknessScale:1,inclusions:true,inclusionDensity:.18,inclusionType:"crystal"},
   esmeralda_1:{id:"esmeralda_1",familia:"Esmeralda",variante:"Calidad 1",color:0x087f45,transmission:.94,ior:1.577,roughness:.018,envMapIntensity:1.65,attenuationColor:0x087f45,attenuationDistance:18,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   esmeralda_2:{id:"esmeralda_2",familia:"Esmeralda",variante:"Calidad 2",color:0x0a6b3b,transmission:.88,ior:1.577,roughness:.022,envMapIntensity:1.55,attenuationColor:0x075d34,attenuationDistance:12,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:true,inclusionDensity:.10,inclusionType:"fingerprint"},
   esmeralda_3:{id:"esmeralda_3",familia:"Calidad 3",variante:"Natural",color:0x064d2f,transmission:.80,ior:1.577,roughness:.028,envMapIntensity:1.45,attenuationColor:0x043d25,attenuationDistance:8,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.22,inclusionType:"fingerprint"},
@@ -227,7 +227,7 @@ export type AurumOpticalProfile = {
 };
 
 export const AURUM_OPTICAL_PROFILES:Record<string,AurumOpticalProfile>={
-  Diamante:{ior:2.417,transmission:1,dispersion:.035,absorptionDistance:100,internalReflection:.98,facetContrast:1,brilliance:1,fire:1},
+  Diamante:{ior:2.417,transmission:1,dispersion:.01,absorptionDistance:100,internalReflection:.98,facetContrast:1,brilliance:1,fire:1},
   Moissanita:{ior:2.65,transmission:1,dispersion:.104,absorptionDistance:80,internalReflection:.99,facetContrast:1,brilliance:.98,fire:1.18},
   Esmeralda:{ior:1.577,transmission:.92,dispersion:.012,absorptionDistance:15,internalReflection:.82,facetContrast:.88,brilliance:.78,fire:.45},
   Rubí:{ior:1.762,transmission:.90,dispersion:.014,absorptionDistance:13,internalReflection:.86,facetContrast:.92,brilliance:.84,fire:.52},
@@ -264,9 +264,9 @@ export type AurumDiamondOpticalConfig = {refractionStrength:number;dispersionStr
 export const AURUM_DIAMOND_OPTICAL_CONFIG:AurumDiamondOpticalConfig={refractionStrength:1,dispersionStrength:1,internalReflection:.98,brilliance:1,fire:1,facetContrast:1,environmentBoost:1};
 export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_CONFIG)=>{
   if(!material)return material;
-  material.transmission=1; material.ior=2.417; material.dispersion=.035*config.dispersionStrength;
+  material.transmission=1; material.ior=2.417; material.dispersion=.01*config.dispersionStrength;
   material.roughness=.010; material.clearcoat=.26; material.clearcoatRoughness=.010;
-  material.envMapIntensity=1.9*config.environmentBoost; material.attenuationDistance=100;
-  material.userData={...(material.userData??{}),aurumDiamondOptics:config}; material.needsUpdate=true; return material;
+  material.envMapIntensity=1.3*config.environmentBoost; material.attenuationDistance=100;
+  material.userData={...(material.userData??{}),aurumDiamondOptics:config,aurumDiamondReference:{referenceEngine:"iJewel/WebGi",referenceDiamondEnvMapIntensity:1.3,referenceDispersion:.01,referenceReflectivity:.5,referenceRayBounces:5,referenceRefractiveIndex:2.6,physicalIOR:2.417}}; material.needsUpdate=true; return material;
 };
 export const applyAurumGemPreset=(material:any,preset:AurumGemPreset,thickness:number)=>applyAurumGem(material,preset,Math.max(.015,thickness*(preset.thicknessScale??1)));
