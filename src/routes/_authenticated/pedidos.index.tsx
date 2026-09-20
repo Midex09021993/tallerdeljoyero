@@ -637,7 +637,6 @@ function PedidosPage() {  const navigate = useNavigate();
                   </label>
                 </div>
               )}
-              )}
               <p className="mt-1 text-[10px] text-muted-foreground">
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
