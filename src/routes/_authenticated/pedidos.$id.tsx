@@ -285,6 +285,36 @@ function FichaPedido() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: archivos = [] } = useArchivos(id);
+  const { data: historialPedido = [] } = useQuery({
+    queryKey: ["pedido-historial", id],
+    queryFn: async () => {
+      const [movimientos, consumos] = await Promise.all([
+        supabase.from("pedido_movimientos").select("id, area_origen, area_destino, accion, usuario_id, nota, created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100),
+        supabase.from("inventario_movimientos").select("id, tipo, cantidad, motivo, area, usuario_id, created_at, inventario(material,unidad)").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100),
+      ]);
+      if (movimientos.error) throw movimientos.error;
+      if (consumos.error) throw consumos.error;
+      const eventos = [
+        ...(movimientos.data ?? []).map((m) => ({
+          id: `area-${m.id}`, fecha: m.created_at, tipo: "Área",
+          titulo: m.accion === "reiniciar_flujo" ? "Flujo reiniciado" : "Pedido movido de área",
+          detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino,
+          nota: m.nota, usuario: m.usuario_id,
+        })),
+        ...(consumos.data ?? []).map((m) => {
+          const material = Array.isArray(m.inventario) ? m.inventario[0] : m.inventario;
+          return {
+            id: `material-${m.id}`, fecha: m.created_at, tipo: "Inventario",
+            titulo: "Material consumido",
+            detalle: `${m.cantidad} ${material?.unidad ?? ""} · ${material?.material ?? "Material"}`,
+            nota: m.motivo, usuario: m.usuario_id,
+          };
+        }),
+      ];
+      return eventos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+    },
+  });
+
   const { data: trabajosPedido = [] } = useQuery({
     queryKey: ["trabajos-pedido", id],
     queryFn: async () => {
@@ -663,6 +693,47 @@ function FichaPedido() {
           </div>
         ) : <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-xs font-medium text-success">✓ Pedido preparado para continuar su flujo operativo.</div>}
       </FichaAurum>
+
+      <Seccion titulo="Historial operativo">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Trazabilidad del pedido</p>
+              <p className="mt-1 text-xs text-muted-foreground">Movimientos de área y consumos de inventario registrados desde la ficha del pedido.</p>
+            </div>
+            <span className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-gold-deep">{historialPedido.length} eventos</span>
+          </div>
+          {historialPedido.length ? (
+            <div className="relative ml-2 border-l border-gold/20 pl-6">
+              <div className="space-y-5">
+                {historialPedido.map((evento) => (
+                  <div key={evento.id} className="relative">
+                    <span className="absolute -left-[31px] top-1.5 size-2.5 rounded-full border-2 border-card bg-gold" />
+                    <div className="rounded-2xl border border-border bg-surface-sunken p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">{evento.tipo}</span>
+                          <p className="mt-1 text-sm font-semibold text-foreground">{evento.titulo}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{evento.detalle}</p>
+                        </div>
+                        <time className="text-[10px] font-medium text-muted-foreground">
+                          {new Date(evento.fecha).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </time>
+                      </div>
+                      {evento.nota ? <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">{evento.nota}</p> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gold/25 bg-surface-sunken p-5 text-center">
+              <p className="text-sm font-semibold text-foreground">Todavía no hay movimientos registrados.</p>
+              <p className="mt-1 text-xs text-muted-foreground">El historial aparecerá automáticamente al mover el pedido entre áreas o consumir materiales.</p>
+            </div>
+          )}
+        </div>
+      </Seccion>
 
       <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <div className="border-b border-border bg-surface-sunken px-5 py-4">
