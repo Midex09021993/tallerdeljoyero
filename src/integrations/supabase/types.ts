@@ -16,28 +16,49 @@ export type Database = {
     Tables: {
       clientes: {
         Row: {
+          ciudad: string | null
           created_at: string
+          direccion: string | null
+          documento: string | null
           email: string | null
           estado: string
           id: string
+          metadata: Json
           nombre: string
+          notas: string
           telefono: string | null
+          tipo: string
+          whatsapp: string | null
         }
         Insert: {
+          ciudad?: string | null
           created_at?: string
+          direccion?: string | null
+          documento?: string | null
           email?: string | null
           estado?: string
           id?: string
+          metadata?: Json
           nombre: string
+          notas?: string
           telefono?: string | null
+          tipo?: string
+          whatsapp?: string | null
         }
         Update: {
+          ciudad?: string | null
           created_at?: string
+          direccion?: string | null
+          documento?: string | null
           email?: string | null
           estado?: string
           id?: string
+          metadata?: Json
           nombre?: string
+          notas?: string
           telefono?: string | null
+          tipo?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
