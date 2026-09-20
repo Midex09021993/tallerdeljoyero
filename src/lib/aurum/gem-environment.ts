@@ -1,3 +1,4 @@
+import * as THREE from "three";
 export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; rotationOffset:number; }> = {
   // The gem environment is intentionally independent from the metal environment.
   // Small family offsets improve the way the same HDR light field crosses
@@ -69,7 +70,11 @@ export function createAurumGemEnvironment(
         // to the gem light field only; it does not alter geometry or IOR.
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale));
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
-        const effectiveRotation = rotation + (Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset);
+        const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
+        const worldEuler = new THREE.Euler();
+        if (oriented && m.getWorldQuaternion) worldEuler.setFromQuaternion(m.getWorldQuaternion(new THREE.Quaternion()), "YXZ");
+        const orientedCompensation = oriented ? -worldEuler.y : 0;
+        const effectiveRotation = rotation + (Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset) + orientedCompensation;
 
         if (m.envMapRotation?.set) {
           m.envMapRotation.set(0, effectiveRotation, 0);
@@ -82,6 +87,7 @@ export function createAurumGemEnvironment(
           aurumGemEnvironmentRotation: effectiveRotation,
           aurumGemEnvironmentBaseRotation: rotation,
           aurumGemEnvironmentRotationOffset: Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset,
+          aurumGemEnvironmentOriented: oriented,
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
