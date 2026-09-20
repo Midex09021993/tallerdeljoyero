@@ -4,6 +4,7 @@ import { Download, Printer, QrCode, X } from "lucide-react";
 
 type DatosJoyaQR = {
   id: string;
+  qr_token: string;
   codigo: string;
   nombre: string;
   taller: string;
@@ -18,7 +19,7 @@ type DatosJoyaQR = {
 export function QRJoya({ joya, onClose }: { joya: DatosJoyaQR; onClose: () => void }) {
   const [svg, setSvg] = useState("");
   const publicBaseUrl = "https://www.tallerdeljoyero.com";
-  const url = `${publicBaseUrl}/joya/${encodeURIComponent(joya.codigo)}`;
+  const url = `${publicBaseUrl}/joya/${encodeURIComponent(joya.qr_token)}`;
 
   useEffect(() => {
     let activo = true;
