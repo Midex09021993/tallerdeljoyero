@@ -464,6 +464,53 @@ export type Database = {
           },
         ]
       }
+      incidencias_trabajo: {
+        Row: {
+          created_at: string
+          descripcion: string
+          estado: string
+          id: string
+          reportado_por: string | null
+          resolucion: string | null
+          resuelto_at: string | null
+          resuelto_por: string | null
+          tipo: string
+          trabajo_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          id?: string
+          reportado_por?: string | null
+          resolucion?: string | null
+          resuelto_at?: string | null
+          resuelto_por?: string | null
+          tipo?: string
+          trabajo_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          id?: string
+          reportado_por?: string | null
+          resolucion?: string | null
+          resuelto_at?: string | null
+          resuelto_por?: string | null
+          tipo?: string
+          trabajo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidencias_trabajo_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventario: {
         Row: {
           categoria: string
@@ -742,6 +789,7 @@ export type Database = {
       }
       pedidos: {
         Row: {
+          a_cuenta: number
           area_actual: string
           area_desde: string
           cantidad_piezas: number
@@ -784,6 +832,7 @@ export type Database = {
           receptor_envio: string
           referencia: string
           ruta: string[]
+          saldo: number
           sede_id: string | null
           talla: string
           telefono: string
@@ -797,6 +846,7 @@ export type Database = {
           ventas_estado: string
         }
         Insert: {
+          a_cuenta?: number
           area_actual?: string
           area_desde?: string
           cantidad_piezas?: number
@@ -839,6 +889,7 @@ export type Database = {
           receptor_envio?: string
           referencia: string
           ruta?: string[]
+          saldo?: number
           sede_id?: string | null
           talla?: string
           telefono?: string
@@ -852,6 +903,7 @@ export type Database = {
           ventas_estado?: string
         }
         Update: {
+          a_cuenta?: number
           area_actual?: string
           area_desde?: string
           cantidad_piezas?: number
@@ -894,6 +946,7 @@ export type Database = {
           receptor_envio?: string
           referencia?: string
           ruta?: string[]
+          saldo?: number
           sede_id?: string | null
           talla?: string
           telefono?: string
@@ -1245,6 +1298,107 @@ export type Database = {
           },
         ]
       }
+      trabajo_archivos: {
+        Row: {
+          created_at: string
+          id: string
+          pedido_archivo_id: string
+          trabajo_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pedido_archivo_id: string
+          trabajo_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pedido_archivo_id?: string
+          trabajo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajo_archivos_pedido_archivo_id_fkey"
+            columns: ["pedido_archivo_id"]
+            isOneToOne: false
+            referencedRelation: "pedido_archivos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trabajo_archivos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trabajos: {
+        Row: {
+          area: string
+          created_at: string
+          descripcion: string
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          fecha_planificada: string | null
+          id: string
+          notas: string
+          pedido_id: string
+          prioridad: string
+          responsable_user_id: string | null
+          tipo: string
+          titulo: string
+          ubicacion: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string | null
+          fecha_planificada?: string | null
+          id?: string
+          notas?: string
+          pedido_id: string
+          prioridad?: string
+          responsable_user_id?: string | null
+          tipo?: string
+          titulo?: string
+          ubicacion?: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string | null
+          fecha_planificada?: string | null
+          id?: string
+          notas?: string
+          pedido_id?: string
+          prioridad?: string
+          responsable_user_id?: string | null
+          tipo?: string
+          titulo?: string
+          ubicacion?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_areas: {
         Row: {
           area: string
@@ -1305,6 +1459,10 @@ export type Database = {
     Functions: {
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
+        Returns: undefined
+      }
+      cambiar_estado_trabajo: {
+        Args: { _nuevo_estado: string; _trabajo_id: string }
         Returns: undefined
       }
       convertir_cotizacion_a_pedido_contrato: {
