@@ -231,7 +231,7 @@ function TrabajoOperativoPage() {
             </div>
             <button
               type="button"
-              onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: {} })}
+              onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: undefined } })}
               className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
             >
               Ver pedido
