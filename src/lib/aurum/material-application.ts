@@ -6,6 +6,7 @@ import {
   applyAurumDiamondOptics,
   applyAurumReferenceGemOptics,
   applyAurumReferenceMetalOptics,
+  applyAurumIJEWELReferenceFromMaterial,
   getAurumOpticalProfile,
   metalPresetFromConfig,
 } from "../aurum-material-engine";
@@ -248,6 +249,11 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // optical shader so they become active uniforms, not metadata-only references.
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
     if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
+    // If the loaded GLB carries an exact iJewel/WebGi DiamondMaterial rootPath,
+    // preserve and activate that authored reference instead of replacing it with
+    // a generic family preset. This is what lets DAROS-grade source materials
+    // survive the AURUM material application pipeline.
+    applyAurumIJEWELReferenceFromMaterial(base);
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
