@@ -3,7 +3,7 @@ import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "luci
 import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
-import { usePedidos, type Pedido } from "@/lib/taller-db";
+import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
 import { useTrabajosDelOperario } from "@/hooks/use-pedidos-area";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
@@ -65,7 +65,7 @@ function areasAsignadasUnicas(areas: string[]) {
 
 function OperarioPage() {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading: isLoadingPedidos } = usePedidos();
+  const { data: pedidos = [], isLoading: isLoadingPedidos } = usePedidosSelector();
   const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
