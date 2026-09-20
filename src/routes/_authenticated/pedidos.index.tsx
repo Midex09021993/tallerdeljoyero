@@ -97,7 +97,6 @@ function coincideEntrega(fechaIso: string | null | undefined, filtro: FiltroEntr
 
   const fecha = new Date(`${fechaIso}T00:00:00`);
   if (Number.isNaN(fecha.getTime())) return false;
-
   const hoyInicio = inicioDia();
   const hoyFin = finDia();
 
@@ -197,8 +196,7 @@ function TarjetaResumen({
   );
 }
 
-function PedidosPage() {
-  const navigate = useNavigate();
+function PedidosPage() {  const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { data: clientes = [] } = useQuery({
@@ -297,8 +295,7 @@ function PedidosPage() {
             p.estado,
             p.area_actual,
           ].some((v) => (v ?? "").toLowerCase().includes(t));
-        const okOperario =
-          !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
+        const okOperario =          !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
         // Los pedidos entregados salen del flujo activo: solo aparecen al buscarlos
         // o al filtrar expresamente por ese estado (el archivo está en Gestión).
         const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
@@ -397,8 +394,7 @@ function PedidosPage() {
             className={`${sesion?.esAdmin ? "hidden sm:flex" : "flex"} flex-wrap items-stretch gap-3`}
           >
             {tarjetasResumen}
-          </div>
-        </div>
+          </div>        </div>
       }
     >
       {soloPendientesAutorizacion ? (
@@ -497,8 +493,7 @@ function PedidosPage() {
                 telefono: form.telefono,
                 origen: form.origen,
                 contrato: form.contrato,
-                cotizacion_detalles: documentosExternos,
-                material: form.material,
+                cotizacion_detalles: documentosExternos,                material: form.material,
                 peso_estimado: form.peso_estimado,
                 estado: "Recibido",
                 entrega: form.fecha_entrega,
@@ -597,8 +592,7 @@ function PedidosPage() {
                             cliente_id: cliente.id,
                             proyecto_joya_id: "",
                             cliente: cliente.nombre,
-                            telefono: cliente.telefono ?? "",
-                          });
+                            telefono: cliente.telefono ?? "",                          });
                           setClienteBusqueda(cliente.nombre);
                           setClientesSelectorAbierto(false);
                         }}
@@ -650,6 +644,7 @@ function PedidosPage() {
                 </div>
               )}
               <p className="mt-1 text-[10px] text-muted-foreground">
+              )}
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
             </div>
@@ -697,8 +692,7 @@ function PedidosPage() {
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Cotización externa <span className="normal-case tracking-normal">(opcional)</span>
                 <input
-                  value={form.cotizacion_externa}
-                  onChange={(e) => setForm({ ...form, cotizacion_externa: e.target.value })}
+                  value={form.cotizacion_externa}                  onChange={(e) => setForm({ ...form, cotizacion_externa: e.target.value })}
                   placeholder="N.º, WhatsApp, archivo o referencia"
                   className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
                 />
@@ -797,8 +791,7 @@ function PedidosPage() {
                 {FILTROS_ENTREGA.map((entrega) => (
                   <option key={entrega}>{entrega}</option>
                 ))}
-              </select>
-            </label>
+              </select>            </label>
           </div>
         </div>
         {soloSusAreas && !busca.trim() ? (
@@ -897,8 +890,7 @@ function PedidosPage() {
           ) : null}
         </div>
 
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full border-collapse text-left">
+        <div className="hidden overflow-x-auto lg:block">          <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
                 {["Ref", "Cliente", "Trabajo", "Estado", "Área actual", "Entrega", "Acciones"].map(
