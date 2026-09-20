@@ -13,7 +13,7 @@ declare
   v_sede text;
   v_prefijo text;
 begin
-  if coalesce(trim(new.codigo), '') <> '' and coalesce(new.origen, 'app') <> 'app' then
+  if coalesce(trim(new.codigo), '') <> '' then
     return new;
   end if;
 
