@@ -18,7 +18,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   const wasPrepared = !!model.userData?.["aurumInitialFrameApplied"];
 
   if (!wasPrepared) {
-    const prepared=prepare(model,2.6);
+    const prepared=prepare(model,sceneId === "ijewelReference" ? 2.0 : 2.6);
     const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
     viewer.groundController.positionUnderModel(bounds);
     viewer.groundController.positionBakedShadow?.(bounds);
