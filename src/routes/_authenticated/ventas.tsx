@@ -69,7 +69,7 @@ function VentasPage() {
     const { error } = await supabase.rpc("transicionar_entrega_pedido", {
       _pedido_id: pedidoId,
       _accion: accion,
-      _datos: datos,
+      _datos: datos as never,
     });
     if (error) {
       toast.error(error.message);
