@@ -43,7 +43,7 @@ function CotizacionesPage() {
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
-    notas_cliente: "", notas_internas: "",
+    notas_cliente: "", notas_internas: "", tasaImpuesto: 18,
   });
 
   const cargar = async () => {
@@ -104,7 +104,7 @@ function CotizacionesPage() {
         subtotal_costo: form.costo * form.cantidad,
         subtotal: form.precio * form.cantidad,
         descuento: form.descuento,
-        impuestos: form.impuestos,
+        impuestos: impuestoCalculado,
         total: Math.max(0, form.precio * form.cantidad - form.descuento + form.impuestos),
         fecha_vencimiento: form.fecha_vencimiento || null,
         fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
