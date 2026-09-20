@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -41,7 +41,7 @@ type Material = {
 type Movimiento = {
   id: string; material_id: string; tipo: string; cantidad: number;
   stock_anterior: number | null; stock_posterior: number | null; motivo: string;
-  referencia_externa: string; created_at: string; inventario?: { material: string; unidad: string } | null;
+  referencia_externa: string; pedido_id: string | null; created_at: string; inventario?: { material: string; unidad: string } | null;
 };
 type Joya = {
   id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
@@ -92,7 +92,7 @@ function InventarioPage() {
     const [a, b, c] = await Promise.all([
       supabase.from("inventario").select("*").eq("sede_id", sedeId).order("material"),
       supabase.from("inventario_movimientos")
-        .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,created_at,inventario(material,unidad)")
+        .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,pedido_id,created_at,inventario(material,unidad)")
         .order("created_at", { ascending: false }).limit(100),
       supabase.from("inventario_joyas")
         .select("id,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado")
@@ -301,8 +301,8 @@ function InventarioPage() {
               <div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Kardex</p><h2 className="mt-1 text-lg font-semibold">Movimientos de inventario</h2><p className="mt-1 text-xs text-muted-foreground">Cada movimiento actualiza el stock de forma atómica.</p></div>
               {puedeMover ? <button type="button" onClick={() => { setMovimientoForm({ material_id: "", tipo: "entrada", cantidad: "", motivo: "", referencia_externa: "" }); setModal("movimiento"); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Registrar movimiento</button> : null}
             </div>
-            <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Fecha", "Material", "Tipo", "Cantidad", "Stock resultante", "Motivo", "Referencia"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
-              {movimientos.length === 0 ? <tr><td colSpan={7} className="px-5 py-16 text-center text-sm text-muted-foreground">Todavía no hay movimientos.</td></tr> : movimientos.map((m) => <tr key={m.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4 text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</td><td className="px-5 py-4 text-sm font-medium">{m.inventario?.material ?? "Material"}</td><td className="px-5 py-4"><Badge text={labelTipo(m.tipo)} warning={!positive(m.tipo)} /></td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(m.cantidad)} {m.inventario?.unidad ?? ""}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.stock_posterior == null ? "—" : num(m.stock_posterior)} {m.inventario?.unidad ?? ""}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.motivo || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.referencia_externa || "—"}</td></tr>)}
+            <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Fecha", "Material", "Tipo", "Cantidad", "Stock resultante", "Pedido", "Motivo", "Referencia"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
+              {movimientos.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center text-sm text-muted-foreground">Todavía no hay movimientos.</td></tr> : movimientos.map((m) => <tr key={m.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4 text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</td><td className="px-5 py-4 text-sm font-medium">{m.inventario?.material ?? "Material"}</td><td className="px-5 py-4"><Badge text={labelTipo(m.tipo)} warning={!positive(m.tipo)} /></td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(m.cantidad)} {m.inventario?.unidad ?? ""}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.stock_posterior == null ? "—" : num(m.stock_posterior)} {m.inventario?.unidad ?? ""}</td><td className="px-5 py-4">{m.pedido_id ? <Link to="/pedidos/$id" params={{ id: m.pedido_id }} className="inline-flex items-center rounded-lg border border-gold/20 bg-gold/[.04] px-2.5 py-1.5 text-[10px] font-semibold text-gold transition hover:border-gold/40 hover:bg-gold/[.08]">Pedido · {m.pedido_id.slice(0, 8).toUpperCase()}</Link> : <span className="text-xs text-muted-foreground">Sin pedido</span>}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.motivo || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{m.referencia_externa || "—"}</td></tr>)}
             </tbody></table></TableWrap>
           </section>
         ) : null}
