@@ -940,6 +940,11 @@ function FichaPedido() {
                       cantidad_piezas: Number(fd.get("cantidad_piezas")) || 1,
                       piedras: String(fd.get("piedras")),
                       importe: Number(fd.get("importe")) || 0,
+                      a_cuenta: Number(fd.get("a_cuenta")) || 0,
+                      saldo: Math.max(
+                        0,
+                        (Number(fd.get("importe")) || 0) - (Number(fd.get("a_cuenta")) || 0),
+                      ),
                       fecha_entrega: String(fd.get("fecha_entrega")) || null,
                       notas: String(fd.get("notas")),
                       corte_texto: String(fd.get("corte_texto") ?? pedido.corte_texto),
@@ -958,24 +963,22 @@ function FichaPedido() {
               >
                 {(
                   [
-                    ["cliente", "Cliente", pedido.cliente, "text"],
-                    ["telefono", "WhatsApp", pedido.telefono, "tel"],
-                    ["origen", "Origen", pedido.origen, "text"],
                     ["contrato", "Contrato", pedido.contrato, "text"],
-                    ["trabajo", "Trabajo", pedido.trabajo || pedido.pieza, "text"],
+                    ["cliente", "Nombre", pedido.cliente, "text"],
+                    ["origen", "Origen / lugar", pedido.origen, "text"],
+                    ["trabajo", "Descripción / trabajo", pedido.trabajo || pedido.pieza, "text"],
+                    ["peso_estimado", "Peso", pedido.peso_estimado, "text"],
                     ["material", "Material", pedido.material, "text"],
-                    ["peso_estimado", "Peso estimado (g)", pedido.peso_estimado, "text"],
-                    ["talla", "Talla / Medida", pedido.talla, "text"],
+                    ["piedras", "Piedras", pedido.piedras, "text"],
+                    ["talla", "Talla", pedido.talla, "text"],
                     [
                       "cantidad_piezas",
-                      "Cantidad de piezas",
+                      "Cantidad",
                       String(pedido.cantidad_piezas),
                       "number",
                     ],
-                    ["piedras", "Piedras / Componentes", pedido.piedras, "text"],
-                    ["notas", "Notas generales", pedido.notas, "text"],
-                    ["importe", "Costo", String(pedido.importe), "number"],
-                    ["fecha_entrega", "Entrega", pedido.fecha_entrega ?? "", "date"],
+                    ["importe", "Precio", String(pedido.importe), "number"],
+                    ["a_cuenta", "A cuenta", String(pedido.a_cuenta), "number"],
                   ] as const
                 ).map(([name, label, val, tipo]) => (
                   <label
@@ -999,6 +1002,20 @@ function FichaPedido() {
                     )}
                   </label>
                 ))}
+
+                <div className="rounded-lg border border-border bg-surface-sunken px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Saldo calculado automáticamente
+                  <span className="ml-2 text-sm font-semibold normal-case text-foreground">
+                    {new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(
+                      Math.max(
+                        0,
+                        (Number((document.querySelector('input[name="importe"]') as HTMLInputElement | null)?.value) || 0) -
+                          (Number((document.querySelector('input[name="a_cuenta"]') as HTMLInputElement | null)?.value) || 0),
+                      ),
+                    )}
+                  </span>
+                </div>
+
                 <fieldset className="col-span-2 lg:col-span-3">
                   <legend className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
                     Ruta del pedido (marca las áreas a las que se destinará)
