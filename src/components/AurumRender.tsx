@@ -481,6 +481,7 @@ export function AurumRender() {
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: encuadrar siempre después de añadir el modelo.
         encuadrar();
+        if (escenarioId === "ijewelReference") applyAurumIJEWELPresentationCamera(camara, controles, modelo);
       };
       const camaraVista=(id:VistaId)=>{
         applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
