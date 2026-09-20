@@ -72,6 +72,86 @@ function InventarioPage() {
         </>
       }
     >
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            id: "materiales" as Modulo,
+            etiqueta: "Materiales",
+            valor: inventario.length,
+            descripcion: "Control del stock del taller",
+            indicador: "Inventario",
+          },
+          {
+            id: "bajo" as Modulo,
+            etiqueta: "Stock bajo",
+            valor: bajos.length,
+            descripcion: bajos.length ? "Requieren atención" : "Todo dentro del mínimo",
+            indicador: bajos.length ? "Atención" : "Estable",
+          },
+          {
+            id: "movimientos" as Modulo,
+            etiqueta: "Movimientos",
+            valor: "Ver",
+            descripcion: "Entradas y consumos del taller",
+            indicador: "Trazabilidad",
+          },
+          {
+            id: null,
+            etiqueta: "Áreas",
+            valor: AREAS.length,
+            descripcion: "Áreas disponibles para el taller",
+            indicador: "Operación",
+          },
+        ].map((ficha) => {
+          const activa = ficha.id !== null && modulo === ficha.id;
+          return (
+            <button
+              key={ficha.etiqueta}
+              type="button"
+              disabled={ficha.id === null}
+              onClick={() => ficha.id && setModulo(ficha.id)}
+              className={[
+                "group relative min-h-[150px] overflow-hidden rounded-2xl border bg-card p-5 text-left",
+                "transition-all duration-300 ease-out",
+                "hover:-translate-y-1 hover:border-gold/70 hover:shadow-[0_14px_36px_-18px_hsl(var(--gold)/0.65)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60",
+                ficha.id === null ? "cursor-default" : "cursor-pointer",
+                activa ? "border-gold/70 shadow-[0_10px_30px_-18px_hsl(var(--gold)/0.7)]" : "border-gold/20",
+              ].join(" ")}
+            >
+              <span className="pointer-events-none absolute -inset-y-10 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-gold/20 to-transparent opacity-0 blur-sm transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100" />
+              <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gold/[0.025] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+              <div className="relative flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold/75">
+                    {ficha.indicador}
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold text-foreground transition-colors duration-300 group-hover:text-gold">
+                    {ficha.etiqueta}
+                  </h2>
+                </div>
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                  <span className="text-xs font-bold">✦</span>
+                </span>
+              </div>
+
+              <div className="relative mt-7 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-2xl font-semibold tabular-nums">{ficha.valor}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{ficha.descripcion}</p>
+                </div>
+                {ficha.id !== null ? (
+                  <span className="translate-x-0 text-sm text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-gold">
+                    →
+                  </span>
+                ) : null}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mb-5 flex flex-wrap gap-2">
         {(
           [
@@ -84,10 +164,10 @@ function InventarioPage() {
             key={id}
             type="button"
             onClick={() => setModulo(id)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
               modulo === id
-                ? "bg-primary text-primary-foreground"
-                : "bg-surface-muted text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-[0_8px_22px_-14px_hsl(var(--gold)/0.8)]"
+                : "bg-surface-muted text-muted-foreground hover:border hover:border-gold/30 hover:text-gold"
             }`}
           >
             {etiqueta}
