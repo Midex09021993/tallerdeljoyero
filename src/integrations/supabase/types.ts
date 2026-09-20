@@ -1292,6 +1292,87 @@ export type Database = {
           },
         ]
       }
+      produccion_eventos: {
+        Row: {
+          created_at: string
+          datos: Json
+          estado_anterior: string
+          estado_nuevo: string
+          id: string
+          orden_produccion_id: string | null
+          pedido_id: string
+          pieza_id: string | null
+          sede_id: string
+          tipo: string
+          trabajo_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          datos?: Json
+          estado_anterior?: string
+          estado_nuevo?: string
+          id?: string
+          orden_produccion_id?: string | null
+          pedido_id: string
+          pieza_id?: string | null
+          sede_id: string
+          tipo: string
+          trabajo_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          datos?: Json
+          estado_anterior?: string
+          estado_nuevo?: string
+          id?: string
+          orden_produccion_id?: string | null
+          pedido_id?: string
+          pieza_id?: string | null
+          sede_id?: string
+          tipo?: string
+          trabajo_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produccion_eventos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_pieza_id_fkey"
+            columns: ["pieza_id"]
+            isOneToOne: false
+            referencedRelation: "piezas_terminadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedido_archivos: {
         Row: {
           created_at: string
