@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
-import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
+import { usePedidosDeArea, type PedidoOperativo } from "@/hooks/use-pedidos-area";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
 import { VisorIframe } from "@/components/VisorIframe";
