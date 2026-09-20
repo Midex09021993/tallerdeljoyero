@@ -13,8 +13,8 @@ function luminance(r: number, g: number, b: number) {
 function polygonArea(points: Point[]) {
   let area = 0;
   for (let i = 0; i < points.length; i++) {
-    const a = points[i];
-    const b = points[(i + 1) % points.length];
+    const a = points[i]!;
+    const b = points[(i + 1) % points.length]!;
     area += a.x * b.y - b.x * a.y;
   }
   return Math.abs(area) / 2;
@@ -49,7 +49,7 @@ function simplify(points: Point[], tolerance: number) {
     const out = [prev];
     let previous = prev;
     for (let i = 1; i < input.length; i++) {
-      const point = input[i];
+      const point = input[i]!;
       if (sqSegDist(point, previous, previous) > sqTolerance) {
         out.push(point);
         previous = point;
@@ -69,7 +69,7 @@ function simplify(points: Point[], tolerance: number) {
       let maxSqDist = 0;
       let index = 0;
       for (let i = first + 1; i < last; i++) {
-        const sqDist = sqSegDist(input[i], input[first], input[last]);
+        const sqDist = sqSegDist(input[i]!, input[first]!, input[last]!);
         if (sqDist > maxSqDist) {
           index = i;
           maxSqDist = sqDist;
@@ -84,7 +84,7 @@ function simplify(points: Point[], tolerance: number) {
   };
 
   const radialPoints = radial(points);
-  return dp(radialPoints);
+  return dp(radialPoints as Point[]);
 }
 
 function traceBoundary(component: Point[], width: number, height: number, foreground: Uint8Array) {
@@ -106,7 +106,7 @@ function traceBoundary(component: Point[], width: number, height: number, foregr
 
   const boundarySet = new Set(boundary.map((p) => p.y * width + p.x));
   const start = boundary.reduce((best, p) =>
-    p.y < best.y || (p.y === best.y && p.x < best.x) ? p : best, boundary[0]);
+    p.y < best.y || (p.y === best.y && p.x < best.x) ? p : best, boundary[0]!);
 
   const ordered: Point[] = [];
   let current = start;
@@ -120,7 +120,7 @@ function traceBoundary(component: Point[], width: number, height: number, foregr
 
     for (let offset = 0; offset < 8; offset++) {
       const dir = (previousDir + offset + 6) % 8;
-      const [dx, dy] = dirs[dir];
+      const [dx, dy] = dirs[dir]!;
       const nx = current.x + dx;
       const ny = current.y + dy;
       if (boundarySet.has(ny * width + nx)) {
@@ -151,7 +151,7 @@ function traceBoundary(component: Point[], width: number, height: number, foregr
 function traceContours(data: Uint8ClampedArray, width: number, height: number, threshold: number) {
   const foreground = new Uint8Array(width * height);
   for (let i = 0; i < width * height; i++) {
-    foreground[i] = luminance(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]) < threshold ? 1 : 0;
+    foreground[i] = luminance(data[i * 4]!, data[i * 4 + 1]!, data[i * 4 + 2]!) < threshold ? 1 : 0;
   }
 
   const visited = new Uint8Array(width * height);
@@ -195,10 +195,10 @@ function traceContours(data: Uint8ClampedArray, width: number, height: number, t
 function pathFromPoints(points: Point[]) {
   if (!points.length) return "";
   const n = points.length;
-  if (n < 3) return `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)} Z`;
-  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+  if (n < 3) return `M ${points[0]!.x.toFixed(2)} ${points[0]!.y.toFixed(2)} Z`;
+  let d = `M ${points[0]!.x.toFixed(2)} ${points[0]!.y.toFixed(2)}`;
   for (let i = 1; i < n; i++) {
-    const p = points[i];
+    const p = points[i]!;
     d += ` L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
   }
   return d + " Z";
@@ -254,7 +254,7 @@ function hasSelfIntersection(points: Point[]) {
     const a = points[i], b = points[(i + 1) % points.length];
     for (let j = i + 1; j < points.length; j++) {
       if (j === i + 1 || (i === 0 && j === points.length - 1)) continue;
-      if (intersects(a,b,points[j],points[(j + 1) % points.length])) return true;
+      if (intersects(a,b,points[j]!,points[(j + 1) % points.length]!)) return true;
     }
   }
   return false;
@@ -327,7 +327,7 @@ export function VectorizadorLaser() {
   const totalPoints = outputContours.reduce((sum, c) => sum + c.points.length, 0);
   const selfIntersecting = outputContours.some((c) => hasSelfIntersection(c.points));
   const duplicatePoints = outputContours.some((c) => c.points.some((p, i) => {
-    const q = c.points[(i + 1) % c.points.length];
+    const q = c.points[(i + 1) % c.points.length]!;
     return p.x === q.x && p.y === q.y;
   }));
   const closed = outputContours.length > 0 && outputContours.every(c => c.points.length >= 3) && !selfIntersecting && !duplicatePoints;
