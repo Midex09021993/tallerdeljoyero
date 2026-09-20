@@ -223,6 +223,8 @@ function PedidosPage() {
   const autorizar = useAutorizarProduccion();
 
   const [abierto, setAbierto] = useState(false);
+  const [clienteBusqueda, setClienteBusqueda] = useState("");
+  const [clientesSelectorAbierto, setClientesSelectorAbierto] = useState(false);
   const [form, setForm] = useState<PedidoFormState>(() => nuevoPedidoVacio());
   const { data: proyectos = [] } = useQuery({
     queryKey: ["proyectos-pedido-selector", form.cliente_id],
@@ -254,6 +256,18 @@ function PedidosPage() {
   const [ultimoContrato, setUltimoContrato] = useState<PedidoFormState | null>(null);
 
   const puedeCrear = Boolean(sesion?.esAdmin);
+  const clientesCoincidentes = useMemo(() => {
+    const termino = clienteBusqueda.trim().toLowerCase();
+    if (!termino) return clientes.slice(0, 8);
+    return clientes
+      .filter((cliente) =>
+        [cliente.nombre, cliente.telefono].some((valor) =>
+          (valor ?? "").toLowerCase().includes(termino),
+        ),
+      )
+      .slice(0, 8);
+  }, [clienteBusqueda, clientes]);
+  const clienteSeleccionado = clientes.find((cliente) => cliente.id === form.cliente_id);
   const sedeFiltradaParaCrear = sesion?.esDueno && sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : "";
   const sedePorDefecto =
     sedeId || sedeFiltradaParaCrear || sesion?.perfil.sede_id || sedes[0]?.id || "";
@@ -521,31 +535,99 @@ function PedidosPage() {
             }}
           >
             <div className="mb-4 max-w-xl">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Cliente registrado <span className="normal-case tracking-normal">(opcional)</span>
-                <select
-                  value={form.cliente_id}
+              </div>
+              <div className="relative mt-1">
+                <input
+                  value={clienteSeleccionado?.nombre ?? clienteBusqueda}
+                  onFocus={() => setClientesSelectorAbierto(true)}
                   onChange={(e) => {
-                    const cliente = clientes.find((item) => item.id === e.target.value);
-                    setForm({
-                      ...form,
-                      cliente_id: e.target.value,
-                      proyecto_joya_id: "",
-                      cliente: cliente?.nombre ?? "",
-                      telefono: cliente?.telefono ?? "",
-                    });
+                    const valor = e.target.value;
+                    setClienteBusqueda(valor);
+                    setClientesSelectorAbierto(true);
+                    if (form.cliente_id) {
+                      setForm({ ...form, cliente_id: "", proyecto_joya_id: "", cliente: valor });
+                    } else {
+                      setForm({ ...form, cliente: valor });
+                    }
                   }}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground sm:py-2 sm:text-sm"
-                >
-                  <option value="">Sin registrar todavía</option>
-                  {clientes.map((cliente) => (
-                    <option key={cliente.id} value={cliente.id}>
-                      {cliente.nombre}{cliente.telefono ? ` · ${cliente.telefono}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {!form.cliente_id ? (
+                  placeholder="Buscar cliente por nombre o teléfono…"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-3 pr-10 text-base text-foreground outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 sm:py-2 sm:text-sm"
+                  autoComplete="off"
+                  aria-label="Buscar cliente registrado"
+                />
+                {form.cliente_id ? (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setForm({ ...form, cliente_id: "", proyecto_joya_id: "" });
+                      setClienteBusqueda("");
+                      setClientesSelectorAbierto(true);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                    aria-label="Quitar cliente seleccionado"
+                  >
+                    Limpiar
+                  </button>
+                ) : null}
+                {clientesSelectorAbierto && !form.cliente_id ? (
+                  <div className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-xl border border-border bg-card shadow-raised">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setForm({ ...form, cliente_id: "", proyecto_joya_id: "", cliente: "" });
+                        setClienteBusqueda("");
+                        setClientesSelectorAbierto(false);
+                      }}
+                      className="flex w-full items-center px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-gold/5"
+                    >
+                      Sin registrar todavía
+                    </button>
+                    {clientesCoincidentes.map((cliente) => (
+                      <button
+                        key={cliente.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setForm({
+                            ...form,
+                            cliente_id: cliente.id,
+                            proyecto_joya_id: "",
+                            cliente: cliente.nombre,
+                            telefono: cliente.telefono ?? "",
+                          });
+                          setClienteBusqueda(cliente.nombre);
+                          setClientesSelectorAbierto(false);
+                        }}
+                        className="flex w-full items-center justify-between gap-3 border-t border-border px-3 py-2.5 text-left hover:bg-gold/5"
+                      >
+                        <span className="min-w-0 truncate text-sm font-medium text-foreground">{cliente.nombre}</span>
+                        {cliente.telefono ? (
+                          <span className="shrink-0 text-xs text-muted-foreground">{cliente.telefono}</span>
+                        ) : null}
+                      </button>
+                    ))}
+                    {clientesCoincidentes.length === 0 ? (
+                      <div className="border-t border-border px-3 py-3 text-xs text-muted-foreground">
+                        No encontramos clientes con esa búsqueda.
+                      </div>
+                    ) : null}
+                    {clientes.length > clientesCoincidentes.length && clienteBusqueda.trim() === "" ? (
+                      <div className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground">
+                        Escribe para filtrar. Mostrando los primeros {clientesCoincidentes.length} resultados.
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              {form.cliente_id ? (
+                <div className="mt-3 rounded-lg border border-gold/15 bg-gold/[.03] px-3 py-2 text-xs text-muted-foreground">
+                  Cliente registrado seleccionado · teléfono tomado de su ficha.
+                </div>
+              ) : (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                     Nombre del cliente
@@ -566,10 +648,7 @@ function PedidosPage() {
                     />
                   </label>
                 </div>
-              ) : (
-                <div className="mt-3 rounded-lg border border-gold/15 bg-gold/[.03] px-3 py-2 text-xs text-muted-foreground">
-                  Cliente y teléfono tomados del registro seleccionado.
-                </div>
+              )}
               )}
               <p className="mt-1 text-[10px] text-muted-foreground">
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
