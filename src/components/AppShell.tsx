@@ -141,7 +141,9 @@ export function AppShell({
             </p>
           </div>
 
-          <nav className="scrollbar-hidden min-h-0 flex-1 space-y-1 overflow-y-auto px-4">
+          <div className="relative min-h-0 flex-1">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-ink via-ink/85 to-transparent" aria-hidden="true" />
+            <nav className="scrollbar-hidden h-full space-y-1 overflow-y-auto px-4 pb-8">
             {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
               if (items.length === 0) return null;
@@ -173,7 +175,8 @@ export function AppShell({
                 </div>
               );
             })}
-          </nav>
+            </nav>
+          </div>
 
           <div className="shrink-0 border-t border-ink-foreground/5 p-6">
             <div className="mb-4 flex items-center gap-3">
