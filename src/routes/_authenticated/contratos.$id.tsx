@@ -19,7 +19,7 @@ import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
-    nuevoPedido: search.nuevoPedido === true || search.nuevoPedido === "true",
+    nuevoPedido: search["nuevoPedido"] === true || search["nuevoPedido"] === "true",
   }),
   head: () => ({
     meta: [
@@ -96,7 +96,12 @@ function ContratoPage() {
     setModalAbierto(true);
     setForm(formularioContratoVacio(contrato));
     setRuta([]);
-    void navigate({ search: { nuevoPedido: undefined }, replace: true });
+    void navigate({
+      to: "/contratos/$id",
+      params: { id },
+      search: { nuevoPedido: false },
+      replace: true,
+    });
   }, [contrato, puedeCrearTrabajo, nuevoPedido, navigate]);
 
   if (isLoading) {

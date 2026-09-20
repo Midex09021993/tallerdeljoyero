@@ -70,7 +70,9 @@ function CotizacionDetallePage() {
     }
     const [{ data: d }, { data: c }, { data: p }] = await Promise.all([
       supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
-      supabase.from("clientes").select("id,nombre,telefono,email").eq("id", q.cliente_id).maybeSingle(),
+      q.cliente_id
+        ? supabase.from("clientes").select("id,nombre,telefono,email").eq("id", q.cliente_id).maybeSingle()
+        : Promise.resolve({ data: null }),
       q.proyecto_joya_id
         ? supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras").eq("id", q.proyecto_joya_id).maybeSingle()
         : Promise.resolve({ data: null }),

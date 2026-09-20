@@ -47,30 +47,17 @@ export function PedidoFormCampos({
         {CAMPOS_PEDIDO.map(([campo, etiqueta, tipo]) => {
           const bloqueado = bloqueados.has(campo);
           return (
-            <label
-              key={campo}
-              className={`text-[10px] uppercase tracking-wider text-muted-foreground ${
-                campo === "notas" ? "sm:col-span-2 lg:col-span-2" : ""
-              }`}
-            >
+            <label key={campo} className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {etiqueta}
-              {tipo === "date" ? (
-                <FechaInput
-                  value={form[campo]}
-                  onChangeIso={(iso) => onChange({ ...form, [campo]: iso })}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground sm:py-2 sm:text-sm"
-                />
-              ) : (
-                <input
-                  type={tipo}
-                  min={campo === "cantidad_piezas" ? 1 : undefined}
-                  required={campo === "cliente" || campo === "trabajo"}
-                  value={form[campo]}
-                  onChange={(e) => onChange({ ...form, [campo]: e.target.value })}
-                  disabled={bloqueado}
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground sm:py-2 sm:text-sm"
-                />
-              )}
+              <input
+                type={tipo}
+                min={campo === "cantidad_piezas" ? 1 : undefined}
+                required={campo === "cliente" || campo === "trabajo"}
+                value={form[campo]}
+                onChange={(e) => onChange({ ...form, [campo]: e.target.value })}
+                disabled={bloqueado}
+                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-base text-foreground disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground sm:py-2 sm:text-sm"
+              />
             </label>
           );
         })}

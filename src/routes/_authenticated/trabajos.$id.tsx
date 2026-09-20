@@ -67,7 +67,7 @@ function TrabajoOperativoPage() {
       if (error) throw error;
       return ((data ?? []) as Array<{ id: string; pedido_archivo_id: string; pedido_archivos: ArchivoTecnico | ArchivoTecnico[] | null }>).map((row) => {
         const archivo = Array.isArray(row.pedido_archivos) ? row.pedido_archivos[0] : row.pedido_archivos;
-        return archivo ? { id: row.id, pedido_archivo_id: row.pedido_archivo_id, ...archivo } : null;
+        return archivo ? { ...archivo, id: row.id, pedido_archivo_id: row.pedido_archivo_id } : null;
       }).filter(Boolean) as ArchivoTecnico[];
     },
   });
