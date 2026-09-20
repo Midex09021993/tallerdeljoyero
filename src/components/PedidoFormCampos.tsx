@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type React from "react";
 import { FechaInput } from "@/components/FechaInput";
 import { areaCoincide } from "@/lib/auth";
@@ -40,6 +41,7 @@ export function PedidoFormCampos({
   camposBloqueados?: Array<keyof PedidoFormState>;
 }) {
   const bloqueados = new Set(camposBloqueados);
+  const [produccionAbierta, setProduccionAbierta] = useState(ruta.length > 0);
 
   const renderCampos = (
     campos: ReadonlyArray<readonly [keyof PedidoFormState, string, string]>,
@@ -142,38 +144,57 @@ export function PedidoFormCampos({
         </label>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5">
-        <div className="mb-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">04 · Producción</p>
-          <h3 className="mt-1 text-sm font-semibold text-foreground">Ruta del pedido</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Marca sólo las áreas que realmente necesita esta pieza.</p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {RUTA_AREAS_PEDIDO.map((area) => {
-            const activa = ruta.includes(area);
-            return (
-              <button
-                key={area}
-                type="button"
-                onClick={() =>
-                  onRutaChange(
-                    activa
-                      ? ruta.filter((x) => x !== area)
-                      : RUTA_AREAS_PEDIDO.filter((x) => [...ruta, area].includes(x)),
-                  )
-                }
-                className={[
-                  "rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all sm:rounded-full sm:py-1.5",
-                  activa
-                    ? "border-gold/30 bg-gold text-gold-foreground shadow-card"
-                    : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-gold-deep",
-                ].join(" ")}
-              >
-                {area}
-              </button>
-            );
-          })}
-        </div>
+      <section className="rounded-2xl border border-border bg-card shadow-card">
+        <button
+          type="button"
+          onClick={() => setProduccionAbierta((v) => !v)}
+          className="flex w-full items-center justify-between gap-4 p-4 text-left sm:p-5"
+          aria-expanded={produccionAbierta}
+        >
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">04 · Producción</p>
+            <h3 className="mt-1 text-sm font-semibold text-foreground">Configuración de producción</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              La ficha comercial y técnica son lo principal. La ruta se puede ajustar aquí antes de enviar el pedido al taller.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-[10px] font-semibold text-muted-foreground">
+            {ruta.length > 0 ? `${ruta.length} áreas` : "Pendiente"} · {produccionAbierta ? "Ocultar" : "Configurar"}
+          </span>
+        </button>
+        {produccionAbierta ? (
+          <div className="border-t border-border p-4 sm:p-5">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              {RUTA_AREAS_PEDIDO.map((area) => {
+                const activa = ruta.includes(area);
+                return (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() =>
+                      onRutaChange(
+                        activa
+                          ? ruta.filter((x) => x !== area)
+                          : RUTA_AREAS_PEDIDO.filter((x) => [...ruta, area].includes(x)),
+                      )
+                    }
+                    className={[
+                      "rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all sm:rounded-full sm:py-1.5",
+                      activa
+                        ? "border-gold/30 bg-gold text-gold-foreground shadow-card"
+                        : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-gold-deep",
+                    ].join(" ")}
+                  >
+                    {area}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Selecciona las áreas necesarias. La autorización de Producción y los movimientos entre áreas siguen siendo controles del flujo operativo.
+            </p>
+          </div>
+        ) : null}
       </section>
 
       {ruta.some((area) => areaCoincide(area, "Corte Láser")) ? (
