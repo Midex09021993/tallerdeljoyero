@@ -1243,19 +1243,37 @@ export function useCrearPedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: PedidoNuevo) => {
-      const contrato = await asegurarContratoParaPedido(pedido);
-      const pedidoConContrato = { ...pedido, contrato: contrato.numero, contrato_id: contrato.id };
-      const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContrato);
-      const respuesta = await supabase.from("pedidos").insert(datosOperativos as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single();
+      // Adopción progresiva: un pedido puede existir sin cliente, cotización
+      // ni contrato registrados en Aurum Lab. El taller puede seguir usando
+      // sus documentos externos y conectarlos después.
+      const pedidoConContexto = {
+        ...pedido,
+        cliente: pedido.cliente.trim() || "Cliente pendiente de registrar",
+        contrato: pedido.contrato?.trim() ?? "",
+        cliente_id: pedido.cliente_id ?? null,
+        cotizacion_id: pedido.cotizacion_id ?? null,
+        contrato_id: pedido.contrato_id ?? null,
+      };
+      const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContexto);
+      const respuesta = await supabase
+        .from("pedidos")
+        .insert(datosOperativos as unknown as TablesInsert<"pedidos">)
+        .select("id, referencia, cliente, sede_id")
+        .single();
       const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
       const { data, error } =
-        respuesta.error && esErrorCampoFaltante(respuesta.error) && "contrato_id" in pedidoConContrato
-          ? await supabase.from("pedidos").insert(sinContratoId as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single()
+        respuesta.error &&
+        esErrorCampoFaltante(respuesta.error) &&
+        "contrato_id" in pedidoConContexto
+          ? await supabase
+              .from("pedidos")
+              .insert(sinContratoId as unknown as TablesInsert<"pedidos">)
+              .select("id, referencia, cliente, sede_id")
+              .single()
           : respuesta;
       if (error) throw error;
       if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
-      await upsertPedidoComercial(data.id, pedidoConContrato);
-      if (!contrato.creado) await sumarImporteAContrato(contrato.id, pedido.importe);
+      await upsertPedidoComercial(data.id, pedidoConContexto);
       return data;
     },
     onSuccess: (pedido) => {
