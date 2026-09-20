@@ -886,6 +886,7 @@ export type Database = {
           referencia_externa: string
           stock_anterior: number
           stock_posterior: number
+          trabajo_id: string | null
           tipo: string
           usuario_id: string | null
         }
@@ -902,6 +903,8 @@ export type Database = {
           referencia_externa?: string
           stock_anterior?: number
           stock_posterior?: number
+          trabajo_id?: string | null
+          trabajo_id?: string | null
           tipo?: string
           usuario_id?: string | null
         }
@@ -941,6 +944,13 @@ export type Database = {
             columns: ["pedido_id"]
             isOneToOne: false
             referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
             referencedColumns: ["id"]
           },
         ]
