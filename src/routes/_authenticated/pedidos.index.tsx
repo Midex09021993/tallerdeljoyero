@@ -201,21 +201,6 @@ function PedidosPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
-  const { data: proyectos = [] } = useQuery({
-    queryKey: ["proyectos-pedido-selector", form.cliente_id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("proyectos_joya")
-        .select("id,codigo,nombre,cliente_id,metal,ley,peso_estimado,talla,cantidad_piezas,piedras")
-        .eq("cliente_id", form.cliente_id)
-        .eq("estado", "activo")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: Boolean(sesion?.esAdmin && form.cliente_id),
-  });
-
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes-pedido-selector"],
     queryFn: async () => {
@@ -240,6 +225,20 @@ function PedidosPage() {
 
   const [abierto, setAbierto] = useState(false);
   const [form, setForm] = useState<PedidoFormState>(() => nuevoPedidoVacio());
+  const { data: proyectos = [] } = useQuery({
+    queryKey: ["proyectos-pedido-selector", form.cliente_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("proyectos_joya")
+        .select("id,codigo,nombre,cliente_id,metal,ley,peso_estimado,talla,cantidad_piezas,piedras")
+        .eq("cliente_id", form.cliente_id)
+        .eq("estado", "activo")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: Boolean(sesion?.esAdmin && form.cliente_id),
+  });
   const [ruta, setRuta] = useState<string[]>([]);
   const [sedeId, setSedeId] = useState<string>("");
   const [filtroArea, setFiltroArea] = useState("Todas");
