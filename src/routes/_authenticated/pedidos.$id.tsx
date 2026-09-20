@@ -1003,17 +1003,9 @@ function FichaPedido() {
                   </label>
                 ))}
 
-                <div className="rounded-lg border border-border bg-surface-sunken px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Saldo calculado automáticamente
-                  <span className="ml-2 text-sm font-semibold normal-case text-foreground">
-                    {new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(
-                      Math.max(
-                        0,
-                        (Number((document.querySelector('input[name="importe"]') as HTMLInputElement | null)?.value) || 0) -
-                          (Number((document.querySelector('input[name="a_cuenta"]') as HTMLInputElement | null)?.value) || 0),
-                      ),
-                    )}
-                  </span>
+                <div className="rounded-lg border border-border bg-surface-sunken px-3 py-2 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">Saldo</span>
+                  {" "}se calcula automáticamente como Precio − A cuenta al guardar.
                 </div>
 
                 <fieldset className="col-span-2 lg:col-span-3">
