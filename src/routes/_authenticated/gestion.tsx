@@ -970,12 +970,45 @@ async function importarPedidosCsv(registros: CsvRegistro[]) {
       ...fila
     }) => fila,
   );
-  const { error } = await supabase.from("pedidos").upsert(filas);
-  if (!error) return filas.length;
-  if (!errorCampoOpcional(error)) throw error;
-
   const { error: errorBase } = await supabase.from("pedidos").upsert(base);
   if (errorBase) throw errorBase;
+
+  const comerciales = filas
+    .filter((fila) => fila.id)
+    .map((fila) => ({
+      pedido_id: fila.id,
+      telefono: fila.telefono,
+      importe: fila.importe,
+      a_cuenta: 0,
+      saldo: fila.importe,
+      ventas_estado: fila.ventas_estado,
+      packing_estado: fila.packing_estado,
+      medio_envio: fila.medio_envio,
+      guia_envio: fila.guia_envio,
+      fecha_envio: fila.fecha_envio,
+      fecha_entregado: fila.fecha_entregado,
+      receptor_envio: fila.receptor_envio,
+      notas_ventas: fila.notas_ventas,
+      fecha_listo_entrega: fila.fecha_listo_entrega,
+      listo_entrega_observaciones: fila.listo_entrega_observaciones,
+      notas_envio: fila.notas_envio,
+      notas_entrega: fila.notas_entrega,
+      usuario_listo_entrega: fila.usuario_listo_entrega,
+      usuario_envio: fila.usuario_envio,
+      usuario_entrega: fila.usuario_entrega,
+      ventas_actualizado_por: fila.ventas_actualizado_por,
+      ventas_actualizado_en: fila.ventas_actualizado_en,
+      enviado_at: fila.enviado_at,
+      entregado_at: fila.entregado_at,
+    }));
+
+  if (comerciales.length > 0) {
+    const { error: errorComercial } = await supabase
+      .from("pedido_comercial")
+      .upsert(comerciales, { onConflict: "pedido_id" });
+    if (errorComercial) throw errorComercial;
+  }
+
   return base.length;
 }
 
