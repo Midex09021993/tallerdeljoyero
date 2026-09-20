@@ -232,14 +232,7 @@ function CotizacionesPage() {
       <span className="block text-sm font-medium">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.telefono || c.email || "Sin contacto"}</span>
     </button>)}
   </div> : null}
-  {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : busquedaCliente.trim() && clientesFiltrados.length === 0 ? (
-    <>
-    <div className="mt-1 grid gap-2 sm:grid-cols-2">
-      <input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({...nuevoCliente,telefono:e.target.value})} placeholder="Teléfono (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
-      <input type="email" value={nuevoCliente.email} onChange={e => setNuevoCliente({...nuevoCliente,email:e.target.value})} placeholder="Correo (opcional)" className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs" />
-    </div>
-    </>
-  ) : null}
+  {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
 </div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Concepto<input required value={form.descripcion} onChange={e => setForm({...form, descripcion:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
