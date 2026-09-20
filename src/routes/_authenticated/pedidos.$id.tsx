@@ -527,6 +527,33 @@ function FichaPedido() {
         </div>
       ) : null}
 
+      <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <div className="border-b border-border bg-surface-sunken px-5 py-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Ciclo del pedido</p>
+          <p className="mt-1 text-sm font-semibold">Seguimiento del pedido de principio a fin</p>
+        </div>
+        <div className="overflow-x-auto p-4">
+          <div className="flex min-w-[680px] items-start">
+            {[
+              ["Cliente", "Origen comercial"],
+              ["Cotización", "Propuesta aprobada"],
+              ["Pedido", "Pedido central"],
+              ["Producción", "normalizarArea(pedido.area_actual)"],
+              ["Entrega", "mostrarEstadoVentas(pedido)"],
+            ].map(([label, value], index) => (
+              <div key={label} className="flex min-w-[130px] flex-1 items-start">
+                <div className="flex flex-col items-center text-center">
+                  <span className="grid size-9 place-items-center rounded-full border border-gold/40 bg-gold/10 text-xs font-bold text-gold-deep">{index + 1}</span>
+                  <span className="mt-2 text-xs font-semibold">{label}</span>
+                  <span className="mt-1 max-w-[120px] truncate text-[10px] text-muted-foreground">{value}</span>
+                </div>
+                {index < 4 ? <span className="mx-2 mt-4 h-px flex-1 bg-border" /> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {puedeVerComercial ? (
         <div className="mb-6 overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-sunken px-5 py-4">
