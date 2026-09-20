@@ -57,6 +57,10 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.92,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
   oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
   gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.40,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.08,metalEnvironmentScale:.88,highlightProtection:.93,exposure:.64,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
+  // VJSON reference: scene environment 1.0, fixed direction, white background.
+  // The original UUID environment is not embedded as a local HDR asset, so Aurum
+  // uses its closest local white-studio HDR while preserving the measured control values.
+  ijewelReference:{environmentKey:"white",gemEnvironmentKey:"gemWhite",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:.8,highlightProtection:.98,exposure:1,lighting:"jewelry",post:{ssao:true,ssaoIntensity:.25,bloom:true,bloomIntensity:.2,bloomThreshold:2,lut:false,lutIntensity:0,taa:true,dof:false,vignette:false}},
 };
 
 export const getAurumPhotographicProfile=(id:string):AurumPhotographicProfile=>AURUM_PHOTOGRAPHIC_PROFILES[id]??AURUM_PHOTOGRAPHIC_PROFILES["producto"]!;
