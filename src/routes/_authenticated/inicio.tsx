@@ -12,7 +12,7 @@ import {
   useCerrarSesion,
   useSesion,
 } from "@/lib/auth";
-import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidos, type Pedido } from "@/lib/taller-db";
+import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 
 function InicioAdminMovil() {
   const { data: sesion, isLoading } = useSesion();
-  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidos();
+  const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
   const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
 
