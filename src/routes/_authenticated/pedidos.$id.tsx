@@ -644,14 +644,14 @@ function FichaPedido() {
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <div className="relative overflow-hidden rounded-[24px] border border-gold/25 bg-ink p-6 text-ink-foreground shadow-[0_20px_55px_-30px_rgba(0,0,0,0.55)]">
+        <div className="relative overflow-hidden rounded-[24px] border border-gold/25 bg-card p-6 text-foreground shadow-raised">
           <div className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold/10 blur-3xl" />
           <div className="relative">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Estado operativo</p>
                 <h2 className="mt-2 font-display text-2xl italic sm:text-3xl">{siguienteAccion}</h2>
-                <p className="mt-2 text-sm text-white/50">
+                <p className="mt-2 text-sm text-muted-foreground">
                   Área actual · {normalizarArea(pedido.area_actual)}
                 </p>
               </div>
@@ -665,7 +665,7 @@ function FichaPedido() {
                   type="button"
                   onClick={() => autorizar.mutate({ pedido, usuarioId: sesion?.user.id ?? null })}
                   disabled={autorizar.isPending}
-                  className="rounded-lg bg-gold px-4 py-2.5 text-xs font-bold text-ink transition hover:brightness-110 disabled:opacity-50"
+                  className="rounded-lg bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground transition hover:brightness-110 disabled:opacity-50"
                 >
                   {autorizar.isPending ? "Autorizando…" : "Autorizar producción"}
                 </button>
@@ -674,7 +674,7 @@ function FichaPedido() {
                 <button
                   type="button"
                   onClick={() => setDestinoMovimiento(normalizarArea(pedido.area_actual))}
-                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                  className="rounded-lg border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:border-gold/50 hover:bg-gold/5"
                 >
                   Gestionar área
                 </button>
@@ -683,14 +683,14 @@ function FichaPedido() {
                 <Link
                   to="/cotizaciones/$id"
                   params={{ id: contextoComercial?.cotizacion?.id ?? pedido.cotizacion_id! }}
-                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                  className="rounded-lg border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:border-gold/50 hover:bg-gold/5"
                 >
                   Ver cotización
                 </Link>
               ) : null}
               <Link
                 to="/ventas"
-                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                className="rounded-lg border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:border-gold/50 hover:bg-gold/5"
               >
                 Ver ventas
               </Link>
@@ -953,7 +953,7 @@ function FichaPedido() {
                             to="/contratos/$id"
                             params={{ id: pedido.contrato_id }}
                             search={{ nuevoPedido: true }}
-                            className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground hover:opacity-90"
+                            className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground hover:opacity-90"
                           >
                             + Nuevo pedido
                           </Link>
@@ -973,7 +973,7 @@ function FichaPedido() {
                           type="button"
                           onClick={() => crearContrato.mutate(pedido)}
                           disabled={crearContrato.isPending}
-                          className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50"
+                          className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground disabled:opacity-50"
                         >
                           {crearContrato.isPending ? "Creando…" : "Crear contrato"}
                         </button>
@@ -1170,7 +1170,7 @@ function FichaPedido() {
                       },
                     );
                   }}
-                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-ink-foreground disabled:opacity-40"
+                  className="rounded-lg bg-gold px-4 py-2 text-sm font-medium text-gold-foreground disabled:opacity-40"
                 >
                   {enviar.isPending ? "Moviendo..." : "Confirmar movimiento"}
                 </button>
@@ -1314,7 +1314,7 @@ function FichaPedido() {
                           }
                           className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
                             activa
-                              ? "border-transparent bg-ink text-gold-bright"
+                              ? "border-transparent bg-gold text-gold-foreground"
                               : "border-border bg-card"
                           }`}
                         >
@@ -1357,7 +1357,7 @@ function FichaPedido() {
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-3">
                   <button
                     type="submit"
-                    className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground"
+                    className="rounded-lg bg-gold px-4 py-2 text-xs text-gold-foreground"
                   >
                     Guardar
                   </button>
@@ -1733,7 +1733,7 @@ function FichaPedido() {
               />
               <button
                 type="submit"
-                className="rounded-lg bg-ink px-4 py-2 text-xs text-ink-foreground"
+                className="rounded-lg bg-gold px-4 py-2 text-xs text-gold-foreground"
               >
                 Añadir enlace
               </button>
