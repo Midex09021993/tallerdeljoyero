@@ -17,7 +17,8 @@ type DatosJoyaQR = {
 
 export function QRJoya({ joya, onClose }: { joya: DatosJoyaQR; onClose: () => void }) {
   const [svg, setSvg] = useState("");
-  const url = `${window.location.origin}/joya/${encodeURIComponent(joya.codigo)}`;
+  const publicBaseUrl = (import.meta.env.VITE_PUBLIC_APP_URL || "https://tallerdeljoyero.lovable.app").replace(/\/$/, "");
+  const url = `${publicBaseUrl}/joya/${encodeURIComponent(joya.codigo)}`;
 
   useEffect(() => {
     let activo = true;
