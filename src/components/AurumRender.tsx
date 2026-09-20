@@ -523,6 +523,7 @@ export function AurumRender() {
           vignette: photoInicialModelo.post.vignette,
           vignetteDarkness: photoInicialModelo.post.vignetteDarkness,
           radius: 1,
+          ssaoFalloff: 1.3,
           bias: 0.001,
         });
         applyPostQuality?.(renderQuality);
