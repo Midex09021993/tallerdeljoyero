@@ -2027,3 +2027,339 @@ export function useArchivosPedidos() {
     },
   });
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Inventario real: saldo derivado de movimientos + catálogo de joyas.         */
+/* -------------------------------------------------------------------------- */
+
+export type MaterialInventarioReal = {
+  id: string;
+  material: string;
+  codigo: string;
+  categoria: string;
+  unidad: string;
+  stock: number;
+  minimo: number;
+  costo_unitario: number;
+  lote: string;
+  proveedor: string;
+  ubicacion: string;
+  activo: boolean;
+  sede_id: string | null;
+  areas: string[];
+};
+
+export type MovimientoInventarioReal = {
+  id: string;
+  material_id: string;
+  material: string;
+  cantidad: number;
+  tipo: string;
+  motivo: string;
+  area: string;
+  pedido_id: string | null;
+  pedido_referencia: string;
+  usuario_id: string | null;
+  created_at: string;
+  stock_anterior: number | null;
+  stock_posterior: number | null;
+  referencia_externa: string;
+};
+
+export type JoyaInventario = {
+  id: string;
+  sede_id: string;
+  importacion_id: string | null;
+  codigo: string;
+  nombre: string;
+  metal: string;
+  ley: string;
+  peso: number | null;
+  talla: string;
+  piedras: string;
+  cantidad: number;
+  estado: string;
+  origen: string;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+};
+
+const CAMPOS_INVENTARIO_REAL =
+  "id, material, codigo, categoria, unidad, stock, minimo, costo_unitario, lote, proveedor, ubicacion, activo, sede_id";
+
+export function useInventarioReal() {
+  return useQuery({
+    queryKey: ["inventario-real"],
+    queryFn: async (): Promise<MaterialInventarioReal[]> => {
+      const [{ data, error }, { data: asignaciones, error: areasError }] = await Promise.all([
+        supabase.from("inventario").select(CAMPOS_INVENTARIO_REAL).eq("activo", true).order("material"),
+        supabase.from("material_areas").select("material_id, area"),
+      ]);
+      if (error) throw error;
+      if (areasError) throw areasError;
+      return (data ?? []).map((m) => ({
+        ...m,
+        stock: Number(m.stock),
+        minimo: Number(m.minimo),
+        costo_unitario: Number(m.costo_unitario),
+        areas: (asignaciones ?? [])
+          .filter((a) => a.material_id === m.id)
+          .map((a) => a.area),
+      })) as MaterialInventarioReal[];
+    },
+  });
+}
+
+export function useCrearMaterialReal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (nuevo: {
+      material: string;
+      codigo?: string;
+      categoria: string;
+      unidad: string;
+      stockInicial: number;
+      minimo: number;
+      costo_unitario: number;
+      lote?: string;
+      proveedor?: string;
+      ubicacion?: string;
+      sede_id: string | null;
+      areas: string[];
+    }) => {
+      const { data, error } = await supabase
+        .from("inventario")
+        .insert({
+          material: nuevo.material.trim(),
+          codigo: nuevo.codigo?.trim() ?? "",
+          categoria: nuevo.categoria,
+          unidad: nuevo.unidad || "g",
+          minimo: Math.max(0, nuevo.minimo),
+          costo_unitario: Math.max(0, nuevo.costo_unitario),
+          lote: nuevo.lote?.trim() ?? "",
+          proveedor: nuevo.proveedor?.trim() ?? "",
+          ubicacion: nuevo.ubicacion?.trim() ?? "",
+          activo: true,
+          sede_id: nuevo.sede_id,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      if (nuevo.stockInicial > 0) {
+        const { error: movimientoError } = await supabase
+          .from("inventario_movimientos")
+          .insert({
+            material_id: data.id,
+            cantidad: nuevo.stockInicial,
+            tipo: "entrada",
+            motivo: "Stock inicial",
+            area: "Almacén",
+          });
+        if (movimientoError) {
+          await supabase.from("inventario").delete().eq("id", data.id);
+          throw movimientoError;
+        }
+      }
+
+      if (nuevo.areas.length > 0) {
+        const { error: areasError } = await supabase
+          .from("material_areas")
+          .insert(nuevo.areas.map((area) => ({ material_id: data.id, area })));
+        if (areasError) throw areasError;
+      }
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario-real"] });
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+    },
+  });
+}
+
+export function useActualizarMaterialReal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      cambios,
+    }: {
+      id: string;
+      cambios: Partial<{
+        material: string;
+        codigo: string;
+        categoria: string;
+        unidad: string;
+        minimo: number;
+        costo_unitario: number;
+        lote: string;
+        proveedor: string;
+        ubicacion: string;
+        activo: boolean;
+      }>;
+    }) => {
+      const { error } = await supabase.from("inventario").update(cambios).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario-real"] });
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+    },
+  });
+}
+
+export function useRegistrarMovimientoReal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (mov: {
+      material_id: string;
+      cantidad: number;
+      tipo:
+        | "entrada"
+        | "consumo"
+        | "devolucion"
+        | "merma"
+        | "ajuste_positivo"
+        | "ajuste_negativo";
+      area: string;
+      motivo: string;
+      pedido_id?: string | null;
+      referencia_externa?: string;
+    }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase.from("inventario_movimientos").insert({
+        material_id: mov.material_id,
+        cantidad: Math.abs(mov.cantidad),
+        tipo: mov.tipo,
+        area: mov.area,
+        motivo: mov.motivo,
+        pedido_id: mov.pedido_id ?? null,
+        referencia_externa: mov.referencia_externa ?? "",
+        usuario_id: userData.user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario-real"] });
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+    },
+  });
+}
+
+export function useMovimientosInventarioReal() {
+  return useQuery({
+    queryKey: ["inventario-movimientos-real"],
+    queryFn: async (): Promise<MovimientoInventarioReal[]> => {
+      const { data, error } = await supabase
+        .from("inventario_movimientos")
+        .select(
+          "id, material_id, cantidad, tipo, motivo, area, pedido_id, usuario_id, created_at, stock_anterior, stock_posterior, referencia_externa, inventario(material), pedidos(referencia)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return (data ?? []).map((row) => {
+        const item = row as typeof row & {
+          inventario: { material: string } | null;
+          pedidos: { referencia: string } | null;
+        };
+        return {
+          ...row,
+          cantidad: Number(row.cantidad),
+          stock_anterior: row.stock_anterior == null ? null : Number(row.stock_anterior),
+          stock_posterior: row.stock_posterior == null ? null : Number(row.stock_posterior),
+          material: item.inventario?.material ?? "",
+          pedido_referencia: item.pedidos?.referencia ?? "",
+        } as MovimientoInventarioReal;
+      });
+    },
+  });
+}
+
+export function useInventarioJoyas() {
+  return useQuery({
+    queryKey: ["inventario-joyas"],
+    queryFn: async (): Promise<JoyaInventario[]> => {
+      const { data, error } = await supabase
+        .from("inventario_joyas")
+        .select(
+          "id, sede_id, importacion_id, codigo, nombre, metal, ley, peso, talla, piedras, cantidad, estado, origen, metadata, created_at, updated_at",
+        )
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((j) => ({
+        ...j,
+        peso: j.peso == null ? null : Number(j.peso),
+        cantidad: Number(j.cantidad),
+      })) as JoyaInventario[];
+    },
+  });
+}
+
+export function useCrearJoyaInventario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (joya: {
+      sede_id: string;
+      codigo: string;
+      nombre: string;
+      metal?: string;
+      ley?: string;
+      peso?: number | null;
+      talla?: string;
+      piedras?: string;
+      cantidad?: number;
+      estado?: string;
+      origen?: string;
+      metadata?: Json;
+    }) => {
+      const { error } = await supabase.from("inventario_joyas").insert({
+        ...joya,
+        codigo: joya.codigo.trim(),
+        nombre: joya.nombre.trim(),
+        metal: joya.metal ?? "",
+        ley: joya.ley ?? "",
+        peso: joya.peso ?? null,
+        talla: joya.talla ?? "",
+        piedras: joya.piedras ?? "",
+        cantidad: joya.cantidad ?? 1,
+        estado: joya.estado ?? "disponible",
+        origen: joya.origen ?? "app",
+        metadata: joya.metadata ?? {},
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario-joyas"] }),
+  });
+}
+
+export function useActualizarJoyaInventario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      cambios,
+    }: {
+      id: string;
+      cambios: Partial<Omit<JoyaInventario, "id" | "sede_id" | "created_at" | "updated_at">>;
+    }) => {
+      const { error } = await supabase.from("inventario_joyas").update(cambios).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario-joyas"] }),
+  });
+}
+
+export function useBorrarJoyaInventario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("inventario_joyas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario-joyas"] }),
+  });
+}
