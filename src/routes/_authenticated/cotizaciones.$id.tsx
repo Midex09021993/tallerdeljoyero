@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useSesion } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -43,6 +43,9 @@ function CotizacionDetallePage() {
   const { id } = useParams({ from: "/_authenticated/cotizaciones/$id" });
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
+  const puedeGestionarCotizaciones =
+    Boolean(sesion?.esAdmin) ||
+    Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [detalles, setDetalles] = useState<Detalle[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -89,7 +92,9 @@ function CotizacionDetallePage() {
     setCargando(false);
   };
 
-  useEffect(() => { void cargar(); }, [id]);
+  useEffect(() => {
+    if (puedeGestionarCotizaciones) void cargar();
+  }, [id, puedeGestionarCotizaciones]);
 
   const margen = useMemo(() => cotizacion ? Number(cotizacion.subtotal) - Number(cotizacion.subtotal_costo) : 0, [cotizacion]);
 
@@ -210,6 +215,14 @@ function CotizacionDetallePage() {
 
   if (cargando) return <AppShell titulo="Cotización" subtitulo="Cargando…" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">Cargando cotización…</p></AppShell>;
   if (!cotizacion) return <AppShell titulo="Cotización no encontrada" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">{error || "La cotización no existe o no tienes acceso."}</p></AppShell>;
+
+  if (!puedeGestionarCotizaciones) {
+    return (
+      <AppShell titulo="Cotización" subtitulo="Acceso restringido al área comercial.">
+        <Panel titulo="Acceso restringido"><p className="p-6 text-sm text-muted-foreground">Esta sección contiene información comercial y financiera.</p></Panel>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
