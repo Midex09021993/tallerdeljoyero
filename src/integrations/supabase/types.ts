@@ -806,6 +806,7 @@ export type Database = {
       }
       inventario_joyas: {
         Row: {
+          qr_token: string
           cantidad: number
           codigo: string
           created_at: string
@@ -824,6 +825,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          qr_token?: string
+          qr_token?: string
           cantidad?: number
           codigo?: string
           created_at?: string
