@@ -195,49 +195,90 @@ function JoyasTerminadas({
   const crear = useCrearJoyaInventario();
   const actualizar = useActualizarJoyaInventario();
   const borrar = useBorrarJoyaInventario();
+
+  type Preview = {
+    archivo: string;
+    columnas: string[];
+    mapping: Record<string, string>;
+    campos: { key: string; label: string }[];
+    filas: number;
+    validas: number;
+    sinCodigo: number;
+    duplicados: number;
+    muestra: Array<Record<string, unknown>>;
+    advertencias: string[];
+  };
+
   const [archivo, setArchivo] = useState<File | null>(null);
-  const [importando, setImportando] = useState(false);
-  const [editando, setEditando] = useState<string | null>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [paso, setPaso] = useState<"lista" | "analizando" | "mapeo" | "revision" | "importando">("lista");
   const [busqueda, setBusqueda] = useState("");
+  const [editando, setEditando] = useState<string | null>(null);
   const [form, setForm] = useState({
-    codigo: "",
-    nombre: "",
-    metal: "",
-    ley: "",
-    peso: "",
-    talla: "",
-    piedras: "",
-    cantidad: "1",
-    estado: "disponible",
+    codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible",
   });
 
   const lista = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     return joyas.filter((j) =>
-      !q ||
-      j.codigo.toLowerCase().includes(q) ||
-      j.nombre.toLowerCase().includes(q) ||
-      j.metal.toLowerCase().includes(q) ||
-      j.piedras.toLowerCase().includes(q)
+      !q || j.codigo.toLowerCase().includes(q) || j.nombre.toLowerCase().includes(q) ||
+      j.metal.toLowerCase().includes(q) || j.piedras.toLowerCase().includes(q)
     );
   }, [joyas, busqueda]);
+
+  async function analizarArchivo(file: File) {
+    setArchivo(file);
+    setPaso("analizando");
+    try {
+      const body = new FormData();
+      body.append("archivo", file);
+      body.append("modo", "preview");
+      const { data, error } = await supabase.functions.invoke("importar-inventario-joyas", { body });
+      if (error) throw error;
+      setPreview(data as Preview);
+      setPaso("mapeo");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo analizar el Excel");
+      setArchivo(null);
+      setPaso("lista");
+    }
+  }
+
+  async function confirmarImportacion() {
+    if (!archivo || !preview) return;
+    setPaso("importando");
+    try {
+      const body = new FormData();
+      body.append("archivo", archivo);
+      body.append("modo", "confirm");
+      body.append("mapping", JSON.stringify(preview.mapping));
+      const { data, error } = await supabase.functions.invoke("importar-inventario-joyas", { body });
+      if (error) throw error;
+      toast.success(`Migración completada: ${data?.filas_importadas ?? 0} registros importados`);
+      setArchivo(null);
+      setPreview(null);
+      setPaso("lista");
+      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo completar la migración");
+      setPaso("revision");
+    }
+  }
+
+  function cancelarImportacion() {
+    setArchivo(null);
+    setPreview(null);
+    setPaso("lista");
+  }
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     if (!sedeId) return toast.error("Tu usuario no tiene una sede asignada");
-    if (!form.codigo.trim() || !form.nombre.trim()) {
-      return toast.error("Código y nombre son obligatorios");
-    }
+    if (!form.codigo.trim() || !form.nombre.trim()) return toast.error("Código y nombre son obligatorios");
     const payload = {
-      codigo: form.codigo.trim(),
-      nombre: form.nombre.trim(),
-      metal: form.metal.trim(),
-      ley: form.ley.trim(),
-      peso: form.peso === "" ? null : Number(form.peso),
-      talla: form.talla.trim(),
-      piedras: form.piedras.trim(),
-      cantidad: Math.max(1, Number(form.cantidad) || 1),
-      estado: form.estado,
+      codigo: form.codigo.trim(), nombre: form.nombre.trim(), metal: form.metal.trim(), ley: form.ley.trim(),
+      peso: form.peso === "" ? null : Number(form.peso), talla: form.talla.trim(), piedras: form.piedras.trim(),
+      cantidad: Math.max(1, Number(form.cantidad) || 1), estado: form.estado,
     };
     try {
       if (editando) {
@@ -257,63 +298,116 @@ function JoyasTerminadas({
   function editar(j: (typeof joyas)[number]) {
     setEditando(j.id);
     setForm({
-      codigo: j.codigo,
-      nombre: j.nombre,
-      metal: j.metal,
-      ley: j.ley,
-      peso: j.peso == null ? "" : String(j.peso),
-      talla: j.talla,
-      piedras: j.piedras,
-      cantidad: String(j.cantidad),
-      estado: j.estado,
+      codigo: j.codigo, nombre: j.nombre, metal: j.metal, ley: j.ley,
+      peso: j.peso == null ? "" : String(j.peso), talla: j.talla, piedras: j.piedras,
+      cantidad: String(j.cantidad), estado: j.estado,
     });
   }
 
-  async function importar() {
-    if (!archivo) return;
-    setImportando(true);
-    try {
-      const body = new FormData();
-      body.append("archivo", archivo);
-      const { data, error } = await supabase.functions.invoke("importar-inventario-joyas", { body });
-      if (error) throw error;
-      toast.success("Importación: " + String(data?.filas_importadas ?? 0) + " joyas actualizadas");
-      setArchivo(null);
-      window.location.reload();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo importar el Excel");
-    } finally {
-      setImportando(false);
-    }
+  if (paso !== "lista") {
+    return (
+      <Panel titulo="Asistente de migración de inventario">
+        <div className="space-y-6 p-6">
+          {paso === "analizando" ? (
+            <div className="rounded-2xl border border-border bg-muted/30 p-8 text-center">
+              <p className="text-lg font-semibold">Analizando tu Excel…</p>
+              <p className="mt-2 text-sm text-muted-foreground">No se está modificando ningún dato.</p>
+            </div>
+          ) : null}
+
+          {preview && paso !== "analizando" ? (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Paso {paso === "mapeo" ? "2" : "3"} de 3</p>
+                  <h3 className="mt-1 text-xl font-semibold">{preview.archivo}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {preview.filas} filas · {preview.validas} listas para importar
+                  </p>
+                </div>
+                <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm" onClick={cancelarImportacion}>Cancelar</button>
+              </div>
+
+              {paso === "mapeo" ? (
+                <>
+                  <div className="rounded-2xl bg-muted/40 p-4 text-sm">
+                    <p className="font-semibold">Mapea tu Excel</p>
+                    <p className="mt-1 text-muted-foreground">No necesitas cambiar tu archivo. Dinos qué representa cada columna.</p>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {preview.campos.map((campo) => (
+                      <label key={campo.key} className="space-y-1.5">
+                        <span className="text-xs font-medium text-muted-foreground">{campo.label}</span>
+                        <select
+                          className={inputCls}
+                          value={preview.mapping[campo.key] ?? ""}
+                          onChange={(e) => setPreview({ ...preview, mapping: { ...preview.mapping, [campo.key]: e.target.value } })}
+                        >
+                          <option value="">No importar</option>
+                          {preview.columnas.map((col) => <option key={col} value={col}>{col}</option>)}
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <button type="button" className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground" onClick={() => setPaso("revision")}>
+                      Revisar importación
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-border p-4"><p className="text-2xl font-semibold">{preview.validas}</p><p className="text-xs text-muted-foreground">Registros listos</p></div>
+                    <div className="rounded-xl border border-border p-4"><p className="text-2xl font-semibold">{preview.sinCodigo}</p><p className="text-xs text-muted-foreground">Sin código</p></div>
+                    <div className="rounded-xl border border-border p-4"><p className="text-2xl font-semibold">{preview.duplicados}</p><p className="text-xs text-muted-foreground">Duplicados internos</p></div>
+                  </div>
+                  {preview.advertencias.length ? (
+                    <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm">
+                      {preview.advertencias.map((a) => <p key={a}>⚠ {a}</p>)}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-success/30 bg-success-soft p-4 text-sm">✓ El archivo está listo para importar.</div>
+                  )}
+                  <div className="overflow-x-auto rounded-xl border border-border">
+                    <table className="w-full min-w-[800px] text-sm">
+                      <thead className="bg-muted/40"><tr>{preview.campos.map((c) => <th key={c.key} className="px-3 py-2 text-left text-xs">{c.label}</th>)}</tr></thead>
+                      <tbody className="divide-y divide-border">
+                        {preview.muestra.map((row, i) => (
+                          <tr key={i}>{preview.campos.map((c) => <td key={c.key} className="px-3 py-2">{String(row[c.key] ?? "—")}</td>)}</tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button type="button" className="rounded-lg border border-border px-4 py-2.5 text-sm" onClick={() => setPaso("mapeo")}>Volver al mapeo</button>
+                    <button type="button" className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground" onClick={() => void confirmarImportacion()} disabled={paso === "importando"}>
+                      {paso === "importando" ? "Importando…" : `Importar ${preview.validas} registros`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : null}
+        </div>
+      </Panel>
+    );
   }
 
   return (
     <div className="space-y-6">
       <Panel titulo="Joyas terminadas">
         <div className="flex flex-col gap-3 border-b border-border p-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Stock de producto terminado por código, metal, ley, talla y piedras.
-            </p>
-          </div>
+          <div><p className="text-sm text-muted-foreground">Producto terminado por código, metal, ley, talla y piedras.</p></div>
           <div className="flex flex-wrap gap-2">
             {puedeGestionar ? (
-              <>
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    className="hidden"
-                    onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-                  />
-                  Importar Excel
-                </label>
-                {archivo ? (
-                  <button type="button" className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground" onClick={() => void importar()} disabled={importando}>
-                    {importando ? "Importando…" : "Confirmar importación"}
-                  </button>
-                ) : null}
-              </>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void analizarArchivo(file);
+                }} />
+                Importar Excel
+              </label>
             ) : null}
           </div>
         </div>
@@ -329,77 +423,33 @@ function JoyasTerminadas({
             <input className={inputCls} placeholder="Piedras" value={form.piedras} onChange={(e) => setForm({ ...form, piedras: e.target.value })} />
             <input className={inputCls} type="number" min="1" placeholder="Cantidad" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
             <select className={inputCls} value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })}>
-              <option value="disponible">Disponible</option>
-              <option value="reservada">Reservada</option>
-              <option value="en exhibición">En exhibición</option>
-              <option value="vendida">Vendida</option>
-              <option value="no disponible">No disponible</option>
+              <option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="en exhibición">En exhibición</option><option value="vendida">Vendida</option><option value="no disponible">No disponible</option>
             </select>
-            <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={crear.isPending || actualizar.isPending}>
-              {editando ? "Guardar cambios" : "Agregar al inventario"}
-            </button>
-            {editando ? (
-              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm" onClick={() => {
-                setEditando(null);
-                setForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" });
-              }}>
-                Cancelar
-              </button>
-            ) : null}
+            <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit" disabled={crear.isPending || actualizar.isPending}>{editando ? "Guardar cambios" : "Agregar al inventario"}</button>
+            {editando ? <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm" onClick={() => {
+              setEditando(null); setForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" });
+            }}>Cancelar</button> : null}
           </form>
         ) : null}
 
-        <div className="border-b border-border p-4">
-          <input className={inputCls} placeholder="Buscar código, pieza, metal o piedra…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-        </div>
-
+        <div className="border-b border-border p-4"><input className={inputCls} placeholder="Buscar código, pieza, metal o piedra…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} /></div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1050px] border-collapse text-left">
-            <thead>
-              <tr className="bg-surface-muted">
-                {["Código", "Pieza", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado", "Acciones"].map((h) => (
-                  <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">{h}</th>
-                ))}
-              </tr>
-            </thead>
+            <thead><tr className="bg-surface-muted">{["Código","Pieza","Metal / ley","Peso","Talla","Piedras","Cantidad","Estado","Acciones"].map((h) => <th key={h} className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">
-              {lista.map((j) => (
-                <tr key={j.id}>
-                  <td className="px-6 py-3 font-mono text-xs">{j.codigo}</td>
-                  <td className="px-6 py-3 text-sm font-medium">{j.nombre}</td>
-                  <td className="px-6 py-3 text-sm">{j.metal || "—"} {j.ley ? "· " + j.ley : ""}</td>
-                  <td className="px-6 py-3 text-sm">{j.peso == null ? "—" : String(j.peso) + " g"}</td>
-                  <td className="px-6 py-3 text-sm">{j.talla || "—"}</td>
-                  <td className="px-6 py-3 text-sm">{j.piedras || "—"}</td>
-                  <td className="px-6 py-3 text-sm font-semibold">{j.cantidad}</td>
-                  <td className="px-6 py-3 text-xs">{j.estado}</td>
-                  <td className="px-6 py-3">
-                    {puedeGestionar ? (
-                      <div className="flex gap-1">
-                        <button type="button" className="rounded-lg px-2 py-1 text-xs hover:bg-muted" onClick={() => editar(j)}>Editar</button>
-                        <button
-                          type="button"
-                          className="rounded-lg px-2 py-1 text-xs text-danger hover:bg-danger-soft"
-                          onClick={async () => {
-                            if (!window.confirm("¿Eliminar " + j.codigo + " del inventario?")) return;
-                            try {
-                              await borrar.mutateAsync(j.id);
-                              toast.success("Joya eliminada");
-                            } catch (error) {
-                              toast.error(error instanceof Error ? error.message : "No se pudo eliminar");
-                            }
-                          }}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-              {!lista.length ? (
-                <tr><td colSpan={9} className="px-6 py-10 text-sm text-muted-foreground">No hay joyas terminadas registradas.</td></tr>
-              ) : null}
+              {lista.map((j) => <tr key={j.id}>
+                <td className="px-6 py-3 font-mono text-xs">{j.codigo}</td><td className="px-6 py-3 text-sm font-medium">{j.nombre}</td>
+                <td className="px-6 py-3 text-sm">{j.metal || "—"} {j.ley ? "· " + j.ley : ""}</td><td className="px-6 py-3 text-sm">{j.peso == null ? "—" : String(j.peso) + " g"}</td>
+                <td className="px-6 py-3 text-sm">{j.talla || "—"}</td><td className="px-6 py-3 text-sm">{j.piedras || "—"}</td><td className="px-6 py-3 text-sm font-semibold">{j.cantidad}</td>
+                <td className="px-6 py-3 text-xs">{j.estado}</td><td className="px-6 py-3">{puedeGestionar ? <div className="flex gap-1">
+                  <button type="button" className="rounded-lg px-2 py-1 text-xs hover:bg-muted" onClick={() => editar(j)}>Editar</button>
+                  <button type="button" className="rounded-lg px-2 py-1 text-xs text-danger hover:bg-danger-soft" onClick={async () => {
+                    if (!window.confirm("¿Eliminar " + j.codigo + " del inventario?")) return;
+                    try { await borrar.mutateAsync(j.id); toast.success("Joya eliminada"); } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo eliminar"); }
+                  }}>Eliminar</button>
+                </div> : null}</td>
+              </tr>)}
+              {!lista.length ? <tr><td colSpan={9} className="px-6 py-10 text-sm text-muted-foreground">No hay joyas terminadas registradas.</td></tr> : null}
             </tbody>
           </table>
         </div>
