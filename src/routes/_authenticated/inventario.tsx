@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { FichaDorada } from "@/components/FichaDorada";
+import { FichaDorada, type FichaDoradaTipo } from "@/components/FichaDorada";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +52,15 @@ const inputCls =
 
 type Modulo = "materiales" | "bajo" | "movimientos";
 
+type FichaInventario = {
+  id: Modulo | null;
+  tipo: FichaDoradaTipo;
+  etiqueta: string;
+  valor: number | string;
+  descripcion: string;
+  indicador: string;
+};
+
 function InventarioPage() {
   const { data: sesion } = useSesion();
   const { data: inventario = [], isLoading } = useInventario();
@@ -59,6 +68,41 @@ function InventarioPage() {
   const bajos = useMemo(() => inventario.filter((i) => i.stock < i.minimo), [inventario]);
 
   const puedeGestionar = sesion?.esAdmin ?? false;
+
+  const fichas: FichaInventario[] = [
+    {
+      id: "materiales",
+      tipo: "materiales",
+      etiqueta: "Materiales",
+      valor: inventario.length,
+      descripcion: "Control del stock del taller",
+      indicador: "Inventario",
+    },
+    {
+      id: "bajo",
+      tipo: "bajo",
+      etiqueta: "Stock bajo",
+      valor: bajos.length,
+      descripcion: bajos.length ? "Requieren atención" : "Todo dentro del mínimo",
+      indicador: bajos.length ? "Atención" : "Estable",
+    },
+    {
+      id: "movimientos",
+      tipo: "movimientos",
+      etiqueta: "Movimientos",
+      valor: "Ver",
+      descripcion: "Entradas y consumos del taller",
+      indicador: "Trazabilidad",
+    },
+    {
+      id: null,
+      tipo: "areas",
+      etiqueta: "Áreas",
+      valor: AREAS.length,
+      descripcion: "Áreas disponibles para el taller",
+      indicador: "Operación",
+    },
+  ];
 
   return (
     <AppShell
@@ -74,45 +118,17 @@ function InventarioPage() {
       }
     >
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            id: "materiales" as Modulo,
-            etiqueta: "Materiales",
-            valor: inventario.length,
-            descripcion: "Control del stock del taller",
-            indicador: "Inventario",
-          },
-          {
-            id: "bajo" as Modulo,
-            etiqueta: "Stock bajo",
-            valor: bajos.length,
-            descripcion: bajos.length ? "Requieren atención" : "Todo dentro del mínimo",
-            indicador: bajos.length ? "Atención" : "Estable",
-          },
-          {
-            id: "movimientos" as Modulo,
-            etiqueta: "Movimientos",
-            valor: "Ver",
-            descripcion: "Entradas y consumos del taller",
-            indicador: "Trazabilidad",
-          },
-          {
-            id: null,
-            etiqueta: "Áreas",
-            valor: AREAS.length,
-            descripcion: "Áreas disponibles para el taller",
-            indicador: "Operación",
-          },
-        ].map((ficha) => (
+        {fichas.map((ficha) => (
           <FichaDorada
             key={ficha.etiqueta}
+            tipo={ficha.tipo}
             indicador={ficha.indicador}
             titulo={ficha.etiqueta}
             valor={ficha.valor}
             descripcion={ficha.descripcion}
             activa={ficha.id !== null && modulo === ficha.id}
             disabled={ficha.id === null}
-            onClick={ficha.id ? () => setModulo(ficha.id) : undefined}
+            onClick={ficha.id ? () => setModulo(ficha.id as Modulo) : undefined}
           />
         ))}
       </div>
