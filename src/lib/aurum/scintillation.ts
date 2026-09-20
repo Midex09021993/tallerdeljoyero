@@ -241,9 +241,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       `
         #ifdef USE_ENVMAP
         #ifdef ENVMAP_TYPE_CUBE_UV
-        // Native iJewel parameter path. This source file is compiled per
-        // material, so only materials carrying the supplied parameters receive
-        // the bounded iterative environment contribution.
+        // Native iJewel parameter path is conditionally emitted at shader
+        // generation time, so non-iJewel gems do not execute it.
+${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file emits the block only
+        // when the material carries the supplied DiamondMaterial parameters.
         vec3 ijView=normalize(-vViewPosition);
         vec3 ijNormal=normalize(normal);
         float ijEta=1.0/max(aurumIJEWELRefractiveIndex,1.0001);
@@ -267,9 +268,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         float ijFacet=clamp(.5+.5*dot(ijNormal,ijView),0.0,1.0);
         float ijGeometry=mix(1.0,ijFacet,clamp(aurumIJEWELGeometryFactor,0.0,1.0));
         float ijReflect=clamp(aurumIJEWELReflectivity,0.0,1.0);
-        // transmissionParameter stays in the original iJewel semantic space;
+        // transmissionParameter remains in the original iJewel semantic space;
         // it is not guessed as MeshPhysicalMaterial.transmission.
-        gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijAccum*ijReflect,ijGeometry);
+        gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijAccum*ijReflect,ijGeometry);\n        ` : ``}
         #endif
         #endif
       `
