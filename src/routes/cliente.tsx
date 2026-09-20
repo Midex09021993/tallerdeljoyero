@@ -11,19 +11,21 @@ export const Route = createFileRoute("/cliente")({
       {
         name: "description",
         content:
-          "Consulta el estado de tu joya: área en la que se encuentra, avance real del trabajo y fecha estimada de entrega.",
+          "Consulta el estado de tu joya con tu código seguro de seguimiento.",
       },
       { property: "og:title", content: "Seguimiento de tu pedido — Aurum Lab" },
       {
         property: "og:description",
-        content: "Introduce tu referencia o número de contrato y conoce el avance de tu joya.",
+        content: "Introduce tu código seguro de seguimiento y conoce el avance de tu joya.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    ...(typeof search["ref"] === "string" && search["ref"] ? { ref: search["ref"] as string } : {}),
+    ...(typeof search["token"] === "string" && search["token"]
+      ? { token: search["token"] as string }
+      : {}),
   }),
   component: SeguimientoCliente,
 });
@@ -81,13 +83,15 @@ function areaCliente(area: string) {
 }
 
 function SeguimientoCliente() {
-  const { ref } = Route.useSearch();
-  const [valor, setValor] = useState(ref ?? "");
+  const { token } = Route.useSearch();
+  const [valor, setValor] = useState(token ?? "");
   const [buscado, setBuscado] = useState(false);
 
   const consulta = useMutation({
-    mutationFn: async (referencia: string): Promise<Seguimiento | null> => {
-      const { data, error } = await supabase.rpc("seguimiento_pedido", { _ref: referencia });
+    mutationFn: async (seguimientoToken: string): Promise<Seguimiento | null> => {
+      const { data, error } = await supabase.rpc("seguimiento_pedido", {
+        _token: seguimientoToken,
+      });
       if (error) throw error;
       return ((data as Seguimiento[] | null) ?? [])[0] ?? null;
     },
@@ -119,7 +123,7 @@ function SeguimientoCliente() {
           <input
             value={valor}
             onChange={(e) => setValor(e.target.value)}
-            placeholder="Referencia o número de contrato"
+            placeholder="Código seguro de seguimiento"
             className="min-h-12 flex-1 rounded-lg border border-border bg-card px-4 py-3 text-base sm:text-sm"
           />
           <button
@@ -133,7 +137,7 @@ function SeguimientoCliente() {
 
         {buscado && !consulta.isPending && !pedido ? (
           <p className="mt-6 text-sm text-muted-foreground">
-            No encontramos ningún pedido con esa referencia. Revísala o consúltanos por WhatsApp.
+            No encontramos ningún pedido con ese código. Revísalo o consúltanos por WhatsApp.
           </p>
         ) : null}
 
