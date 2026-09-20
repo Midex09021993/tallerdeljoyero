@@ -80,6 +80,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
                 ? new THREE.Color(0xe69a7c)
                 : new THREE.Color(0xd7799b);
 
+  const ijewel=material.userData?.aurumIJEWELParameters;
+  const ijewelEnabled=!!ijewel;
   material.userData={
     ...(material.userData??{}),
     aurumDynamicScintillation:{
@@ -100,6 +102,17 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
+    if(ijewelEnabled){
+      shader.uniforms.aurumIJEWELRefractiveIndex={value:Number(ijewel.refractiveIndex??2.6)};
+      shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(ijewel.rayBounces??5))))};
+      shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
+      shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
+      shader.uniforms.aurumIJEWELSQUASHFactor={value:Number(ijewel.squashFactor??.98)};
+      shader.uniforms.aurumIJEWELAbsorptionFactor={value:Number(ijewel.absorptionFactor??1)};
+      shader.uniforms.aurumIJEWELGammaFactor={value:Number(ijewel.gammaFactor??1)};
+      shader.uniforms.aurumIJEWELTransmissionParameter={value:Number(ijewel.transmissionParameter??0)};
+      shader.uniforms.aurumIJEWELBoostFactors={value:new THREE.Vector3(Number(ijewel.boostFactors?.x??1),Number(ijewel.boostFactors?.y??1),Number(ijewel.boostFactors?.z??1))};
+    }
     if(oilDropEnabled){
       shader.uniforms.aurumOilDropStrength={value:Number(oilDrop.strength??.1)};
     }
@@ -174,6 +187,15 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumUVMode;
       uniform float aurumPhenomenonStrength;
       uniform float aurumPhenomenonMode;
+      uniform float aurumIJEWELRefractiveIndex;
+      uniform float aurumIJEWELRayBounces;
+      uniform float aurumIJEWELReflectivity;
+      uniform float aurumIJEWELGeometryFactor;
+      uniform float aurumIJEWELSQUASHFactor;
+      uniform float aurumIJEWELAbsorptionFactor;
+      uniform float aurumIJEWELGammaFactor;
+      uniform float aurumIJEWELTransmissionParameter;
+      uniform vec3 aurumIJEWELBoostFactors;
       uniform vec3 aurumPhenomenonAxisA;
       uniform vec3 aurumPhenomenonAxisB;
       uniform vec3 aurumPhenomenonAxisC;
@@ -217,7 +239,47 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.fragmentShader=shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `
-        // Use the physical surface normal and view direction already present
+        if(ijewelEnabled){
+        #ifdef USE_ENVMAP
+        #ifdef ENVMAP_TYPE_CUBE_UV
+        // Native iJewel parameter path. The source renderer exposes rayBounces
+        // as a material parameter; AURUM uses a bounded iterative internal
+        // reflection/refraction path against the same PMREM environment rather
+        // than collapsing the value into a different IOR or transmission value.
+        vec3 ijView=normalize(-vViewPosition);
+        vec3 ijNormal=normalize(normal);
+        float ijEta=1.0/max(aurumIJEWELRefractiveIndex,1.0001);
+        vec3 ijDir=refract(-ijView,ijNormal,ijEta);
+        vec3 ijAccum=vec3(0.0);
+        float ijWeight=1.0;
+        float ijMaxBounces=clamp(aurumIJEWELRayBounces,1.0,8.0);
+        for(int ijB=0;ijB<8;ijB++){
+          if(float(ijB)>=ijMaxBounces) break;
+          vec3 ijWorldDir=inverseTransformDirection(normalize(ijDir),viewMatrix);
+          vec3 ijEnv=textureCubeUV(envMap,envMapRotation*ijWorldDir,0.0).rgb;
+          float ijDepth=exp(-float(ijB)*max(aurumIJEWELAbsorptionFactor,0.001)*.18);
+          ijAccum+=ijEnv*ijWeight*ijDepth;
+          ijWeight*=.62;
+          // Internal bounce: reflect inside the stone, then refract again.
+          ijDir=reflect(ijDir,ijNormal);
+          ijDir=normalize(mix(ijDir,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.2)));
+        }
+        float ijNorm=max(ijWeight,0.0001);
+        ijAccum/=max(1.0,ijMaxBounces*.35);
+        ijAccum*=aurumIJEWELBoostFactors;
+        ijAccum=pow(max(ijAccum,vec3(0.0)),vec3(max(aurumIJEWELGammaFactor,.01)));
+        float ijFacet=clamp(.5+.5*dot(ijNormal,ijView),0.0,1.0);
+        float ijGeometry=mix(1.0,ijFacet,clamp(aurumIJEWELGeometryFactor,0.0,1.0));
+        float ijReflect=clamp(aurumIJEWELReflectivity,0.0,1.0);
+        // transmissionParameter=0 is preserved as the original iJewel value;
+        // it is not mapped to MeshPhysicalMaterial.transmission. The custom
+        // optical contribution is blended here using the source reflectivity.
+        gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijAccum*ijReflect,ijGeometry);
+        #endif
+        #endif
+      }
+
+      // Use the physical surface normal and view direction already present
         // in the PBR pipeline. No synthetic RGB sparkle or emissive overlay.
         vec3 aurumN=normalize(normal);
         vec3 aurumV=normalize(vViewPosition);
