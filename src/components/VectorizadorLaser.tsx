@@ -192,7 +192,7 @@ export function VectorizadorLaser() {
     setProcessing(true);
     setSourceName(file.name.replace(/\.[^.]+$/, "") || "diseño");
     const url = URL.createObjectURL(file);
-    setImageUrl(url);
+    setImageUrl((previous) => {\n      if (previous) URL.revokeObjectURL(previous);\n      return url;\n    });\n    setSourceFile(file);
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(1, MAX_SIZE / Math.max(img.naturalWidth, img.naturalHeight));
