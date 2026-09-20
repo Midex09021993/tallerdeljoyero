@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
@@ -48,6 +48,13 @@ function CorteLaserCompleto() {
         </>
       }
     >
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/20 bg-card p-4 shadow-card">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Diseño para fabricación</p>
+          <p className="mt-1 text-sm text-muted-foreground">Convierte una imagen en una curva cerrada para corte o grabado.</p>
+        </div>
+        <Link to="/vectorizador-laser" className="rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground">Abrir Vectorizador →</Link>
+      </div>
       <PedidosArea area="Corte Láser" titulo="Pedidos asignados a Corte Láser" />
     </AppShell>
   );
