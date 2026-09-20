@@ -63,6 +63,29 @@ function VentasPage() {
   const [historialPagosId, setHistorialPagosId] = useState<string | null>(null);
   const usuarioId = sesion?.user.id ?? null;
 
+  const ejecutarEntrega = async (pedidoId: string, accion: string, datos: Record<string, unknown> = {}) => {
+    const { error } = await supabase.rpc("transicionar_entrega_pedido", {
+      _pedido_id: pedidoId,
+      _accion: accion,
+      _datos: datos,
+    });
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success(
+      accion === "packing"
+        ? "Packing preparado"
+        : accion === "despachar"
+          ? "Pedido despachado"
+          : accion === "entregar"
+            ? "Entrega registrada"
+            : "Pedido listo para entrega",
+    );
+    return true;
+  };
+
+
   const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
   const enVentas = pedidosPorSede.filter((p) => p.area_actual === "Área ventas");
   const filtrados = useMemo(() => {
@@ -165,18 +188,22 @@ function VentasPage() {
                     );
                   }}
                   onCrearContrato={() => crearContrato.mutate(pedido)}
-                  accionPrincipal={listo ? "Registrar envío" : "Marcar listo para entrega"}
-                  {...(listo && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
+                  accionPrincipal={listo ? (pedido.packing_estado === "Preparado" ? "Registrar envío" : "Preparar packing") : "Marcar listo para entrega"}
+                  {...(listo && pedido.packing_estado === "Preparado" && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
                   onAbrir={() => abrirPedido(pedido.id)}
                   onAccion={() => {
-                    if (listo) {
-                      setEnvioId(pedido.id);
-                      setEntregaId(null);
-                      setListoId(null);
-                    } else {
+                    if (!listo) {
                       setListoId(pedido.id);
                       setEnvioId(null);
                       setEntregaId(null);
+                    } else if (pedido.packing_estado !== "Preparado") {
+                      void ejecutarEntrega(pedido.id, "packing").then((ok) => {
+                        if (ok) setListoId(null);
+                      });
+                    } else {
+                      setEnvioId(pedido.id);
+                      setEntregaId(null);
+                      setListoId(null);
                     }
                   }}
                   onAccionSecundaria={() => {
@@ -191,22 +218,9 @@ function VentasPage() {
                       guardando={actualizar.isPending}
                       onCancelar={() => setListoId(null)}
                       onGuardar={(datos) => {
-                        const ahora = new Date().toISOString();
-                        actualizar.mutate(
-                          {
-                            id: pedido.id,
-                            area_actual: "Área ventas",
-                            estado: "Listo para Entrega",
-                            ventas_estado: "Listo para Entrega",
-                            packing_estado: "Listo para entrega",
-                            fecha_listo_entrega: datos.fecha_listo_entrega,
-                            listo_entrega_observaciones: datos.listo_entrega_observaciones,
-                            usuario_listo_entrega: usuarioId,
-                            ventas_actualizado_por: usuarioId,
-                            ventas_actualizado_en: ahora,
-                          },
-                          { onSuccess: () => setListoId(null) },
-                        );
+                        void ejecutarEntrega(pedido.id, "listo_entrega", datos).then((ok) => {
+                          if (ok) setListoId(null);
+                        });
                       }}
                     />
                   ) : null}
@@ -216,22 +230,9 @@ function VentasPage() {
                       guardando={actualizar.isPending}
                       onCancelar={() => setEnvioId(null)}
                       onGuardar={(datos) => {
-                        const ahora = new Date().toISOString();
-                        actualizar.mutate(
-                          {
-                            id: pedido.id,
-                            area_actual: "Área ventas",
-                            estado: "En Camino",
-                            ventas_estado: "En Camino",
-                            packing_estado: "Despachado",
-                            usuario_envio: usuarioId,
-                            enviado_at: ahora,
-                            ventas_actualizado_por: usuarioId,
-                            ventas_actualizado_en: ahora,
-                            ...datos,
-                          },
-                          { onSuccess: () => setEnvioId(null) },
-                        );
+                        void ejecutarEntrega(pedido.id, "despachar", datos).then((ok) => {
+                          if (ok) setEnvioId(null);
+                        });
                       }}
                     />
                   ) : null}
@@ -246,22 +247,9 @@ function VentasPage() {
                       guardando={actualizar.isPending}
                       onCancelar={() => setEntregaId(null)}
                       onGuardar={(datos) => {
-                        const ahora = new Date().toISOString();
-                        actualizar.mutate(
-                          {
-                            id: pedido.id,
-                            area_actual: "Área ventas",
-                            estado: "Entregado",
-                            ventas_estado: "Entregado",
-                            packing_estado: "Entregado al cliente",
-                            usuario_entrega: usuarioId,
-                            entregado_at: ahora,
-                            ventas_actualizado_por: usuarioId,
-                            ventas_actualizado_en: ahora,
-                            ...datos,
-                          },
-                          { onSuccess: () => setEntregaId(null) },
-                        );
+                        void ejecutarEntrega(pedido.id, "entregar", datos).then((ok) => {
+                          if (ok) setEntregaId(null);
+                        });
                       }}
                     />
                   ) : null}
