@@ -456,7 +456,7 @@ function InventarioPage() {
             <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-gold/80">Identificación automática</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">El sistema asignará un código único según la sede, fecha de registro y pieza. No necesitas inventar ni escribir el código.</p>
           </div>
-          <Field label="Nombre de pieza" value={joyaForm.nombre} onChange={(v) => setJoyaForm({ ...joyaForm, nombre: v })} required /></div>
+          <Field label="Nombre de pieza" value={joyaForm.nombre} onChange={(v) => setJoyaForm({ ...joyaForm, nombre: v })} required />
           <div className="grid gap-3 sm:grid-cols-2"><Field label="Metal" value={joyaForm.metal} onChange={(v) => setJoyaForm({ ...joyaForm, metal: v })} /><Field label="Ley" value={joyaForm.ley} onChange={(v) => setJoyaForm({ ...joyaForm, ley: v })} /></div>
           <div className="grid gap-3 sm:grid-cols-3"><Field label="Peso (g)" value={joyaForm.peso} onChange={(v) => setJoyaForm({ ...joyaForm, peso: v })} type="number" step="0.001" inputMode="decimal" /><Field label="Talla" value={joyaForm.talla} onChange={(v) => setJoyaForm({ ...joyaForm, talla: v })} /><Field label="Cantidad" value={joyaForm.cantidad} onChange={(v) => setJoyaForm({ ...joyaForm, cantidad: v })} type="number" step="1" inputMode="numeric" /></div>
           <Field label="Piedras" value={joyaForm.piedras} onChange={(v) => setJoyaForm({ ...joyaForm, piedras: v })} />
