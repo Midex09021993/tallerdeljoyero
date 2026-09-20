@@ -63,18 +63,6 @@ function CotizacionesPage() {
     if (puedeGestionarCotizaciones) void cargar();
   }, [puedeGestionarCotizaciones]);
 
-  if (!puedeGestionarCotizaciones) {
-    return (
-      <AppShell titulo="Cotizaciones" subtitulo="Acceso restringido al área comercial.">
-        <Panel titulo="Acceso restringido">
-          <p className="p-6 text-sm text-muted-foreground">
-            Esta sección contiene información comercial y financiera.
-          </p>
-        </Panel>
-      </AppShell>
-    );
-  }
-
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
     if (!t) return cotizaciones;
@@ -91,6 +79,18 @@ function CotizacionesPage() {
   }, [busquedaCliente, clientes]);
   const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
+
+  if (!puedeGestionarCotizaciones) {
+    return (
+      <AppShell titulo="Cotizaciones" subtitulo="Acceso restringido al área comercial.">
+        <Panel titulo="Acceso restringido">
+          <p className="p-6 text-sm text-muted-foreground">
+            Esta sección contiene información comercial y financiera.
+          </p>
+        </Panel>
+      </AppShell>
+    );
+  }
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
