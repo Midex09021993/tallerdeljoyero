@@ -6,7 +6,9 @@ type ThicknessMapResult={
   hitRatio:number;
   minDepth:number;
   maxDepth:number;
-  method:"uv-ray-depth-grid-v2";
+  method:"uv-ray-depth-grid-v3";
+  cacheKey:string;
+  normalMapRes:number;
 };
 
 type Tri=[number,number,number];
@@ -45,6 +47,9 @@ type CellGrid={
 };
 
 const cellKey=(x:number,y:number,z:number,nx:number,ny:number)=>x+y*nx+z*nx*ny;
+
+const AURUM_THICKNESS_CACHE=new Map<string,ThicknessMapResult>();
+const geometryCacheIdentity=(target:any)=>String(target?.uuid??target?.geometry?.uuid??"anonymous");
 
 const buildGrid=(positions:THREE.Vector3[],triangles:Tri[]):CellGrid=>{
   const box=new THREE.Box3().setFromPoints(positions);
@@ -135,6 +140,9 @@ const gridRayDistance=(origin:THREE.Vector3,direction:THREE.Vector3,grid:CellGri
 };
 
 export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):ThicknessMapResult|null=>{
+  const cacheKey=`${geometryCacheIdentity(target)}:${size}:${Number(thicknessScale??1).toFixed(4)}`;
+  const cached=AURUM_THICKNESS_CACHE.get(cacheKey);
+  if(cached)return cached;
   const geometry=target?.geometry;
   const position=geometry?.getAttribute?.("position");
   const normal=geometry?.getAttribute?.("normal");
@@ -191,5 +199,7 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):Thickn
   const texture=new THREE.DataTexture(data,size,size,THREE.RGBAFormat,THREE.UnsignedByteType);
   texture.colorSpace=THREE.NoColorSpace;texture.wrapS=THREE.ClampToEdgeWrapping;texture.wrapT=THREE.ClampToEdgeWrapping;
   texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearFilter;texture.generateMipmaps=false;texture.needsUpdate=true;
-  return {texture,baseThickness:Math.max(.015,maxDepth*1.05*Math.max(.5,Math.min(1.5,Number(thicknessScale??1)))),hitRatio,minDepth,maxDepth,method:"uv-ray-depth-grid-v2"};
+  const result={texture,baseThickness:Math.max(.015,maxDepth*1.05*Math.max(.5,Math.min(1.5,Number(thicknessScale??1)))),hitRatio,minDepth,maxDepth,method:"uv-ray-depth-grid-v3" as const,cacheKey,normalMapRes:size};
+  AURUM_THICKNESS_CACHE.set(cacheKey,result);
+  return result;
 };
