@@ -81,7 +81,8 @@ function Inicio() {
         { to: "/pedidos-2", label: "Pedidos 2", icono: PackageCheck, subtitulo: "Centro operativo" },
         { to: "/pedidos", label: "Pedidos anterior", icono: ClipboardList, subtitulo: "Seguimiento legado" },
         { to: "/inventario", label: "Inventario", icono: Boxes, subtitulo: "Stock y movimientos" },
-        { to: "/ventas", label: "Ventas", icono: PackageCheck, subtitulo: "Ventas y entregas" },
+        { to: "/ventas-2", label: "Ventas 2", icono: PackageCheck, subtitulo: "Centro comercial" },
+        { to: "/ventas", label: "Ventas anterior", icono: PackageCheck, subtitulo: "Operación comercial" },
         { to: "/gestion", label: "Gestión", icono: Wrench, subtitulo: "Administración del taller" },
       ];
     }
