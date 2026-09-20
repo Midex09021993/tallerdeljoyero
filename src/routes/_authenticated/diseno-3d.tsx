@@ -432,7 +432,7 @@ function ColaModelado({
   cargando,
   contarModelos,
 }: {
-  items: PedidoOperativo[];
+  items: PedidoSelector[];
   cargando?: boolean;
   contarModelos: (pedidoId: string) => number;
 }) {

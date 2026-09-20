@@ -132,7 +132,7 @@ function GestionPage() {
     { id: "resumen", label: "Resumen", visible: true },
     { id: "flujo", label: "Flujo", visible: true },
     { id: "entregados", label: "Pedidos Entregados", visible: puedeUsuarios },
-    { id: "finanzas", label: "Finanzas", visible: esDueno || sesion?.roles.includes("gerente") },
+    { id: "finanzas", label: "Finanzas", visible: Boolean(esDueno || sesion?.roles.includes("gerente")) },
     { id: "respaldo", label: "Respaldo", visible: puedeUsuarios },
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
