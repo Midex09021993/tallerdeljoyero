@@ -91,6 +91,18 @@ function regresoDesde(origen: string | undefined): RegresoFicha {
   return regresosFicha[origen as keyof typeof regresosFicha] ?? regresosFicha.pedidos;
 }
 
+function QuickStatus({ label, value, ok }: { label: string; value: string; ok: boolean }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface-sunken p-3">
+      <div className="flex items-center gap-2">
+        <span className={`size-1.5 rounded-full ${ok ? "bg-emerald-500" : "bg-gold"}`} />
+        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+      </div>
+      <p className="mt-1 truncate text-xs font-semibold">{value}</p>
+    </div>
+  );
+}
+
 function DatoClave({
   etiqueta,
   valor,
@@ -496,6 +508,17 @@ function FichaPedido() {
   });
   const reiniciaFlujo = areaCoincide(destinoMovimiento, "Pedidos");
   const motivoRequerido = reiniciaFlujo && !motivoRetornoPedidos.trim();
+  const siguienteAccion = pedidoEnRecepcion(pedido.estado)
+    ? "Autorizar ingreso a producción"
+    : pedido.estado === "Listo para Entrega"
+      ? "Preparar entrega"
+      : normalizarArea(pedido.area_actual) === "Área ventas"
+        ? "Revisar venta y saldo"
+        : `Trabajar en ${normalizarArea(pedido.area_actual)}`;
+  const estadoEntrega = mostrarEstadoVentas(pedido);
+  const tieneContextoCliente = Boolean(contextoComercial?.cliente || pedido.cliente_id);
+  const tieneCotizacion = Boolean(contextoComercial?.cotizacion || pedido.cotizacion_id);
+
   const tieneCorteLaser =
     rutaPedido.some((area) => areaCoincide(area, "Corte Láser")) ||
     areaCoincide(pedido.area_actual, "Corte Láser") ||
@@ -552,6 +575,72 @@ function FichaPedido() {
                 {index < 4 ? <span className="mx-2 mt-4 h-px flex-1 bg-border" /> : null}
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
+        <div className="relative overflow-hidden rounded-[24px] border border-gold/25 bg-ink p-6 text-ink-foreground shadow-[0_20px_55px_-30px_rgba(0,0,0,0.55)]">
+          <div className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold/10 blur-3xl" />
+          <div className="relative">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Estado operativo</p>
+                <h2 className="mt-2 font-display text-2xl italic sm:text-3xl">{siguienteAccion}</h2>
+                <p className="mt-2 text-sm text-white/50">
+                  Área actual · {normalizarArea(pedido.area_actual)}
+                </p>
+              </div>
+              <span className="rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+                {pedido.estado}
+              </span>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {pedidoEnRecepcion(pedido.estado) && puedeAutorizar ? (
+                <button
+                  type="button"
+                  onClick={() => autorizar.mutate(pedido.id)}
+                  disabled={autorizar.isPending}
+                  className="rounded-lg bg-gold px-4 py-2.5 text-xs font-bold text-ink transition hover:brightness-110 disabled:opacity-50"
+                >
+                  {autorizar.isPending ? "Autorizando…" : "Autorizar producción"}
+                </button>
+              ) : null}
+              {!pedidoEnRecepcion(pedido.estado) && !["Entregado"].includes(pedido.estado) ? (
+                <button
+                  type="button"
+                  onClick={() => setDestinoMovimiento(normalizarArea(pedido.area_actual))}
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                >
+                  Gestionar área
+                </button>
+              ) : null}
+              {tieneCotizacion ? (
+                <Link
+                  to="/cotizaciones/$id"
+                  params={{ id: contextoComercial?.cotizacion?.id ?? pedido.cotizacion_id! }}
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                >
+                  Ver cotización
+                </Link>
+              ) : null}
+              <Link
+                to="/ventas"
+                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+              >
+                Ver ventas
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-border bg-card p-5 shadow-card">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Control rápido</p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <QuickStatus label="Cliente" value={tieneContextoCliente ? "Conectado" : "Pendiente"} ok={tieneContextoCliente} />
+            <QuickStatus label="Cotización" value={tieneCotizacion ? "Conectada" : "Externa / directa"} ok={tieneCotizacion} />
+            <QuickStatus label="Producción" value={normalizarArea(pedido.area_actual)} ok={!pedidoEnRecepcion(pedido.estado)} />
+            <QuickStatus label="Entrega" value={estadoEntrega} ok={estadoEntrega === "Entregado"} />
           </div>
         </div>
       </div>
