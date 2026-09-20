@@ -677,11 +677,11 @@ function FichaPedido() {
 
   
 
-              <Panel titulo="Estado financiero">
+              <Panel titulo="Estado de pagos del contrato">
                 <div className="grid gap-4 p-5 sm:grid-cols-3 lg:p-6">
-                  <DatoClave etiqueta="Total" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(totalFinanciero)} />
-                  <DatoClave etiqueta="Abonado" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(abonadoFinanciero)} />
-                  <DatoClave etiqueta="Saldo" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(saldoFinanciero)} destacado />
+                  <DatoClave etiqueta="Total contrato" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(totalFinanciero)} />
+                  <DatoClave etiqueta="Abonado contrato" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(abonadoFinanciero)} />
+                  <DatoClave etiqueta="Saldo contrato" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(saldoFinanciero)} destacado />
                 </div>
                 <div className="border-t border-border px-5 py-3 text-xs lg:px-6">
                   <span className="text-muted-foreground">Estado: </span>
