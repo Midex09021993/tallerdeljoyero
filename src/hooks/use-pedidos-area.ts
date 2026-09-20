@@ -36,7 +36,7 @@ export type PedidoOperativo = Pick<Pedido,
 >;
 
 const CAMPOS_PEDIDO_OPERATIVO =
-  "id, referencia, pieza, cliente, material, estado, entrega, sede_id, trabajo, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+  "id, referencia, pieza, cliente, material, estado, entrega, sede_id, trabajo, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 export function pedidoAsignadoAArea(pedido: Pick<PedidoOperativo, "ruta" | "area_actual">, area: string) {
   const ruta = Array.isArray(pedido.ruta) ? pedido.ruta : [];
