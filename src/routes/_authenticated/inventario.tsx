@@ -569,6 +569,7 @@ function InventarioPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Identificación</p>
                   <h3 className="mt-1 text-xl font-semibold">{joyaSeleccionada.nombre}</h3>
                   <p className="mt-1 font-mono text-xs font-semibold text-gold">{joyaSeleccionada.codigo || "Código pendiente"}</p>
+                  <p className="mt-2 text-xs text-muted-foreground"><span className="font-semibold text-foreground">Taller:</span> {sesion?.sede?.nombre ?? "Sede no disponible"}</p>
                 </div>
                 <span className="rounded-full border border-gold/20 bg-background px-3 py-1 text-[10px] font-semibold uppercase">{joyaSeleccionada.estado.replace("_", " ")}</span>
               </div>
