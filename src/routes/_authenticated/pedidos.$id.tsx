@@ -424,6 +424,7 @@ function FichaPedido() {
   const [materialConsumo, setMaterialConsumo] = useState("");
   const [cantidadConsumo, setCantidadConsumo] = useState("");
   const [motivoConsumo, setMotivoConsumo] = useState("");
+  const [tipoMovimientoProduccion, setTipoMovimientoProduccion] = useState<"consumo" | "merma" | "devolucion">("consumo");
   const [materialPlan, setMaterialPlan] = useState("");
   const [cantidadPlan, setCantidadPlan] = useState("");
   const [notasPlan, setNotasPlan] = useState("");
@@ -675,16 +676,24 @@ function FichaPedido() {
     if (!material || !Number.isFinite(cantidad) || cantidad <= 0) return;
     setGuardandoConsumo(true);
     try {
+      const etiquetas = { consumo: "Consumo", merma: "Merma", devolucion: "Devolución" } as const;
+      const motivo = motivoConsumo.trim();
+      if (!motivo) {
+        toast.error("El motivo es obligatorio");
+        return;
+      }
       const { error } = await supabase.from("inventario_movimientos").insert({
         material_id: material.id,
-        tipo: "consumo",
+        tipo: tipoMovimientoProduccion,
         cantidad,
-        motivo: motivoConsumo.trim() || `Consumo de ${normalizarArea(pedido.area_actual)}`,
+        motivo,
         area: normalizarArea(pedido.area_actual),
         pedido_id: pedido.id,
+        referencia_externa: `Pedido ${pedido.referencia}`,
       } as never);
       if (error) throw error;
-      toast.success(`${cantidad} ${material.unidad} descontados de ${material.material}`);
+      const verbo = tipoMovimientoProduccion === "devolucion" ? "devueltos al stock" : "registrados";
+      toast.success(`${etiquetas[tipoMovimientoProduccion]}: ${cantidad} ${material.unidad} de ${material.material} ${verbo}`);
       setMaterialConsumo("");
       setCantidadConsumo("");
       setMotivoConsumo("");
@@ -931,10 +940,15 @@ function FichaPedido() {
             ) : null}
             <div className="my-4 flex items-center gap-3"><span className="h-px flex-1 bg-border" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-muted-foreground">Consumo real</span><span className="h-px flex-1 bg-border" /></div>
             <form onSubmit={registrarConsumo} className="rounded-2xl border border-gold/15 bg-gold/[.025] p-4">
-              <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+              <div className="mb-3 grid gap-3 sm:grid-cols-[150px_1fr_150px]">
+                <select value={tipoMovimientoProduccion} onChange={(e) => setTipoMovimientoProduccion(e.target.value as "consumo" | "merma" | "devolucion")} className="h-10 rounded-xl border border-gold/20 bg-card px-3 text-sm">
+                  <option value="consumo">Consumo real</option>
+                  <option value="merma">Merma</option>
+                  <option value="devolucion">Devolución</option>
+                </select>
                 <select value={materialConsumo} onChange={(e) => setMaterialConsumo(e.target.value)} className="h-10 rounded-xl border border-gold/20 bg-card px-3 text-sm" required>
                   <option value="">Seleccionar material...</option>
-                  {materialesInventario.filter((m) => m.stock > 0).map((m) => (
+                  {materialesInventario.filter((m) => m.activo && (tipoMovimientoProduccion === "devolucion" || m.stock > 0)).map((m) => (
                     <option key={m.id} value={m.id}>{m.material} · {m.stock} {m.unidad} disponibles</option>
                   ))}
                 </select>
@@ -951,15 +965,15 @@ function FichaPedido() {
             <div className="mt-4 divide-y divide-border">
               {movimientosPedido.map((mov) => (
                 <div key={mov.id} className="flex items-center gap-3 py-3">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gold/10 text-gold-deep">
-                    <span className="text-xs font-bold">−</span>
+                  <span className={`grid size-8 shrink-0 place-items-center rounded-lg ${mov.tipo === "devolucion" ? "bg-emerald-500/10 text-emerald-600" : mov.tipo === "merma" ? "bg-danger/10 text-danger" : "bg-gold/10 text-gold-deep"}`}>
+                    <span className="text-xs font-bold">{mov.tipo === "devolucion" ? "+" : "−"}</span>
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-semibold">{mov.inventario?.material ?? "Material"}</p>
-                    <p className="text-[10px] text-muted-foreground">{mov.area || "Producción"} · {new Date(mov.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</p>
+                    <p className="text-[10px] text-muted-foreground">{mov.tipo === "devolucion" ? "Devolución" : mov.tipo === "merma" ? "Merma" : "Consumo"} · {mov.area || "Producción"} · {new Date(mov.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-semibold tabular-nums">−{mov.cantidad} {mov.inventario?.unidad ?? ""}</p>
+                    <p className="text-xs font-semibold tabular-nums">{mov.tipo === "devolucion" ? "+" : "−"}{mov.cantidad} {mov.inventario?.unidad ?? ""}</p>
                     <p className="text-[10px] text-muted-foreground">Stock {mov.stock_posterior ?? "—"}</p>
                   </div>
                 </div>
@@ -974,7 +988,7 @@ function FichaPedido() {
             <div className="rounded-2xl border border-border bg-card p-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Resumen</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Cada consumo queda asociado al pedido y al área que lo realizó. El inventario actualiza el stock automáticamente.
+                Cada consumo, merma o devolución queda asociado al pedido y al área que lo realizó. El inventario actualiza el stock automáticamente.
               </p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <DatoClave etiqueta="Movimientos" valor={String(movimientosPedido.length)} />
