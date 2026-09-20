@@ -52,42 +52,72 @@ function Ventas2Page() {
   return (
     <AppShell
       titulo="Ventas 2"
-      subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : `Centro comercial · ${sesion?.esDueno ? etiquetaSede : sesion?.sede?.nombre ?? "Tu sede"}`}
-      acciones={<div className="flex flex-wrap items-center gap-2"><SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} /><Link to="/ventas" className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold text-muted-foreground">Ventas anterior</Link></div>}
+      subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : "Control comercial y cierre de pedidos"}
+      acciones={<SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
+        <div className="relative p-6 sm:p-8">
+          <div className="pointer-events-none absolute -right-24 -top-32 size-80 rounded-full bg-gold/10 blur-3xl" />
+          <div className="relative grid gap-7 xl:grid-cols-[1fr_420px] xl:items-end">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.22em] text-gold">Centro comercial</p>
+              <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">Dinero, entrega y cierre</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Una vista operativa para saber qué está pendiente de cobro, qué puede entregarse y qué pedidos ya cerraron.</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface-muted/70 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">Saldo de cartera</p>
+              <p className="mt-2 text-3xl font-semibold tabular-nums">{money(totalPendiente)}</p>
+              <div className="mt-3 flex items-center justify-between text-xs"><span className="text-muted-foreground">{cobrosPendientes} contratos pendientes</span><span className="font-semibold">{money(totalCobrado)} cobrado</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Metric icon={ClipboardList} label="Cartera activa" value={activos.length} />
-        <Metric icon={CreditCard} label="Por cobrar" value={money(totalPendiente)} tone="warning" />
+        <Metric icon={CreditCard} label="Pendiente de cobro" value={money(totalPendiente)} tone="warning" />
         <Metric icon={Banknote} label="Cobrado" value={money(totalCobrado)} tone="positive" />
-        <Metric icon={Truck} label="Por entregar" value={porEntregar.length} />
+        <Metric icon={Truck} label="Listos para entregar" value={porEntregar.length} />
         <Metric icon={PackageCheck} label="En camino" value={enCamino.length} />
       </div>
 
-      <section className="mt-6 rounded-[24px] border border-border bg-card shadow-card">
-        <div className="border-b border-border p-4 sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Centro comercial</p><h2 className="mt-1 text-xl font-semibold">Cartera y cumplimiento</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Ventas controla la relación económica y el cierre del pedido: cobro, preparación, despacho, entrega y trazabilidad.</p></div>
-            <div className="relative w-full lg:w-80"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar cliente, pedido, contrato o guía…" className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-gold/50" /></div>
+      <section className="mt-5 overflow-hidden rounded-[24px] border border-border bg-card shadow-card">
+        <div className="border-b border-border p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div><h2 className="text-lg font-semibold">Flujo comercial</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona el momento del ciclo que quieres gestionar.</p></div>
+            <div className="relative w-full lg:w-80"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar pedido, cliente, contrato o guía…" className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-gold/50" /></div>
           </div>
-          <div className="mt-5 flex flex-wrap gap-1 rounded-xl bg-surface-muted p-1">
-            {([["cartera","Cartera",activos.length],["cobros","Cobros",cobrosPendientes],["despacho","Despacho",porEntregar.length+enCamino.length],["entregados","Entregados",entregados.length]] as const).map(([id,label,count]) => <button key={id} type="button" onClick={() => setVista(id)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${vista===id ? "bg-card text-foreground shadow-card" : "text-muted-foreground"}`}>{label} <span className="ml-1 opacity-60">{count}</span></button>)}
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([["cartera","Cartera",activos.length],["cobros","Cobros",cobrosPendientes],["despacho","Despacho",porEntregar.length+enCamino.length],["entregados","Cerrados",entregados.length]] as const).map(([id,label,count]) => (
+              <button key={id} type="button" onClick={() => setVista(id)} className={`rounded-xl border px-3 py-3 text-left transition ${vista===id ? "border-gold/30 bg-gold/[.07] shadow-card" : "border-border bg-surface-muted hover:border-gold/20"}`}>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+                <span className="mt-1 block text-xl font-semibold tabular-nums">{count}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full text-left">
-            <thead className="border-b border-border bg-surface-muted/60"><tr>{["Pedido","Cliente","Taller","Venta","Estado","Entrega","Saldo","Acción"].map((h)=><th key={h} className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
+            <thead className="border-b border-border bg-surface-muted/60"><tr>{["Pedido","Cliente","Taller","Venta","Estado","Compromiso","Saldo",""] .map((h)=><th key={h} className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">{lista.map((p)=><VentaRow key={p.id} pedido={{...p, saldo: saldoPedido(p)}} onOpen={()=>navigate({to:"/ventas-2/$id",params:{id:p.id}})}/>)}</tbody>
           </table>
         </div>
-        <div className="divide-y divide-border lg:hidden">{lista.map((p)=><button key={p.id} type="button" onClick={()=>navigate({to:"/ventas-2/$id",params:{id:p.id}})} className="w-full p-4 text-left"><div className="flex justify-between gap-3"><div><b className="text-sm">{p.referencia}</b><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado}/></div><p className="mt-3 text-sm">{p.trabajo || p.pieza || "Pedido"}</p><div className="mt-2 text-[11px] font-semibold text-gold">{p.sede_nombre || "Taller no asignado"}</div><div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>{p.medio_envio || "Entrega"}</span><span>{fmtFecha(p.fecha_entrega) || "Sin fecha"}</span></div></button>)}</div>
+        <div className="divide-y divide-border lg:hidden">{lista.map((p)=>(
+          <button key={p.id} type="button" onClick={()=>navigate({to:"/ventas-2/$id",params:{id:p.id}})} className="w-full p-4 text-left transition hover:bg-surface-muted/50">
+            <div className="flex items-start justify-between gap-3"><div><b className="text-sm">{p.referencia}</b><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado}/></div>
+            <p className="mt-4 text-sm font-medium">{p.trabajo || p.pieza || "Pedido"}</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold"><span className="rounded-lg bg-gold/10 px-2 py-1 text-gold-deep">{p.sede_nombre || "Taller no asignado"}</span><span className="rounded-lg bg-surface-muted px-2 py-1">{money(saldoPedido(p))} pendiente</span></div>
+            <div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>{p.medio_envio || "Entrega en taller"}</span><span>{fmtFecha(p.fecha_entrega) || "Sin fecha"}</span></div>
+          </button>
+        ))}</div>
         {!lista.length ? <div className="p-12 text-center text-sm text-muted-foreground">No hay registros en esta vista.</div> : null}
       </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-3">
-        <AreaCard icon={CreditCard} title="Cobranza" text={`${cobrosPendientes} contratos con saldo pendiente · ${money(totalPendiente)} por cobrar.`} />
-        <AreaCard icon={Truck} title="Logística" text={`${porEntregar.length} pedidos por preparar/entregar y ${enCamino.length} en camino.`} />
-        <AreaCard icon={CheckCircle2} title="Cierre" text={`${entregados.length} pedidos entregados en la vista actual.`} />
+      <section className="mt-5 grid gap-4 lg:grid-cols-3">
+        <AreaCard icon={CreditCard} title="Cobranza" text={`${cobrosPendientes} contratos tienen saldo pendiente por ${money(totalPendiente)}.`} />
+        <AreaCard icon={Truck} title="Despacho" text={`${porEntregar.length} pedidos esperan preparación o entrega y ${enCamino.length} están en camino.`} />
+        <AreaCard icon={CheckCircle2} title="Cierre" text={`${entregados.length} pedidos aparecen como entregados en la vista actual.`} />
       </section>
     </AppShell>
   );
