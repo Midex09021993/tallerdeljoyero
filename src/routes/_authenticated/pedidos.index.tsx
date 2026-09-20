@@ -97,8 +97,7 @@ function coincideEntrega(fechaIso: string | null | undefined, filtro: FiltroEntr
 
   const fecha = new Date(`${fechaIso}T00:00:00`);
   if (Number.isNaN(fecha.getTime())) return false;
-  const hoyInicio = inicioDia();
-  const hoyFin = finDia();
+  const hoyInicio = inicioDia();  const hoyFin = finDia();
 
   if (filtro === "Hoy") {
     return fecha >= hoyInicio && fecha <= hoyFin;
@@ -197,8 +196,7 @@ function TarjetaResumen({
 }
 
 function PedidosPage() {  const navigate = useNavigate();
-  const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: sesion } = useSesion();  const { data: pedidos = [], isLoading } = usePedidos();
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes-pedido-selector"],
     queryFn: async () => {
@@ -297,8 +295,7 @@ function PedidosPage() {  const navigate = useNavigate();
           ].some((v) => (v ?? "").toLowerCase().includes(t));
         const okOperario =          !soloSusAreas || Boolean(t) || misAreas.some((area) => areaCoincide(area, p.area_actual));
         // Los pedidos entregados salen del flujo activo: solo aparecen al buscarlos
-        // o al filtrar expresamente por ese estado (el archivo está en Gestión).
-        const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
+        // o al filtrar expresamente por ese estado (el archivo está en Gestión).        const okArchivo = p.estado !== "Entregado" || Boolean(t) || filtroEstado === "Entregado";
         const okAutorizacion = !soloPendientesAutorizacion || pedidoPendienteAutorizacionProduccion(p);
         return okArea && okEstado && okEntrega && okTexto && okOperario && okArchivo && okAutorizacion;
       }),
@@ -397,8 +394,7 @@ function PedidosPage() {  const navigate = useNavigate();
           </div>        </div>
       }
     >
-      {soloPendientesAutorizacion ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/25 bg-warning-soft/50 px-4 py-3 text-sm">
+      {soloPendientesAutorizacion ? (        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/25 bg-warning-soft/50 px-4 py-3 text-sm">
           <div>
             <p className="font-semibold text-warning">Pedidos pendientes de autorización</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -497,8 +493,7 @@ function PedidosPage() {  const navigate = useNavigate();
                 peso_estimado: form.peso_estimado,
                 estado: "Recibido",
                 entrega: form.fecha_entrega,
-                importe: Number(form.importe) || 0,
-                a_cuenta: Number(form.a_cuenta) || 0,
+                importe: Number(form.importe) || 0,                a_cuenta: Number(form.a_cuenta) || 0,
                 fecha_ingreso: form.fecha_ingreso || hoy(),
                 fecha_entrega: form.fecha_entrega || null,
                 sede_id: sedePorDefecto || null,
@@ -597,8 +592,7 @@ function PedidosPage() {  const navigate = useNavigate();
                           setClientesSelectorAbierto(false);
                         }}
                         className="flex w-full items-center justify-between gap-3 border-t border-border px-3 py-2.5 text-left hover:bg-gold/5"
-                      >
-                        <span className="min-w-0 truncate text-sm font-medium text-foreground">{cliente.nombre}</span>
+                      >                        <span className="min-w-0 truncate text-sm font-medium text-foreground">{cliente.nombre}</span>
                         {cliente.telefono ? (
                           <span className="shrink-0 text-xs text-muted-foreground">{cliente.telefono}</span>
                         ) : null}
@@ -643,8 +637,8 @@ function PedidosPage() {  const navigate = useNavigate();
                   </label>
                 </div>
               )}
-              <p className="mt-1 text-[10px] text-muted-foreground">
               )}
+              <p className="mt-1 text-[10px] text-muted-foreground">
                 Puedes crear el pedido hoy y registrar al cliente después. Si no lo registras todavía, quedará como pendiente sin bloquear el flujo.
               </p>
             </div>
@@ -697,8 +691,7 @@ function PedidosPage() {  const navigate = useNavigate();
                   className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-3 text-sm text-foreground"
                 />
               </label>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Contrato externo <span className="normal-case tracking-normal">(opcional)</span>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">                Contrato externo <span className="normal-case tracking-normal">(opcional)</span>
                 <input
                   value={form.contrato_externo}
                   onChange={(e) => setForm({ ...form, contrato_externo: e.target.value })}
@@ -797,8 +790,7 @@ function PedidosPage() {  const navigate = useNavigate();
         {soloSusAreas && !busca.trim() ? (
           <p className="px-6 pt-3 text-[11px] text-muted-foreground">
             Ves los pedidos que están en tus áreas: {misAreas.join(", ")}. Usa el buscador para
-            encontrar pedidos que ya se movieron a otra área.
-          </p>
+            encontrar pedidos que ya se movieron a otra área.          </p>
         ) : null}
 
         <div className="block divide-y divide-border lg:hidden">
@@ -897,8 +889,7 @@ function PedidosPage() {  const navigate = useNavigate();
                   (h, i) => (
                     <th
                       key={h || i}
-                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${
-                        i >= 5 ? "text-right" : ""
+                      className={`px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground ${                        i >= 5 ? "text-right" : ""
                       }`}
                     >
                       {h}
