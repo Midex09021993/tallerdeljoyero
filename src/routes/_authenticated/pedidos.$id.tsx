@@ -23,6 +23,7 @@ import { fmtFecha } from "@/lib/utils";
 import { leerMetadatosEnlace } from "@/lib/enlaces.functions";
 import { urlEmbedVisor } from "@/lib/visor-embed";
 import { VisorIframe } from "@/components/VisorIframe";
+import { FichaAurum } from "@/components/FichaDorada";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 import {
@@ -644,7 +645,7 @@ function FichaPedido() {
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <div className="relative overflow-hidden rounded-[24px] border border-gold/25 bg-card p-6 text-foreground shadow-raised">
+        <FichaAurum className="rounded-[24px] p-6 shadow-raised">
           <div className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold/10 blur-3xl" />
           <div className="relative">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -696,7 +697,7 @@ function FichaPedido() {
               </Link>
             </div>
           </div>
-        </div>
+        </FichaAurum>
 
         <div className="rounded-[24px] border border-border bg-card p-5 shadow-card">
           <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Control rápido</p>
