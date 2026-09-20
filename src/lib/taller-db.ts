@@ -489,7 +489,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, sedes(nombre)";
+  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 const CAMPOS_PEDIDO_COMERCIAL =
   "pedido_id, telefono, importe, a_cuenta, saldo, cotizacion_detalles, especificaciones_comerciales, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at";
@@ -604,10 +604,10 @@ export function usePedidos() {
           cantidad_piezas: Number(p["cantidad_piezas"]) || 1,
           piedras: textoCampo(p, "piedras"),
           peso_estimado: textoCampo(p, "peso_estimado"),
-          corte_texto: "",
-          corte_tipografia: "",
-          corte_ubicacion: "",
-          corte_observaciones: "",
+          corte_texto: textoCampo(p, "corte_texto"),
+          corte_tipografia: textoCampo(p, "corte_tipografia"),
+          corte_ubicacion: textoCampo(p, "corte_ubicacion"),
+          corte_observaciones: textoCampo(p, "corte_observaciones"),
           ventas_estado: normalizarEstadoVentas(textoCampo(comercial, "ventas_estado")),
           packing_estado: textoCampo(comercial, "packing_estado", "Pendiente"),
           medio_envio: textoCampo(comercial, "medio_envio"),
