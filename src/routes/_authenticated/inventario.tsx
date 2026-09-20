@@ -23,7 +23,7 @@ import {
   useCrearMaterial,
   useInventario,
   useMovimientosInventario,
-  usePedidos,
+  usePedidosSelector,
   useRegistrarMovimiento,
 } from "@/lib/taller-db";
 
@@ -535,7 +535,7 @@ function Movimientos({
   puedeTodo: boolean;
 }) {
   const { data: movimientos = [] } = useMovimientosInventario();
-  const { data: pedidos = [] } = usePedidos();
+  const { data: pedidos = [] } = usePedidosSelector();
   const registrar = useRegistrarMovimiento();
   const areasDisponibles = puedeTodo || areasUsuario.length === 0 ? [...AREAS] : areasUsuario;
   const [form, setForm] = useState({
