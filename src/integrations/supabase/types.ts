@@ -794,6 +794,7 @@ export type Database = {
           area_desde: string
           cantidad_piezas: number
           cliente: string
+          cliente_id: string | null
           contrato: string
           contrato_id: string | null
           corte_observaciones: string
@@ -851,6 +852,7 @@ export type Database = {
           area_desde?: string
           cantidad_piezas?: number
           cliente: string
+          cliente_id?: string | null
           contrato?: string
           contrato_id?: string | null
           corte_observaciones?: string
@@ -908,6 +910,7 @@ export type Database = {
           area_desde?: string
           cantidad_piezas?: number
           cliente?: string
+          cliente_id?: string | null
           contrato?: string
           contrato_id?: string | null
           corte_observaciones?: string
@@ -960,6 +963,13 @@ export type Database = {
           ventas_estado?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pedidos_contrato_id_fkey"
             columns: ["contrato_id"]
