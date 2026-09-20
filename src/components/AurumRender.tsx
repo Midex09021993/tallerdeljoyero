@@ -8,7 +8,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView } from "../lib/aurum/camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
@@ -116,7 +116,7 @@ export function AurumRender() {
   }, []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("producto"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
+  const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -302,8 +302,8 @@ export function AurumRender() {
         nodo
       );
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
-      const presetInicial = sceneController.apply("producto");
-      const photoInicial = getAurumPhotographicProfile("producto");
+      const presetInicial = sceneController.apply("ijewelReference");
+      const photoInicial = getAurumPhotographicProfile("ijewelReference");
       // Product scene starts with the same independent Gem Environment used by
       // the active photographic profile, rather than inheriting the metal HDRI.
       cargarEntornoGema(
