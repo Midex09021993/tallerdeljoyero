@@ -195,7 +195,8 @@ export function VectorizadorLaser() {
     setImageUrl((previous) => {
       if (previous) URL.revokeObjectURL(previous);
       return url;
-    });\n    setSourceFile(file);
+    });
+    setSourceFile(file);
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(1, MAX_SIZE / Math.max(img.naturalWidth, img.naturalHeight));
