@@ -151,6 +151,15 @@ export function createAurumLightingController(
       });
 
       this.create();
+      if (id === "ijewelReference") {
+        // The supplied WebGi reference has no active randomized/directional light
+        // plugin; the reference illumination is environment-driven. Keep the
+        // studio lights available for every other AURUM scene, but disable them
+        // in the calibration scene so they cannot contaminate the comparison.
+        Object.values(lights).forEach((light:any) => {
+          if (light) light.visible = false;
+        });
+      }
     },
     update(patch) {
       Object.assign(config, patch);
