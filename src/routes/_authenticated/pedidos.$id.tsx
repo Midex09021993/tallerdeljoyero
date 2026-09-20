@@ -1100,21 +1100,6 @@ function FichaPedido() {
                       ["Notas generales", pedido.notas || "Sin notas técnicas."],
                       ["Material", pedido.material || "—"],
                       ["Peso estimado", pedido.peso_estimado || "—"],
-                      ["Packing", pedido.packing_estado || "Pendiente"],
-                      ["Listo para entrega", fmtFecha(pedido.fecha_listo_entrega) ?? "—"],
-                      [
-                        "Observación listo",
-                        pedido.listo_entrega_observaciones || "Sin observaciones.",
-                      ],
-                      ["Fecha de envío", fmtFecha(pedido.fecha_envio) ?? "—"],
-                      ["Fecha entregado", fmtFecha(pedido.fecha_entregado) ?? "—"],
-                      ["Recibe / contacto", pedido.receptor_envio || "—"],
-                      ["Nota de envío", pedido.notas_envio || "—"],
-                      ["Nota de entrega", pedido.notas_entrega || pedido.notas_ventas || "—"],
-                      [
-                        "Última actualización ventas",
-                        fmtFecha(pedido.ventas_actualizado_en) ?? "—",
-                      ],
                     ] as const
                   ).map(([label, valor]) => (
                     <div key={label}>
