@@ -19,7 +19,7 @@ export type AurumPhotographicProfile = {
   post:{
     ssao:boolean; ssaoIntensity:number;
     bloom:boolean; bloomIntensity:number; bloomThreshold:number;
-    lut:boolean; lutIntensity:number;
+    lut:boolean; lutIntensity:number; gradeEnabled?:boolean; gradeContrast?:number; gradeSaturation?:number;
     taa?:boolean; progressiveFrameCount?:number; ssr?:boolean; ssrIntensity?:number; ssrMaxDistance?:number; ssrThickness?:number; dof?:boolean; dofAperture?:number; dofMaxBlur?:number;
     vignette?:boolean; vignetteDarkness?:number;
   };
