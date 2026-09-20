@@ -253,7 +253,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // preserve and activate that authored reference instead of replacing it with
     // a generic family preset. This is what lets DAROS-grade source materials
     // survive the AURUM material application pipeline.
-    applyAurumIJEWELReferenceFromMaterial(next);
+    applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
