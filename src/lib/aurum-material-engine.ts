@@ -301,12 +301,14 @@ export const applyAurumIJEWELGemParameters=(material:any,source:AurumIJEWELGemPa
   material.ior=Math.max(1.01,Number(p.refractiveIndex));
   material.dispersion=Math.max(0,Number(p.dispersion));
   material.envMapIntensity=Math.max(0,Number(p.environmentIntensity));
+  if (material.envMapRotation?.set) material.envMapRotation.set(0,Number(p.environmentRotationOffset??0),0);
   material.userData={
     ...(material.userData??{}),
     aurumIJEWELParameters:p,
     aurumIJEWELActive:true,
     aurumIJEWELSourceTransmission:Number(p.transmissionParameter),
     aurumIJEWELRayBounces:Math.max(1,Math.floor(Number(p.rayBounces))),
+    aurumIJEWELOrientedEnvMap:Number(p.diamondOrientedEnvMap??0),
   };
   material.needsUpdate=true;
   return material;
