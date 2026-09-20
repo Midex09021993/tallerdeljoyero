@@ -79,6 +79,128 @@ export type Database = {
           },
         ]
       }
+      compra_detalles: {
+        Row: {
+          cantidad: number
+          cantidad_recibida: number
+          compra_id: string
+          costo_unitario: number
+          created_at: string
+          descripcion: string
+          id: string
+          impuesto: number
+          material_id: string
+          unidad: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad: number
+          cantidad_recibida?: number
+          compra_id: string
+          costo_unitario: number
+          created_at?: string
+          descripcion?: string
+          id?: string
+          impuesto?: number
+          material_id: string
+          unidad?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          cantidad_recibida?: number
+          compra_id?: string
+          costo_unitario?: number
+          created_at?: string
+          descripcion?: string
+          id?: string
+          impuesto?: number
+          material_id?: string
+          unidad?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compra_detalles_compra_id_fkey"
+            columns: ["compra_id"]
+            isOneToOne: false
+            referencedRelation: "compras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compra_detalles_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          estado: string
+          fecha_emision: string
+          fecha_entrega: string | null
+          id: string
+          impuestos: number
+          moneda: string
+          notas: string
+          numero: string
+          proveedor_nombre: string
+          proveedor_participante_id: string | null
+          sede_id: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_emision?: string
+          fecha_entrega?: string | null
+          id?: string
+          impuestos?: number
+          moneda?: string
+          notas?: string
+          numero: string
+          proveedor_nombre?: string
+          proveedor_participante_id?: string | null
+          sede_id: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: string
+          fecha_emision?: string
+          fecha_entrega?: string | null
+          id?: string
+          impuestos?: number
+          moneda?: string
+          notas?: string
+          numero?: string
+          proveedor_nombre?: string
+          proveedor_participante_id?: string | null
+          sede_id?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       config_sistema: {
         Row: {
           clave: string
@@ -2473,6 +2595,7 @@ export type Database = {
         }[]
       }
       recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
+      recibir_compra: { Args: { _compra_id: string }; Returns: Json }
       security_scanner_bola_lab_lookup: {
         Args: { target_id: string }
         Returns: {
