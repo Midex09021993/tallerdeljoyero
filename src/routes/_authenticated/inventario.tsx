@@ -97,7 +97,7 @@ function InventarioPage() {
     material_id: "", tipo: "entrada", cantidad: "", motivo: "", referencia_externa: "",
   });
   const [joyaForm, setJoyaForm] = useState({
-    codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible",
+    nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible",
   });
 
   async function cargar() {
@@ -256,17 +256,21 @@ function InventarioPage() {
 
   async function guardarJoya(e: FormEvent) {
     e.preventDefault();
-    if (!sedeId || !joyaForm.codigo.trim() || !joyaForm.nombre.trim()) return;
+    if (!sedeId || !joyaForm.nombre.trim()) return;
     setGuardando(true);
     const r = await supabase.from("inventario_joyas").insert({
-      sede_id: sedeId, codigo: joyaForm.codigo.trim(), nombre: joyaForm.nombre.trim(),
+      sede_id: sedeId, codigo: "", nombre: joyaForm.nombre.trim(),
       metal: joyaForm.metal.trim(), ley: joyaForm.ley.trim(),
       peso: joyaForm.peso ? Number(joyaForm.peso) : null, talla: joyaForm.talla.trim(),
       piedras: joyaForm.piedras.trim(), cantidad: Number(joyaForm.cantidad) || 1,
       estado: joyaForm.estado, origen: "app",
     });
     if (r.error) toast.error(r.error.message);
-    else { toast.success("Joya agregada"); setModal(null); await cargar(); }
+    else {
+      toast.success(r.data?.codigo ? `Joya creada · ${r.data.codigo}` : "Joya agregada");
+      setModal(null);
+      await cargar();
+    }
     setGuardando(false);
   }
 
@@ -418,7 +422,7 @@ function InventarioPage() {
 
         {tab === "joyas" ? (
           <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
-            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p><h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2><p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p></div>{esAdmin ? <button type="button" onClick={() => { setJoyaForm({ codigo: "", nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}</div>
+            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p><h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2><p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p></div>{esAdmin ? <button type="button" onClick={() => { setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}</div>
             <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Código", "Joya", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
               {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyas.map((j) => <tr key={j.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4 text-xs font-semibold">{j.codigo}</td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
             </tbody></table></TableWrap>
@@ -448,7 +452,11 @@ function InventarioPage() {
           <Actions saving={guardando} cancel={() => setModal(null)} />
         </form> : null}
         {modal === "joya" ? <form onSubmit={guardarJoya} className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2"><Field label="Código" value={joyaForm.codigo} onChange={(v) => setJoyaForm({ ...joyaForm, codigo: v })} required /><Field label="Nombre de pieza" value={joyaForm.nombre} onChange={(v) => setJoyaForm({ ...joyaForm, nombre: v })} required /></div>
+          <div className="rounded-xl border border-gold/15 bg-gold/[.025] px-3.5 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-gold/80">Identificación automática</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">El sistema asignará un código único según la sede, fecha de registro y pieza. No necesitas inventar ni escribir el código.</p>
+          </div>
+          <Field label="Nombre de pieza" value={joyaForm.nombre} onChange={(v) => setJoyaForm({ ...joyaForm, nombre: v })} required /></div>
           <div className="grid gap-3 sm:grid-cols-2"><Field label="Metal" value={joyaForm.metal} onChange={(v) => setJoyaForm({ ...joyaForm, metal: v })} /><Field label="Ley" value={joyaForm.ley} onChange={(v) => setJoyaForm({ ...joyaForm, ley: v })} /></div>
           <div className="grid gap-3 sm:grid-cols-3"><Field label="Peso (g)" value={joyaForm.peso} onChange={(v) => setJoyaForm({ ...joyaForm, peso: v })} type="number" step="0.001" inputMode="decimal" /><Field label="Talla" value={joyaForm.talla} onChange={(v) => setJoyaForm({ ...joyaForm, talla: v })} /><Field label="Cantidad" value={joyaForm.cantidad} onChange={(v) => setJoyaForm({ ...joyaForm, cantidad: v })} type="number" step="1" inputMode="numeric" /></div>
           <Field label="Piedras" value={joyaForm.piedras} onChange={(v) => setJoyaForm({ ...joyaForm, piedras: v })} />
