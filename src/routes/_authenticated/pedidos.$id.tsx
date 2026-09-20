@@ -512,6 +512,9 @@ function FichaPedido() {
   const [guardandoPlan, setGuardandoPlan] = useState(false);
   const [guardandoOrden, setGuardandoOrden] = useState(false);
   const [transicionandoOrden, setTransicionandoOrden] = useState(false);
+  const [guardandoCalidad, setGuardandoCalidad] = useState(false);
+  const [resultadoCalidad, setResultadoCalidad] = useState<"aprobado" | "observado" | "rechazado">("aprobado");
+  const [motivoCalidad, setMotivoCalidad] = useState("");
   const [guardandoEntrega, setGuardandoEntrega] = useState(false);
   const [materialEntrega, setMaterialEntrega] = useState("");
   const [cantidadEntrega, setCantidadEntrega] = useState("");
@@ -779,6 +782,43 @@ function FichaPedido() {
       toast.error(error instanceof Error ? error.message : "No se pudo cambiar el estado de producción");
     } finally {
       setTransicionandoOrden(false);
+    }
+  }
+
+  async function verificarPiezaTerminada(piezaId: string, nuevoEstado: "verificada" | "liberada" | "rechazada") {
+    try {
+      const { error } = await supabase.rpc("verificar_pieza_terminada", { _pieza_id: piezaId, _nuevo_estado: nuevoEstado });
+      if (error) throw error;
+      toast.success(nuevoEstado === "verificada" ? "Pieza verificada" : nuevoEstado === "liberada" ? "Pieza liberada" : "Pieza rechazada");
+      void qc.invalidateQueries({ queryKey: ["piezas-terminadas-op", ordenProduccion?.id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo actualizar la pieza");
+    }
+  }
+
+  async function registrarInspeccionFinal(e: FormEvent) {
+    e.preventDefault();
+    if (!ordenProduccion || ordenProduccion.estado !== "control_calidad" || guardandoCalidad) return;
+    setGuardandoCalidad(true);
+    try {
+      const { error } = await supabase.rpc("registrar_inspeccion_calidad", {
+        _orden_id: ordenProduccion.id,
+        _resultado: resultadoCalidad,
+        _tipo: "inspeccion_final",
+        _motivo: motivoCalidad.trim(),
+        _descripcion: resultadoCalidad === "aprobado" ? "Inspección final conforme" : "Inspección final con observaciones",
+        _evidencia_url: null,
+      });
+      if (error) throw error;
+      toast.success(resultadoCalidad === "aprobado" ? "Calidad aprobada y OP liberada" : "Resultado de calidad registrado");
+      setMotivoCalidad("");
+      void qc.invalidateQueries({ queryKey: ["controles-calidad", id] });
+      void qc.invalidateQueries({ queryKey: ["orden-produccion-pedido", id] });
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar la inspección");
+    } finally {
+      setGuardandoCalidad(false);
     }
   }
 
@@ -1098,6 +1138,7 @@ function FichaPedido() {
           <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Control de calidad</p><h2 className="mt-1 text-lg font-semibold">Inspecciones y liberación</h2><p className="mt-1 text-xs text-muted-foreground">Historial permanente de aprobaciones, observaciones, rechazos y retrabajos.</p></div>
           <span className="rounded-full bg-surface-muted px-3 py-1.5 text-[10px] font-bold">{controlesCalidad.length} registro{controlesCalidad.length===1?"":"s"}</span>
         </div>
+        {ordenProduccion?.estado === "control_calidad" ? <form onSubmit={registrarInspeccionFinal} className="mt-4 rounded-2xl border border-info/20 bg-info/5 p-4"><div className="grid gap-3 sm:grid-cols-[180px_1fr_auto]"><select value={resultadoCalidad} onChange={e => setResultadoCalidad(e.target.value as typeof resultadoCalidad)} className="h-10 rounded-xl border border-border bg-background px-3 text-xs"><option value="aprobado">Aprobado</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option></select><input value={motivoCalidad} onChange={e => setMotivoCalidad(e.target.value)} placeholder="Motivo / observación de inspección..." className="h-10 rounded-xl border border-border bg-background px-3 text-xs" required={resultadoCalidad !== "aprobado"} /><button type="submit" disabled={guardandoCalidad} className="rounded-xl bg-info px-4 py-2 text-[10px] font-bold text-info-foreground disabled:opacity-50">{guardandoCalidad ? "Registrando…" : "Registrar inspección"}</button></div>{resultadoCalidad === "aprobado" ? <p className="mt-2 text-[10px] text-muted-foreground">Al aprobar, la OP solo terminará si existe una pieza verificada o liberada.</p> : null}</form> : null}
         <div className="mt-4 space-y-2">
           {controlesCalidad.slice(0,6).map((c) => <div key={c.id} className="rounded-xl border border-border bg-background p-3"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-semibold">{c.tipo.replace("_"," ")}</span><span className="rounded-full bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase">{c.resultado}</span></div>{c.motivo ? <p className="mt-1 text-xs text-muted-foreground">{c.motivo}</p> : null}</div>)}
           {controlesCalidad.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay inspecciones registradas.</p> : null}
@@ -1106,7 +1147,7 @@ function FichaPedido() {
 
       <div className="mb-6 rounded-2xl border border-gold/25 bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">Pieza terminada</p><h2 className="mt-1 text-lg font-semibold">Recepción y verificación física</h2><p className="mt-1 text-xs text-muted-foreground">Registra la pieza fabricada y conserva estimados frente a datos reales.</p></div>{ordenProduccion ? <button type="button" onClick={() => void registrarPiezaTerminada()} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground">Registrar pieza</button> : null}</div>
-        <div className="mt-4 space-y-2">{piezasTerminadas.map((p) => <div key={p.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-semibold">{p.numero_pieza}</p><p className="text-[10px] text-muted-foreground">{p.cantidad} pieza{p.cantidad===1?"":"s"} · {p.metal_real || p.metal_estimado || "Metal por verificar"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{p.estado}</span></div><div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"><span>Peso est. <b>{p.peso_estimado ?? "—"} g</b></span><span>Peso real <b>{p.peso_final ?? "Pendiente"} g</b></span><span>Piedras <b>{p.piedras_reales || p.piedras_estimadas || "—"}</b></span><span>Metal <b>{p.metal_real || p.metal_estimado || "—"}</b></span></div></div>)}{piezasTerminadas.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay pieza terminada registrada.</p> : null}</div>
+        <div className="mt-4 space-y-2">{piezasTerminadas.map((p) => <div key={p.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-semibold">{p.numero_pieza}</p><p className="text-[10px] text-muted-foreground">{p.cantidad} pieza{p.cantidad===1?"":"s"} · {p.metal_real || p.metal_estimado || "Metal por verificar"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{p.estado}</span></div><div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"><span>Peso est. <b>{p.peso_estimado ?? "—"} g</b></span><span>Peso real <b>{p.peso_final ?? "Pendiente"} g</b></span><span>Piedras <b>{p.piedras_reales || p.piedras_estimadas || "—"}</b></span><span>Metal <b>{p.metal_real || p.metal_estimado || "—"}</b></span></div><div className="mt-3 flex justify-end gap-2">{p.estado === "recibida" || p.estado === "pendiente" ? <button type="button" onClick={() => void verificarPiezaTerminada(p.id, "verificada")} className="rounded-lg border border-success/25 bg-success/10 px-3 py-1.5 text-[10px] font-bold text-success">Verificar pieza</button> : null}{p.estado === "verificada" ? <button type="button" onClick={() => void verificarPiezaTerminada(p.id, "liberada")} className="rounded-lg bg-success px-3 py-1.5 text-[10px] font-bold text-success-foreground">Liberar pieza</button> : null}{p.estado === "recibida" || p.estado === "pendiente" ? <button type="button" onClick={() => void verificarPiezaTerminada(p.id, "rechazada")} className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-1.5 text-[10px] font-bold text-destructive">Rechazar</button> : null}</div></div>)}{piezasTerminadas.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay pieza terminada registrada.</p> : null}</div>
       </div>
 
       <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-card">
