@@ -972,13 +972,18 @@ async function importarPedidosCsv(registros: CsvRegistro[]) {
       ...fila
     }) => fila,
   );
-  const { error: errorBase } = await supabase.from("pedidos").upsert(base);
+  const { data: pedidosInsertados, error: errorBase } = await supabase
+    .from("pedidos")
+    .upsert(base)
+    .select("id, referencia");
   if (errorBase) throw errorBase;
 
+  const idsPorReferencia = new Map(
+    (pedidosInsertados ?? []).map((pedido) => [pedido.referencia, pedido.id]),
+  );
   const comerciales = filas
-    .filter((fila) => fila.id)
     .map((fila) => ({
-      pedido_id: fila.id,
+      pedido_id: fila.id ?? idsPorReferencia.get(fila.referencia) ?? "",
       telefono: fila.telefono,
       importe: fila.importe,
       a_cuenta: 0,
