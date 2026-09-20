@@ -30,10 +30,14 @@ import { Route as AuthenticatedMigracionRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
+import { Route as AuthenticatedPedidos2RouteImport } from './routes/_authenticated/pedidos-2'
+import { Route as AuthenticatedPedidos2IdRouteImport } from './routes/_authenticated/pedidos-2.$id'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
+import { Route as AuthenticatedVentas2RouteImport } from './routes/_authenticated/ventas-2'
+import { Route as AuthenticatedVentas2IdRouteImport } from './routes/_authenticated/ventas-2.$id'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
@@ -151,6 +155,16 @@ const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   path: '/pedidos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPedidos2Route = AuthenticatedPedidos2RouteImport.update({
+  id: '/pedidos-2',
+  path: '/pedidos-2',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPedidos2IdRoute = AuthenticatedPedidos2IdRouteImport.update({
+  id: '/pedidos-2/$id',
+  path: '/pedidos-2/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -170,6 +184,16 @@ const AuthenticatedVectorizadorLaserRoute =
 const AuthenticatedVentasRoute = AuthenticatedVentasRouteImport.update({
   id: '/ventas',
   path: '/ventas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVentas2Route = AuthenticatedVentas2RouteImport.update({
+  id: '/ventas-2',
+  path: '/ventas-2',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVentas2IdRoute = AuthenticatedVentas2IdRouteImport.update({
+  id: '/ventas-2/$id',
+  path: '/ventas-2/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedContratosIdRoute =
@@ -238,13 +262,18 @@ export interface FileRoutesByFullPath {
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
+  '/pedidos-2': typeof AuthenticatedPedidos2Route
+  '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRoute
+  '/ventas-2': typeof AuthenticatedVentas2Route
+  '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -275,6 +304,8 @@ export interface FileRoutesByTo {
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRoute
+  '/ventas-2': typeof AuthenticatedVentas2Route
+  '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -307,13 +338,18 @@ export interface FileRoutesById {
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
+  '/_authenticated/pedidos-2': typeof AuthenticatedPedidos2Route
+  '/_authenticated/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRoute
+  '/_authenticated/ventas-2': typeof AuthenticatedVentas2Route
+  '/_authenticated/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/_authenticated/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -585,6 +621,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pedidos-2': {
+      id: '/_authenticated/pedidos-2'
+      path: '/pedidos-2'
+      fullPath: '/pedidos-2'
+      preLoaderRoute: typeof AuthenticatedPedidos2RouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos-2/$id': {
+      id: '/_authenticated/pedidos-2/$id'
+      path: '/pedidos-2/$id'
+      fullPath: '/pedidos-2/$id'
+      preLoaderRoute: typeof AuthenticatedPedidos2IdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -611,6 +661,20 @@ declare module '@tanstack/react-router' {
       path: '/ventas'
       fullPath: '/ventas'
       preLoaderRoute: typeof AuthenticatedVentasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ventas-2': {
+      id: '/_authenticated/ventas-2'
+      path: '/ventas-2'
+      fullPath: '/ventas-2'
+      preLoaderRoute: typeof AuthenticatedVentas2RouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ventas-2/$id': {
+      id: '/_authenticated/ventas-2/$id'
+      path: '/ventas-2/$id'
+      fullPath: '/ventas-2/$id'
+      preLoaderRoute: typeof AuthenticatedVentas2RouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/contratos/$id': {
@@ -716,10 +780,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
+  AuthenticatedPedidos2Route: typeof AuthenticatedPedidos2Route
+  AuthenticatedPedidos2IdRoute: typeof AuthenticatedPedidos2IdRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRoute
+  AuthenticatedVentas2Route: typeof AuthenticatedVentas2Route
+  AuthenticatedVentas2IdRoute: typeof AuthenticatedVentas2IdRoute
   AuthenticatedContratosIdRoute: typeof AuthenticatedContratosIdRoute
   AuthenticatedTrabajosIdRoute: typeof AuthenticatedTrabajosIdRoute
 }
@@ -741,10 +809,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
+  AuthenticatedPedidos2Route: AuthenticatedPedidos2Route,
+  AuthenticatedPedidos2IdRoute: AuthenticatedPedidos2IdRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRoute,
+  AuthenticatedVentas2Route: AuthenticatedVentas2Route,
+  AuthenticatedVentas2IdRoute: AuthenticatedVentas2IdRoute,
   AuthenticatedContratosIdRoute: AuthenticatedContratosIdRoute,
   AuthenticatedTrabajosIdRoute: AuthenticatedTrabajosIdRoute,
 }
