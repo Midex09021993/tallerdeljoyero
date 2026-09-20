@@ -67,6 +67,7 @@ export async function createAurumPostPipeline(
         width:Math.max(1,renderer.domElement.width),
         height:Math.max(1,renderer.domElement.height),
         selects:[],
+        groundReflector:null,
       });
       ssrPass.output=SSRPass.OUTPUT.SSR;
       ssrPass.opacity=1;

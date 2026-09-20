@@ -74,7 +74,7 @@ export const AURUM_HDRI_LIBRARY:AurumHdriResource[]=[  {id:"ijewelMetal003",name
 
 /** Escena maestra para comparar materiales bajo condiciones constantes. No cambia el visor público. */
 /** Reference scene from the supplied iJewel/WebGi configuration. Use this for side-by-side material calibration. */
-export const AURUM_IJEWEL_REFERENCE_SCENE: AurumScenePreset = AURUM_SCENE_PRESETS.ijewelReference;
+export const AURUM_IJEWEL_REFERENCE_SCENE: AurumScenePreset = AURUM_SCENE_PRESETS["ijewelReference"]!;
 
 export const AURUM_MATERIAL_CALIBRATION_SCENE: AurumScenePreset = {
   id:"material-calibration",

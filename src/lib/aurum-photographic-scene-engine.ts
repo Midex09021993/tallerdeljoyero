@@ -20,7 +20,7 @@ export type AurumPhotographicProfile = {
   lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference";
   post:{
     ssao:boolean; ssaoIntensity:number; ssaoFalloff?:number;
-    bloom:boolean; bloomIntensity:number; bloomThreshold:number;
+    bloom:boolean; bloomIntensity:number; bloomThreshold:number; bloomRadius?:number;
     lut:boolean; lutIntensity:number; gradeEnabled?:boolean; gradeContrast?:number; gradeSaturation?:number;
     taa?:boolean; progressiveFrameCount?:number; ssr?:boolean; ssrIntensity?:number; ssrMaxDistance?:number; ssrThickness?:number; dof?:boolean; dofAperture?:number; dofMaxBlur?:number;
     vignette?:boolean; vignetteDarkness?:number;

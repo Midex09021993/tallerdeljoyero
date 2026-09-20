@@ -273,9 +273,6 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijAccum*ijReflect,ijGeometry);\n        ` : ``}
         #endif
         #endif
-      `
-    );
-
       // Use the physical surface normal and view direction already present
         // in the PBR pipeline. No synthetic RGB sparkle or emissive overlay.
         vec3 aurumN=normalize(normal);
