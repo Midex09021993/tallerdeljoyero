@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
+import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -46,7 +46,8 @@ function ClientesPage() {
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "" });
 
   const cargar = async () => {
-    const { data } = await supabase.from("clientes").select("id,nombre,telefono,email,estado,created_at").order("nombre");
+    if (!sesion?.sede?.id) return;
+    const { data } = await supabase.from("clientes").select("id,nombre,telefono,email,estado,created_at").eq("sede_id", sesion.sede.id).order("nombre");
     if (data) {
       setClientes(data);
       if (seleccionado) setSeleccionado(data.find((c) => c.id === seleccionado.id) ?? null);
@@ -93,7 +94,8 @@ function ClientesPage() {
     if (!form.nombre.trim()) return;
     setGuardando(true);
     try {
-      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null };
+      if (!sesion?.sede?.id) throw new Error("No hay una sede activa para guardar el cliente.");
+      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, sede_id: sesion.sede.id };
       const result = seleccionado
         ? await supabase.from("clientes").update(payload).eq("id", seleccionado.id)
         : await supabase.from("clientes").insert(payload);
@@ -101,7 +103,7 @@ function ClientesPage() {
       setModal(false);
       await cargar();
       if (!seleccionado) {
-        const { data } = await supabase.from("clientes").select("id,nombre,telefono,email,estado,created_at").eq("nombre", payload.nombre).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        const { data } = await supabase.from("clientes").select("id,nombre,telefono,email,estado,created_at").eq("sede_id", sesion.sede.id).eq("nombre", payload.nombre).order("created_at", { ascending: false }).limit(1).maybeSingle();
         if (data) setSeleccionado(data);
       }
     } catch (error) {
@@ -215,7 +217,7 @@ function ClientesPage() {
                     <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-lg font-semibold text-gold shadow-[0_10px_30px_-15px_hsl(var(--gold)/0.8)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
                     <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-muted-foreground">Relación comercial · Aurum Lab</p></div>
                   </div>
-                  <span className="rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-success">{seleccionado.estado}</span>
+                  <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider ${seleccionado.estado === "activo" ? "border-success/30 bg-success/10 text-success" : "border-border bg-surface-muted text-muted-foreground"}`}>{seleccionado.estado}</span>
                 </div>
               </div>
               <div className="p-5">
@@ -225,7 +227,7 @@ function ClientesPage() {
                 </div>
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <Link to="/pedidos" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pedidos</span><ShoppingBag className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{pedidos.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Pedidos registrados</span></Link>
-                  <button type="button" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Cotizaciones registradas</span></button>
+                  <Link to="/cotizaciones" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Ver cotizaciones</span></Link>
                 </div>
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
