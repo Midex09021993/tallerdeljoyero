@@ -891,46 +891,25 @@ function FichaPedido() {
         </Panel>
       </div>
 
-      {puedeVerComercial ? (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-card">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-sunken px-5 py-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Origen comercial</p>
-              <p className="mt-1 text-sm font-semibold">Cliente → proyecto → cotización → pedido</p>
-            </div>
-            <span className="rounded-full border border-border bg-card px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Pedido central
+      <FichaAurum className="mb-6 p-5" interactiva>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Contexto comercial</p>
+            <p className="mt-1 text-sm font-semibold">Relaciones del pedido</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[10px] font-semibold">
+            <span className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-gold-deep">
+              {contextoComercial?.cliente?.nombre ?? pedido.cliente ?? "Cliente pendiente"}
+            </span>
+            <span className="rounded-full border border-border bg-surface-sunken px-3 py-1 text-muted-foreground">
+              {contextoComercial?.cotizacion ? `Cotización ${contextoComercial.cotizacion.numero}` : tieneCotizacionExterna ? "Cotización externa" : "Pedido directo"}
+            </span>
+            <span className="rounded-full border border-border bg-surface-sunken px-3 py-1 text-muted-foreground">
+              {pedido.contrato || (tieneContratoExterno ? "Contrato externo" : "Sin contrato")}
             </span>
           </div>
-          <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4">
-            <div className="bg-card p-4">
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</p>
-              <p className="mt-1 truncate text-sm font-semibold">{contextoComercial?.cliente?.nombre ?? pedido.cliente ?? "—"}</p>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{contextoComercial?.cliente?.telefono || contextoComercial?.cliente?.email || "Sin contacto"}</p>
-            </div>
-            <div className="bg-card p-4">
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Proyecto</p>
-              <p className="mt-1 truncate text-sm font-semibold">{contextoComercial?.proyecto ? `${contextoComercial.proyecto.codigo} · ${contextoComercial.proyecto.nombre}` : "Sin proyecto vinculado"}</p>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{contextoComercial?.proyecto?.metal || pedido.material || "—"}{contextoComercial?.proyecto?.ley ? ` · ${contextoComercial.proyecto.ley}` : ""}</p>
-            </div>
-            <div className="bg-card p-4">
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cotización</p>
-              {contextoComercial?.cotizacion ? (
-                <Link to="/cotizaciones/$id" params={{ id: contextoComercial.cotizacion.id }} className="mt-1 block truncate text-sm font-semibold text-gold-deep hover:underline">
-                  {contextoComercial.cotizacion.numero} · v{contextoComercial.cotizacion.version}
-                </Link>
-              ) : <p className="mt-1 text-sm font-semibold">Sin cotización vinculada</p>}
-              <p className="mt-1 truncate text-xs text-muted-foreground">{contextoComercial?.cotizacion?.estado ?? "Pedido directo"}</p>
-            </div>
-            <div className="bg-card p-4">
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Producción</p>
-              <p className="mt-1 truncate text-sm font-semibold">{normalizarArea(pedido.area_actual)}</p>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{pedido.estado} · {trabajosPedido.length} trabajo{trabajosPedido.length === 1 ? "" : "s"}</p>
-            </div>
-          </div>
         </div>
-      ) : null}
-
+      </FichaAurum>
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Panel titulo="Ficha rápida">
