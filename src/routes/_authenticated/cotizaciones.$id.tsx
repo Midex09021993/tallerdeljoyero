@@ -68,7 +68,7 @@ function CotizacionDetallePage() {
       setError(qError?.message ?? "No se encontró la cotización.");
       setCargando(false); return;
     }
-    const [{ data: d }, { data: c }, { data: p }] = await Promise.all([
+    const [{ data: d }, { data: c }, { data: p }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
       supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
       q.cliente_id
         ? supabase.from("clientes").select("id,nombre,telefono,email").eq("id", q.cliente_id).maybeSingle()
@@ -76,8 +76,17 @@ function CotizacionDetallePage() {
       q.proyecto_joya_id
         ? supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras").eq("id", q.proyecto_joya_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      supabase.from("pedidos").select("id,contrato_id,contrato").eq("cotizacion_id", id).maybeSingle(),
+      supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
-    setCotizacion(q); setDetalles(d ?? []); setCliente(c ?? null); setProyecto(p ?? null); setCargando(false);
+    setCotizacion(q);
+    setDetalles(d ?? []);
+    setCliente(c ?? null);
+    setProyecto(p ?? null);
+    setPedidoId(pedidoExistente?.id ?? null);
+    setContratoId(contratoExistente?.id ?? pedidoExistente?.contrato_id ?? null);
+    setContratoNumero(contratoExistente?.numero ?? pedidoExistente?.contrato ?? null);
+    setCargando(false);
   };
 
   useEffect(() => { void cargar(); }, [id]);
