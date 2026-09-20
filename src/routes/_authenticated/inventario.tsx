@@ -50,7 +50,7 @@ type ImportacionJoya = { codigo: string; nombre: string; metal: string; ley: str
 type ResultadoCSVJoyas = { filas: ImportacionJoya[]; mapa: Record<string, string> };
 
 type Joya = {
-  id: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
+  id: string; qr_token: string; codigo: string; nombre: string; metal: string; ley: string; peso: number | null;
   talla: string; piedras: string; cantidad: number; estado: string; created_at?: string | null;
 };
 type EventoJoya = {
@@ -130,7 +130,7 @@ function InventarioPage() {
         .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,pedido_id,created_at,inventario(material,unidad)")
         .order("created_at", { ascending: false }).limit(100),
       supabase.from("inventario_joyas")
-        .select("id,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado,created_at")
+        .select("id,qr_token,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado,created_at")
         .eq("sede_id", sedeId).order("nombre"),
     ]);
     if (a.error) toast.error(a.error.message);
