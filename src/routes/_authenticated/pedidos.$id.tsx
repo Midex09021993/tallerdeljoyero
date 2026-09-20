@@ -358,10 +358,10 @@ function FichaPedido() {
     },
   });
   const { data: tarifasManoObra = [] } = useQuery({
-    queryKey: ["tarifas-mano-obra-sede", pedido?.sede_id],
-    enabled: Boolean(pedido?.sede_id && sesion?.esAdmin),
+    queryKey: ["tarifas-mano-obra-sede", pedidos.find((p) => p.id === id)?.sede_id],
+    enabled: Boolean(pedidos.find((p) => p.id === id)?.sede_id && sesion?.esAdmin),
     queryFn: async () => {
-      const { data, error } = await supabase.from("tarifas_mano_obra").select("id,area,tarifa_hora,moneda,vigente_desde,activo").eq("sede_id", pedido!.sede_id).order("vigente_desde", { ascending: false });
+      const { data, error } = await supabase.from("tarifas_mano_obra").select("id,area,tarifa_hora,moneda,vigente_desde,activo").eq("sede_id", pedidos.find((p) => p.id === id)?.sede_id ?? "").order("vigente_desde", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -783,6 +783,7 @@ function FichaPedido() {
     } finally {
       setTransicionandoOrden(false);
     }
+    return undefined;
   }
 
   async function verificarPiezaTerminada(piezaId: string, nuevoEstado: "verificada" | "liberada" | "rechazada") {
@@ -807,7 +808,7 @@ function FichaPedido() {
         _tipo: "inspeccion_final",
         _motivo: motivoCalidad.trim(),
         _descripcion: resultadoCalidad === "aprobado" ? "Inspección final conforme" : "Inspección final con observaciones",
-        _evidencia_url: null,
+        _evidencia_url: undefined,
       });
       if (error) throw error;
       toast.success(resultadoCalidad === "aprobado" ? "Calidad aprobada y OP liberada" : "Resultado de calidad registrado");
