@@ -15,8 +15,8 @@ import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-pub
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
-import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
@@ -70,14 +70,14 @@ const AuthenticatedAurumRenderRoute =
     path: '/aurum-render',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
   id: '/casting',
   path: '/casting',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCorteLaserRoute = AuthenticatedCorteLaserRouteImport.update({
@@ -332,8 +332,8 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/aurum-render'
     | '/casting'
-    | '/corte-laser'
     | '/clientes'
+    | '/corte-laser'
     | '/cotizaciones'
     | '/diseno-3d'
     | '/gestion'
@@ -363,6 +363,7 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/_authenticated/aurum-render'
     | '/_authenticated/casting'
+    | '/_authenticated/clientes'
     | '/_authenticated/corte-laser'
     | '/_authenticated/cotizaciones'
     | '/_authenticated/diseno-3d'
@@ -442,18 +443,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAurumRenderRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/clientes': {
-      id: '/_authenticated/clientes'
-      path: '/clientes'
-      fullPath: '/clientes'
-      preLoaderRoute: typeof AuthenticatedClientesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/casting': {
       id: '/_authenticated/casting'
       path: '/casting'
       fullPath: '/casting'
       preLoaderRoute: typeof AuthenticatedCastingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/corte-laser': {
@@ -642,8 +643,8 @@ const AuthenticatedPedidosRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
-  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRouteWithChildren
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
@@ -663,9 +664,9 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
+  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRouteWithChildren,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
