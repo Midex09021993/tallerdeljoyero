@@ -29,7 +29,17 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   let hdriGround:any = null;
   let hdriGroundTexture:any = null;
   let hdriGroundEnabled = false;
-  const bakedShadowMaterial = new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.22,depthWrite:false,depthTest:true});
+  const shadowSize=128;
+  const shadowData=new Uint8Array(shadowSize*shadowSize*4);
+  for(let sy=0;sy<shadowSize;sy++) for(let sx=0;sx<shadowSize;sx++){
+    const dx=(sx/(shadowSize-1))*.5-.25, dy=(sy/(shadowSize-1))-.5;
+    const radial=Math.max(0,1-Math.sqrt((dx/.25)*(dx/.25)+(dy/.5)*(dy/.5)));
+    const alpha=Math.pow(radial,1.8)*255;
+    const i=(sy*shadowSize+sx)*4; shadowData[i]=0; shadowData[i+1]=0; shadowData[i+2]=0; shadowData[i+3]=Math.round(alpha);
+  }
+  const bakedShadowTexture=new THREE.DataTexture(shadowData,shadowSize,shadowSize,THREE.RGBAFormat,THREE.UnsignedByteType);
+  bakedShadowTexture.colorSpace=THREE.NoColorSpace; bakedShadowTexture.minFilter=THREE.LinearFilter; bakedShadowTexture.magFilter=THREE.LinearFilter; bakedShadowTexture.needsUpdate=true;
+  const bakedShadowMaterial = new THREE.MeshBasicMaterial({map:bakedShadowTexture,color:0x000000,transparent:true,opacity:.22,depthWrite:false,depthTest:true});
   const bakedShadow = new THREE.Mesh(new THREE.PlaneGeometry(1,1),bakedShadowMaterial);
   bakedShadow.rotation.x = -Math.PI / 2;
   bakedShadow.renderOrder = -0.5;
@@ -102,6 +112,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       scene.remove(bakedShadow);
       bakedShadow.geometry?.dispose?.();
       bakedShadow.material?.dispose?.();
+      bakedShadowTexture.dispose?.();
       if (hdriGround) {
         scene.remove(hdriGround);
         hdriGround.geometry?.dispose?.();
