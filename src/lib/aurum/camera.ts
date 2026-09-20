@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { AURUM_IJEWEL_REFERENCE, AURUM_IJEWEL_CAMERA_DIRECTION } from "./ijewel-reference";
 
 export type AurumCameraView = "perspectiva" | "frontal" | "superior" | "lateral";
 export type AurumProductCategory = "Anillo" | "Arete" | "Collar" | "Pulsera" | "Dije" | "Brazalete" | "Otro";
@@ -22,10 +23,8 @@ export const getAurumProductCameraProfile = (category: string) =>
   AURUM_PRODUCT_CAMERA_PROFILES.Otro;
 
 /**
- * Presentación inicial inspirada directamente en la cámara del VJSON iJewel
- * suministrado por el usuario. El VJSON usa FOV 25 y una posición
- * [-1.2292, 9.3674, 3.2772] mirando al origen. AURUM conserva esa dirección
- * y la escala automáticamente al volumen normalizado de cada joya.
+ * Presentación inicial calibrada con los valores exactos de cámara del VJSON iJewel
+ * suministrado. No sustituye la dirección de referencia por un ángulo fotográfico.
  */
 export function applyAurumIJEWELPresentationCamera(
   camera: THREE.PerspectiveCamera,
@@ -47,15 +46,15 @@ export function applyAurumIJEWELPresentationCamera(
   // Exact normalized direction from the supplied WebGi VJSON camera position
   // [-1.2292039067, 9.3674392853, 3.2772151274] looking at [0,0,0].
   // Do not substitute a hand-tuned photographic angle in reference mode.
-  const direction = new THREE.Vector3(-1.2292039067094442, 9.367439285321952, 3.2772151274423926).normalize();
+  const direction = new THREE.Vector3(...AURUM_IJEWEL_CAMERA_DIRECTION);
   // Keep generous negative space around the product, as in the reference
   // presentation. The final viewport framing is intentionally not a tight CAD fit.
   // VJSON camera distance is |position| around the origin. Because the
   // reference model is normalized to the documented autoScaleRadius=2,
   // preserve the measured distance instead of re-fitting the camera.
-  const distance = 10;
-  camera.fov = 25;
-  camera.up.set(0, 1, 0);
+  const distance = AURUM_IJEWEL_REFERENCE.camera.distance;
+  camera.fov = AURUM_IJEWEL_REFERENCE.camera.fov;
+  camera.up.set(...AURUM_IJEWEL_REFERENCE.camera.up);
   if (model) target.set(0,0,0);
   controls.target.copy(target);
   camera.position.copy(target).add(direction.multiplyScalar(distance));
