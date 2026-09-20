@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useSesion } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones")({
   head: () => ({
@@ -29,6 +29,9 @@ function money(n: number, moneda = "PEN") {
 
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
+  const puedeGestionarCotizaciones =
+    Boolean(sesion?.esAdmin) ||
+    Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
@@ -52,7 +55,21 @@ function CotizacionesPage() {
     if (q) setCotizaciones(q);
   };
 
-  useEffect(() => { void cargar(); }, []);
+  useEffect(() => {
+    if (puedeGestionarCotizaciones) void cargar();
+  }, [puedeGestionarCotizaciones]);
+
+  if (!puedeGestionarCotizaciones) {
+    return (
+      <AppShell titulo="Cotizaciones" subtitulo="Acceso restringido al área comercial.">
+        <Panel titulo="Acceso restringido">
+          <p className="p-6 text-sm text-muted-foreground">
+            Esta sección contiene información comercial y financiera.
+          </p>
+        </Panel>
+      </AppShell>
+    );
+  }
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
