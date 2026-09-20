@@ -32,6 +32,7 @@ type Seccion = {
     | "/ventas"
     | "/clientes"
     | "/inventario"
+    | "/compras"
     | "/gestion"
     | "/monitor"
     | "/operario"
@@ -62,6 +63,7 @@ const secciones: Seccion[] = [
   { to: "/taller", label: "Taller", area: "Taller", icono: Hammer, grupo: "produccion" },
   { to: "/ventas", label: "Ventas", area: "Área ventas", icono: PackageCheck, grupo: "comercial" },
   { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "inventario" },
+  { to: "/compras", label: "Compras", roles: ["dueno", "gerente"], icono: Boxes, grupo: "inventario" },
   { to: "/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
@@ -105,6 +107,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/pedidos": 20,
   "/ventas": 30,
   "/inventario": 40,
+  "/compras": 45,
   "/gestion": 50,
   "/migracion": 55,
   "/aurum-render": 999,
