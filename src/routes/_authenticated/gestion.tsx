@@ -948,6 +948,8 @@ async function importarPedidosCsv(registros: CsvRegistro[]) {
 
   const base = filas.map(
     ({
+      telefono,
+      importe,
       ventas_estado,
       packing_estado,
       medio_envio,
