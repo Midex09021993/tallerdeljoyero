@@ -20,6 +20,7 @@ export async function createAurumPostPipeline(
   let composer:any=null;
   let renderPass:any=null;
   let taaPass:any=null;
+  let ssrPass:any=null;
   let ssaoPass:any=null;
   let bloomPass:any=null;
   let lutPass:any=null;
@@ -32,6 +33,27 @@ export async function createAurumPostPipeline(
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
     renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
+
+    try {
+      const { SSRPass }=await import("three/examples/jsm/postprocessing/SSRPass.js");
+      ssrPass=new SSRPass({
+        renderer,
+        scene,
+        camera,
+        width:Math.max(1,renderer.domElement.width),
+        height:Math.max(1,renderer.domElement.height),
+        selects:[],
+      });
+      ssrPass.opacity=1;
+      ssrPass.blur=true;
+      ssrPass.fresnel=true;
+      ssrPass.distanceAttenuation=true;
+      ssrPass.resolutionScale=.65;
+      ssrPass.enabled=false;
+      composer.addPass(ssrPass);
+    } catch {
+      ssrPass=null;
+    }
 
     try {
       const { TAARenderPass }=await import("three/examples/jsm/postprocessing/TAARenderPass.js");
@@ -109,7 +131,7 @@ export async function createAurumPostPipeline(
   } catch {
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
-    composer=null; renderPass=null; taaPass=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; dofPass=null; outputPass=null;
+    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssaoPass=null; bloomPass=null; lutPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
   const applyQuality=(next:any)=>{
@@ -118,13 +140,25 @@ export async function createAurumPostPipeline(
     const high=q.pixelRatio>=1.4;
     const ultra=q.pixelRatio>=1.55;
 
-    // iJewel VJSON explicitly enables TAA. Keep it active whenever the
-    // photographic profile requests it instead of disabling it globally.
-    if(renderPass) renderPass.enabled=true;
+    // iJewel VJSON explicitly enables progressive jitter + TAA. In Three r185,
+    // sampleLevel=5 provides the 32 jitter samples used by TAARenderPass.
+    const taaEnabled=config.taa!==false;
+    const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass);
+    if(renderPass) renderPass.enabled=!ssrEnabled;
+    if(ssrPass){
+      ssrPass.enabled=ssrEnabled;
+      ssrPass.opacity=Math.max(0,Number(config.ssrIntensity??1));
+      ssrPass.blur=true;
+      ssrPass.fresnel=true;
+      ssrPass.distanceAttenuation=true;
+      ssrPass.resolutionScale=ultra?.85:high?.65:.45;
+      if(Number.isFinite(Number(config.ssrMaxDistance))) ssrPass.maxDistance=Math.max(.05,Number(config.ssrMaxDistance));
+      if(Number.isFinite(Number(config.ssrThickness))) ssrPass.thickness=Math.max(.001,Number(config.ssrThickness));
+    }
     if(taaPass){
-      taaPass.enabled=config.taa!==false;
-      taaPass.accumulate=config.taa!==false;
-      taaPass.sampleLevel=2;
+      taaPass.enabled=taaEnabled;
+      taaPass.accumulate=taaEnabled;
+      taaPass.sampleLevel=ultra||high?5:3;
     }
 
     if(ssaoPass){
@@ -161,6 +195,13 @@ export async function createAurumPostPipeline(
     const finalPixelRatio=Math.max(1,Math.min(1.75,Number(q.pixelRatio??1.5)));
     composer.setPixelRatio?.(finalPixelRatio);
     composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
+    if(ssrPass){
+      ssrPass.setSize?.(
+        renderer.domElement.width||renderer.domElement.clientWidth||1,
+        renderer.domElement.height||renderer.domElement.clientHeight||1
+      );
+      ssrPass.resolutionScale=ultra?.85:high?.65:.45;
+    }
     if(ssaoPass){
       const ssaoScale=ultra?.72:high?.82:.70;
       ssaoPass.setSize?.(
@@ -176,8 +217,10 @@ export async function createAurumPostPipeline(
     const moved=!Number.isFinite(lastPX)
       || Math.abs(p.x-lastPX)>1e-5 || Math.abs(p.y-lastPY)>1e-5 || Math.abs(p.z-lastPZ)>1e-5
       || Math.abs(q.x-lastQX)>1e-5 || Math.abs(q.y-lastQY)>1e-5 || Math.abs(q.z-lastQZ)>1e-5 || Math.abs(q.w-lastQW)>1e-5;
-    if(taaPass){
-      taaPass.accumulate=false;
+    if(taaPass && moved){
+      // Preserve the accumulated image while the camera is still; restart
+      // the 32-sample progressive sequence only after actual motion.
+      taaPass.accumulate=true;
       taaPass.accumulateIndex=-1;
     }
     lastPX=p.x; lastPY=p.y; lastPZ=p.z;
@@ -189,5 +232,9 @@ export async function createAurumPostPipeline(
   };
 
   applyQuality(quality);
-  return {composer,ssaoPass,applyQuality,updateTemporal,dofPass,taaPass};
+  const setSSRSelects=(objects:any[])=>{
+    if(!ssrPass)return;
+    ssrPass.selects=Array.isArray(objects)?objects:[];
+  };
+  return {composer,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass};
 }
