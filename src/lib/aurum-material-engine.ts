@@ -187,7 +187,7 @@ export const gemPresetFromConfig=(g:any):AurumGemPreset=>({
 export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
   diamante:{id:"diamante",familia:"Diamante",variante:"Natural",color:0xffffff,transmission:1,ior:2.417,roughness:.012,envMapIntensity:1.3,attenuationColor:0xffffff,attenuationDistance:100,dispersion:.01,iridescence:.03,thicknessScale:1,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   diamante_inclusiones:{id:"diamante_inclusiones",familia:"Diamante",variante:"Con inclusiones",color:0xf8f8f8,transmission:1,ior:2.417,roughness:.018,envMapIntensity:1.3,attenuationColor:0xf5f5f5,attenuationDistance:65,dispersion:.01,iridescence:.04,thicknessScale:1,inclusions:true,inclusionDensity:.18,inclusionType:"crystal"},
-  esmeralda_1:{id:"esmeralda_1",familia:"Esmeralda",variante:"Calidad 1",color:0x087f45,transmission:.94,ior:1.577,roughness:.018,envMapIntensity:1.65,attenuationColor:0x087f45,attenuationDistance:18,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
+  esmeralda_1:{id:"esmeralda_1",familia:"Esmeralda",variante:"Calidad 1",color:0x22dfa3,transmission:.94,ior:1.58,roughness:.018,envMapIntensity:1.00,attenuationColor:0x087f45,attenuationDistance:18,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   esmeralda_2:{id:"esmeralda_2",familia:"Esmeralda",variante:"Calidad 2",color:0x0a6b3b,transmission:.88,ior:1.577,roughness:.022,envMapIntensity:1.55,attenuationColor:0x075d34,attenuationDistance:12,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:true,inclusionDensity:.10,inclusionType:"fingerprint"},
   esmeralda_3:{id:"esmeralda_3",familia:"Calidad 3",variante:"Natural",color:0x064d2f,transmission:.80,ior:1.577,roughness:.028,envMapIntensity:1.45,attenuationColor:0x043d25,attenuationDistance:8,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.22,inclusionType:"fingerprint"},
   rubi:{id:"rubi",familia:"Rubí",variante:"Natural",color:0x9f1239,transmission:.93,ior:1.762,roughness:.018,envMapIntensity:1.65,attenuationColor:0x8f1239,attenuationDistance:16,dispersion:.014,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
@@ -256,6 +256,63 @@ export const applyAurumOpticalProfile=(material:any,profile:AurumOpticalProfile)
   material.thickness=Math.max(.015,material.thickness??.5);
   material.attenuationDistance=Math.max(.1,profile.absorptionDistance);
   material.userData={...(material.userData??{}),aurumOpticalProfile:profile};
+  material.needsUpdate=true;
+  return material;
+};
+
+
+export const AURUM_IJEWEL_EMERALD_REFERENCE = {
+  engineVersion: "0.22.0",
+  materialType: "DiamondMaterial",
+  sourceRootPath: "1_gem_emerald_1_58128f46c0.dmat",
+  color: 0x22dfa3,
+  environmentIntensity: 1,
+  environmentRotationOffset: 0,
+  dispersion: 7.182839392716467e-19,
+  squashFactor: .98,
+  geometryFactor: .5,
+  gammaFactor: 1,
+  absorptionFactor: 1.6,
+  reflectivity: .5,
+  refractiveIndex: 1.58,
+  rayBounces: 5,
+  diamondOrientedEnvMap: 0,
+  boostFactors: {x:-.3,y:1,z:1},
+  transmissionParameter: 0,
+} as const;
+
+/**
+ * Calibrates a refractive gem against an observed iJewel/WebGi material.
+ * The reference values remain metadata where the source renderer's parameter
+ * semantics differ from Three.js. Physical catalog values continue to control
+ * the actual MeshPhysicalMaterial transmission/IOR/attenuation.
+ */
+export const applyAurumReferenceGemOptics=(material:any,family:string)=>{
+  if(!material)return material;
+  if(family!=="Esmeralda")return material;
+  const r=AURUM_IJEWEL_EMERALD_REFERENCE;
+  material.ior=1.58;
+  material.envMapIntensity=r.environmentIntensity;
+  material.dispersion=Math.max(0,Number(material.dispersion??0));
+  material.userData={
+    ...(material.userData??{}),
+    aurumReferenceGemOptics:{
+      engine:"iJewel/WebGi",
+      version:r.engineVersion,
+      materialType:r.materialType,
+      sourceRootPath:r.sourceRootPath,
+      reference:r,
+      physicalMapping:{
+        ior:1.58,
+        transmission:Number(material.transmission??.94),
+        attenuationDistance:Number(material.attenuationDistance??15),
+        note:"source DiamondMaterial transmission=0 is renderer-specific and is not copied literally into Three.js"
+      }
+    },
+    aurumGemReferenceEnvIntensity:r.environmentIntensity,
+    aurumGemReferenceEnvRotation:r.environmentRotationOffset,
+    aurumGemReferenceBoostFactors:[r.boostFactors.x,r.boostFactors.y,r.boostFactors.z],
+  };
   material.needsUpdate=true;
   return material;
 };
