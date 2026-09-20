@@ -703,12 +703,17 @@ function FichaPedido() {
               />
 
               {pedido.cotizacion_id ? (
-                <Panel titulo="Origen comercial">
+                <Panel titulo="Detalle de cotización">
                   <div className="space-y-4 p-5 lg:p-6">
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <DatoClave etiqueta="Origen" valor={pedido.origen || "Cotización"} destacado />
-                      <DatoClave etiqueta="Proyecto" valor={pedido.proyecto_joya_id ? "Proyecto de joya vinculado" : "Sin proyecto"} />
-                      <DatoClave etiqueta="Importe vendido" valor={new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(pedido.importe || 0)} />
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>
+                        Pedido generado desde una cotización.
+                      </span>
+                      {pedido.proyecto_joya_id ? (
+                        <span className="rounded-full border border-border bg-surface-muted px-2.5 py-1">
+                          Proyecto de joya vinculado
+                        </span>
+                      ) : null}
                     </div>
                     {Array.isArray(pedido.cotizacion_detalles) && pedido.cotizacion_detalles.length > 0 ? (
                       <div className="overflow-x-auto rounded-xl border border-border">
