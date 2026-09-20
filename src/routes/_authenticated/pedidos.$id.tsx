@@ -382,6 +382,21 @@ function FichaPedido() {
       return data;
     },
   });
+  const { data: controlesCalidad = [] } = useQuery({
+    queryKey: ["controles-calidad", id],
+    enabled: Boolean(ordenProduccion?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("control_calidad")
+        .select("id,tipo,resultado,motivo,descripcion,created_at")
+        .eq("orden_produccion_id", ordenProduccion!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; tipo: string; resultado: string; motivo: string; descripcion: string; created_at: string;
+      }>;
+    },
+  });
   const recalcularCostos = async () => {
     if (!ordenProduccion) return;
     const { error } = await supabase.rpc("recalcular_costos_orden", { _orden_id: ordenProduccion.id });
