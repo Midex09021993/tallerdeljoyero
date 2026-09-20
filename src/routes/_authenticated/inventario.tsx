@@ -62,7 +62,18 @@ function InventarioPage() {
   const { data: sesion } = useSesion();
   const sedeId = sesion?.perfil.sede_id ?? null;
   const esAdmin = Boolean(sesion?.esAdmin);
-  const puedeMover = esAdmin || Boolean(sesion?.roles.includes("operario") || sesion?.roles.includes("monitor"));
+  const puedeMover = esAdmin;
+
+  if (sesion && !esAdmin) {
+    return (
+      <AppShell titulo="Inventario" subtitulo="Acceso restringido">
+        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+          <p className="text-base font-semibold">Inventario restringido</p>
+          <p className="mt-2 text-sm text-muted-foreground">Tu cuenta operativa no tiene acceso al inventario general ni al Kardex.</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   const [tab, setTab] = useState<Tab>("resumen");
   const [materiales, setMateriales] = useState<Material[]>([]);
