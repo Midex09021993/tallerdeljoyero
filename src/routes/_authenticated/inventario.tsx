@@ -525,7 +525,7 @@ function numeroCodigo(codigo: string, prefijo: string) {
   const inicio = `J-${prefijo}-`;
   if (!codigo.startsWith(inicio)) return null;
   const parte = codigo.slice(inicio.length);
-  if (!/^\\d{3}$/.test(parte)) return null;
+  if (parte.length !== 3 || [...parte].some((caracter) => caracter < "0" || caracter > "9")) return null;
   return Number(parte);
 }
 
@@ -555,7 +555,11 @@ function normalizarCodigosJoyas(joyas: Joya[], nombreSede: string | null | undef
 
   const resultado = joyas.map((joya) => {
     const codigo = joya.codigo?.trim() ?? "";
-    const esCodigoAntiguo = /^JY-[A-Z0-9]+-\\d{6}-[A-Z0-9]+$/.test(codigo);
+    const partesAntiguas = codigo.split("-");
+    const esCodigoAntiguo = partesAntiguas.length === 4
+      && partesAntiguas[0] === "JY"
+      && partesAntiguas[2].length === 6
+      && partesAntiguas[3].length === 8;
 
     if (codigo && !esCodigoAntiguo) return joya;
 
