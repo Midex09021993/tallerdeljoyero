@@ -221,20 +221,20 @@ function Inicio() {
           </Panel>
 
           <Panel titulo="Actividad del taller">
-            <div className="grid gap-2 p-3">
-              {modulos.slice(0, 6).map((modulo) => {
-                const Icono = modulo.icono;
-                return (
-                  <Link key={modulo.to} to={modulo.to as never} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3 transition hover:bg-muted/40">
-                    <span className="grid size-9 place-items-center rounded-lg bg-ink text-gold">{Icono ? <Icono className="size-4" /> : null}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold">{modulo.label}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{modulo.subtitulo}</span>
-                    </span>
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  </Link>
-                );
-              })}
+            <div className="space-y-2 p-3">
+              {[
+                ["Diseño 3D", "Diseño 3D", LayoutGrid],
+                ["Impresión", "Impresión 3D", Boxes],
+                ["Casting", "Casting", Gem],
+                ["Taller", "Taller", Hammer],
+                ["Ventas", "Área ventas", PackageCheck],
+              ].map(([label, area, Icono]) => (
+                <div key={String(label)} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
+                  <span className="grid size-9 place-items-center rounded-lg bg-ink text-gold"><Icono className="size-4" /></span>
+                  <span className="flex-1 text-sm font-semibold">{String(label)}</span>
+                  <span className="font-display text-xl">{pedidos.filter((p) => p.area_actual === area).length}</span>
+                </div>
+              ))}
             </div>
           </Panel>
         </section>
