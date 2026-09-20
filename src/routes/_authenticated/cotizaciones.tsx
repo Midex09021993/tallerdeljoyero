@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3 } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -39,7 +39,7 @@ function CotizacionesPage() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [busca, setBusca] = useState("");
   const [abierto, setAbierto] = useState(false);
-  const [guardando, setGuardando] = useState(false);
+  const [guardando, setGuardando] = useState(false);\n  const [busquedaCliente, setBusquedaCliente] = useState("");
   const [form, setForm] = useState({
     cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1,
     costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
@@ -82,6 +82,12 @@ function CotizacionesPage() {
     });
   }, [busca, clientes, cotizaciones]);
 
+  const clientesFiltrados = useMemo(() => {
+    const t = busquedaCliente.trim().toLowerCase();
+    if (!t) return clientes.slice(0, 20);
+    return clientes.filter((c) => [c.nombre, c.telefono ?? "", c.email ?? ""].join(" ").toLowerCase().includes(t)).slice(0, 20);
+  }, [busquedaCliente, clientes]);
+  const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
 
   async function guardar(e: FormEvent) {
@@ -115,7 +121,7 @@ function CotizacionesPage() {
       });
       if (detalleError) throw detalleError;
       setAbierto(false);
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
+      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "Servicio de joyería", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });\n      setBusquedaCliente("");
       await cargar();
     } finally {
       setGuardando(false);
@@ -185,7 +191,18 @@ function CotizacionesPage() {
           <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
             <div className="mb-5 flex items-start justify-between"><div><h2 className="font-display text-2xl">Nueva cotización</h2><p className="text-sm text-muted-foreground">Costo interno separado del precio al cliente.</p></div><button type="button" onClick={() => setAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-xs text-muted-foreground">Cliente<select required value={form.cliente_id} onChange={e => setForm({...form, cliente_id:e.target.value, proyecto_joya_id:""})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Seleccionar cliente</option>{clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></label>
+              <div className="relative">
+  <label className="text-xs text-muted-foreground">Cliente</label>
+  <input value={busquedaCliente} onChange={e => setBusquedaCliente(e.target.value)} placeholder="Buscar por nombre, teléfono o correo…" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
+  {form.cliente_id ? <button type="button" onClick={() => { setForm({...form, cliente_id:"", proyecto_joya_id:""}); setBusquedaCliente(""); }} className="absolute right-3 top-8 text-muted-foreground"><X className="size-4" /></button> : null}
+  {!form.cliente_id && busquedaCliente ? <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
+    {clientesFiltrados.map(c => <button type="button" key={c.id} onClick={() => { setForm({...form, cliente_id:c.id, proyecto_joya_id:""}); setBusquedaCliente(c.nombre); }} className="block w-full border-b border-border px-3 py-3 text-left hover:bg-surface-muted">
+      <span className="block text-sm font-medium">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.telefono || c.email || "Sin contacto"}</span>
+    </button>)}
+    {clientesFiltrados.length === 0 ? <p className="px-3 py-4 text-xs text-muted-foreground">No encontramos clientes. Puedes crearlo desde Clientes.</p> : null}
+  </div> : null}
+  {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
+</div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Concepto<input required value={form.descripcion} onChange={e => setForm({...form, descripcion:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
               <label className="text-xs text-muted-foreground">Cantidad<input type="number" min="1" step="1" value={form.cantidad} onChange={e => setForm({...form,cantidad:Number(e.target.value) || 1})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
@@ -193,12 +210,12 @@ function CotizacionesPage() {
               <label className="text-xs text-muted-foreground">Costo interno / unidad<input type="number" min="0" step="0.01" value={form.costo} onChange={e => setForm({...form,costo:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground">Precio al cliente / unidad<input required type="number" min="0.01" step="0.01" value={form.precio} onChange={e => setForm({...form,precio:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground">Descuento<input type="number" min="0" step="0.01" value={form.descuento} onChange={e => setForm({...form,descuento:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">Impuestos<input type="number" min="0" step="0.01" value={form.impuestos} onChange={e => setForm({...form,impuestos:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <label className="text-xs text-muted-foreground">Impuesto (%)<input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">Configurado para el país/sede. Inicial: Perú 18%.</span></label>
               <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>\n              <label className="text-xs text-muted-foreground">Entrega solicitada<input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
-            <div className="mt-5 flex items-center justify-between rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+form.impuestos), form.moneda)}</strong></div>
+            <div className="mt-5 flex items-center justify-between rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+impuestoCalculado), form.moneda)}</strong></div>
             <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm transition hover:border-gold/30 hover:bg-gold/5">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando…" : "Crear cotización"}</button></div>
           </form>
         </div>}
