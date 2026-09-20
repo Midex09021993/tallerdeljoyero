@@ -88,7 +88,6 @@ function InventarioPage() {
   const [modal, setModal] = useState<"material" | "movimiento" | "joya" | null>(null);
   const [editando, setEditando] = useState<Material | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const [codigoJoyaAsignado, setCodigoJoyaAsignado] = useState<string | null>(null);
 
   const [materialForm, setMaterialForm] = useState({
     codigo: "", material: "", categoria: "Oro", unidad: "g", stock: "", minimo: "",
@@ -260,7 +259,7 @@ function InventarioPage() {
     if (!sedeId || !joyaForm.nombre.trim()) return;
     setGuardando(true);
     const r = await supabase.from("inventario_joyas").insert({
-      sede_id: sedeId, codigo: codigoJoyaAsignado ?? "", nombre: joyaForm.nombre.trim(),
+      sede_id: sedeId, codigo: "", nombre: joyaForm.nombre.trim(),
       metal: joyaForm.metal.trim(), ley: joyaForm.ley.trim(),
       peso: joyaForm.peso ? Number(joyaForm.peso) : null, talla: joyaForm.talla.trim(),
       piedras: joyaForm.piedras.trim(), cantidad: Number(joyaForm.cantidad) || 1,
@@ -268,15 +267,9 @@ function InventarioPage() {
     }).select("id,codigo").single();
     if (r.error) toast.error(r.error.message);
     else {
-      if (r.data?.codigo) {
-        setCodigoJoyaAsignado(r.data.codigo);
-        toast.success(`Joya creada · ${r.data.codigo}`);
-      } else {
-        toast.success("Joya agregada");
-      }
+      toast.success(r.data?.codigo ? `Joya creada · ${r.data.codigo}` : "Joya agregada");
       await cargar();
       setModal(null);
-      setCodigoJoyaAsignado(null);
     }
     setGuardando(false);
   }
@@ -429,7 +422,7 @@ function InventarioPage() {
 
         {tab === "joyas" ? (
           <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.25)]">
-            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p><h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2><p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p></div>{esAdmin ? <button type="button" onClick={() => { setCodigoJoyaAsignado(generarCodigoJoyaPreview(sesion.sede?.nombre)); setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}</div>
+            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Stock terminado</p><h2 className="mt-1 text-lg font-semibold">Joyas terminadas</h2><p className="mt-1 text-xs text-muted-foreground">Piezas terminadas separadas del inventario de insumos.</p></div>{esAdmin ? <button type="button" onClick={() => { setJoyaForm({ nombre: "", metal: "", ley: "", peso: "", talla: "", piedras: "", cantidad: "1", estado: "disponible" }); setModal("joya"); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold hover:bg-gold/[.03]"><Plus className="size-4 text-gold" /> Nueva joya</button> : null}</div>
             <TableWrap><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-border bg-gold/[.02]">{["Código", "Joya", "Metal / ley", "Peso", "Talla", "Piedras", "Cantidad", "Estado"].map((h) => <th key={h} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">
               {joyas.length === 0 ? <tr><td colSpan={8} className="px-5 py-16 text-center"><Gem className="mx-auto size-7 text-gold/45" /><p className="mt-3 text-sm font-medium">Sin joyas terminadas</p><p className="mt-1 text-xs text-muted-foreground">Este inventario parte completamente limpio.</p></td></tr> : joyas.map((j) => <tr key={j.id} className="transition-colors hover:bg-gold/[.02]"><td className="px-5 py-4"><span className="inline-flex items-center rounded-lg border border-gold/25 bg-gold/[.06] px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-wide text-gold">{j.codigo || "Sin código"}</span></td><td className="px-5 py-4 text-sm font-medium">{j.nombre}</td><td className="px-5 py-4 text-xs text-muted-foreground">{[j.metal, j.ley].filter(Boolean).join(" · ") || "—"}</td><td className="px-5 py-4 text-xs">{j.peso == null ? "—" : num(j.peso) + " g"}</td><td className="px-5 py-4 text-xs">{j.talla || "—"}</td><td className="px-5 py-4 text-xs text-muted-foreground">{j.piedras || "—"}</td><td className="px-5 py-4 text-sm font-semibold tabular-nums">{num(j.cantidad)}</td><td className="px-5 py-4"><select disabled={!esAdmin} value={j.estado} onChange={(e) => void cambiarEstado(j.id, e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] uppercase"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="en_produccion">En producción</option><option value="apartada">Apartada</option><option value="otro">Otro</option></select></td></tr>)}
             </tbody></table></TableWrap>
@@ -459,21 +452,7 @@ function InventarioPage() {
           <Actions saving={guardando} cancel={() => setModal(null)} />
         </form> : null}
         {modal === "joya" ? <form onSubmit={guardarJoya} className="space-y-4">
-          {codigoJoyaAsignado ? (
-            <div className="rounded-2xl border border-gold/30 bg-gold/[.06] p-4 shadow-[0_12px_35px_-25px_hsl(var(--gold)/.5)]">
-              <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-gold">Código asignado</p>
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="font-mono text-2xl font-bold tracking-[.08em] text-foreground">{codigoJoyaAsignado}</p>
-                <button type="button" onClick={() => { void navigator.clipboard?.writeText(codigoJoyaAsignado); toast.success("Código copiado"); }} className="rounded-xl border border-gold/25 bg-card px-3 py-2 text-xs font-semibold text-gold hover:bg-gold/[.05]">Copiar código</button>
-              </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">Este identificador pertenece a esta joya y se conservará en su trazabilidad.</p>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-gold/15 bg-gold/[.025] px-3.5 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-gold/80">Identificación automática</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">Al guardar, el sistema asignará y mostrará un código único según la sede, fecha de registro y pieza.</p>
-            </div>
-          )}
+          <p className="rounded-xl border border-gold/10 bg-gold/[.02] px-3.5 py-2.5 text-[11px] leading-5 text-muted-foreground">El sistema asignará automáticamente el código único de esta joya al guardarla.</p>
           <Field label="Nombre de pieza" value={joyaForm.nombre} onChange={(v) => setJoyaForm({ ...joyaForm, nombre: v })} required />
           <div className="grid gap-3 sm:grid-cols-2"><Field label="Metal" value={joyaForm.metal} onChange={(v) => setJoyaForm({ ...joyaForm, metal: v })} /><Field label="Ley" value={joyaForm.ley} onChange={(v) => setJoyaForm({ ...joyaForm, ley: v })} /></div>
           <div className="grid gap-3 sm:grid-cols-3"><Field label="Peso (g)" value={joyaForm.peso} onChange={(v) => setJoyaForm({ ...joyaForm, peso: v })} type="number" step="0.001" inputMode="decimal" /><Field label="Talla" value={joyaForm.talla} onChange={(v) => setJoyaForm({ ...joyaForm, talla: v })} /><Field label="Cantidad" value={joyaForm.cantidad} onChange={(v) => setJoyaForm({ ...joyaForm, cantidad: v })} type="number" step="1" inputMode="numeric" /></div>
@@ -518,21 +497,6 @@ function Actions({ saving, cancel }: { saving: boolean; cancel: () => void }) {
 function Field({ label, value, onChange, type = "text", required = false, select = false, options = [], optionValues = [], step, inputMode }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; select?: boolean; options?: string[]; optionValues?: string[]; step?: string; inputMode?: "none" | "text" | "tel" | "url" | "email" | "numeric" | "decimal" | "search" }) {
   const cls = "mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15";
   return <label className="block text-xs font-medium">{label}{select ? <select required={required} value={value} onChange={(e) => onChange(e.target.value)} className={cls}>{options.map((o, i) => <option key={o} value={optionValues[i] ?? o}>{o}</option>)}</select> : <input required={required} min={type === "number" ? 0 : undefined} step={type === "number" ? step ?? "any" : undefined} inputMode={inputMode} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={cls} />}</label>;
-}
-
-function generarCodigoJoyaPreview(nombreSede?: string | null) {
-  const prefijo = (nombreSede ?? "Sede")
-    .trim()
-    .slice(0, 3)
-    .replace(/[^A-Za-z0-9]/g, "")
-    .toUpperCase() || "SED";
-  const fecha = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", year: "2-digit", month: "2-digit", day: "2-digit" })
-    .format(new Date())
-    .split("/")
-    .reverse()
-    .join("");
-  const sufijo = crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
-  return `JY-${prefijo}-${fecha}-${sufijo}`;
 }
 
 function positive(tipo: string) {
