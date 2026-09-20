@@ -41,7 +41,7 @@ BEGIN
    WHERE id = _pedido_id;
 
   INSERT INTO public.pedido_movimientos (pedido_id, area_origen, area_destino, accion, nota, usuario_id)
-  VALUES (_pedido_id, v_pedido.area_actual, _destino, 'mover', _motivo, auth.uid());
+  VALUES (_pedido_id, v_pedido.area_actual, _destino, 'mover', coalesce(_motivo, ''), auth.uid());
 
   RETURN QUERY SELECT _destino, v_estado, v_ahora, v_reinicia;
 END;
