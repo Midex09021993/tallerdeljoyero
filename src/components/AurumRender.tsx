@@ -194,7 +194,7 @@ export function AurumRender() {
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -414,6 +414,11 @@ export function AurumRender() {
           lut: photo.post.lut,
           lutIntensity: photo.post.lutIntensity,
           taa: photo.post.taa,
+          progressiveFrameCount: photo.post.progressiveFrameCount,
+          ssr: photo.post.ssr,
+          ssrIntensity: photo.post.ssrIntensity,
+          ssrMaxDistance: photo.post.ssrMaxDistance,
+          ssrThickness: photo.post.ssrThickness,
           dof: photo.post.dof,
           dofAperture: photo.post.dofAperture,
           dofMaxBlur: photo.post.dofMaxBlur,
@@ -471,6 +476,19 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
+        // SSR iJewel: only authored metal meshes participate in screen-space
+        // reflection. Gemstones keep their own environment/refraction path.
+        const ssrMetalMeshes:any[]=[];
+        modelo.traverse((x:any)=>{
+          if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
+          const meta=x.userData?.aurumRhino||{};
+          const category=String(meta.categoria??"").toLowerCase();
+          const materialMetal=Array.isArray(x.material)
+            ? x.material.some((m:any)=>Number(m?.metalness??0)>=.9)
+            : Number(x.material?.metalness??0)>=.9;
+          if(category==="metal"||materialMetal)ssrMetalMeshes.push(x);
+        });
+        setSSRSelects?.(ssrMetalMeshes);
         // Presentación inicial determinista: producto + studioSoft + framing.
         // iJewel separates scene, camera and material configuration; Aurum does
         // the same at load time so the user sees a finished product preview.
@@ -487,6 +505,11 @@ export function AurumRender() {
           lut: photoInicialModelo.post.lut,
           lutIntensity: photoInicialModelo.post.lutIntensity,
           taa: photoInicialModelo.post.taa,
+          progressiveFrameCount: photoInicialModelo.post.progressiveFrameCount,
+          ssr: photoInicialModelo.post.ssr,
+          ssrIntensity: photoInicialModelo.post.ssrIntensity,
+          ssrMaxDistance: photoInicialModelo.post.ssrMaxDistance,
+          ssrThickness: photoInicialModelo.post.ssrThickness,
           dof: photoInicialModelo.post.dof,
           vignette: photoInicialModelo.post.vignette,
           vignetteDarkness: photoInicialModelo.post.vignetteDarkness,
