@@ -98,16 +98,51 @@ function VentasPage() {
 
   const contenido = (
     <>
-      <div className="mb-5 max-sm:hidden">
+      <section className="mb-5 overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-card">
+        <div className="relative overflow-hidden bg-ink px-5 py-5 text-ink-foreground sm:px-6">
+          <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gold">Área comercial</p>
+              <h1 className="mt-1 font-display text-2xl sm:text-3xl">Ventas y atención al cliente</h1>
+              <p className="mt-1 max-w-2xl text-sm text-ink-foreground/70">
+                Una sola vista para recibir pedidos, coordinar entregas, controlar pagos y cerrar la venta.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => navigate({ to: "/pedidos" })} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-medium hover:bg-white/15">
+                Ver pedidos
+              </button>
+              <button type="button" onClick={() => navigate({ to: "/cotizaciones" })} className="rounded-xl bg-gold px-3 py-2 text-xs font-semibold text-ink hover:opacity-90">
+                Cotizaciones
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-border sm:grid-cols-4">
+          <ResumenComercial etiqueta="Por entregar" valor={pendientesEntrega.length} detalle="Atención inmediata" />
+          <ResumenComercial etiqueta="En camino" valor={enviados.length} detalle="Despachos activos" />
+          <ResumenComercial etiqueta="Entregados" valor={entregados.length} detalle="Histórico filtrado" />
+          <ResumenComercial etiqueta="Sede" valor={esDueno ? etiquetaSede : "Actual"} detalle={esDueno ? "Filtro comercial" : "Tu sede"} />
+        </div>
+      </section>
+
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 font-medium text-gold">Pedidos → Venta</span>
+          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">Pago</span>
+          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">Despacho</span>
+          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-muted-foreground">Entrega</span>
+        </div>
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar por REF, cliente, contrato, taller o guía..."
-          className="h-11 w-full rounded-xl border border-border bg-card px-4 text-base outline-none focus:ring-1 focus:ring-gold sm:max-w-md sm:text-sm"
+          placeholder="Buscar pedido, cliente, contrato o guía..."
+          className="h-10 w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-1 focus:ring-gold sm:w-80"
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <SeccionVentas titulo="Pendientes de entrega" cantidad={pendientesEntrega.length}>
           {pendientesEntrega.length === 0 ? (
             <Vacio texto="No hay pedidos pendientes de entrega." />
@@ -297,8 +332,7 @@ function VentasPage() {
               >
                 {entregaId === pedido.id ? (
                   <FormularioEntrega
-                    pedido={pedido}
-                    resumenFinanciero={resumenFinancieroPedido(
+                    pedido={pedido}                    resumenFinanciero={resumenFinancieroPedido(
                       pedido,
                       contratosPorClave,
                       pagosPorContrato,
@@ -444,6 +478,16 @@ function resumenFinancieroPedido(
   return resumenFinancieroContrato(
     contrato,
     contrato ? (pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero)) : [],
+  );
+}
+
+function ResumenComercial({ etiqueta, valor, detalle }: { etiqueta: string; valor: number | string; detalle: string }) {
+  return (
+    <div className="px-4 py-4 sm:px-5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{etiqueta}</p>
+      <p className="mt-1 text-xl font-semibold text-foreground">{valor}</p>
+      <p className="mt-0.5 text-[10px] text-muted-foreground">{detalle}</p>
+    </div>
   );
 }
 
@@ -597,8 +641,7 @@ function PedidoVentaCard({
         </dl>
 
         {tieneContratoFinanciero ? (
-          <div
-            className={`mt-3 rounded-xl border p-3 text-xs ${
+          <div            className={`mt-3 rounded-xl border p-3 text-xs ${
               tieneSaldo
                 ? "border-warning/25 bg-warning-soft text-warning"
                 : "border-success/20 bg-success-soft text-success"
@@ -897,8 +940,7 @@ function FormularioEnvio({
         </button>
         <button
           type="button"
-          onClick={onCancelar}
-          className="rounded-lg border border-border px-4 py-2 text-xs font-medium"
+          onClick={onCancelar}          className="rounded-lg border border-border px-4 py-2 text-xs font-medium"
         >
           Cancelar
         </button>
