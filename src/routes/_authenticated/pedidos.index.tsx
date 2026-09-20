@@ -531,6 +531,7 @@ function PedidosPage() {
                     setForm({
                       ...form,
                       cliente_id: e.target.value,
+                      proyecto_joya_id: "",
                       cliente: cliente?.nombre ?? "",
                       telefono: cliente?.telefono ?? "",
                     });
