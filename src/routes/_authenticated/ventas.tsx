@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AppShell, FichaDorada, MobileBackButton } from "@/components/AppShell";
+import { AppShell, MobileBackButton } from "@/components/AppShell";
+import { FichaDorada } from "@/components/FichaDorada";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
 import { areaCoincide } from "@/lib/auth";
