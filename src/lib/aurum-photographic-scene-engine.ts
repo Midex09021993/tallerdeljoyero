@@ -1,3 +1,5 @@
+import { AURUM_IJEWEL_REFERENCE } from "./aurum/ijewel-reference";
+
 /**
  * AURUM PHOTOGRAPHIC SCENE ENGINE v1.2
  *
@@ -65,7 +67,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   // VJSON reference: scene environment 1.0, fixed direction, white background.
   // The original UUID environment is not embedded as a local HDR asset, so Aurum
   // uses its closest local white-studio HDR while preserving the measured control values.
-  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:1,lighting:"ijewelReference",post:{ssao:true,ssaoIntensity:.25,bloom:true,bloomIntensity:.2,bloomThreshold:2,lut:false,lutIntensity:0,gradeEnabled:true,gradeContrast:1.1,gradeSaturation:1,ssaoFalloff:1.3,bloomRadius:.6,taa:true,progressiveFrameCount:32,ssr:true,ssrIntensity:1,ssrMaxDistance:1,ssrThickness:.018,dof:false,vignette:false}},
+  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:AURUM_IJEWEL_REFERENCE.scene.environmentIntensity,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",post:{ssao:true,ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,bloom:true,bloomIntensity:AURUM_IJEWEL_REFERENCE.bloom.intensity,bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,lut:false,lutIntensity:0,gradeEnabled:true,gradeContrast:AURUM_IJEWEL_REFERENCE.toneMapping.contrast,gradeSaturation:AURUM_IJEWEL_REFERENCE.toneMapping.saturation,ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,taa:true,progressiveFrameCount:AURUM_IJEWEL_REFERENCE.progressive.maxFrameCount,ssr:true,ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,ssrThickness:.018,dof:false,vignette:false}},
 };
 
 export const getAurumPhotographicProfile=(id:string):AurumPhotographicProfile=>AURUM_PHOTOGRAPHIC_PROFILES[id]??AURUM_PHOTOGRAPHIC_PROFILES["producto"]!;
