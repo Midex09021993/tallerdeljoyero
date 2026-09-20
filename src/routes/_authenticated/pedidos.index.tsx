@@ -350,7 +350,6 @@ function PedidosPage() {  const navigate = useNavigate();
   const entregadosPorArea = contarPorArea(entregados);
   const atrasadosPorArea = contarPorArea(atrasados);
   const proximosPorArea = contarPorArea(proximos);
-  const pendientesAutorizacion = pedidosPorSede.filter((p) => pedidoPendienteAutorizacionProduccion(p));
   const pedidosAtencion = pedidosPorSede.filter((p) => {
     const dias = diasHastaEntrega(p.fecha_entrega ?? p.entrega);
     return pedidoPendienteAutorizacionProduccion(p) || (dias !== null && dias < 0 && !esEstadoFinalPedido(p.estado));
