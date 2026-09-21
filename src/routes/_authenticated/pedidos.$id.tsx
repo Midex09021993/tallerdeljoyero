@@ -337,14 +337,14 @@ function FichaPedido() {
           const detalle = e.estado_anterior && e.estado_nuevo
             ? `${e.estado_anterior} → ${e.estado_nuevo}`
             : String(
-                datos.numero_pieza
-                  ? `Pieza ${datos.numero_pieza}`
-                  : datos.numero
-                    ? String(datos.numero)
-                    : datos.titulo
-                      ? String(datos.titulo)
-                      : datos.material_id
-                        ? `${datos.cantidad ?? ""} · material`
+                datos["numero_pieza"]
+                  ? `Pieza ${datos["numero_pieza"]}`
+                  : datos["numero"]
+                    ? String(datos["numero"])
+                    : datos["titulo"]
+                      ? String(datos["titulo"])
+                      : datos["material_id"]
+                        ? `${datos["cantidad"] ?? ""} · material`
                         : "",
               );
           return {
@@ -353,7 +353,7 @@ function FichaPedido() {
             tipo,
             titulo,
             detalle,
-            nota: String(datos.motivo ?? datos.descripcion ?? datos.area ?? ""),
+            nota: String(datos["motivo"] ?? datos["descripcion"] ?? datos["area"] ?? ""),
             usuario: e.usuario_id,
           };
         }),
