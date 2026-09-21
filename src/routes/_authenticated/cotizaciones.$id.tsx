@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 });
 
 type Cotizacion = {
-  id: string; numero: string; version: number; estado: string; seguimiento_token: string | null; sede_id: string | null; fecha_emision: string;
+  id: string; numero: string; version: number; estado: string; sede_id: string | null; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
@@ -61,13 +61,15 @@ function CotizacionDetallePage() {
   const [contratoId, setContratoId] = useState<string | null>(null);
   const [contratoNumero, setContratoNumero] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [copiado, setCopiado] = useState<"enlace" | "whatsapp" | null>(null);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [enlacePdf, setEnlacePdf] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState<"enlace" | "pdf" | null>(null);
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_token,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -214,45 +216,35 @@ function CotizacionDetallePage() {
     setConvirtiendoPedido(false);
   }
 
-  const enlaceCliente = useMemo(() => {
-    if (!cotizacion?.seguimiento_token || typeof window === "undefined") return null;
-    return window.location.origin + "/cliente?token=" + encodeURIComponent(cotizacion.seguimiento_token);
-  }, [cotizacion?.seguimiento_token]);
-
-  async function copiarTexto(texto: string, tipo: "enlace" | "whatsapp") {
+  async function copiarTexto(texto: string, tipo: "enlace" | "pdf") {
     try {
       await navigator.clipboard.writeText(texto);
       setCopiado(tipo);
       window.setTimeout(() => setCopiado(null), 1800);
     } catch {
-      setError("No se pudo copiar al portapapeles. Puedes seleccionar y copiar el texto manualmente.");
+      setError("No se pudo copiar el enlace. Puedes copiarlo manualmente.");
     }
   }
 
-  async function copiarEnlaceCliente() {
-    if (!enlaceCliente) return;
-    await copiarTexto(enlaceCliente, "enlace");
+  async function generarPdfCotizacion() {
+    if (!cotizacion || generandoPdf) return;
+    setGenerandoPdf(true);
+    setError("");
+    const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
+      body: { cotizacion_id: cotizacion.id },
+    });
+    if (pdfError || !data?.url) {
+      setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
+      setGenerandoPdf(false);
+      return;
+    }
+    setEnlacePdf(data.url);
+    setGenerandoPdf(false);
   }
 
-  async function copiarMensajeWhatsApp() {
-    if (!enlaceCliente || !cotizacion) return;
-    const mensaje = [
-      "Hola" + (cliente?.nombre ? " " + cliente.nombre : "") + ", te compartimos tu cotización de Taller del Joyero.",
-      "",
-      "Cotización: " + cotizacion.numero + " v" + cotizacion.version,
-      "Total: " + money(cotizacion.total, cotizacion.moneda),
-      cotizacion.fecha_vencimiento ? "Vigencia: " + cotizacion.fecha_vencimiento : null,
-      "",
-      "Puedes revisar la propuesta aquí:",
-      enlaceCliente,
-      "",
-      "Taller del Joyero",
-    ].filter((line): line is string => line !== null).join("\n");
-    await copiarTexto(mensaje, "whatsapp");
-  }
-
-  function imprimirCotizacion() {
-    window.print();
+  async function copiarEnlacePdf() {
+    if (!enlacePdf) return;
+    await copiarTexto(enlacePdf, "pdf");
   }
 
   async function cambiarEstado(estado: string) {
@@ -280,7 +272,6 @@ function CotizacionDetallePage() {
 
   return (
     <>
-      <style>{`@media print { body { background: white !important; } .cotizacion-app { display: none !important; } .cotizacion-print { display: block !important; } } @media screen { .cotizacion-print { display: none; } }`}</style>
       <div className="cotizacion-app"><AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -405,12 +396,18 @@ function CotizacionDetallePage() {
                 <Fila label="Margen bruto" valor={money(margen, cotizacion.moneda)} />
               </div>
             </Panel>
-            <Panel titulo="Enviar al cliente">
-              <div className="space-y-2 p-4">
-                <p className="text-xs text-muted-foreground">Comparte una copia de la propuesta o el enlace seguro de consulta. Los datos internos no se incluyen.</p>
-                <button type="button" disabled={!enlaceCliente} onClick={() => void copiarEnlaceCliente()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50">{copiado === "enlace" ? "✓ Enlace copiado" : "Copiar enlace para cliente"}</button>
-                <button type="button" disabled={!enlaceCliente} onClick={() => void copiarMensajeWhatsApp()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50">{copiado === "whatsapp" ? "✓ Mensaje copiado" : "Copiar mensaje para WhatsApp"}</button>
-                <button type="button" onClick={imprimirCotizacion} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Guardar PDF / imprimir</button>
+            <Panel titulo="Documento para el cliente">
+              <div className="space-y-3 p-4">
+                <p className="text-xs text-muted-foreground">Genera una copia PDF de la propuesta con información comercial. Los costos internos y notas internas nunca se incluyen.</p>
+                <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {generandoPdf ? "Generando PDF…" : enlacePdf ? "Regenerar PDF" : "Generar PDF"}
+                </button>
+                {enlacePdf ? (
+                  <button type="button" onClick={() => void copiarEnlacePdf()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
+                    {copiado === "pdf" ? "✓ Enlace del PDF copiado" : "Copiar enlace del PDF"}
+                  </button>
+                ) : null}
+                {enlacePdf ? <p className="break-all text-[11px] text-muted-foreground">{enlacePdf}</p> : null}
               </div>
             </Panel>
             <Panel titulo="Acciones">
@@ -458,48 +455,6 @@ function CotizacionDetallePage() {
     </AppShell>
       </div>
 
-      <div className="cotizacion-print mx-auto w-full max-w-3xl bg-white p-8 text-black">
-        <div className="flex items-start justify-between border-b border-gray-300 pb-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em]">Taller del Joyero</p>
-            <h1 className="mt-2 text-3xl font-bold">Cotización {cotizacion.numero}</h1>
-            <p className="mt-1 text-sm">Versión {cotizacion.version} · {etiquetaEstado(cotizacion.estado)}</p>
-          </div>
-          <div className="text-right text-sm">
-            <p>Emisión: {cotizacion.fecha_emision}</p>
-            {cotizacion.fecha_vencimiento ? <p>Válida hasta: {cotizacion.fecha_vencimiento}</p> : null}
-          </div>
-        </div>
-        <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
-          <div><p className="text-xs uppercase tracking-wider text-gray-500">Cliente</p><p className="mt-1 font-semibold">{cliente?.nombre ?? "—"}</p></div>
-          <div><p className="text-xs uppercase tracking-wider text-gray-500">Taller</p><p className="mt-1 font-semibold">{sedeNombre ?? "Taller no asignado"}</p></div>
-          <div><p className="text-xs uppercase tracking-wider text-gray-500">Proyecto</p><p className="mt-1">{proyecto ? proyecto.codigo + " · " + proyecto.nombre : "Propuesta de joyería"}</p></div>
-          {cotizacion.fecha_entrega_solicitada ? <div><p className="text-xs uppercase tracking-wider text-gray-500">Entrega solicitada</p><p className="mt-1">{cotizacion.fecha_entrega_solicitada}</p></div> : null}
-        </div>
-        {proyecto ? <div className="mt-6 rounded-lg border border-gray-300 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Especificación de la joya</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-            {proyecto.metal ? <p>Metal: {proyecto.metal}</p> : null}
-            {proyecto.ley ? <p>Ley: {proyecto.ley}</p> : null}
-            {proyecto.piedras ? <p>Piedras: {proyecto.piedras}</p> : null}
-            {proyecto.talla ? <p>Talla: {proyecto.talla}</p> : null}
-            {proyecto.peso_estimado != null ? <p>Peso estimado: {proyecto.peso_estimado} g</p> : null}
-          </div>
-          {proyecto.descripcion ? <p className="mt-3 text-sm">{proyecto.descripcion}</p> : null}
-        </div> : null}
-        <table className="mt-7 w-full border-collapse text-sm">
-          <thead><tr className="border-y border-gray-300 text-left text-xs uppercase tracking-wider"><th className="py-3">Descripción</th><th className="py-3 text-right">Cant.</th><th className="py-3 text-right">Precio</th><th className="py-3 text-right">Total</th></tr></thead>
-          <tbody>{detalles.map(d => <tr key={d.id} className="border-b border-gray-200"><td className="py-3">{d.descripcion}</td><td className="py-3 text-right">{d.cantidad} {d.unidad}</td><td className="py-3 text-right">{money(d.precio_unitario, cotizacion.moneda)}</td><td className="py-3 text-right font-medium">{money(d.total_precio, cotizacion.moneda)}</td></tr>)}</tbody>
-        </table>
-        <div className="mt-6 ml-auto w-64 space-y-2 text-sm">
-          <div className="flex justify-between"><span>Subtotal</span><span>{money(cotizacion.subtotal, cotizacion.moneda)}</span></div>
-          {cotizacion.descuento > 0 ? <div className="flex justify-between"><span>Descuento</span><span>-{money(cotizacion.descuento, cotizacion.moneda)}</span></div> : null}
-          <div className="flex justify-between"><span>Impuestos</span><span>{money(cotizacion.impuestos, cotizacion.moneda)}</span></div>
-          <div className="flex justify-between border-t border-gray-300 pt-3 text-base font-bold"><span>Total</span><span>{money(cotizacion.total, cotizacion.moneda)}</span></div>
-        </div>
-        {cotizacion.notas_cliente ? <div className="mt-8 border-t border-gray-300 pt-5"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Observaciones</p><p className="mt-2 whitespace-pre-wrap text-sm">{cotizacion.notas_cliente}</p></div> : null}
-        <div className="mt-10 border-t border-gray-300 pt-4 text-xs text-gray-500">Documento comercial generado por Taller del Joyero.</div>
-      </div>
     </>
   );
 }
