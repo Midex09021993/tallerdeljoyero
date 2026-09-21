@@ -69,6 +69,20 @@ function parseHexColor(value: unknown) {
   return rgb(((number >> 16) & 255) / 255, ((number >> 8) & 255) / 255, (number & 255) / 255);
 }
 
+async function loadLogo(pdf: any, logoUrl: unknown) {
+  const url = clean(logoUrl);
+  if (!url) return null;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
+    if (contentType.includes("png") || /\.png(?:[?#].*)?$/i.test(url)) return await pdf.embedPng(bytes);
+    if (contentType.includes("jpeg") || contentType.includes("jpg") || /\.jpe?g(?:[?#].*)?$/i.test(url)) return await pdf.embedJpg(bytes);
+  } catch {}
+  return null;
+}
+
 function drawLabelValue(
   page: any,
   font: any,
@@ -160,11 +174,37 @@ Deno.serve(async (req) => {
     let y = height - 54;
 
     const brandColor = parseHexColor(identidad?.color_principal) ?? rgb(0.42, 0.32, 0.16);
-    page.drawText(nombreComercial, { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
-    page.drawText("COTIZACIÓN COMERCIAL", { x: 42, y: y - 24, size: 10, font: bold, color: brandColor });
-    page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: 375, y, size: 11, font: bold });
-    page.drawText(`Emitida: ${quote.fecha_emision ?? "—"}`, { x: 375, y: y - 16, size: 9, font });
-    y -= 62;
+    const logo = await loadLogo(pdf, identidad?.logo_url);
+    const headerX = logo ? 132 : 42;
+
+    if (logo) {
+      const maxWidth = 72;
+      const maxHeight = 42;
+      const scale = Math.min(maxWidth / logo.width, maxHeight / logo.height, 1);
+      page.drawImage(logo, {
+        x: 42,
+        y: y - maxHeight + 8,
+        width: logo.width * scale,
+        height: logo.height * scale,
+      });
+    }
+
+    page.drawText(nombreComercial, { x: headerX, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
+    page.drawText("COTIZACIÓN COMERCIAL", { x: headerX, y: y - 24, size: 10, font: bold, color: brandColor });
+
+    const identityMeta = [
+      clean(identidad?.razon_social) && "Razón social: " + clean(identidad?.razon_social),
+      clean(identidad?.ruc) && "RUC: " + clean(identidad?.ruc),
+      clean(identidad?.direccion || identidad?.ciudad) && [clean(identidad?.direccion), clean(identidad?.ciudad)].filter(Boolean).join(", "),
+    ].filter(Boolean).join(" · ");
+
+    if (identityMeta) {
+      page.drawText(identityMeta, { x: headerX, y: y - 38, size: 7.5, font, color: rgb(0.42, 0.42, 0.45), maxWidth: 330 });
+    }
+
+    page.drawText(String(quote.numero) + " · Versión " + String(quote.version), { x: 375, y, size: 11, font: bold });
+    page.drawText("Emitida: " + String(quote.fecha_emision ?? "—"), { x: 375, y: y - 16, size: 9, font });
+    y -= identityMeta ? 72 : 62;
 
     page.drawLine({ start: { x: 42, y }, end: { x: width - 42, y }, thickness: 1, color: rgb(0.84, 0.84, 0.86) });
     y -= 28;
