@@ -22,6 +22,7 @@ type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
   impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null;
+  cliente?: { nombre: string } | null;
 };
 
 type Sede = { id: string; nombre: string };
@@ -38,6 +39,7 @@ function CotizacionesPage() {
     Boolean(sesion?.esAdmin) ||
     Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [buscandoClientes, setBuscandoClientes] = useState(false);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [sedes, setSedes] = useState<Sede[]>([]);
@@ -55,12 +57,10 @@ function CotizacionesPage() {
 
   const cargar = async () => {
     const [{ data: c }, { data: p }, { data: q }, { data: s }] = await Promise.all([
-      supabase.from("clientes").select("id,nombre,telefono,email").eq("estado", "activo").order("nombre"),
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id").order("created_at", { ascending: false }),
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").order("nombre"),
     ]);
-    if (c) setClientes(c);
     if (p) setProyectos(p);
     if (q) setCotizaciones(q);
     if (s) setSedes(s);
@@ -70,20 +70,50 @@ function CotizacionesPage() {
     if (puedeGestionarCotizaciones) void cargar();
   }, [puedeGestionarCotizaciones]);
 
+  useEffect(() => {
+    if (!puedeGestionarCotizaciones || !sesion?.sede?.id) return;
+    const termino = busquedaCliente.trim();
+    if (form.cliente_id && !termino) return;
+
+    const timer = window.setTimeout(async () => {
+      setBuscandoClientes(true);
+      try {
+        let query = supabase
+          .from("clientes")
+          .select("id,nombre,telefono,email")
+          .eq("estado", "activo")
+          .eq("sede_id", sesion.sede.id)
+          .order("nombre")
+          .limit(20);
+
+        if (termino) {
+          const limpio = termino.replace(/[%_,]/g, "");
+          const patron = "%" + limpio + "%";
+          query = query.or("nombre.ilike." + patron + ",telefono.ilike." + patron + ",email.ilike." + patron);
+        } else {
+          query = query.limit(0);
+        }
+
+        const { data, error } = await query;
+        if (!error) setClientes(data ?? []);
+      } finally {
+        setBuscandoClientes(false);
+      }
+    }, termino ? 250 : 0);
+
+    return () => window.clearTimeout(timer);
+  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.sede?.id, form.cliente_id]);
+
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
     if (!t) return cotizaciones;
     return cotizaciones.filter((q) => {
-      const cliente = clientes.find((c) => c.id === q.cliente_id)?.nombre ?? "";
+      const cliente = q.cliente?.nombre ?? "";
       return [q.numero, q.estado, cliente].join(" ").toLowerCase().includes(t);
     });
   }, [busca, clientes, cotizaciones]);
 
-  const clientesFiltrados = useMemo(() => {
-    const t = busquedaCliente.trim().toLowerCase();
-    if (!t) return clientes.slice(0, 20);
-    return clientes.filter((c) => [c.nombre, c.telefono ?? "", c.email ?? ""].join(" ").toLowerCase().includes(t)).slice(0, 20);
-  }, [busquedaCliente, clientes]);
+  const clientesFiltrados = clientes;
   const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
