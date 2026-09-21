@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ClipboardList, Factory, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -53,10 +53,26 @@ function NuevoPedido2() {
   const { data: sedes = [] } = useSedes();
   const crear = useCrearPedido();
   const [clienteBusqueda, setClienteBusqueda] = useState("");
+  const [clienteBusquedaDebounced, setClienteBusquedaDebounced] = useState("");
+  useEffect(() => {
+    const termino = clienteBusqueda.trim();
+    const timer = window.setTimeout(() => setClienteBusquedaDebounced(termino), 250);
+    return () => window.clearTimeout(timer);
+  }, [clienteBusqueda]);
+
   const { data: clientes = [] } = useQuery({
-    queryKey: ["pedidos-2-nuevo-clientes"],
+    queryKey: ["pedidos-2-nuevo-clientes", clienteBusquedaDebounced],
+    enabled: clienteBusquedaDebounced.length >= 2,
     queryFn: async () => {
-      const { data, error } = await supabase.from("clientes").select("id,nombre,telefono").eq("estado", "activo").order("nombre");
+      const termino = clienteBusquedaDebounced.replace(/[%_,]/g, "");
+      const patron = "%" + termino + "%";
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id,nombre,telefono")
+        .eq("estado", "activo")
+        .or("nombre.ilike." + patron + ",telefono.ilike." + patron)
+        .order("nombre")
+        .limit(8);
       if (error) throw error;
       return data ?? [];
     },
@@ -72,10 +88,21 @@ function NuevoPedido2() {
   const [ruta, setRuta] = useState<string[]>([]);
 
   const sede = sedes.find((s) => s.id === sedeId);
-  const clientesFiltrados = useMemo(() => {
-    const q = clienteBusqueda.trim().toLowerCase();
-    return (q ? clientes.filter((c) => [c.nombre, c.telefono].some((v) => (v ?? "").toLowerCase().includes(q))) : clientes).slice(0, 6);
-  }, [clienteBusqueda, clientes]);
+  const clientePredictivo = useMemo(() => {
+    const termino = clienteBusqueda.trim().toLowerCase();
+    if (termino.length < 2 || clienteId || !clientes.length) return null;
+
+    const exacto = clientes.find((cliente) =>
+      [cliente.nombre, cliente.telefono]
+        .filter(Boolean)
+        .some((valor) => String(valor).toLowerCase() === termino),
+    );
+    if (exacto) return exacto;
+
+    return clientes.length === 1 ? clientes[0] : null;
+  }, [clienteBusqueda, clienteId, clientes]);
+
+  const hayVariasCoincidencias = !clienteId && clienteBusqueda.trim().length >= 2 && clientes.length > 1;
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -148,7 +175,12 @@ function NuevoPedido2() {
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Identificación del pedido</h2><p className="mt-1 text-xs text-muted-foreground">Define qué joya entra al sistema y a quién pertenece.</p></div></div>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50" /></label>{clientesFiltrados.length ? <div className="mt-1 rounded-xl border border-border bg-card p-1 shadow-raised">{clientesFiltrados.map((c) => <button key={c.id} type="button" onClick={() => { setClienteId(c.id); set("cliente", c.nombre); set("telefono", c.telefono ?? ""); setClienteBusqueda(""); }} className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs hover:bg-surface-muted"><span>{c.nombre}</span><span className="text-muted-foreground">{c.telefono || ""}</span></button>)}</div> : null}</div>
+                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
+  {!clienteId && clienteBusqueda.trim().length >= 2 ? <div className="mt-1 min-h-5 text-[11px]">
+    {clientePredictivo ? <button type="button" onClick={() => { setClienteId(clientePredictivo.id); set("cliente", clientePredictivo.nombre); set("telefono", clientePredictivo.telefono ?? ""); setClienteBusqueda(""); }} className="text-left text-muted-foreground transition hover:text-foreground">
+      <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}{clientePredictivo.telefono ? <span className="ml-2 opacity-70">{clientePredictivo.telefono}</span> : null}
+    </button> : hayVariasCoincidencias ? <span className="text-muted-foreground">Hay varias coincidencias. Continúa escribiendo para precisar.</span> : null}
+  </div> : null}</div>
                 <Campo label="Trabajo / joya" value={form.trabajo} onChange={(v) => set("trabajo", v)} placeholder="Ej. Anillo de compromiso" required />
                 <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Contacto" />
                 <Campo label="Material" value={form.material} onChange={(v) => set("material", v)} placeholder="Ej. Oro 18K amarillo" />
