@@ -51,29 +51,50 @@ function validar(input: NuevoUsuario): NuevoUsuario {
   return input;
 }
 
-/** Indica si todavía no existe ningún usuario con rol. */
+/** Comprueba server-side si el proyecto todavía no tiene ninguna cuenta. */
 export const sistemaSinDuenos = createServerFn({ method: "GET" }).handler(async () => {
-  // Esta comprobación no puede depender de la Service Role Key durante el
-  // arranque del login. La administración de cuentas se ejecuta sólo después
-  // de una acción explícita y autenticada.
-  return { vacio: false, disponible: false };
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const [{ count: rolesCount }, { data: usuarios, error: usuariosError }] = await Promise.all([
+    supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }),
+    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 }),
+  ]);
+
+  if (usuariosError) {
+    console.error("[Auth] No se pudo comprobar el estado inicial:", usuariosError);
+    return { vacio: false, disponible: false };
+  }
+
+  const vacio = (rolesCount ?? 0) === 0 && (usuarios?.users.length ?? 0) === 0;
+  return { vacio, disponible: vacio };
 });
 
-/** Alta del primer dueño general. Sólo funciona mientras no haya ningún rol asignado. */
+/** Alta del primer dueño general. Sólo funciona mientras Auth y roles estén vacíos. */
 export const registrarPrimerDueno = createServerFn({ method: "POST" })
   .inputValidator(validar)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count } = await supabaseAdmin
-      .from("user_roles")
-      .select("id", { count: "exact", head: true });
-    if ((count ?? 0) > 0) throw new Error("El sistema ya tiene usuarios registrados");
 
-    const { data: sede } = await supabaseAdmin
+    const [{ count: rolesCount }, { data: usuarios, error: usuariosError }] = await Promise.all([
+      supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }),
+      supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 }),
+    ]);
+
+    if (usuariosError) {
+      throw new Error("No se pudo verificar el estado de autenticación del sistema");
+    }
+
+    if ((rolesCount ?? 0) > 0 || (usuarios?.users.length ?? 0) > 0) {
+      throw new Error("El sistema ya tiene usuarios registrados");
+    }
+
+    const { data: sede, error: sedeError } = await supabaseAdmin
       .from("sedes")
       .select("id")
       .eq("nombre", "Gerencia general")
       .maybeSingle();
+
+    if (sedeError) throw new Error("No se pudo preparar la sede inicial");
 
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.correo,
@@ -81,16 +102,33 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
       email_confirm: true,
       user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
     });
-    if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
 
-    await supabaseAdmin.from("profiles").upsert({
+    if (error || !creado.user) {
+      throw new Error(error?.message ?? "No se pudo crear el usuario");
+    }
+
+    const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
       nombre: data.nombre,
       dni: data.dni,
       telefono: data.telefono,
       sede_id: sede?.id ?? null,
     });
-    await supabaseAdmin.from("user_roles").insert({ user_id: creado.user.id, role: "dueno" });
+
+    if (perfilError) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw new Error("No se pudo crear el perfil inicial");
+    }
+
+    const { error: rolError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: creado.user.id, role: "dueno", sede_id: sede?.id ?? null });
+
+    if (rolError) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw new Error("No se pudo asignar el rol inicial");
+    }
+
     return { ok: true };
   });
 
