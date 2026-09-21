@@ -215,8 +215,9 @@ function CotizacionesPage() {
               </tr></thead>
               <tbody className="divide-y divide-border">
                 {filtradas.map(q => {
-                  const cliente = clientes.find(c => c.id === q.cliente_id);
+                  const cliente = q.cliente;
                   const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
+                  const sede = sedes.find(s => s.id === q.sede_id);
                   return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.06]">
                     <td className="p-0 font-medium">
                       <Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></Link>
