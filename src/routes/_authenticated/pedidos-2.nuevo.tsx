@@ -79,6 +79,27 @@ function NuevoPedido2() {
   });
 
   const [clienteId, setClienteId] = useState("");
+  const [contratoId, setContratoId] = useState("");
+  const { data: contratosCliente = [], isFetching: buscandoContratos } = useQuery({
+    queryKey: ["pedidos-2-nuevo-contratos", clienteId],
+    enabled: Boolean(clienteId),
+    queryFn: async () => {
+      const { data: cotizacionesCliente, error: errorCotizaciones } = await supabase
+        .from("cotizaciones")
+        .select("id")
+        .eq("cliente_id", clienteId);
+      if (errorCotizaciones) throw errorCotizaciones;
+      const cotizacionIds = (cotizacionesCliente ?? []).map((c) => c.id);
+      if (!cotizacionIds.length) return [];
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("id,numero,origen,cotizacion_id")
+        .in("cotizacion_id", cotizacionIds)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const [sedeId, setSedeId] = useState(sesion?.perfil.sede_id ?? sedes[0]?.id ?? "");
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
@@ -103,6 +124,16 @@ function NuevoPedido2() {
   }, [clienteBusqueda, clienteId, clientes]);
 
   const hayVariasCoincidencias = !clienteId && clienteBusqueda.trim().length >= 2 && clientes.length > 1;
+
+  useEffect(() => {
+    if (contratosCliente.length === 1) {
+      const contrato = contratosCliente[0];
+      setContratoId(contrato.id);
+      set("contrato", contrato.numero);
+    } else if (!contratosCliente.length) {
+      setContratoId("");
+    }
+  }, [contratosCliente]);
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -133,6 +164,7 @@ function NuevoPedido2() {
       trabajo: form.trabajo.trim(),
       cliente: form.cliente.trim() || "Cliente pendiente de registrar",
       cliente_id: clienteId || null,
+      contrato_id: contratoId || null,
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
@@ -175,18 +207,49 @@ function NuevoPedido2() {
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Identificación del pedido</h2><p className="mt-1 text-xs text-muted-foreground">Define qué joya entra al sistema y a quién pertenece.</p></div></div>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
+                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setContratoId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
   {!clienteId && clienteBusqueda.trim().length >= 2 ? <div className="mt-1 min-h-5 text-[11px]">
     {clientePredictivo ? <button type="button" onClick={() => { setClienteId(clientePredictivo.id); set("cliente", clientePredictivo.nombre); set("telefono", clientePredictivo.telefono ?? ""); setClienteBusqueda(""); }} className="text-left text-muted-foreground transition hover:text-foreground">
       <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}{clientePredictivo.telefono ? <span className="ml-2 opacity-70">{clientePredictivo.telefono}</span> : null}
     </button> : hayVariasCoincidencias ? <span className="text-muted-foreground">Hay varias coincidencias. Continúa escribiendo para precisar.</span> : null}
   </div> : null}</div>
-                <Campo label="Trabajo / joya" value={form.trabajo} onChange={(v) => set("trabajo", v)} placeholder="Ej. Anillo de compromiso" required />
-                <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Contacto" />
+  <div className="sm:col-span-2">
+    <label className="block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Contrato</span>
+      {clienteId && contratosCliente.length > 0 ? (
+        <select
+          value={contratoId || ""}
+          onChange={(e) => {
+            const id = e.target.value;
+            setContratoId(id);
+            const contrato = contratosCliente.find((item) => item.id === id);
+            set("contrato", contrato?.numero ?? "");
+          }}
+          className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50"
+        >
+          <option value="">Sin contrato previo</option>
+          {contratosCliente.map((contrato) => <option key={contrato.id} value={contrato.id}>{contrato.numero}{contrato.origen ? ` · ${contrato.origen}` : ""}</option>)}
+        </select>
+      ) : (
+        <input
+          value={form.contrato}
+          onChange={(e) => { set("contrato", e.target.value); setContratoId(""); }}
+          placeholder={clienteId ? (buscandoContratos ? "Buscando contratos del cliente…" : "Escribir referencia de contrato") : "Selecciona un cliente o escribe una referencia manual"}
+          disabled={buscandoContratos}
+          className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10 disabled:opacity-60"
+        />
+      )}
+    </label>
+    {clienteId && contratosCliente.length > 0 ? <p className="mt-1 text-[10px] text-muted-foreground">Contrato vinculado previamente al cliente.</p> : null}
+  </div>
+                <Campo label="Origen / lugar" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Ej. Tienda, sucursal, referido…" />
+                <Campo label="Descripción del trabajo / joya" value={form.trabajo} onChange={(v) => set("trabajo", v)} placeholder="Ej. Anillo de compromiso" required />
+                <Campo label="Peso" value={form.peso_estimado} onChange={(v) => set("peso_estimado", v)} placeholder="Ej. 4.20 g" />
                 <Campo label="Material" value={form.material} onChange={(v) => set("material", v)} placeholder="Ej. Oro 18K amarillo" />
-                <Campo label="Talla" value={form.talla} onChange={(v) => set("talla", v)} placeholder="Ej. 18" />
                 <Campo label="Piedras" value={form.piedras} onChange={(v) => set("piedras", v)} placeholder="Diamantes, zafiros…" />
-                <Campo label="Peso estimado" value={form.peso_estimado} onChange={(v) => set("peso_estimado", v)} placeholder="Ej. 4.20 g" />
+                <Campo label="Talla / medida" value={form.talla} onChange={(v) => set("talla", v)} placeholder="Ej. 18" />
+                <Campo label="Cantidad" value={form.cantidad_piezas} onChange={(v) => set("cantidad_piezas", v)} type="number" placeholder="1" />
+                <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Contacto" />
                 <Campo label="Cantidad de piezas" value={form.cantidad_piezas} onChange={(v) => set("cantidad_piezas", v)} type="number" />
               </div>
             </section>
