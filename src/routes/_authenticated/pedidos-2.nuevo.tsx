@@ -126,15 +126,20 @@ function NuevoPedido2() {
   const hayVariasCoincidencias = !clienteId && clienteBusqueda.trim().length >= 2 && clientes.length > 1;
 
   useEffect(() => {
+    // La búsqueda de contratos solo debe controlar el campo cuando
+    // realmente se ha seleccionado un cliente existente. Para un cliente
+    // nuevo, la referencia de contrato es completamente manual y no debe
+    // ser borrada por el estado inicial de la consulta.
+    if (!clienteId) return;
+
     if (contratosCliente.length === 1) {
       const contrato = contratosCliente[0];
       setContratoId(contrato.id);
       set("contrato", contrato.numero);
-    } else if (!contratosCliente.length) {
+    } else if (!contratosCliente.length && !buscandoContratos) {
       setContratoId("");
-      set("contrato", "");
     }
-  }, [contratosCliente]);
+  }, [clienteId, contratosCliente, buscandoContratos]);
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
