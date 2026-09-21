@@ -108,8 +108,7 @@ function Inicio() {
         { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, subtitulo: "Propuestas comerciales" },
         { to: "/pedidos-2", label: "Pedidos", icono: PackageCheck, subtitulo: "Centro operativo" },
         { to: "/inventario", label: "Inventario", icono: Boxes, subtitulo: "Stock y movimientos" },
-        { to: "/ventas-2", label: "Ventas 2", icono: PackageCheck, subtitulo: "Centro comercial" },
-        { to: "/ventas", label: "Ventas anterior", icono: PackageCheck, subtitulo: "Operación comercial" },
+        { to: "/ventas-2", label: "Ventas", icono: PackageCheck, subtitulo: "Centro comercial" },
         { to: "/gestion", label: "Gestión", icono: Wrench, subtitulo: "Administración del taller" },
       ];
     }
