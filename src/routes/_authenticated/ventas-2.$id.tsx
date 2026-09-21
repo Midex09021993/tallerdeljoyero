@@ -81,7 +81,7 @@ function Venta2Detalle() {
     },
   });
 
-  if (!pedido) return <AppShell titulo="Ventas 2"><div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">No se encontró el pedido.</div></AppShell>;
+  if (!pedido) return <AppShell titulo="Ventas"><div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">No se encontró el pedido.</div></AppShell>;
 
   const saldo = resumen.origen === "contrato" ? resumen.saldo : pedido.saldo;
   const estado = pedido.estado === "Entregado" || pedido.ventas_estado === "Entregado" ? "Entregado" : pedido.estado === "En Camino" || pedido.ventas_estado === "En Camino" ? "En Camino" : pedido.estado === "Listo para Entrega" || pedido.ventas_estado === "Listo para Entrega" ? "Listo para Entrega" : pedido.ventas_estado || pedido.estado;
