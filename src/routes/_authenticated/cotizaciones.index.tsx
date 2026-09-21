@@ -56,7 +56,7 @@ function CotizacionesPage() {
   });
 
   const cargar = async () => {
-    const [{ data: c }, { data: p }, { data: q }, { data: s }] = await Promise.all([
+    const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").order("nombre"),
@@ -111,7 +111,7 @@ function CotizacionesPage() {
       const cliente = q.cliente?.nombre ?? "";
       return [q.numero, q.estado, cliente].join(" ").toLowerCase().includes(t);
     });
-  }, [busca, clientes, cotizaciones]);
+  }, [busca, cotizaciones]);
 
   const clientesFiltrados = clientes;
   const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
