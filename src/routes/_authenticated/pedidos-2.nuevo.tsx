@@ -132,6 +132,7 @@ function NuevoPedido2() {
       set("contrato", contrato.numero);
     } else if (!contratosCliente.length) {
       setContratoId("");
+      set("contrato", "");
     }
   }, [contratosCliente]);
 
@@ -186,6 +187,52 @@ function NuevoPedido2() {
     };
 
     try {
+      let clienteFinalId = clienteId || null;
+
+      if (!clienteFinalId && form.cliente.trim()) {
+        const nombreCliente = form.cliente.trim();
+        const telefonoCliente = form.telefono.trim();
+        const ciudadCliente = form.origen.trim();
+
+        let clienteExistente = null;
+        if (telefonoCliente) {
+          const { data, error } = await supabase
+            .from("clientes")
+            .select("id,nombre,telefono,ciudad")
+            .eq("sede_id", sedeId)
+            .eq("estado", "activo")
+            .eq("telefono", telefonoCliente)
+            .limit(1)
+            .maybeSingle();
+          if (error) throw error;
+          clienteExistente = data;
+        }
+
+        if (clienteExistente) {
+          clienteFinalId = clienteExistente.id;
+          set("cliente", clienteExistente.nombre);
+          set("telefono", clienteExistente.telefono ?? telefonoCliente);
+          set("origen", clienteExistente.ciudad ?? ciudadCliente);
+        } else {
+          const { data: clienteNuevo, error: errorCliente } = await supabase
+            .from("clientes")
+            .insert({
+              sede_id: sedeId,
+              nombre: nombreCliente,
+              telefono: telefonoCliente || null,
+              ciudad: ciudadCliente || null,
+              estado: "activo",
+            })
+            .select("id,nombre,telefono,ciudad")
+            .single();
+
+          if (errorCliente) throw errorCliente;
+          clienteFinalId = clienteNuevo.id;
+        }
+      }
+
+      nuevo.cliente_id = clienteFinalId;
+
       const resultado = await crear.mutateAsync(nuevo);
       toast.success(`Pedido ${resultado?.referencia ?? nuevo.referencia} creado correctamente.`);
       navigate({ to: "/pedidos-2/$id", params: { id: resultado.id } });
@@ -209,7 +256,14 @@ function NuevoPedido2() {
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setContratoId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
   {!clienteId && clienteBusqueda.trim().length >= 2 ? <div className="mt-1 min-h-5 text-[11px]">
-    {clientePredictivo ? <button type="button" onClick={() => { setClienteId(clientePredictivo.id); set("cliente", clientePredictivo.nombre); set("telefono", clientePredictivo.telefono ?? ""); setClienteBusqueda(""); }} className="text-left text-muted-foreground transition hover:text-foreground">
+    {clientePredictivo ? <button type="button" onClick={async () => {
+        setClienteId(clientePredictivo.id);
+        set("cliente", clientePredictivo.nombre);
+        set("telefono", clientePredictivo.telefono ?? "");
+        const { data: clienteCompleto } = await supabase.from("clientes").select("ciudad").eq("id", clientePredictivo.id).maybeSingle();
+        set("origen", clienteCompleto?.ciudad ?? "");
+        setClienteBusqueda("");
+      }} className="text-left text-muted-foreground transition hover:text-foreground">
       <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}{clientePredictivo.telefono ? <span className="ml-2 opacity-70">{clientePredictivo.telefono}</span> : null}
     </button> : hayVariasCoincidencias ? <span className="text-muted-foreground">Hay varias coincidencias. Continúa escribiendo para precisar.</span> : null}
   </div> : null}</div>
