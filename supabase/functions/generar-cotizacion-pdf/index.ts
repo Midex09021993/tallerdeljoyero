@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-    const page = pdf.addPage([595.28, 841.89]);
+    let page = pdf.addPage([595.28, 841.89]);
     const { width, height } = page.getSize();
     let y = height - 54;
 
@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
       const descriptionLines = wrap(clean(item.descripcion), 55);
       const rowHeight = Math.max(18, descriptionLines.length * 12);
       if (y - rowHeight < 150) {
-        page.addPage([595.28, 841.89]);
+        page = pdf.addPage([595.28, 841.89]);
         y = height - 55;
       }
       descriptionLines.forEach((line, index) => {
@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
     }
 
     if (y < 220) {
-      page.addPage([595.28, 841.89]);
+      page = pdf.addPage([595.28, 841.89]);
       y = height - 55;
     }
     page.drawLine({ start: { x: 335, y }, end: { x: width - 42, y }, thickness: 0.8, color: rgb(0.82, 0.82, 0.84) });
