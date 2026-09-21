@@ -55,7 +55,7 @@ function Pedido2Detalle() {
     queryKey: ["pedidos-2-costos", ordenes[0]?.id],
     enabled: Boolean(ordenes[0]?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("orden_produccion_resumen_costos").select("costo_estimado,costo_materiales,costo_mano_obra,costo_externo,costo_indirecto,costo_ajustes,costo_real,venta,margen,margen_porcentaje,moneda,calculado_at").eq("orden_produccion_id", ordenes[0].id).maybeSingle();
+      const { data, error } = await supabase.from("orden_produccion_resumen_costos").select("costo_estimado,costo_materiales,costo_mano_obra,costo_externo,costo_indirecto,costo_ajustes,costo_real,venta,margen,margen_porcentaje,moneda,calculado_at").eq("orden_produccion_id", ordenes[0]?.id ?? "").maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -157,7 +157,6 @@ function Pedido2Detalle() {
         _tipo: tipoCalidad,
         _motivo: motivoCalidad.trim(),
         _descripcion: descripcionCalidad.trim(),
-        _evidencia_url: undefined,
       });
       if (error) throw error;
       toast.success(resultadoCalidad === "aprobado" ? "Inspección aprobada y registrada." : "Inspección de calidad registrada.");

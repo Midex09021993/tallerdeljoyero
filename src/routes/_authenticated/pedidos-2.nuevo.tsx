@@ -136,8 +136,10 @@ function NuevoPedido2() {
 
     if (contratosCliente.length === 1) {
       const contrato = contratosCliente[0];
-      setContratoId(contrato.id);
-      set("contrato", contrato.numero);
+      if (contrato) {
+        setContratoId(contrato.id);
+        set("contrato", contrato.numero);
+      }
     } else if (!contratosCliente.length && !buscandoContratos) {
       setContratoId("");
     }
