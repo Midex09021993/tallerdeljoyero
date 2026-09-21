@@ -19,7 +19,9 @@ function hoy() {
 
 function prefijoSede(nombre: string) {
   const palabras = nombre.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g, "").trim().split(/\s+/).filter(Boolean);
-  return (palabras.length > 1 ? palabras[0][0] + palabras[1][0] : (palabras[0] ?? "TA").slice(0, 2)).toUpperCase();
+  const primera = palabras[0] ?? "TA";
+  const segunda = palabras[1] ?? "";
+  return (palabras.length > 1 ? (primera[0] ?? "") + (segunda[0] ?? "") : primera.slice(0, 2)).toUpperCase();
 }
 
 function siguienteReferencia(sede: string, refs: string[]) {

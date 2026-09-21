@@ -248,7 +248,7 @@ function InventarioPage() {
         codigo = siguienteCodigoJoya(sesion?.sede?.nombre, [
           ...existentes,
           ...filas.slice(0, index).map((f, i) => ({
-            id: `import-${i}`, codigo: f.codigo, nombre: f.nombre, metal: f.metal, ley: f.ley,
+            id: `import-${i}`, qr_token: "", codigo: f.codigo, nombre: f.nombre, metal: f.metal, ley: f.ley,
             peso: Number(f.peso) || null, talla: f.talla, piedras: f.piedras, cantidad: Number(f.cantidad) || 1, estado: f.estado,
           })),
         ]);
@@ -396,7 +396,7 @@ function InventarioPage() {
     e.preventDefault();
     if (!sedeId || !joyaForm.nombre.trim()) return;
     setGuardando(true);
-    const codigoNuevo = siguienteCodigoJoya(sesion.sede?.nombre, joyas);
+    const codigoNuevo = siguienteCodigoJoya(sesion?.sede?.nombre, joyas);
     const r = await supabase.from("inventario_joyas").insert({
       sede_id: sedeId, codigo: codigoNuevo, nombre: joyaForm.nombre.trim(),
       metal: joyaForm.metal.trim(), ley: joyaForm.ley.trim(),
@@ -840,9 +840,10 @@ function parsearCSVJoyas(texto: string): ResultadoCSVJoyas {
   const lineas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linea) => linea.trim());
   if (lineas.length < 2) return { filas: [], mapa: {} };
 
-  const separador = (lineas[0].match(/;/g) ?? []).length > (lineas[0].match(/,/g) ?? []).length ? ";" : ",";
+  const primera = lineas[0] ?? "";
+  const separador = (primera.match(/;/g) ?? []).length > (primera.match(/,/g) ?? []).length ? ";" : ",";
   const filas = lineas.map((linea) => separarCSV(linea, separador));
-  const encabezados = filas[0].map((h) => normalizarEncabezado(h));
+  const encabezados = (filas[0] ?? []).map((h) => normalizarEncabezado(h));
 
   const definirColumna = (campo: keyof ImportacionJoya, variantes: string[]) => {
     const posicion = variantes.map((v) => encabezados.indexOf(v)).find((i) => i >= 0);
@@ -952,8 +953,8 @@ function normalizarCodigosJoyas(joyas: Joya[], nombreSede: string | null | undef
     const partesAntiguas = codigo.split("-");
     const esCodigoAntiguo = partesAntiguas.length === 4
       && partesAntiguas[0] === "JY"
-      && partesAntiguas[2].length === 6
-      && partesAntiguas[3].length === 8;
+      && (partesAntiguas[2] ?? "").length === 6
+      && (partesAntiguas[3] ?? "").length === 8;
 
     if (codigo && !esCodigoAntiguo) return joya;
 

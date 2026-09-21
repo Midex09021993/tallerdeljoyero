@@ -157,7 +157,7 @@ function Pedido2Detalle() {
         _tipo: tipoCalidad,
         _motivo: motivoCalidad.trim(),
         _descripcion: descripcionCalidad.trim(),
-        _evidencia_url: null,
+        _evidencia_url: undefined,
       });
       if (error) throw error;
       toast.success(resultadoCalidad === "aprobado" ? "Inspección aprobada y registrada." : "Inspección de calidad registrada.");
