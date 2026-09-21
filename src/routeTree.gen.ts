@@ -32,6 +32,7 @@ import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedPedidos2RouteImport } from './routes/_authenticated/pedidos-2'
 import { Route as AuthenticatedPedidos2IdRouteImport } from './routes/_authenticated/pedidos-2.$id'
+import { Route as AuthenticatedPedidos2IndexRouteImport } from './routes/_authenticated/pedidos-2.index'
 import { Route as AuthenticatedPedidos2NuevoRouteImport } from './routes/_authenticated/pedidos-2.nuevo'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
@@ -162,15 +163,20 @@ const AuthenticatedPedidos2Route = AuthenticatedPedidos2RouteImport.update({
   path: '/pedidos-2',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPedidos2IndexRoute = AuthenticatedPedidos2IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedPedidos2Route,
+} as any)
 const AuthenticatedPedidos2IdRoute = AuthenticatedPedidos2IdRouteImport.update({
-  id: '/pedidos-2/$id',
-  path: '/pedidos-2/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedPedidos2Route,
 } as any)
 const AuthenticatedPedidos2NuevoRoute = AuthenticatedPedidos2NuevoRouteImport.update({
-  id: '/pedidos-2/nuevo',
-  path: '/pedidos-2/nuevo',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/nuevo',
+  path: '/nuevo',
+  getParentRoute: () => AuthenticatedPedidos2Route,
 } as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
@@ -275,9 +281,8 @@ export interface FileRoutesByFullPath {
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
-  '/pedidos-2': typeof AuthenticatedPedidos2Route
-  '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
-  '/pedidos-2': typeof AuthenticatedPedidos2Route
+  '/pedidos-2': typeof AuthenticatedPedidos2RouteWithChildren
+  '/pedidos-2/': typeof AuthenticatedPedidos2IndexRoute
   '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/pedidos-2/nuevo': typeof AuthenticatedPedidos2NuevoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -358,7 +363,8 @@ export interface FileRoutesById {
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
-  '/_authenticated/pedidos-2': typeof AuthenticatedPedidos2Route
+  '/_authenticated/pedidos-2': typeof AuthenticatedPedidos2RouteWithChildren
+  '/_authenticated/pedidos-2/': typeof AuthenticatedPedidos2IndexRoute
   '/_authenticated/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/_authenticated/pedidos-2/nuevo': typeof AuthenticatedPedidos2NuevoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
@@ -402,8 +408,7 @@ export interface FileRouteTypes {
     | '/operario'
     | '/pedidos'
     | '/pedidos-2'
-    | '/pedidos-2/$id'
-    | '/pedidos-2'
+    | '/pedidos-2/'
     | '/pedidos-2/$id'
     | '/pedidos-2/nuevo'
     | '/perfil'
@@ -659,19 +664,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidos2RouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pedidos-2/': {
+      id: '/_authenticated/pedidos-2/'
+      path: '/'
+      fullPath: '/pedidos-2/'
+      preLoaderRoute: typeof AuthenticatedPedidos2IndexRouteImport
+      parentRoute: typeof AuthenticatedPedidos2Route
+    }
     '/_authenticated/pedidos-2/$id': {
       id: '/_authenticated/pedidos-2/$id'
-      path: '/pedidos-2/$id'
+      path: '/$id'
       fullPath: '/pedidos-2/$id'
       preLoaderRoute: typeof AuthenticatedPedidos2IdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPedidos2Route
     }
     '/_authenticated/pedidos-2/nuevo': {
       id: '/_authenticated/pedidos-2/nuevo'
-      path: '/pedidos-2/nuevo'
+      path: '/nuevo'
       fullPath: '/pedidos-2/nuevo'
       preLoaderRoute: typeof AuthenticatedPedidos2NuevoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPedidos2Route
     }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
@@ -810,6 +822,21 @@ const AuthenticatedPedidosRouteChildren: AuthenticatedPedidosRouteChildren = {
 const AuthenticatedPedidosRouteWithChildren =
   AuthenticatedPedidosRoute._addFileChildren(AuthenticatedPedidosRouteChildren)
 
+interface AuthenticatedPedidos2RouteChildren {
+  AuthenticatedPedidos2IndexRoute: typeof AuthenticatedPedidos2IndexRoute
+  AuthenticatedPedidos2IdRoute: typeof AuthenticatedPedidos2IdRoute
+  AuthenticatedPedidos2NuevoRoute: typeof AuthenticatedPedidos2NuevoRoute
+}
+
+const AuthenticatedPedidos2RouteChildren: AuthenticatedPedidos2RouteChildren = {
+  AuthenticatedPedidos2IndexRoute: AuthenticatedPedidos2IndexRoute,
+  AuthenticatedPedidos2IdRoute: AuthenticatedPedidos2IdRoute,
+  AuthenticatedPedidos2NuevoRoute: AuthenticatedPedidos2NuevoRoute,
+}
+
+const AuthenticatedPedidos2RouteWithChildren =
+  AuthenticatedPedidos2Route._addFileChildren(AuthenticatedPedidos2RouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
@@ -827,9 +854,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
-  AuthenticatedPedidos2Route: typeof AuthenticatedPedidos2Route
-  AuthenticatedPedidos2IdRoute: typeof AuthenticatedPedidos2IdRoute
-  AuthenticatedPedidos2NuevoRoute: typeof AuthenticatedPedidos2NuevoRoute
+  AuthenticatedPedidos2Route: typeof AuthenticatedPedidos2RouteWithChildren
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
@@ -857,9 +882,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
-  AuthenticatedPedidos2Route: AuthenticatedPedidos2Route,
-  AuthenticatedPedidos2IdRoute: AuthenticatedPedidos2IdRoute,
-  AuthenticatedPedidos2NuevoRoute: AuthenticatedPedidos2NuevoRoute,
+  AuthenticatedPedidos2Route: AuthenticatedPedidos2RouteWithChildren,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
