@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 });
 
 type Cotizacion = {
-  id: string; numero: string; version: number; estado: string; fecha_emision: string;
+  id: string; numero: string; version: number; estado: string; seguimiento_token: string | null; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
@@ -60,12 +60,13 @@ function CotizacionDetallePage() {
   const [contratoId, setContratoId] = useState<string | null>(null);
   const [contratoNumero, setContratoNumero] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [copiado, setCopiado] = useState<"enlace" | "whatsapp" | null>(null);
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_token,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -206,6 +207,47 @@ function CotizacionDetallePage() {
     setConvirtiendoPedido(false);
   }
 
+  const enlaceCliente = useMemo(() => {
+    if (!cotizacion?.seguimiento_token || typeof window === "undefined") return null;
+    return window.location.origin + "/cliente?token=" + encodeURIComponent(cotizacion.seguimiento_token);
+  }, [cotizacion?.seguimiento_token]);
+
+  async function copiarTexto(texto: string, tipo: "enlace" | "whatsapp") {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(tipo);
+      window.setTimeout(() => setCopiado(null), 1800);
+    } catch {
+      setError("No se pudo copiar al portapapeles. Puedes seleccionar y copiar el texto manualmente.");
+    }
+  }
+
+  async function copiarEnlaceCliente() {
+    if (!enlaceCliente) return;
+    await copiarTexto(enlaceCliente, "enlace");
+  }
+
+  async function copiarMensajeWhatsApp() {
+    if (!enlaceCliente || !cotizacion) return;
+    const mensaje = [
+      "Hola" + (cliente?.nombre ? " " + cliente.nombre : "") + ", te compartimos tu cotización de Taller del Joyero.",
+      "",
+      "Cotización: " + cotizacion.numero + " v" + cotizacion.version,
+      "Total: " + money(cotizacion.total, cotizacion.moneda),
+      cotizacion.fecha_vencimiento ? "Vigencia: " + cotizacion.fecha_vencimiento : null,
+      "",
+      "Puedes revisar la propuesta aquí:",
+      enlaceCliente,
+      "",
+      "Taller del Joyero",
+    ].filter((line): line is string => line !== null).join("\n");
+    await copiarTexto(mensaje, "whatsapp");
+  }
+
+  function imprimirCotizacion() {
+    window.print();
+  }
+
   async function cambiarEstado(estado: string) {
     if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
     setGuardandoEstado(true); setError("");
@@ -230,7 +272,9 @@ function CotizacionDetallePage() {
   }
 
   return (
-    <AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
+    <>
+      <style>{`@media print { body { background: white !important; } .cotizacion-app { display: none !important; } .cotizacion-print { display: block !important; } } @media screen { .cotizacion-print { display: none; } }`}</style>
+      <div className="cotizacion-app">\n    <AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
@@ -352,6 +396,14 @@ function CotizacionDetallePage() {
                 <div className="border-t border-border pt-3"><Fila label="Total" valor={money(cotizacion.total, cotizacion.moneda)} fuerte /></div>
                 <Fila label="Anticipo" valor={money(cotizacion.anticipo, cotizacion.moneda)} />
                 <Fila label="Margen bruto" valor={money(margen, cotizacion.moneda)} />
+              </div>
+            </Panel>
+            <Panel titulo="Enviar al cliente">
+              <div className="space-y-2 p-4">
+                <p className="text-xs text-muted-foreground">Comparte una copia de la propuesta o el enlace seguro de consulta. Los datos internos no se incluyen.</p>
+                <button type="button" disabled={!enlaceCliente} onClick={() => void copiarEnlaceCliente()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50">{copiado === "enlace" ? "✓ Enlace copiado" : "Copiar enlace para cliente"}</button>
+                <button type="button" disabled={!enlaceCliente} onClick={() => void copiarMensajeWhatsApp()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50">{copiado === "whatsapp" ? "✓ Mensaje copiado" : "Copiar mensaje para WhatsApp"}</button>
+                <button type="button" onClick={imprimirCotizacion} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Guardar PDF / imprimir</button>
               </div>
             </Panel>
             <Panel titulo="Acciones">
