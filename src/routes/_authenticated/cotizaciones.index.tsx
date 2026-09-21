@@ -82,7 +82,7 @@ function CotizacionesPage() {
           .from("clientes")
           .select("id,nombre,telefono,email")
           .eq("estado", "activo")
-          .eq("sede_id", sesion.sede.id)
+          .eq("sede_id", sesion?.sede?.id ?? "")
           .order("nombre")
           .limit(20);
 
@@ -162,7 +162,7 @@ function CotizacionesPage() {
     setGuardando(true);
     setErrorCliente("");
     try {
-      const { data: cotizacionCreadaId, error: creacionError } = await supabase.rpc("crear_cotizacion_comercial", {
+      const argumentos = {
         _cliente_id: form.cliente_id || null,
         _cliente_nombre: form.cliente_id ? null : busquedaCliente.trim(),
         _cliente_telefono: form.cliente_id ? null : nuevoCliente.telefono.trim() || null,
@@ -180,7 +180,11 @@ function CotizacionesPage() {
         _notas_cliente: form.notas_cliente,
         _notas_internas: form.notas_internas,
         _descripcion: form.descripcion,
-      });
+      };
+      const { data: cotizacionCreadaId, error: creacionError } = await supabase.rpc(
+        "crear_cotizacion_comercial",
+        argumentos as unknown as Parameters<typeof supabase.rpc<"crear_cotizacion_comercial">>[1],
+      );
       if (creacionError || !cotizacionCreadaId) {
         throw creacionError ?? new Error("No se pudo crear la cotización.");
       }
@@ -188,7 +192,7 @@ function CotizacionesPage() {
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
+      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, impuestos: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
       setBusquedaCliente("");
       await cargar();
       await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
