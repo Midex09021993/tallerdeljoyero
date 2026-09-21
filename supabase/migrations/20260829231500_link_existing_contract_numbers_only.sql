@@ -10,7 +10,11 @@ SELECT
   max(p.origen) AS origen,
   COALESCE(sum(p.importe), 0) AS total,
   0 AS abonado,
-  max(p.sede_id) AS sede_id,
+  CASE
+    WHEN count(DISTINCT p.sede_id) FILTER (WHERE p.sede_id IS NOT NULL) = 1
+      THEN (array_agg(p.sede_id) FILTER (WHERE p.sede_id IS NOT NULL))[1]
+    ELSE NULL
+  END AS sede_id,
   'Documento comercial creado automáticamente desde N° Contrato existente.' AS notas
 FROM public.pedidos p
 WHERE trim(COALESCE(p.contrato, '')) <> ''
