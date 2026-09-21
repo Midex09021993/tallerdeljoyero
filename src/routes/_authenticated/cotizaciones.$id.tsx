@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 });
 
 type Cotizacion = {
-  id: string; numero: string; version: number; estado: string; seguimiento_token: string | null; fecha_emision: string;
+  id: string; numero: string; version: number; estado: string; seguimiento_token: string | null; sede_id: string | null; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
@@ -50,6 +50,7 @@ function CotizacionDetallePage() {
   const [detalles, setDetalles] = useState<Detalle[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
+  const [sedeNombre, setSedeNombre] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardandoEstado, setGuardandoEstado] = useState(false);
   const [editando, setEditando] = useState(false);
@@ -66,7 +67,7 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_token,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_token,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -87,6 +88,12 @@ function CotizacionDetallePage() {
     setDetalles(d ?? []);
     setCliente(c ?? null);
     setProyecto(p ?? null);
+    if (q.sede_id) {
+      const { data: sede } = await supabase.from("sedes").select("nombre").eq("id", q.sede_id).maybeSingle();
+      setSedeNombre(sede?.nombre ?? null);
+    } else {
+      setSedeNombre(null);
+    }
     setPedidoId(pedidoExistente?.id ?? null);
     setContratoId(contratoExistente?.id ?? pedidoExistente?.contrato_id ?? null);
     setContratoNumero(contratoExistente?.numero ?? pedidoExistente?.contrato ?? null);
