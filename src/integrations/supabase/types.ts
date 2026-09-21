@@ -1977,6 +1977,7 @@ export type Database = {
           id: string
           orden_produccion_id: string | null
           pedido_id: string | null
+          pieza_id: string | null
           sede_id: string | null
           tipo: string
           trabajo_id: string | null
@@ -1990,6 +1991,7 @@ export type Database = {
           id?: string
           orden_produccion_id?: string | null
           pedido_id?: string | null
+          pieza_id?: string | null
           sede_id?: string | null
           tipo: string
           trabajo_id?: string | null
@@ -2003,6 +2005,7 @@ export type Database = {
           id?: string
           orden_produccion_id?: string | null
           pedido_id?: string | null
+          pieza_id?: string | null
           sede_id?: string | null
           tipo?: string
           trabajo_id?: string | null
@@ -2021,6 +2024,13 @@ export type Database = {
             columns: ["pedido_id"]
             isOneToOne: false
             referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_pieza_id_fkey"
+            columns: ["pieza_id"]
+            isOneToOne: false
+            referencedRelation: "piezas_terminadas"
             referencedColumns: ["id"]
           },
           {
