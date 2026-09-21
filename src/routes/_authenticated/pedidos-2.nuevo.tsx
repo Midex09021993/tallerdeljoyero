@@ -250,7 +250,6 @@ function NuevoPedido2() {
                 <Campo label="Talla / medida" value={form.talla} onChange={(v) => set("talla", v)} placeholder="Ej. 18" />
                 <Campo label="Cantidad" value={form.cantidad_piezas} onChange={(v) => set("cantidad_piezas", v)} type="number" placeholder="1" />
                 <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Contacto" />
-                <Campo label="Cantidad de piezas" value={form.cantidad_piezas} onChange={(v) => set("cantidad_piezas", v)} type="number" />
               </div>
             </section>
 
