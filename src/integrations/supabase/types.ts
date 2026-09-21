@@ -2512,6 +2512,28 @@ export type Database = {
       }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
       es_interno: { Args: { _user_id: string }; Returns: boolean }
+      crear_cotizacion_comercial: {
+        Args: {
+          _cliente_id: string | null
+          _cliente_nombre: string | null
+          _cliente_telefono: string | null
+          _cliente_email: string | null
+          _proyecto_joya_id: string | null
+          _sede_id: string | null
+          _moneda: string
+          _cantidad: number
+          _costo_unitario: number
+          _precio_unitario: number
+          _descuento: number
+          _impuestos: number
+          _fecha_vencimiento: string | null
+          _fecha_entrega_solicitada: string | null
+          _notas_cliente: string | null
+          _notas_internas: string | null
+          _descripcion: string
+        }
+        Returns: string
+      }
       guardar_detalles_cotizacion: {
         Args: { _cotizacion_id: string; _detalles: Json }
         Returns: undefined
