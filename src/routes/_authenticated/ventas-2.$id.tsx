@@ -10,7 +10,7 @@ import { areaCoincide, useSesion } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ventas-2/$id")({
-  head: () => ({ meta: [{ title: "Ficha comercial — Ventas 2" }, { name: "description", content: "Ficha comercial y de entrega del pedido." }] }),
+  head: () => ({ meta: [{ title: "Ficha comercial — Ventas" }, { name: "description", content: "Ficha comercial y de entrega del pedido." }] }),
   component: Venta2Detalle,
 });
 
