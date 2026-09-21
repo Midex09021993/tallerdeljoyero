@@ -804,6 +804,50 @@ export type Database = {
           },
         ]
       }
+      inventario_joya_eventos: {
+        Row: {
+          created_at: string
+          estado_anterior: string | null
+          estado_nuevo: string | null
+          id: string
+          joya_id: string
+          nota: string | null
+          sede_id: string | null
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          joya_id: string
+          nota?: string | null
+          sede_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          joya_id?: string
+          nota?: string | null
+          sede_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_joya_eventos_joya_id_fkey"
+            columns: ["joya_id"]
+            isOneToOne: false
+            referencedRelation: "inventario_joyas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventario_joyas: {
         Row: {
           cantidad: number
@@ -819,6 +863,7 @@ export type Database = {
           origen: string
           peso: number | null
           piedras: string
+          qr_token: string
           sede_id: string | null
           talla: string
           updated_at: string
@@ -837,6 +882,7 @@ export type Database = {
           origen?: string
           peso?: number | null
           piedras?: string
+          qr_token?: string
           sede_id?: string | null
           talla?: string
           updated_at?: string
@@ -855,6 +901,7 @@ export type Database = {
           origen?: string
           peso?: number | null
           piedras?: string
+          qr_token?: string
           sede_id?: string | null
           talla?: string
           updated_at?: string
@@ -1921,6 +1968,70 @@ export type Database = {
           },
         ]
       }
+      produccion_eventos: {
+        Row: {
+          created_at: string
+          datos: Json
+          estado_anterior: string | null
+          estado_nuevo: string | null
+          id: string
+          orden_produccion_id: string | null
+          pedido_id: string | null
+          sede_id: string | null
+          tipo: string
+          trabajo_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          datos?: Json
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          orden_produccion_id?: string | null
+          pedido_id?: string | null
+          sede_id?: string | null
+          tipo: string
+          trabajo_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          datos?: Json
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          orden_produccion_id?: string | null
+          pedido_id?: string | null
+          sede_id?: string | null
+          tipo?: string
+          trabajo_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produccion_eventos_orden_produccion_id_fkey"
+            columns: ["orden_produccion_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_produccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produccion_eventos_trabajo_id_fkey"
+            columns: ["trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "trabajos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           acceso_desde: string | null
@@ -2502,9 +2613,46 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      consultar_joya_publica: {
+        Args: { _token: string }
+        Returns: {
+          codigo: string
+          estado: string
+          id: string
+          ley: string
+          metal: string
+          nombre: string
+          peso: number
+          piedras: string
+          talla: string
+          taller: string
+        }[]
+      }
       convertir_cotizacion_a_pedido_contrato: {
         Args: { _cotizacion_id: string }
         Returns: Json
+      }
+      crear_cotizacion_comercial: {
+        Args: {
+          _cantidad: number
+          _cliente_email: string
+          _cliente_id: string
+          _cliente_nombre: string
+          _cliente_telefono: string
+          _costo_unitario: number
+          _descripcion: string
+          _descuento: number
+          _fecha_entrega_solicitada: string
+          _fecha_vencimiento: string
+          _impuestos: number
+          _moneda: string
+          _notas_cliente: string
+          _notas_internas: string
+          _precio_unitario: number
+          _proyecto_joya_id: string
+          _sede_id: string
+        }
+        Returns: string
       }
       crear_version_cotizacion: {
         Args: { _cotizacion_id: string }
@@ -2534,6 +2682,10 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      preparar_produccion_pedido: {
+        Args: { _pedido_id: string }
+        Returns: Json
+      }
       recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
       registrar_entrega_material_produccion: {
