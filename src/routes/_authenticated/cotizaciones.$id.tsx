@@ -247,6 +247,22 @@ function CotizacionDetallePage() {
     await copiarTexto(enlacePdf, "pdf");
   }
 
+  function abrirWhatsApp() {
+    if (!enlacePdf) return;
+    const telefono = (cliente?.telefono ?? "").replace(/\D/g, "");
+    const mensaje = [
+      "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
+      "",
+      `Te enviamos la cotización ${cotizacion?.numero ?? ""}` + (cotizacion?.version ? ` (versión ${cotizacion.version})` : "") + ".",
+      "Puedes revisar el PDF aquí:",
+      enlacePdf,
+    ].join("\n");
+    const destino = telefono
+      ? `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
+      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(destino, "_blank", "noopener,noreferrer");
+  }
+
   async function descargarPdf() {
     if (!enlacePdf) return;
     try {
@@ -429,6 +445,9 @@ function CotizacionDetallePage() {
                     </button>
                     <button type="button" onClick={() => void copiarEnlacePdf()} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
                       {copiado === "pdf" ? "✓ Enlace copiado" : "Copiar enlace"}
+                    </button>
+                    <button type="button" onClick={abrirWhatsApp} className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
+                      Enviar por WhatsApp
                     </button>
                   </div>
                 ) : null}
