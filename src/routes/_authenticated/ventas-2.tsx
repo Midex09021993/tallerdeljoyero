@@ -8,7 +8,7 @@ import { estadoClases, esEstadoFinalPedido, resumenFinancieroContrato, useContra
 import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/ventas-2")({
-  head: () => ({ meta: [{ title: "Ventas 2 — Taller del Joyero" }, { name: "description", content: "Centro comercial de cobros, cartera, despacho y entrega del taller." }] }),
+  head: () => ({ meta: [{ title: "Ventas — Taller del Joyero" }, { name: "description", content: "Centro comercial de cobros, cartera, despacho y entrega del taller." }] }),
   component: Ventas2Page,
 });
 
