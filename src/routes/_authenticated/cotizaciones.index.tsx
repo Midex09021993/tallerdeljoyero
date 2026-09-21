@@ -127,7 +127,6 @@ function CotizacionesPage() {
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
-      const cotizacionCreadaId = q.id;
       setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
       setBusquedaCliente("");
       await cargar();
