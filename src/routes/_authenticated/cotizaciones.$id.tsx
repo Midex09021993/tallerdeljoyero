@@ -247,6 +247,26 @@ function CotizacionDetallePage() {
     await copiarTexto(enlacePdf, "pdf");
   }
 
+  async function descargarPdf() {
+    if (!enlacePdf) return;
+    try {
+      setError("");
+      const response = await fetch(enlacePdf);
+      if (!response.ok) throw new Error("No se pudo descargar el PDF.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${cotizacion?.numero ?? "cotizacion"}-v${cotizacion?.version ?? 1}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (downloadError) {
+      setError(downloadError instanceof Error ? downloadError.message : "No se pudo descargar el PDF.");
+    }
+  }
+
   async function cambiarEstado(estado: string) {
     if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
     setGuardandoEstado(true); setError("");
@@ -403,11 +423,20 @@ function CotizacionDetallePage() {
                   {generandoPdf ? "Generando PDF…" : enlacePdf ? "Regenerar PDF" : "Generar PDF"}
                 </button>
                 {enlacePdf ? (
-                  <button type="button" onClick={() => void copiarEnlacePdf()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
-                    {copiado === "pdf" ? "✓ Enlace del PDF copiado" : "Copiar enlace del PDF"}
-                  </button>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button type="button" onClick={() => void descargarPdf()} className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground hover:opacity-90">
+                      Descargar PDF
+                    </button>
+                    <button type="button" onClick={() => void copiarEnlacePdf()} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
+                      {copiado === "pdf" ? "✓ Enlace copiado" : "Copiar enlace"}
+                    </button>
+                  </div>
                 ) : null}
-                {enlacePdf ? <p className="break-all text-[11px] text-muted-foreground">{enlacePdf}</p> : null}
+                {enlacePdf ? (
+                  <a href={enlacePdf} target="_blank" rel="noreferrer" className="block text-center text-xs font-medium text-primary hover:underline">
+                    Abrir PDF en una pestaña nueva
+                  </a>
+                ) : null}
               </div>
             </Panel>
             <Panel titulo="Acciones">
