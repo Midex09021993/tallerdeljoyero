@@ -269,7 +269,21 @@ Deno.serve(async (req) => {
 
     if (uploadError) return json({ error: "No se pudo guardar el PDF." }, 500);
 
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/cotizaciones-publicas/${path}`;
+    // El bucket es privado en este entorno: se comparte un enlace firmado de larga duración.
+    const { data: bucketInfo } = await admin.storage.getBucket("cotizaciones-publicas");
+    let publicUrl = `${supabaseUrl}/storage/v1/object/public/cotizaciones-publicas/${path}`;
+
+    if (!bucketInfo?.public) {
+      const { data: signed, error: signedError } = await admin.storage
+        .from("cotizaciones-publicas")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+
+      if (signedError || !signed?.signedUrl) {
+        await admin.storage.from("cotizaciones-publicas").remove([path]);
+        return json({ error: "No se pudo generar el enlace del PDF." }, 500);
+      }
+      publicUrl = signed.signedUrl;
+    }
 
     const { error: documentError } = await admin
       .from("cotizacion_documentos_publicos")

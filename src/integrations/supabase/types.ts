@@ -482,6 +482,44 @@ export type Database = {
           },
         ]
       }
+      cotizacion_documentos_publicos: {
+        Row: {
+          cotizacion_id: string
+          creado_por: string | null
+          created_at: string
+          id: string
+          public_url: string
+          storage_path: string
+          version: number
+        }
+        Insert: {
+          cotizacion_id: string
+          creado_por?: string | null
+          created_at?: string
+          id?: string
+          public_url: string
+          storage_path: string
+          version: number
+        }
+        Update: {
+          cotizacion_id?: string
+          creado_por?: string | null
+          created_at?: string
+          id?: string
+          public_url?: string
+          storage_path?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_documentos_publicos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           anticipo: number
