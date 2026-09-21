@@ -1192,7 +1192,7 @@ function FichaPedido() {
                 </Link>
               ) : null}
               <Link
-                to="/ventas"
+                to="/ventas-2"
                 className="rounded-lg border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:border-gold/50 hover:bg-gold/5"
               >
                 Ver ventas
