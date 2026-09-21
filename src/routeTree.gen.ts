@@ -32,6 +32,7 @@ import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedPedidos2RouteImport } from './routes/_authenticated/pedidos-2'
 import { Route as AuthenticatedPedidos2IdRouteImport } from './routes/_authenticated/pedidos-2.$id'
+import { Route as AuthenticatedPedidos2NuevoRouteImport } from './routes/_authenticated/pedidos-2.nuevo'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
@@ -166,6 +167,11 @@ const AuthenticatedPedidos2IdRoute = AuthenticatedPedidos2IdRouteImport.update({
   path: '/pedidos-2/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPedidos2NuevoRoute = AuthenticatedPedidos2NuevoRouteImport.update({
+  id: '/pedidos-2/nuevo',
+  path: '/pedidos-2/nuevo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
   '/pedidos-2': typeof AuthenticatedPedidos2Route
   '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
+  '/pedidos-2/nuevo': typeof AuthenticatedPedidos2NuevoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
+  '/pedidos-2/nuevo': typeof AuthenticatedPedidos2NuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/_authenticated/pedidos-2': typeof AuthenticatedPedidos2Route
   '/_authenticated/pedidos-2/$id': typeof AuthenticatedPedidos2IdRoute
+  '/_authenticated/pedidos-2/nuevo': typeof AuthenticatedPedidos2NuevoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/pedidos-2/$id'
     | '/pedidos-2'
     | '/pedidos-2/$id'
+    | '/pedidos-2/nuevo'
     | '/perfil'
     | '/taller'
     | '/vectorizador-laser'
@@ -656,6 +666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidos2IdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pedidos-2/nuevo': {
+      id: '/_authenticated/pedidos-2/nuevo'
+      path: '/pedidos-2/nuevo'
+      fullPath: '/pedidos-2/nuevo'
+      preLoaderRoute: typeof AuthenticatedPedidos2NuevoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -812,6 +829,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
   AuthenticatedPedidos2Route: typeof AuthenticatedPedidos2Route
   AuthenticatedPedidos2IdRoute: typeof AuthenticatedPedidos2IdRoute
+  AuthenticatedPedidos2NuevoRoute: typeof AuthenticatedPedidos2NuevoRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
@@ -841,6 +859,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
   AuthenticatedPedidos2Route: AuthenticatedPedidos2Route,
   AuthenticatedPedidos2IdRoute: AuthenticatedPedidos2IdRoute,
+  AuthenticatedPedidos2NuevoRoute: AuthenticatedPedidos2NuevoRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
