@@ -2672,6 +2672,10 @@ export type Database = {
         Args: { _accion: string; _datos?: Json; _pedido_id: string }
         Returns: Json
       }
+      preparar_produccion_pedido: {
+        Args: { _pedido_id: string }
+        Returns: Json
+      }
       transicionar_orden_produccion: {
         Args: { _nuevo_estado: string; _orden_id: string }
         Returns: {
