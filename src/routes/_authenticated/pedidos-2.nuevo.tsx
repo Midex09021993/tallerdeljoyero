@@ -34,7 +34,7 @@ function siguienteReferencia(sede: string, refs: string[]) {
   return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
 }
 
-const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Área ventas"];
+const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
 
 function Campo({ label, value, onChange, placeholder, type = "text", required = false }: {
   label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean;
