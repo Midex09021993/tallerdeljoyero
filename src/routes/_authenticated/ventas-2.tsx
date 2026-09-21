@@ -51,7 +51,7 @@ function Ventas2Page() {
 
   return (
     <AppShell
-      titulo="Ventas 2"
+      titulo="Ventas"
       subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : "Control comercial y cierre de pedidos"}
       acciones={<SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />}
     >
