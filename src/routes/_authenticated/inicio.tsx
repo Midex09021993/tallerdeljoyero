@@ -69,9 +69,37 @@ function Inicio() {
     const activos = pedidos.filter((p) => !esEstadoFinalPedido(p.estado));
     const produccion = activos.filter((p) => p.estado === "En Producción");
     const recepcion = activos.filter((p) => pedidoEnRecepcion(p.estado));
+    const vencidos = activos.filter((p) => {
+      const dias = diasHastaEntrega(p);
+      return dias !== null && dias < 0;
+    });
+    const hoy = activos.filter((p) => diasHastaEntrega(p) === 0);
     const urgentes = activos.filter(esUrgente);
-    return { activos, produccion, recepcion, urgentes };
+    const atencion = [...activos]
+      .filter((p) => esUrgente(p) || pedidoEnRecepcion(p.estado))
+      .sort((a, b) => {
+        const da = diasHastaEntrega(a);
+        const db = diasHastaEntrega(b);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1;
+        if (db === null) return -1;
+        return da - db;
+      });
+    return { activos, produccion, recepcion, vencidos, hoy, urgentes, atencion };
   }, [pedidos]);
+
+  const cargaAreas = useMemo(
+    () =>
+      [
+        ["Diseño 3D", LayoutGrid],
+        ["Impresión 3D", Boxes],
+        ["Casting", Gem],
+        ["Taller", Hammer],
+        ["Corte Láser", Scissors],
+        ["Área ventas", PackageCheck],
+      ] as const,
+    [],
+  );
 
   const modulos = useMemo(() => {
     if (!esOperario) {
@@ -175,35 +203,37 @@ function Inicio() {
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       acciones={
         <>
-          <Link to="/pedidos" className="rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised">Ver pedidos</Link>
+          <Link to="/pedidos-2" className="rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised">Ver pedidos</Link>
+          <Link to="/pedidos-2/nuevo" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nuevo pedido</Link>
           <Link to="/cotizaciones" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nueva cotización</Link>
         </>
       }
     >
       <div className="space-y-6">
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatCard etiqueta="Pedidos activos" valor={String(resumen.activos.length)} />
           <StatCard etiqueta="En producción" valor={String(resumen.produccion.length)} />
           <StatCard etiqueta="En recepción" valor={String(resumen.recepcion.length)} />
-          <StatCard etiqueta="Urgentes" valor={String(resumen.urgentes.length)} tono={resumen.urgentes.length ? "negativo" : "positivo"} />
+          <StatCard etiqueta="Entrega hoy" valor={String(resumen.hoy.length)} tono={resumen.hoy.length ? "negativo" : "positivo"} />
+          <StatCard etiqueta="Vencidos" valor={String(resumen.vencidos.length)} tono={resumen.vencidos.length ? "negativo" : "positivo"} />
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
           <Panel
-            titulo="Pedidos que requieren atención"
-            accion={<Link to="/pedidos" className="text-xs font-semibold text-gold hover:underline">Ver todos</Link>}
+            titulo="Requieren atención"
+            accion={<Link to="/pedidos-2" className="text-xs font-semibold text-gold hover:underline">Ver pedidos</Link>}
           >
             <div className="divide-y divide-border">
               {cargandoPedidos ? (
                 <div className="p-6 text-sm text-muted-foreground">Cargando pedidos...</div>
-              ) : resumen.activos.length === 0 ? (
+               ) : resumen.atencion.length === 0 ? (
                 <div className="p-8 text-center">
                   <Clock3 className="mx-auto size-8 text-muted-foreground" />
                   <p className="mt-3 text-sm font-medium">No hay pedidos activos</p>
                   <p className="mt-1 text-xs text-muted-foreground">Cuando ingresen pedidos aparecerán aquí.</p>
                 </div>
               ) : (
-                resumen.activos.slice(0, 7).map((pedido) => (
+                resumen.atencion.slice(0, 7).map((pedido) => (
                   <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-muted/40 lg:px-6">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{pedido.referencia || pedido.pieza || pedido.trabajo || "Pedido sin referencia"}</p>
@@ -240,23 +270,19 @@ function Inicio() {
           </Panel>
         </section>
 
-        <Panel titulo="Flujo del taller">
-          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5">
-            {[
-              { label: "Pedidos", value: resumen.activos.length, icon: ClipboardList, to: "/pedidos" },
-              { label: "Diseño 3D", value: pedidos.filter((p) => p.area_actual === "Diseño 3D").length, icon: LayoutGrid, to: "/diseno-3d" },
-              { label: "Impresión", value: pedidos.filter((p) => p.area_actual === "Impresión 3D").length, icon: Boxes, to: "/impresion-3d" },
-              { label: "Casting", value: pedidos.filter((p) => p.area_actual === "Casting").length, icon: Gem, to: "/casting" },
-              { label: "Taller", value: pedidos.filter((p) => p.area_actual === "Taller").length, icon: Hammer, to: "/taller" },
-            ].map((item) => {
-              const Icono = item.icon;
+        <Panel titulo="Carga operativa por área">
+          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cargaAreas.map(([area, Icono]) => {
+              const cantidad = pedidos.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
+              const destino = area === "Área ventas" ? "/ventas-2" : areaRuta[area];
               return (
-                <Link key={item.label} to={item.to as never} className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-raised">
-                  <div className="flex items-center justify-between">
-                    <Icono className="size-4 text-gold" />
-                    <span className="text-xl font-semibold">{item.value}</span>
+                <Link key={area} to={destino as never} className="rounded-2xl border border-border bg-card p-4 shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-raised">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
+                    <span className="font-display text-2xl font-semibold">{cantidad}</span>
                   </div>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{area}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{cantidad === 0 ? "Sin carga activa" : cantidad === 1 ? "1 pedido en curso" : cantidad + " pedidos en curso"}</p>
                 </Link>
               );
             })}
