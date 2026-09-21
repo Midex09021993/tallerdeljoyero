@@ -9,7 +9,7 @@ as $$
 declare
   v_pedido public.pedidos;
   v_op public.ordenes_produccion;
-  v_ruta jsonb;
+  v_ruta text[];
   v_area text;
   v_secuencia integer := 0;
   v_cantidad integer;
@@ -37,8 +37,8 @@ begin
     raise exception 'Este pedido ya tiene una orden de producción';
   end if;
 
-  v_ruta := coalesce(v_pedido.ruta,'[]'::jsonb);
-  if jsonb_typeof(v_ruta) <> 'array' or jsonb_array_length(v_ruta)=0 then
+  v_ruta := coalesce(v_pedido.ruta, ARRAY[]::text[]);
+  if coalesce(array_length(v_ruta,1),0)=0 then
     raise exception 'El pedido no tiene una ruta de fabricación definida';
   end if;
 
@@ -63,11 +63,12 @@ begin
   )
   returning * into v_op;
 
-  for v_area in
-    select trim(value)
-    from jsonb_array_elements_text(v_ruta)
-    where lower(trim(value)) <> 'área ventas'
+  foreach v_area in array v_ruta
   loop
+    v_area := trim(v_area);
+    if lower(v_area) = 'área ventas' or v_area = '' then
+      continue;
+    end if;
     v_secuencia := v_secuencia + 1;
     insert into public.trabajos(
       pedido_id,orden_produccion_id,sede_id,secuencia,area,ubicacion,
