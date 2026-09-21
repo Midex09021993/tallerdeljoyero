@@ -21,8 +21,10 @@ type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
-  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null;
+  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null;
 };
+
+type Sede = { id: string; nombre: string };
 
 
 function money(n: number, moneda = "PEN") {
@@ -38,6 +40,7 @@ function CotizacionesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+  const [sedes, setSedes] = useState<Sede[]>([]);
   const [busca, setBusca] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -51,14 +54,16 @@ function CotizacionesPage() {
   });
 
   const cargar = async () => {
-    const [{ data: c }, { data: p }, { data: q }] = await Promise.all([
+    const [{ data: c }, { data: p }, { data: q }, { data: s }] = await Promise.all([
       supabase.from("clientes").select("id,nombre,telefono,email").eq("estado", "activo").order("nombre"),
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id").order("created_at", { ascending: false }),
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id").order("created_at", { ascending: false }),
+      supabase.from("sedes").select("id,nombre").order("nombre"),
     ]);
     if (c) setClientes(c);
     if (p) setProyectos(p);
     if (q) setCotizaciones(q);
+    if (s) setSedes(s);
   };
 
   useEffect(() => {
@@ -176,7 +181,7 @@ function CotizacionesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead><tr className="border-y border-border bg-surface-muted/45 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {["Cotización","Cliente","Proyecto","Estado","Emisión","Total"].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
+                {["Cotización","Cliente","Proyecto","Taller","Estado","Emisión","Total"].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
               </tr></thead>
               <tbody className="divide-y divide-border">
                 {filtradas.map(q => {
@@ -188,12 +193,13 @@ function CotizacionesPage() {
                     </td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
                     <td className="p-0 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
+                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sede?.nombre ?? "Taller no asignado"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
                     <td className="p-0 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{money(Number(q.total), q.moneda)}</Link></td>
                   </tr>;
                 })}
-                {filtradas.length === 0 && <tr><td colSpan={6} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
+                {filtradas.length === 0 && <tr><td colSpan={7} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
               </tbody>
             </table>
           </div>
