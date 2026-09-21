@@ -54,8 +54,7 @@ type AtrasMovil = false | { to?: string; onClick?: () => void };
 const secciones: Seccion[] = [
   { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
-  { to: "/pedidos-2", label: "Pedidos 2", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
-  { to: "/pedidos", label: "Pedidos anterior", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
+  { to: "/pedidos-2", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
   { to: "/clientes", label: "Clientes", icono: Users, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
