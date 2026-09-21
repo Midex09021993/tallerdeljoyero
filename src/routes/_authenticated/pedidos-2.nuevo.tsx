@@ -68,7 +68,7 @@ function NuevoPedido2() {
       const patron = "%" + termino + "%";
       const { data, error } = await supabase
         .from("clientes")
-        .select("id,nombre,telefono")
+        .select("id,nombre,telefono,ciudad")
         .eq("estado", "activo")
         .or("nombre.ilike." + patron + ",telefono.ilike." + patron)
         .order("nombre")
@@ -260,8 +260,7 @@ function NuevoPedido2() {
         setClienteId(clientePredictivo.id);
         set("cliente", clientePredictivo.nombre);
         set("telefono", clientePredictivo.telefono ?? "");
-        const { data: clienteCompleto } = await supabase.from("clientes").select("ciudad").eq("id", clientePredictivo.id).maybeSingle();
-        set("origen", clienteCompleto?.ciudad ?? "");
+        set("origen", clientePredictivo.ciudad ?? "");
         setClienteBusqueda("");
       }} className="text-left text-muted-foreground transition hover:text-foreground">
       <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}{clientePredictivo.telefono ? <span className="ml-2 opacity-70">{clientePredictivo.telefono}</span> : null}
