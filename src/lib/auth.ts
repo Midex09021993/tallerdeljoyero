@@ -160,8 +160,8 @@ export function inicioSegunRol(s: Sesion, opciones?: { movilTablet?: boolean }):
   if (s.rolPrincipal === "monitor") return "/monitor";
   if (s.rolPrincipal === "cliente") return "/cliente";
   if (s.rolPrincipal === "operario") return opciones?.movilTablet ? "/inicio" : "/operario";
-  if (opciones?.movilTablet && s.esAdmin) return "/inicio";
-  return "/pedidos";
+  if (s.esAdmin) return "/inicio";
+  return "/inicio";
 }
 
 /** Permite entrar con DNI o correo. El DNI se convierte en un correo interno. */
