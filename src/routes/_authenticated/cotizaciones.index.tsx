@@ -113,7 +113,33 @@ function CotizacionesPage() {
     });
   }, [busca, cotizaciones]);
 
-  const clientesFiltrados = clientes;
+  const clientePredictivo = useMemo(() => {
+    const termino = busquedaCliente.trim().toLowerCase();
+    if (!termino || form.cliente_id) return null;
+    const coincidencias = clientes.filter((cliente) =>
+      [cliente.nombre, cliente.telefono, cliente.email]
+        .filter(Boolean)
+        .some((valor) => String(valor).toLowerCase().includes(termino)),
+    );
+    if (coincidencias.length === 1) return coincidencias[0];
+    const exacto = coincidencias.find((cliente) =>
+      [cliente.nombre, cliente.telefono, cliente.email]
+        .filter(Boolean)
+        .some((valor) => String(valor).toLowerCase() === termino),
+    );
+    return exacto ?? null;
+  }, [busquedaCliente, clientes, form.cliente_id]);
+
+  const coincidenciasCliente = useMemo(() => {
+    const termino = busquedaCliente.trim().toLowerCase();
+    if (!termino || form.cliente_id) return 0;
+    return clientes.filter((cliente) =>
+      [cliente.nombre, cliente.telefono, cliente.email]
+        .filter(Boolean)
+        .some((valor) => String(valor).toLowerCase().includes(termino)),
+    ).length;
+  }, [busquedaCliente, clientes, form.cliente_id]);
+
   const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -241,13 +267,38 @@ function CotizacionesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="relative">
   <label className="text-xs text-muted-foreground">Cliente</label>
-  <input value={busquedaCliente} onChange={e => setBusquedaCliente(e.target.value)} placeholder="Buscar por nombre, teléfono o correo…" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
-  {form.cliente_id ? <button type="button" onClick={() => { setForm({...form, cliente_id:"", proyecto_joya_id:""}); setBusquedaCliente(""); }} className="absolute right-3 top-8 text-muted-foreground"><X className="size-4" /></button> : null}
-  {!form.cliente_id && busquedaCliente ? <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
-    {clientesFiltrados.map(c => <button type="button" key={c.id} onClick={() => { setForm({...form, cliente_id:c.id, proyecto_joya_id:""}); setBusquedaCliente(c.nombre); }} className="block w-full border-b border-border px-3 py-3 text-left hover:bg-surface-muted">
-      <span className="block text-sm font-medium">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.telefono || c.email || "Sin contacto"}</span>
-    </button>)}
-  </div> : null}
+  <input
+    value={busquedaCliente}
+    onChange={e => {
+      setBusquedaCliente(e.target.value);
+      if (form.cliente_id) setForm({...form, cliente_id:"", proyecto_joya_id:""});
+    }}
+    placeholder="Escribe nombre, teléfono o correo…"
+    className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/15"
+  />
+  {form.cliente_id ? (
+    <button type="button" onClick={() => { setForm({...form, cliente_id:"", proyecto_joya_id:""}); setBusquedaCliente(""); }} className="absolute right-3 top-8 text-muted-foreground">
+      <X className="size-4" />
+    </button>
+  ) : null}
+  {!form.cliente_id && busquedaCliente.trim() ? (
+    <div className="mt-1 min-h-5 text-[11px]">
+      {clientePredictivo ? (
+        <button
+          type="button"
+          onClick={() => { setForm({...form, cliente_id:clientePredictivo.id, proyecto_joya_id:""}); setBusquedaCliente(clientePredictivo.nombre); }}
+          className="text-left text-muted-foreground transition hover:text-foreground"
+        >
+          <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}
+          {clientePredictivo.telefono || clientePredictivo.email ? <span className="ml-2 opacity-70">{clientePredictivo.telefono || clientePredictivo.email}</span> : null}
+        </button>
+      ) : coincidenciasCliente > 1 ? (
+        <span className="text-muted-foreground">Hay {coincidenciasCliente} coincidencias. Continúa escribiendo para precisar.</span>
+      ) : (
+        <span className="text-muted-foreground">No hay una coincidencia exacta todavía. Puedes registrar este nombre como nuevo cliente.</span>
+      )}
+    </div>
+  ) : null}
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
 </div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
