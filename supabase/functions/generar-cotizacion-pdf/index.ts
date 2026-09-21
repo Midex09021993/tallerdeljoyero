@@ -62,6 +62,13 @@ function wrap(text: string, maxChars = 88) {
   return lines;
 }
 
+function parseHexColor(value: unknown) {
+  const raw = clean(value).replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
+  const number = Number.parseInt(raw, 16);
+  return rgb(((number >> 16) & 255) / 255, ((number >> 8) & 255) / 255, (number & 255) / 255);
+}
+
 function drawLabelValue(
   page: any,
   font: any,
@@ -102,7 +109,7 @@ Deno.serve(async (req) => {
 
     const { data: quote, error: quoteError } = await admin
       .from("cotizaciones")
-      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id")
+      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id,identidad_comercial_id")
       .eq("id", cotizacionId)
       .maybeSingle();
 
@@ -122,7 +129,7 @@ Deno.serve(async (req) => {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
     }
 
-    const [{ data: cliente }, { data: proyecto }, { data: sede }, { data: detalles }] = await Promise.all([
+    const [{ data: cliente }, { data: proyecto }, { data: sede }, { data: detalles }, { data: identidadDirecta }] = await Promise.all([
       admin.from("clientes").select("nombre,telefono,email").eq("id", quote.cliente_id).maybeSingle(),
       quote.proyecto_joya_id
         ? admin.from("proyectos_joya").select("codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras,cantidad_piezas").eq("id", quote.proyecto_joya_id).maybeSingle()
@@ -131,7 +138,19 @@ Deno.serve(async (req) => {
         ? admin.from("sedes").select("nombre").eq("id", quote.sede_id).maybeSingle()
         : Promise.resolve({ data: null }),
       admin.from("cotizacion_detalles").select("orden,tipo,descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", quote.id).order("orden"),
+      quote.identidad_comercial_id
+        ? admin.from("identidades_comerciales").select("id,sede_id,nombre_comercial,razon_social,ruc,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,metadata").eq("id", quote.identidad_comercial_id).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
+
+    const { data: identidadSede } = !identidadDirecta && quote.sede_id
+      ? await admin.from("identidades_comerciales")
+          .select("id,sede_id,nombre_comercial,razon_social,ruc,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,metadata")
+          .eq("sede_id", quote.sede_id).eq("activa", true).maybeSingle()
+      : { data: null };
+
+    const identidad = identidadDirecta ?? identidadSede;
+    const nombreComercial = clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "Taller del Joyero";
 
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -140,8 +159,9 @@ Deno.serve(async (req) => {
     const { width, height } = page.getSize();
     let y = height - 54;
 
-    page.drawText("TALLER DEL JOYERO", { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
-    page.drawText("COTIZACIÓN COMERCIAL", { x: 42, y: y - 24, size: 10, font: bold, color: rgb(0.42, 0.32, 0.16) });
+    const brandColor = parseHexColor(identidad?.color_principal) ?? rgb(0.42, 0.32, 0.16);
+    page.drawText(nombreComercial, { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
+    page.drawText("COTIZACIÓN COMERCIAL", { x: 42, y: y - 24, size: 10, font: bold, color: brandColor });
     page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: 375, y, size: 11, font: bold });
     page.drawText(`Emitida: ${quote.fecha_emision ?? "—"}`, { x: 375, y: y - 16, size: 9, font });
     y -= 62;
@@ -245,12 +265,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    page.drawText("Documento comercial generado por Taller del Joyero.", {
-      x: 42,
-      y: 28,
-      size: 7.5,
-      font,
+    const footerText = clean(identidad?.pie_documento)
+      || [identidad?.direccion, identidad?.telefono || identidad?.whatsapp, identidad?.email, identidad?.sitio_web]
+        .filter(Boolean).map(clean).join(" · ")
+      || `Documento comercial generado por ${nombreComercial}.`;
+
+    page.drawText(footerText, {
+      x: 42, y: 28, size: 7.5, font,
       color: rgb(0.48, 0.48, 0.5),
+      maxWidth: width - 84,
     });
 
     const pdfBytes = await pdf.save();
