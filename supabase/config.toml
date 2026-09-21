@@ -1,3 +1,6 @@
 # Lovable Cloud manages the connected Supabase backend.
 # This project_id is only the local Supabase CLI identifier; it is not a remote project binding.
 project_id = "tallerdeljoyero"
+
+[functions.generar-cotizacion-pdf]
+verify_jwt = true
