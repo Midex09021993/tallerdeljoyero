@@ -90,7 +90,7 @@ function Venta2Detalle() {
     <AppShell
       titulo={pedido.referencia}
       subtitulo={`${pedido.cliente || "Cliente pendiente"} · ${pedido.sede_nombre || "Taller no asignado"}`}
-      acciones={<div className="flex flex-wrap gap-2"><button type="button" onClick={()=>navigate({to:"/ventas-2"})} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4"/> Ventas 2</button><Link to="/pedidos-2/$id" params={{id}} className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold">Ver pedido operativo</Link></div>}
+      acciones={<div className="flex flex-wrap gap-2"><button type="button" onClick={()=>navigate({to:"/ventas-2"})} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4"/> Ventas</button><Link to="/pedidos-2/$id" params={{id}} className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold">Ver pedido operativo</Link></div>}
     >
       <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-6 sm:p-8">
