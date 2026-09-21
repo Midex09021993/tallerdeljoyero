@@ -1,2 +1,3 @@
 # Lovable Cloud manages the connected Supabase backend.
-# Do not pin this repository to a personal Supabase project.
+# This project_id is only the local Supabase CLI identifier; it is not a remote project binding.
+project_id = "tallerdeljoyero"
