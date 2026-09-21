@@ -64,7 +64,9 @@ begin
   returning * into v_op;
 
   for v_area in
-    select value from jsonb_array_elements_text(v_ruta)
+    select trim(value)
+    from jsonb_array_elements_text(v_ruta)
+    where lower(trim(value)) <> 'área ventas'
   loop
     v_secuencia := v_secuencia + 1;
     insert into public.trabajos(
@@ -87,6 +89,10 @@ begin
       ''
     );
   end loop;
+
+  if v_secuencia = 0 then
+    raise exception 'La ruta del pedido no contiene operaciones de fabricación';
+  end if;
 
   insert into public.piezas_terminadas(
     orden_produccion_id,pedido_id,numero_pieza,cantidad,
