@@ -217,14 +217,13 @@ function CotizacionesPage() {
                 {filtradas.map(q => {
                   const cliente = q.cliente;
                   const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
-                  const sede = sedes.find(s => s.id === q.sede_id);
                   return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.06]">
                     <td className="p-0 font-medium">
                       <Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></Link>
                     </td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
                     <td className="p-0 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
-                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sede?.nombre ?? "Taller no asignado"}</Link></td>
+                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.sede_id)?.nombre ?? "Taller no asignado"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
                     <td className="p-0 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{money(Number(q.total), q.moneda)}</Link></td>
