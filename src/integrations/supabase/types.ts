@@ -501,6 +501,7 @@ export type Database = {
           numero: string
           proyecto_joya_id: string | null
           sede_id: string | null
+          seguimiento_token: string
           subtotal: number
           subtotal_costo: number
           total: number
@@ -525,6 +526,7 @@ export type Database = {
           numero?: string
           proyecto_joya_id?: string | null
           sede_id?: string | null
+          seguimiento_token?: string
           subtotal?: number
           subtotal_costo?: number
           total?: number
