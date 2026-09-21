@@ -281,7 +281,7 @@ function CotizacionDetallePage() {
   return (
     <>
       <style>{`@media print { body { background: white !important; } .cotizacion-app { display: none !important; } .cotizacion-print { display: block !important; } } @media screen { .cotizacion-print { display: none; } }`}</style>
-      <div className="cotizacion-app">\n    <AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
+      <div className="cotizacion-app"><AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
@@ -456,6 +456,51 @@ function CotizacionDetallePage() {
         </div>
       </div>
     </AppShell>
+      </div>
+
+      <div className="cotizacion-print mx-auto w-full max-w-3xl bg-white p-8 text-black">
+        <div className="flex items-start justify-between border-b border-gray-300 pb-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em]">Taller del Joyero</p>
+            <h1 className="mt-2 text-3xl font-bold">Cotización {cotizacion.numero}</h1>
+            <p className="mt-1 text-sm">Versión {cotizacion.version} · {etiquetaEstado(cotizacion.estado)}</p>
+          </div>
+          <div className="text-right text-sm">
+            <p>Emisión: {cotizacion.fecha_emision}</p>
+            {cotizacion.fecha_vencimiento ? <p>Válida hasta: {cotizacion.fecha_vencimiento}</p> : null}
+          </div>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
+          <div><p className="text-xs uppercase tracking-wider text-gray-500">Cliente</p><p className="mt-1 font-semibold">{cliente?.nombre ?? "—"}</p></div>
+          <div><p className="text-xs uppercase tracking-wider text-gray-500">Taller</p><p className="mt-1 font-semibold">{sedeNombre ?? "Taller no asignado"}</p></div>
+          <div><p className="text-xs uppercase tracking-wider text-gray-500">Proyecto</p><p className="mt-1">{proyecto ? proyecto.codigo + " · " + proyecto.nombre : "Propuesta de joyería"}</p></div>
+          {cotizacion.fecha_entrega_solicitada ? <div><p className="text-xs uppercase tracking-wider text-gray-500">Entrega solicitada</p><p className="mt-1">{cotizacion.fecha_entrega_solicitada}</p></div> : null}
+        </div>
+        {proyecto ? <div className="mt-6 rounded-lg border border-gray-300 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Especificación de la joya</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+            {proyecto.metal ? <p>Metal: {proyecto.metal}</p> : null}
+            {proyecto.ley ? <p>Ley: {proyecto.ley}</p> : null}
+            {proyecto.piedras ? <p>Piedras: {proyecto.piedras}</p> : null}
+            {proyecto.talla ? <p>Talla: {proyecto.talla}</p> : null}
+            {proyecto.peso_estimado != null ? <p>Peso estimado: {proyecto.peso_estimado} g</p> : null}
+          </div>
+          {proyecto.descripcion ? <p className="mt-3 text-sm">{proyecto.descripcion}</p> : null}
+        </div> : null}
+        <table className="mt-7 w-full border-collapse text-sm">
+          <thead><tr className="border-y border-gray-300 text-left text-xs uppercase tracking-wider"><th className="py-3">Descripción</th><th className="py-3 text-right">Cant.</th><th className="py-3 text-right">Precio</th><th className="py-3 text-right">Total</th></tr></thead>
+          <tbody>{detalles.map(d => <tr key={d.id} className="border-b border-gray-200"><td className="py-3">{d.descripcion}</td><td className="py-3 text-right">{d.cantidad} {d.unidad}</td><td className="py-3 text-right">{money(d.precio_unitario, cotizacion.moneda)}</td><td className="py-3 text-right font-medium">{money(d.total_precio, cotizacion.moneda)}</td></tr>)}</tbody>
+        </table>
+        <div className="mt-6 ml-auto w-64 space-y-2 text-sm">
+          <div className="flex justify-between"><span>Subtotal</span><span>{money(cotizacion.subtotal, cotizacion.moneda)}</span></div>
+          {cotizacion.descuento > 0 ? <div className="flex justify-between"><span>Descuento</span><span>-{money(cotizacion.descuento, cotizacion.moneda)}</span></div> : null}
+          <div className="flex justify-between"><span>Impuestos</span><span>{money(cotizacion.impuestos, cotizacion.moneda)}</span></div>
+          <div className="flex justify-between border-t border-gray-300 pt-3 text-base font-bold"><span>Total</span><span>{money(cotizacion.total, cotizacion.moneda)}</span></div>
+        </div>
+        {cotizacion.notas_cliente ? <div className="mt-8 border-t border-gray-300 pt-5"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Observaciones</p><p className="mt-2 whitespace-pre-wrap text-sm">{cotizacion.notas_cliente}</p></div> : null}
+        <div className="mt-10 border-t border-gray-300 pt-4 text-xs text-gray-500">Documento comercial generado por Taller del Joyero.</div>
+      </div>
+    </>
   );
 }
 
