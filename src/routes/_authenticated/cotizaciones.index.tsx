@@ -101,46 +101,29 @@ function CotizacionesPage() {
     setGuardando(true);
     setErrorCliente("");
     try {
-      let clienteId = form.cliente_id;
-      if (!clienteId) {
-        if (!sesion?.sede?.id) throw new Error("No hay un taller/sede activo para registrar el cliente.");
-        const { data: clienteNuevo, error: clienteError } = await supabase.from("clientes").insert({
-          nombre: busquedaCliente.trim(),
-          telefono: nuevoCliente.telefono.trim() || null,
-          email: nuevoCliente.email.trim() || null,
-          sede_id: sesion.sede.id,
-          estado: "activo",
-        }).select("id,nombre,telefono,email").single();
-        if (clienteError || !clienteNuevo) throw clienteError ?? new Error("No se pudo registrar automáticamente el cliente.");
-        clienteId = clienteNuevo.id;
-        setClientes((actuales) => [clienteNuevo, ...actuales.filter((c) => c.id !== clienteNuevo.id)]);
+      const { data: cotizacionCreadaId, error: creacionError } = await supabase.rpc("crear_cotizacion_comercial", {
+        _cliente_id: form.cliente_id || null,
+        _cliente_nombre: form.cliente_id ? null : busquedaCliente.trim(),
+        _cliente_telefono: form.cliente_id ? null : nuevoCliente.telefono.trim() || null,
+        _cliente_email: form.cliente_id ? null : nuevoCliente.email.trim() || null,
+        _proyecto_joya_id: form.proyecto_joya_id || null,
+        _sede_id: sesion?.sede?.id ?? null,
+        _moneda: form.moneda,
+        _cantidad: form.cantidad,
+        _costo_unitario: form.costo,
+        _precio_unitario: form.precio,
+        _descuento: form.descuento,
+        _impuestos: impuestoCalculado,
+        _fecha_vencimiento: form.fecha_vencimiento || null,
+        _fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
+        _notas_cliente: form.notas_cliente,
+        _notas_internas: form.notas_internas,
+        _descripcion: form.descripcion,
+      });
+      if (creacionError || !cotizacionCreadaId) {
+        throw creacionError ?? new Error("No se pudo crear la cotización.");
       }
 
-      const { data: q, error } = await supabase.from("cotizaciones").insert({
-        cliente_id: clienteId,
-        proyecto_joya_id: form.proyecto_joya_id || null,
-        sede_id: sesion?.sede?.id ?? null,
-        estado: "borrador",
-        moneda: form.moneda,
-        subtotal_costo: form.costo * form.cantidad,
-        subtotal: form.precio * form.cantidad,
-        descuento: form.descuento,
-        impuestos: impuestoCalculado,
-        total: Math.max(0, form.precio * form.cantidad - form.descuento + impuestoCalculado),
-        fecha_vencimiento: form.fecha_vencimiento || null,
-        fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
-        notas_cliente: form.notas_cliente,
-        notas_internas: form.notas_internas,
-        creado_por: sesion?.user.id ?? null,
-      }).select("id").single();
-      if (error || !q) throw error ?? new Error("No se pudo crear la cotización");
-      const { error: detalleError } = await supabase.from("cotizacion_detalles").insert({
-        cotizacion_id: q.id, orden: 1, tipo: "otro", descripcion: form.descripcion,
-        cantidad: form.cantidad, unidad: "und", costo_unitario: form.costo,
-        precio_unitario: form.precio, total_costo: form.costo * form.cantidad,
-        total_precio: form.precio * form.cantidad,
-      });
-      if (detalleError) throw detalleError;
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
