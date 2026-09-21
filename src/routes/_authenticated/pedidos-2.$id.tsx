@@ -141,7 +141,13 @@ function Pedido2Detalle() {
         queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
       ]);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo preparar la producción.");
+      const detalle = error && typeof error === "object" && "message" in error
+        ? String((error as { message?: unknown }).message ?? "")
+        : error instanceof Error
+          ? error.message
+          : "";
+      toast.error(detalle || "No se pudo preparar la producción.");
+      console.error("preparar_produccion_pedido", error);
     } finally {
       setPreparandoProduccion(false);
     }
