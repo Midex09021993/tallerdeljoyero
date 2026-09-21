@@ -297,9 +297,8 @@ function NuevoPedido2() {
         <input
           value={form.contrato}
           onChange={(e) => { set("contrato", e.target.value); setContratoId(""); }}
-          placeholder={clienteId ? (buscandoContratos ? "Buscando contratos del cliente…" : "Escribir referencia de contrato") : "Selecciona un cliente o escribe una referencia manual"}
-          disabled={buscandoContratos}
-          className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10 disabled:opacity-60"
+          placeholder={clienteId ? (buscandoContratos ? "Puedes escribir una referencia mientras comprobamos contratos…" : "Escribir referencia de contrato") : "Escribir referencia de contrato"}
+          className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10"
         />
       )}
     </label>
