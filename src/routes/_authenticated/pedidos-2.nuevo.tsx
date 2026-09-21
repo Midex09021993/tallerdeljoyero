@@ -206,6 +206,16 @@ function NuevoPedido2() {
             .maybeSingle();
           if (error) throw error;
           clienteExistente = data;
+        } else {
+          const { data, error } = await supabase
+            .from("clientes")
+            .select("id,nombre,telefono,ciudad")
+            .eq("sede_id", sedeId)
+            .eq("estado", "activo")
+            .ilike("nombre", nombreCliente)
+            .limit(2);
+          if (error) throw error;
+          clienteExistente = data?.length === 1 ? data[0] : null;
         }
 
         if (clienteExistente) {
