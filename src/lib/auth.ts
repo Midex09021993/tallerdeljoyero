@@ -54,7 +54,7 @@ export const areaRuta: Record<string, string> = {
   "Impresión 3D": "/impresion-3d",
   Casting: "/casting",
   Taller: "/taller",
-  "Área ventas": "/ventas",
+  "Área ventas": "/ventas-2",
   "Corte Láser": "/corte-laser",
   "Servicio láser": "/corte-laser",
   Terminado: "/gestion",
