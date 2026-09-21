@@ -106,9 +106,18 @@ function DiagnosticoPage() {
 
     for (const [id, nombre] of pruebasBase) {
       await ejecutarPrueba(id, nombre, async () => {
+        const table =
+          id === "perfil" ? "profiles" :
+          id === "roles" ? "user_roles" :
+          id === "areas" ? "user_areas" :
+          id === "sedes" ? "sedes" :
+          id === "clientes" ? "clientes" :
+          id === "pedidos" ? "pedidos" :
+          id === "cotizaciones" ? "cotizaciones" :
+          "ordenes_produccion";
         const { count, error } = await supabase
-          .from(id === "perfil" ? "profiles" : id)
-          .select("id", { count: "exact", head: true });
+          .from(table)
+          .select("*", { count: "exact", head: true });
         if (error) throw error;
         return `${count ?? 0} registros visibles con la sesión actual.`;
       });
@@ -158,7 +167,7 @@ function DiagnosticoPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Usuario</p>
-              <p className="mt-1 text-sm font-medium">{sesion?.usuario?.email ?? "Sesión cargando…"}</p>
+              <p className="mt-1 text-sm font-medium">{sesion?.user?.email ?? "Sesión cargando…"}</p>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Resultado</p>
