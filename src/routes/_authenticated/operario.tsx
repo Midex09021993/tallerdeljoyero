@@ -65,7 +65,7 @@ function areasAsignadasUnicas(areas: string[]) {
 
 function OperarioPage() {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading: isLoadingPedidos } = usePedidosSelector();
+  const { data: pedidos = [] } = usePedidosSelector();
   const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
