@@ -45,6 +45,8 @@ function ClientesPage() {
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [modal, setModal] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [confirmarEliminacion, setConfirmarEliminacion] = useState(false);
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "" });
 
   const cargar = async () => {
@@ -141,24 +143,24 @@ function ClientesPage() {
   }
 
   async function eliminarCliente() {
-    if (!seleccionado || !sesion?.esDueno) return;
-    const confirmado = window.confirm(
-      `¿Eliminar definitivamente a "${seleccionado.nombre}"? Esta acción no se puede deshacer.`,
-    );
-    if (!confirmado) return;
+    if (!seleccionado || !sesion?.esDueno || eliminando) return;
 
-    setGuardando(true);
+    setEliminando(true);
     try {
-      const { error } = await supabase.from("clientes").delete().eq("id", seleccionado.id);
+      const clienteId = seleccionado.id;
+      const { error } = await supabase.from("clientes").delete().eq("id", clienteId);
       if (error) throw error;
+
+      // Actualización inmediata de la interfaz: no esperamos a una recarga completa.
+      setClientes((actuales) => actuales.filter((cliente) => cliente.id !== clienteId));
       setSeleccionado(null);
+      setConfirmarEliminacion(false);
       await cargar();
-      alert("Cliente eliminado correctamente.");
     } catch (error) {
       console.error(error);
       alert("No se pudo eliminar el cliente. Puede tener información relacionada que debe conservarse.");
     } finally {
-      setGuardando(false);
+      setEliminando(false);
     }
   }
 
@@ -260,7 +262,7 @@ function ClientesPage() {
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
                   <button type="button" onClick={cambiarEstado} className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/5">{seleccionado.estado === "activo" ? "Desactivar" : "Activar"}</button>
-                  {sesion?.esDueno ? <button type="button" onClick={() => void eliminarCliente()} disabled={guardando} className="inline-flex items-center gap-2 rounded-xl border border-danger/25 px-4 py-2.5 text-xs font-semibold text-danger transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger/5 disabled:opacity-50"><Trash2 className="size-3.5" /> Eliminar cliente</button> : null}
+                  {sesion?.esDueno ? <button type="button" onClick={() => setConfirmarEliminacion(true)} disabled={guardando || eliminando} className="inline-flex items-center gap-2 rounded-xl border border-danger/25 px-4 py-2.5 text-xs font-semibold text-danger transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger/5 disabled:opacity-50"><Trash2 className="size-3.5" /> Eliminar cliente</button> : null}
                 </div>
                 <div className="mt-7">
                   <SectionTitle title="Cotizaciones recientes" />
@@ -283,6 +285,25 @@ function ClientesPage() {
           )}
         </section>
       </div>
+
+      {confirmarEliminacion && seleccionado ? <div className="fixed inset-0 z-[60] grid place-items-center bg-foreground/35 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="confirmar-eliminacion-titulo">
+        <div className="w-full max-w-md rounded-2xl border border-danger/20 bg-card p-6 shadow-raised">
+          <div className="flex items-start gap-4">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger"><Trash2 className="size-5" /></span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-danger/80">Eliminar cliente</p>
+              <h2 id="confirmar-eliminacion-titulo" className="mt-1 text-lg font-semibold">¿Eliminar definitivamente a {seleccionado.nombre}?</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Esta acción no se puede deshacer. Se eliminará la ficha del cliente y la información relacionada que permita la base de datos.</p>
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end gap-2">
+            <button type="button" onClick={() => setConfirmarEliminacion(false)} disabled={eliminando} className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface-muted disabled:opacity-50">Cancelar</button>
+            <button type="button" onClick={() => void eliminarCliente()} disabled={eliminando} className="inline-flex items-center gap-2 rounded-xl bg-danger px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+              <Trash2 className="size-4" /> {eliminando ? "Eliminando..." : "Sí, eliminar cliente"}
+            </button>
+          </div>
+        </div>
+      </div> : null}
 
       {modal ? <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4" role="dialog" aria-modal="true">
         <form onSubmit={guardar} className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-raised">
