@@ -336,6 +336,12 @@ function SeguimientoCliente() {
                   ) : null}
                 </div>
               </div>
+              {respuestaEnviada ? (
+                <div className="mt-4 rounded-xl border border-success/20 bg-success-soft px-4 py-3 text-sm text-success">
+                  Tu respuesta fue registrada correctamente. El estado de la cotización ahora es{" "}
+                  <span className="font-semibold">{etiquetaEstadoCotizacion(respuestaEnviada)}</span>.
+                </div>
+              ) : null}
             </div>
 
             <section className="border-b border-border p-4 sm:p-6">
