@@ -65,7 +65,7 @@ function areasAsignadasUnicas(areas: string[]) {
 
 function OperarioPage() {
   const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading: isLoadingPedidos } = usePedidosSelector();
+  const { data: pedidos = [] } = usePedidosSelector();
   const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
@@ -86,7 +86,8 @@ function OperarioPage() {
     [areas, pedidosPorId, trabajos],
   );
 
-  const isLoading = isLoadingPedidos || isLoadingTrabajos;
+  // La bandeja de trabajos es la fuente principal del operario. No bloqueamos su renderizado esperando el selector de pedidos, que solo aporta datos complementarios a la ficha.
+  const isLoading = isLoadingTrabajos;
   const nombre = sesion?.perfil.nombre?.trim() || "Operario";
   const puedeHerramientas = areas.some((area) => areaCoincide(area, "Taller"));
 
