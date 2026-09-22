@@ -150,6 +150,9 @@ function SeguimientoCliente() {
   const { token, codigo } = Route.useSearch();
   const [valor, setValor] = useState(token ?? codigo ?? "");
   const [buscado, setBuscado] = useState(false);
+  const [accionCliente, setAccionCliente] = useState<"aprobada" | "requiere_revision" | "rechazada" | null>(null);
+  const [comentarioCliente, setComentarioCliente] = useState("");
+  const [respuestaEnviada, setRespuestaEnviada] = useState<string | null>(null);
 
   const consulta = useMutation({
     mutationFn: async (
@@ -181,6 +184,32 @@ function SeguimientoCliente() {
       return null;
     },
     onSettled: () => setBuscado(true),
+  });
+
+  const responder = useMutation({
+    mutationFn: async ({
+      accion,
+      comentario,
+    }: {
+      accion: "aprobada" | "requiere_revision" | "rechazada";
+      comentario: string;
+    }) => {
+      const codigo = (codigo ?? token ?? valor).trim();
+      if (!codigo) throw new Error("Código de cotización no disponible");
+      const { data, error } = await supabase.rpc("responder_cotizacion_cliente", {
+        _codigo: codigo,
+        _accion: accion,
+        _comentario: comentario,
+      });
+      if (error) throw error;
+      return data as { estado: string };
+    },
+    onSuccess: (data) => {
+      setRespuestaEnviada(data.estado);
+      setAccionCliente(null);
+      setComentarioCliente("");
+      consulta.mutate((codigo ?? token ?? valor).trim());
+    },
   });
 
   const resultado = consulta.data ?? null;
@@ -295,6 +324,108 @@ function SeguimientoCliente() {
                     </p>
                     <p className="mt-2 whitespace-pre-wrap text-sm">{cotizacion.notas_cliente}</p>
                   </div>
+                ) : null}
+
+                {cotizacion.estado === "enviada" ? (
+                  <section className="mt-5 rounded-xl border border-border bg-surface/60 p-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Tu respuesta
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Revisa la propuesta y dinos cómo deseas continuar.
+                    </p>
+
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => setAccionCliente("aprobada")}
+                        className="rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground"
+                      >
+                        Aprobar cotización
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAccionCliente("requiere_revision")}
+                        className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium"
+                      >
+                        Solicitar cambios
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAccionCliente("rechazada")}
+                        className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium"
+                      >
+                        Rechazar
+                      </button>
+                    </div>
+
+                    {accionCliente ? (
+                      <div className="mt-4 rounded-xl border border-border bg-card p-4">
+                        <p className="text-sm font-semibold">
+                          {accionCliente === "aprobada"
+                            ? "Confirmar aprobación"
+                            : accionCliente === "requiere_revision"
+                              ? "¿Qué cambios deseas solicitar?"
+                              : "¿Por qué deseas rechazar la cotización?"}
+                        </p>
+
+                        {accionCliente !== "aprobada" ? (
+                          <textarea
+                            value={comentarioCliente}
+                            onChange={(e) => setComentarioCliente(e.target.value)}
+                            placeholder={
+                              accionCliente === "requiere_revision"
+                                ? "Escribe los cambios o ajustes que deseas..."
+                                : "Indica el motivo del rechazo..."
+                            }
+                            rows={4}
+                            className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-3 text-sm"
+                          />
+                        ) : null}
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => responder.mutate({
+                              accion: accionCliente,
+                              comentario: comentarioCliente,
+                            })}
+                            disabled={
+                              responder.isPending ||
+                              (accionCliente !== "aprobada" && comentarioCliente.trim().length < 3)
+                            }
+                            className="rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50"
+                          >
+                            {responder.isPending ? "Enviando…" : "Confirmar respuesta"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAccionCliente(null);
+                              setComentarioCliente("");
+                            }}
+                            className="rounded-lg border border-border px-4 py-3 text-sm"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+
+                        {responder.error ? (
+                          <p className="mt-3 text-sm text-destructive">
+                            {responder.error instanceof Error
+                              ? responder.error.message
+                              : "No pudimos registrar tu respuesta."}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {respuestaEnviada ? (
+                      <p className="mt-4 text-sm text-success">
+                        Tu respuesta fue registrada correctamente.
+                      </p>
+                    ) : null}
+                  </section>
                 ) : null}
               </section>
 
