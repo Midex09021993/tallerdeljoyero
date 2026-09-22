@@ -131,11 +131,22 @@ export function useTrabajosDelOperario() {
         .select(
           "id, pedido_id, area, ubicacion, titulo, descripcion, estado, prioridad, tipo, fecha_planificada, fecha_inicio, fecha_fin, notas, responsable_user_id",
         )
-        .eq("responsable_user_id", sesion.user.id)
         .in("estado", ESTADOS_TRABAJO_ACTIVOS)
         .order("fecha_planificada", { ascending: true, nullsFirst: true });
       if (error) throw error;
-      return (data ?? []) as TrabajoBandeja[];
+
+      // RLS ya limita las filas por sede/área. En la bandeja mostramos
+      // únicamente los trabajos del propio operario y los que están libres
+      // dentro de sus áreas, para que no desaparezcan operaciones recién creadas
+      // antes de que se asigne un responsable.
+      const areasUsuario = sesion.areas ?? [];
+      return (data ?? []).filter((trabajo) =>
+        trabajo.responsable_user_id === sesion.user.id ||
+        (
+          trabajo.responsable_user_id === null &&
+          areasUsuario.some((area) => areaCoincide(area, trabajo.area))
+        )
+      ) as TrabajoBandeja[];
     },
   });
 

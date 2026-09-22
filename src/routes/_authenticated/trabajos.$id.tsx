@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, CircleAlert, FileText, Link2, Play, Paperclip } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useSesion } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 
 type ArchivoTecnico = {
   id: string;
@@ -234,7 +234,14 @@ function TrabajoOperativoPage() {
 
   const { data: archivosPedido = [] } = useQuery({
     queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id],
-    enabled: Boolean(trabajo?.pedido_id && (sesion?.esAdmin || trabajo?.responsable_user_id === sesion?.user.id)),
+    enabled: Boolean(
+        trabajo?.pedido_id &&
+        (
+          sesion?.esAdmin ||
+          trabajo?.responsable_user_id === sesion?.user.id ||
+          (sesion?.rolPrincipal === "operario" && (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area)))
+        )
+      ),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedido_archivos")
@@ -296,7 +303,27 @@ function TrabajoOperativoPage() {
   }
 
   const esResponsable = trabajo.responsable_user_id === sesion?.user.id;
+  const puedeTomar = Boolean(
+    sesion?.rolPrincipal === "operario" &&
+    !trabajo.responsable_user_id &&
+    (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area)),
+  );
   const puedeGestionar = Boolean(sesion?.esAdmin || esResponsable);
+
+  const tomarTrabajo = async () => {
+    if (!puedeTomar) return;
+    setErrorAccion(null);
+    const { error } = await supabase.rpc("tomar_trabajo", { _trabajo_id: trabajo.id });
+    if (error) {
+      setErrorAccion(error.message);
+      return;
+    }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["trabajo-operativo", id] }),
+      qc.invalidateQueries({ queryKey: ["trabajos-operario", sesion?.user.id] }),
+      qc.invalidateQueries({ queryKey: ["trabajos-pedido", trabajo.pedido_id] }),
+    ]);
+  };
   const activo = !["completado", "cancelado"].includes(trabajo.estado);
 
   return (
@@ -321,15 +348,26 @@ function TrabajoOperativoPage() {
                 {pedidoTrabajo?.trabajo || "Trabajo sin descripción"}
               </p>
             </div>
-            {sesion?.esAdmin ? (
-              <button
-                type="button"
-                onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: undefined } })}
-                className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
-              >
-                Ver pedido
-              </button>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {puedeTomar ? (
+                <button
+                  type="button"
+                  onClick={() => void tomarTrabajo()}
+                  className="rounded-xl bg-gold px-3 py-2 text-xs font-bold text-gold-foreground"
+                >
+                  Tomar este trabajo
+                </button>
+              ) : null}
+              {sesion?.esAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: undefined } })}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
+                >
+                  Ver pedido
+                </button>
+              ) : null}
+            </div>
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
             {[

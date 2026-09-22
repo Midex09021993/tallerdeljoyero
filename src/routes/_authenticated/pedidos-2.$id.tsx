@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardLi
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePedidos, estadoClases, esEstadoFinalPedido } from "@/lib/taller-db";
-import { useSesion } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -33,13 +33,14 @@ function Pedido2Detalle() {
   const [preparandoProduccion, setPreparandoProduccion] = useState(false);
   const [ruta, setRuta] = useState<string[]>([]);
   const [guardandoRuta, setGuardandoRuta] = useState(false);
+  const [asignandoTrabajoId, setAsignandoTrabajoId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
 
   useEffect(() => {
     if (!pedido) return;
-    setRuta((pedido.ruta ?? []).filter((area: string) => rutas.includes(area)));
+    setRuta((Array.isArray(pedido.ruta) ? pedido.ruta : []).filter((area: string) => rutas.includes(area)));
   }, [pedido?.id]);
 
   const { data: trabajos = [], isLoading: loadingTrabajos } = useQuery({
@@ -47,6 +48,19 @@ function Pedido2Detalle() {
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,created_at").eq("pedido_id", id).order("created_at");
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const { data: operarios = [] } = useQuery({
+    queryKey: ["pedidos-2-operarios", pedido?.sede_id, sesion?.esAdmin],
+    enabled: Boolean(pedido?.sede_id && sesion?.esAdmin),
+    queryFn: async () => {
+      if (!pedido?.sede_id || !sesion?.esAdmin) return [];
+      const { data, error } = await supabase.rpc("listar_operarios_por_area", {
+        _sede_id: pedido.sede_id,
+      });
       if (error) throw error;
       return data ?? [];
     },
@@ -58,7 +72,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("ordenes_produccion").select("id,numero,estado,prioridad,fecha_planificada_inicio,fecha_planificada_fin,fecha_inicio,fecha_fin,responsable_user_id,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -83,7 +97,7 @@ function Pedido2Detalle() {
         .in("orden_produccion_id", ordenIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -93,7 +107,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("piezas_terminadas").select("id,numero_pieza,cantidad,estado,peso_final,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -103,7 +117,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_archivos").select("id,nombre,tipo,grupo,version,poster,es_vigente_fabricacion,created_at").eq("pedido_id", id).order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -113,7 +127,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("produccion_eventos").select("id,tipo,estado_anterior,estado_nuevo,usuario_id,datos,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(150);
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -123,7 +137,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_movimientos").select("id,area_origen,area_destino,accion,usuario_id,nota,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -131,6 +145,28 @@ function Pedido2Detalle() {
   const trabajosCompletos = trabajos.length > 0 && trabajos.every((t) => t.estado === "completado");
   const piezaVerificada = piezas.some((p) => ["verificada", "liberada"].includes(p.estado));
   const calidadFinalAprobada = controles.some((c) => c.tipo === "inspeccion_final" && c.resultado === "aprobado");
+
+  const asignarResponsable = async (trabajoId: string, responsableUserId: string | null) => {
+    if (!sesion?.esAdmin || asignandoTrabajoId) return;
+    setAsignandoTrabajoId(trabajoId);
+    try {
+      const { error } = await supabase.rpc("asignar_responsable_trabajo", {
+        _trabajo_id: trabajoId,
+        _responsable_user_id: responsableUserId,
+      });
+      if (error) throw error;
+      toast.success(
+        responsableUserId
+          ? "Operario asignado al trabajo."
+          : "Responsable retirado del trabajo.",
+      );
+      await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo asignar el operario.");
+    } finally {
+      setAsignandoTrabajoId(null);
+    }
+  };
 
   const prepararProduccion = async () => {
     if (!pedido || preparandoProduccion) return;
@@ -151,6 +187,34 @@ function Pedido2Detalle() {
         queryClient.invalidateQueries({ queryKey: ["pedidos-2-eventos", id] }),
         queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
       ]);
+
+      // Si el área tiene exactamente un operario activo en esta sede,
+      // la operación queda asignada automáticamente. Si hay varios,
+      // permanece libre para que administración elija o el operario la tome.
+      if (sesion?.esAdmin) {
+        const { data: trabajosActualizados } = await supabase
+          .from("trabajos")
+          .select("id, area, responsable_user_id")
+          .eq("pedido_id", pedido.id);
+
+        for (const trabajo of trabajosActualizados ?? []) {
+          if (trabajo.responsable_user_id) continue;
+          const candidatos = operarios.filter((operario) =>
+            operario.areas.some((area) => areaCoincide(area, trabajo.area)),
+          );
+          if (candidatos.length === 1) {
+            const { error: asignacionError } = await supabase.rpc("asignar_responsable_trabajo", {
+              _trabajo_id: trabajo.id,
+              _responsable_user_id: candidatos[0].id,
+            });
+            if (asignacionError) {
+              console.warn("No se pudo asignar automáticamente el trabajo", trabajo.id, asignacionError);
+            }
+          }
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] });
+      }
     } catch (error) {
       const detalle = error && typeof error === "object" && "message" in error
         ? String((error as { message?: unknown }).message ?? "")
@@ -272,7 +336,7 @@ function Pedido2Detalle() {
       </div>
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} /> : null}
-      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
+      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
@@ -423,11 +487,66 @@ function calidadFinalResumen(controles: any[]) {
 
 function Mini({ icon: Icon, title, value, detail }: { icon: typeof Factory; title: string; value: string; detail: string }) { return <div className="rounded-2xl border border-border bg-card p-5"><Icon className="size-5 text-gold" /><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p><p className="mt-1 text-base font-semibold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>; }
 
-function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, ordenPrincipal, trabajosCompletos, piezaVerificada, calidadFinalAprobada, transicionando, transicionar, verificarPieza, resultadoCalidad, setResultadoCalidad, tipoCalidad, setTipoCalidad, descripcionCalidad, setDescripcionCalidad, motivoCalidad, setMotivoCalidad, guardandoCalidad, registrarCalidad, cantidadRequerida, preparandoProduccion, prepararProduccion }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean; ordenPrincipal: any; trabajosCompletos: boolean; piezaVerificada: boolean; calidadFinalAprobada: boolean; transicionando: boolean; transicionar: (estado: string) => Promise<void>; verificarPieza: (id: string, estado: "verificada"|"liberada"|"rechazada") => Promise<void>; resultadoCalidad: string; setResultadoCalidad: (v:string)=>void; tipoCalidad:string; setTipoCalidad:(v:string)=>void; descripcionCalidad:string; setDescripcionCalidad:(v:string)=>void; motivoCalidad:string; setMotivoCalidad:(v:string)=>void; guardandoCalidad:boolean; registrarCalidad:()=>Promise<void>; cantidadRequerida:number; preparandoProduccion:boolean; prepararProduccion:()=>Promise<void> }) {
+function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, ordenPrincipal, trabajosCompletos, piezaVerificada, calidadFinalAprobada, transicionando, transicionar, verificarPieza, puedeAsignarResponsable, operarios, asignandoTrabajoId, asignarResponsable, resultadoCalidad, setResultadoCalidad, tipoCalidad, setTipoCalidad, descripcionCalidad, setDescripcionCalidad, motivoCalidad, setMotivoCalidad, guardandoCalidad, registrarCalidad, cantidadRequerida, preparandoProduccion, prepararProduccion }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean; ordenPrincipal: any; trabajosCompletos: boolean; piezaVerificada: boolean; calidadFinalAprobada: boolean; transicionando: boolean; transicionar: (estado: string) => Promise<void>; verificarPieza: (id: string, estado: "verificada"|"liberada"|"rechazada") => Promise<void>; puedeAsignarResponsable: boolean; operarios: { id: string; nombre: string; areas: string[] }[]; asignandoTrabajoId: string | null; asignarResponsable: (trabajoId: string, responsableUserId: string | null) => Promise<void>; resultadoCalidad: string; setResultadoCalidad: (v:string)=>void; tipoCalidad:string; setTipoCalidad:(v:string)=>void; descripcionCalidad:string; setDescripcionCalidad:(v:string)=>void; motivoCalidad:string; setMotivoCalidad:(v:string)=>void; guardandoCalidad:boolean; registrarCalidad:()=>Promise<void>; cantidadRequerida:number; preparandoProduccion:boolean; prepararProduccion:()=>Promise<void> }) {
   return <div className="space-y-5">
     {loading ? <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">Cargando producción…</div> : null}
-    {ordenPrincipal ? <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Control de producción</p><p className="mt-1 text-sm font-semibold">{ordenPrincipal.numero} · {ordenPrincipal.estado}</p><p className="mt-1 text-xs text-muted-foreground">{trabajosCompletos ? "Todos los trabajos están completados." : `${trabajos.filter((t) => t.estado === "completado").length}/${trabajos.length} trabajos completados`}{calidadFinalAprobada ? " · Calidad final aprobada." : ""}{piezaVerificada ? " · Pieza verificada/liberada." : ""}</p></div><div className="flex flex-wrap gap-2">{ordenPrincipal.estado === "borrador" ? <button type="button" disabled={transicionando} onClick={() => void transicionar("liberada")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Liberar OP</button> : null}{["liberada","pausada"].includes(ordenPrincipal.estado) ? <button type="button" disabled={transicionando} onClick={() => void transicionar("en_produccion")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Iniciar producción</button> : null}{ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando} onClick={() => void transicionar("pausada")} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Pausar</button> : null}{ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando || !trabajosCompletos} onClick={() => void transicionar("control_calidad")} className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep disabled:cursor-not-allowed disabled:opacity-50">Enviar a calidad</button> : null}</div></div></section> : <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-gold-deep">Producción pendiente de preparar</p><p className="mt-1 text-sm font-semibold">El pedido aún no tiene una orden de producción.</p><p className="mt-1 text-xs text-muted-foreground">Se crearán la OP, las operaciones de la ruta y las piezas requeridas en una sola operación.</p></div><button type="button" disabled={preparandoProduccion} onClick={() => void prepararProduccion()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{preparandoProduccion ? "Preparando…" : "Preparar producción"}</button></div></section>}
-    <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trabajos</h3><p className="mt-1 text-xs text-muted-foreground">{trabajos.length} operaciones registradas</p></div><Factory className="size-5 text-gold" /></div><div className="mt-4 space-y-2">{trabajos.length ? trabajos.map((t) => <div key={t.id} className="flex flex-col gap-2 rounded-xl border border-border bg-surface-sunken p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">{t.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{t.area} · {t.prioridad || "normal"} · Responsable {t.responsable_user_id ? "asignado" : "pendiente"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{t.estado}</span></div>) : <Empty text="No hay trabajos registrados." />}</div></section>
+    {ordenPrincipal ? <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Control de producción</p><p className="mt-1 text-sm font-semibold">{ordenPrincipal.numero} · {ordenPrincipal.estado}</p><p className="mt-1 text-xs text-muted-foreground">{trabajosCompletos ? "Todos los trabajos están completados." : `${trabajos.filter((t) => t.estado === "completado").length}/${trabajos.length} trabajos completados`}{calidadFinalAprobada ? " · Calidad final aprobada." : ""}{piezaVerificada ? " · Pieza verificada/liberada." : ""}</p></div><div className="flex flex-wrap gap-2">{ordenPrincipal.estado === "borrador" ? <button type="button" disabled={transicionando} onClick={() => void transicionar("liberada")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Liberar OP</button> : null}{["liberada","pausada"].includes(ordenPrincipal.estado) ? <button type="button" disabled={transicionando} onClick={() => void transicionar("en_produccion")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Iniciar producción</button> : null}{ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando} onClick={() => void transicionar("pausada")} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Pausar</button> : null}{ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando || !trabajosCompletos} onClick={() => void transicionar("control_calidad")} className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep disabled:cursor-not-allowed disabled:opacity-50">Enviar a calidad</button> : null}{ordenPrincipal && trabajos.length === 0 ? <button type="button" disabled={preparandoProduccion} onClick={() => void prepararProduccion()} className="rounded-xl border border-warning/30 bg-warning-soft/60 px-4 py-2.5 text-xs font-bold text-warning disabled:opacity-50">{preparandoProduccion ? "Reparando…" : "Generar operaciones"}</button> : null}</div></div></section> : <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-gold-deep">Producción pendiente de preparar</p><p className="mt-1 text-sm font-semibold">El pedido aún no tiene una orden de producción.</p><p className="mt-1 text-xs text-muted-foreground">Se crearán la OP, las operaciones de la ruta y las piezas requeridas en una sola operación.</p></div><button type="button" disabled={preparandoProduccion} onClick={() => void prepararProduccion()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{preparandoProduccion ? "Preparando…" : "Preparar producción"}</button></div></section>}
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-[.16em]">Trabajos</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{trabajos.length} operaciones registradas · cada operación tiene un responsable concreto</p>
+        </div>
+        <Factory className="size-5 text-gold" />
+      </div>
+      <div className="mt-4 space-y-2">
+        {trabajos.length ? trabajos.map((t) => {
+          const operariosDelArea = operarios.filter((operario) =>
+            operario.areas.some((area) => area.trim().toLowerCase() === String(t.area || "").trim().toLowerCase()),
+          );
+          return (
+            <div key={t.id} className="flex flex-col gap-3 rounded-xl border border-border bg-surface-sunken p-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{t.titulo}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t.area} · {t.prioridad || "normal"} · {t.estado}
+                </p>
+              </div>
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-[240px]">
+                <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Operario responsable</label>
+                {puedeAsignarResponsable ? (
+                  <>
+                    <select
+                      value={t.responsable_user_id ?? ""}
+                      disabled={asignandoTrabajoId === t.id}
+                      onChange={(e) => void asignarResponsable(t.id, e.target.value || null)}
+                      className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60"
+                    >
+                      <option value="">Sin asignar</option>
+                      {operariosDelArea.map((operario) => (
+                        <option key={operario.id} value={operario.id}>{operario.nombre}</option>
+                      ))}
+                    </select>
+                    {operariosDelArea.length === 0 ? (
+                      <p className="text-[10px] text-warning">No hay operarios activos asignados a {t.area} en este taller.</p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="rounded-xl bg-surface-muted px-3 py-2.5 text-sm font-semibold">
+                    {t.responsable_user_id ? "Operario asignado" : "Sin asignar"}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        }) : <Empty text="No hay trabajos registrados." />}
+      </div>
+      {operarios.length > 0 ? (
+        <p className="mt-3 text-[10px] text-muted-foreground">
+          La lista muestra únicamente operarios activos de este taller; el sistema valida también que el operario tenga asignada el área de la operación.
+        </p>
+      ) : null}
+    </section>
     <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Órdenes de producción</h3><div className="mt-4 space-y-2">{ordenes.length ? ordenes.map((o) => <div key={o.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold">{o.numero}</p><p className="mt-1 text-xs text-muted-foreground">{o.estado} · Prioridad {o.prioridad || "normal"}</p></div><span className="text-xs text-muted-foreground">{o.fecha_planificada_fin ? fmtFecha(o.fecha_planificada_fin) : "Sin fecha planificada"}</span></div></div>) : <Empty text="No hay orden de producción." />}</div></section>
     {ordenPrincipal?.estado === "control_calidad" ? <section className="rounded-2xl border border-border bg-card p-5 shadow-raised"><div className="flex items-start justify-between gap-4"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Control de calidad</h3><p className="mt-1 text-xs text-muted-foreground">Registra la inspección sobre la OP. Para aprobar la inspección final deben estar verificadas o liberadas las piezas requeridas.</p></div><CheckCircle2 className="size-5 text-gold" /></div><div className="mt-4 grid gap-3 md:grid-cols-3"><label className="text-xs font-semibold">Tipo<select value={tipoCalidad} onChange={(e)=>setTipoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"><option value="inspeccion_final">Inspección final</option><option value="inspeccion_operacion">Inspección de operación</option><option value="reinspeccion">Reinspección</option></select></label><label className="text-xs font-semibold">Resultado<select value={resultadoCalidad} onChange={(e)=>setResultadoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"><option value="aprobado">Aprobado</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option><option value="pendiente">Pendiente</option></select></label><label className="text-xs font-semibold">Motivo<input value={motivoCalidad} onChange={(e)=>setMotivoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm" placeholder="Motivo u observación"/></label></div><label className="mt-3 block text-xs font-semibold">Descripción<textarea value={descripcionCalidad} onChange={(e)=>setDescripcionCalidad(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm" placeholder="Hallazgos y criterios revisados."/></label><div className="mt-4 flex justify-end"><button type="button" disabled={guardandoCalidad} onClick={()=>void registrarCalidad()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{guardandoCalidad ? "Registrando…" : "Registrar inspección"}</button></div></section> : null}
     <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between gap-4"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Verificación de piezas</h3><p className="mt-1 text-xs text-muted-foreground">Requeridas: {cantidadRequerida} · Verificadas/liberadas: {piezas.filter((p)=>["verificada","liberada"].includes(p.estado)).reduce((sum,p)=>sum+Number(p.cantidad||1),0)}</p></div><PackageCheck className="size-5 text-gold"/></div><div className="mt-4 space-y-2">{piezas.length ? piezas.map((p)=><div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"><div><p className="text-sm font-semibold">Pieza {p.numero_pieza}</p><p className="text-xs text-muted-foreground">{p.estado} · {p.peso_final ? `${p.peso_final} g` : "Peso final pendiente"}</p></div><div className="flex gap-2">{["pendiente","recibida"].includes(p.estado) ? <button type="button" onClick={()=>void verificarPieza(p.id,"verificada")} className="rounded-lg bg-gold px-3 py-2 text-[11px] font-bold text-black">Verificar</button> : null}{p.estado==="verificada" ? <button type="button" onClick={()=>void verificarPieza(p.id,"liberada")} className="rounded-lg border border-gold/40 px-3 py-2 text-[11px] font-bold text-gold-deep">Liberar</button> : null}{!["rechazada","liberada"].includes(p.estado) ? <button type="button" onClick={()=>void verificarPieza(p.id,"rechazada")} className="rounded-lg border border-danger/30 px-3 py-2 text-[11px] font-bold text-danger">Rechazar</button> : null}</div></div>) : <Empty text="Sin piezas registradas."/>}</div></section>
@@ -435,7 +554,113 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
     {costo ? <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Costeo real</h3><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Dato label="Materiales" value={money(costo.costo_materiales,costo.moneda)} /><Dato label="Mano de obra" value={money(costo.costo_mano_obra,costo.moneda)} /><Dato label="Costo real" value={money(costo.costo_real,costo.moneda)} /><Dato label="Margen" value={money(costo.margen,costo.moneda)} /></div></section> : null}
   </div>;
 }
-function Comercial({ pedido }: { pedido: any }) { return <div className="grid gap-4 md:grid-cols-2"><section className="rounded-2xl border border-border bg-card p-5"><UserRound className="size-5 text-gold" /><h3 className="mt-3 text-xs font-bold uppercase tracking-[.16em]">Cliente</h3><div className="mt-4 grid gap-3 sm:grid-cols-2"><Dato label="Cliente" value={pedido.cliente || "Sin cliente"} /><Dato label="Contrato" value={pedido.contrato || "Sin contrato"} /><Dato label="Origen" value={pedido.origen || "—"} /><Dato label="Sede" value={pedido.sede_nombre || "—"} /></div></section><section className="rounded-2xl border border-border bg-card p-5"><FileText className="size-5 text-gold" /><h3 className="mt-3 text-xs font-bold uppercase tracking-[.16em]">Importes</h3><div className="mt-4 grid gap-3 sm:grid-cols-3"><Dato label="Importe" value={money(pedido.importe,"PEN")} /><Dato label="A cuenta" value={money(pedido.a_cuenta,"PEN")} /><Dato label="Saldo" value={money((Number(pedido.importe)||0)-(Number(pedido.a_cuenta)||0),"PEN")} /></div></section></div>; }
+function comercialObjeto(valor: unknown): Record<string, unknown> {
+  return valor && typeof valor === "object" && !Array.isArray(valor) ? valor as Record<string, unknown> : {};
+}
+
+function comercialLista(valor: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(valor) ? valor.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
+}
+
+function comercialNumero(valor: unknown, fallback = 0) {
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? numero : fallback;
+}
+
+function Comercial({ pedido }: { pedido: any }) {
+  const especificaciones = comercialObjeto(pedido.especificaciones_comerciales);
+  const detalles = comercialLista(pedido.cotizacion_detalles);
+  const subtotal = comercialNumero(especificaciones.subtotal, comercialNumero(pedido.importe));
+  const descuento = comercialNumero(especificaciones.descuento);
+  const impuestos = comercialNumero(especificaciones.impuestos);
+  const total = comercialNumero(especificaciones.total, comercialNumero(pedido.importe));
+  const anticipo = comercialNumero(especificaciones.anticipo, comercialNumero(pedido.a_cuenta));
+  const saldo = Math.max(0, total - anticipo);
+  const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : anticipo > 0 ? "Pago parcial" : "Pendiente";
+  const cotizacion = typeof especificaciones.cotizacion_numero === "string" ? especificaciones.cotizacion_numero : "";
+  const version = especificaciones.cotizacion_version;
+  const moneda = typeof especificaciones.moneda === "string" && especificaciones.moneda ? especificaciones.moneda : "PEN";
+  const identidad = typeof especificaciones.identidad_comercial === "string" ? especificaciones.identidad_comercial : "";
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-center gap-3">
+          <UserRound className="size-5 text-gold" />
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[.16em]">Relación comercial</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {cotizacion ? `Snapshot de la cotización ${cotizacion}${version ? ` · v${version}` : ""}` : "Pedido registrado sin cotización vinculada"}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Dato label="Cliente" value={pedido.cliente || "Sin cliente"} />
+          <Dato label="Cotización" value={cotizacion ? `${cotizacion}${version ? ` · v${version}` : ""}` : "—"} />
+          <Dato label="Contrato" value={pedido.contrato || "Sin contrato"} />
+          <Dato label="Origen" value={pedido.origen || "—"} />
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Dato label="Taller / sede" value={pedido.sede_nombre || "—"} />
+          <Dato label="Identidad comercial" value={identidad || "—"} />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-center gap-3">
+          <FileText className="size-5 text-gold" />
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[.16em]">Resumen económico</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">Valores conservados desde la información comercial del pedido.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <Dato label="Subtotal" value={money(subtotal, moneda)} />
+          <Dato label="Descuento" value={money(descuento, moneda)} />
+          <Dato label="Impuestos" value={money(impuestos, moneda)} />
+          <Dato label="Total" value={money(total, moneda)} />
+          <Dato label="Anticipo" value={money(anticipo, moneda)} />
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Dato label="Saldo" value={money(saldo, moneda)} />
+          <Dato label="Estado de pago" value={estadoPago} />
+        </div>
+      </section>
+
+      {detalles.length ? (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-[.16em]">Detalle de la cotización</h3>
+              <p className="mt-1 text-[11px] text-muted-foreground">{detalles.length} partida(s) conservadas en el pedido.</p>
+            </div>
+            <ClipboardList className="size-5 text-gold" />
+          </div>
+          <div className="mt-4 space-y-2">
+            {detalles.map((detalle, index) => {
+              const descripcion = typeof detalle.descripcion === "string" ? detalle.descripcion : `Partida ${index + 1}`;
+              const cantidad = comercialNumero(detalle.cantidad, 1);
+              const unidad = typeof detalle.unidad === "string" ? detalle.unidad : "";
+              const precio = comercialNumero(detalle.total_precio, comercialNumero(detalle.precio_unitario));
+              return (
+                <div key={String(detalle.id ?? index)} className="grid gap-2 rounded-xl border border-border bg-surface-sunken p-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
+                  <div><p className="text-xs font-semibold">{descripcion}</p><p className="mt-1 text-[10px] text-muted-foreground">{cantidad} {unidad}</p></div>
+                  <span className="text-[10px] font-semibold text-muted-foreground">{detalle.tipo ? String(detalle.tipo) : "Detalle"}</span>
+                  <span className="text-xs font-bold">{money(precio, moneda)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      <p className="rounded-xl border border-border bg-surface-muted p-3 text-[10px] text-muted-foreground">
+        Los datos comerciales heredados de una cotización se muestran como referencia del pedido y no modifican la trazabilidad operativa.
+      </p>
+    </div>
+  );
+}
+
 function Archivos({ archivos }: { archivos: any[] }) { return <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Documentos del pedido</h3><p className="mt-1 text-xs text-muted-foreground">{archivos.length} archivos registrados</p></div><FileText className="size-5 text-gold" /></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{archivos.map((a) => <div key={a.id} className="overflow-hidden rounded-xl border border-border"><div className="grid aspect-video place-items-center bg-surface-muted">{a.poster ? <img src={a.poster} alt="" className="size-full object-cover" /> : <FileText className="size-8 text-muted-foreground" />}</div><div className="p-3"><p className="truncate text-sm font-semibold">{a.nombre}</p><p className="mt-1 text-[10px] text-muted-foreground">{a.grupo || a.tipo || "Archivo"} · v{a.version ?? 1}{a.es_vigente_fabricacion ? " · Vigente" : ""}</p></div></div>)}</div>{!archivos.length ? <Empty text="No hay archivos registrados." /> : null}</section>; }
 function Historial({ eventos, movimientos }: { eventos: any[]; movimientos: any[] }) { const items = useMemo(() => [...eventos.map((e) => ({ id: e.id, fecha: e.created_at, tipo: "Producción", titulo: e.tipo, detalle: e.estado_anterior && e.estado_nuevo ? `${e.estado_anterior} → ${e.estado_nuevo}` : "Evento registrado", usuario: e.usuario_id })), ...movimientos.map((m) => ({ id: m.id, fecha: m.created_at, tipo: "Área", titulo: m.accion || "Movimiento", detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino, usuario: m.usuario_id }))].sort((a,b) => new Date(b.fecha).getTime()-new Date(a.fecha).getTime()), [eventos,movimientos]); return <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trazabilidad</h3><div className="mt-5 space-y-0">{items.length ? items.map((e) => <div key={`${e.tipo}-${e.id}`} className="relative border-l border-border pb-5 pl-5 last:pb-0"><span className="absolute -left-1.5 top-1 size-3 rounded-full bg-gold ring-4 ring-card" /><p className="text-sm font-semibold">{e.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p><p className="mt-1 text-[10px] text-muted-foreground">{new Date(e.fecha).toLocaleString("es-PE")} · {e.usuario ? e.usuario.slice(0,8).toUpperCase() : "Sistema"}</p></div>) : <Empty text="Aún no hay eventos registrados." />}</div></section>; }
 function Empty({ text }: { text: string }) { return <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</div>; }

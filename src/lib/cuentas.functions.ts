@@ -166,7 +166,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
     });
     if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
 
-    await supabaseAdmin.from("profiles").upsert({
+    const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
       nombre: data.nombre,
       dni: data.dni,
@@ -175,15 +175,28 @@ export const crearUsuario = createServerFn({ method: "POST" })
       acceso_desde: data.acceso_desde ?? null,
       acceso_hasta: data.acceso_hasta ?? null,
     });
-    await supabaseAdmin
+    if (perfilError) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw new Error("Usuario creado en Auth, pero no se pudo crear el perfil");
+    }
+
+    const { error: rolError } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: creado.user.id, role: data.rol, sede_id: data.sede_id });
+    if (rolError) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw new Error("Usuario creado, pero no se pudo asignar el rol");
+    }
+
     const areasAlta = data.rol === "operario" ? normalizarAreas(data.areas) : [];
     if (areasAlta.length > 0) {
       const { error: errAreas } = await supabaseAdmin
         .from("user_areas")
         .insert(areasAlta.map((area) => ({ user_id: creado.user!.id, area })));
-      if (errAreas) throw new Error(`Usuario creado, pero no se guardaron las áreas: ${errAreas.message}`);
+      if (errAreas) {
+        await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+        throw new Error("Usuario creado, pero no se guardaron las áreas");
+      }
     }
     return { ok: true, id: creado.user.id };
   });
