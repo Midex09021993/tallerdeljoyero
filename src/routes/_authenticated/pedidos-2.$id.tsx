@@ -39,7 +39,7 @@ function Pedido2Detalle() {
 
   useEffect(() => {
     if (!pedido) return;
-    setRuta((pedido.ruta ?? []).filter((area: string) => rutas.includes(area)));
+    setRuta((Array.isArray(pedido.ruta) ? pedido.ruta : []).filter((area: string) => rutas.includes(area)));
   }, [pedido?.id]);
 
   const { data: trabajos = [], isLoading: loadingTrabajos } = useQuery({
@@ -48,7 +48,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -58,7 +58,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("ordenes_produccion").select("id,numero,estado,prioridad,fecha_planificada_inicio,fecha_planificada_fin,fecha_inicio,fecha_fin,responsable_user_id,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -83,7 +83,7 @@ function Pedido2Detalle() {
         .in("orden_produccion_id", ordenIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -93,7 +93,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("piezas_terminadas").select("id,numero_pieza,cantidad,estado,peso_final,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -103,7 +103,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_archivos").select("id,nombre,tipo,grupo,version,poster,es_vigente_fabricacion,created_at").eq("pedido_id", id).order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -113,7 +113,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("produccion_eventos").select("id,tipo,estado_anterior,estado_nuevo,usuario_id,datos,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(150);
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -123,7 +123,7 @@ function Pedido2Detalle() {
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_movimientos").select("id,area_origen,area_destino,accion,usuario_id,nota,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
-      return data ?? [];
+      return Array.isArray(data) ? data : [];
     },
   });
 
