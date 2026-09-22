@@ -37,10 +37,11 @@ const tiposPartida = [
   ["metal", "Metal"],
   ["piedras", "Piedra / Gema"],
   ["fundicion", "Fundición"],
+  ["ajustes", "Ajustes"],
   ["engaste", "Engaste"],
   ["acabado", "Acabado"],
   ["mano_obra", "Mano de obra"],
-  ["render", "Render 3D"],
+  ["render", "Renderizado 3D"],
   ["otro", "Otro"],
 ] as const;
 
