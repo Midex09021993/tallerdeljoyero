@@ -28,7 +28,7 @@ type Cliente = { id: string; nombre: string; telefono: string | null; whatsapp: 
 type Proyecto = { id: string; codigo: string; nombre: string; descripcion: string; metal: string | null; ley: string | null; peso_estimado: number | null; talla: string | null; piedras: string | null };
 
 const estados = [
-  ["borrador", "Borrador"], ["enviada", "Enviada"], ["aprobada", "Aprobada"],
+  ["borrador", "Borrador"], ["enviada", "Enviada"], ["requiere_revision", "Requiere cambios"], ["aprobada", "Aprobada"],
   ["rechazada", "Rechazada"], ["vencida", "Vencida"], ["cancelada", "Cancelada"],
 ] as const;
 
@@ -212,7 +212,7 @@ function CotizacionDetallePage() {
   }
 
   async function crearVersion() {
-    if (!cotizacion || !sesion?.esAdmin || !["enviada", "rechazada", "vencida"].includes(cotizacion.estado)) return;
+    if (!cotizacion || !sesion?.esAdmin || !["enviada", "requiere_revision", "rechazada", "vencida"].includes(cotizacion.estado)) return;
     setCreandoVersion(true);
     setError("");
     const { data: nuevoId, error: versionError } = await supabase.rpc("crear_version_cotizacion", {
