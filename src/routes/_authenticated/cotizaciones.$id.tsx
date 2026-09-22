@@ -272,9 +272,15 @@ function CotizacionDetallePage() {
     setGenerandoPdf(false);
   }
 
+  function enlacePdfCliente() {
+    const codigo = cotizacion?.seguimiento_codigo?.trim().toUpperCase();
+    return codigo ? `${window.location.origin}/c/${codigo}/pdf` : enlacePdf;
+  }
+
   async function copiarEnlacePdf() {
-    if (!enlacePdf) return;
-    await copiarTexto(enlacePdf, "pdf");
+    const enlace = enlacePdfCliente();
+    if (!enlace) return;
+    await copiarTexto(enlace, "pdf");
   }
 
   function numeroWhatsAppRegistrado() {
@@ -328,10 +334,7 @@ function CotizacionDetallePage() {
       "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
       "",
       `Te enviamos la cotización ${cotizacion?.numero ?? ""}` + (cotizacion?.version ? ` (versión ${cotizacion.version})` : "") + ".",
-      "Puedes revisar el PDF aquí:",
-      enlacePdf,
-      "",
-      "Para aprobarla, solicitar cambios o rechazarla:",
+      "Puedes revisar la propuesta y responderla aquí:",
       enlaceCliente,
     ].join("\n");
     const destino = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
@@ -524,7 +527,7 @@ function CotizacionDetallePage() {
                   </div>
                 ) : null}
                 {enlacePdf ? (
-                  <a href={enlacePdf} target="_blank" rel="noreferrer" className="block text-center text-xs font-medium text-primary hover:underline">
+                  <a href={enlacePdfCliente() ?? enlacePdf ?? "#"} target="_blank" rel="noreferrer" className="block text-center text-xs font-medium text-primary hover:underline">
                     Abrir PDF en una pestaña nueva
                   </a>
                 ) : null}
@@ -582,7 +585,7 @@ function CotizacionDetallePage() {
                               </div>
                             )}
                             <button type="button" onClick={() => void copiarEnlacePdf()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
-                              {copiado === "pdf" ? "✓ Enlace copiado" : "Copiar enlace"}
+                              {copiado === "pdf" ? "✓ Enlace corto copiado" : "Copiar enlace corto"}
                             </button>
                           </>
                         ) : (
