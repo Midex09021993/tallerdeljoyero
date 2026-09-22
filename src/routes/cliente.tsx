@@ -214,6 +214,7 @@ function SeguimientoCliente() {
   });
 
   const resultado = consulta.data ?? null;
+  const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
 
   const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
   const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
@@ -279,9 +280,21 @@ function SeguimientoCliente() {
                     {cotizacion.sede ? ` · ${cotizacion.sede}` : ""}
                   </p>
                 </div>
-                <span className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium">
-                  {etiquetaEstadoCotizacion(cotizacion.estado)}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium">
+                    {etiquetaEstadoCotizacion(cotizacion.estado)}
+                  </span>
+                  {codigoConsulta ? (
+                    <a
+                      href={`/c/${codigoConsulta}/pdf`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-primary hover:bg-surface-muted"
+                    >
+                      Ver PDF
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </div>
 
