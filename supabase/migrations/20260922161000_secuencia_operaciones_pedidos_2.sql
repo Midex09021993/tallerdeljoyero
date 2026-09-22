@@ -25,7 +25,7 @@ begin
           and t.estado not in ('completado', 'cancelado')
       )
       then 'en_proceso'
-      else 'bloqueado'
+      else case when estado = 'bloqueado' then 'bloqueado' else 'pendiente' end
     end,
     fecha_inicio = case
       when secuencia = (
@@ -186,7 +186,7 @@ begin
     into v_siguiente
     from public.trabajos siguiente
     where siguiente.orden_produccion_id = v_trabajo.orden_produccion_id
-      and siguiente.estado not in ('completado','cancelado')
+      and siguiente.estado = 'pendiente'
       and (
         v_trabajo.secuencia is null
         or (siguiente.secuencia is not null and siguiente.secuencia > v_trabajo.secuencia)
