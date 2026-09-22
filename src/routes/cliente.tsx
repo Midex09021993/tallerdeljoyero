@@ -284,27 +284,8 @@ function SeguimientoCliente() {
     AREAS_PRODUCCION.some((a) => a === areaCliente(pedido.area_actual));
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-8 sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-surface px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto w-full max-w-4xl">
-        <header className="mb-8 overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-          <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-            <div className="flex items-center gap-4">
-              <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-gold">
-                <span className="font-display text-lg">TJ</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">Taller del Joyero</p>
-                <h1 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">Portal de cliente</h1>
-                <p className="mt-1 text-xs text-foreground/70">Consulta, revisa y responde tus cotizaciones de forma segura.</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface/70 px-4 py-3 text-left sm:text-right">
-              <p className="text-[10px] uppercase tracking-wider text-foreground/60">Acceso privado</p>
-              <p className="mt-1 text-xs font-medium text-foreground">Código de seguimiento</p>
-            </div>
-          </div>
-        </header>
-
         <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
           <div className="mb-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Seguimiento</p>
