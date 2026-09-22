@@ -190,6 +190,14 @@ function SeguimientoCliente() {
     onSettled: () => setBuscado(true),
   });
 
+  useEffect(() => {
+    const codigoInicial = (codigo ?? token ?? "").trim();
+    if (!codigoInicial) return;
+    setValor(codigoInicial);
+    setBuscado(false);
+    consulta.mutate(codigoInicial);
+  }, [codigo, token]);
+
   const responder = useMutation({
     mutationFn: async ({
       accion,
@@ -298,7 +306,13 @@ function SeguimientoCliente() {
           </button>
         </form>
 
-        {buscado && !consulta.isPending && !resultado ? (
+        {buscado && !consulta.isPending && consulta.error ? (
+          <div className="mt-6 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
+            No pudimos consultar la cotización o pedido. Inténtalo nuevamente.
+          </div>
+        ) : null}
+
+        {buscado && !consulta.isPending && !consulta.error && !resultado ? (
           <p className="mt-6 text-sm text-muted-foreground">
             No encontramos ninguna cotización o pedido con ese código. Revísalo o consúltanos por WhatsApp.
           </p>
