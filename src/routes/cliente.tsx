@@ -153,7 +153,8 @@ function SeguimientoCliente() {
   const [buscado, setBuscado] = useState(false);
   const [accionCliente, setAccionCliente] = useState<"aprobada" | "requiere_revision" | "rechazada" | null>(null);
   const [comentarioCliente, setComentarioCliente] = useState("");
-  const [respuestaEnviada, setRespuestaEnviada] = useState<string | null>(null);  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [respuestaEnviada, setRespuestaEnviada] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfCargando, setPdfCargando] = useState(false);
   const [pdfError, setPdfError] = useState("");
 
