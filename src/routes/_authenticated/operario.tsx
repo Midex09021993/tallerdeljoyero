@@ -186,48 +186,129 @@ function OperarioPage() {
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Producción</p>
-            <h2 className="mt-1 text-xl font-semibold">Mis trabajos</h2>
+            <h2 className="mt-1 text-xl font-semibold">Fichas técnicas</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Se actualiza automáticamente y muestra tus operaciones activas.
+              Aquí tienes directamente los trabajos que te corresponden.
             </p>
           </div>
-          <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold">{trabajos.length}</span>
+          <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold">
+            {trabajos.length}
+          </span>
         </div>
 
         {trabajos.length === 0 && !isLoadingTrabajos ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-            No tienes trabajos activos visibles en este momento. Si ya te asignaron uno, actualiza la pantalla o revisa con administración que el área y taller de tu usuario coincidan con la operación.
+            No tienes fichas técnicas activas en este momento. Si ya te asignaron un trabajo,
+            actualiza la pantalla o revisa con administración que tu área y sede coincidan con la operación.
           </div>
         ) : (
           <div className="space-y-3">
-            {trabajos.map((trabajo) => (
-              <button
-                key={trabajo.id}
-                type="button"
-                onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
-                className="w-full rounded-2xl border border-gold/20 bg-card p-4 text-left shadow-card active:bg-surface-muted"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-semibold">{trabajo.titulo || "Trabajo sin título"}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">{trabajo.area} · {trabajo.prioridad}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase text-gold-deep">
-                    {trabajo.estado === "en_proceso" ? "En proceso" : trabajo.estado === "bloqueado" ? "Bloqueado" : "Pendiente"}
-                  </span>
-                </div>
-                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{trabajo.descripcion || "Sin descripción adicional."}</p>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-[11px] text-muted-foreground">
-                    {trabajo.responsable_user_id === sesion?.user.id ? "Asignado a ti" : "Disponible para tu área"}
-                  </span>
-                  <span className="rounded-full bg-gold px-3 py-2 text-xs font-bold text-gold-foreground">Abrir ficha</span>
-                </div>
-              </button>
-            ))}
+            {trabajos.map((trabajo) => {
+              const pedido = pedidosPorId.get(trabajo.pedido_id);
+              const asignado = trabajo.responsable_user_id === sesion?.user.id;
+              const material = pedido?.material?.trim() || "—";
+              const piedras = pedido?.piedras?.trim() || "—";
+              const talla = pedido?.talla?.trim() || "—";
+              const peso = pedido?.peso_estimado?.trim() || "—";
+              const cantidad = pedido?.cantidad_piezas || 1;
+              const entrega = pedido ? diasHastaEntrega(pedido) : null;
+
+              return (
+                <article
+                  key={trabajo.id}
+                  className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card"
+                >
+                  <button
+                    type="button"
+                    onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
+                    className="w-full text-left"
+                    aria-label={`Abrir ficha técnica de ${trabajo.titulo || "trabajo sin título"}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-lg font-semibold">
+                          {trabajo.titulo || pedido?.referencia || "Trabajo sin título"}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          {pedido?.referencia || "Pedido"} · {trabajo.area}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase text-gold-deep">
+                        {trabajo.estado === "en_proceso"
+                          ? "En proceso"
+                          : trabajo.estado === "bloqueado"
+                            ? "Bloqueado"
+                            : "Pendiente"}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">
+                        Ficha técnica
+                      </p>
+                      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-xl bg-card p-2.5">
+                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Material
+                          </dt>
+                          <dd className="mt-1 truncate font-medium">{material}</dd>
+                        </div>
+                        <div className="rounded-xl bg-card p-2.5">
+                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Piedras
+                          </dt>
+                          <dd className="mt-1 truncate font-medium">{piedras}</dd>
+                        </div>
+                        <div className="rounded-xl bg-card p-2.5">
+                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Talla
+                          </dt>
+                          <dd className="mt-1 truncate font-medium">{talla}</dd>
+                        </div>
+                        <div className="rounded-xl bg-card p-2.5">
+                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Peso
+                          </dt>
+                          <dd className="mt-1 truncate font-medium">{peso}</dd>
+                        </div>
+                        <div className="rounded-xl bg-card p-2.5">
+                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Cantidad
+                          </dt>
+                          <dd className="mt-1 truncate font-medium">{cantidad}</dd>
+                        </div>
+                        <div className="rounded-xl bg-card p-2.5">
+                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Entrega
+                          </dt>
+                          <dd className="mt-1 truncate font-medium">
+                            {entrega === null ? "—" : entrega < 0 ? "Vencida" : entrega === 0 ? "Hoy" : `En ${entrega} días`}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    {trabajo.descripcion ? (
+                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                        {trabajo.descripcion}
+                      </p>
+                    ) : null}
+
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <span className="text-[11px] text-muted-foreground">
+                        {asignado ? "Asignado a ti" : "Disponible para tu área"}
+                      </span>
+                      <span className="rounded-full bg-gold px-3 py-2 text-xs font-bold text-gold-foreground">
+                        Abrir ficha técnica
+                      </span>
+                    </div>
+                  </button>
+                </article>
+              );
+            })}
           </div>
         )}
-      </section>
+      </section>      </section>
     </AppShell>
   );
 }
