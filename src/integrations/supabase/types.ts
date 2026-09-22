@@ -17,6 +17,7 @@ export type Database = {
       clientes: {
         Row: {
           ciudad: string | null
+          creado_por: string | null
           created_at: string
           direccion: string | null
           documento: string | null
@@ -33,6 +34,7 @@ export type Database = {
         }
         Insert: {
           ciudad?: string | null
+          creado_por?: string | null
           created_at?: string
           direccion?: string | null
           documento?: string | null
@@ -49,6 +51,7 @@ export type Database = {
         }
         Update: {
           ciudad?: string | null
+          creado_por?: string | null
           created_at?: string
           direccion?: string | null
           documento?: string | null
