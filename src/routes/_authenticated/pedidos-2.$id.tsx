@@ -359,6 +359,27 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, pue
         </div>
       </section>
 
+      <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[.16em]">Ruta de fabricación</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Define las áreas que deberán intervenir en esta joya antes de preparar la producción.</p>
+          </div>
+          {ruta.length ? <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold-deep">{ruta.length} {ruta.length === 1 ? "área" : "áreas"}</span> : <span className="rounded-full bg-warning-soft px-2.5 py-1 text-[10px] font-bold text-warning">Ruta pendiente</span>}
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"].map((area) => (
+            <button key={area} type="button" disabled={!puedeEditarRuta} onClick={() => toggleRuta(area)}
+              className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-70 ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}>
+              <span>{area}</span>{ruta.includes(area) ? <CheckCircle2 className="size-4 text-gold" /> : null}
+            </button>
+          ))}
+        </div>
+        {ruta.length ? <div className="mt-4 rounded-xl bg-surface-muted p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Orden de recorrido</p><p className="mt-1 text-xs font-semibold">{ruta.map((area, index) => `${index + 1}. ${area}`).join("  →  ")}</p></div> : <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Este pedido aún no tiene una ruta de fabricación. Debes definirla antes de preparar la producción.</p>}
+        {puedeEditarRuta ? <div className="mt-4 flex justify-end"><button type="button" disabled={guardandoRuta || !ruta.length} onClick={() => void guardarRuta()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50">{guardandoRuta ? "Guardando ruta…" : "Guardar ruta"}</button></div> : null}
+        {!puedeEditarRuta && ordenes.length ? <p className="mt-3 text-[10px] text-muted-foreground">La ruta queda bloqueada después de iniciar la producción para conservar la trazabilidad.</p> : null}
+      </section>
+
       <section className="grid gap-4 lg:grid-cols-[1.15fr_.85fr]">
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-3">
