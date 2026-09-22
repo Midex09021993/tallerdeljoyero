@@ -200,6 +200,8 @@ function CotizacionesPage() {
     setGuardando(true);
     setErrorCliente("");
     try {
+      const primero = conceptos[0];
+      if (!primero) return;
       const argumentos = {
         _cliente_id: form.cliente_id || null,
         _cliente_nombre: form.cliente_id ? null : busquedaCliente.trim(),
@@ -208,16 +210,16 @@ function CotizacionesPage() {
         _proyecto_joya_id: form.proyecto_joya_id || null,
         _sede_id: sesion?.sede?.id ?? null,
         _moneda: form.moneda,
-        _cantidad: conceptos[0].cantidad,
-        _costo_unitario: conceptos[0].costo,
-        _precio_unitario: conceptos[0].precio,
+        _cantidad: primero.cantidad,
+        _costo_unitario: primero.costo,
+        _precio_unitario: primero.precio,
         _descuento: form.descuento,
         _impuestos: impuestoCalculado,
         _fecha_vencimiento: form.fecha_vencimiento || null,
         _fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
         _notas_cliente: form.notas_cliente,
         _notas_internas: form.notas_internas,
-        _descripcion: conceptos[0].descripcion,
+        _descripcion: primero.descripcion,
       };
       const { data: cotizacionCreadaId, error: creacionError } = await supabase.rpc(
         "crear_cotizacion_comercial",
