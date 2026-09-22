@@ -59,6 +59,7 @@ import { SolicitudesAccesoOwner } from "@/components/SolicitudesAccesoOwner";
 import { EcosistemaParticipantesOwner } from "@/components/EcosistemaParticipantesOwner";
 import { EspecialidadesOwner } from "@/components/EspecialidadesOwner";
 import { ConfiguracionFiscal } from "@/components/ConfiguracionFiscal";
+import { ConfiguracionContratos } from "@/components/ConfiguracionContratos";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -100,7 +101,8 @@ type Modulo =
   | "solicitudesAcceso"
   | "ecosistema"
   | "especialidades"
-  | "fiscal";
+  | "fiscal"
+  | "contratos";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -145,6 +147,7 @@ function GestionPage() {
     { id: "ecosistema", label: "Ecosistema", visible: esDueno },
     { id: "especialidades", label: "Especialidades", visible: esDueno },
     { id: "fiscal", label: "Fiscalidad", visible: esDueno },
+    { id: "contratos", label: "Contratos", visible: puedeUsuarios },
   ];
 
   return (
@@ -207,6 +210,7 @@ function GestionPage() {
       {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
       {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
       {modulo === "fiscal" && esDueno ? <ConfiguracionFiscal /> : null}
+      {modulo === "contratos" && puedeUsuarios ? <ConfiguracionContratos /> : null}
     </AppShell>
   );
 }
