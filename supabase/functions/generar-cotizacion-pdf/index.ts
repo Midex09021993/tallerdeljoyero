@@ -24,6 +24,7 @@ type Quote = {
   cliente_id: string;
   proyecto_joya_id: string | null;
   sede_id: string | null;
+  identidad_comercial_id: string | null;
 };
 
 function json(body: unknown, status = 200) {
@@ -102,7 +103,7 @@ Deno.serve(async (req) => {
 
     const { data: quote, error: quoteError } = await admin
       .from("cotizaciones")
-      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id")
+      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id,identidad_comercial_id")
       .eq("id", cotizacionId)
       .maybeSingle();
 
@@ -122,13 +123,16 @@ Deno.serve(async (req) => {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
     }
 
-    const [{ data: cliente }, { data: proyecto }, { data: sede }, { data: detalles }] = await Promise.all([
+    const [{ data: cliente }, { data: proyecto }, { data: sede }, { data: identidad }, { data: detalles }] = await Promise.all([
       admin.from("clientes").select("nombre,telefono,email").eq("id", quote.cliente_id).maybeSingle(),
       quote.proyecto_joya_id
         ? admin.from("proyectos_joya").select("codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras,cantidad_piezas").eq("id", quote.proyecto_joya_id).maybeSingle()
         : Promise.resolve({ data: null }),
       quote.sede_id
         ? admin.from("sedes").select("nombre").eq("id", quote.sede_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      quote.identidad_comercial_id
+        ? admin.from("identidades_comerciales").select("nombre_comercial,razon_social,ruc,logo_url").eq("id", quote.identidad_comercial_id).maybeSingle()
         : Promise.resolve({ data: null }),
       admin.from("cotizacion_detalles").select("orden,tipo,descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", quote.id).order("orden"),
     ]);
@@ -140,7 +144,7 @@ Deno.serve(async (req) => {
     const { width, height } = page.getSize();
     let y = height - 54;
 
-    page.drawText(clean(sede?.nombre) || "TALLER", { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
+    page.drawText(clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO", { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
     page.drawText("COTIZACIÓN COMERCIAL", { x: 42, y: y - 24, size: 10, font: bold, color: rgb(0.42, 0.32, 0.16) });
     page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: 375, y, size: 11, font: bold });
     page.drawText(`Emitida: ${quote.fecha_emision ?? "—"}`, { x: 375, y: y - 16, size: 9, font });
@@ -150,7 +154,7 @@ Deno.serve(async (req) => {
     y -= 28;
 
     drawLabelValue(page, font, "CLIENTE", clean(cliente?.nombre), 42, y);
-    drawLabelValue(page, font, "TALLER", clean(sede?.nombre), 235, y);
+    drawLabelValue(page, font, "TALLER / JOYERÍA", clean(identidad?.nombre_comercial) || clean(sede?.nombre), 235, y);
     drawLabelValue(page, font, "ESTADO", clean(quote.estado), 420, y);
     y -= 50;
 
