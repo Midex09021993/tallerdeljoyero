@@ -50,7 +50,7 @@ create or replace function public.asignar_responsable_trabajo(
   _trabajo_id uuid,
   _responsable_user_id uuid
 )
-returns public.trabajos
+returns jsonb
 language plpgsql
 security definer
 set search_path = ''
@@ -109,7 +109,10 @@ begin
   where id = _trabajo_id
   returning * into v_trabajo;
 
-  return v_trabajo;
+  return jsonb_build_object(
+    'trabajo_id', v_trabajo.id,
+    'responsable_user_id', v_trabajo.responsable_user_id
+  );
 end;
 $$;
 
