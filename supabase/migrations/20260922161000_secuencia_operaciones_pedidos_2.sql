@@ -22,17 +22,17 @@ begin
         select min(t.secuencia)
         from public.trabajos t
         where t.orden_produccion_id = new.id
-          and t.estado <> 'cancelado'
+          and t.estado not in ('completado', 'cancelado')
       )
       then 'en_proceso'
-      else case when estado = 'en_proceso' then 'bloqueado' else estado end
+      else 'bloqueado' end
     end,
     fecha_inicio = case
       when secuencia = (
         select min(t.secuencia)
         from public.trabajos t
         where t.orden_produccion_id = new.id
-          and t.estado <> 'cancelado'
+          and t.estado not in ('completado', 'cancelado')
       )
       then coalesce(fecha_inicio, now())
       else fecha_inicio
