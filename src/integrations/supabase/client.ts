@@ -34,10 +34,10 @@ function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
   const SUPABASE_URL = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL
-    || "https://ynetgjhghfhvyinwvqkl.supabase.co";
+    || "https://zziynehbcclmwhletack.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY =
     (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY
-    || "sb_publishable_I37emY5b4Sy5q6LpARRaXA_uSk9l9Md";
+    || "sb_publishable_P6XZlEmgVbjKm53tre_DJA_pdDG-Jzm";
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
