@@ -308,7 +308,7 @@ function OperarioPage() {
             })}
           </div>
         )}
-      </section>      </section>
+      </section>
     </AppShell>
   );
 }
