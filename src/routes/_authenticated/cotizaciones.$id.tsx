@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 });
 
 type Cotizacion = {
-  id: string; numero: string; version: number; estado: string; sede_id: string | null; fecha_emision: string;
+  id: string; numero: string; version: number; estado: string; seguimiento_codigo: string | null; sede_id: string | null; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
@@ -99,7 +99,7 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -318,12 +318,21 @@ function CotizacionDetallePage() {
       setMostrarOpcionesEnvio(true);
       return;
     }
+    const codigoSeguimiento = cotizacion?.seguimiento_codigo?.trim().toUpperCase();
+    if (!codigoSeguimiento) {
+      setError("Esta cotización todavía no tiene un código de seguimiento. Actualiza la base de datos con la migración del portal público antes de enviarla.");
+      return;
+    }
+    const enlaceCliente = `${window.location.origin}/c/${codigoSeguimiento}`;
     const mensaje = [
       "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
       "",
       `Te enviamos la cotización ${cotizacion?.numero ?? ""}` + (cotizacion?.version ? ` (versión ${cotizacion.version})` : "") + ".",
       "Puedes revisar el PDF aquí:",
       enlacePdf,
+      "",
+      "Para aprobarla, solicitar cambios o rechazarla:",
+      enlaceCliente,
     ].join("\n");
     const destino = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
     window.open(destino, "_blank", "noopener,noreferrer");
