@@ -18,7 +18,20 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/")({
 
 type Cliente = { id: string; nombre: string; telefono: string | null; email: string | null };
 type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string | null };
-type ConceptoCotizacion = { id: string; descripcion: string; cantidad: number; costo: number; precio: number; };
+type TipoPartida = "modelo" | "metal" | "piedras" | "fundicion" | "ajustes" | "acabado" | "mano_obra" | "render" | "otro";
+type ConceptoCotizacion = { id: string; tipo: TipoPartida; descripcion: string; cantidad: number; costo: number; precio: number; };
+
+const tiposPartida: Array<{ value: TipoPartida; label: string }> = [
+  { value: "modelo", label: "Joya / Producto" },
+  { value: "metal", label: "Metal" },
+  { value: "piedras", label: "Piedra / Gema" },
+  { value: "fundicion", label: "Fundición" },
+  { value: "ajustes", label: "Ajustes" },
+  { value: "acabado", label: "Acabado" },
+  { value: "mano_obra", label: "Mano de obra" },
+  { value: "render", label: "Renderizado 3D" },
+  { value: "otro", label: "Otro" },
+];
 
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
@@ -53,7 +66,7 @@ function CotizacionesPage() {
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
-  const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
+  const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
   const [impuestoActivo, setImpuestoActivo] = useState(true);
   const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
@@ -230,7 +243,7 @@ function CotizacionesPage() {
         throw creacionError ?? new Error("No se pudo crear la cotización.");
       }
 
-      const { error: detallesError } = await supabase.rpc("guardar_detalles_cotizacion", { _cotizacion_id: cotizacionCreadaId, _detalles: conceptos.map((item, index) => ({ orden: index + 1, tipo: "otro", descripcion: item.descripcion.trim(), cantidad: item.cantidad, unidad: "und", costo_unitario: item.costo, precio_unitario: item.precio })) });
+      const { error: detallesError } = await supabase.rpc("guardar_detalles_cotizacion", { _cotizacion_id: cotizacionCreadaId, _detalles: conceptos.map((item, index) => ({ orden: index + 1, tipo: item.tipo, descripcion: item.descripcion.trim(), cantidad: item.cantidad, unidad: "und", costo_unitario: item.costo, precio_unitario: item.precio })) });
       if (detallesError) throw detallesError;
 
       setAbierto(false);
@@ -238,7 +251,7 @@ function CotizacionesPage() {
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
       setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
-      setConceptos([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
+      setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
       await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
@@ -377,13 +390,13 @@ function CotizacionesPage() {
               <section className="sm:col-span-2 overflow-hidden rounded-2xl border border-gold/15 bg-gradient-to-b from-gold/[0.035] to-transparent">
   <div className="flex items-center justify-between gap-4 border-b border-gold/10 px-4 py-4 sm:px-5">
     <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-card text-gold"><FileText className="size-4" /></span><div><p className="text-sm font-semibold tracking-tight">Conceptos de la cotización</p><p className="mt-0.5 text-[11px] text-muted-foreground">Añade productos, servicios o trabajos y define su precio.</p></div></div>
-    <button type="button" onClick={() => setConceptos(items => [...items, { id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }])} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-gold/25 bg-card px-3 text-xs font-semibold text-foreground shadow-sm transition hover:border-gold/45 hover:bg-gold/5"><Plus className="size-3.5 text-gold" /> Agregar</button>
+    <button type="button" onClick={() => setConceptos(items => [...items, { id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }])} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-gold/25 bg-card px-3 text-xs font-semibold text-foreground shadow-sm transition hover:border-gold/45 hover:bg-gold/5"><Plus className="size-3.5 text-gold" /> Agregar</button>
   </div>
-  <div className="hidden grid-cols-[minmax(0,1fr)_76px_128px_128px_34px] gap-2 px-5 pb-2 pt-4 sm:grid"><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Descripción</span><span className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Cant.</span><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Costo interno</span><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Precio cliente</span><span /></div>
+  <div className="hidden grid-cols-[minmax(0,1.15fr)_76px_128px_128px_34px] gap-2 px-5 pb-2 pt-4 sm:grid"><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Concepto y descripción</span><span className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Cant.</span><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Costo interno</span><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Precio cliente</span><span /></div>
   <div className="space-y-2 px-4 pb-4 pt-2 sm:px-5 sm:pt-0">
     {conceptos.map((item, index) => (
       <div key={item.id} className="group rounded-xl border border-border/80 bg-card p-3 transition hover:border-gold/20 hover:shadow-sm sm:grid sm:grid-cols-[minmax(0,1fr)_76px_128px_128px_34px] sm:items-end sm:gap-2">
-        <div><div className="mb-1.5 flex items-center gap-2 sm:hidden"><span className="grid size-5 place-items-center rounded-md bg-gold/10 text-[9px] font-bold text-gold">{index + 1}</span><span className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Concepto</span></div><label className="text-[10px] font-medium text-muted-foreground">Descripción<input required value={item.descripcion} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, descripcion: e.target.value } : x))} placeholder="Ej. Anillo de oro 18K" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition placeholder:text-muted-foreground/55 focus:border-gold/45 focus:ring-2 focus:ring-gold/10" /></label></div>
+        <div><div className="mb-1.5 flex items-center gap-2 sm:hidden"><span className="grid size-5 place-items-center rounded-md bg-gold/10 text-[9px] font-bold text-gold">{index + 1}</span><span className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Concepto</span></div><label className="text-[10px] font-medium text-muted-foreground">Tipo<select value={item.tipo} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, tipo: e.target.value as TipoPartida } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm">{tiposPartida.map(tipo => <option key={tipo.value} value={tipo.value}>{tipo.label}</option>)}</select></label><label className="mt-2 block text-[10px] font-medium text-muted-foreground">Descripción<input required value={item.descripcion} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, descripcion: e.target.value } : x))} placeholder="Ej. Anillo de oro 18K" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition placeholder:text-muted-foreground/55 focus:border-gold/45 focus:ring-2 focus:ring-gold/10" /></label></div>
         <label className="text-[10px] font-medium text-muted-foreground">Cantidad<input required type="number" min="1" step="1" value={item.cantidad} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, cantidad: Number(e.target.value) || 1 } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-center outline-none focus:border-gold/45 focus:ring-2 focus:ring-gold/10" /></label>
         <label className="text-[10px] font-medium text-muted-foreground">Costo interno<input type="number" min="0" step="0.01" value={item.costo} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, costo: Number(e.target.value) || 0 } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-gold/45 focus:ring-2 focus:ring-gold/10" placeholder="0.00" /></label>
         <label className="text-[10px] font-medium text-muted-foreground">Precio cliente<input required type="number" min="0.01" step="0.01" value={item.precio} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, precio: Number(e.target.value) || 0 } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-gold/45 focus:ring-2 focus:ring-gold/10" placeholder="0.00" /></label>
