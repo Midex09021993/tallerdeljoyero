@@ -217,6 +217,8 @@ function SeguimientoCliente() {
   });
 
   const resultado = consulta.data ?? null;
+  const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
+  const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
   const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
 
   useEffect(() => {
@@ -256,9 +258,6 @@ function SeguimientoCliente() {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [codigoConsulta, resultado?.tipo, cotizacion?.version, cotizacion?.estado]);
-
-  const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
-  const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
 
   const estadoActual = pedido ? estadoCliente(pedido) : null;
   const indice = estadoActual ? ESTADOS_CLIENTE.findIndex((estado) => estado === estadoActual) : -1;
