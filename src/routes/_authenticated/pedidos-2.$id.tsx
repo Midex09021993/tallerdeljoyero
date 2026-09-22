@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardLi
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePedidos, estadoClases, esEstadoFinalPedido } from "@/lib/taller-db";
+import { useSesion } from "@/lib/auth";
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ function Pedido2Detalle() {
   const { id } = useParams({ from: "/_authenticated/pedidos-2/$id" });
   const navigate = useNavigate();
   const { data: pedidos = [] } = usePedidos();
+  const { data: sesion } = useSesion();
   const pedido = pedidos.find((p) => p.id === id);
   const [tab, setTab] = useState<Tab>("resumen");
   const [transicionando, setTransicionando] = useState(false);
@@ -29,7 +31,16 @@ function Pedido2Detalle() {
   const [motivoCalidad, setMotivoCalidad] = useState("");
   const [guardandoCalidad, setGuardandoCalidad] = useState(false);
   const [preparandoProduccion, setPreparandoProduccion] = useState(false);
+  const [ruta, setRuta] = useState<string[]>([]);
+  const [guardandoRuta, setGuardandoRuta] = useState(false);
   const queryClient = useQueryClient();
+
+  const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
+
+  useEffect(() => {
+    if (!pedido) return;
+    setRuta((pedido.ruta ?? []).filter((area: string) => rutas.includes(area)));
+  }, [pedido?.id]);
 
   const { data: trabajos = [], isLoading: loadingTrabajos } = useQuery({
     queryKey: ["pedidos-2-trabajos", id],
@@ -271,7 +282,7 @@ function Pedido2Detalle() {
 
 function Dato({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-surface-muted px-3 py-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold truncate">{value}</p></div>; }
 
-function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias }: { pedido: any; trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; dias: number | null }) {
+function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, puedeEditarRuta, guardandoRuta, toggleRuta, guardarRuta }: { pedido: any; trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; dias: number | null; ruta: string[]; puedeEditarRuta: boolean; guardandoRuta: boolean; toggleRuta: (area: string) => void; guardarRuta: () => Promise<void> }) {
   const completados = trabajos.filter((t) => t.estado === "completado").length;
   const rechazadas = piezas.filter((p) => p.estado === "rechazada").length;
   const piezasValidas = piezas.filter((p) => ["verificada", "liberada"].includes(p.estado));
