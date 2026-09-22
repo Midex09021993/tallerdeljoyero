@@ -280,6 +280,19 @@ function CotizacionDetallePage() {
   async function copiarEnlacePdf() {
     const enlace = enlacePdfCliente();
     if (!enlace) return;
+
+    if (cotizacion?.estado === "borrador") {
+      const { error: estadoError } = await supabase.rpc("cambiar_estado_cotizacion", {
+        _cotizacion_id: cotizacion.id,
+        _nuevo_estado: "enviada",
+      });
+      if (estadoError) {
+        setError(estadoError.message);
+        return;
+      }
+      setCotizacion((actual) => actual ? { ...actual, estado: "enviada" } : actual);
+    }
+
     await copiarTexto(enlace, "pdf");
   }
 
@@ -316,7 +329,7 @@ function CotizacionDetallePage() {
     abrirWhatsApp(clienteActualizado.whatsapp);
   }
 
-  function abrirWhatsApp(numeroForzado?: string | null) {
+  async function abrirWhatsApp(numeroForzado?: string | null) {
     if (!enlacePdf) return;
     const telefono = (numeroForzado || numeroWhatsAppRegistrado()).replace(/\D/g, "");
     if (!telefono) {
@@ -329,6 +342,26 @@ function CotizacionDetallePage() {
       setError("Esta cotización todavía no tiene un código de seguimiento. Actualiza la base de datos con la migración del portal público antes de enviarla.");
       return;
     }
+
+    const ventana = window.open("about:blank", "_blank");
+    if (!ventana) {
+      setError("El navegador bloqueó la ventana de WhatsApp. Permite ventanas emergentes para este sitio.");
+      return;
+    }
+
+    if (cotizacion?.estado === "borrador") {
+      const { error: estadoError } = await supabase.rpc("cambiar_estado_cotizacion", {
+        _cotizacion_id: cotizacion.id,
+        _nuevo_estado: "enviada",
+      });
+      if (estadoError) {
+        ventana.close();
+        setError(estadoError.message);
+        return;
+      }
+      setCotizacion((actual) => actual ? { ...actual, estado: "enviada" } : actual);
+    }
+
     const enlaceCliente = `${window.location.origin}/c/${codigoSeguimiento}`;
     const mensaje = [
       "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
@@ -338,7 +371,7 @@ function CotizacionDetallePage() {
       enlaceCliente,
     ].join("\n");
     const destino = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
-    window.open(destino, "_blank", "noopener,noreferrer");
+    ventana.location.href = destino;
   }
 
   async function descargarPdf() {
