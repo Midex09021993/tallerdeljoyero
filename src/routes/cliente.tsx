@@ -276,35 +276,59 @@ function SeguimientoCliente() {
     AREAS_PRODUCCION.some((a) => a === areaCliente(pedido.area_actual));
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-10 sm:px-6 sm:py-16">
-      <div className="mx-auto w-full max-w-3xl">
-        <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-gold">Taller del Joyero</p>
-        <h1 className="mb-2 font-display text-3xl">Consulta tu cotización o pedido</h1>
-        <p className="mb-6 max-w-xl text-sm text-muted-foreground">
-          Ingresa tu código seguro de consulta. Puedes usar el enlace que te enviamos por WhatsApp o correo.
-        </p>
+    <main className="min-h-screen bg-surface px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-4xl">
+        <header className="mb-8 overflow-hidden rounded-3xl border border-border bg-ink shadow-card">
+          <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div className="flex items-center gap-4">
+              <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-gold">
+                <span className="font-display text-lg">TJ</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">Taller del Joyero</p>
+                <h1 className="mt-1 font-display text-2xl text-ink-foreground sm:text-3xl">Portal de cliente</h1>
+                <p className="mt-1 text-xs text-ink-foreground/70">Consulta, revisa y responde tus cotizaciones de forma segura.</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left sm:text-right">
+              <p className="text-[10px] uppercase tracking-wider text-ink-foreground/60">Acceso privado</p>
+              <p className="mt-1 text-xs font-medium text-ink-foreground">Código de seguimiento</p>
+            </div>
+          </div>
+        </header>
 
-        <form
-          className="flex flex-col gap-2 sm:flex-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (valor.trim()) consulta.mutate(valor.trim());
-          }}
-        >
-          <input
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            placeholder="Código seguro de consulta"
-            className="min-h-12 flex-1 rounded-lg border border-border bg-card px-4 py-3 text-base sm:text-sm"
-          />
-          <button
-            type="submit"
-            disabled={consulta.isPending}
-            className="min-h-12 rounded-lg bg-ink px-5 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50 sm:text-xs"
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+          <div className="mb-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Seguimiento</p>
+            <h2 className="mt-1 font-display text-xl">Consulta tu cotización o pedido</h2>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Ingresa tu código seguro o utiliza directamente el enlace que te enviamos por WhatsApp o correo.
+            </p>
+          </div>
+
+          <form
+            className="flex flex-col gap-2 sm:flex-row"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (valor.trim()) consulta.mutate(valor.trim());
+            }}
           >
-            {consulta.isPending ? "Buscando…" : "Consultar"}
-          </button>
-        </form>
+            <input
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              placeholder="Ej. 4B197DE5"
+              aria-label="Código seguro de consulta"
+              className="min-h-12 flex-1 rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium tracking-wide outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/15 sm:text-sm"
+            />
+            <button
+              type="submit"
+              disabled={consulta.isPending}
+              className="min-h-12 rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-ink-foreground shadow-sm transition hover:-translate-y-0.5 disabled:opacity-50 sm:text-xs"
+            >
+              {consulta.isPending ? "Buscando…" : "Consultar"}
+            </button>
+          </form>
+        </section>
 
         {buscado && !consulta.isPending && consulta.error ? (
           <div className="mt-6 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
@@ -319,36 +343,26 @@ function SeguimientoCliente() {
         ) : null}
 
         {cotizacion ? (
-          <article className="mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-            <div className="border-b border-border bg-surface/60 p-6">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <article className="mt-8 overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+            <div className="border-b border-border bg-surface/70 p-6 sm:p-8">
+              <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
-                    Cotización
-                  </p>
-                  <h2 className="mt-1 font-display text-2xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-gold">Cotización</span>
+                    <span className="text-[10px] text-muted-foreground">•</span>
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Documento comercial</span>
+                  </div>
+                  <h2 className="mt-2 font-display text-2xl sm:text-3xl">
                     {cotizacion.numero} <span className="text-muted-foreground">v{cotizacion.version}</span>
                   </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {cotizacion.trabajo}
                     {cotizacion.sede ? ` · ${cotizacion.sede}` : ""}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium">
-                    {etiquetaEstadoCotizacion(cotizacion.estado)}
-                  </span>
-                  {pdfUrl ? (
-                    <a
-                      href={pdfUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-primary hover:bg-surface-muted"
-                    >
-                      Abrir PDF
-                    </a>
-                  ) : null}
-                </div>
+                <span className="w-fit rounded-full border border-gold/25 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold">
+                  {etiquetaEstadoCotizacion(cotizacion.estado)}
+                </span>
               </div>
               {respuestaEnviada ? (
                 <div className="mt-4 rounded-xl border border-success/20 bg-success-soft px-4 py-3 text-sm text-success">
@@ -377,22 +391,38 @@ function SeguimientoCliente() {
                 ) : null}
               </div>
 
-              <div className="mt-4 overflow-hidden rounded-xl border border-border bg-surface-muted">
-                {pdfUrl ? (
-                  <iframe
-                    title={"PDF " + cotizacion.numero + " versión " + cotizacion.version}
-                    src={pdfUrl}
-                    className="h-[680px] w-full border-0"
-                  />
-                ) : pdfCargando ? (
-                  <div className="grid h-40 place-items-center px-6 text-sm text-muted-foreground">
-                    Abriendo el documento…
+              <div className="mt-4 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-ink text-gold">
+                      <span className="text-xs font-bold tracking-tight">PDF</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">Propuesta oficial</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        Descarga el documento completo para revisarlo con calma. Luego podrás responder a la cotización desde esta misma página.
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="grid h-40 place-items-center px-6 text-center text-sm text-muted-foreground">
-                    {pdfError || "El PDF todavía no está disponible."}
+
+                  {pdfUrl ? (
+                    <a
+                      href={pdfUrl}
+                      download={cotizacion.numero + "-v" + cotizacion.version + ".pdf"}
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-ink px-5 py-3 text-xs font-semibold text-ink-foreground shadow-sm transition hover:-translate-y-0.5"
+                    >
+                      Descargar PDF
+                    </a>
+                  ) : pdfCargando ? (
+                    <span className="text-xs font-medium text-muted-foreground">Preparando documento…</span>
+                  ) : null}
+                </div>
+
+                {!pdfCargando && !pdfUrl ? (
+                  <div className="mt-4 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-xs text-danger">
+                    {pdfError || "El PDF todavía no está disponible para descarga."}
                   </div>
-                )}
+                ) : null}
               </div>
             </section>
             <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto]">
@@ -540,7 +570,7 @@ function SeguimientoCliente() {
                 ) : null}
               </section>
 
-              <aside className="min-w-[220px] rounded-xl border border-border bg-surface/60 p-5">
+              <aside className="min-w-[220px] rounded-2xl border border-border bg-surface/60 p-5 shadow-sm">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Cliente</p>
                 <p className="mt-1 font-medium">{cotizacion.cliente}</p>
 
