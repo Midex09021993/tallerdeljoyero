@@ -2817,7 +2817,19 @@ export type Database = {
         Args: { _cotizacion_id: string }
         Returns: string
       }
+      asignar_responsable_trabajo: {
+        Args: { _responsable_user_id: string | null; _trabajo_id: string }
+        Returns: Json
+      }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
+      listar_operarios_por_area: {
+        Args: { _sede_id: string }
+        Returns: {
+          areas: string[]
+          id: string
+          nombre: string
+        }[]
+      }
       es_interno: { Args: { _user_id: string }; Returns: boolean }
       guardar_detalles_cotizacion: {
         Args: { _cotizacion_id: string; _detalles: Json }
