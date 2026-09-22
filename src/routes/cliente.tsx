@@ -29,6 +29,9 @@ export const Route = createFileRoute("/cliente")({
     ...(typeof search["token"] === "string" && search["token"]
       ? { token: search["token"] as string }
       : {}),
+    ...(typeof search["codigo"] === "string" && search["codigo"]
+      ? { codigo: search["codigo"] as string }
+      : {}),
   }),
   component: SeguimientoCliente,
 });
@@ -144,8 +147,8 @@ function moneda(valor: number, codigo: string) {
 }
 
 function SeguimientoCliente() {
-  const { token } = Route.useSearch();
-  const [valor, setValor] = useState(token ?? "");
+  const { token, codigo } = Route.useSearch();
+  const [valor, setValor] = useState(token ?? codigo ?? "");
   const [buscado, setBuscado] = useState(false);
 
   const consulta = useMutation({
@@ -154,9 +157,10 @@ function SeguimientoCliente() {
     ): Promise<{ tipo: "cotizacion"; data: SeguimientoCotizacion } | { tipo: "pedido"; data: SeguimientoPedido } | null> => {
       const db = supabase as any;
 
+      const esCodigoCorto = /^[A-Z0-9]{8}$/i.test(seguimientoToken);
       const { data: cotizacion, error: cotizacionError } = await db.rpc(
-        "seguimiento_cotizacion",
-        { _token: seguimientoToken },
+        esCodigoCorto ? "seguimiento_cotizacion_codigo" : "seguimiento_cotizacion",
+        esCodigoCorto ? { _codigo: seguimientoToken } : { _token: seguimientoToken },
       );
 
       if (cotizacionError) throw cotizacionError;
