@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, CircleAlert, FileText, Link2, Play, Paperclip } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useSesion } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 
 type ArchivoTecnico = {
   id: string;
