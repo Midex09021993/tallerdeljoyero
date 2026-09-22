@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X, Send } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X, Send, ToggleLeft, ToggleRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -54,7 +54,7 @@ function CotizacionesPage() {
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
-  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+  const [impuestoActivo, setImpuestoActivo] = useState(true);\n  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
@@ -143,7 +143,7 @@ function CotizacionesPage() {
 
   const subtotalConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.precio * item.cantidad), 0);
   const costoConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.costo * item.cantidad), 0);
-  const impuestoCalculado = Math.max(0, subtotalConceptos - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
+  const impuestoCalculado = impuestoActivo ? Math.max(0, subtotalConceptos - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100 : 0;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -235,7 +235,7 @@ function CotizacionesPage() {
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
-      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setImpuestoActivo(true);\n      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
       setConceptos([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
@@ -393,7 +393,7 @@ function CotizacionesPage() {
 </section>
 <label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
               <div className="hidden sm:block" />
-              <label className="text-xs text-muted-foreground">Impuesto (%)<input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">Configurado para el país/sede. Inicial: Perú 18%.</span></label>
+              <div className="text-xs text-muted-foreground"><div className="flex items-center justify-between gap-3"><span>Impuesto (%)</span><button type="button" onClick={() => setImpuestoActivo(v => !v)} aria-pressed={impuestoActivo} title={impuestoActivo ? "Desactivar impuesto" : "Activar impuesto"} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${impuestoActivo ? "border-gold/25 bg-gold/10 text-gold" : "border-border bg-background text-muted-foreground"}`}>{impuestoActivo ? <ToggleRight className="size-4" /> : <ToggleLeft className="size-4" />}{impuestoActivo ? "Activo" : "Desactivado"}</button></div><input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} disabled={!impuestoActivo} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50" /><span className="mt-1 block text-[10px] text-muted-foreground">{impuestoActivo ? "Se aplicará sobre el subtotal después del descuento." : "El impuesto no se aplicará a esta cotización."}</span></div>
               <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
                             <label className="text-xs text-muted-foreground">Entrega solicitada<input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
