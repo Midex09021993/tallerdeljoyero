@@ -21,7 +21,8 @@ as $$
     );
 $$;
 
-revoke all on function private.usuario_puede_ventas(uuid, uuid) from public, anon, authenticated;
+revoke all on function private.usuario_puede_ventas(uuid, uuid) from public, anon;
+grant execute on function private.usuario_puede_ventas(uuid, uuid) to authenticated;
 
 -- Clientes
 drop policy if exists "clientes manage" on public.clientes;
