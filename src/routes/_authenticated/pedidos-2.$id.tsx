@@ -187,6 +187,34 @@ function Pedido2Detalle() {
         queryClient.invalidateQueries({ queryKey: ["pedidos-2-eventos", id] }),
         queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
       ]);
+
+      // Si el área tiene exactamente un operario activo en esta sede,
+      // la operación queda asignada automáticamente. Si hay varios,
+      // permanece libre para que administración elija o el operario la tome.
+      if (sesion?.esAdmin) {
+        const { data: trabajosActualizados } = await supabase
+          .from("trabajos")
+          .select("id, area, responsable_user_id")
+          .eq("pedido_id", pedido.id);
+
+        for (const trabajo of trabajosActualizados ?? []) {
+          if (trabajo.responsable_user_id) continue;
+          const candidatos = operarios.filter((operario) =>
+            operario.areas.some((area) => areaCoincide(area, trabajo.area)),
+          );
+          if (candidatos.length === 1) {
+            const { error: asignacionError } = await supabase.rpc("asignar_responsable_trabajo", {
+              _trabajo_id: trabajo.id,
+              _responsable_user_id: candidatos[0].id,
+            });
+            if (asignacionError) {
+              console.warn("No se pudo asignar automáticamente el trabajo", trabajo.id, asignacionError);
+            }
+          }
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] });
+      }
     } catch (error) {
       const detalle = error && typeof error === "object" && "message" in error
         ? String((error as { message?: unknown }).message ?? "")
