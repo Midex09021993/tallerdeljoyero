@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/")({
 
 type Cliente = { id: string; nombre: string; telefono: string | null; email: string | null };
 type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string | null };
+type ConceptoCotizacion = { id: string; descripcion: string; cantidad: number; costo: number; precio: number; };
+
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
@@ -51,11 +53,8 @@ function CotizacionesPage() {
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
-  const [form, setForm] = useState({
-    cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1,
-    costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
-    notas_cliente: "", notas_internas: "", tasaImpuesto: 18,
-  });
+  const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
+  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
@@ -142,7 +141,9 @@ function CotizacionesPage() {
     ).length;
   }, [busquedaCliente, clientes, form.cliente_id]);
 
-  const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
+  const subtotalConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.precio * item.cantidad), 0);
+  const costoConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.costo * item.cantidad), 0);
+  const impuestoCalculado = Math.max(0, subtotalConceptos - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -195,7 +196,7 @@ function CotizacionesPage() {
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    if ((!form.cliente_id && !busquedaCliente.trim()) || !form.descripcion.trim() || form.precio <= 0) return;
+    if ((!form.cliente_id && !busquedaCliente.trim()) || conceptos.some((item) => !item.descripcion.trim() || item.cantidad <= 0 || item.precio <= 0)) return;
     setGuardando(true);
     setErrorCliente("");
     try {
@@ -207,16 +208,16 @@ function CotizacionesPage() {
         _proyecto_joya_id: form.proyecto_joya_id || null,
         _sede_id: sesion?.sede?.id ?? null,
         _moneda: form.moneda,
-        _cantidad: form.cantidad,
-        _costo_unitario: form.costo,
-        _precio_unitario: form.precio,
+        _cantidad: conceptos[0].cantidad,
+        _costo_unitario: conceptos[0].costo,
+        _precio_unitario: conceptos[0].precio,
         _descuento: form.descuento,
         _impuestos: impuestoCalculado,
         _fecha_vencimiento: form.fecha_vencimiento || null,
         _fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
         _notas_cliente: form.notas_cliente,
         _notas_internas: form.notas_internas,
-        _descripcion: form.descripcion,
+        _descripcion: conceptos[0].descripcion,
       };
       const { data: cotizacionCreadaId, error: creacionError } = await supabase.rpc(
         "crear_cotizacion_comercial",
@@ -226,10 +227,14 @@ function CotizacionesPage() {
         throw creacionError ?? new Error("No se pudo crear la cotización.");
       }
 
+      const { error: detallesError } = await supabase.rpc("guardar_detalles_cotizacion", { _cotizacion_id: cotizacionCreadaId, _detalles: conceptos.map((item, index) => ({ orden: index + 1, tipo: "otro", descripcion: item.descripcion.trim(), cantidad: item.cantidad, unidad: "und", costo_unitario: item.costo, precio_unitario: item.precio })) });
+      if (detallesError) throw detallesError;
+
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, impuestos: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
+      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setConceptos([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
       await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
@@ -358,12 +363,26 @@ function CotizacionesPage() {
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
 </div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
-              <label className="text-xs text-muted-foreground sm:col-span-2">Concepto<input required value={form.descripcion} onChange={e => setForm({...form, descripcion:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
-              <label className="text-xs text-muted-foreground">Cantidad<input type="number" min="1" step="1" value={form.cantidad} onChange={e => setForm({...form,cantidad:Number(e.target.value) || 1})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
+              <div className="sm:col-span-2 rounded-xl border border-gold/15 bg-gold/[0.02] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div><p className="text-xs font-semibold">Conceptos de la cotización</p><p className="mt-0.5 text-[10px] text-muted-foreground">Agrega cada producto o servicio como una partida independiente.</p></div>
+                  <button type="button" onClick={() => setConceptos(items => [...items, { id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }])} className="inline-flex items-center gap-1.5 rounded-lg border border-gold/25 bg-card px-3 py-2 text-xs font-semibold hover:bg-gold/5"><Plus className="size-3.5" /> Agregar concepto</button>
+                </div>
+                <div className="mt-4 space-y-3">{conceptos.map((item, index) => (
+                  <div key={item.id} className="rounded-lg border border-border bg-background p-3">
+                    <div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-wider text-gold/80">Concepto {index + 1}</span>{conceptos.length > 1 ? <button type="button" onClick={() => setConceptos(items => items.filter(x => x.id !== item.id))} className="inline-flex items-center gap-1 text-[10px] font-semibold text-danger"><Trash2 className="size-3" /> Quitar</button> : null}</div>
+                    <div className="grid gap-2 sm:grid-cols-[1fr_90px_130px_140px]">
+                      <input required value={item.descripcion} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, descripcion: e.target.value } : x))} placeholder="Ej. Anillo de oro 18K" className="h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                      <input required type="number" min="1" step="1" value={item.cantidad} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, cantidad: Number(e.target.value) || 1 } : x))} className="h-10 rounded-lg border border-border bg-card px-3 text-sm" aria-label="Cantidad" />
+                      <input type="number" min="0" step="0.01" value={item.costo} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, costo: Number(e.target.value) || 0 } : x))} className="h-10 rounded-lg border border-border bg-card px-3 text-sm" placeholder="Costo interno" />
+                      <input required type="number" min="0.01" step="0.01" value={item.precio} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, precio: Number(e.target.value) || 0 } : x))} className="h-10 rounded-lg border border-border bg-card px-3 text-sm" placeholder="Precio cliente" />
+                    </div>
+                    <div className="mt-2 text-right text-xs text-muted-foreground">Total: <strong className="text-foreground">{money(item.precio * item.cantidad, form.moneda)}</strong></div>
+                  </div>
+                ))}</div>
+              </div>
               <label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
-              <label className="text-xs text-muted-foreground">Costo interno / unidad<input type="number" min="0" step="0.01" value={form.costo} onChange={e => setForm({...form,costo:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">Precio al cliente / unidad<input required type="number" min="0.01" step="0.01" value={form.precio} onChange={e => setForm({...form,precio:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">Descuento<input type="number" min="0" step="0.01" value={form.descuento} onChange={e => setForm({...form,descuento:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <div className="hidden sm:block" />
               <label className="text-xs text-muted-foreground">Impuesto (%)<input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">Configurado para el país/sede. Inicial: Perú 18%.</span></label>
               <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
                             <label className="text-xs text-muted-foreground">Entrega solicitada<input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
@@ -371,7 +390,7 @@ function CotizacionesPage() {
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
             {errorCliente ? <div className="mb-3 rounded-lg border border-danger/20 bg-danger-soft px-3 py-2 text-xs text-danger">{errorCliente}</div> : null}
-            <div className="mt-5 flex items-center justify-between rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+impuestoCalculado), form.moneda)}</strong></div>
+            <div className="mt-5 rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Subtotal</span><strong className="text-foreground">{money(subtotalConceptos, form.moneda)}</strong></div><div className="mt-2 flex items-center justify-between text-xs text-muted-foreground"><span>Costo interno</span><strong className="text-foreground">{money(costoConceptos, form.moneda)}</strong></div><div className="mt-2 flex items-center justify-between text-xs text-muted-foreground"><span>Descuento</span><strong className="text-foreground">{money(form.descuento, form.moneda)}</strong></div><div className="mt-2 flex items-center justify-between text-xs text-muted-foreground"><span>Impuesto</span><strong className="text-foreground">{money(impuestoCalculado, form.moneda)}</strong></div><div className="mt-3 flex items-center justify-between border-t border-gold/10 pt-3"><span className="text-sm font-semibold">Total al cliente</span><strong className="text-xl">{money(Math.max(0, subtotalConceptos-form.descuento+impuestoCalculado), form.moneda)}</strong></div></div>
             <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm transition hover:border-gold/30 hover:bg-gold/5">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando…" : "Crear cotización"}</button></div>
           </form>
         </div>}
