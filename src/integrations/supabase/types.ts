@@ -532,6 +532,7 @@ export type Database = {
           fecha_entrega_solicitada: string | null
           fecha_vencimiento: string | null
           id: string
+          identidad_comercial_id: string | null
           impuestos: number
           moneda: string
           notas_cliente: string
@@ -556,6 +557,7 @@ export type Database = {
           fecha_entrega_solicitada?: string | null
           fecha_vencimiento?: string | null
           id?: string
+          identidad_comercial_id?: string | null
           impuestos?: number
           moneda?: string
           notas_cliente?: string
@@ -580,6 +582,7 @@ export type Database = {
           fecha_entrega_solicitada?: string | null
           fecha_vencimiento?: string | null
           id?: string
+          identidad_comercial_id?: string | null
           impuestos?: number
           moneda?: string
           notas_cliente?: string
@@ -599,6 +602,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_identidad_comercial_id_fkey"
+            columns: ["identidad_comercial_id"]
+            isOneToOne: false
+            referencedRelation: "identidades_comerciales"
             referencedColumns: ["id"]
           },
           {
@@ -726,6 +736,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "gastos_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      identidades_comerciales: {
+        Row: {
+          activa: boolean
+          ciudad: string | null
+          color_principal: string | null
+          created_at: string
+          direccion: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          metadata: Json
+          nombre_comercial: string
+          pie_documento: string | null
+          razon_social: string | null
+          ruc: string | null
+          sede_id: string | null
+          sitio_web: string | null
+          telefono: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          activa?: boolean
+          ciudad?: string | null
+          color_principal?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          metadata?: Json
+          nombre_comercial: string
+          pie_documento?: string | null
+          razon_social?: string | null
+          ruc?: string | null
+          sede_id?: string | null
+          sitio_web?: string | null
+          telefono?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          activa?: boolean
+          ciudad?: string | null
+          color_principal?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          metadata?: Json
+          nombre_comercial?: string
+          pie_documento?: string | null
+          razon_social?: string | null
+          ruc?: string | null
+          sede_id?: string | null
+          sitio_web?: string | null
+          telefono?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identidades_comerciales_sede_id_fkey"
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
