@@ -153,7 +153,9 @@ function SeguimientoCliente() {
   const [buscado, setBuscado] = useState(false);
   const [accionCliente, setAccionCliente] = useState<"aprobada" | "requiere_revision" | "rechazada" | null>(null);
   const [comentarioCliente, setComentarioCliente] = useState("");
-  const [respuestaEnviada, setRespuestaEnviada] = useState<string | null>(null);
+  const [respuestaEnviada, setRespuestaEnviada] = useState<string | null>(null);  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfCargando, setPdfCargando] = useState(false);
+  const [pdfError, setPdfError] = useState("");
 
   const consulta = useMutation({
     mutationFn: async (
@@ -215,6 +217,44 @@ function SeguimientoCliente() {
 
   const resultado = consulta.data ?? null;
   const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
+
+  useEffect(() => {
+    let activo = true;
+    let objectUrl: string | null = null;
+
+    if (!codigoConsulta || resultado?.tipo !== "cotizacion") {
+      setPdfUrl(null);
+      setPdfError("");
+      setPdfCargando(false);
+      return () => undefined;
+    }
+
+    setPdfCargando(true);
+    setPdfError("");
+
+    void (async () => {
+      const { data, error: pdfInvokeError } = await supabase.functions.invoke("ver-cotizacion-pdf", {
+        body: { codigo: codigoConsulta },
+      });
+
+      if (!activo) return;
+
+      if (pdfInvokeError || !(data instanceof Blob)) {
+        setPdfError(pdfInvokeError?.message ?? "El PDF todavía no está disponible.");
+        setPdfCargando(false);
+        return;
+      }
+
+      objectUrl = URL.createObjectURL(data);
+      setPdfUrl(objectUrl);
+      setPdfCargando(false);
+    })();
+
+    return () => {
+      activo = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [codigoConsulta, resultado?.tipo, cotizacion?.version, cotizacion?.estado]);
 
   const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
   const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
@@ -284,20 +324,57 @@ function SeguimientoCliente() {
                   <span className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium">
                     {etiquetaEstadoCotizacion(cotizacion.estado)}
                   </span>
-                  {codigoConsulta ? (
+                  {pdfUrl ? (
                     <a
-                      href={`/c/${codigoConsulta}/pdf`}
+                      href={pdfUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="w-fit rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-primary hover:bg-surface-muted"
                     >
-                      Ver PDF
+                      Abrir PDF
                     </a>
                   ) : null}
                 </div>
               </div>
             </div>
 
+            <section className="border-b border-border p-4 sm:p-6">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <div>
+                  <h3 className="text-sm font-semibold">Documento de la propuesta</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Revisa el PDF completo antes de aprobar, solicitar cambios o rechazar la cotización.
+                  </p>
+                </div>
+                {pdfUrl ? (
+                  <a
+                    href={pdfUrl}
+                    download={cotizacion.numero + "-v" + cotizacion.version + ".pdf"}
+                    className="w-fit rounded-lg bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground"
+                  >
+                    Descargar PDF
+                  </a>
+                ) : null}
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-xl border border-border bg-surface-muted">
+                {pdfUrl ? (
+                  <iframe
+                    title={"PDF " + cotizacion.numero + " versión " + cotizacion.version}
+                    src={pdfUrl}
+                    className="h-[680px] w-full border-0"
+                  />
+                ) : pdfCargando ? (
+                  <div className="grid h-40 place-items-center px-6 text-sm text-muted-foreground">
+                    Abriendo el documento…
+                  </div>
+                ) : (
+                  <div className="grid h-40 place-items-center px-6 text-center text-sm text-muted-foreground">
+                    {pdfError || "El PDF todavía no está disponible."}
+                  </div>
+                )}
+              </div>
+            </section>
             <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto]">
               <section>
                 <h3 className="text-sm font-semibold">Propuesta</h3>
