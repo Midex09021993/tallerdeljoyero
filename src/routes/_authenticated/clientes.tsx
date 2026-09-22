@@ -13,6 +13,8 @@ type Cliente = {
   email: string | null;
   estado: string;
   created_at: string;
+  sede_id: string;
+  sede_nombre: string;
 };
 
 type PedidoRef = { id: string; referencia: string; estado: string; importe: number | null; fecha_entrega: string | null };
@@ -47,11 +49,30 @@ function ClientesPage() {
 
   const cargar = async () => {
     if (!sesion?.sede?.id) return;
-    const { data } = await supabase.from("clientes").select("id,nombre,telefono,email,estado,created_at").eq("sede_id", sesion.sede.id).order("nombre");
-    if (data) {
-      setClientes(data);
-      if (seleccionado) setSeleccionado(data.find((c) => c.id === seleccionado.id) ?? null);
-    }
+    const esDueno = Boolean(sesion.esDueno);
+    const clientesQuery = supabase
+      .from("clientes")
+      .select("id,nombre,telefono,email,estado,created_at,sede_id")
+      .order("nombre");
+    const { data: clientesData, error: clientesError } = esDueno
+      ? await clientesQuery
+      : await clientesQuery.eq("sede_id", sesion.sede.id);
+    if (clientesError) throw clientesError;
+
+    const sedeIds = [...new Set((clientesData ?? []).map((cliente) => cliente.sede_id).filter(Boolean))];
+    const { data: sedesData, error: sedesError } = sedeIds.length
+      ? await supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+      : { data: [], error: null };
+    if (sedesError) throw sedesError;
+
+    const sedeNombrePorId = new Map((sedesData ?? []).map((sede) => [sede.id, sede.nombre]));
+    const clientesConSede = (clientesData ?? []).map((cliente) => ({
+      ...cliente,
+      sede_nombre: sedeNombrePorId.get(cliente.sede_id) ?? "Sede no identificada",
+    })) as Cliente[];
+
+    setClientes(clientesConSede);
+    if (seleccionado) setSeleccionado(clientesConSede.find((c) => c.id === seleccionado.id) ?? null);
   };
 
   useEffect(() => { if (puedeVer) void cargar(); }, [puedeVer]);
@@ -103,8 +124,15 @@ function ClientesPage() {
       setModal(false);
       await cargar();
       if (!seleccionado) {
-        const { data } = await supabase.from("clientes").select("id,nombre,telefono,email,estado,created_at").eq("sede_id", sesion.sede.id).eq("nombre", payload.nombre).order("created_at", { ascending: false }).limit(1).maybeSingle();
-        if (data) setSeleccionado(data);
+        const { data } = await supabase
+          .from("clientes")
+          .select("id,nombre,telefono,email,estado,created_at,sede_id")
+          .eq("sede_id", sesion.sede.id)
+          .eq("nombre", payload.nombre)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) setSeleccionado({ ...data, sede_nombre: sesion.sede.nombre });
       }
     } catch (error) {
       console.error(error);
@@ -198,7 +226,7 @@ function ClientesPage() {
                 <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/10 text-sm font-semibold text-gold">{cliente.nombre.charAt(0).toUpperCase()}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{cliente.nombre}</span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{cliente.telefono || cliente.email || "Sin contacto registrado"}</span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{cliente.sede_nombre} · {cliente.telefono || cliente.email || "Sin contacto registrado"}</span>
                 </span>
                 <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${cliente.estado === "activo" ? "bg-success-soft text-success" : "bg-surface-muted text-muted-foreground"}`}>{cliente.estado}</span>
               </button>
@@ -215,7 +243,7 @@ function ClientesPage() {
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-lg font-semibold text-gold shadow-[0_10px_30px_-15px_hsl(var(--gold)/0.8)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
-                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-muted-foreground">Relación comercial · Aurum Lab</p></div>
+                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-muted-foreground">Relación comercial · Aurum Lab</p><p className="mt-1 text-[11px] font-medium text-gold/80">Sede · {seleccionado.sede_nombre}</p></div>
                   </div>
                   <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider ${seleccionado.estado === "activo" ? "border-success/30 bg-success/10 text-success" : "border-border bg-surface-muted text-muted-foreground"}`}>{seleccionado.estado}</span>
                 </div>
