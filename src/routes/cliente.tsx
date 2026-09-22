@@ -198,10 +198,10 @@ function SeguimientoCliente() {
       accion: "aprobada" | "requiere_revision" | "rechazada";
       comentario: string;
     }) => {
-      const codigo = (codigo ?? token ?? valor).trim();
-      if (!codigo) throw new Error("Código de cotización no disponible");
+      const codigoRespuesta = (codigo ?? token ?? valor).trim();
+      if (!codigoRespuesta) throw new Error("Código de cotización no disponible");
       const { data, error } = await supabase.rpc("responder_cotizacion_cliente", {
-        _codigo: codigo,
+        _codigo: codigoRespuesta,
         _accion: accion,
         _comentario: comentario,
       });
