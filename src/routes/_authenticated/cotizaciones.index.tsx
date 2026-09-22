@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, X } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -46,6 +46,8 @@ function CotizacionesPage() {
   const [busca, setBusca] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
+  const [errorEliminacion, setErrorEliminacion] = useState("");
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
@@ -144,6 +146,41 @@ function CotizacionesPage() {
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  async function eliminarCotizacion(cotizacion: Cotizacion) {
+    if (!sesion?.esDueno || eliminandoId) return;
+    const confirmado = window.confirm(
+      `¿Eliminar la cotización ${cotizacion.numero}? Esta acción no se puede deshacer.`,
+    );
+    if (!confirmado) return;
+
+    setEliminandoId(cotizacion.id);
+    setErrorEliminacion("");
+    try {
+      const { count, error: contratoError } = await supabase
+        .from("contratos")
+        .select("id", { count: "exact", head: true })
+        .eq("cotizacion_id", cotizacion.id);
+
+      if (contratoError) throw contratoError;
+      if ((count ?? 0) > 0) {
+        throw new Error(
+          "No se puede eliminar esta cotización porque ya está vinculada a un contrato. Primero debe gestionarse ese contrato.",
+        );
+      }
+
+      const { error } = await supabase.from("cotizaciones").delete().eq("id", cotizacion.id);
+      if (error) throw error;
+
+      setCotizaciones((actuales) => actuales.filter((item) => item.id !== cotizacion.id));
+    } catch (error) {
+      setErrorEliminacion(
+        error instanceof Error ? error.message : "No se pudo eliminar la cotización.",
+      );
+    } finally {
+      setEliminandoId(null);
+    }
+  }
+
   if (!puedeGestionarCotizaciones) {
     return (
       <AppShell titulo="Cotizaciones" subtitulo="Acceso restringido al área comercial.">
@@ -229,6 +266,7 @@ function CotizacionesPage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">Gestión comercial</p>
               <h2 className="mt-1 text-lg font-semibold">Cotizaciones del taller</h2>
               <p className="mt-1 text-xs text-muted-foreground">Presupuestos vinculados a clientes y proyectos de joyería.</p>
+              {errorEliminacion ? <p className="mt-2 text-xs text-danger">{errorEliminacion}</p> : null}
             </div>
             <div className="hidden items-center gap-2 rounded-xl border border-gold/15 bg-gold/[0.025] px-3 py-2 text-[10px] text-muted-foreground sm:flex"><Clock3 className="size-3.5 text-gold/65" /> Seguimiento comercial</div>
           </div>
@@ -241,7 +279,7 @@ function CotizacionesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead><tr className="border-y border-border bg-surface-muted/45 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {["Cotización","Cliente","Proyecto","Taller","Estado","Emisión","Total"].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
+                {["Cotización","Cliente","Proyecto","Taller","Estado","Emisión","Total",...(sesion?.esDueno ? ["Acciones"] : [])].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
               </tr></thead>
               <tbody className="divide-y divide-border">
                 {filtradas.map(q => {
@@ -257,9 +295,23 @@ function CotizacionesPage() {
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
                     <td className="p-0 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{money(Number(q.total), q.moneda)}</Link></td>
+                    {sesion?.esDueno ? (
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          title={eliminandoId === q.id ? "Eliminando…" : "Eliminar cotización"}
+                          aria-label={eliminandoId === q.id ? `Eliminando ${q.numero}` : `Eliminar ${q.numero}`}
+                          disabled={eliminandoId !== null}
+                          onClick={() => void eliminarCotizacion(q)}
+                          className="inline-flex size-9 items-center justify-center rounded-lg border border-danger/20 text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>;
                 })}
-                {filtradas.length === 0 && <tr><td colSpan={7} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
+                {filtradas.length === 0 && <tr><td colSpan={sesion?.esDueno ? 8 : 7} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
               </tbody>
             </table>
           </div>
