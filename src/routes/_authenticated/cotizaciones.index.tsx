@@ -239,13 +239,7 @@ function CotizacionesPage() {
       await cargar();
       await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
     } catch (error) {
-      const mensaje =
-        error && typeof error === "object" && "message" in error
-          ? String((error as { message?: unknown }).message ?? "")
-          : error instanceof Error
-            ? error.message
-            : "";
-      setErrorCliente(mensaje || "No se pudo guardar la cotización.");
+      setErrorCliente(error instanceof Error ? error.message : "No se pudo guardar la cotización.");
     } finally {
       setGuardando(false);
     }
