@@ -53,20 +53,28 @@ function validar(input: NuevoUsuario): NuevoUsuario {
 
 /** Comprueba server-side si el proyecto todavía no tiene ninguna cuenta. */
 export const sistemaSinDuenos = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const [{ count: rolesCount }, { data: usuarios, error: usuariosError }] = await Promise.all([
-    supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }),
-    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 }),
-  ]);
+    const [{ count: rolesCount }, { data: usuarios, error: usuariosError }] = await Promise.all([
+      supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }),
+      supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 }),
+    ]);
 
-  if (usuariosError) {
-    console.error("[Auth] No se pudo comprobar el estado inicial:", usuariosError);
+    if (usuariosError) {
+      console.error("[Auth] No se pudo comprobar el estado inicial:", usuariosError);
+      return { vacio: false, disponible: false };
+    }
+
+    const vacio = (rolesCount ?? 0) === 0 && (usuarios?.users.length ?? 0) === 0;
+    return { vacio, disponible: true };
+  } catch (error) {
+    // El login debe seguir renderizando aunque el entorno local/preview
+    // no tenga la service-role key. El alta inicial simplemente queda
+    // deshabilitada hasta conectar Supabase en el servidor.
+    console.error("[Auth] Estado inicial no disponible:", error);
     return { vacio: false, disponible: false };
   }
-
-  const vacio = (rolesCount ?? 0) === 0 && (usuarios?.users.length ?? 0) === 0;
-  return { vacio, disponible: vacio };
 });
 
 /** Alta del primer dueño general. Sólo funciona mientras Auth y roles estén vacíos. */
