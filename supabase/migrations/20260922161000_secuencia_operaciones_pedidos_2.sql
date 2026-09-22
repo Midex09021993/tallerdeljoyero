@@ -25,7 +25,7 @@ begin
           and t.estado not in ('completado', 'cancelado')
       )
       then 'en_proceso'
-      else 'bloqueado' end
+      else 'bloqueado'
     end,
     fecha_inicio = case
       when secuencia = (
