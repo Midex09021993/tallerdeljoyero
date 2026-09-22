@@ -515,11 +515,11 @@ function textoCampo(registro: Record<string, unknown>, campo: string, fallback =
 
 export type PedidoSelector = Pick<
   Pedido,
-  "id" | "referencia" | "pieza" | "cliente" | "trabajo" | "contrato" | "estado" | "sede_id" | "sede_nombre" | "area_actual" | "ruta" | "fecha_entrega" | "entrega" | "area_desde" | "fecha_ingreso"
+  "id" | "referencia" | "pieza" | "cliente" | "trabajo" | "contrato" | "estado" | "sede_id" | "sede_nombre" | "area_actual" | "ruta" | "fecha_entrega" | "entrega" | "area_desde" | "fecha_ingreso" | "material" | "talla" | "cantidad_piezas" | "piedras" | "peso_estimado"
 >;
 
 const CAMPOS_PEDIDO_SELECTOR =
-  "id, referencia, pieza, cliente, trabajo, contrato, estado, sede_id, fecha_entrega, entrega, area_actual, area_desde, fecha_ingreso, ruta, sedes(nombre)";
+  "id, referencia, pieza, cliente, trabajo, contrato, estado, sede_id, material, talla, cantidad_piezas, piedras, peso_estimado, fecha_entrega, entrega, area_actual, area_desde, fecha_ingreso, ruta, sedes(nombre)";
 
 export function usePedidosSelector() {
   return useQuery({
@@ -538,6 +538,11 @@ export function usePedidosSelector() {
         pieza: p.pieza ?? "",
         cliente: p.cliente ?? "",
         trabajo: p.trabajo ?? "",
+        material: p.material ?? "",
+        talla: p.talla ?? "",
+        cantidad_piezas: Number(p.cantidad_piezas) || 1,
+        piedras: p.piedras ?? "",
+        peso_estimado: p.peso_estimado ?? "",
         contrato: p.contrato ?? "",
         estado: normalizarEstadoPedido(p.estado, p.area_actual),
         sede_id: p.sede_id ?? null,
