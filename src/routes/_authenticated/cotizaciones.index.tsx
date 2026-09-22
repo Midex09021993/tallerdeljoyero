@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FichaDorada } from "@/components/FichaDorada";
 import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X, Send, ToggleLeft, ToggleRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +66,7 @@ function CotizacionesPage() {
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [eliminandoId, setEliminandoId] = useState<string | null>(null);
+  const [cotizacionPorEliminar, setCotizacionPorEliminar] = useState<Cotizacion | null>(null);
   const [errorEliminacion, setErrorEliminacion] = useState("");
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
@@ -163,10 +168,6 @@ function CotizacionesPage() {
 
   async function eliminarCotizacion(cotizacion: Cotizacion) {
     if (!sesion?.esDueno || eliminandoId) return;
-    const confirmado = window.confirm(
-      `¿Eliminar la cotización ${cotizacion.numero}? Esta acción no se puede deshacer.`,
-    );
-    if (!confirmado) return;
 
     setEliminandoId(cotizacion.id);
     setErrorEliminacion("");
@@ -193,6 +194,7 @@ function CotizacionesPage() {
       );
     } finally {
       setEliminandoId(null);
+      setCotizacionPorEliminar(null);
     }
   }
 
@@ -331,7 +333,7 @@ function CotizacionesPage() {
                           title={eliminandoId === q.id ? "Eliminando…" : "Eliminar cotización"}
                           aria-label={eliminandoId === q.id ? `Eliminando ${q.numero}` : `Eliminar ${q.numero}`}
                           disabled={eliminandoId !== null}
-                          onClick={() => void eliminarCotizacion(q)}
+                          onClick={() => { setErrorEliminacion(""); setCotizacionPorEliminar(q); }}
                           className="inline-flex size-9 items-center justify-center rounded-lg border border-danger/20 text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <Trash2 className="size-4" />
@@ -345,6 +347,28 @@ function CotizacionesPage() {
             </table>
           </div>
         </section>
+
+        <AlertDialog open={cotizacionPorEliminar !== null} onOpenChange={(open) => {
+          if (!open && !eliminandoId) setCotizacionPorEliminar(null);
+        }}>
+          <AlertDialogContent className="mx-4 max-w-sm rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar cotización</AlertDialogTitle>
+              <AlertDialogDescription>
+                ¿Deseas eliminar la cotización "{cotizacionPorEliminar?.numero}"?
+                <span className="mt-2 block font-medium text-destructive">Esta acción no se puede deshacer.</span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={eliminandoId !== null}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction disabled={!cotizacionPorEliminar || eliminandoId !== null}
+                onClick={() => { if (cotizacionPorEliminar) void eliminarCotizacion(cotizacionPorEliminar); }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {eliminandoId ? "Eliminando..." : "Eliminar cotización"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4 backdrop-blur-sm">
           <form onSubmit={guardar} className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
