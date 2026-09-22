@@ -147,6 +147,13 @@ function moneda(valor: number, codigo: string) {
   }).format(valor);
 }
 
+function cotizacionVencida(fecha: string | null) {
+  if (!fecha) return false;
+  const hoy = new Date();
+  const fechaLocal = new Date(fecha + "T23:59:59");
+  return fechaLocal.getTime() < hoy.getTime();
+}
+
 function SeguimientoCliente() {
   const { token, codigo } = Route.useSearch();
   const [valor, setValor] = useState(token ?? codigo ?? "");
@@ -228,6 +235,9 @@ function SeguimientoCliente() {
   const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
   const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
   const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
+  const nombreTaller = String(cotizacion?.identidad_comercial?.nombre_comercial ?? "").trim();
+  const estaVencida = cotizacionVencida(cotizacion?.fecha_vencimiento ?? null);
+  const estadoVisible = estaVencida && cotizacion?.estado === "enviada" ? "vencida" : cotizacion?.estado;
 
   useEffect(() => {
     let activo = true;
@@ -357,9 +367,14 @@ function SeguimientoCliente() {
                     {cotizacion.trabajo}
                     {cotizacion.sede ? ` · ${cotizacion.sede}` : ""}
                   </p>
+                  {nombreTaller ? (
+                    <p className="mt-2 text-xs font-medium text-foreground">
+                      Cotización emitida por <span className="text-gold">{nombreTaller}</span>
+                    </p>
+                  ) : null}
                 </div>
                 <span className="w-fit rounded-full border border-gold/25 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold">
-                  {etiquetaEstadoCotizacion(cotizacion.estado)}
+                  {etiquetaEstadoCotizacion(estadoVisible ?? cotizacion.estado)}
                 </span>
               </div>
               {respuestaEnviada ? (
@@ -375,7 +390,7 @@ function SeguimientoCliente() {
                 <div>
                   <h3 className="text-sm font-semibold">Documento de la propuesta</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Revisa el PDF completo antes de aprobar, solicitar cambios o rechazar la cotización.
+                    Revisa la propuesta completa. La cotización es válida hasta la fecha indicada y luego podrás responder desde esta misma página.
                   </p>
                 </div>
               </div>
@@ -409,7 +424,7 @@ function SeguimientoCliente() {
 
                 {!pdfCargando && !pdfUrl ? (
                   <div className="mt-4 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-xs text-danger">
-                    {pdfError || "El PDF todavía no está disponible para descarga."}
+                    {pdfError || "El PDF todavía no está disponible para descarga. Genera o regenera el documento desde el ERP y vuelve a abrir este enlace."}
                   </div>
                 ) : null}
               </div>
@@ -456,13 +471,18 @@ function SeguimientoCliente() {
                   </div>
                 ) : null}
 
-                {cotizacion.estado === "enviada" ? (
+                {estadoVisible === "enviada" ? (
                   <section className="mt-5 rounded-xl border border-border bg-surface/60 p-4">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Tu respuesta
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Revisa la propuesta y dinos cómo deseas continuar.
+                      {cotizacion.fecha_vencimiento ? (
+                        <>
+                          {" "}Válida hasta <span className="font-medium text-foreground">{fmtFecha(cotizacion.fecha_vencimiento)}</span>.
+                        </>
+                      ) : null}
                     </p>
 
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row">
