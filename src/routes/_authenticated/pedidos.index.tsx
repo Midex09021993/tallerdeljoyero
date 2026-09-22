@@ -888,7 +888,7 @@ function PedidosPage() {  const navigate = useNavigate();
                   {fmtFecha(p.fecha_entrega ?? p.entrega) ?? "Sin fecha"}
                 </span>
               </div>
-              {puedeCrear ? (
+              {(puedeCrear || sesion?.esDueno) ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {pedidoEnRecepcion(p.estado) ? (
                     <button
