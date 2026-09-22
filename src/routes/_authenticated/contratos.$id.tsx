@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { FileText, ExternalLink } from "lucide-react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { PedidoFormCampos } from "@/components/PedidoFormCampos";
@@ -16,6 +17,7 @@ import {
   type PedidoNuevo,
 } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -76,6 +78,9 @@ function ContratoPage() {
   const [pagoAbierto, setPagoAbierto] = useState(false);
   const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfHash, setPdfHash] = useState<string | null>(null);
 
   useEffect(() => {
     if (contrato && modalAbierto) {
@@ -133,15 +138,60 @@ function ContratoPage() {
           <Panel
             titulo={`Contrato ${contrato.numero}`}
             accion={
-              <button
-                type="button"
-                onClick={() => navigate({ to: "/pedidos" })}
-                className="hidden rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
-              >
-                ← Atrás
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                {pdfUrl ? (
+                  <a
+                    href={pdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-muted"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    Ver PDF
+                  </a>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={generandoPdf}
+                  onClick={async () => {
+                    setGenerandoPdf(true);
+                    setPdfUrl(null);
+                    setPdfHash(null);
+                    const { data, error } = await supabase.functions.invoke("generar-contrato-pdf", {
+                      body: { contrato_id: contrato.id },
+                    });
+                    if (error) {
+                      toast.error(error.message || "No se pudo generar el contrato.");
+                    } else if (data?.url) {
+                      setPdfUrl(data.url);
+                      setPdfHash(data.sha256 ?? null);
+                      toast.success("Contrato PDF generado.");
+                    } else {
+                      toast.error(data?.error || "No se pudo generar el contrato.");
+                    }
+                    setGenerandoPdf(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                  <FileText className="size-3.5" />
+                  {generandoPdf ? "Generando…" : "Generar contrato PDF"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/pedidos" })}
+                  className="hidden rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
+                >
+                  ← Atrás
+                </button>
+              </div>
             }
           >
+            {pdfHash ? (
+              <div className="border-b border-border bg-surface-muted/50 px-4 py-3 text-[11px] text-muted-foreground lg:px-6">
+                <span className="font-semibold text-foreground">Documento original generado.</span>{" "}
+                SHA-256: <span className="font-mono">{pdfHash}</span>
+              </div>
+            ) : null}
             <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
               <Dato label="Cliente" valor={contrato.cliente} />
               <Dato label="Teléfono" valor={contrato.telefono || "—"} />
