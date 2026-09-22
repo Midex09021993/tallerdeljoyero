@@ -274,7 +274,7 @@ function CotizacionDetallePage() {
 
   function enlacePdfCliente() {
     const codigo = cotizacion?.seguimiento_codigo?.trim().toUpperCase();
-    return codigo ? `${window.location.origin}/c/${codigo}/pdf` : enlacePdf;
+    return codigo ? `${window.location.origin}/c/${codigo}` : enlacePdf;
   }
 
   async function marcarComoEnviada() {
@@ -427,7 +427,7 @@ function CotizacionDetallePage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
           {sesion?.esAdmin ? <div className="flex flex-wrap items-center gap-2">
-            {["enviada", "rechazada", "vencida"].includes(cotizacion.estado) ? (
+            {["enviada", "requiere_revision", "rechazada", "vencida"].includes(cotizacion.estado) ? (
               <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
                 {creandoVersion ? "Creando…" : "Crear nueva versión"}
               </button>
@@ -586,13 +586,15 @@ function CotizacionDetallePage() {
                           return;
                         }
                         if (!(await marcarComoEnviada())) return;
-                        setMostrarOpcionesEnvio((visible) => !visible);
+                        setMostrarOpcionesEnvio(true);
                       }}
                       className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
                     >
-                      {mostrarOpcionesEnvio ? "Ocultar opciones de envío" : "Enviar al cliente"}
+                      Enviar al cliente
                     </button>
-                    {mostrarOpcionesEnvio ? (
+                  </>
+                ) : null}
+                {mostrarOpcionesEnvio ? (
                       <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
                         <p className="text-xs text-muted-foreground">Comparte la cotización mediante una de estas opciones:</p>
                         {enlacePdf ? (
@@ -639,8 +641,6 @@ function CotizacionDetallePage() {
                           <p className="text-xs text-muted-foreground">Primero genera el PDF en “Documento para el cliente” para poder compartirlo.</p>
                         )}
                       </div>
-                    ) : null}
-                  </>
                 ) : null}
                 {cotizacion.estado === "enviada" ? (
                   <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("aprobada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
