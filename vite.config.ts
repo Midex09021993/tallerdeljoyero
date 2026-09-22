@@ -6,17 +6,21 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Valores públicos del backend (URL + clave publicable). No son secretos.
-// Se usan como respaldo cuando el build de producción no recibe las variables
-// VITE_SUPABASE_*, para que la web publicada nunca quede sin conexión.
-const SUPABASE_URL_FALLBACK = "https://ynetgjhghfhvyinwvqkl.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY_FALLBACK = "sb_publishable_I37emY5b4Sy5q6LpARRaXA_uSk9l9Md";
-const SUPABASE_PROJECT_ID_FALLBACK = "ynetgjhghfhvyinwvqkl";
+// El backend se toma SIEMPRE del entorno inyectado por Lovable Cloud para este
+// proyecto. No se usan valores fijos ni proyectos externos.
+const publicEnv = {
+  VITE_SUPABASE_URL: process.env["VITE_SUPABASE_URL"] ?? process.env["SUPABASE_URL"],
+  VITE_SUPABASE_PUBLISHABLE_KEY:
+    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_PUBLISHABLE_KEY"],
+  VITE_SUPABASE_PROJECT_ID:
+    process.env["VITE_SUPABASE_PROJECT_ID"] ?? process.env["SUPABASE_PROJECT_ID"],
+} as const;
 
-const supabaseUrl = process.env["VITE_SUPABASE_URL"] || SUPABASE_URL_FALLBACK;
-const supabaseKey =
-  process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || SUPABASE_PUBLISHABLE_KEY_FALLBACK;
-const supabaseProjectId = process.env["VITE_SUPABASE_PROJECT_ID"] || SUPABASE_PROJECT_ID_FALLBACK;
+const define = Object.fromEntries(
+  Object.entries(publicEnv)
+    .filter(([, value]) => typeof value === "string" && value.length > 0)
+    .map(([key, value]) => [`import.meta.env.${key}`, JSON.stringify(value)]),
+);
 
 export default defineConfig({
   tanstackStart: {
@@ -25,10 +29,6 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    define: {
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabaseKey),
-      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(supabaseProjectId),
-    },
+    define,
   },
 });
