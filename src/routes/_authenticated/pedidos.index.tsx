@@ -906,17 +906,19 @@ function PedidosPage() {  const navigate = useNavigate();
                       Autorizar Producción
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPorBorrar({ id: p.id, referencia: p.referencia });
-                    }}
-                    className="ml-auto rounded-lg border border-danger/30 px-3 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10"
-                    aria-label={`Eliminar pedido ${p.referencia}`}
-                  >
-                    Eliminar
-                  </button>
+                  {sesion?.esDueno ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPorBorrar({ id: p.id, referencia: p.referencia });
+                      }}
+                      className="ml-auto rounded-lg border border-danger/30 px-3 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10"
+                      aria-label={`Eliminar pedido ${p.referencia}`}
+                    >
+                      Eliminar
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </article>
@@ -1056,7 +1058,7 @@ function PedidosPage() {  const navigate = useNavigate();
                           Autorizar Producción
                         </button>
                       ) : null}
-                      {puedeCrear ? (
+                      {sesion?.esDueno ? (
                         <button
                           type="button"
                           onClick={() => setPorBorrar({ id: p.id, referencia: p.referencia })}
