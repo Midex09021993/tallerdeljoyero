@@ -113,6 +113,7 @@ function normalizarContenido(valor: unknown): ContenidoContrato {
 
 export function ConfiguracionContratos() {
   const { data: sesion } = useSesion();
+  const db = supabase as any;
   const [identidades, setIdentidades] = useState<Identidad[]>([]);
   const [identidadId, setIdentidadId] = useState("");
   const [contenido, setContenido] = useState<ContenidoContrato>(() => clonarDefault());
@@ -152,7 +153,7 @@ export function ConfiguracionContratos() {
     let activo = true;
     setCargando(true);
     void (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("plantillas_contrato")
         .select("id,nombre,version,contenido")
         .eq("identidad_comercial_id", identidadId)
@@ -232,14 +233,14 @@ export function ConfiguracionContratos() {
     }
     setGuardando(true);
     const siguienteVersion = version + 1;
-    const { error } = await supabase.from("plantillas_contrato").upsert(
+    const { error } = await db.from("plantillas_contrato").upsert(
       {
         identidad_comercial_id: identidadId,
         nombre: nombre.trim(),
         version: siguienteVersion,
         contenido,
         activa: true,
-        updated_by: sesion?.user_id ?? null,
+        updated_by: sesion?.user.id ?? null,
       } as any,
       { onConflict: "identidad_comercial_id" },
     );
