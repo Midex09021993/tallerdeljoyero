@@ -377,7 +377,7 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, pue
         </div>
         {ruta.length ? <div className="mt-4 rounded-xl bg-surface-muted p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Orden de recorrido</p><p className="mt-1 text-xs font-semibold">{ruta.map((area, index) => `${index + 1}. ${area}`).join("  →  ")}</p></div> : <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Este pedido aún no tiene una ruta de fabricación. Debes definirla antes de preparar la producción.</p>}
         {puedeEditarRuta ? <div className="mt-4 flex justify-end"><button type="button" disabled={guardandoRuta || !ruta.length} onClick={() => void guardarRuta()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50">{guardandoRuta ? "Guardando ruta…" : "Guardar ruta"}</button></div> : null}
-        {!puedeEditarRuta && ordenes.length ? <p className="mt-3 text-[10px] text-muted-foreground">La ruta queda bloqueada después de iniciar la producción para conservar la trazabilidad.</p> : null}
+        {!puedeEditarRuta && ordenes.length ? <p className="mt-3 text-[10px] text-muted-foreground">La ruta queda bloqueada después de preparar la producción para conservar la trazabilidad.</p> : null}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.15fr_.85fr]">
