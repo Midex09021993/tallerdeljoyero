@@ -435,7 +435,113 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
     {costo ? <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Costeo real</h3><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Dato label="Materiales" value={money(costo.costo_materiales,costo.moneda)} /><Dato label="Mano de obra" value={money(costo.costo_mano_obra,costo.moneda)} /><Dato label="Costo real" value={money(costo.costo_real,costo.moneda)} /><Dato label="Margen" value={money(costo.margen,costo.moneda)} /></div></section> : null}
   </div>;
 }
-function Comercial({ pedido }: { pedido: any }) { return <div className="grid gap-4 md:grid-cols-2"><section className="rounded-2xl border border-border bg-card p-5"><UserRound className="size-5 text-gold" /><h3 className="mt-3 text-xs font-bold uppercase tracking-[.16em]">Cliente</h3><div className="mt-4 grid gap-3 sm:grid-cols-2"><Dato label="Cliente" value={pedido.cliente || "Sin cliente"} /><Dato label="Contrato" value={pedido.contrato || "Sin contrato"} /><Dato label="Origen" value={pedido.origen || "—"} /><Dato label="Sede" value={pedido.sede_nombre || "—"} /></div></section><section className="rounded-2xl border border-border bg-card p-5"><FileText className="size-5 text-gold" /><h3 className="mt-3 text-xs font-bold uppercase tracking-[.16em]">Importes</h3><div className="mt-4 grid gap-3 sm:grid-cols-3"><Dato label="Importe" value={money(pedido.importe,"PEN")} /><Dato label="A cuenta" value={money(pedido.a_cuenta,"PEN")} /><Dato label="Saldo" value={money((Number(pedido.importe)||0)-(Number(pedido.a_cuenta)||0),"PEN")} /></div></section></div>; }
+function comercialObjeto(valor: unknown): Record<string, unknown> {
+  return valor && typeof valor === "object" && !Array.isArray(valor) ? valor as Record<string, unknown> : {};
+}
+
+function comercialLista(valor: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(valor) ? valor.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
+}
+
+function comercialNumero(valor: unknown, fallback = 0) {
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? numero : fallback;
+}
+
+function Comercial({ pedido }: { pedido: any }) {
+  const especificaciones = comercialObjeto(pedido.especificaciones_comerciales);
+  const detalles = comercialLista(pedido.cotizacion_detalles);
+  const subtotal = comercialNumero(especificaciones.subtotal, comercialNumero(pedido.importe));
+  const descuento = comercialNumero(especificaciones.descuento);
+  const impuestos = comercialNumero(especificaciones.impuestos);
+  const total = comercialNumero(especificaciones.total, comercialNumero(pedido.importe));
+  const anticipo = comercialNumero(especificaciones.anticipo, comercialNumero(pedido.a_cuenta));
+  const saldo = Math.max(0, total - anticipo);
+  const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : anticipo > 0 ? "Pago parcial" : "Pendiente";
+  const cotizacion = typeof especificaciones.cotizacion_numero === "string" ? especificaciones.cotizacion_numero : "";
+  const version = especificaciones.cotizacion_version;
+  const moneda = typeof especificaciones.moneda === "string" && especificaciones.moneda ? especificaciones.moneda : "PEN";
+  const identidad = typeof especificaciones.identidad_comercial === "string" ? especificaciones.identidad_comercial : "";
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-center gap-3">
+          <UserRound className="size-5 text-gold" />
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[.16em]">Relación comercial</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {cotizacion ? `Snapshot de la cotización ${cotizacion}${version ? ` · v${version}` : ""}` : "Pedido registrado sin cotización vinculada"}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Dato label="Cliente" value={pedido.cliente || "Sin cliente"} />
+          <Dato label="Cotización" value={cotizacion ? `${cotizacion}${version ? ` · v${version}` : ""}` : "—"} />
+          <Dato label="Contrato" value={pedido.contrato || "Sin contrato"} />
+          <Dato label="Origen" value={pedido.origen || "—"} />
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Dato label="Taller / sede" value={pedido.sede_nombre || "—"} />
+          <Dato label="Identidad comercial" value={identidad || "—"} />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-center gap-3">
+          <FileText className="size-5 text-gold" />
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[.16em]">Resumen económico</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">Valores conservados desde la información comercial del pedido.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <Dato label="Subtotal" value={money(subtotal, moneda)} />
+          <Dato label="Descuento" value={money(descuento, moneda)} />
+          <Dato label="Impuestos" value={money(impuestos, moneda)} />
+          <Dato label="Total" value={money(total, moneda)} />
+          <Dato label="Anticipo" value={money(anticipo, moneda)} />
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Dato label="Saldo" value={money(saldo, moneda)} />
+          <Dato label="Estado de pago" value={estadoPago} />
+        </div>
+      </section>
+
+      {detalles.length ? (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-[.16em]">Detalle de la cotización</h3>
+              <p className="mt-1 text-[11px] text-muted-foreground">{detalles.length} partida(s) conservadas en el pedido.</p>
+            </div>
+            <ClipboardList className="size-5 text-gold" />
+          </div>
+          <div className="mt-4 space-y-2">
+            {detalles.map((detalle, index) => {
+              const descripcion = typeof detalle.descripcion === "string" ? detalle.descripcion : `Partida ${index + 1}`;
+              const cantidad = comercialNumero(detalle.cantidad, 1);
+              const unidad = typeof detalle.unidad === "string" ? detalle.unidad : "";
+              const precio = comercialNumero(detalle.total_precio, comercialNumero(detalle.precio_unitario));
+              return (
+                <div key={String(detalle.id ?? index)} className="grid gap-2 rounded-xl border border-border bg-surface-sunken p-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
+                  <div><p className="text-xs font-semibold">{descripcion}</p><p className="mt-1 text-[10px] text-muted-foreground">{cantidad} {unidad}</p></div>
+                  <span className="text-[10px] font-semibold text-muted-foreground">{detalle.tipo ? String(detalle.tipo) : "Detalle"}</span>
+                  <span className="text-xs font-bold">{money(precio, moneda)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      <p className="rounded-xl border border-border bg-surface-muted p-3 text-[10px] text-muted-foreground">
+        Los datos comerciales heredados de una cotización se muestran como referencia del pedido y no modifican la trazabilidad operativa.
+      </p>
+    </div>
+  );
+}
+
 function Archivos({ archivos }: { archivos: any[] }) { return <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Documentos del pedido</h3><p className="mt-1 text-xs text-muted-foreground">{archivos.length} archivos registrados</p></div><FileText className="size-5 text-gold" /></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{archivos.map((a) => <div key={a.id} className="overflow-hidden rounded-xl border border-border"><div className="grid aspect-video place-items-center bg-surface-muted">{a.poster ? <img src={a.poster} alt="" className="size-full object-cover" /> : <FileText className="size-8 text-muted-foreground" />}</div><div className="p-3"><p className="truncate text-sm font-semibold">{a.nombre}</p><p className="mt-1 text-[10px] text-muted-foreground">{a.grupo || a.tipo || "Archivo"} · v{a.version ?? 1}{a.es_vigente_fabricacion ? " · Vigente" : ""}</p></div></div>)}</div>{!archivos.length ? <Empty text="No hay archivos registrados." /> : null}</section>; }
 function Historial({ eventos, movimientos }: { eventos: any[]; movimientos: any[] }) { const items = useMemo(() => [...eventos.map((e) => ({ id: e.id, fecha: e.created_at, tipo: "Producción", titulo: e.tipo, detalle: e.estado_anterior && e.estado_nuevo ? `${e.estado_anterior} → ${e.estado_nuevo}` : "Evento registrado", usuario: e.usuario_id })), ...movimientos.map((m) => ({ id: m.id, fecha: m.created_at, tipo: "Área", titulo: m.accion || "Movimiento", detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino, usuario: m.usuario_id }))].sort((a,b) => new Date(b.fecha).getTime()-new Date(a.fecha).getTime()), [eventos,movimientos]); return <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trazabilidad</h3><div className="mt-5 space-y-0">{items.length ? items.map((e) => <div key={`${e.tipo}-${e.id}`} className="relative border-l border-border pb-5 pl-5 last:pb-0"><span className="absolute -left-1.5 top-1 size-3 rounded-full bg-gold ring-4 ring-card" /><p className="text-sm font-semibold">{e.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p><p className="mt-1 text-[10px] text-muted-foreground">{new Date(e.fecha).toLocaleString("es-PE")} · {e.usuario ? e.usuario.slice(0,8).toUpperCase() : "Sistema"}</p></div>) : <Empty text="Aún no hay eventos registrados." />}</div></section>; }
 function Empty({ text }: { text: string }) { return <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</div>; }
