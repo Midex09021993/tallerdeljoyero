@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       .from("cotizaciones")
       .select("id,estado,version")
       .eq("seguimiento_codigo", codigo)
-       .in("estado", ["enviada", "requiere_revision", "aprobada", "rechazada", "vencida"])
+      .in("estado", ["enviada", "requiere_revision", "aprobada", "rechazada", "vencida"])
       .maybeSingle();
 
     if (quoteError) {
