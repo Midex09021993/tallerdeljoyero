@@ -24,12 +24,25 @@ type Detalle = {
   id: string; orden: number; tipo: string; descripcion: string; cantidad: number; unidad: string;
   costo_unitario: number; precio_unitario: number; total_costo: number; total_precio: number;
 };
-type Cliente = { id: string; nombre: string; telefono: string | null; email: string | null };
+type Cliente = { id: string; nombre: string; telefono: string | null; whatsapp: string | null; email: string | null };
 type Proyecto = { id: string; codigo: string; nombre: string; descripcion: string; metal: string | null; ley: string | null; peso_estimado: number | null; talla: string | null; piedras: string | null };
 
 const estados = [
   ["borrador", "Borrador"], ["enviada", "Enviada"], ["aprobada", "Aprobada"],
   ["rechazada", "Rechazada"], ["vencida", "Vencida"], ["cancelada", "Cancelada"],
+] as const;
+
+const paisesWhatsapp = [
+  { codigo: "51", nombre: "Perú" },
+  { codigo: "57", nombre: "Colombia" },
+  { codigo: "56", nombre: "Chile" },
+  { codigo: "593", nombre: "Ecuador" },
+  { codigo: "591", nombre: "Bolivia" },
+  { codigo: "54", nombre: "Argentina" },
+  { codigo: "55", nombre: "Brasil" },
+  { codigo: "52", nombre: "México" },
+  { codigo: "1", nombre: "Estados Unidos / Canadá" },
+  { codigo: "34", nombre: "España" },
 ] as const;
 
 const tiposPartida = [
@@ -78,6 +91,9 @@ function CotizacionDetallePage() {
   const [enlacePdf, setEnlacePdf] = useState<string | null>(null);
   const [copiado, setCopiado] = useState<"enlace" | "pdf" | null>(null);
   const [mostrarOpcionesEnvio, setMostrarOpcionesEnvio] = useState(false);
+  const [paisWhatsapp, setPaisWhatsapp] = useState("51");
+  const [numeroWhatsapp, setNumeroWhatsapp] = useState("");
+  const [guardandoWhatsapp, setGuardandoWhatsapp] = useState(false);
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
   const cargar = async () => {
@@ -92,7 +108,7 @@ function CotizacionDetallePage() {
     const [{ data: d }, { data: c }, { data: p }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
       supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
       q.cliente_id
-        ? supabase.from("clientes").select("id,nombre,telefono,email").eq("id", q.cliente_id).maybeSingle()
+        ? supabase.from("clientes").select("id,nombre,telefono,whatsapp,email").eq("id", q.cliente_id).maybeSingle()
         : Promise.resolve({ data: null }),
       q.proyecto_joya_id
         ? supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras").eq("id", q.proyecto_joya_id).maybeSingle()
@@ -261,9 +277,47 @@ function CotizacionDetallePage() {
     await copiarTexto(enlacePdf, "pdf");
   }
 
-  function abrirWhatsApp() {
+  function numeroWhatsAppRegistrado() {
+    return (cliente?.whatsapp || cliente?.telefono || "").replace(/\D/g, "");
+  }
+
+  async function registrarWhatsAppYEnviar() {
+    if (!cliente || !enlacePdf || guardandoWhatsapp) return;
+    const numero = numeroWhatsapp.replace(/\D/g, "");
+    if (numero.length < 6) {
+      setError("Ingresa un número de WhatsApp válido.");
+      return;
+    }
+
+    const numeroInternacional = paisWhatsapp + numero;
+    setGuardandoWhatsapp(true);
+    setError("");
+    const { error: updateError } = await supabase
+      .from("clientes")
+      .update({ whatsapp: numeroInternacional })
+      .eq("id", cliente.id);
+
+    if (updateError) {
+      setError(updateError.message);
+      setGuardandoWhatsapp(false);
+      return;
+    }
+
+    const clienteActualizado = { ...cliente, whatsapp: numeroInternacional };
+    setCliente(clienteActualizado);
+    setNumeroWhatsapp("");
+    setGuardandoWhatsapp(false);
+    abrirWhatsApp(clienteActualizado.whatsapp);
+  }
+
+  function abrirWhatsApp(numeroForzado?: string | null) {
     if (!enlacePdf) return;
-    const telefono = (cliente?.telefono ?? "").replace(/\D/g, "");
+    const telefono = (numeroForzado || numeroWhatsAppRegistrado()).replace(/\D/g, "");
+    if (!telefono) {
+      setError("Este cliente no tiene un número registrado. Ingresa su número de WhatsApp para guardarlo y continuar.");
+      setMostrarOpcionesEnvio(true);
+      return;
+    }
     const mensaje = [
       "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
       "",
@@ -271,9 +325,7 @@ function CotizacionDetallePage() {
       "Puedes revisar el PDF aquí:",
       enlacePdf,
     ].join("\n");
-    const destino = telefono
-      ? `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
-      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    const destino = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
     window.open(destino, "_blank", "noopener,noreferrer");
   }
 
@@ -486,9 +538,40 @@ function CotizacionDetallePage() {
                         <p className="text-xs text-muted-foreground">Comparte la cotización mediante una de estas opciones:</p>
                         {enlacePdf ? (
                           <>
-                            <button type="button" onClick={abrirWhatsApp} className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
-                              Enviar por WhatsApp
-                            </button>
+                            {numeroWhatsAppRegistrado() ? (
+                              <button type="button" onClick={() => abrirWhatsApp()} className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
+                                Enviar por WhatsApp
+                              </button>
+                            ) : (
+                              <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+                                <div>
+                                  <p className="text-sm font-semibold">Registrar WhatsApp del cliente</p>
+                                  <p className="mt-1 text-xs text-muted-foreground">No encontramos un número guardado. Regístralo una vez y lo guardaremos automáticamente en la ficha del cliente.</p>
+                                </div>
+                                <div className="grid gap-2 sm:grid-cols-[150px_1fr]">
+                                  <label className="text-xs text-muted-foreground">
+                                    País
+                                    <select value={paisWhatsapp} onChange={(e) => setPaisWhatsapp(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm">
+                                      {paisesWhatsapp.map((pais) => <option key={pais.codigo} value={pais.codigo}>+{pais.codigo} · {pais.nombre}</option>)}
+                                    </select>
+                                  </label>
+                                  <label className="text-xs text-muted-foreground">
+                                    Número
+                                    <input
+                                      value={numeroWhatsapp}
+                                      onChange={(e) => setNumeroWhatsapp(e.target.value.replace(/[^0-9\s()+-]/g, ""))}
+                                      placeholder="987 654 321"
+                                      inputMode="tel"
+                                      autoComplete="tel"
+                                      className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    />
+                                  </label>
+                                </div>
+                                <button type="button" disabled={guardandoWhatsapp} onClick={() => void registrarWhatsAppYEnviar()} className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                                  {guardandoWhatsapp ? "Guardando número…" : "Guardar y enviar por WhatsApp"}
+                                </button>
+                              </div>
+                            )}
                             <button type="button" onClick={() => void copiarEnlacePdf()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
                               {copiado === "pdf" ? "✓ Enlace copiado" : "Copiar enlace"}
                             </button>
