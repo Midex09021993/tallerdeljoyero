@@ -33,6 +33,7 @@ function Pedido2Detalle() {
   const [preparandoProduccion, setPreparandoProduccion] = useState(false);
   const [ruta, setRuta] = useState<string[]>([]);
   const [guardandoRuta, setGuardandoRuta] = useState(false);
+  const [asignandoTrabajoId, setAsignandoTrabajoId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
@@ -49,6 +50,19 @@ function Pedido2Detalle() {
       const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
       return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const { data: operarios = [] } = useQuery({
+    queryKey: ["pedidos-2-operarios", pedido?.sede_id, sesion?.esAdmin],
+    enabled: Boolean(pedido?.sede_id && sesion?.esAdmin),
+    queryFn: async () => {
+      if (!pedido?.sede_id || !sesion?.esAdmin) return [];
+      const { data, error } = await supabase.rpc("listar_operarios_por_area", {
+        _sede_id: pedido.sede_id,
+      });
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -131,6 +145,28 @@ function Pedido2Detalle() {
   const trabajosCompletos = trabajos.length > 0 && trabajos.every((t) => t.estado === "completado");
   const piezaVerificada = piezas.some((p) => ["verificada", "liberada"].includes(p.estado));
   const calidadFinalAprobada = controles.some((c) => c.tipo === "inspeccion_final" && c.resultado === "aprobado");
+
+  const asignarResponsable = async (trabajoId: string, responsableUserId: string | null) => {
+    if (!sesion?.esAdmin || asignandoTrabajoId) return;
+    setAsignandoTrabajoId(trabajoId);
+    try {
+      const { error } = await supabase.rpc("asignar_responsable_trabajo", {
+        _trabajo_id: trabajoId,
+        _responsable_user_id: responsableUserId,
+      });
+      if (error) throw error;
+      toast.success(
+        responsableUserId
+          ? "Operario asignado al trabajo."
+          : "Responsable retirado del trabajo.",
+      );
+      await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo asignar el operario.");
+    } finally {
+      setAsignandoTrabajoId(null);
+    }
+  };
 
   const prepararProduccion = async () => {
     if (!pedido || preparandoProduccion) return;
@@ -272,7 +308,7 @@ function Pedido2Detalle() {
       </div>
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} /> : null}
-      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
+      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} operarios={operarios} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
@@ -423,11 +459,58 @@ function calidadFinalResumen(controles: any[]) {
 
 function Mini({ icon: Icon, title, value, detail }: { icon: typeof Factory; title: string; value: string; detail: string }) { return <div className="rounded-2xl border border-border bg-card p-5"><Icon className="size-5 text-gold" /><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p><p className="mt-1 text-base font-semibold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>; }
 
-function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, ordenPrincipal, trabajosCompletos, piezaVerificada, calidadFinalAprobada, transicionando, transicionar, verificarPieza, resultadoCalidad, setResultadoCalidad, tipoCalidad, setTipoCalidad, descripcionCalidad, setDescripcionCalidad, motivoCalidad, setMotivoCalidad, guardandoCalidad, registrarCalidad, cantidadRequerida, preparandoProduccion, prepararProduccion }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean; ordenPrincipal: any; trabajosCompletos: boolean; piezaVerificada: boolean; calidadFinalAprobada: boolean; transicionando: boolean; transicionar: (estado: string) => Promise<void>; verificarPieza: (id: string, estado: "verificada"|"liberada"|"rechazada") => Promise<void>; resultadoCalidad: string; setResultadoCalidad: (v:string)=>void; tipoCalidad:string; setTipoCalidad:(v:string)=>void; descripcionCalidad:string; setDescripcionCalidad:(v:string)=>void; motivoCalidad:string; setMotivoCalidad:(v:string)=>void; guardandoCalidad:boolean; registrarCalidad:()=>Promise<void>; cantidadRequerida:number; preparandoProduccion:boolean; prepararProduccion:()=>Promise<void> }) {
+function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, ordenPrincipal, trabajosCompletos, piezaVerificada, calidadFinalAprobada, transicionando, transicionar, verificarPieza, operarios, asignandoTrabajoId, asignarResponsable, resultadoCalidad, setResultadoCalidad, tipoCalidad, setTipoCalidad, descripcionCalidad, setDescripcionCalidad, motivoCalidad, setMotivoCalidad, guardandoCalidad, registrarCalidad, cantidadRequerida, preparandoProduccion, prepararProduccion }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean; ordenPrincipal: any; trabajosCompletos: boolean; piezaVerificada: boolean; calidadFinalAprobada: boolean; transicionando: boolean; transicionar: (estado: string) => Promise<void>; verificarPieza: (id: string, estado: "verificada"|"liberada"|"rechazada") => Promise<void>; operarios: { id: string; nombre: string; areas: string[] }[]; asignandoTrabajoId: string | null; asignarResponsable: (trabajoId: string, responsableUserId: string | null) => Promise<void>; resultadoCalidad: string; setResultadoCalidad: (v:string)=>void; tipoCalidad:string; setTipoCalidad:(v:string)=>void; descripcionCalidad:string; setDescripcionCalidad:(v:string)=>void; motivoCalidad:string; setMotivoCalidad:(v:string)=>void; guardandoCalidad:boolean; registrarCalidad:()=>Promise<void>; cantidadRequerida:number; preparandoProduccion:boolean; prepararProduccion:()=>Promise<void> }) {
   return <div className="space-y-5">
     {loading ? <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">Cargando producción…</div> : null}
     {ordenPrincipal ? <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Control de producción</p><p className="mt-1 text-sm font-semibold">{ordenPrincipal.numero} · {ordenPrincipal.estado}</p><p className="mt-1 text-xs text-muted-foreground">{trabajosCompletos ? "Todos los trabajos están completados." : `${trabajos.filter((t) => t.estado === "completado").length}/${trabajos.length} trabajos completados`}{calidadFinalAprobada ? " · Calidad final aprobada." : ""}{piezaVerificada ? " · Pieza verificada/liberada." : ""}</p></div><div className="flex flex-wrap gap-2">{ordenPrincipal.estado === "borrador" ? <button type="button" disabled={transicionando} onClick={() => void transicionar("liberada")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Liberar OP</button> : null}{["liberada","pausada"].includes(ordenPrincipal.estado) ? <button type="button" disabled={transicionando} onClick={() => void transicionar("en_produccion")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">Iniciar producción</button> : null}{ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando} onClick={() => void transicionar("pausada")} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Pausar</button> : null}{ordenPrincipal.estado === "en_produccion" ? <button type="button" disabled={transicionando || !trabajosCompletos} onClick={() => void transicionar("control_calidad")} className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep disabled:cursor-not-allowed disabled:opacity-50">Enviar a calidad</button> : null}</div></div></section> : <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-gold-deep">Producción pendiente de preparar</p><p className="mt-1 text-sm font-semibold">El pedido aún no tiene una orden de producción.</p><p className="mt-1 text-xs text-muted-foreground">Se crearán la OP, las operaciones de la ruta y las piezas requeridas en una sola operación.</p></div><button type="button" disabled={preparandoProduccion} onClick={() => void prepararProduccion()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{preparandoProduccion ? "Preparando…" : "Preparar producción"}</button></div></section>}
-    <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trabajos</h3><p className="mt-1 text-xs text-muted-foreground">{trabajos.length} operaciones registradas</p></div><Factory className="size-5 text-gold" /></div><div className="mt-4 space-y-2">{trabajos.length ? trabajos.map((t) => <div key={t.id} className="flex flex-col gap-2 rounded-xl border border-border bg-surface-sunken p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">{t.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{t.area} · {t.prioridad || "normal"} · Responsable {t.responsable_user_id ? "asignado" : "pendiente"}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{t.estado}</span></div>) : <Empty text="No hay trabajos registrados." />}</div></section>
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-[.16em]">Trabajos</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{trabajos.length} operaciones registradas · cada operación tiene un responsable concreto</p>
+        </div>
+        <Factory className="size-5 text-gold" />
+      </div>
+      <div className="mt-4 space-y-2">
+        {trabajos.length ? trabajos.map((t) => {
+          const operariosDelArea = operarios.filter((operario) =>
+            operario.areas.some((area) => area.trim().toLowerCase() === String(t.area || "").trim().toLowerCase()),
+          );
+          return (
+            <div key={t.id} className="flex flex-col gap-3 rounded-xl border border-border bg-surface-sunken p-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{t.titulo}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t.area} · {t.prioridad || "normal"} · {t.estado}
+                </p>
+              </div>
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-[240px]">
+                <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Operario responsable</label>
+                <select
+                  value={t.responsable_user_id ?? ""}
+                  disabled={asignandoTrabajoId === t.id}
+                  onChange={(e) => void asignarResponsable(t.id, e.target.value || null)}
+                  className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60"
+                >
+                  <option value="">Sin asignar</option>
+                  {operariosDelArea.map((operario) => (
+                    <option key={operario.id} value={operario.id}>{operario.nombre}</option>
+                  ))}
+                </select>
+                {operariosDelArea.length === 0 ? (
+                  <p className="text-[10px] text-warning">No hay operarios activos asignados a {t.area} en este taller.</p>
+                ) : null}
+              </div>
+            </div>
+          );
+        }) : <Empty text="No hay trabajos registrados." />}
+      </div>
+      {operarios.length > 0 ? (
+        <p className="mt-3 text-[10px] text-muted-foreground">
+          La lista muestra únicamente operarios activos de este taller; el sistema valida también que el operario tenga asignada el área de la operación.
+        </p>
+      ) : null}
+    </section>
     <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Órdenes de producción</h3><div className="mt-4 space-y-2">{ordenes.length ? ordenes.map((o) => <div key={o.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold">{o.numero}</p><p className="mt-1 text-xs text-muted-foreground">{o.estado} · Prioridad {o.prioridad || "normal"}</p></div><span className="text-xs text-muted-foreground">{o.fecha_planificada_fin ? fmtFecha(o.fecha_planificada_fin) : "Sin fecha planificada"}</span></div></div>) : <Empty text="No hay orden de producción." />}</div></section>
     {ordenPrincipal?.estado === "control_calidad" ? <section className="rounded-2xl border border-border bg-card p-5 shadow-raised"><div className="flex items-start justify-between gap-4"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Control de calidad</h3><p className="mt-1 text-xs text-muted-foreground">Registra la inspección sobre la OP. Para aprobar la inspección final deben estar verificadas o liberadas las piezas requeridas.</p></div><CheckCircle2 className="size-5 text-gold" /></div><div className="mt-4 grid gap-3 md:grid-cols-3"><label className="text-xs font-semibold">Tipo<select value={tipoCalidad} onChange={(e)=>setTipoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"><option value="inspeccion_final">Inspección final</option><option value="inspeccion_operacion">Inspección de operación</option><option value="reinspeccion">Reinspección</option></select></label><label className="text-xs font-semibold">Resultado<select value={resultadoCalidad} onChange={(e)=>setResultadoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm"><option value="aprobado">Aprobado</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option><option value="pendiente">Pendiente</option></select></label><label className="text-xs font-semibold">Motivo<input value={motivoCalidad} onChange={(e)=>setMotivoCalidad(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm" placeholder="Motivo u observación"/></label></div><label className="mt-3 block text-xs font-semibold">Descripción<textarea value={descripcionCalidad} onChange={(e)=>setDescripcionCalidad(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm" placeholder="Hallazgos y criterios revisados."/></label><div className="mt-4 flex justify-end"><button type="button" disabled={guardandoCalidad} onClick={()=>void registrarCalidad()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black disabled:opacity-50">{guardandoCalidad ? "Registrando…" : "Registrar inspección"}</button></div></section> : null}
     <section className="rounded-2xl border border-border bg-card p-5"><div className="flex items-center justify-between gap-4"><div><h3 className="text-xs font-bold uppercase tracking-[.16em]">Verificación de piezas</h3><p className="mt-1 text-xs text-muted-foreground">Requeridas: {cantidadRequerida} · Verificadas/liberadas: {piezas.filter((p)=>["verificada","liberada"].includes(p.estado)).reduce((sum,p)=>sum+Number(p.cantidad||1),0)}</p></div><PackageCheck className="size-5 text-gold"/></div><div className="mt-4 space-y-2">{piezas.length ? piezas.map((p)=><div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"><div><p className="text-sm font-semibold">Pieza {p.numero_pieza}</p><p className="text-xs text-muted-foreground">{p.estado} · {p.peso_final ? `${p.peso_final} g` : "Peso final pendiente"}</p></div><div className="flex gap-2">{["pendiente","recibida"].includes(p.estado) ? <button type="button" onClick={()=>void verificarPieza(p.id,"verificada")} className="rounded-lg bg-gold px-3 py-2 text-[11px] font-bold text-black">Verificar</button> : null}{p.estado==="verificada" ? <button type="button" onClick={()=>void verificarPieza(p.id,"liberada")} className="rounded-lg border border-gold/40 px-3 py-2 text-[11px] font-bold text-gold-deep">Liberar</button> : null}{!["rechazada","liberada"].includes(p.estado) ? <button type="button" onClick={()=>void verificarPieza(p.id,"rechazada")} className="rounded-lg border border-danger/30 px-3 py-2 text-[11px] font-bold text-danger">Rechazar</button> : null}</div></div>) : <Empty text="Sin piezas registradas."/>}</div></section>
