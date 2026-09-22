@@ -73,7 +73,7 @@ function CotizacionesPage() {
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
   const [impuestoActivo, setImpuestoActivo] = useState(true);
-  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
@@ -223,7 +223,7 @@ function CotizacionesPage() {
         _cliente_nombre: form.cliente_id ? null : busquedaCliente.trim(),
         _cliente_telefono: form.cliente_id ? null : nuevoCliente.telefono.trim() || null,
         _cliente_email: form.cliente_id ? null : nuevoCliente.email.trim() || null,
-        _proyecto_joya_id: form.proyecto_joya_id || null,
+        _proyecto_joya_id: null,
         _sede_id: sesion?.sede?.id ?? null,
         _moneda: form.moneda,
         _cantidad: primero.cantidad,
@@ -251,7 +251,7 @@ function CotizacionesPage() {
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
-      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setForm({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
@@ -379,13 +379,13 @@ function CotizacionesPage() {
     value={busquedaCliente}
     onChange={e => {
       setBusquedaCliente(e.target.value);
-      if (form.cliente_id) setForm({...form, cliente_id:"", proyecto_joya_id:""});
+      if (form.cliente_id) setForm({...form, cliente_id:""});
     }}
     placeholder="Escribe nombre, teléfono o correo…"
     className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/15"
   />
   {form.cliente_id ? (
-    <button type="button" onClick={() => { setForm({...form, cliente_id:"", proyecto_joya_id:""}); setBusquedaCliente(""); }} className="absolute right-3 top-8 text-muted-foreground">
+    <button type="button" onClick={() => { setForm({...form, cliente_id:""}); setBusquedaCliente(""); }} className="absolute right-3 top-8 text-muted-foreground">
       <X className="size-4" />
     </button>
   ) : null}
@@ -394,7 +394,7 @@ function CotizacionesPage() {
       {clientePredictivo ? (
         <button
           type="button"
-          onClick={() => { setForm({...form, cliente_id:clientePredictivo.id, proyecto_joya_id:""}); setBusquedaCliente(clientePredictivo.nombre); }}
+          onClick={() => { setForm({...form, cliente_id:clientePredictivo.id}); setBusquedaCliente(clientePredictivo.nombre); }}
           className="text-left text-muted-foreground transition hover:text-foreground"
         >
           <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}
@@ -409,7 +409,6 @@ function CotizacionesPage() {
   ) : null}
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
 </div>
-              <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
               <section className="sm:col-span-2 overflow-hidden rounded-2xl border border-gold/15 bg-gradient-to-b from-gold/[0.035] to-transparent">
   <div className="flex items-center justify-between gap-4 border-b border-gold/10 px-4 py-4 sm:px-5">
     <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-card text-gold"><FileText className="size-4" /></span><div><p className="text-sm font-semibold tracking-tight">Conceptos de la cotización</p><p className="mt-0.5 text-[11px] text-muted-foreground">Añade productos, servicios o trabajos y define su precio.</p></div></div>
