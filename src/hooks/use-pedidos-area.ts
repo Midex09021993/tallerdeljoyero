@@ -124,29 +124,15 @@ export function useTrabajosDelOperario() {
   const query = useQuery({
     queryKey: ["trabajos-operario", sesion?.user.id],
     enabled,
+    refetchInterval: enabled ? 15000 : false,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     queryFn: async () => {
       if (!sesion?.user.id) return [] as TrabajoBandeja[];
-      const { data, error } = await supabase
-        .from("trabajos")
-        .select(
-          "id, pedido_id, area, ubicacion, titulo, descripcion, estado, prioridad, tipo, fecha_planificada, fecha_inicio, fecha_fin, notas, responsable_user_id",
-        )
-        .in("estado", ESTADOS_TRABAJO_ACTIVOS)
-        .order("fecha_planificada", { ascending: true, nullsFirst: true });
+      const { data, error } = await supabase.rpc("listar_trabajos_operario");
       if (error) throw error;
-
-      // RLS ya limita las filas por sede/área. En la bandeja mostramos
-      // únicamente los trabajos del propio operario y los que están libres
-      // dentro de sus áreas, para que no desaparezcan operaciones recién creadas
-      // antes de que se asigne un responsable.
-      const areasUsuario = sesion.areas ?? [];
-      return (data ?? []).filter((trabajo) =>
-        trabajo.responsable_user_id === sesion.user.id ||
-        (
-          trabajo.responsable_user_id === null &&
-          areasUsuario.some((area) => areaCoincide(area, trabajo.area))
-        )
-      ) as TrabajoBandeja[];
+      return (data ?? []) as TrabajoBandeja[];
     },
   });
 

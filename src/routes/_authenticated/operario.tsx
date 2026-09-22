@@ -181,6 +181,53 @@ function OperarioPage() {
           <p className="mt-2 text-sm text-muted-foreground">Tus datos, sede y cierre de sesión.</p>
         </button>
       </section>
+
+      <section className="mt-5 lg:hidden">
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Producción</p>
+            <h2 className="mt-1 text-xl font-semibold">Mis trabajos</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Se actualiza automáticamente y muestra tus operaciones activas.
+            </p>
+          </div>
+          <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold">{trabajos.length}</span>
+        </div>
+
+        {trabajos.length === 0 && !isLoadingTrabajos ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
+            No tienes trabajos activos visibles en este momento. Si ya te asignaron uno, actualiza la pantalla o revisa con administración que el área y taller de tu usuario coincidan con la operación.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {trabajos.map((trabajo) => (
+              <button
+                key={trabajo.id}
+                type="button"
+                onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
+                className="w-full rounded-2xl border border-gold/20 bg-card p-4 text-left shadow-card active:bg-surface-muted"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-semibold">{trabajo.titulo || "Trabajo sin título"}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{trabajo.area} · {trabajo.prioridad}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase text-gold-deep">
+                    {trabajo.estado === "en_proceso" ? "En proceso" : trabajo.estado === "bloqueado" ? "Bloqueado" : "Pendiente"}
+                  </span>
+                </div>
+                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{trabajo.descripcion || "Sin descripción adicional."}</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className="text-[11px] text-muted-foreground">
+                    {trabajo.responsable_user_id === sesion?.user.id ? "Asignado a ti" : "Disponible para tu área"}
+                  </span>
+                  <span className="rounded-full bg-gold px-3 py-2 text-xs font-bold text-gold-foreground">Abrir ficha</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
     </AppShell>
   );
 }

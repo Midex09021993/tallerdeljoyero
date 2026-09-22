@@ -2830,6 +2830,25 @@ export type Database = {
           nombre: string
         }[]
       }
+      listar_trabajos_operario: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          pedido_id: string
+          area: string
+          ubicacion: string
+          titulo: string
+          descripcion: string
+          estado: string
+          prioridad: string
+          tipo: string
+          fecha_planificada: string | null
+          fecha_inicio: string | null
+          fecha_fin: string | null
+          notas: string
+          responsable_user_id: string | null
+        }[]
+      }
       tomar_trabajo: {
         Args: { _trabajo_id: string }
         Returns: Json
