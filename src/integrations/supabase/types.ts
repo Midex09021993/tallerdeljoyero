@@ -520,6 +520,32 @@ export type Database = {
           },
         ]
       }
+      cotizacion_numeradores: {
+        Row: {
+          anio: number
+          sede_id: string
+          ultimo_numero: number
+        }
+        Insert: {
+          anio: number
+          sede_id: string
+          ultimo_numero?: number
+        }
+        Update: {
+          anio?: number
+          sede_id?: string
+          ultimo_numero?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_numeradores_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           anticipo: number
@@ -2742,6 +2768,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      codigo_taller_cotizacion: { Args: { _sede_id: string }; Returns: string }
       consultar_joya_publica: {
         Args: { _token: string }
         Returns: {
@@ -2924,6 +2951,10 @@ export type Database = {
           trabajo: string
           ventas_estado: string
         }[]
+      }
+      siguiente_numero_cotizacion: {
+        Args: { _anio: number; _sede_id: string }
+        Returns: string
       }
       transicionar_entrega_pedido: {
         Args: { _accion: string; _datos?: Json; _pedido_id: string }
