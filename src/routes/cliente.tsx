@@ -132,6 +132,7 @@ function etiquetaEstadoCotizacion(estado: string) {
   const etiquetas: Record<string, string> = {
     enviada: "Enviada",
     aprobada: "Aprobada",
+    requiere_revision: "Requiere cambios",
     rechazada: "Rechazada",
     vencida: "Vencida",
   };
