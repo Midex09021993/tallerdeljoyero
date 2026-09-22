@@ -32,6 +32,18 @@ const estados = [
   ["rechazada", "Rechazada"], ["vencida", "Vencida"], ["cancelada", "Cancelada"],
 ] as const;
 
+const tiposPartida = [
+  ["modelo", "Joya / Producto"],
+  ["metal", "Metal"],
+  ["piedras", "Piedra / Gema"],
+  ["fundicion", "Fundición"],
+  ["engaste", "Engaste"],
+  ["acabado", "Acabado"],
+  ["mano_obra", "Mano de obra"],
+  ["render", "Render 3D"],
+  ["otro", "Otro"],
+] as const;
+
 function money(n: number, moneda: string) {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(Number(n) || 0);
 }
@@ -375,7 +387,7 @@ function CotizacionDetallePage() {
             </Panel>
 
         {editando ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-          <div className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-6">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-display text-2xl">Editar partidas</h2>
@@ -384,26 +396,29 @@ function CotizacionDetallePage() {
               <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="rounded-full border border-border px-3 py-1">×</button>
             </div>
             <div className="space-y-3">
-              {borradorDetalles.map((d, i) => <div key={d.id} className="rounded-xl border border-border p-3">
+              {borradorDetalles.map((d, i) => <div key={d.id} className="rounded-xl border border-border bg-background/40 p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Partida {i + 1}</span>
-                  <button type="button" onClick={() => eliminarPartida(d.id)} disabled={guardando || borradorDetalles.length === 1} className="text-xs text-danger disabled:opacity-40">Eliminar</button>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold/80">Partida {i + 1}</span>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">Define qué se está cobrando en esta línea.</p>
+                  </div>
+                  <button type="button" onClick={() => eliminarPartida(d.id)} disabled={guardando || borradorDetalles.length === 1} className="rounded-lg px-2 py-1 text-xs text-danger transition hover:bg-danger-soft disabled:opacity-40">Eliminar</button>
                 </div>
-                <div className="grid gap-3 md:grid-cols-12">
-                  <label className="text-xs text-muted-foreground md:col-span-2">Tipo<select value={d.tipo} onChange={e => actualizarPartida(d.id, { tipo: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm">
-                    {["modelo","metal","piedras","fundicion","engaste","acabado","mano_obra","render","otro"].map(v => <option key={v} value={v}>{v}</option>)}
+                <div className="grid gap-3 lg:grid-cols-12">
+                  <label className="text-xs text-muted-foreground lg:col-span-3">Tipo<select value={d.tipo} onChange={e => actualizarPartida(d.id, { tipo: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm">
+                    {tiposPartida.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                   </select></label>
-                  <label className="text-xs text-muted-foreground md:col-span-4">Descripción<input value={d.descripcion} onChange={e => actualizarPartida(d.id, { descripcion: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-                  <label className="text-xs text-muted-foreground md:col-span-1">Cant.<input type="number" min="0.001" step="0.001" value={d.cantidad} onChange={e => actualizarPartida(d.id, { cantidad: Number(e.target.value) || 1 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
-                  <label className="text-xs text-muted-foreground md:col-span-1">Unidad<input value={d.unidad} onChange={e => actualizarPartida(d.id, { unidad: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
-                  <label className="text-xs text-muted-foreground md:col-span-2">Costo<input type="number" min="0" step="0.01" value={d.costo_unitario} onChange={e => actualizarPartida(d.id, { costo_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
-                  <label className="text-xs text-muted-foreground md:col-span-2">Precio<input type="number" min="0" step="0.01" value={d.precio_unitario} onChange={e => actualizarPartida(d.id, { precio_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-9">Descripción<input value={d.descripcion} onChange={e => actualizarPartida(d.id, { descripcion: e.target.value })} placeholder="Ej. Anillo de oro 18K con diamante" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-2">Cantidad<input type="number" min="0.001" step="0.001" value={d.cantidad} onChange={e => actualizarPartida(d.id, { cantidad: Number(e.target.value) || 1 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-2">Unidad<input value={d.unidad} onChange={e => actualizarPartida(d.id, { unidad: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" placeholder="und / g / ct" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-3">Costo interno<input type="number" min="0" step="0.01" value={d.costo_unitario} onChange={e => actualizarPartida(d.id, { costo_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-3">Precio cliente<input type="number" min="0" step="0.01" value={d.precio_unitario} onChange={e => actualizarPartida(d.id, { precio_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <div className="flex items-end justify-between rounded-lg border border-gold/10 bg-gold/[0.025] px-3 py-2 lg:col-span-2">
+                    <span className="text-[10px] text-muted-foreground">Total</span>
+                    <strong className="text-sm tabular-nums">{money((Number(d.cantidad) || 0) * (Number(d.precio_unitario) || 0), cotizacion.moneda)}</strong>
+                  </div>
                 </div>
-                <div className="mt-2 text-right text-xs text-muted-foreground">
-                  Total: {money((Number(d.cantidad) || 0) * (Number(d.precio_unitario) || 0), cotizacion.moneda)}
-                </div>
-              </div>)}
-              <button type="button" onClick={agregarPartida} disabled={guardando} className="w-full rounded-xl border border-dashed border-border px-4 py-3 text-sm font-medium hover:bg-surface-muted">+ Agregar partida</button>
+              </div>)}              <button type="button" onClick={agregarPartida} disabled={guardando} className="w-full rounded-xl border border-dashed border-border px-4 py-3 text-sm font-medium hover:bg-surface-muted">+ Agregar partida</button>
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="rounded-lg border border-border px-4 py-2.5 text-sm">Cancelar</button>
