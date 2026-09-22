@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardLi
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePedidos, estadoClases, esEstadoFinalPedido } from "@/lib/taller-db";
-import { useSesion } from "@/lib/auth";
+import { areaCoincide, useSesion } from "@/lib/auth";
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 
