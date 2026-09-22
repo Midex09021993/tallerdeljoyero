@@ -31,6 +31,7 @@ type Trabajo = {
   fecha_fin: string | null;
   notas: string;
   responsable_user_id: string | null;
+  especialidad_id: string | null;
 };
 
 export const Route = createFileRoute("/_authenticated/trabajos/$id")({
@@ -57,6 +58,8 @@ function TrabajoOperativoPage() {
   const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });
   const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
   const [relojAhora, setRelojAhora] = useState(Date.now());
+  const [especialidadSeleccionada, setEspecialidadSeleccionada] = useState("");
+  const [guardandoEspecialidad, setGuardandoEspecialidad] = useState(false);
 
   const { data: sesionesTiempo = [] } = useQuery({
     queryKey: ["trabajo-tiempos", id],
@@ -178,7 +181,7 @@ function TrabajoOperativoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trabajos")
-        .select("id, pedido_id, area, ubicacion, titulo, descripcion, estado, prioridad, tipo, fecha_planificada, fecha_inicio, fecha_fin, notas, responsable_user_id")
+        .select("id, pedido_id, area, ubicacion, titulo, descripcion, estado, prioridad, tipo, fecha_planificada, fecha_inicio, fecha_fin, notas, responsable_user_id, especialidad_id")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -187,6 +190,20 @@ function TrabajoOperativoPage() {
     },
   });
 
+  const { data: especialidades = [] } = useQuery({
+    queryKey: ["especialidades-trabajo", trabajo?.area],
+    enabled: Boolean(sesion?.esAdmin && trabajo),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("especialidades")
+        .select("id,nombre,categoria")
+        .eq("activa", true)
+        .order("categoria", { ascending: true, nullsFirst: true })
+        .order("nombre", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const { data: pedidoTrabajo } = useQuery({
     queryKey: ["pedido-trabajo", trabajo?.pedido_id],
     enabled: Boolean(trabajo?.pedido_id),
@@ -238,6 +255,21 @@ function TrabajoOperativoPage() {
     [archivosPedido],
   );
 
+  const guardarEspecialidad = async () => {
+    if (!sesion?.esAdmin || !trabajo || guardandoEspecialidad) return;
+    setGuardandoEspecialidad(true);
+    setErrorAccion(null);
+    const { error } = await supabase
+      .from("trabajos")
+      .update({ especialidad_id: especialidadSeleccionada || null })
+      .eq("id", trabajo.id);
+    setGuardandoEspecialidad(false);
+    if (error) {
+      setErrorAccion(error.message);
+      return;
+    }
+    await qc.invalidateQueries({ queryKey: ["trabajo-operativo", id] });
+  };
   const cambiarEstado = useMutation({
     mutationFn: async (estado: "en_proceso" | "completado" | "bloqueado") => {
       setErrorAccion(null);
@@ -430,6 +462,25 @@ function TrabajoOperativoPage() {
             <span className="rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-semibold">{estadoLabel[trabajo.estado]}</span>
           </div>
 
+          <div className="mt-4 rounded-2xl border border-gold/20 bg-gold/[0.03] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Especialidad de la operación</p>
+                <p className="mt-1 text-sm font-semibold">{trabajo.especialidad_id ? (especialidades.find((e: any) => e.id === trabajo.especialidad_id)?.nombre ?? "Especialidad asignada") : "Sin especialidad asignada"}</p>
+              </div>
+              {sesion?.esAdmin ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <select value={especialidadSeleccionada || trabajo.especialidad_id || ""} onChange={(e) => setEspecialidadSeleccionada(e.target.value)} className="min-h-10 rounded-xl border border-border bg-background px-3 text-sm">
+                    <option value="">Sin especialidad</option>
+                    {especialidades.map((especialidad: any) => <option key={especialidad.id} value={especialidad.id}>{especialidad.categoria ? `${especialidad.categoria} · ` : ""}{especialidad.nombre}</option>)}
+                  </select>
+                  <button type="button" disabled={guardandoEspecialidad || (especialidadSeleccionada || "") === (trabajo.especialidad_id || "")} onClick={() => void guardarEspecialidad()} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50">
+                    {guardandoEspecialidad ? "Guardando…" : "Guardar"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-border bg-surface-sunken p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Prioridad</p><p className="mt-1 font-semibold">{trabajo.prioridad}</p></div>
             <div className="rounded-xl border border-border bg-surface-sunken p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ubicación</p><p className="mt-1 font-semibold">{trabajo.ubicacion || "Por definir"}</p></div>
