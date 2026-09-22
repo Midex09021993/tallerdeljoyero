@@ -277,22 +277,25 @@ function CotizacionDetallePage() {
     return codigo ? `${window.location.origin}/c/${codigo}/pdf` : enlacePdf;
   }
 
+  async function marcarComoEnviada() {
+    if (!cotizacion || cotizacion.estado !== "borrador") return true;
+    const { error: estadoError } = await supabase.rpc("cambiar_estado_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+      _nuevo_estado: "enviada",
+    });
+    if (estadoError) {
+      setError(estadoError.message);
+      return false;
+    }
+    setCotizacion((actual) => actual ? { ...actual, estado: "enviada" } : actual);
+    return true;
+  }
+
   async function copiarEnlacePdf() {
     const enlace = enlacePdfCliente();
     if (!enlace) return;
 
-    if (cotizacion?.estado === "borrador") {
-      const { error: estadoError } = await supabase.rpc("cambiar_estado_cotizacion", {
-        _cotizacion_id: cotizacion.id,
-        _nuevo_estado: "enviada",
-      });
-      if (estadoError) {
-        setError(estadoError.message);
-        return;
-      }
-      setCotizacion((actual) => actual ? { ...actual, estado: "enviada" } : actual);
-    }
-
+    if (!(await marcarComoEnviada())) return;
     await copiarTexto(enlace, "pdf");
   }
 
@@ -575,7 +578,18 @@ function CotizacionDetallePage() {
                 {cotizacion.estado === "borrador" ? (
                   <>
                     <button type="button" onClick={abrirEditor} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">Editar cotización</button>
-                    <button type="button" onClick={() => setMostrarOpcionesEnvio((visible) => !visible)} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!enlacePdf) {
+                          setError("Primero genera el PDF en “Documento para el cliente”.");
+                          return;
+                        }
+                        if (!(await marcarComoEnviada())) return;
+                        setMostrarOpcionesEnvio((visible) => !visible);
+                      }}
+                      className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+                    >
                       {mostrarOpcionesEnvio ? "Ocultar opciones de envío" : "Enviar al cliente"}
                     </button>
                     {mostrarOpcionesEnvio ? (
