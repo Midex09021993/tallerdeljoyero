@@ -51,6 +51,12 @@ function money(n: number, moneda = "PEN") {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(n);
 }
 
+function fechaVencimientoPorDefecto() {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + 7);
+  return fecha.toISOString().slice(0, 10);
+}
+
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
   const navigate = useNavigate();
@@ -73,7 +79,7 @@ function CotizacionesPage() {
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
   const [impuestoActivo, setImpuestoActivo] = useState(true);
-  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
@@ -252,7 +258,7 @@ function CotizacionesPage() {
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
-      setForm({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setForm({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
@@ -432,7 +438,7 @@ function CotizacionesPage() {
 <label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
               <div className="hidden sm:block" />
               <div className="text-xs text-muted-foreground"><div className="flex items-center justify-between gap-3"><span>Impuesto (%)</span><button type="button" onClick={() => setImpuestoActivo(v => !v)} aria-pressed={impuestoActivo} title={impuestoActivo ? "Desactivar impuesto" : "Activar impuesto"} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${impuestoActivo ? "border-gold/25 bg-gold/10 text-gold" : "border-border bg-background text-muted-foreground"}`}>{impuestoActivo ? <ToggleRight className="size-4" /> : <ToggleLeft className="size-4" />}{impuestoActivo ? "Activo" : "Desactivado"}</button></div><input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} disabled={!impuestoActivo} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50" /><span className="mt-1 block text-[10px] text-muted-foreground">{impuestoActivo ? "Se aplicará sobre el subtotal después del descuento." : "El impuesto no se aplicará a esta cotización."}</span></div>
-              <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <label className="text-xs text-muted-foreground">Válida hasta<input type="date" min={new Date().toISOString().slice(0, 10)} value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">7 días por defecto. Puedes ajustarla según el acuerdo comercial.</span></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
