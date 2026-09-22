@@ -2834,14 +2834,6 @@ export type Database = {
         Args: { _trabajo_id: string }
         Returns: Json
       }
-      listar_operarios_por_area: {
-        Args: { _sede_id: string }
-        Returns: {
-          areas: string[]
-          id: string
-          nombre: string
-        }[]
-      }
       es_interno: { Args: { _user_id: string }; Returns: boolean }
       guardar_detalles_cotizacion: {
         Args: { _cotizacion_id: string; _detalles: Json }
