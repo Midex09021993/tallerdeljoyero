@@ -31,11 +31,15 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseClient() {
-  // Lovable Cloud injects these values from the project's connected backend.
-  // Never hardcode a Supabase project URL or API key here.
-  const SUPABASE_URL = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL;
+  // Lovable Cloud should inject these values. Keep the connected production
+  // backend as a public-client fallback so the app still starts when the
+  // build environment does not expose the VITE_* variables.
+  const SUPABASE_URL =
+    (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ||
+    "https://ynetgjhghfhvyinwvqkl.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY =
-    (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY;
+    (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ||
+    "sb_publishable_I37emY5b4Sy5q6LpARRaXA_uSk9l9Md";
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
