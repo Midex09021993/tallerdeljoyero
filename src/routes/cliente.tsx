@@ -452,6 +452,39 @@ function SeguimientoCliente() {
                   </div>
                 ) : null}
 
+                {["aprobada", "requiere_revision", "rechazada", "vencida"].includes(estadoVisible ?? "") ? (
+                  <section className="mt-5 rounded-xl border border-border bg-surface/60 p-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Respuesta registrada
+                    </p>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {estadoVisible === "aprobada"
+                            ? "Cotización aprobada"
+                            : estadoVisible === "requiere_revision"
+                              ? "Cambios solicitados"
+                              : estadoVisible === "rechazada"
+                                ? "Cotización rechazada"
+                                : "Cotización vencida"}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {estadoVisible === "aprobada"
+                            ? "Tu aprobación fue registrada correctamente. El taller ya puede continuar con la siguiente etapa."
+                            : estadoVisible === "requiere_revision"
+                              ? "Tu solicitud de cambios fue registrada y el taller podrá revisarla."
+                              : estadoVisible === "rechazada"
+                                ? "Tu rechazo fue registrado correctamente."
+                                : "La fecha de vigencia terminó y esta cotización ya no admite nuevas respuestas."}
+                        </p>
+                      </div>
+                      <span className="w-fit shrink-0 rounded-full border border-gold/25 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold">
+                        {etiquetaEstadoCotizacion(estadoVisible ?? cotizacion.estado)}
+                      </span>
+                    </div>
+                  </section>
+                ) : null}
+
                 {estadoVisible === "enviada" ? (
                   <section className="mt-5 rounded-xl border border-border bg-surface/60 p-4">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
