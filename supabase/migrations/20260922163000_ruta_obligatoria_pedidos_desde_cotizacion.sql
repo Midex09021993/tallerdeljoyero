@@ -219,3 +219,26 @@ $$;
 
 revoke all on function public.preparar_produccion_pedido(uuid) from public, anon;
 grant execute on function public.preparar_produccion_pedido(uuid) to authenticated, service_role;
+
+
+-- Una vez preparada la producción, la ruta pasa a ser parte de la trazabilidad
+-- y no debe modificarse sin recrear/ajustar la orden de producción.
+create or replace function public.proteger_ruta_pedido_con_op()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.ruta is distinct from old.ruta
+     and exists (select 1 from public.ordenes_produccion where pedido_id = old.id) then
+    raise exception 'La ruta de fabricación no puede modificarse después de preparar la producción';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists proteger_ruta_pedido_con_op_trg on public.pedidos;
+create trigger proteger_ruta_pedido_con_op_trg
+before update of ruta on public.pedidos
+for each row
+execute function public.proteger_ruta_pedido_con_op();
