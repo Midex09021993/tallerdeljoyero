@@ -380,15 +380,6 @@ function SeguimientoCliente() {
                     Revisa el PDF completo antes de aprobar, solicitar cambios o rechazar la cotización.
                   </p>
                 </div>
-                {pdfUrl ? (
-                  <a
-                    href={pdfUrl}
-                    download={cotizacion.numero + "-v" + cotizacion.version + ".pdf"}
-                    className="w-fit rounded-lg bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground"
-                  >
-                    Descargar PDF
-                  </a>
-                ) : null}
               </div>
 
               <div className="mt-4 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
