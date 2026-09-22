@@ -35,9 +35,9 @@ Deno.serve(async (req) => {
 
     const { data: quote, error: quoteError } = await admin
       .from("cotizaciones")
-      .select("id,estado")
+      .select("id,estado,version")
       .eq("seguimiento_codigo", codigo)
-      .in("estado", ["enviada", "aprobada", "rechazada", "vencida"])
+       .in("estado", ["enviada", "requiere_revision", "aprobada", "rechazada", "vencida"])
       .maybeSingle();
 
     if (quoteError) {
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       .from("cotizacion_documentos_publicos")
       .select("storage_path")
       .eq("cotizacion_id", quote.id)
-      .eq("version", (await admin.from("cotizaciones").select("version").eq("id", quote.id).single()).data?.version ?? 0)
+      .eq("version", quote.version)
       .maybeSingle();
 
     if (documentError) {
