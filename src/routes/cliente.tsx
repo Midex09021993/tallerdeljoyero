@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabasePublic } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/cliente")({
@@ -176,7 +176,7 @@ function SeguimientoCliente() {
         return { tipo: "cotizacion", data: cotizacion[0] as SeguimientoCotizacion };
       }
 
-      const { data: pedido, error: pedidoError } = await supabase.rpc("seguimiento_pedido", {
+      const { data: pedido, error: pedidoError } = await supabasePublic.rpc("seguimiento_pedido", {
         _ref: seguimientoToken,
       });
 
@@ -208,7 +208,7 @@ function SeguimientoCliente() {
     }) => {
       const codigoRespuesta = (codigo ?? token ?? valor).trim();
       if (!codigoRespuesta) throw new Error("Código de cotización no disponible");
-      const { data, error } = await supabase.rpc("responder_cotizacion_cliente", {
+      const { data, error } = await supabasePublic.rpc("responder_cotizacion_cliente", {
         _codigo: codigoRespuesta,
         _accion: accion,
         _comentario: comentario,
@@ -244,7 +244,7 @@ function SeguimientoCliente() {
     setPdfError("");
 
     void (async () => {
-      const { data, error: pdfInvokeError } = await supabase.functions.invoke("ver-cotizacion-pdf", {
+      const { data, error: pdfInvokeError } = await supabasePublic.functions.invoke("ver-cotizacion-pdf", {
         body: { codigo: codigoConsulta },
       });
 
