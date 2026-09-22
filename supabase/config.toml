@@ -4,3 +4,6 @@ project_id = "tallerdeljoyero"
 
 [functions.generar-cotizacion-pdf]
 verify_jwt = true
+
+[functions.ver-cotizacion-pdf]
+verify_jwt = false
