@@ -231,7 +231,6 @@ function SeguimientoCliente() {
 
   useEffect(() => {
     let activo = true;
-    let objectUrl: string | null = null;
 
     if (!codigoConsulta || resultado?.tipo !== "cotizacion") {
       setPdfUrl(null);
@@ -244,26 +243,25 @@ function SeguimientoCliente() {
     setPdfError("");
 
     void (async () => {
-      const { data, error: pdfInvokeError } = await supabasePublic.functions.invoke("ver-cotizacion-pdf", {
-        body: { codigo: codigoConsulta },
-      });
+      const { data, error: pdfUrlError } = await (supabasePublic as any).rpc(
+        "seguimiento_cotizacion_pdf_url",
+        { _codigo: codigoConsulta },
+      );
 
       if (!activo) return;
 
-      if (pdfInvokeError || !(data instanceof Blob)) {
-        setPdfError(pdfInvokeError?.message ?? "El PDF todavía no está disponible.");
+      if (pdfUrlError || !data) {
+        setPdfError("El PDF todavía no está disponible para descarga.");
         setPdfCargando(false);
         return;
       }
 
-      objectUrl = URL.createObjectURL(data);
-      setPdfUrl(objectUrl);
+      setPdfUrl(String(data));
       setPdfCargando(false);
     })();
 
     return () => {
       activo = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [codigoConsulta, resultado?.tipo, cotizacion?.version, cotizacion?.estado]);
 
@@ -278,7 +276,7 @@ function SeguimientoCliente() {
   return (
     <main className="min-h-screen bg-surface px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto w-full max-w-4xl">
-        <header className="mb-8 overflow-hidden rounded-3xl border border-border bg-ink shadow-card">
+        <header className="mb-8 overflow-hidden rounded-3xl border border-border bg-card shadow-card">
           <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div className="flex items-center gap-4">
               <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-gold">
@@ -286,13 +284,13 @@ function SeguimientoCliente() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">Taller del Joyero</p>
-                <h1 className="mt-1 font-display text-2xl text-ink-foreground sm:text-3xl">Portal de cliente</h1>
-                <p className="mt-1 text-xs text-ink-foreground/70">Consulta, revisa y responde tus cotizaciones de forma segura.</p>
+                <h1 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">Portal de cliente</h1>
+                <p className="mt-1 text-xs text-foreground/70">Consulta, revisa y responde tus cotizaciones de forma segura.</p>
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left sm:text-right">
-              <p className="text-[10px] uppercase tracking-wider text-ink-foreground/60">Acceso privado</p>
-              <p className="mt-1 text-xs font-medium text-ink-foreground">Código de seguimiento</p>
+            <div className="rounded-2xl border border-border bg-surface/70 px-4 py-3 text-left sm:text-right">
+              <p className="text-[10px] uppercase tracking-wider text-foreground/60">Acceso privado</p>
+              <p className="mt-1 text-xs font-medium text-foreground">Código de seguimiento</p>
             </div>
           </div>
         </header>
@@ -323,7 +321,7 @@ function SeguimientoCliente() {
             <button
               type="submit"
               disabled={consulta.isPending}
-              className="min-h-12 rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-ink-foreground shadow-sm transition hover:-translate-y-0.5 disabled:opacity-50 sm:text-xs"
+              className="min-h-12 rounded-xl bg-gold px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5 disabled:opacity-50 sm:text-xs"
             >
               {consulta.isPending ? "Buscando…" : "Consultar"}
             </button>
@@ -385,22 +383,22 @@ function SeguimientoCliente() {
               <div className="mt-4 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-ink text-gold">
+                    <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold">
                       <span className="text-xs font-bold tracking-tight">PDF</span>
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Propuesta oficial</p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        Descarga el documento completo para revisarlo con calma. Luego podrás responder a la cotización desde esta misma página.
+                        Descarga la propuesta completa, revísala con calma y luego responde desde esta misma página.
                       </p>
                     </div>
                   </div>
 
                   {pdfUrl ? (
                     <a
-                      href={pdfUrl}
+                      href={`${pdfUrl}${pdfUrl.includes("?") ? "&" : "?"}download=${encodeURIComponent(cotizacion.numero + "-v" + cotizacion.version + ".pdf")}`}
                       download={cotizacion.numero + "-v" + cotizacion.version + ".pdf"}
-                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-ink px-5 py-3 text-xs font-semibold text-ink-foreground shadow-sm transition hover:-translate-y-0.5"
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-gold px-5 py-3 text-xs font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5"
                     >
                       Descargar PDF
                     </a>
@@ -471,7 +469,7 @@ function SeguimientoCliente() {
                       <button
                         type="button"
                         onClick={() => setAccionCliente("aprobada")}
-                        className="rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground"
+                        className="rounded-lg bg-gold px-4 py-3 text-sm font-medium text-foreground"
                       >
                         Aprobar cotización
                       </button>
@@ -526,7 +524,7 @@ function SeguimientoCliente() {
                               responder.isPending ||
                               (accionCliente !== "aprobada" && comentarioCliente.trim().length < 3)
                             }
-                            className="rounded-lg bg-ink px-4 py-3 text-sm font-medium text-ink-foreground disabled:opacity-50"
+                            className="rounded-lg bg-gold px-4 py-3 text-sm font-medium text-foreground disabled:opacity-50"
                           >
                             {responder.isPending ? "Enviando…" : "Confirmar respuesta"}
                           </button>
@@ -646,7 +644,7 @@ function SeguimientoCliente() {
                       i < indice
                         ? "bg-success-soft text-success"
                         : i === indice
-                          ? "bg-ink text-gold-bright"
+                          ? "bg-gold/10 text-gold-bright"
                           : "bg-surface-muted text-muted-foreground"
                     }`}
                   >
