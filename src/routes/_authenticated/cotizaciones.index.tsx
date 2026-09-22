@@ -232,6 +232,7 @@ function CotizacionesPage() {
         _descuento: form.descuento,
         _impuestos: impuestoCalculado,
         _fecha_vencimiento: form.fecha_vencimiento || null,
+        _fecha_entrega_solicitada: null,
         _notas_cliente: form.notas_cliente,
         _notas_internas: form.notas_internas,
         _descripcion: primero.descripcion,
