@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 
@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/")({
 
 type Cliente = { id: string; nombre: string; telefono: string | null; email: string | null };
 type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string | null };
+type ConceptoCotizacion = { id: string; descripcion: string; cantidad: number; costo: number; precio: number; };
+
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
@@ -51,11 +53,8 @@ function CotizacionesPage() {
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
-  const [form, setForm] = useState({
-    cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1,
-    costo: 0, precio: 0, descuento: 0, impuestos: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "",
-    notas_cliente: "", notas_internas: "", tasaImpuesto: 18,
-  });
+  const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
+  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
@@ -142,7 +141,9 @@ function CotizacionesPage() {
     ).length;
   }, [busquedaCliente, clientes, form.cliente_id]);
 
-  const impuestoCalculado = Math.max(0, form.precio * form.cantidad - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
+  const subtotalConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.precio * item.cantidad), 0);
+  const costoConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.costo * item.cantidad), 0);
+  const impuestoCalculado = Math.max(0, subtotalConceptos - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100;
   const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -195,7 +196,7 @@ function CotizacionesPage() {
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    if ((!form.cliente_id && !busquedaCliente.trim()) || !form.descripcion.trim() || form.precio <= 0) return;
+    if ((!form.cliente_id && !busquedaCliente.trim()) || conceptos.some((item) => !item.descripcion.trim() || item.cantidad <= 0 || item.precio <= 0)) return;
     setGuardando(true);
     setErrorCliente("");
     try {
@@ -207,16 +208,16 @@ function CotizacionesPage() {
         _proyecto_joya_id: form.proyecto_joya_id || null,
         _sede_id: sesion?.sede?.id ?? null,
         _moneda: form.moneda,
-        _cantidad: form.cantidad,
-        _costo_unitario: form.costo,
-        _precio_unitario: form.precio,
+        _cantidad: conceptos[0].cantidad,
+        _costo_unitario: conceptos[0].costo,
+        _precio_unitario: conceptos[0].precio,
         _descuento: form.descuento,
         _impuestos: impuestoCalculado,
         _fecha_vencimiento: form.fecha_vencimiento || null,
         _fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
         _notas_cliente: form.notas_cliente,
         _notas_internas: form.notas_internas,
-        _descripcion: form.descripcion,
+        _descripcion: conceptos[0].descripcion,
       };
       const { data: cotizacionCreadaId, error: creacionError } = await supabase.rpc(
         "crear_cotizacion_comercial",
@@ -226,15 +227,25 @@ function CotizacionesPage() {
         throw creacionError ?? new Error("No se pudo crear la cotización.");
       }
 
+      const { error: detallesError } = await supabase.rpc("guardar_detalles_cotizacion", { _cotizacion_id: cotizacionCreadaId, _detalles: conceptos.map((item, index) => ({ orden: index + 1, tipo: "otro", descripcion: item.descripcion.trim(), cantidad: item.cantidad, unidad: "und", costo_unitario: item.costo, precio_unitario: item.precio })) });
+      if (detallesError) throw detallesError;
+
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
-      setForm({ cliente_id: "", proyecto_joya_id: "", descripcion: "", cantidad: 1, costo: 0, precio: 0, descuento: 0, impuestos: 0, tasaImpuesto: 18, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "" });
+      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setConceptos([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
       await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
     } catch (error) {
-      setErrorCliente(error instanceof Error ? error.message : "No se pudo guardar la cotización.");
+      const mensaje =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: unknown }).message ?? "")
+          : error instanceof Error
+            ? error.message
+            : "";
+      setErrorCliente(mensaje || "No se pudo guardar la cotización.");
     } finally {
       setGuardando(false);
     }
@@ -247,6 +258,7 @@ function CotizacionesPage() {
       acciones={
         <>
           <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizaciones.length} descripcion="Presupuestos registrados" onClick={() => { setBusca(""); irALista(); }} icono={<FileText className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Estado" titulo="Enviadas" valor={cotizaciones.filter(q => q.estado === "enviada").length} descripcion="Cotizaciones enviadas al cliente" onClick={() => { setBusca("enviada"); irALista(); }} icono={<Send className="size-5" strokeWidth={1.7} />} />
           <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizaciones.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
           <FichaDorada indicador="Comercial" titulo="Total aprobado" valor={money(totalAprobadas)} descripcion="Valor de cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<BadgeDollarSign className="size-5" strokeWidth={1.7} />} />
           <button type="button" onClick={() => setAbierto(true)} className="group relative min-h-[150px] min-w-[170px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_hsl(var(--gold)/0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_24px_50px_-24px_hsl(var(--gold)/0.38)]">
@@ -318,7 +330,7 @@ function CotizacionesPage() {
         </section>
 
         {abierto && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4 backdrop-blur-sm">
-          <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
+          <form onSubmit={guardar} className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
             <div className="mb-5 flex items-start justify-between"><div><h2 className="font-display text-2xl">Nueva cotización</h2><p className="text-sm text-muted-foreground">Costo interno separado del precio al cliente.</p></div><button type="button" onClick={() => setAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="relative">
@@ -358,12 +370,27 @@ function CotizacionesPage() {
   {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
 </div>
               <label className="text-xs text-muted-foreground">Proyecto (opcional)<select value={form.proyecto_joya_id} onChange={e => setForm({...form, proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Sin proyecto</option>{proyectos.filter(p => !form.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}</select></label>
-              <label className="text-xs text-muted-foreground sm:col-span-2">Concepto<input required value={form.descripcion} onChange={e => setForm({...form, descripcion:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
-              <label className="text-xs text-muted-foreground">Cantidad<input type="number" min="1" step="1" value={form.cantidad} onChange={e => setForm({...form,cantidad:Number(e.target.value) || 1})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm px-3" /></label>
-              <label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
-              <label className="text-xs text-muted-foreground">Costo interno / unidad<input type="number" min="0" step="0.01" value={form.costo} onChange={e => setForm({...form,costo:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">Precio al cliente / unidad<input required type="number" min="0.01" step="0.01" value={form.precio} onChange={e => setForm({...form,precio:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
-              <label className="text-xs text-muted-foreground">Descuento<input type="number" min="0" step="0.01" value={form.descuento} onChange={e => setForm({...form,descuento:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+              <section className="sm:col-span-2 overflow-hidden rounded-2xl border border-gold/15 bg-gradient-to-b from-gold/[0.035] to-transparent">
+  <div className="flex items-center justify-between gap-4 border-b border-gold/10 px-4 py-4 sm:px-5">
+    <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-card text-gold"><FileText className="size-4" /></span><div><p className="text-sm font-semibold tracking-tight">Conceptos de la cotización</p><p className="mt-0.5 text-[11px] text-muted-foreground">Añade productos, servicios o trabajos y define su precio.</p></div></div>
+    <button type="button" onClick={() => setConceptos(items => [...items, { id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }])} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-gold/25 bg-card px-3 text-xs font-semibold text-foreground shadow-sm transition hover:border-gold/45 hover:bg-gold/5"><Plus className="size-3.5 text-gold" /> Agregar</button>
+  </div>
+  <div className="hidden grid-cols-[minmax(0,1fr)_76px_128px_128px_34px] gap-2 px-5 pb-2 pt-4 sm:grid"><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Descripción</span><span className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Cant.</span><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Costo interno</span><span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Precio cliente</span><span /></div>
+  <div className="space-y-2 px-4 pb-4 pt-2 sm:px-5 sm:pt-0">
+    {conceptos.map((item, index) => (
+      <div key={item.id} className="group rounded-xl border border-border/80 bg-card p-3 transition hover:border-gold/20 hover:shadow-sm sm:grid sm:grid-cols-[minmax(0,1fr)_76px_128px_128px_34px] sm:items-end sm:gap-2">
+        <div><div className="mb-1.5 flex items-center gap-2 sm:hidden"><span className="grid size-5 place-items-center rounded-md bg-gold/10 text-[9px] font-bold text-gold">{index + 1}</span><span className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Concepto</span></div><label className="text-[10px] font-medium text-muted-foreground">Descripción<input required value={item.descripcion} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, descripcion: e.target.value } : x))} placeholder="Ej. Anillo de oro 18K" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition placeholder:text-muted-foreground/55 focus:border-gold/45 focus:ring-2 focus:ring-gold/10" /></label></div>
+        <label className="text-[10px] font-medium text-muted-foreground">Cantidad<input required type="number" min="1" step="1" value={item.cantidad} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, cantidad: Number(e.target.value) || 1 } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-center outline-none focus:border-gold/45 focus:ring-2 focus:ring-gold/10" /></label>
+        <label className="text-[10px] font-medium text-muted-foreground">Costo interno<input type="number" min="0" step="0.01" value={item.costo} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, costo: Number(e.target.value) || 0 } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-gold/45 focus:ring-2 focus:ring-gold/10" placeholder="0.00" /></label>
+        <label className="text-[10px] font-medium text-muted-foreground">Precio cliente<input required type="number" min="0.01" step="0.01" value={item.precio} onChange={e => setConceptos(items => items.map(x => x.id === item.id ? { ...x, precio: Number(e.target.value) || 0 } : x))} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-gold/45 focus:ring-2 focus:ring-gold/10" placeholder="0.00" /></label>
+        <div className="flex items-center justify-between pt-2 sm:block sm:pb-1"><span className="text-[10px] text-muted-foreground sm:hidden">Total de partida</span>{conceptos.length > 1 ? <button type="button" onClick={() => setConceptos(items => items.filter(x => x.id !== item.id))} title="Quitar concepto" aria-label={`Quitar concepto ${index + 1}`} className="ml-auto grid size-8 place-items-center rounded-lg text-muted-foreground transition hover:bg-danger-soft hover:text-danger"><Trash2 className="size-3.5" /></button> : <span className="block size-8" />}</div>
+        <div className="col-span-full flex items-center justify-end border-t border-border/60 pt-2 text-xs sm:col-start-3 sm:col-span-2 sm:mt-1 sm:border-0"><span className="text-muted-foreground">Total&nbsp;</span><strong className="tabular-nums text-foreground">{money(item.precio * item.cantidad, form.moneda)}</strong></div>
+      </div>
+    ))}
+  </div>
+</section>
+<label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
+              <div className="hidden sm:block" />
               <label className="text-xs text-muted-foreground">Impuesto (%)<input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">Configurado para el país/sede. Inicial: Perú 18%.</span></label>
               <label className="text-xs text-muted-foreground">Válida hasta<input type="date" value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
                             <label className="text-xs text-muted-foreground">Entrega solicitada<input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
@@ -371,7 +398,7 @@ function CotizacionesPage() {
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
             </div>
             {errorCliente ? <div className="mb-3 rounded-lg border border-danger/20 bg-danger-soft px-3 py-2 text-xs text-danger">{errorCliente}</div> : null}
-            <div className="mt-5 flex items-center justify-between rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><span className="text-sm text-muted-foreground">Total al cliente</span><strong className="text-xl">{money(Math.max(0, form.precio*form.cantidad-form.descuento+impuestoCalculado), form.moneda)}</strong></div>
+            <div className="mt-5 rounded-xl border border-gold/15 bg-gold/[0.025] p-4"><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Subtotal</span><strong className="text-foreground">{money(subtotalConceptos, form.moneda)}</strong></div><div className="mt-2 flex items-center justify-between text-xs text-muted-foreground"><span>Costo interno</span><strong className="text-foreground">{money(costoConceptos, form.moneda)}</strong></div><div className="mt-2 flex items-center justify-between text-xs text-muted-foreground"><span>Descuento</span><strong className="text-foreground">{money(form.descuento, form.moneda)}</strong></div><div className="mt-2 flex items-center justify-between text-xs text-muted-foreground"><span>Impuesto</span><strong className="text-foreground">{money(impuestoCalculado, form.moneda)}</strong></div><div className="mt-3 flex items-center justify-between border-t border-gold/10 pt-3"><span className="text-sm font-semibold">Total al cliente</span><strong className="text-xl">{money(Math.max(0, subtotalConceptos-form.descuento+impuestoCalculado), form.moneda)}</strong></div></div>
             <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAbierto(false)} className="rounded-xl border border-border px-4 py-2 text-sm transition hover:border-gold/30 hover:bg-gold/5">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando…" : "Crear cotización"}</button></div>
           </form>
         </div>}

@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     const { width, height } = page.getSize();
     let y = height - 54;
 
-    page.drawText("TALLER DEL JOYERO", { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
+    page.drawText(clean(sede?.nombre) || "TALLER", { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
     page.drawText("COTIZACIÓN COMERCIAL", { x: 42, y: y - 24, size: 10, font: bold, color: rgb(0.42, 0.32, 0.16) });
     page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: 375, y, size: 11, font: bold });
     page.drawText(`Emitida: ${quote.fecha_emision ?? "—"}`, { x: 375, y: y - 16, size: 9, font });
@@ -245,7 +245,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    page.drawText("Documento comercial generado por Taller del Joyero.", {
+    page.drawText("Documento comercial generado por www.tallerdeljoyero.com - Aurum LAB", {
       x: 42,
       y: 28,
       size: 7.5,
