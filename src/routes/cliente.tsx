@@ -162,7 +162,7 @@ function SeguimientoCliente() {
     mutationFn: async (
       seguimientoToken: string,
     ): Promise<{ tipo: "cotizacion"; data: SeguimientoCotizacion } | { tipo: "pedido"; data: SeguimientoPedido } | null> => {
-      const db = supabase as any;
+      const db = supabasePublic;
 
       const esCodigoCorto = /^[A-Z0-9]{8}$/i.test(seguimientoToken);
       const { data: cotizacion, error: cotizacionError } = await db.rpc(
