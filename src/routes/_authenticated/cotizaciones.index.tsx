@@ -54,7 +54,8 @@ function CotizacionesPage() {
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
-  const [impuestoActivo, setImpuestoActivo] = useState(true);\n  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+  const [impuestoActivo, setImpuestoActivo] = useState(true);
+  const [form, setForm] = useState({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
@@ -235,7 +236,8 @@ function CotizacionesPage() {
       setAbierto(false);
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
-      setImpuestoActivo(true);\n      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setImpuestoActivo(true);
+      setForm({ cliente_id: "", proyecto_joya_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: "", fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
       setConceptos([{ id: crypto.randomUUID(), descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
