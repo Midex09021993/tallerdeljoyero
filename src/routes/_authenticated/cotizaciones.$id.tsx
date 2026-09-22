@@ -77,6 +77,7 @@ function CotizacionDetallePage() {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [enlacePdf, setEnlacePdf] = useState<string | null>(null);
   const [copiado, setCopiado] = useState<"enlace" | "pdf" | null>(null);
+  const [mostrarOpcionesEnvio, setMostrarOpcionesEnvio] = useState(false);
   const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
 
   const cargar = async () => {
@@ -459,12 +460,6 @@ function CotizacionDetallePage() {
                     <button type="button" onClick={() => void descargarPdf()} className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground hover:opacity-90">
                       Descargar PDF
                     </button>
-                    <button type="button" onClick={() => void copiarEnlacePdf()} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
-                      {copiado === "pdf" ? "✓ Enlace copiado" : "Copiar enlace"}
-                    </button>
-                    <button type="button" onClick={abrirWhatsApp} className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
-                      Enviar por WhatsApp
-                    </button>
                   </div>
                 ) : null}
                 {enlacePdf ? (
@@ -483,9 +478,26 @@ function CotizacionDetallePage() {
                 {cotizacion.estado === "borrador" ? (
                   <>
                     <button type="button" onClick={abrirEditor} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">Editar cotización</button>
-                    <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("enviada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                      {guardandoEstado ? "Procesando…" : "Enviar al cliente"}
+                    <button type="button" onClick={() => setMostrarOpcionesEnvio((visible) => !visible)} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                      {mostrarOpcionesEnvio ? "Ocultar opciones de envío" : "Enviar al cliente"}
                     </button>
+                    {mostrarOpcionesEnvio ? (
+                      <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
+                        <p className="text-xs text-muted-foreground">Comparte la cotización mediante una de estas opciones:</p>
+                        {enlacePdf ? (
+                          <>
+                            <button type="button" onClick={abrirWhatsApp} className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
+                              Enviar por WhatsApp
+                            </button>
+                            <button type="button" onClick={() => void copiarEnlacePdf()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
+                              {copiado === "pdf" ? "✓ Enlace copiado" : "Copiar enlace"}
+                            </button>
+                          </>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">Primero genera el PDF en “Documento para el cliente” para poder compartirlo.</p>
+                        )}
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
                 {cotizacion.estado === "enviada" ? (
