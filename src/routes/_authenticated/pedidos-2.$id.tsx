@@ -73,6 +73,29 @@ function Pedido2Detalle() {
   });
 
 
+  const sedeProduccionId = trabajos.find((trabajo) => trabajo.sede_id)?.sede_id ?? pedido?.sede_id ?? null;
+
+  const { data: capacidadesSede = [], error: capacidadesSedeError } = useQuery({
+    queryKey: ["pedidos-2-capacidades-sede", sedeProduccionId],
+    enabled: Boolean(sedeProduccionId && sesion?.esAdmin),
+    queryFn: async () => {
+      if (!sedeProduccionId || !sesion?.esAdmin) return [];
+      const { data, error } = await supabase
+        .from("sede_especialidades")
+        .select("especialidad_id, especialidades!inner(nombre)")
+        .eq("sede_id", sedeProduccionId);
+      if (error) throw error;
+      return (data ?? [])
+        .map((row: any) => ({
+          id: row.especialidad_id as string,
+          nombre: Array.isArray(row.especialidades)
+            ? row.especialidades[0]?.nombre
+            : row.especialidades?.nombre,
+        }))
+        .filter((row) => row.nombre);
+    },
+  });
+
   const { data: operarios = [], error: operariosError } = useQuery({
     queryKey: ["pedidos-2-operarios", sedeProduccionId, sesion?.esAdmin],
     enabled: Boolean(sedeProduccionId && sesion?.esAdmin),
