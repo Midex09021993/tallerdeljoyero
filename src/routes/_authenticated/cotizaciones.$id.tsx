@@ -26,6 +26,7 @@ type Detalle = {
 };
 type Cliente = { id: string; nombre: string; telefono: string | null; whatsapp: string | null; email: string | null };
 type Proyecto = { id: string; codigo: string; nombre: string; descripcion: string; metal: string | null; ley: string | null; peso_estimado: number | null; talla: string | null; piedras: string | null };
+type RespuestaCliente = { id: string; accion: string; comentario: string; created_at: string };
 
 const estados = [
   ["borrador", "Borrador"], ["enviada", "Enviada"], ["requiere_revision", "Requiere cambios"], ["aprobada", "Aprobada"],
@@ -64,6 +65,12 @@ function money(n: number, moneda: string) {
 function etiquetaEstado(estado: string) {
   return estados.find(([value]) => value === estado)?.[1] ?? estado;
 }
+function etiquetaRespuesta(accion: string) {
+  if (accion === "aprobada") return "Aprobó la cotización";
+  if (accion === "requiere_revision") return "Solicitó cambios";
+  if (accion === "rechazada") return "Rechazó la cotización";
+  return accion;
+}
 
 function CotizacionDetallePage() {
   const { id } = useParams({ from: "/_authenticated/cotizaciones/$id" });
@@ -74,6 +81,7 @@ function CotizacionDetallePage() {
     Boolean(sesion?.areas.some((area) => area.trim().toLowerCase() === "área ventas"));
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [detalles, setDetalles] = useState<Detalle[]>([]);
+  const [respuestasCliente, setRespuestasCliente] = useState<RespuestaCliente[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
@@ -105,7 +113,7 @@ function CotizacionDetallePage() {
       setError(qError?.message ?? "No se encontró la cotización.");
       setCargando(false); return;
     }
-    const [{ data: d }, { data: c }, { data: p }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
+    const [{ data: d }, { data: c }, { data: p }, { data: respuestas, error: respuestasError }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
       supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
       q.cliente_id
         ? supabase.from("clientes").select("id,nombre,telefono,whatsapp,email").eq("id", q.cliente_id).maybeSingle()
@@ -113,6 +121,7 @@ function CotizacionDetallePage() {
       q.proyecto_joya_id
         ? supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras").eq("id", q.proyecto_joya_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      supabase.rpc("listar_respuestas_cotizacion", { _cotizacion_id: id }),
       supabase.from("pedidos").select("id,contrato_id,contrato").eq("cotizacion_id", id).maybeSingle(),
       supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
@@ -120,6 +129,10 @@ function CotizacionDetallePage() {
     setDetalles(d ?? []);
     setCliente(c ?? null);
     setProyecto(p ?? null);
+    setRespuestasCliente(respuestas ?? []);
+    if (respuestasError) {
+      setError(respuestasError.message);
+    }
     if (q.sede_id) {
       const { data: sede } = await supabase.from("sedes").select("nombre").eq("id", q.sede_id).maybeSingle();
       setSedeNombre(sede?.nombre ?? null);
@@ -529,6 +542,39 @@ function CotizacionDetallePage() {
           </div>
         </div> : null}
 
+            {cotizacion.estado === "requiere_revision" || respuestasCliente.length > 0 ? (
+              <Panel titulo="Respuesta del cliente">
+                <div className="space-y-4 p-4 lg:p-6">
+                  {cotizacion.estado === "requiere_revision" ? (
+                    <div className="rounded-xl border border-gold/30 bg-gold/10 p-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/90">Atención comercial</p>
+                      <p className="mt-1 text-sm font-semibold">El cliente solicitó cambios en esta cotización.</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Revisa el comentario, ajusta la propuesta y crea una nueva versión para volver a enviarla.</p>
+                    </div>
+                  ) : null}
+                  {respuestasCliente.length > 0 ? (
+                    <div className="space-y-3">
+                      {respuestasCliente.map((respuesta) => (
+                        <div key={respuesta.id} className="rounded-xl border border-border bg-surface/60 p-4">
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm font-semibold">{etiquetaRespuesta(respuesta.accion)}</p>
+                            <p className="text-[11px] text-muted-foreground">{new Date(respuesta.created_at).toLocaleString("es-PE")}</p>
+                          </div>
+                          {respuesta.comentario ? (
+                            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{respuesta.comentario}</p>
+                          ) : (
+                            <p className="mt-2 text-xs text-muted-foreground">Sin comentario adicional.</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">La cotización está marcada para revisión, pero no se encontró un comentario del cliente.</p>
+                  )}
+                </div>
+              </Panel>
+            ) : null}
+
             <Panel titulo="Notas">
               <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
                 <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Para el cliente</p><p className="mt-2 whitespace-pre-wrap text-sm">{cotizacion.notas_cliente || "Sin notas."}</p></div>
@@ -573,7 +619,7 @@ function CotizacionDetallePage() {
               <div className="space-y-2 p-4">
                 <div className="rounded-xl border border-gold/15 bg-gold/[0.025] p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/80">Flujo comercial</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Revisa la cotización, envíala al cliente y apruébala para convertirla en operación.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Revisa la cotización, envíala al cliente y gestiona la respuesta antes de convertirla en operación.</p>
                 </div>
                 {cotizacion.estado === "borrador" ? (
                   <>
@@ -641,6 +687,15 @@ function CotizacionDetallePage() {
                           <p className="text-xs text-muted-foreground">Primero genera el PDF en “Documento para el cliente” para poder compartirlo.</p>
                         )}
                       </div>
+                ) : null}
+                {cotizacion.estado === "requiere_revision" ? (
+                  <div className="rounded-xl border border-gold/25 bg-gold/10 px-3 py-3">
+                    <p className="text-sm font-semibold">Cambios solicitados por el cliente</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Revisa la sección “Respuesta del cliente” y crea una nueva versión cuando estés listo para editar la propuesta.</p>
+                    <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="mt-3 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                      {creandoVersion ? "Creando nueva versión…" : "Crear nueva versión"}
+                    </button>
+                  </div>
                 ) : null}
                 {cotizacion.estado === "enviada" ? (
                   <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("aprobada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">

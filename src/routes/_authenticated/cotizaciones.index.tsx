@@ -51,6 +51,19 @@ function money(n: number, moneda = "PEN") {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(n);
 }
 
+function etiquetaEstadoCotizacion(estado: string) {
+  const etiquetas: Record<string, string> = {
+    borrador: "Borrador",
+    enviada: "Enviada",
+    requiere_revision: "Requiere cambios",
+    aprobada: "Aprobada",
+    rechazada: "Rechazada",
+    vencida: "Vencida",
+    cancelada: "Cancelada",
+  };
+  return etiquetas[estado] ?? estado;
+}
+
 function fechaVencimientoPorDefecto() {
   const fecha = new Date();
   fecha.setDate(fecha.getDate() + 7);
@@ -284,6 +297,7 @@ function CotizacionesPage() {
         <>
           <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizaciones.length} descripcion="Presupuestos registrados" onClick={() => { setBusca(""); irALista(); }} icono={<FileText className="size-5" strokeWidth={1.7} />} />
           <FichaDorada indicador="Estado" titulo="Enviadas" valor={cotizaciones.filter(q => q.estado === "enviada").length} descripcion="Cotizaciones enviadas al cliente" onClick={() => { setBusca("enviada"); irALista(); }} icono={<Send className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Atención" titulo="Requieren revisión" valor={cotizaciones.filter(q => q.estado === "requiere_revision").length} descripcion="Cambios solicitados por clientes" onClick={() => { setBusca("requiere_revision"); irALista(); }} icono={<Clock3 className="size-5" strokeWidth={1.7} />} />
           <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizaciones.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
           <FichaDorada indicador="Comercial" titulo="Total aprobado" valor={money(totalAprobadas)} descripcion="Valor de cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<BadgeDollarSign className="size-5" strokeWidth={1.7} />} />
           <button type="button" onClick={() => setAbierto(true)} className="group relative min-h-[150px] min-w-[170px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_hsl(var(--gold)/0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_24px_50px_-24px_hsl(var(--gold)/0.38)]">
@@ -329,7 +343,7 @@ function CotizacionesPage() {
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
                     <td className="p-0 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.sede_id)?.nombre ?? "Taller no asignado"}</Link></td>
-                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="rounded-full border border-gold/15 bg-gold/[0.035] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{q.estado}</span></Link></td>
+                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className={"rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider " + (q.estado === "requiere_revision" ? "border-gold/30 bg-gold/10 text-gold" : "border-gold/15 bg-gold/[0.035] text-muted-foreground")}>{etiquetaEstadoCotizacion(q.estado)}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
                     <td className="p-0 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{money(Number(q.total), q.moneda)}</Link></td>
                     {sesion?.esDueno ? (

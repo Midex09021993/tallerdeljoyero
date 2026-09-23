@@ -2822,6 +2822,15 @@ export type Database = {
         Returns: Json
       }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
+      listar_respuestas_cotizacion: {
+        Args: { _cotizacion_id: string }
+        Returns: {
+          id: string
+          accion: string
+          comentario: string
+          created_at: string
+        }[]
+      }
       listar_operarios_por_area: {
         Args: { _sede_id: string }
         Returns: {
