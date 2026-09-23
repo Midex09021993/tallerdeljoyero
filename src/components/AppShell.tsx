@@ -86,18 +86,16 @@ function seccionesVisibles(
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
-  // Los operarios ven la pantalla de cada área que el dueño/gerente les asignó
-  // junto con su inicio rápido y perfil. Si aún no tienen áreas, solo ven el inicio.
+  // El operario usa una única bandeja: /operario. Las áreas se seleccionan
+  // dentro de esa pantalla para evitar duplicar interfaces (/taller, /casting, etc.).
+  // Herramientas y Perfil permanecen como destinos independientes.
   const asignadas = areas ?? [];
   const inicio = secciones.filter((s) => s.to === "/operario");
-  const porArea = secciones.filter(
-    (s) =>
-      !["/inventario", "/operario", "/perfil"].includes(s.to) &&
-      s.area != null &&
-      asignadas.some((area) => areaCoincide(area, s.area)),
+  const herramientas = secciones.filter(
+    (s) => s.to === "/herramientas" && asignadas.some((area) => areaCoincide(area, "Taller")),
   );
   const perfil = secciones.filter((s) => s.to === "/perfil");
-  return [...inicio, ...porArea, ...perfil];
+  return [...inicio, ...herramientas, ...perfil];
 }
 
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
