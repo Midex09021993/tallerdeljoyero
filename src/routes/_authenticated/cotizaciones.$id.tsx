@@ -86,7 +86,6 @@ function CotizacionDetallePage() {
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [guardandoEstado, setGuardandoEstado] = useState(false);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [creandoVersion, setCreandoVersion] = useState(false);
@@ -410,18 +409,6 @@ function CotizacionDetallePage() {
     }
   }
 
-  async function cambiarEstado(estado: string) {
-    if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
-    setGuardandoEstado(true); setError("");
-    const { error: updateError } = await supabase.rpc("cambiar_estado_cotizacion", {
-      _cotizacion_id: cotizacion.id,
-      _nuevo_estado: estado,
-    });
-    if (updateError) setError(updateError.message);
-    else setCotizacion({ ...cotizacion, estado });
-    setGuardandoEstado(false);
-  }
-
   if (cargando) return <AppShell titulo="Cotización" subtitulo="Cargando…" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">Cargando cotización…</p></AppShell>;
   if (!cotizacion) return <AppShell titulo="Cotización no encontrada" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">{error || "La cotización no existe o no tienes acceso."}</p></AppShell>;
 
@@ -440,13 +427,14 @@ function CotizacionDetallePage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
           {sesion?.esAdmin ? <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-foreground">
+              Estado: {etiquetaEstado(cotizacion.estado)}
+            </span>
             {["enviada", "requiere_revision", "rechazada", "vencida"].includes(cotizacion.estado) ? (
               <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
                 {creandoVersion ? "Creando…" : "Crear nueva versión"}
               </button>
             ) : null}
-            {estados.map(([value, label]) => <button key={value} type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado(value)}
-              className={"rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " + (cotizacion.estado === value ? "border-ink bg-ink text-ink-foreground" : "border-border text-muted-foreground hover:text-foreground")}>{label}</button>)}
           </div> : null}
         </div>
         {error ? <div className="rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">{error}</div> : null}
@@ -696,11 +684,6 @@ function CotizacionDetallePage() {
                       {creandoVersion ? "Creando nueva versión…" : "Crear nueva versión"}
                     </button>
                   </div>
-                ) : null}
-                {cotizacion.estado === "enviada" ? (
-                  <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("aprobada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                    {guardandoEstado ? "Procesando…" : "Aprobar cotización"}
-                  </button>
                 ) : null}
                 {cotizacion.estado === "aprobada" ? (
                   pedidoId ? (
