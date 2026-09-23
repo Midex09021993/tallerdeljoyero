@@ -247,7 +247,6 @@ function TrabajoOperativoPage() {
         .from("pedido_archivos")
         .select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion")
         .eq("pedido_id", trabajo!.pedido_id)
-        .eq("es_enlace", false)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Array<{
@@ -325,7 +324,7 @@ function TrabajoOperativoPage() {
     ]);
   };
   const activo = !["completado", "cancelado"].includes(trabajo.estado);
-  const sedeNombre = Array.isArray(pedidoTrabajo?.sedes) ? pedidoTrabajo.sedes[0]?.nombre : pedidoTrabajo?.sedes?.nombre;
+  const sedeNombre = (pedidoTrabajo?.sedes as { nombre?: string } | null)?.nombre ?? "";
   const nombrePieza = pedidoTrabajo?.pieza || pedidoTrabajo?.trabajo || trabajo.titulo || "—";
 
   return (
@@ -362,7 +361,7 @@ function TrabajoOperativoPage() {
             {[
               ["Trabajo / pieza", nombrePieza], ["Referencia", pedidoTrabajo?.referencia || "—"], ["Área actual", pedidoTrabajo?.area_actual || trabajo.area],
               ["Sede / taller", sedeNombre || "—"], ["Origen", pedidoTrabajo?.origen || "—"], ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
-              ["Fecha de ingreso", pedidoTrabajo?.fecha_ingreso || "—"], ["Fecha de entrega", pedidoTrabajo?.fecha_entrega || "—"], ["Prioridad", trabajo.prioridad],
+              ["Fecha de ingreso", pedidoTrabajo?.fecha_ingreso || "—"], ["Área desde", pedidoTrabajo?.area_desde || "—"], ["Fecha de entrega", pedidoTrabajo?.fecha_entrega || "—"], ["Prioridad", trabajo.prioridad],
               ["Ubicación", trabajo.ubicacion || "Por definir"], ["Fecha planificada", trabajo.fecha_planificada || "Sin fecha"], ["Tipo de trabajo", trabajo.tipo === "externo" ? "Externo" : "Interno"],
             ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-surface-sunken p-3"><dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt><dd className="mt-1 text-sm font-semibold">{valor}</dd></div>)}
           </dl></div>
