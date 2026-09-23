@@ -343,7 +343,7 @@ function TrabajoOperativoPage() {
       subtitulo={`${trabajo.area} · Pedido ${pedidoTrabajo?.referencia ?? trabajo.pedido_id.slice(0, 8) + "…"}`}
       ocultarNavegacion
       encabezadoMovilCompacto
-      atrasMovil={{ to: "/operario" }}
+      atrasMovil={false}
     >
       <div className="mx-auto max-w-3xl space-y-4">
         <div className="flex items-center justify-between gap-3">
