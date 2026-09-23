@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 });
 
 type Cotizacion = {
-  id: string; numero: string; version: number; estado: string; seguimiento_codigo: string | null; sede_id: string | null; fecha_emision: string;
+  id: string; numero: string; version: number; estado: string; seguimiento_codigo: string | null; sede_id: string | null; reemplaza_id: string | null; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
@@ -82,6 +82,7 @@ function CotizacionDetallePage() {
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [detalles, setDetalles] = useState<Detalle[]>([]);
   const [respuestasCliente, setRespuestasCliente] = useState<RespuestaCliente[]>([]);
+  const [respuestaVersionAnterior, setRespuestaVersionAnterior] = useState<RespuestaCliente | null>(null);
   const [versiones, setVersiones] = useState<Cotizacion[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
@@ -107,7 +108,7 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_codigo,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -128,11 +129,26 @@ function CotizacionDetallePage() {
     setCotizacion(q);
     const { data: versionesRelacionadas } = await supabase
       .from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_codigo,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("numero", q.numero)
       .eq("sede_id", q.sede_id)
       .order("version", { ascending: false });
     setVersiones(versionesRelacionadas ?? [q]);
+
+    // Si esta versión nació de otra, mostramos la respuesta del cliente
+    // que provocó la creación de esta nueva versión. La respuesta sigue
+    // vinculada a la versión original; aquí solo la contextualizamos.
+    if (q.reemplaza_id) {
+      const { data: respuestaAnterior } = await supabase
+        .rpc("listar_respuestas_cotizacion", { _cotizacion_id: q.reemplaza_id });
+      const ultimaRevision = (respuestaAnterior ?? [])
+        .filter((respuesta) => respuesta.accion === "requiere_revision")
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] ?? null;
+      setRespuestaVersionAnterior(ultimaRevision);
+    } else {
+      setRespuestaVersionAnterior(null);
+    }
+
     setDetalles(d ?? []);
     setCliente(c ?? null);
     setProyecto(p ?? null);
@@ -567,6 +583,31 @@ function CotizacionDetallePage() {
                   ) : (
                     <p className="text-sm text-muted-foreground">La cotización está marcada para revisión, pero no se encontró un comentario del cliente.</p>
                   )}
+                </div>
+              </Panel>
+            ) : null}
+
+            {respuestaVersionAnterior ? (
+              <Panel titulo="Cambios solicitados por el cliente">
+                <div className="space-y-4 p-4 lg:p-6">
+                  <div className="rounded-xl border border-gold/25 bg-gold/10 p-4">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm font-semibold">Solicitud recibida en la versión anterior</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {new Date(respuestaVersionAnterior.created_at).toLocaleString("es-PE")}
+                      </p>
+                    </div>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">
+                      {respuestaVersionAnterior.comentario || "El cliente solicitó cambios sin agregar un comentario."}
+                    </p>
+                    <Link
+                      to="/cotizaciones/$id"
+                      params={{ id: cotizacion.reemplaza_id! }}
+                      className="mt-4 inline-flex text-xs font-semibold text-primary hover:underline"
+                    >
+                      Ver la versión que recibió esta solicitud →
+                    </Link>
+                  </div>
                 </div>
               </Panel>
             ) : null}
