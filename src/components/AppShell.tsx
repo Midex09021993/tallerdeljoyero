@@ -135,7 +135,8 @@ function seccionesVisibles(
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) {
-    const habilitadas = new Set(capacidades ?? []);
+    if (!capacidades) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
+    const habilitadas = new Set(capacidades);
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
       if (s.grupo !== "produccion" && s.to !== "/aurum-render") return true;
