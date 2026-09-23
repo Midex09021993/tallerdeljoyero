@@ -53,10 +53,10 @@ function Pedidos2Page() {
       acciones={<div className="flex flex-wrap items-center gap-2"><SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />{sesion?.esAdmin ? <button type="button" onClick={() => navigate({ to: "/pedidos-2/nuevo" })} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground shadow-card"><Plus className="size-4" /> Nuevo pedido</button> : null}</div>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={ClipboardList} label="Activos" value={activos.length} />
-        <Metric icon={AlertTriangle} label="Requieren atención" value={atencion.length} tone="warning" />
-        <Metric icon={Factory} label="En producción" value={produccion.length} />
-        <Metric icon={PackageCheck} label="Por entregar" value={entrega.length} tone="positive" />
+        <Metric icon={ClipboardList} label="Activos" value={activos.length} onClick={() => setVista("todos")} active={vista === "todos"} />
+        <Metric icon={AlertTriangle} label="Requieren atención" value={atencion.length} tone="warning" onClick={() => setVista("atencion")} active={vista === "atencion"} />
+        <Metric icon={Factory} label="En producción" value={produccion.length} onClick={() => setVista("produccion")} active={vista === "produccion"} />
+        <Metric icon={PackageCheck} label="Por entregar" value={entrega.length} tone="positive" onClick={() => setVista("entrega")} active={vista === "entrega"} />
       </div>
 
       <section className="mt-6 overflow-hidden rounded-[24px] border border-border bg-card shadow-card">
@@ -117,5 +117,13 @@ function PedidoRow({ pedido: p, esDueno, onOpen, onDelete }: { pedido: any; esDu
   return <tr onClick={onOpen} className="cursor-pointer hover:bg-surface-muted/60"><td className="px-5 py-4"><span className="font-semibold text-sm">{p.referencia}</span>{p.contrato ? <span className="block text-[10px] text-muted-foreground">Contrato {p.contrato}</span> : null}</td><td className="px-5 py-4 text-sm">{p.cliente || "Cliente pendiente"}</td><td className="px-5 py-4 text-sm text-muted-foreground">{p.trabajo || p.pieza || "Sin descripción"}</td><td className="px-5 py-4"><Status estado={p.estado} /></td><td className="px-5 py-4"><span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{p.sede_nombre || "Taller no asignado"}</span></td><td className="px-5 py-4"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{p.area_actual || "Sin ubicación"}</span></td><td className="px-5 py-4 text-xs">{fmtFecha(p.fecha_entrega ?? p.entrega) || "Sin fecha"}{dias !== null && dias < 0 && !esEstadoFinalPedido(p.estado) ? <span className="ml-2 text-[10px] font-semibold text-danger">Atrasado</span> : null}</td><td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>{esDueno ? <div className="flex items-center justify-end gap-2"><button type="button" onClick={onDelete} className="inline-flex items-center gap-1.5 rounded-lg border border-danger/25 px-2.5 py-1.5 text-xs font-semibold text-danger hover:bg-danger/10" aria-label={`Eliminar pedido ${p.referencia}`}><Trash2 className="size-3.5" /> Eliminar</button><ArrowRight className="size-4 text-muted-foreground" /></div> : <ArrowRight className="ml-auto size-4 text-muted-foreground" />}</td></tr>;
 }
 function Status({ estado }: { estado: string }) { return <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${estadoClases[estado] ?? "bg-surface-muted text-muted-foreground"}`}>{estado}</span>; }
-function Metric({ icon: Icon, label, value, tone = "neutral" }: { icon: typeof ClipboardList; label: string; value: number; tone?: "neutral" | "warning" | "positive" }) { return <div className="rounded-2xl border border-border bg-card p-4 shadow-card"><div className="flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl bg-surface-muted text-gold"><Icon className="size-4" /></span><span className={`text-2xl font-semibold tabular-nums ${tone === "warning" ? "text-warning" : tone === "positive" ? "text-success" : "text-foreground"}`}>{value}</span></div><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p></div>; }
+function Metric({ icon: Icon, label, value, tone = "neutral", onClick, active }: { icon: typeof ClipboardList; label: string; value: number; tone?: "neutral" | "warning" | "positive"; onClick: () => void; active: boolean }) {
+  return <button type="button" onClick={onClick} aria-pressed={active} className={`w-full rounded-2xl border bg-card p-4 text-left shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold/30 ${active ? "border-gold/50 ring-1 ring-gold/20" : "border-border"}`}>
+    <div className="flex items-center justify-between">
+      <span className="grid size-9 place-items-center rounded-xl bg-surface-muted text-gold"><Icon className="size-4" /></span>
+      <span className={`text-2xl font-semibold tabular-nums ${tone === "warning" ? "text-warning" : tone === "positive" ? "text-success" : "text-foreground"}`}>{value}</span>
+    </div>
+    <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+  </button>;
+}
 function InfoCard({ icon: Icon, title, text }: { icon: typeof Factory; title: string; text: string }) { return <div className="rounded-2xl border border-border bg-card p-5"><Icon className="size-5 text-gold" /><h3 className="mt-3 text-sm font-semibold">{title}</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></div>; }
