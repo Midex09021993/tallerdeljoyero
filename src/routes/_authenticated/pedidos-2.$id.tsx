@@ -506,7 +506,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
       <div className="mt-4 space-y-2">
         {trabajos.length ? trabajos.map((t) => {
           const operariosDelArea = operarios.filter((operario) =>
-            operario.areas.some((area) => area.trim().toLowerCase() === String(t.area || "").trim().toLowerCase()),
+            operario.areas.some((area) => areaCoincide(area, t.area)),
           );
           return (
             <div key={t.id} className="flex flex-col gap-3 rounded-xl border border-border bg-surface-sunken p-4 lg:flex-row lg:items-center lg:justify-between">
