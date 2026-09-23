@@ -114,7 +114,7 @@ export function EspecialidadesOwner() {
   );
 }
 
-function Asignador({ participante, especialidades, onClose }: { participante: Participante; especialidades: Especialidad[]; onClose: () => void }) {
+export function Asignador({ participante, especialidades, onClose }: { participante: Participante; especialidades: Especialidad[]; onClose: () => void }) {
   const qc = useQueryClient();
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
