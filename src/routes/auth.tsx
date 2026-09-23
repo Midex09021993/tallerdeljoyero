@@ -252,17 +252,50 @@ function LoginPage() {
               {seccionPlataforma === "ecosistema" ? (
                 <>
                   <div className="max-w-3xl">
-                    <p className="text-sm leading-relaxed text-white/60">Una plataforma especializada que conecta la gestión del taller, la producción, las herramientas técnicas, AURUM y una red profesional en un mismo entorno.</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Lo que ya puedes usar</p>
+                    <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Una plataforma que ya reúne el trabajo real del taller.</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-white/60">
+                      Además de las herramientas gratuitas de entrada, Aurum Lab integra gestión, pedidos, producción, fichas técnicas, trazabilidad y visualización 3D en un mismo entorno.
+                    </p>
                   </div>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {[
-                      { icon: Boxes, title: "Gestión del taller", text: "Clientes, proyectos, cotizaciones, pedidos, trabajos, inventario, pagos y entregas." },
-                      { icon: Sparkles, title: "AURUM Studio", text: "Diseño y visualización 3D, materiales, piedras, escenas y renders para joyería." },
-                      { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras y conversores para apoyar diseño, fabricación y producción." },
-                      { icon: PackageCheck, title: "Producción y trazabilidad", text: "Seguimiento por área, ubicación, responsable, estado e historial." },
-                      { icon: Network, title: "Red profesional", text: "Profesionales, proveedores, vendedores y servicios especializados." },
-                      { icon: ShieldCheck, title: "Acceso por perfil", text: "Cada participante verá las funciones y datos que correspondan a su relación con la plataforma." },
-                    ].map(({icon:Icon,title,text}) => <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 hover:border-gold/35"><Icon className="size-6 text-gold"/><h3 className="mt-3 text-sm font-semibold text-white">{title}</h3><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p></article>)}
+                      { icon: Boxes, title: "Gestiona tu taller", text: "Clientes, cotizaciones, pedidos, trabajos, inventario, pagos y entregas." },
+                      { icon: PackageCheck, title: "Controla la producción", text: "Rutas por área, trabajos, responsables, estados, tiempos e incidencias." },
+                      { icon: Sparkles, title: "Visualiza en 3D", text: "AURUM Render para visualizar diseños de joyería con materiales, piedras y escenas." },
+                      { icon: Calculator, title: "Herramientas para joyeros", text: "Yeso / agua, aleaciones de oro, tallas y visualización y peso 3D." },
+                    ].map(({icon:Icon,title,text}) => (
+                      <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
+                        <Icon className="size-6 text-gold"/>
+                        <h3 className="mt-3 text-sm font-semibold text-white">{title}</h3>
+                        <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <article className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Producción y trazabilidad</p>
+                      <h3 className="mt-2 text-base font-semibold text-white">Cada trabajo puede seguir su recorrido.</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">
+                        Desde el pedido y su ruta de fabricación hasta el área responsable, la ficha técnica, el estado, el tiempo y las incidencias.
+                      </p>
+                    </article>
+                    <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Ficha técnica</p>
+                      <h3 className="mt-2 text-base font-semibold text-white">La información acompaña a la pieza.</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">
+                        Material, talla, piedras, peso, cantidad, instrucciones, archivos técnicos, ruta y datos de fabricación.
+                      </p>
+                    </article>
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-xs font-semibold text-white">También puedes empezar sin ser cliente del sistema.</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+                      Las herramientas gratuitas permiten conocer Aurum Lab y resolver necesidades técnicas antes de dar el siguiente paso.
+                    </p>
                   </div>
                 </>
               ) : null}
