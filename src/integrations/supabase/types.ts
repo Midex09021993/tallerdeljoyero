@@ -728,6 +728,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sede_especialidades: {
+        Row: {
+          created_at: string
+          especialidad_id: string
+          sede_id: string
+        }
+        Insert: {
+          created_at?: string
+          especialidad_id: string
+          sede_id: string
+        }
+        Update: {
+          created_at?: string
+          especialidad_id?: string
+          sede_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sede_especialidades_especialidad_id_fkey"
+            columns: ["especialidad_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sede_especialidades_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gastos: {
         Row: {
           categoria: string
