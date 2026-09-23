@@ -685,11 +685,6 @@ function CotizacionDetallePage() {
                     </button>
                   </div>
                 ) : null}
-                {cotizacion.estado === "enviada" ? (
-                  <button type="button" disabled={false} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                    {guardandoEstado ? "Procesando…" : "Aprobar cotización"}
-                  </button>
-                ) : null}
                 {cotizacion.estado === "aprobada" ? (
                   pedidoId ? (
                     <div className="space-y-2">
