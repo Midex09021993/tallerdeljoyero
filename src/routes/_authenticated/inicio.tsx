@@ -12,6 +12,7 @@ import {
 import { useEffect, useMemo } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import {
+  areaRuta,
   rolEtiqueta,
   useSesion,
 } from "@/lib/auth";
