@@ -39,7 +39,6 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
-  const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -223,8 +222,3 @@ function textoEntrega(pedido: PedidoSelector) {
   return `Entrega en ${dias} d`;
 }
 
-  const partes = [`${pendientes} pendiente${pendientes === 1 ? "" : "s"}`];
-  if (enArea > 0) partes.push(`${enArea} en área`);
-  if (urgentes > 0) partes.push(`${urgentes} urgente${urgentes === 1 ? "" : "s"}`);
-  return partes.join(" · ");
-}
