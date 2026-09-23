@@ -25,6 +25,19 @@ const CAPACIDADES_COMERCIALES = [
   "Ventas",
 ] as const;
 
+const CAPACIDADES_INVENTARIO = [
+  "Inventario",
+  "Compras",
+] as const;
+
+const CAPACIDADES_HERRAMIENTAS = [
+  "Herramientas",
+] as const;
+
+const CAPACIDADES_ADMINISTRACION = [
+  "Migración",
+] as const;
+
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -58,13 +71,28 @@ const CAPACIDADES_COMERCIALES = [
     const comercial = especialidades
       .filter((e) => ordenComercial.has(e.nombre))
       .sort((a, b) => (ordenComercial.get(a.nombre) ?? 99) - (ordenComercial.get(b.nombre) ?? 99));
+    const ordenInventario = new Map(CAPACIDADES_INVENTARIO.map((nombre, indice) => [nombre, indice]));
+    const inventario = especialidades
+      .filter((e) => ordenInventario.has(e.nombre))
+      .sort((a, b) => (ordenInventario.get(a.nombre) ?? 99) - (ordenInventario.get(b.nombre) ?? 99));
+    const ordenHerramientas = new Map(CAPACIDADES_HERRAMIENTAS.map((nombre, indice) => [nombre, indice]));
+    const herramientas = especialidades
+      .filter((e) => ordenHerramientas.has(e.nombre))
+      .sort((a, b) => (ordenHerramientas.get(a.nombre) ?? 99) - (ordenHerramientas.get(b.nombre) ?? 99));
+    const ordenAdministracion = new Map(CAPACIDADES_ADMINISTRACION.map((nombre, indice) => [nombre, indice]));
+    const administracion = especialidades
+      .filter((e) => ordenAdministracion.has(e.nombre))
+      .sort((a, b) => (ordenAdministracion.get(a.nombre) ?? 99) - (ordenAdministracion.get(b.nombre) ?? 99));
     const servicios = especialidades
-      .filter((e) => !ordenProduccion.has(e.nombre) && !ordenComercial.has(e.nombre))
+      .filter((e) => !ordenProduccion.has(e.nombre) && !ordenComercial.has(e.nombre) && !ordenInventario.has(e.nombre) && !ordenHerramientas.has(e.nombre) && !ordenAdministracion.has(e.nombre))
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
     return [
       ...(produccion.length ? [["Producción", produccion] as [string, Especialidad[]]] : []),
       ...(comercial.length ? [["Comercial", comercial] as [string, Especialidad[]]] : []),
+      ...(inventario.length ? [["Inventario", inventario] as [string, Especialidad[]]] : []),
+      ...(herramientas.length ? [["Herramientas", herramientas] as [string, Especialidad[]]] : []),
+      ...(administracion.length ? [["Administración", administracion] as [string, Especialidad[]]] : []),
       ...(servicios.length ? [["Servicios especializados", servicios] as [string, Especialidad[]]] : []),
     ];
   }, [especialidades]);
