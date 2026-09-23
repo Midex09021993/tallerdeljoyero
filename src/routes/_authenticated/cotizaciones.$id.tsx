@@ -86,7 +86,6 @@ function CotizacionDetallePage() {
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [guardandoEstado, setGuardandoEstado] = useState(false);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [creandoVersion, setCreandoVersion] = useState(false);
@@ -410,18 +409,6 @@ function CotizacionDetallePage() {
     }
   }
 
-  async function cambiarEstado(estado: string) {
-    if (!cotizacion || !sesion?.esAdmin || estado === cotizacion.estado) return;
-    setGuardandoEstado(true); setError("");
-    const { error: updateError } = await supabase.rpc("cambiar_estado_cotizacion", {
-      _cotizacion_id: cotizacion.id,
-      _nuevo_estado: estado,
-    });
-    if (updateError) setError(updateError.message);
-    else setCotizacion({ ...cotizacion, estado });
-    setGuardandoEstado(false);
-  }
-
   if (cargando) return <AppShell titulo="Cotización" subtitulo="Cargando…" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">Cargando cotización…</p></AppShell>;
   if (!cotizacion) return <AppShell titulo="Cotización no encontrada" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">{error || "La cotización no existe o no tienes acceso."}</p></AppShell>;
 
@@ -699,7 +686,7 @@ function CotizacionDetallePage() {
                   </div>
                 ) : null}
                 {cotizacion.estado === "enviada" ? (
-                  <button type="button" disabled={guardandoEstado} onClick={() => void cambiarEstado("aprobada")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  <button type="button" disabled={false} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
                     {guardandoEstado ? "Procesando…" : "Aprobar cotización"}
                   </button>
                 ) : null}
