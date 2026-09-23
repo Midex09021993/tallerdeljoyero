@@ -2836,6 +2836,7 @@ export type Database = {
         Returns: {
           id: string
           nombre: string
+          tipo_participante: string
           especialidad: string | null
         }[]
       }
