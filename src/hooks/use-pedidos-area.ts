@@ -131,8 +131,73 @@ export function useTrabajosDelOperario() {
     queryFn: async () => {
       if (!sesion?.user.id) return [] as TrabajoBandeja[];
       const { data, error } = await supabase.rpc("listar_trabajos_operario");
-      if (error) throw error;
-      return (data ?? []) as TrabajoBandeja[];
+      if (error) {
+        const message = error.message || error.details || error.hint || "Error al consultar la bandeja del operario";
+        throw new Error(message);
+      }
+
+      const trabajos = (data ?? []) as TrabajoBandeja[];
+
+      // Autorreparación controlada: un pedido ya EN PRODUCCIÓN debe tener al menos
+      // una operación. Si una operación quedó ausente por una preparación anterior
+      // incompleta, la regeneramos usando la RPC idempotente de producción.
+      // Solo se intenta para pedidos de esta sede cuya ruta/área coincide con las
+      // áreas asignadas al operario.
+      if (sesion.areas?.length) {
+        const { data: pedidosProduccion, error: pedidosError } = await supabase
+          .from("pedidos")
+          .select("id, ruta, area_actual")
+          .eq("estado", "En Producción");
+
+        if (pedidosError) {
+          throw new Error(
+            pedidosError.message || pedidosError.details || pedidosError.hint || "Error al revisar pedidos en producción",
+          );
+        }
+
+        const tieneTrabajo = new Set(trabajos.map((trabajo) => trabajo.pedido_id));
+        const candidatos = (pedidosProduccion ?? []).filter((pedido) => {
+          if (tieneTrabajo.has(pedido.id)) return false;
+          const ruta = Array.isArray(pedido.ruta) ? pedido.ruta : [];
+          return (
+            ruta.some((area) =>
+              sesion.areas!.some((asignada) => areaCoincide(area, asignada)),
+            ) ||
+            sesion.areas!.some((asignada) => areaCoincide(pedido.area_actual, asignada))
+          );
+        });
+
+        for (const pedido of candidatos) {
+          const { error: prepararError } = await supabase.rpc("preparar_produccion_pedido", {
+            _pedido_id: pedido.id,
+          });
+          if (prepararError) {
+            // No ocultamos el trabajo que sí pudo cargarse. El error queda explícito
+            // para diagnóstico si la reparación no está autorizada o configurada.
+            throw new Error(
+              prepararError.message ||
+                prepararError.details ||
+                prepararError.hint ||
+                "No se pudo reparar una operación de producción",
+            );
+          }
+        }
+
+        if (candidatos.length > 0) {
+          const { data: reparados, error: reparadosError } = await supabase.rpc("listar_trabajos_operario");
+          if (reparadosError) {
+            throw new Error(
+              reparadosError.message ||
+                reparadosError.details ||
+                reparadosError.hint ||
+                "No se pudo recargar la bandeja después de reparar producción",
+            );
+          }
+          return (reparados ?? []) as TrabajoBandeja[];
+        }
+      }
+
+      return trabajos;
     },
   });
 
