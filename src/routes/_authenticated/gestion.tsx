@@ -60,6 +60,7 @@ import { EcosistemaParticipantesOwner } from "@/components/EcosistemaParticipant
 import { EspecialidadesOwner } from "@/components/EspecialidadesOwner";
 import { ConfiguracionFiscal } from "@/components/ConfiguracionFiscal";
 import { ConfiguracionContratos } from "@/components/ConfiguracionContratos";
+import { CapacidadesSedeAdmin } from "@/components/CapacidadesSedeAdmin";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -102,7 +103,8 @@ type Modulo =
   | "ecosistema"
   | "especialidades"
   | "fiscal"
-  | "contratos";
+  | "contratos"
+  | "capacidades";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -140,6 +142,7 @@ function GestionPage() {
     { id: "respaldo", label: "Respaldo", visible: puedeUsuarios },
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
+    { id: "capacidades", label: "Capacidades del taller", visible: puedeUsuarios },
     { id: "sedes", label: "Sedes", visible: esDueno },
     { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
     { id: "aurumRender", label: "AURUM Render", visible: esDueno },
@@ -211,6 +214,7 @@ function GestionPage() {
       {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
       {modulo === "fiscal" && esDueno ? <ConfiguracionFiscal /> : null}
       {modulo === "contratos" && puedeUsuarios ? <ConfiguracionContratos /> : null}
+      {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sesion?.sede?.nombre ?? undefined} /> : null}
     </AppShell>
   );
 }
