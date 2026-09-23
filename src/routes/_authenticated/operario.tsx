@@ -91,10 +91,6 @@ function OperarioPage() {
   const isLoading = isLoadingTrabajos;
   const nombre = sesion?.perfil.nombre?.trim() || "Operario";
   const puedeHerramientas = areas.some((area) => areaCoincide(area, "Taller"));
-  const trabajosVisibles = areaSeleccionada
-    ? trabajos.filter((trabajo) => areaCoincide(trabajo.area, areaSeleccionada))
-    : trabajos;
-
   const seleccionarArea = (area: string) => {
     setAreaSeleccionada((actual) => (actual === area ? null : area));
   };
