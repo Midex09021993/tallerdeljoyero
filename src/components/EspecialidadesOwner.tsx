@@ -126,7 +126,17 @@ export function Asignador({ participante, especialidades, onClose }: { participa
       return (data ?? []) as Relacion[];
     },
   });
-  const { data: catalogo = [] } = useQuery({\n    queryKey: ["ecosistema-especialidades"],\n    queryFn: async () => {\n      const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");\n      if (error) throw error;\n      return (data ?? []) as Especialidad[];\n    },\n    enabled: !especialidades?.length,\n  });\n  const opciones = especialidades?.length ? especialidades : catalogo;\n  const ids = seleccionadas ?? actuales.map(r => r.especialidad_id);
+  const { data: catalogo = [] } = useQuery({
+    queryKey: ["ecosistema-especialidades"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");
+      if (error) throw error;
+      return (data ?? []) as Especialidad[];
+    },
+    enabled: !especialidades?.length,
+  });
+  const opciones = especialidades?.length ? especialidades : catalogo;
+  const ids = seleccionadas ?? actuales.map(r => r.especialidad_id);
 
   async function guardar() {
     setGuardando(true);
