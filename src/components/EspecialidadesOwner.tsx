@@ -114,7 +114,7 @@ export function EspecialidadesOwner() {
   );
 }
 
-export function Asignador({ participante, especialidades, onClose }: { participante: Participante; especialidades: Especialidad[]; onClose: () => void }) {
+export function Asignador({ participante, especialidades, onClose }: { participante: Participante; especialidades?: Especialidad[]; onClose: () => void }) {
   const qc = useQueryClient();
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -126,7 +126,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
       return (data ?? []) as Relacion[];
     },
   });
-  const ids = seleccionadas ?? actuales.map(r => r.especialidad_id);
+  const { data: catalogo = [] } = useQuery({\n    queryKey: ["ecosistema-especialidades"],\n    queryFn: async () => {\n      const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");\n      if (error) throw error;\n      return (data ?? []) as Especialidad[];\n    },\n    enabled: !especialidades?.length,\n  });\n  const opciones = especialidades?.length ? especialidades : catalogo;\n  const ids = seleccionadas ?? actuales.map(r => r.especialidad_id);
 
   async function guardar() {
     setGuardando(true);
@@ -147,7 +147,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-xl">
       <div className="border-b border-border p-5"><p className="text-lg font-semibold">Especialidades · {participante.nombre}</p><p className="text-xs text-muted-foreground">Selecciona las capacidades que este participante puede ofrecer.</p></div>
-      <div className="grid gap-2 p-5 sm:grid-cols-2">{especialidades.filter(e => e.activa).map(e => <label key={e.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"><input type="checkbox" checked={ids.includes(e.id)} onChange={ev => setSeleccionadas((ids.includes(e.id) ? ids.filter(x => x !== e.id) : [...ids, e.id]))} /><span><span className="block text-sm">{e.nombre}</span><span className="text-xs text-muted-foreground">{e.categoria || "Sin categoría"}</span></span></label>)}</div>
+      <div className="grid gap-2 p-5 sm:grid-cols-2">{opciones.filter(e => e.activa).map(e => <label key={e.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"><input type="checkbox" checked={ids.includes(e.id)} onChange={ev => setSeleccionadas((ids.includes(e.id) ? ids.filter(x => x !== e.id) : [...ids, e.id]))} /><span><span className="block text-sm">{e.nombre}</span><span className="text-xs text-muted-foreground">{e.categoria || "Sin categoría"}</span></span></label>)}</div>
       {isLoading ? <p className="px-5 pb-3 text-xs text-muted-foreground">Cargando asignaciones…</p> : null}
       <div className="flex justify-end gap-2 border-t border-border p-5"><Button variant="outline" onClick={onClose}>Cancelar</Button><Button disabled={guardando || isLoading} onClick={() => void guardar()}>{guardando ? "Guardando…" : `Guardar (${ids.length})`}</Button></div>
     </div>
