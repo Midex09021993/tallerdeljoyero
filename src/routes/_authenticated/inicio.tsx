@@ -12,7 +12,6 @@ import {
 import { useEffect, useMemo } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import {
-  areaRuta,
   rolEtiqueta,
   useSesion,
 } from "@/lib/auth";
@@ -169,7 +168,15 @@ function Inicio() {
           <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
             {cargaAreas.map(([area, Icono]) => {
               const cantidad = pedidos.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
-              const destino = area === "Área ventas" ? "/ventas-2" : areaRuta[area];
+              const destinos: Record<string, string> = {
+                "Diseño 3D": "/diseno-3d",
+                "Impresión 3D": "/impresion-3d",
+                Casting: "/casting",
+                Taller: "/taller",
+                "Corte Láser": "/corte-laser",
+                "Área ventas": "/ventas-2",
+              };
+              const destino = destinos[area];
               return (
                 <Link key={area} to={destino as never} className="rounded-2xl border border-border bg-card p-4 shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-raised">
                   <div className="flex items-center justify-between gap-3">
