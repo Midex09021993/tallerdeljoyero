@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
 import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
@@ -70,6 +70,7 @@ function OperarioPage() {
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
   const [areaSeleccionada, setAreaSeleccionada] = useState<string | null>(null);
+  const fichasRef = useRef<HTMLElement | null>(null);
 
   const areas = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
   const pedidosPorId = useMemo(
@@ -94,6 +95,14 @@ function OperarioPage() {
   const trabajosVisibles = areaSeleccionada
     ? trabajos.filter((trabajo) => areaCoincide(trabajo.area, areaSeleccionada))
     : trabajos;
+
+  const seleccionarArea = (area: string) => {
+    const siguiente = areaSeleccionada === area ? null : area;
+    setAreaSeleccionada(siguiente);
+    if (siguiente === "Taller") {
+      window.setTimeout(() => fichasRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    }
+  };
 
   return (
     <AppShell
@@ -130,7 +139,7 @@ function OperarioPage() {
             <button
               key={area}
               type="button"
-              onClick={() => setAreaSeleccionada((actual) => (actual === area ? null : area))}
+              onClick={() => seleccionarArea(area)}
               className={`min-h-[132px] rounded-2xl border p-5 text-left shadow-card transition focus-visible:outline-none ${areaSeleccionada === area ? "border-gold bg-gold/5" : "border-border bg-card hover:border-gold"}`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -187,17 +196,17 @@ function OperarioPage() {
         </button>
       </section>
 
-      <section className="mt-5">
+      <section ref={fichasRef} className="mt-5 scroll-mt-4">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Producción</p>
             <h2 className="mt-1 text-xl font-semibold">Fichas técnicas</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Aquí tienes directamente los trabajos que te corresponden.
+              Aquí tienes directamente los trabajos que te corresponden{areaSeleccionada ? ` en ${areaSeleccionada}` : ""}.
             </p>
           </div>
           <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold">
-            {trabajos.length}
+            {trabajosVisibles.length}
           </span>
         </div>
 
