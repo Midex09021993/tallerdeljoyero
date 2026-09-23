@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Calculator, Droplets, RotateCcw, Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
+import { useNavigate } from "@tanstack/react-router";
 import { CLAVES_CALCULADORAS, leerConfigYeso } from "@/lib/calculadoras-config";
 
 export const Route = createFileRoute("/_authenticated/taller")({
@@ -90,21 +91,18 @@ function calcularMezcla(
 function TallerPage() {
   const { data: sesion } = useSesion();
   if (sesion?.rolPrincipal === "operario") {
-    return (
-      <AreaOperario area="Taller">
-        <details className="hidden rounded-2xl border border-border bg-card shadow-card lg:block">
-          <summary className="cursor-pointer px-4 py-4 text-sm font-semibold">
-            Herramientas técnicas
-          </summary>
-          <div className="border-t border-border">
-            <CalculadoraYeso />
-          </div>
-        </details>
-      </AreaOperario>
-    );
+    return <AreaOperarioRedirect />;
   }
 
   return <TallerCompleto />;
+}
+
+function AreaOperarioRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    void navigate({ to: "/operario", replace: true });
+  }, [navigate]);
+  return null;
 }
 
 function TallerCompleto() {
