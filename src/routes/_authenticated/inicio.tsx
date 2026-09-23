@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import {
   rolEtiqueta,
   useSesion,
