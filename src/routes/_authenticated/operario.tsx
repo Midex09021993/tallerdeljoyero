@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
 import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
@@ -95,6 +95,19 @@ function OperarioPage() {
     setAreaSeleccionada((actual) => (actual === area ? null : area));
   };
 
+  useEffect(() => {
+    if (window.location.hash === "#fichas" && areas.some((area) => areaCoincide(area, "Taller"))) {
+      setAreaSeleccionada("Taller");
+    }
+  }, [areas]);
+
+  useEffect(() => {
+    if (window.location.hash !== "#fichas" || areaSeleccionada !== "Taller") return;
+    requestAnimationFrame(() => {
+      document.getElementById("fichas-tecnicas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [areaSeleccionada]);
+
   return (
     <AppShell
       titulo={`Hola ${nombre}`}
@@ -163,7 +176,7 @@ function OperarioPage() {
               </button>
 
               {seleccionado ? (
-                <div className="rounded-b-2xl border border-t-0 border-gold bg-card p-4 shadow-card">
+                <div id="fichas-tecnicas" className="scroll-mt-4 rounded-b-2xl border border-t-0 border-gold bg-card p-4 shadow-card">
                   <div className="mb-3 flex items-end justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">
