@@ -2831,6 +2831,18 @@ export type Database = {
           created_at: string
         }[]
       }
+      listar_participantes_servicio: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          nombre: string
+          especialidad: string | null
+        }[]
+      }
+      asignar_participante_externo_trabajo: {
+        Args: { _participante_id: string | null; _trabajo_id: string }
+        Returns: Json
+      }
       listar_operarios_por_area: {
         Args: { _sede_id: string }
         Returns: {
