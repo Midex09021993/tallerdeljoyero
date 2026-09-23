@@ -88,6 +88,13 @@ const CAPACIDADES_MENU = [
   "Taller",
 ] as const;
 
+const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
+  "/pedidos-2": "Pedidos",
+  "/cotizaciones": "Cotizaciones",
+  "/clientes": "Clientes",
+  "/ventas-2": "Ventas",
+};
+
 function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
   const { esDueno, sedeFiltro } = useSedeFiltroDueno();
 
@@ -139,6 +146,8 @@ function seccionesVisibles(
     const habilitadas = new Set(capacidades);
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
+      const capacidadComercial = CAPACIDADES_COMERCIALES_MENU[s.to];
+      if (capacidadComercial) return habilitadas.has(capacidadComercial);
       if (s.grupo !== "produccion" && s.to !== "/aurum-render") return true;
       if (!s.area || !CAPACIDADES_MENU.some((area) => areaCoincide(area, s.area))) return true;
       return habilitadas.has(CAPACIDADES_MENU.find((area) => areaCoincide(area, s.area)) ?? "");
