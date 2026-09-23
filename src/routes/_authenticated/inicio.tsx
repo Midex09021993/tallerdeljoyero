@@ -2,27 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
   ChevronRight,
-  ClipboardList,
   Clock3,
   Gem,
   Hammer,
   LayoutGrid,
   PackageCheck,
   Scissors,
-  UserRound,
-  Users,
-  Wrench,
 } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import {
-  areaCoincide,
-  areaRuta,
-  esVistaMovilTablet,
-  normalizarArea,
   rolEtiqueta,
-  useCerrarSesion,
   useSesion,
 } from "@/lib/auth";
 import {
@@ -48,7 +38,6 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
-  const cerrarSesion = useCerrarSesion();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,13 +46,10 @@ function Inicio() {
       navigate({ to: "/pedidos" });
       return;
     }
-    if (sesion.rolPrincipal === "operario" && !esVistaMovilTablet()) {
-      navigate({ to: "/operario" });
+    if (sesion.rolPrincipal === "operario") {
+      navigate({ to: "/operario", replace: true });
     }
   }, [isLoading, navigate, sesion]);
-
-  const esOperario = sesion?.rolPrincipal === "operario";
-  const areasOperario = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
 
   const resumen = useMemo(() => {
     const activos = pedidos.filter((p) => !esEstadoFinalPedido(p.estado));
@@ -101,100 +87,9 @@ function Inicio() {
     [],
   );
 
-  const modulos = useMemo(() => {
-    if (!esOperario) {
-      return [
-        { to: "/clientes", label: "Clientes", icono: Users, subtitulo: "Cartera y fichas" },
-        { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, subtitulo: "Propuestas comerciales" },
-        { to: "/pedidos-2", label: "Pedidos", icono: PackageCheck, subtitulo: "Centro operativo" },
-        { to: "/inventario", label: "Inventario", icono: Boxes, subtitulo: "Stock y movimientos" },
-        { to: "/ventas-2", label: "Ventas", icono: PackageCheck, subtitulo: "Centro comercial" },
-        { to: "/gestion", label: "Gestión", icono: Wrench, subtitulo: "Administración del taller" },
-      ];
-    }
+  // Los operarios usan exclusivamente /operario como bandeja única.
 
-    const tarjetas = areasOperario.map((area) => {
-      const asignados = pedidos.filter(
-        (pedido) =>
-          !esEstadoFinalPedido(pedido.estado) &&
-          !pedidoEnRecepcion(pedido.estado) &&
-          pedido.estado === "En Producción" &&
-          pedidoAsignadoAArea(pedido, area),
-      );
-      const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));
-      const urgentes = enTrabajo.filter(esUrgente);
-      return {
-        to: areaRuta[area],
-        label: area,
-        icono: iconosArea[area] ?? Hammer,
-        subtitulo: resumenOperario(asignados.length, enTrabajo.length, urgentes.length),
-      };
-    });
 
-    if (areasOperario.some((area) => areaCoincide(area, "Taller"))) {
-      tarjetas.push({
-        to: "/herramientas",
-        label: "Herramientas",
-        icono: Wrench,
-        subtitulo: "Calculadoras técnicas",
-      });
-    }
-
-    tarjetas.push({
-      to: "/perfil",
-      label: "Perfil",
-      icono: UserRound,
-      subtitulo: "Datos y sesión",
-    });
-
-    return tarjetas;
-  }, [areasOperario, esOperario, pedidos]);
-
-  if (esOperario) {
-    return (
-      <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:hidden">
-        <header className="mb-5 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Panel de acceso</p>
-            <h1 className="mt-1 truncate font-display text-3xl">Hola {sesion?.perfil.nombre?.trim() || "Usuario"}</h1>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {sesion ? rolEtiqueta[sesion.rolPrincipal] : "Cargando..."}
-            </p>
-          </div>
-          <button type="button" onClick={() => void cerrarSesion()} className="shrink-0 rounded-full border border-danger/25 bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">
-            Cerrar sesión
-          </button>
-        </header>
-
-        {cargandoPedidos ? (
-          <div className="mb-3 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground shadow-card">Cargando tus áreas...</div>
-        ) : null}
-
-        {!cargandoPedidos && areasOperario.length === 0 ? (
-          <div className="mb-3 rounded-2xl border border-border bg-card p-5 shadow-card">
-            <p className="text-base font-semibold">Sin áreas asignadas</p>
-            <p className="mt-2 text-sm text-muted-foreground">Pide a un administrador que asigne tus áreas de trabajo.</p>
-          </div>
-        ) : null}
-
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {modulos.map((modulo) => {
-            const Icono = modulo.icono;
-            return (
-              <button key={modulo.to} type="button" onClick={() => void navigate({ to: modulo.to as never })} className="min-h-[118px] rounded-2xl border border-gold/20 bg-card p-4 text-left shadow-card transition active:scale-[0.98] hover:border-gold/40 hover:shadow-raised focus-visible:border-gold focus-visible:outline-none">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-10 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold-deep">{Icono ? <Icono className="size-5" aria-hidden="true" /> : null}</span>
-                  <ChevronRight className="mt-1 size-5 text-muted-foreground" aria-hidden="true" />
-                </div>
-                <h2 className="mt-4 text-base font-semibold leading-tight">{modulo.label}</h2>
-                {modulo.subtitulo ? <p className="mt-2 text-xs font-medium leading-snug text-muted-foreground">{modulo.subtitulo}</p> : null}
-              </button>
-            );
-          })}
-        </section>
-      </main>
-    );
-  }
 
   return (
     <AppShell
@@ -301,25 +196,6 @@ function MetricHero({ label, value }: { label: string; value: number | string })
   );
 }
 
-const iconosArea: Record<string, typeof Hammer> = {
-  "Diseño 3D": LayoutGrid,
-  "Impresión 3D": Boxes,
-  "Corte Láser": Scissors,
-  Casting: Hammer,
-  Taller: Hammer,
-  "Área ventas": Boxes,
-  Pedidos: LayoutGrid,
-};
-
-function areasAsignadasUnicas(areas: string[]) {
-  const vistas = new Set<string>();
-  return areas.map(normalizarArea).filter((area) => areaRuta[area]).filter((area) => {
-    if (vistas.has(area)) return false;
-    vistas.add(area);
-    return true;
-  });
-}
-
 function diasHastaEntrega(pedido: PedidoSelector) {
   const fechaIso = pedido.fecha_entrega ?? pedido.entrega;
   if (!fechaIso) return null;
@@ -345,9 +221,3 @@ function textoEntrega(pedido: PedidoSelector) {
   return `Entrega en ${dias} d`;
 }
 
-function resumenOperario(pendientes: number, enArea: number, urgentes: number) {
-  const partes = [`${pendientes} pendiente${pendientes === 1 ? "" : "s"}`];
-  if (enArea > 0) partes.push(`${enArea} en área`);
-  if (urgentes > 0) partes.push(`${urgentes} urgente${urgentes === 1 ? "" : "s"}`);
-  return partes.join(" · ");
-}

@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
+import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
 import { useTrabajosDelOperario } from "@/hooks/use-pedidos-area";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
@@ -69,6 +69,7 @@ function OperarioPage() {
   const { trabajos, isLoading: isLoadingTrabajos, error: errorTrabajos } = useTrabajosDelOperario();
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
+  const [areaSeleccionada, setAreaSeleccionada] = useState<string | null>(null);
 
   const areas = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
   const pedidosPorId = useMemo(
@@ -90,6 +91,9 @@ function OperarioPage() {
   const isLoading = isLoadingTrabajos;
   const nombre = sesion?.perfil.nombre?.trim() || "Operario";
   const puedeHerramientas = areas.some((area) => areaCoincide(area, "Taller"));
+  const trabajosVisibles = areaSeleccionada
+    ? trabajos.filter((trabajo) => areaCoincide(trabajo.area, areaSeleccionada))
+    : trabajos;
 
   return (
     <AppShell
@@ -126,8 +130,8 @@ function OperarioPage() {
             <button
               key={area}
               type="button"
-              onClick={() => void navigate({ to: areaRuta[area] as never })}
-              className="min-h-[132px] rounded-2xl border border-border bg-card p-5 text-left shadow-card transition hover:border-gold focus-visible:border-gold focus-visible:outline-none"
+              onClick={() => setAreaSeleccionada((actual) => (actual === area ? null : area))}
+              className={`min-h-[132px] rounded-2xl border p-5 text-left shadow-card transition focus-visible:outline-none ${areaSeleccionada === area ? "border-gold bg-gold/5" : "border-border bg-card hover:border-gold"}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="grid size-11 place-items-center rounded-2xl bg-ink text-gold">
@@ -183,7 +187,7 @@ function OperarioPage() {
         </button>
       </section>
 
-      <section className="mt-5 lg:hidden">
+      <section className="mt-5">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Producción</p>
@@ -197,14 +201,14 @@ function OperarioPage() {
           </span>
         </div>
 
-        {trabajos.length === 0 && !isLoadingTrabajos ? (
+        {trabajosVisibles.length === 0 && !isLoadingTrabajos ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
             No tienes fichas técnicas activas en este momento. Si ya te asignaron un trabajo,
             actualiza la pantalla o revisa con administración que tu área y sede coincidan con la operación.
           </div>
         ) : (
           <div className="space-y-3">
-            {trabajos.map((trabajo) => {
+            {trabajosVisibles.map((trabajo) => {
               const pedido = pedidosPorId.get(trabajo.pedido_id);
               const asignado = trabajo.responsable_user_id === sesion?.user.id;
               const material = pedido?.material?.trim() || "—";
