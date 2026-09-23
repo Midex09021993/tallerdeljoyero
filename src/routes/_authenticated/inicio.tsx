@@ -149,51 +149,9 @@ function Inicio() {
     return tarjetas;
   }, [areasOperario, esOperario, pedidos]);
 
-  if (esOperario) {
-    return (
-      <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:hidden">
-        <header className="mb-5 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Panel de acceso</p>
-            <h1 className="mt-1 truncate font-display text-3xl">Hola {sesion?.perfil.nombre?.trim() || "Usuario"}</h1>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {sesion ? rolEtiqueta[sesion.rolPrincipal] : "Cargando..."}
-            </p>
-          </div>
-          <button type="button" onClick={() => void cerrarSesion()} className="shrink-0 rounded-full border border-danger/25 bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">
-            Cerrar sesión
-          </button>
-        </header>
+  // Los operarios usan exclusivamente /operario como bandeja única.
 
-        {cargandoPedidos ? (
-          <div className="mb-3 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground shadow-card">Cargando tus áreas...</div>
-        ) : null}
 
-        {!cargandoPedidos && areasOperario.length === 0 ? (
-          <div className="mb-3 rounded-2xl border border-border bg-card p-5 shadow-card">
-            <p className="text-base font-semibold">Sin áreas asignadas</p>
-            <p className="mt-2 text-sm text-muted-foreground">Pide a un administrador que asigne tus áreas de trabajo.</p>
-          </div>
-        ) : null}
-
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {modulos.map((modulo) => {
-            const Icono = modulo.icono;
-            return (
-              <button key={modulo.to} type="button" onClick={() => void navigate({ to: modulo.to as never })} className="min-h-[118px] rounded-2xl border border-gold/20 bg-card p-4 text-left shadow-card transition active:scale-[0.98] hover:border-gold/40 hover:shadow-raised focus-visible:border-gold focus-visible:outline-none">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-10 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold-deep">{Icono ? <Icono className="size-5" aria-hidden="true" /> : null}</span>
-                  <ChevronRight className="mt-1 size-5 text-muted-foreground" aria-hidden="true" />
-                </div>
-                <h2 className="mt-4 text-base font-semibold leading-tight">{modulo.label}</h2>
-                {modulo.subtitulo ? <p className="mt-2 text-xs font-medium leading-snug text-muted-foreground">{modulo.subtitulo}</p> : null}
-              </button>
-            );
-          })}
-        </section>
-      </main>
-    );
-  }
 
   return (
     <AppShell
