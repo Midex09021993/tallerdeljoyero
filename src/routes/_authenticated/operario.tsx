@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
+import { areaCoincide, normalizarArea, useSesion } from "@/lib/auth";
 import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
 import { useTrabajosDelOperario } from "@/hooks/use-pedidos-area";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
