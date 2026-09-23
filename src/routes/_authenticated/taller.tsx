@@ -1,13 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Calculator, Droplets, RotateCcw, Check } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
-import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
+import { PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
-import { useNavigate } from "@tanstack/react-router";
 import { CLAVES_CALCULADORAS, leerConfigYeso } from "@/lib/calculadoras-config";
 
 export const Route = createFileRoute("/_authenticated/taller")({
