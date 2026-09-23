@@ -138,6 +138,7 @@ function seccionesVisibles(
     const habilitadas = new Set(capacidades ?? []);
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
+      if (s.grupo !== "produccion" && s.to !== "/aurum-render") return true;
       if (!s.area || !CAPACIDADES_MENU.some((area) => areaCoincide(area, s.area))) return true;
       return habilitadas.has(CAPACIDADES_MENU.find((area) => areaCoincide(area, s.area)) ?? "");
     });
@@ -196,8 +197,13 @@ export function AppShell({
 }) {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
-  const { data: capacidadesMenu = [] } = useCapacidadesMenu(sesion);
-  const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin, capacidadesMenu);
+  const { data: capacidadesMenu, isSuccess: capacidadesCargadas } = useCapacidadesMenu(sesion);
+  const visibles = seccionesVisibles(
+    sesion?.roles,
+    sesion?.areas,
+    sesion?.esAdmin,
+    capacidadesCargadas ? capacidadesMenu : undefined,
+  );
   const visiblesOrdenadas = ordenarMenu(visibles);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
