@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
 import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
@@ -70,7 +70,6 @@ function OperarioPage() {
   const navigate = useNavigate();
   const { filtrarPedidos } = useSedeFiltroDueno();
   const [areaSeleccionada, setAreaSeleccionada] = useState<string | null>(null);
-  const fichasRef = useRef<HTMLElement | null>(null);
 
   const areas = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
   const pedidosPorId = useMemo(
@@ -97,11 +96,7 @@ function OperarioPage() {
     : trabajos;
 
   const seleccionarArea = (area: string) => {
-    const siguiente = areaSeleccionada === area ? null : area;
-    setAreaSeleccionada(siguiente);
-    if (siguiente === "Taller") {
-      window.setTimeout(() => fichasRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
-    }
+    setAreaSeleccionada((actual) => (actual === area ? null : area));
   };
 
   return (
@@ -135,31 +130,161 @@ function OperarioPage() {
 
         {conteos.map(({ area, asignados, urgentes }) => {
           const Icono = iconosArea[area] ?? Hammer;
+          const seleccionado = areaSeleccionada === area;
+          const trabajosArea = trabajos.filter((trabajo) => areaCoincide(trabajo.area, area));
+
           return (
-            <button
+            <article
               key={area}
-              type="button"
-              onClick={() => seleccionarArea(area)}
-              className={`min-h-[132px] rounded-2xl border p-5 text-left shadow-card transition focus-visible:outline-none ${areaSeleccionada === area ? "border-gold bg-gold/5" : "border-border bg-card hover:border-gold"}`}
+              className={`rounded-2xl transition ${seleccionado ? "sm:col-span-2 xl:col-span-3" : ""}`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <span className="grid size-11 place-items-center rounded-2xl bg-ink text-gold">
-                  <Icono className="size-5" aria-hidden="true" />
-                </span>
-                <ChevronRight className="mt-1 size-5 text-muted-foreground" aria-hidden="true" />
-              </div>
-              <h2 className="mt-4 text-xl font-semibold">{area}</h2>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                <span className="rounded-full bg-surface-muted px-3 py-1.5 text-muted-foreground">
-                  {asignados.length} pendiente{asignados.length === 1 ? "" : "s"}
-                </span>
-                {urgentes.length > 0 ? (
-                  <span className="rounded-full bg-danger-soft px-3 py-1.5 text-danger">
-                    {urgentes.length} urgente{urgentes.length === 1 ? "" : "s"}
+              <button
+                type="button"
+                onClick={() => seleccionarArea(area)}
+                className={`w-full min-h-[132px] rounded-2xl border p-5 text-left shadow-card transition focus-visible:outline-none ${seleccionado ? "rounded-b-none border-gold bg-gold/5" : "border-border bg-card hover:border-gold"}`}
+                aria-expanded={seleccionado}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="grid size-11 place-items-center rounded-2xl bg-ink text-gold">
+                    <Icono className="size-5" aria-hidden="true" />
                   </span>
-                ) : null}
-              </div>
-            </button>
+                  <ChevronRight
+                    className={`mt-1 size-5 text-muted-foreground transition-transform ${seleccionado ? "rotate-90" : ""}`}
+                    aria-hidden="true"
+                  />
+                </div>
+                <h2 className="mt-4 text-xl font-semibold">{area}</h2>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className="rounded-full bg-surface-muted px-3 py-1.5 text-muted-foreground">
+                    {asignados.length} pendiente{asignados.length === 1 ? "" : "s"}
+                  </span>
+                  {urgentes.length > 0 ? (
+                    <span className="rounded-full bg-danger-soft px-3 py-1.5 text-danger">
+                      {urgentes.length} urgente{urgentes.length === 1 ? "" : "s"}
+                    </span>
+                  ) : null}
+                </div>
+              </button>
+
+              {seleccionado ? (
+                <div className="rounded-b-2xl border border-t-0 border-gold bg-card p-4 shadow-card">
+                  <div className="mb-3 flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">
+                        Producción · {area}
+                      </p>
+                      <h3 className="mt-1 text-lg font-semibold">Fichas técnicas</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Aquí están los trabajos asignados a esta área.
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold">
+                      {trabajosArea.length}
+                    </span>
+                  </div>
+
+                  {trabajosArea.length === 0 && !isLoadingTrabajos ? (
+                    <div className="rounded-2xl border border-dashed border-border bg-surface-muted/50 p-5 text-sm text-muted-foreground">
+                      No hay fichas técnicas activas en {area} en este momento.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {trabajosArea.map((trabajo) => {
+                        const pedido = pedidosPorId.get(trabajo.pedido_id);
+                        const asignado = trabajo.responsable_user_id === sesion?.user.id;
+                        const material = pedido?.material?.trim() || "—";
+                        const piedras = pedido?.piedras?.trim() || "—";
+                        const talla = pedido?.talla?.trim() || "—";
+                        const peso = pedido?.peso_estimado?.trim() || "—";
+                        const cantidad = pedido?.cantidad_piezas || 1;
+                        const entrega = pedido ? diasHastaEntrega(pedido) : null;
+
+                        return (
+                          <article
+                            key={trabajo.id}
+                            className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
+                              className="w-full text-left"
+                              aria-label={`Abrir ficha técnica de ${trabajo.titulo || "trabajo sin título"}`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-lg font-semibold">
+                                    {trabajo.titulo || pedido?.referencia || "Trabajo sin título"}
+                                  </p>
+                                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                                    {pedido?.referencia || "Pedido"} · {trabajo.area}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase text-gold-deep">
+                                  {trabajo.estado === "en_proceso"
+                                    ? "En proceso"
+                                    : trabajo.estado === "bloqueado"
+                                      ? "Bloqueado"
+                                      : "Pendiente"}
+                                </span>
+                              </div>
+
+                              <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">
+                                  Ficha técnica
+                                </p>
+                                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                  <div className="rounded-xl bg-card p-2.5">
+                                    <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Material</dt>
+                                    <dd className="mt-1 truncate font-medium">{material}</dd>
+                                  </div>
+                                  <div className="rounded-xl bg-card p-2.5">
+                                    <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Piedras</dt>
+                                    <dd className="mt-1 truncate font-medium">{piedras}</dd>
+                                  </div>
+                                  <div className="rounded-xl bg-card p-2.5">
+                                    <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Talla</dt>
+                                    <dd className="mt-1 truncate font-medium">{talla}</dd>
+                                  </div>
+                                  <div className="rounded-xl bg-card p-2.5">
+                                    <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Peso</dt>
+                                    <dd className="mt-1 truncate font-medium">{peso}</dd>
+                                  </div>
+                                  <div className="rounded-xl bg-card p-2.5">
+                                    <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cantidad</dt>
+                                    <dd className="mt-1 truncate font-medium">{cantidad}</dd>
+                                  </div>
+                                  <div className="rounded-xl bg-card p-2.5">
+                                    <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Entrega</dt>
+                                    <dd className="mt-1 truncate font-medium">
+                                      {entrega === null ? "—" : entrega < 0 ? "Vencida" : entrega === 0 ? "Hoy" : `En ${entrega} días`}
+                                    </dd>
+                                  </div>
+                                </dl>
+                              </div>
+
+                              {trabajo.descripcion ? (
+                                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                                  {trabajo.descripcion}
+                                </p>
+                              ) : null}
+
+                              <div className="mt-3 flex items-center justify-between gap-3">
+                                <span className="text-[11px] text-muted-foreground">
+                                  {asignado ? "Asignado a ti" : "Disponible para tu área"}
+                                </span>
+                                <span className="rounded-full bg-gold px-3 py-2 text-xs font-bold text-gold-foreground">
+                                  Abrir ficha técnica
+                                </span>
+                              </div>
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </article>
           );
         })}
 
@@ -196,133 +321,6 @@ function OperarioPage() {
         </button>
       </section>
 
-      <section ref={fichasRef} className="mt-5 scroll-mt-4">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Producción</p>
-            <h2 className="mt-1 text-xl font-semibold">Fichas técnicas</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Aquí tienes directamente los trabajos que te corresponden{areaSeleccionada ? ` en ${areaSeleccionada}` : ""}.
-            </p>
-          </div>
-          <span className="rounded-full bg-surface-muted px-3 py-1.5 text-xs font-bold">
-            {trabajosVisibles.length}
-          </span>
-        </div>
-
-        {trabajosVisibles.length === 0 && !isLoadingTrabajos ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-            No tienes fichas técnicas activas en este momento. Si ya te asignaron un trabajo,
-            actualiza la pantalla o revisa con administración que tu área y sede coincidan con la operación.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {trabajosVisibles.map((trabajo) => {
-              const pedido = pedidosPorId.get(trabajo.pedido_id);
-              const asignado = trabajo.responsable_user_id === sesion?.user.id;
-              const material = pedido?.material?.trim() || "—";
-              const piedras = pedido?.piedras?.trim() || "—";
-              const talla = pedido?.talla?.trim() || "—";
-              const peso = pedido?.peso_estimado?.trim() || "—";
-              const cantidad = pedido?.cantidad_piezas || 1;
-              const entrega = pedido ? diasHastaEntrega(pedido) : null;
-
-              return (
-                <article
-                  key={trabajo.id}
-                  className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card"
-                >
-                  <button
-                    type="button"
-                    onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
-                    className="w-full text-left"
-                    aria-label={`Abrir ficha técnica de ${trabajo.titulo || "trabajo sin título"}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-lg font-semibold">
-                          {trabajo.titulo || pedido?.referencia || "Trabajo sin título"}
-                        </p>
-                        <p className="mt-1 truncate text-xs text-muted-foreground">
-                          {pedido?.referencia || "Pedido"} · {trabajo.area}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase text-gold-deep">
-                        {trabajo.estado === "en_proceso"
-                          ? "En proceso"
-                          : trabajo.estado === "bloqueado"
-                            ? "Bloqueado"
-                            : "Pendiente"}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">
-                        Ficha técnica
-                      </p>
-                      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-xl bg-card p-2.5">
-                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Material
-                          </dt>
-                          <dd className="mt-1 truncate font-medium">{material}</dd>
-                        </div>
-                        <div className="rounded-xl bg-card p-2.5">
-                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Piedras
-                          </dt>
-                          <dd className="mt-1 truncate font-medium">{piedras}</dd>
-                        </div>
-                        <div className="rounded-xl bg-card p-2.5">
-                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Talla
-                          </dt>
-                          <dd className="mt-1 truncate font-medium">{talla}</dd>
-                        </div>
-                        <div className="rounded-xl bg-card p-2.5">
-                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Peso
-                          </dt>
-                          <dd className="mt-1 truncate font-medium">{peso}</dd>
-                        </div>
-                        <div className="rounded-xl bg-card p-2.5">
-                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Cantidad
-                          </dt>
-                          <dd className="mt-1 truncate font-medium">{cantidad}</dd>
-                        </div>
-                        <div className="rounded-xl bg-card p-2.5">
-                          <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Entrega
-                          </dt>
-                          <dd className="mt-1 truncate font-medium">
-                            {entrega === null ? "—" : entrega < 0 ? "Vencida" : entrega === 0 ? "Hoy" : `En ${entrega} días`}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
-
-                    {trabajo.descripcion ? (
-                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                        {trabajo.descripcion}
-                      </p>
-                    ) : null}
-
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-muted-foreground">
-                        {asignado ? "Asignado a ti" : "Disponible para tu área"}
-                      </span>
-                      <span className="rounded-full bg-gold px-3 py-2 text-xs font-bold text-gold-foreground">
-                        Abrir ficha técnica
-                      </span>
-                    </div>
-                  </button>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
     </AppShell>
   );
 }
