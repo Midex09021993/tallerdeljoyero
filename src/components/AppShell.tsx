@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   Boxes,
   ClipboardList,
@@ -17,6 +18,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionProduccion";
 
 type Seccion = {
@@ -77,15 +80,68 @@ export const modulosAdminMovil = secciones.filter(
   (s) => !["/inicio", "/monitor", "/operario", "/perfil"].includes(s.to),
 );
 
+const CAPACIDADES_MENU = [
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Taller",
+] as const;
+
+function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
+
+  return useQuery({
+    queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
+    enabled: Boolean(sesion?.esAdmin),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sede_especialidades")
+        .select("sede_id, especialidades!inner(nombre)");
+      if (error) throw error;
+
+      const filas = (data ?? []) as Array<{
+        sede_id: string;
+        especialidades: { nombre: string } | { nombre: string }[] | null;
+      }>;
+
+      const sedeObjetivo = esDueno && sedeFiltro !== TODAS_LAS_SEDES
+        ? sedeFiltro
+        : !esDueno
+          ? sesion?.sede?.id ?? null
+          : null;
+
+      const nombres = filas
+        .filter((fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo)
+        .flatMap((fila) => {
+          if (!fila.especialidades) return [];
+          return Array.isArray(fila.especialidades)
+            ? fila.especialidades.map((e) => e.nombre)
+            : [fila.especialidades.nombre];
+        });
+
+      return [...new Set(nombres)];
+    },
+  });
+}
+
 function seccionesVisibles(
   roles: Rol[] | undefined,
   areas: string[] | undefined,
   esAdmin: boolean | undefined,
+  capacidades: string[] | undefined,
 ): Seccion[] {
   if (!roles) return [];
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
-  if (esAdmin) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
+  if (esAdmin) {
+    const habilitadas = new Set(capacidades ?? []);
+    return secciones.filter((s) => {
+      if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
+      if (!s.area || !CAPACIDADES_MENU.some((area) => areaCoincide(area, s.area))) return true;
+      return habilitadas.has(CAPACIDADES_MENU.find((area) => areaCoincide(area, s.area)) ?? "");
+    });
+  }
   // El operario usa una única bandeja: /operario. Las áreas se seleccionan
   // dentro de esa pantalla para evitar duplicar interfaces (/taller, /casting, etc.).
   // Herramientas y Perfil permanecen como destinos independientes.
@@ -140,7 +196,8 @@ export function AppShell({
 }) {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
-  const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin);
+  const { data: capacidadesMenu = [] } = useCapacidadesMenu(sesion);
+  const visibles = seccionesVisibles(sesion?.roles, sesion?.areas, sesion?.esAdmin, capacidadesMenu);
   const visiblesOrdenadas = ordenarMenu(visibles);
   const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
