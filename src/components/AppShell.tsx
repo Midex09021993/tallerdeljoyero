@@ -95,6 +95,13 @@ const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
   "/ventas-2": "Ventas",
 };
 
+const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
+  "/inventario": "Inventario",
+  "/compras": "Compras",
+  "/herramientas": "Herramientas",
+  "/migracion": "Migración",
+};
+
 function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
   const { esDueno, sedeFiltro } = useSedeFiltroDueno();
 
@@ -148,6 +155,11 @@ function seccionesVisibles(
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
       const capacidadComercial = CAPACIDADES_COMERCIALES_MENU[s.to];
       if (capacidadComercial) return habilitadas.has(capacidadComercial);
+      const capacidadSistema = CAPACIDADES_SISTEMA_MENU[s.to];
+      if (capacidadSistema) return habilitadas.has(capacidadSistema);
+      // Gestión siempre permanece visible porque es el lugar desde donde
+      // el dueño/gerente puede volver a configurar las capacidades del taller.
+      if (s.to === "/gestion") return true;
       if (s.grupo !== "produccion" && s.to !== "/aurum-render") return true;
       if (!s.area || !CAPACIDADES_MENU.some((area) => areaCoincide(area, s.area))) return true;
       return habilitadas.has(CAPACIDADES_MENU.find((area) => areaCoincide(area, s.area)) ?? "");
