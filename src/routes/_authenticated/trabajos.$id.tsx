@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, CircleAlert, FileText, Link2, Play, Paperclip } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Play, Paperclip } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
@@ -210,7 +210,7 @@ function TrabajoOperativoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pedidos")
-        .select("id, referencia, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_entrega, notas, ruta, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones")
+        .select("id, referencia, pieza, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_ingreso, fecha_entrega, origen, area_actual, area_desde, notas, ruta, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sede_id, sedes(nombre)")
         .eq("id", trabajo!.pedido_id)
         .maybeSingle();
       if (error) throw error;
@@ -325,6 +325,8 @@ function TrabajoOperativoPage() {
     ]);
   };
   const activo = !["completado", "cancelado"].includes(trabajo.estado);
+  const sedeNombre = Array.isArray(pedidoTrabajo?.sedes) ? pedidoTrabajo.sedes[0]?.nombre : pedidoTrabajo?.sedes?.nombre;
+  const nombrePieza = pedidoTrabajo?.pieza || pedidoTrabajo?.trabajo || trabajo.titulo || "—";
 
   return (
     <AppShell
@@ -334,300 +336,116 @@ function TrabajoOperativoPage() {
       encabezadoMovilCompacto
       atrasMovil={{ to: "/operario" }}
     >
-      <div className="mx-auto max-w-3xl space-y-5">
-        <button type="button" onClick={() => void navigate({ to: "/operario" })} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Mi trabajo
-        </button>
+      <div className="mx-auto max-w-3xl space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" onClick={() => void navigate({ to: "/operario" })} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> Mi trabajo
+          </button>
+          <span className="rounded-full border border-gold/20 bg-gold/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase text-gold-deep">{trabajo.area}</span>
+        </div>
+
+        <section className="rounded-3xl border-2 border-gold/30 bg-gradient-to-br from-card to-gold/[0.05] p-5 shadow-raised">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">Ficha técnica de fabricación</p>
+          <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0"><h1 className="text-2xl font-semibold">{nombrePieza}</h1><p className="mt-1 text-sm text-muted-foreground">{pedidoTrabajo?.referencia ?? "Pedido"} · {trabajo.area}</p></div>
+            <span className="rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-bold">{estadoLabel[trabajo.estado]}</span>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {puedeTomar ? <button type="button" onClick={() => void tomarTrabajo()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground">Tomar este trabajo</button> : null}
+            {trabajo.estado === "pendiente" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
+          </div>
+        </section>
+
+        <details open className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">1</span><span className="text-sm font-bold">Identificación completa</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5"><dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {[
+              ["Trabajo / pieza", nombrePieza], ["Referencia", pedidoTrabajo?.referencia || "—"], ["Área actual", pedidoTrabajo?.area_actual || trabajo.area],
+              ["Sede / taller", sedeNombre || "—"], ["Origen", pedidoTrabajo?.origen || "—"], ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
+              ["Fecha de ingreso", pedidoTrabajo?.fecha_ingreso || "—"], ["Fecha de entrega", pedidoTrabajo?.fecha_entrega || "—"], ["Prioridad", trabajo.prioridad],
+              ["Ubicación", trabajo.ubicacion || "Por definir"], ["Fecha planificada", trabajo.fecha_planificada || "Sin fecha"], ["Tipo de trabajo", trabajo.tipo === "externo" ? "Externo" : "Interno"],
+            ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-surface-sunken p-3"><dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt><dd className="mt-1 text-sm font-semibold">{valor}</dd></div>)}
+          </dl></div>
+        </details>
+
+        <details open className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">2</span><span className="text-sm font-bold">Especificaciones de la pieza</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ["Trabajo", pedidoTrabajo?.trabajo || "—"], ["Pieza", pedidoTrabajo?.pieza || "—"], ["Material / metal", pedidoTrabajo?.material || "—"],
+                ["Talla", pedidoTrabajo?.talla || "—"], ["Piedras", pedidoTrabajo?.piedras || "—"], ["Peso estimado", pedidoTrabajo?.peso_estimado || "—"], ["Cantidad de piezas", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
+              ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-background p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{etiqueta}</p><p className="mt-1 text-sm font-semibold">{valor}</p></div>)}
+            </div>
+            {pedidoTrabajo?.notas ? <div className="mt-3 rounded-2xl border border-border bg-background p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Notas y especificaciones del pedido</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{pedidoTrabajo.notas}</p></div> : null}
+          </div>
+        </details>
+
+        <details open className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">3</span><span className="text-sm font-bold">Instrucciones de fabricación</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5">
+            <div className="rounded-2xl border border-gold/20 bg-gold/[0.03] p-4"><p className="whitespace-pre-wrap text-sm leading-6">{trabajo.descripcion || "No hay instrucciones adicionales registradas."}</p></div>
+            {trabajo.notas ? <div className="mt-3 rounded-2xl border border-border bg-background p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Notas de la operación</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{trabajo.notas}</p></div> : null}
+          </div>
+        </details>
+
+        <details className="group overflow-hidden rounded-2xl border border-success/20 bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-success/[0.04] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-success/10 text-xs font-bold text-success">4</span><span className="text-sm font-bold">Diseño y archivos <span className="ml-1 text-xs text-muted-foreground">({archivosPedido.length})</span></span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-success/20 p-5">
+            <div className="rounded-2xl border border-success/20 bg-success/[0.03] p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-wider text-success">Archivo vigente para fabricación</p><p className="mt-1 text-sm font-semibold">Diseño aprobado</p></div><span className="rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-bold text-success">{archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}</span></div>
+              {archivosVigentes.length > 0 ? <div className="mt-3 space-y-2">{archivosVigentes.map((archivo) => <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-background p-3"><span className="min-w-0"><span className="block truncate text-sm font-semibold">{archivo.nombre}</span><span className="mt-1 block text-[10px] text-muted-foreground">Versión {archivo.version} · {archivo.grupo || "Técnico"}</span></span><span className="shrink-0 text-xs font-semibold text-success">Abrir</span></a>)}</div> : <p className="mt-3 text-sm text-muted-foreground">Aún no hay un archivo aprobado para fabricación.</p>}
+            </div>
+            <div className="mt-4 space-y-2">{archivosPedido.map((archivo) => <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl border border-border bg-background p-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary"><Link2 className="size-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{archivo.nombre}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{archivo.tipo} · {archivo.grupo || "Técnico"} · v{archivo.version}</span></span><span className="text-xs font-semibold text-muted-foreground">Abrir</span></a>)}{archivosPedido.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay archivos técnicos en el pedido.</p> : null}</div>
+          </div>
+        </details>
+
+        <details className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">5</span><span className="text-sm font-bold">Ruta de producción</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5">{Array.isArray(pedidoTrabajo?.ruta) && pedidoTrabajo.ruta.length > 0 ? <div className="flex flex-wrap gap-2">{pedidoTrabajo.ruta.map((area) => <span key={area} className={area === trabajo.area ? "rounded-full bg-gold px-3 py-1.5 text-[10px] font-bold text-gold-foreground" : "rounded-full bg-surface-muted px-3 py-1.5 text-[10px] font-semibold text-muted-foreground"}>{area === trabajo.area ? "→ " + area + " · AQUÍ" : area}</span>)}</div> : <p className="text-sm text-muted-foreground">No hay una ruta de producción registrada.</p>}</div>
+        </details>
+
+        <details className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">6</span><span className="text-sm font-bold">Materiales previstos <span className="ml-1 text-xs text-muted-foreground">({materialesPlanificados.length})</span></span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5">{materialesPlanificados.length > 0 ? <div className="space-y-2">{materialesPlanificados.map((item) => <div key={item.id} className="rounded-xl border border-border bg-background p-3"><p className="text-sm font-semibold">{item.inventario?.material || "Material"}</p><p className="mt-1 text-xs text-muted-foreground">{item.cantidad_planificada} {item.unidad || item.inventario?.unidad || ""}{item.inventario?.codigo ? " · " + item.inventario.codigo : ""}</p>{item.notas ? <p className="mt-1 text-xs text-muted-foreground">{item.notas}</p> : null}</div>)}</div> : <p className="text-sm text-muted-foreground">No hay materiales planificados para este pedido.</p>}</div>
+        </details>
+
+        <details className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">7</span><span className="text-sm font-bold">Planificación</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5"><dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">{[
+            ["Entrega", pedidoTrabajo?.fecha_entrega || "—"], ["Ingreso", pedidoTrabajo?.fecha_ingreso || "—"], ["Fecha planificada", trabajo.fecha_planificada || "—"],
+            ["Inicio real", trabajo.fecha_inicio ? new Date(trabajo.fecha_inicio).toLocaleString() : "—"], ["Fin real", trabajo.fecha_fin ? new Date(trabajo.fecha_fin).toLocaleString() : "—"], ["Prioridad", trabajo.prioridad],
+          ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-surface-sunken p-3"><dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt><dd className="mt-1 text-sm font-semibold">{valor}</dd></div>)}</dl></div>
+        </details>
+
+        {trabajo.area === "Corte Láser" && (pedidoTrabajo?.corte_texto || pedidoTrabajo?.corte_tipografia || pedidoTrabajo?.corte_ubicacion || pedidoTrabajo?.corte_observaciones) ? <details open className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">8</span><span className="text-sm font-bold">Especificaciones especiales · Corte Láser</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5 grid gap-2 sm:grid-cols-2 text-sm"><p><span className="font-semibold">Texto:</span> {pedidoTrabajo.corte_texto || "—"}</p><p><span className="font-semibold">Tipografía:</span> {pedidoTrabajo.corte_tipografia || "—"}</p><p><span className="font-semibold">Ubicación:</span> {pedidoTrabajo.corte_ubicacion || "—"}</p><p className="sm:col-span-2"><span className="font-semibold">Observaciones:</span> {pedidoTrabajo.corte_observaciones || "—"}</p></div>
+        </details> : null}
+
+        <details className="group overflow-hidden rounded-2xl border border-gold/25 bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">9</span><span className="text-sm font-bold">Tiempo de producción</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tiempo acumulado</p><h2 className="mt-1 text-xl font-semibold">{Math.floor(segundosTotales / 3600)}h {Math.floor((segundosTotales % 3600) / 60)}m</h2></div><span className={sesionActiva ? "rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-semibold text-success" : "rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground"}>{sesionActiva ? "Reloj activo" : "Pausado"}</span></div>{puedeGestionar ? <div className="mt-4 flex flex-wrap gap-2">{trabajo.estado === "en_proceso" && !sesionActiva ? <button type="button" onClick={() => void iniciarReloj()} className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs font-semibold text-gold-deep">▶ Iniciar reloj</button> : null}{sesionActiva ? <button type="button" onClick={() => void detenerReloj()} className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs font-semibold text-warning">⏸ Pausar reloj</button> : null}</div> : null}</div>
+        </details>
+
+        <details className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-surface-sunken px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">10</span><span className="text-sm font-bold">Incidencias</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <div className="border-t border-border p-5"><div className="space-y-3">{incidencias.map((item) => <div key={item.id} className="rounded-xl border border-border bg-background p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-semibold">{item.tipo}</p><p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.descripcion}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold uppercase">{item.estado}</span></div>{item.resolucion ? <p className="mt-3 rounded-xl bg-success-soft p-3 text-xs text-success">Resolución: {item.resolucion}</p> : null}</div>)}{incidencias.length === 0 ? <p className="text-sm text-muted-foreground">No hay incidencias registradas.</p> : null}</div>
+            {activo ? <div className="mt-4 rounded-2xl border border-warning/20 bg-warning-soft/40 p-4"><p className="text-xs font-semibold">¿Hay algo que impida continuar?</p><div className="mt-3 grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_auto]"><select value={incidencia.tipo} onChange={(e) => setIncidencia((v) => ({ ...v, tipo: e.target.value }))} className="min-h-10 rounded-xl border border-border bg-background px-3 text-sm"><option value="general">General</option><option value="material">Material</option><option value="diseño">Diseño</option><option value="máquina">Máquina</option><option value="cliente">Cliente</option></select><input value={incidencia.descripcion} onChange={(e) => setIncidencia((v) => ({ ...v, descripcion: e.target.value }))} placeholder="Describe brevemente el problema…" className="min-h-10 rounded-xl border border-border bg-background px-3 text-sm" /><button type="button" disabled={!incidencia.descripcion.trim() || reportandoIncidencia} onClick={() => void reportarIncidencia()} className="rounded-xl bg-warning px-4 py-2.5 text-xs font-semibold text-warning-foreground disabled:opacity-50">{reportandoIncidencia ? "Enviando…" : "Reportar"}</button></div></div> : null}
+          </div>
+        </details>
 
         <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Pedido asociado</p>
-              <h2 className="mt-1 text-lg font-semibold">{pedidoTrabajo?.referencia ?? "Pedido"}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {pedidoTrabajo?.trabajo || "Trabajo sin descripción"}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {puedeTomar ? (
-                <button
-                  type="button"
-                  onClick={() => void tomarTrabajo()}
-                  className="rounded-xl bg-gold px-3 py-2 text-xs font-bold text-gold-foreground"
-                >
-                  Tomar este trabajo
-                </button>
-              ) : null}
-              {sesion?.esAdmin ? (
-                <button
-                  type="button"
-                  onClick={() => void navigate({ to: "/pedidos/$id", params: { id: trabajo.pedido_id }, search: { from: undefined } })}
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold hover:border-primary/40 hover:text-primary"
-                >
-                  Ver pedido
-                </button>
-              ) : null}
-            </div>
-          </div>
-          <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {[
-              ["Material", pedidoTrabajo?.material || "—"],
-              ["Talla", pedidoTrabajo?.talla || "—"],
-              ["Piedras", pedidoTrabajo?.piedras || "—"],
-              ["Peso", pedidoTrabajo?.peso_estimado || "—"],
-              ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
-            ].map(([etiqueta, valor]) => (
-              <div key={etiqueta} className="rounded-xl bg-surface-sunken p-3">
-                <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt>
-                <dd className="mt-1 truncate text-sm font-medium">{valor}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Acciones</p><h2 className="mt-1 text-lg font-semibold">Ejecutar trabajo</h2></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{estadoLabel[trabajo.estado]}</span></div>
+          {activo && puedeGestionar ? <div className="mt-4 flex flex-wrap gap-2">
+            {trabajo.estado === "pendiente" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-3 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
+            {trabajo.estado === "en_proceso" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("completado")} className="inline-flex items-center gap-2 rounded-xl bg-success px-4 py-3 text-xs font-semibold text-success-foreground disabled:opacity-50"><Check className="size-4" /> Completar trabajo</button> : null}
+            {trabajo.estado !== "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("bloqueado")} className="inline-flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-xs font-semibold text-warning disabled:opacity-50"><CircleAlert className="size-4" /> Bloquear</button> : null}
+            {trabajo.estado === "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="rounded-xl bg-ink px-4 py-3 text-xs font-semibold text-ink-foreground disabled:opacity-50">Reanudar</button> : null}
+          </div> : null}
+          {errorAccion ? <p className="mt-3 text-xs text-danger">{errorAccion}</p> : null}
         </section>
 
-        <section className="rounded-3xl border-2 border-gold/30 bg-gradient-to-br from-card to-gold/[0.04] p-5 shadow-raised">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">Ficha técnica de fabricación</p>
-              <h2 className="mt-1 text-xl font-semibold">Qué se debe fabricar</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Información técnica necesaria para ejecutar este trabajo. Los datos comerciales no forman parte de esta ficha.</p>
-            </div>
-            <span className="rounded-full border border-gold/20 bg-gold/[0.08] px-3 py-1.5 text-[10px] font-bold text-gold-deep">{trabajo.area}</span>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Trabajo", pedidoTrabajo?.trabajo || trabajo.titulo || "—"],
-              ["Material / metal", pedidoTrabajo?.material || "—"],
-              ["Talla", pedidoTrabajo?.talla || "—"],
-              ["Piedras", pedidoTrabajo?.piedras || "—"],
-              ["Peso estimado", pedidoTrabajo?.peso_estimado || "—"],
-              ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
-              ["Entrega", pedidoTrabajo?.fecha_entrega || "—"],
-              ["Referencia", pedidoTrabajo?.referencia || "—"],
-            ].map(([etiqueta, valor]) => (
-              <div key={etiqueta} className="rounded-2xl border border-border bg-background p-4">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
-                <p className="mt-1 text-sm font-semibold">{valor}</p>
-              </div>
-            ))}
-          </div>
-
-          {pedidoTrabajo?.notas ? (
-            <div className="mt-4 rounded-2xl border border-border bg-background p-4">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Especificaciones / notas</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{pedidoTrabajo.notas}</p>
-            </div>
-          ) : null}
-
-          {Array.isArray(pedidoTrabajo?.ruta) && pedidoTrabajo.ruta.length > 0 ? (
-            <div className="mt-4">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Ruta de producción</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {pedidoTrabajo.ruta.map((area) => (
-                  <span key={area} className={area === trabajo.area ? "rounded-full bg-gold px-3 py-1.5 text-[10px] font-bold text-gold-foreground" : "rounded-full bg-surface-muted px-3 py-1.5 text-[10px] font-semibold text-muted-foreground"}>
-                    {area}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {materialesPlanificados.length > 0 ? (
-            <div className="mt-4">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Materiales previstos para este trabajo</p>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {materialesPlanificados.map((item: any) => (
-                  <div key={item.id} className="rounded-2xl border border-border bg-background p-3">
-                    <p className="text-sm font-semibold">{item.inventario?.material || "Material"}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.cantidad_planificada} {item.unidad || item.inventario?.unidad || ""}{item.inventario?.codigo ? ` · ${item.inventario.codigo}` : ""}</p>
-                    {item.notas ? <p className="mt-1 text-xs text-muted-foreground">{item.notas}</p> : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {trabajo.area === "Corte Láser" && (pedidoTrabajo?.corte_texto || pedidoTrabajo?.corte_tipografia || pedidoTrabajo?.corte_ubicacion || pedidoTrabajo?.corte_observaciones) ? (
-            <div className="mt-4 rounded-2xl border border-border bg-background p-4">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Especificaciones de Corte Láser</p>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm">
-                <p><span className="font-semibold">Texto:</span> {pedidoTrabajo.corte_texto || "—"}</p>
-                <p><span className="font-semibold">Tipografía:</span> {pedidoTrabajo.corte_tipografia || "—"}</p>
-                <p><span className="font-semibold">Ubicación:</span> {pedidoTrabajo.corte_ubicacion || "—"}</p>
-                <p className="sm:col-span-2"><span className="font-semibold">Observaciones:</span> {pedidoTrabajo.corte_observaciones || "—"}</p>
-              </div>
-            </div>
-          ) : null}
-        </section>
-
-        <section className="rounded-2xl border-2 border-success/20 bg-success/[0.03] p-5 shadow-raised">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-success">Archivo vigente para fabricación</p>
-              <h2 className="mt-1 text-lg font-semibold">Diseño aprobado</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Esta es la versión que debe utilizarse para ejecutar el trabajo.</p>
-            </div>
-            <span className="rounded-full bg-success/10 px-3 py-1.5 text-[10px] font-bold text-success">
-              {archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}
-            </span>
-          </div>
-          <div className="mt-4 space-y-2">
-            {archivosVigentes.length > 0 ? archivosVigentes.map((archivo) => (
-              <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer"
-                className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-background p-3 hover:border-success/40">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{archivo.nombre}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Versión {archivo.version} · {archivo.grupo}</p>
-                </div>
-                <span className="shrink-0 text-xs font-semibold text-success">Abrir</span>
-              </a>
-            )) : (
-              <p className="rounded-xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
-                Aún no hay un archivo aprobado para fabricación. El administrador debe marcar una versión vigente.
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-gold/25 bg-card p-5 shadow-raised">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Trabajo asignado</p>
-              <h1 className="mt-1 text-2xl font-semibold">{trabajo.titulo}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{trabajo.area} · {trabajo.tipo === "externo" ? "Externo" : "Interno"}</p>
-            </div>
-            <span className="rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-semibold">{estadoLabel[trabajo.estado]}</span>
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-gold/20 bg-gold/[0.03] p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Especialidad de la operación</p>
-                <p className="mt-1 text-sm font-semibold">{trabajo.especialidad_id ? (especialidades.find((e: any) => e.id === trabajo.especialidad_id)?.nombre ?? "Especialidad asignada") : "Sin especialidad asignada"}</p>
-              </div>
-              {sesion?.esAdmin ? (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <select value={especialidadSeleccionada || trabajo.especialidad_id || ""} onChange={(e) => setEspecialidadSeleccionada(e.target.value)} className="min-h-10 rounded-xl border border-border bg-background px-3 text-sm">
-                    <option value="">Sin especialidad</option>
-                    {especialidades.map((especialidad: any) => <option key={especialidad.id} value={especialidad.id}>{especialidad.categoria ? `${especialidad.categoria} · ` : ""}{especialidad.nombre}</option>)}
-                  </select>
-                  <button type="button" disabled={guardandoEspecialidad || (especialidadSeleccionada || "") === (trabajo.especialidad_id || "")} onClick={() => void guardarEspecialidad()} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50">
-                    {guardandoEspecialidad ? "Guardando…" : "Guardar"}
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-border bg-surface-sunken p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Prioridad</p><p className="mt-1 font-semibold">{trabajo.prioridad}</p></div>
-            <div className="rounded-xl border border-border bg-surface-sunken p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Ubicación</p><p className="mt-1 font-semibold">{trabajo.ubicacion || "Por definir"}</p></div>
-            <div className="rounded-xl border border-border bg-surface-sunken p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Fecha planificada</p><p className="mt-1 font-semibold">{trabajo.fecha_planificada || "Sin fecha"}</p></div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-gold/25 bg-card p-5 shadow-raised">
-          <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Tiempo de producción</p><h2 className="mt-1 text-lg font-semibold">{Math.floor(segundosTotales / 3600)}h {Math.floor((segundosTotales % 3600) / 60)}m</h2></div><span className={sesionActiva ? "rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-semibold text-success" : "rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground"}>{sesionActiva ? "Reloj activo" : "Pausado"}</span></div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted"><div className="h-full w-1/3 rounded-full bg-gold" /></div>
-          <p className="mt-3 text-xs text-muted-foreground">{sesionesTiempo.length} sesión{sesionesTiempo.length === 1 ? "" : "es"} registrada{sesionesTiempo.length === 1 ? "" : "s"}. El tiempo queda asociado al operario.</p>
-        </section>
-
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
-          <h2 className="text-xs font-bold uppercase tracking-[0.18em]">Instrucciones</h2>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{trabajo.descripcion || "No hay instrucciones adicionales registradas."}</p>
-          {trabajo.notas ? <div className="mt-4 rounded-xl border border-border bg-surface-sunken p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notas</p><p className="mt-2 whitespace-pre-wrap text-sm">{trabajo.notas}</p></div> : null}
-        </section>
-
-        {activo && puedeGestionar ? (
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-raised">
-            <h2 className="text-xs font-bold uppercase tracking-[0.18em]">Acciones</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {trabajo.estado === "en_proceso" && !sesionActiva ? <button type="button" onClick={() => void iniciarReloj()} className="rounded-lg border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs font-semibold text-gold-deep">▶ Iniciar reloj</button> : null}
-              {sesionActiva ? <button type="button" onClick={() => void detenerReloj()} className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs font-semibold text-warning">⏸ Pausar reloj</button> : null}
-              {trabajo.estado === "pendiente" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
-              {trabajo.estado === "en_proceso" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("completado")} className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2.5 text-xs font-semibold text-success-foreground disabled:opacity-50"><Check className="size-4" /> Completar trabajo</button> : null}
-              {trabajo.estado !== "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("bloqueado")} className="inline-flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs font-semibold text-warning disabled:opacity-50"><CircleAlert className="size-4" /> Bloquear</button> : null}
-              {trabajo.estado === "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="rounded-lg bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50">Reanudar</button> : null}
-            </div>
-            {errorAccion ? <p className="mt-3 text-xs text-danger">{errorAccion}</p> : null}
-          </section>
-        ) : null}
-
-        <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Material de trabajo</p>
-              <h2 className="mt-1 text-lg font-semibold">Archivos técnicos</h2>
-            </div>
-            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{archivosTecnicos.length}</span>
-          </div>
-          <div className="mt-4 space-y-2">
-            {archivosPedido.map((archivo) => (
-              <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-3 transition hover:border-primary/40 hover:bg-primary/[0.03]">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary"><Link2 className="size-4" /></span>
-                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium group-hover:text-primary">{archivo.nombre}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{archivo.tipo} · {archivo.grupo || "Técnico"}</span></span>
-                <ArrowLeft className="size-3.5 rotate-180 text-muted-foreground" />
-              </a>
-            ))}
-            {archivosPedido.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay archivos técnicos en el pedido.</p> : null}
-          </div>
-          {archivosTecnicos.length > 0 ? (
-            <p className="mt-3 text-xs text-muted-foreground">
-              {archivosTecnicos.length} archivo{archivosTecnicos.length === 1 ? "" : "s"} vinculado{archivosTecnicos.length === 1 ? "" : "s"} específicamente a este trabajo.
-            </p>
-          ) : null}
-          {(sesion?.esAdmin || esResponsable) && archivosPedido.length > 0 ? (
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <select value={archivoSeleccionado} onChange={(e) => setArchivoSeleccionado(e.target.value)} className="min-h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm">
-                <option value="">Vincular archivo a este trabajo…</option>
-                {archivosPedido.filter((archivo) => !archivosTecnicos.some((vinculado) => vinculado.pedido_archivo_id === archivo.id)).map((archivo) => <option key={archivo.id} value={archivo.id}>{archivo.nombre}</option>)}
-              </select>
-              <button type="button" disabled={!archivoSeleccionado || guardandoArchivo} onClick={() => void adjuntarArchivo()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Paperclip className="size-3.5" /> Vincular</button>
-            </div>
-          ) : null}
-        </section>
-
-        <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Seguimiento</p>
-              <h2 className="mt-1 text-lg font-semibold">Incidencias</h2>
-            </div>
-            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{incidencias.length}</span>
-          </div>
-          <div className="mt-4 space-y-3">
-            {incidencias.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-border bg-background p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><p className="text-sm font-semibold">{item.tipo}</p><p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.descripcion}</p></div>
-                  <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold uppercase">{item.estado}</span>
-                </div>
-                {item.resolucion ? <p className="mt-3 rounded-xl bg-success-soft p-3 text-xs text-success">Resolución: {item.resolucion}</p> : null}
-                {sesion?.esAdmin && item.estado !== "resuelta" && item.estado !== "descartada" ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => void cambiarIncidencia(item.id, "resuelta")} className="rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground">Marcar resuelta</button>
-                    <button type="button" onClick={() => void cambiarIncidencia(item.id, "descartada")} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Descartar</button>
-                  </div>
-                ) : null}
-              </div>
-            ))}
-            {incidencias.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-4 text-xs text-muted-foreground">No hay incidencias registradas.</p> : null}
-          </div>
-          {activo ? (
-            <div className="mt-4 rounded-2xl border border-warning/20 bg-warning-soft/40 p-4">
-              <p className="text-xs font-semibold">¿Hay algo que impida continuar?</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_auto]">
-                <select value={incidencia.tipo} onChange={(e) => setIncidencia((v) => ({ ...v, tipo: e.target.value }))} className="min-h-10 rounded-xl border border-border bg-background px-3 text-sm">
-                  <option value="general">General</option><option value="material">Material</option><option value="diseño">Diseño</option><option value="máquina">Máquina</option><option value="cliente">Cliente</option>
-                </select>
-                <input value={incidencia.descripcion} onChange={(e) => setIncidencia((v) => ({ ...v, descripcion: e.target.value }))} placeholder="Describe brevemente el problema…" className="min-h-10 rounded-xl border border-border bg-background px-3 text-sm" />
-                <button type="button" disabled={!incidencia.descripcion.trim() || reportandoIncidencia} onClick={() => void reportarIncidencia()} className="rounded-xl bg-warning px-4 py-2.5 text-xs font-semibold text-warning-foreground disabled:opacity-50">{reportandoIncidencia ? "Enviando…" : "Reportar"}</button>
-              </div>
-            </div>
-          ) : null}
-        </section>
-
-                <p className="text-xs text-muted-foreground">El acceso a este trabajo está limitado por las reglas de seguridad de producción.</p>
+        <p className="text-xs text-muted-foreground">El acceso a este trabajo está limitado por las reglas de seguridad de producción.</p>
       </div>
     </AppShell>
   );
