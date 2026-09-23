@@ -381,9 +381,13 @@ function TrabajoOperativoPage() {
           <div className="border-t border-border p-5">
             <div className="grid gap-2 sm:grid-cols-2">
               {[
-                ["Trabajo", pedidoTrabajo?.trabajo || "—"], ["Pieza", pedidoTrabajo?.pieza || "—"], ["Material / metal", pedidoTrabajo?.material || "—"],
-                ["Talla", pedidoTrabajo?.talla || "—"], ["Piedras", pedidoTrabajo?.piedras || "—"], ["Peso estimado", pedidoTrabajo?.peso_estimado || "—"], ["Cantidad de piezas", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
-              ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-background p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{etiqueta}</p><p className="mt-1 text-sm font-semibold">{valor}</p></div>)}
+                ["Trabajo / pieza", pedidoTrabajo?.trabajo || pedidoTrabajo?.pieza || nombrePieza],
+                ["Material / metal", pedidoTrabajo?.material || "—"],
+                ["Talla", pedidoTrabajo?.talla || "—"],
+                ["Piedras", pedidoTrabajo?.piedras || "—"],
+                ["Peso estimado", pedidoTrabajo?.peso_estimado || "—"],
+                ["Cantidad de piezas", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
+              ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-background p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{etiqueta}</p><p className="mt-1 break-words text-sm font-semibold leading-5">{valor}</p></div>)}
             </div>
             {pedidoTrabajo?.notas ? <div className="mt-3 rounded-2xl border border-border bg-background p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Notas y especificaciones del pedido</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{pedidoTrabajo.notas}</p></div> : null}
           </div>
