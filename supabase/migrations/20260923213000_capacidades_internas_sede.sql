@@ -68,3 +68,14 @@ from (values
 where not exists (
   select 1 from public.especialidades e where lower(trim(e.nombre)) = lower(trim(x.nombre))
 );
+
+-- El catálogo es administrado por el Dueño, pero los gerentes necesitan
+-- consultarlo para configurar las capacidades internas de su propia sede.
+drop policy if exists "owner_read_especialidades" on public.especialidades;
+create policy "owner_or_manager_read_especialidades"
+on public.especialidades
+for select to authenticated
+using (
+  public.has_role((select auth.uid()), 'dueno'::app_role)
+  or public.has_role((select auth.uid()), 'gerente'::app_role)
+);
