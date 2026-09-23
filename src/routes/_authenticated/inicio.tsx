@@ -2,26 +2,18 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
   ChevronRight,
-  ClipboardList,
   Clock3,
   Gem,
   Hammer,
   LayoutGrid,
   PackageCheck,
   Scissors,
-  UserRound,
-  Users,
-  Wrench,
 } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-area";
 import {
-  areaCoincide,
-  areaRuta,
-  normalizarArea,
   rolEtiqueta,
-  useCerrarSesion,
   useSesion,
 } from "@/lib/auth";
 import {
@@ -61,9 +53,6 @@ function Inicio() {
     }
   }, [isLoading, navigate, sesion]);
 
-  const esOperario = sesion?.rolPrincipal === "operario";
-  const areasOperario = useMemo(() => areasAsignadasUnicas(sesion?.areas ?? []), [sesion?.areas]);
-
   const resumen = useMemo(() => {
     const activos = pedidos.filter((p) => !esEstadoFinalPedido(p.estado));
     const produccion = activos.filter((p) => p.estado === "En Producción");
@@ -99,55 +88,6 @@ function Inicio() {
       ] as const,
     [],
   );
-
-  const modulos = useMemo(() => {
-    if (!esOperario) {
-      return [
-        { to: "/clientes", label: "Clientes", icono: Users, subtitulo: "Cartera y fichas" },
-        { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, subtitulo: "Propuestas comerciales" },
-        { to: "/pedidos-2", label: "Pedidos", icono: PackageCheck, subtitulo: "Centro operativo" },
-        { to: "/inventario", label: "Inventario", icono: Boxes, subtitulo: "Stock y movimientos" },
-        { to: "/ventas-2", label: "Ventas", icono: PackageCheck, subtitulo: "Centro comercial" },
-        { to: "/gestion", label: "Gestión", icono: Wrench, subtitulo: "Administración del taller" },
-      ];
-    }
-
-    const tarjetas = areasOperario.map((area) => {
-      const asignados = pedidos.filter(
-        (pedido) =>
-          !esEstadoFinalPedido(pedido.estado) &&
-          !pedidoEnRecepcion(pedido.estado) &&
-          pedido.estado === "En Producción" &&
-          pedidoAsignadoAArea(pedido, area),
-      );
-      const enTrabajo = asignados.filter((pedido) => pedidoEnAreaActual(pedido, area));
-      const urgentes = enTrabajo.filter(esUrgente);
-      return {
-        to: areaRuta[area],
-        label: area,
-        icono: iconosArea[area] ?? Hammer,
-        subtitulo: resumenOperario(asignados.length, enTrabajo.length, urgentes.length),
-      };
-    });
-
-    if (areasOperario.some((area) => areaCoincide(area, "Taller"))) {
-      tarjetas.push({
-        to: "/herramientas",
-        label: "Herramientas",
-        icono: Wrench,
-        subtitulo: "Calculadoras técnicas",
-      });
-    }
-
-    tarjetas.push({
-      to: "/perfil",
-      label: "Perfil",
-      icono: UserRound,
-      subtitulo: "Datos y sesión",
-    });
-
-    return tarjetas;
-  }, [areasOperario, esOperario, pedidos]);
 
   // Los operarios usan exclusivamente /operario como bandeja única.
 
@@ -258,25 +198,6 @@ function MetricHero({ label, value }: { label: string; value: number | string })
   );
 }
 
-const iconosArea: Record<string, typeof Hammer> = {
-  "Diseño 3D": LayoutGrid,
-  "Impresión 3D": Boxes,
-  "Corte Láser": Scissors,
-  Casting: Hammer,
-  Taller: Hammer,
-  "Área ventas": Boxes,
-  Pedidos: LayoutGrid,
-};
-
-function areasAsignadasUnicas(areas: string[]) {
-  const vistas = new Set<string>();
-  return areas.map(normalizarArea).filter((area) => areaRuta[area]).filter((area) => {
-    if (vistas.has(area)) return false;
-    vistas.add(area);
-    return true;
-  });
-}
-
 function diasHastaEntrega(pedido: PedidoSelector) {
   const fechaIso = pedido.fecha_entrega ?? pedido.entrega;
   if (!fechaIso) return null;
@@ -302,7 +223,6 @@ function textoEntrega(pedido: PedidoSelector) {
   return `Entrega en ${dias} d`;
 }
 
-function resumenOperario(pendientes: number, enArea: number, urgentes: number) {
   const partes = [`${pendientes} pendiente${pendientes === 1 ? "" : "s"}`];
   if (enArea > 0) partes.push(`${enArea} en área`);
   if (urgentes > 0) partes.push(`${urgentes} urgente${urgentes === 1 ? "" : "s"}`);
