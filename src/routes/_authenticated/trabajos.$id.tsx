@@ -326,6 +326,15 @@ function TrabajoOperativoPage() {
   const activo = !["completado", "cancelado"].includes(trabajo.estado);
   const sedeNombre = (pedidoTrabajo?.sedes as { nombre?: string } | null)?.nombre ?? "";
   const nombrePieza = pedidoTrabajo?.pieza || pedidoTrabajo?.trabajo || trabajo.titulo || "—";
+  const formatearFecha = (valor: string | null | undefined, incluirHora = false) => {
+    if (!valor) return "—";
+    const fecha = new Date(valor);
+    if (Number.isNaN(fecha.getTime())) return valor;
+    return new Intl.DateTimeFormat("es-PE", {
+      dateStyle: "medium",
+      ...(incluirHora ? { timeStyle: "short" as const } : {}),
+    }).format(fecha);
+  };
 
   return (
     <AppShell
@@ -361,9 +370,9 @@ function TrabajoOperativoPage() {
             {[
               ["Trabajo / pieza", nombrePieza], ["Referencia", pedidoTrabajo?.referencia || "—"], ["Área actual", pedidoTrabajo?.area_actual || trabajo.area],
               ["Sede / taller", sedeNombre || "—"], ["Origen", pedidoTrabajo?.origen || "—"], ["Cantidad", String(pedidoTrabajo?.cantidad_piezas ?? "—")],
-              ["Fecha de ingreso", pedidoTrabajo?.fecha_ingreso || "—"], ["Área desde", pedidoTrabajo?.area_desde || "—"], ["Fecha de entrega", pedidoTrabajo?.fecha_entrega || "—"], ["Prioridad", trabajo.prioridad],
+              ["Fecha de ingreso", formatearFecha(pedidoTrabajo?.fecha_ingreso)], ["Entrada al área", formatearFecha(pedidoTrabajo?.area_desde, true)], ["Fecha de entrega", formatearFecha(pedidoTrabajo?.fecha_entrega)], ["Prioridad", trabajo.prioridad],
               ["Ubicación", trabajo.ubicacion || "Por definir"], ["Fecha planificada", trabajo.fecha_planificada || "Sin fecha"], ["Tipo de trabajo", trabajo.tipo === "externo" ? "Externo" : "Interno"],
-            ].map(([etiqueta, valor]) => <div key={etiqueta} className="rounded-xl border border-border bg-surface-sunken p-3"><dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt><dd className="mt-1 text-sm font-semibold">{valor}</dd></div>)}
+            ].map(([etiqueta, valor]) => <div key={etiqueta} className="min-w-0 rounded-xl border border-border bg-surface-sunken p-3"><dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</dt><dd className="mt-1 min-w-0 break-words text-sm font-semibold leading-5">{valor}</dd></div>)}
           </dl></div>
         </details>
 
