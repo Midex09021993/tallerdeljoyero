@@ -154,7 +154,7 @@ function OperarioPage() {
                 aria-expanded={seleccionado}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-11 place-items-center rounded-2xl bg-ink text-gold">
+                  <span className="grid size-11 place-items-center rounded-2xl bg-gold/10 text-gold-deep">
                     <Icono className="size-5" aria-hidden="true" />
                   </span>
                   <ChevronRight
@@ -304,7 +304,7 @@ function OperarioPage() {
             className="min-h-[116px] rounded-2xl border border-border bg-card p-5 text-left shadow-card transition hover:border-gold focus-visible:border-gold focus-visible:outline-none"
           >
             <div className="flex items-start justify-between gap-3">
-              <span className="grid size-11 place-items-center rounded-2xl bg-warning-soft text-warning">
+              <span className="grid size-11 place-items-center rounded-2xl bg-gold/10 text-gold-deep">
                 <Wrench className="size-5" aria-hidden="true" />
               </span>
               <ChevronRight className="mt-1 size-5 text-muted-foreground" aria-hidden="true" />
@@ -320,7 +320,7 @@ function OperarioPage() {
           className="min-h-[116px] rounded-2xl border border-border bg-card p-5 text-left shadow-card transition hover:border-gold focus-visible:border-gold focus-visible:outline-none"
         >
           <div className="flex items-start justify-between gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-surface-muted text-muted-foreground">
+            <span className="grid size-11 place-items-center rounded-2xl bg-gold/5 text-gold-deep">
               <UserRound className="size-5" aria-hidden="true" />
             </span>
             <ChevronRight className="mt-1 size-5 text-muted-foreground" aria-hidden="true" />
