@@ -285,7 +285,7 @@ export function AppShell({
                   key={s.to}
                   to={s.to}
                   className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-                  activeProps={{ className: "bg-ink text-gold-bright border-transparent" }}
+                  activeProps={{ className: "bg-gold/10 text-gold-deep border-gold/20" }}
                 >
                   {s.label}
                 </Link>
