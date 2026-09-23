@@ -357,11 +357,11 @@ function TrabajoOperativoPage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">Ficha técnica de fabricación</p>
           <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0"><h1 className="text-2xl font-semibold">{nombrePieza}</h1><p className="mt-1 text-sm text-muted-foreground">{pedidoTrabajo?.referencia ?? "Pedido"} · {trabajo.area}</p></div>
-            <span className="rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-bold">{estadoLabel[trabajo.estado]}</span>
+            <span className="rounded-full border border-gold/20 bg-gold/[0.06] px-3 py-1.5 text-xs font-bold text-gold-deep">{estadoLabel[trabajo.estado]}</span>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {puedeTomar ? <button type="button" onClick={() => void tomarTrabajo()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground">Tomar este trabajo</button> : null}
-            {trabajo.estado === "pendiente" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
+            {trabajo.estado === "pendiente" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
           </div>
         </section>
 
@@ -453,7 +453,7 @@ function TrabajoOperativoPage() {
             {trabajo.estado === "pendiente" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-3 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
             {trabajo.estado === "en_proceso" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("completado")} className="inline-flex items-center gap-2 rounded-xl bg-success px-4 py-3 text-xs font-semibold text-success-foreground disabled:opacity-50"><Check className="size-4" /> Completar trabajo</button> : null}
             {trabajo.estado !== "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("bloqueado")} className="inline-flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-xs font-semibold text-warning disabled:opacity-50"><CircleAlert className="size-4" /> Bloquear</button> : null}
-            {trabajo.estado === "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="rounded-xl bg-ink px-4 py-3 text-xs font-semibold text-ink-foreground disabled:opacity-50">Reanudar</button> : null}
+            {trabajo.estado === "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="rounded-xl bg-gold px-4 py-3 text-xs font-semibold text-gold-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50">Reanudar</button> : null}
           </div> : null}
           {errorAccion ? <p className="mt-3 text-xs text-danger">{errorAccion}</p> : null}
         </section>
