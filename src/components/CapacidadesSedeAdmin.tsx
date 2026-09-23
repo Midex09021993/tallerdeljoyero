@@ -10,6 +10,14 @@ type Relacion = { sede_id: string; especialidad_id: string };
 
 export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | null; sedeNombre?: string }) {
   const qc = useQueryClient();
+  const CAPACIDADES_PRODUCCION = [
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Taller",
+] as const;
+
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -35,12 +43,18 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | 
 
   const ids = seleccionadas ?? actuales.map(r => r.especialidad_id);
   const porCategoria = useMemo(() => {
-    const mapa = new Map<string, Especialidad[]>();
-    for (const e of especialidades) {
-      const key = e.categoria || "Producción";
-      mapa.set(key, [...(mapa.get(key) ?? []), e]);
-    }
-    return Array.from(mapa.entries());
+    const ordenProduccion = new Map(CAPACIDADES_PRODUCCION.map((nombre, indice) => [nombre, indice]));
+    const produccion = especialidades
+      .filter((e) => ordenProduccion.has(e.nombre))
+      .sort((a, b) => (ordenProduccion.get(a.nombre) ?? 99) - (ordenProduccion.get(b.nombre) ?? 99));
+    const servicios = especialidades
+      .filter((e) => !ordenProduccion.has(e.nombre))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+
+    return [
+      ...(produccion.length ? [["Producción", produccion] as [string, Especialidad[]]] : []),
+      ...(servicios.length ? [["Servicios especializados", servicios] as [string, Especialidad[]]] : []),
+    ];
   }, [especialidades]);
 
   async function guardar() {
@@ -55,6 +69,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | 
       }
       toast.success("Capacidades del taller actualizadas");
       await qc.invalidateQueries({ queryKey: ["sede-especialidades", sedeId] });
+      await qc.invalidateQueries({ queryKey: ["menu-capacidades"] });
       setSeleccionadas(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudieron guardar las capacidades");
@@ -70,7 +85,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | 
   return <Panel titulo="Capacidades del taller">
     <div className="border-b border-border p-5">
       <p className="font-medium">{sedeNombre || "Tu taller"}</p>
-      <p className="mt-1 text-xs text-muted-foreground">Define qué trabajos puede realizar internamente este taller. Esto no administra proveedores externos.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Selecciona todas las capacidades que este taller puede ejecutar internamente. Las áreas de producción habilitadas también aparecerán en el menú de este taller. Esto no administra proveedores externos.</p>
     </div>
     <div className="grid gap-3 p-5 sm:grid-cols-2">
       {porCategoria.map(([categoria, items]) => <div key={categoria} className="rounded-xl border border-border p-4">
