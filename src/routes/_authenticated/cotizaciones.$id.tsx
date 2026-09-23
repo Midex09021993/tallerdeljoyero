@@ -82,6 +82,7 @@ function CotizacionDetallePage() {
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [detalles, setDetalles] = useState<Detalle[]>([]);
   const [respuestasCliente, setRespuestasCliente] = useState<RespuestaCliente[]>([]);
+  const [versiones, setVersiones] = useState<Cotizacion[]>([]);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
@@ -125,6 +126,13 @@ function CotizacionDetallePage() {
       supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
     setCotizacion(q);
+    const { data: versionesRelacionadas } = await supabase
+      .from("cotizaciones")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .eq("numero", q.numero)
+      .eq("sede_id", q.sede_id)
+      .order("version", { ascending: false });
+    setVersiones(versionesRelacionadas ?? [q]);
     setDetalles(d ?? []);
     setCliente(c ?? null);
     setProyecto(p ?? null);
@@ -562,6 +570,36 @@ function CotizacionDetallePage() {
                 </div>
               </Panel>
             ) : null}
+
+            <Panel titulo="Historial de versiones">
+              <div className="space-y-2 p-4 lg:p-6">
+                <p className="text-xs text-muted-foreground">
+                  Todas las versiones pertenecen a la misma cotización. Aquí se conserva el historial sin duplicarla en el directorio comercial.
+                </p>
+                <div className="space-y-2">
+                  {versiones.map((version) => (
+                    <Link
+                      key={version.id}
+                      to="/cotizaciones/$id"
+                      params={{ id: version.id }}
+                      className={"flex items-center justify-between gap-3 rounded-xl border px-3 py-3 transition hover:bg-surface-muted " + (version.id === cotizacion.id ? "border-gold/30 bg-gold/[0.05]" : "border-border")}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{version.numero} · v{version.version}</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {etiquetaEstado(version.estado)} · {version.fecha_emision}
+                        </p>
+                      </div>
+                      {version.id === cotizacion.id ? (
+                        <span className="rounded-full border border-gold/20 bg-gold/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-gold">
+                          Actual
+                        </span>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </Panel>
 
             <Panel titulo="Notas">
               <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
