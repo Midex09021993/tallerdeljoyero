@@ -19,7 +19,6 @@ import { pedidoAsignadoAArea, pedidoEnAreaActual } from "@/hooks/use-pedidos-are
 import {
   areaCoincide,
   areaRuta,
-  esVistaMovilTablet,
   normalizarArea,
   rolEtiqueta,
   useCerrarSesion,
@@ -57,8 +56,8 @@ function Inicio() {
       navigate({ to: "/pedidos" });
       return;
     }
-    if (sesion.rolPrincipal === "operario" && !esVistaMovilTablet()) {
-      navigate({ to: "/operario" });
+    if (sesion.rolPrincipal === "operario") {
+      navigate({ to: "/operario", replace: true });
     }
   }, [isLoading, navigate, sesion]);
 
