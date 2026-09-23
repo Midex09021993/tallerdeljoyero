@@ -143,14 +143,33 @@ function CotizacionesPage() {
     return () => window.clearTimeout(timer);
   }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.sede?.id, form.cliente_id]);
 
+  // Una cotización es una entidad comercial; sus versiones son historial.
+  // El listado muestra únicamente la versión vigente (la de mayor número)
+  // para evitar duplicar visualmente la misma cotización.
+  const cotizacionesVigentes = useMemo(() => {
+    const mapa = new Map<string, Cotizacion>();
+    for (const q of cotizaciones) {
+      const clave = `${q.sede_id ?? "sin-sede"}|${q.numero}`;
+      const actual = mapa.get(clave);
+      if (!actual || Number(q.version) > Number(actual.version)) {
+        mapa.set(clave, q);
+      }
+    }
+    return Array.from(mapa.values()).sort((a, b) => {
+      const fechaA = new Date(a.fecha_emision).getTime();
+      const fechaB = new Date(b.fecha_emision).getTime();
+      return fechaB - fechaA || a.numero.localeCompare(b.numero);
+    });
+  }, [cotizaciones]);
+
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    if (!t) return cotizaciones;
-    return cotizaciones.filter((q) => {
+    if (!t) return cotizacionesVigentes;
+    return cotizacionesVigentes.filter((q) => {
       const cliente = q.cliente?.nombre ?? "";
       return [q.numero, q.estado, cliente].join(" ").toLowerCase().includes(t);
     });
-  }, [busca, cotizaciones]);
+  }, [busca, cotizacionesVigentes]);
 
   const clientePredictivo = useMemo(() => {
     const termino = busquedaCliente.trim().toLowerCase();
@@ -182,7 +201,7 @@ function CotizacionesPage() {
   const subtotalConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.precio * item.cantidad), 0);
   const costoConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.costo * item.cantidad), 0);
   const impuestoCalculado = impuestoActivo ? Math.max(0, subtotalConceptos - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100 : 0;
-  const totalAprobadas = cotizaciones.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
+  const totalAprobadas = cotizacionesVigentes.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   async function eliminarCotizacion(cotizacion: Cotizacion) {
@@ -295,10 +314,10 @@ function CotizacionesPage() {
       subtitulo="Presupuestos comerciales conectados con clientes y proyectos de joyería."
       acciones={
         <>
-          <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizaciones.length} descripcion="Presupuestos registrados" onClick={() => { setBusca(""); irALista(); }} icono={<FileText className="size-5" strokeWidth={1.7} />} />
-          <FichaDorada indicador="Estado" titulo="Enviadas" valor={cotizaciones.filter(q => q.estado === "enviada").length} descripcion="Cotizaciones enviadas al cliente" onClick={() => { setBusca("enviada"); irALista(); }} icono={<Send className="size-5" strokeWidth={1.7} />} />
-          <FichaDorada indicador="Atención" titulo="Requieren revisión" valor={cotizaciones.filter(q => q.estado === "requiere_revision").length} descripcion="Cambios solicitados por clientes" onClick={() => { setBusca("requiere_revision"); irALista(); }} icono={<Clock3 className="size-5" strokeWidth={1.7} />} />
-          <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizaciones.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizacionesVigentes.length} descripcion="Cotizaciones vigentes" onClick={() => { setBusca(""); irALista(); }} icono={<FileText className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Estado" titulo="Enviadas" valor={cotizacionesVigentes.filter(q => q.estado === "enviada").length} descripcion="Cotizaciones enviadas al cliente" onClick={() => { setBusca("enviada"); irALista(); }} icono={<Send className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Atención" titulo="Requieren revisión" valor={cotizacionesVigentes.filter(q => q.estado === "requiere_revision").length} descripcion="Cambios solicitados por clientes" onClick={() => { setBusca("requiere_revision"); irALista(); }} icono={<Clock3 className="size-5" strokeWidth={1.7} />} />
+          <FichaDorada indicador="Estado" titulo="Aprobadas" valor={cotizacionesVigentes.filter(q => q.estado === "aprobada").length} descripcion="Cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<CheckCircle2 className="size-5" strokeWidth={1.7} />} />
           <FichaDorada indicador="Comercial" titulo="Total aprobado" valor={money(totalAprobadas)} descripcion="Valor de cotizaciones aprobadas" onClick={() => { setBusca("aprobada"); irALista(); }} icono={<BadgeDollarSign className="size-5" strokeWidth={1.7} />} />
           <button type="button" onClick={() => setAbierto(true)} className="group relative min-h-[150px] min-w-[170px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_hsl(var(--gold)/0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_24px_50px_-24px_hsl(var(--gold)/0.38)]">
             <span className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-gold/10 blur-2xl transition-all group-hover:bg-gold/15" />
