@@ -18,6 +18,13 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | 
   "Taller",
 ] as const;
 
+const CAPACIDADES_COMERCIALES = [
+  "Pedidos",
+  "Cotizaciones",
+  "Clientes",
+  "Ventas",
+] as const;
+
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -47,12 +54,17 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | 
     const produccion = especialidades
       .filter((e) => ordenProduccion.has(e.nombre))
       .sort((a, b) => (ordenProduccion.get(a.nombre) ?? 99) - (ordenProduccion.get(b.nombre) ?? 99));
+    const ordenComercial = new Map(CAPACIDADES_COMERCIALES.map((nombre, indice) => [nombre, indice]));
+    const comercial = especialidades
+      .filter((e) => ordenComercial.has(e.nombre))
+      .sort((a, b) => (ordenComercial.get(a.nombre) ?? 99) - (ordenComercial.get(b.nombre) ?? 99));
     const servicios = especialidades
-      .filter((e) => !ordenProduccion.has(e.nombre))
+      .filter((e) => !ordenProduccion.has(e.nombre) && !ordenComercial.has(e.nombre))
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
     return [
       ...(produccion.length ? [["Producción", produccion] as [string, Especialidad[]]] : []),
+      ...(comercial.length ? [["Comercial", comercial] as [string, Especialidad[]]] : []),
       ...(servicios.length ? [["Servicios especializados", servicios] as [string, Especialidad[]]] : []),
     ];
   }, [especialidades]);
@@ -85,7 +97,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre }: { sedeId: string | 
   return <Panel titulo="Capacidades del taller">
     <div className="border-b border-border p-5">
       <p className="font-medium">{sedeNombre || "Tu taller"}</p>
-      <p className="mt-1 text-xs text-muted-foreground">Selecciona todas las capacidades que este taller puede ejecutar internamente. Las áreas de producción habilitadas también aparecerán en el menú de este taller. Esto no administra proveedores externos.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Selecciona las capacidades de producción y los módulos comerciales que este taller puede utilizar. Las capacidades habilitadas se reflejan en el menú del taller. Esto no administra proveedores externos.</p>
     </div>
     <div className="grid gap-3 p-5 sm:grid-cols-2">
       {porCategoria.map(([categoria, items]) => <div key={categoria} className="rounded-xl border border-border p-4">
