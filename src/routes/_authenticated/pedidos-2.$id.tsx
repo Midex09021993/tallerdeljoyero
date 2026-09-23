@@ -55,13 +55,15 @@ function Pedido2Detalle() {
 
   const { data: participantesServicio = [], error: participantesServicioError } = useQuery({ queryKey: ["pedidos-2-participantes-servicio"], enabled: Boolean(sesion?.esAdmin), queryFn: async () => { if (!sesion?.esAdmin) return []; const { data, error } = await supabase.rpc("listar_participantes_servicio"); if (error) throw error; return data ?? []; } });
 
+  const sedeProduccionId = trabajos.find((trabajo) => trabajo.sede_id)?.sede_id ?? pedido?.sede_id ?? null;
+
   const { data: operarios = [], error: operariosError } = useQuery({
-    queryKey: ["pedidos-2-operarios", pedido?.sede_id, sesion?.esAdmin],
-    enabled: Boolean(pedido?.sede_id && sesion?.esAdmin),
+    queryKey: ["pedidos-2-operarios", sedeProduccionId, sesion?.esAdmin],
+    enabled: Boolean(sedeProduccionId && sesion?.esAdmin),
     queryFn: async () => {
-      if (!pedido?.sede_id || !sesion?.esAdmin) return [];
+      if (!sedeProduccionId || !sesion?.esAdmin) return [];
       const { data, error } = await supabase.rpc("listar_operarios_por_area", {
-        _sede_id: pedido.sede_id,
+        _sede_id: sedeProduccionId,
       });
       if (error) throw error;
       return data ?? [];
@@ -340,7 +342,7 @@ function Pedido2Detalle() {
       </div>
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} /> : null}
-      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} participantesServicio={participantesServicio} operariosError={operariosError instanceof Error ? operariosError.message : participantesServicioError instanceof Error ? participantesServicioError.message : null} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} asignarParticipanteExterno={asignarParticipanteExterno} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
+      {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} participantesServicio={participantesServicio} operariosError={operariosError?.message ?? participantesServicioError?.message ?? null} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} asignarParticipanteExterno={asignarParticipanteExterno} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
