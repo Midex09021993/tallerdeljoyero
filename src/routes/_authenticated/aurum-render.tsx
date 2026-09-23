@@ -4,7 +4,7 @@ import { AurumRenderShell } from "@/components/AurumRenderShell";
 export const Route = createFileRoute("/_authenticated/aurum-render")({
   head: () => ({
     meta: [
-      { title: "AURUM RENDER — Aurum Lab" },
+      { title: "AURUM RENDER — Estudio de Joyería 3D" },
       {
         name: "description",
         content: "Visualizador y renderizador profesional de joyería 3D.",

@@ -67,7 +67,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Ir al inicio
           </a>
         </div>
       </div>
@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aurum Lab — Taller de joyería" },
+      { title: "Taller del Joyero — Gestión de joyería" },
       {
         name: "description",
         content:
-          "Panel interno del taller de joyería Aurum Lab: pedidos, diseño e impresión 3D, corte láser, taller, inventario y gestión.",
+          "Panel interno del Taller del Joyero: pedidos, diseño e impresión 3D, corte láser, taller, inventario y gestión.",
       },
-      { property: "og:title", content: "Aurum Lab — Taller de joyería" },
+      { property: "og:title", content: "Taller del Joyero — Gestión de joyería" },
       {
         property: "og:description",
         content: "Gestiona pedidos, producción e inventario del taller de joyería.",
@@ -96,7 +96,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#111111" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Joyero" },
+      { name: "apple-mobile-web-app-title", content: "Taller del Joyero" },
+      { name: "google", content: "notranslate" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -123,7 +124,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" translate="no">
       <head>
         <HeadContent />
       </head>
