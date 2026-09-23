@@ -17,8 +17,7 @@ insert into public.ecosistema_participantes (
   nombre,
   ciudad,
   descripcion,
-  estado,
-  metadata
+  estado
 )
 select
   s.id,
@@ -26,8 +25,7 @@ select
   s.nombre,
   s.ciudad,
   'Taller/sede integrado desde el registro operativo del ERP.',
-  case when s.activa then 'activo' else 'inactivo' end,
-  jsonb_build_object('origen', 'sede', 'sede_id', s.id::text)
+  case when s.activa then 'activo' else 'inactivo' end
 from public.sedes s
 where not exists (
   select 1
