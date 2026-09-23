@@ -214,6 +214,21 @@ function Pedido2Detalle() {
             if (asignacionError) {
               console.warn("No se pudo asignar automáticamente el trabajo", trabajo.id, asignacionError);
             }
+          } else if (candidatos.length === 0) {
+            const externos = participantesServicio.filter((p) =>
+              (p.especialidad || "").split(" · ").some(
+                (e) => e.trim().toLowerCase() === String(trabajo.area || "").trim().toLowerCase(),
+              ),
+            );
+            if (externos.length === 1) {
+              const { error: asignacionExternaError } = await supabase.rpc("asignar_participante_externo_trabajo", {
+                _trabajo_id: trabajo.id,
+                _participante_id: externos[0].id,
+              });
+              if (asignacionExternaError) {
+                console.warn("No se pudo derivar automáticamente el trabajo al servicio externo", trabajo.id, asignacionExternaError);
+              }
+            }
           }
         }
 
@@ -516,7 +531,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                   {t.area} · {t.prioridad || "normal"} · {t.estado}
                 </p>
               </div>
-              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]"><label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Responsable de ejecución</label>{puedeAsignarResponsable ? <><select value={t.participante_id ? `externo:${t.participante_id}` : t.responsable_user_id ? `interno:${t.responsable_user_id}` : ""} disabled={asignandoTrabajoId === t.id} onChange={(e) => { const value=e.target.value; if (!value) { void asignarResponsable(t.id,null); return; } if (value.startsWith("externo:")) void asignarParticipanteExterno(t.id,value.slice(8)); else if (value.startsWith("interno:")) void asignarResponsable(t.id,value.slice(8)); }} className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60"><option value="">Sin asignar</option><optgroup label={`Taller propio · ${t.area}`} >{operariosDelArea.map((operario) => <option key={`i-${operario.id}`} value={`interno:${operario.id}`}>{operario.nombre}</option>)}</optgroup><optgroup label="Servicios externos">{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).map((p) => <option key={`e-${p.id}`} value={`externo:${p.id}`}>{p.nombre} · {p.tipo_participante === "servicio" ? "Servicio especializado" : "Taller / joyería"} · {p.especialidad}</option>)}</optgroup></select>{operariosDelArea.length === 0 ? <p className="text-[10px] text-warning">No hay operarios internos activos para {t.area}. Puedes enviarlo a un servicio externo.</p> : null}{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).length === 0 ? <p className="text-[10px] text-muted-foreground">No hay servicios externos configurados para {t.area}.</p> : null}{t.participante_id ? <p className="text-[10px] text-muted-foreground">El taller externo recibirá y repartirá internamente este servicio.</p> : null}</> : <p className="rounded-xl bg-surface-muted px-3 py-2.5 text-sm font-semibold">{t.participante_id ? "Servicio externo asignado" : t.responsable_user_id ? "Operario asignado" : "Sin asignar"}</p>}</div></div>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]"><label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Responsable de ejecución</label>{puedeAsignarResponsable ? <><select value={t.participante_id ? `externo:${t.participante_id}` : t.responsable_user_id ? `interno:${t.responsable_user_id}` : ""} disabled={asignandoTrabajoId === t.id} onChange={(e) => { const value=e.target.value; if (!value) { void asignarResponsable(t.id,null); return; } if (value.startsWith("externo:")) void asignarParticipanteExterno(t.id,value.slice(8)); else if (value.startsWith("interno:")) void asignarResponsable(t.id,value.slice(8)); }} className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60"><option value="">Sin asignar</option>{operariosDelArea.length > 0 ? <optgroup label={`Taller propio · ${t.area}`}>{operariosDelArea.map((operario) => <option key={`i-${operario.id}`} value={`interno:${operario.id}`}>{operario.nombre}</option>)}</optgroup> : null}{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).length > 0 ? <optgroup label="Servicios externos">{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).map((p) => <option key={`e-${p.id}`} value={`externo:${p.id}`}>{p.nombre} · {p.tipo_participante === "servicio" ? "Servicio especializado" : "Taller / joyería"} · {p.especialidad}</option>)}</optgroup> : null}</select>{operariosDelArea.length === 0 ? <p className="text-[10px] text-warning">No hay operarios internos activos para {t.area}. Puedes enviarlo a un servicio externo.</p> : null}{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).length === 0 ? <p className="text-[10px] text-muted-foreground">No hay servicios externos configurados para {t.area}.</p> : null}{t.participante_id ? <p className="text-[10px] text-muted-foreground">El taller externo recibirá y repartirá internamente este servicio.</p> : null}</> : <p className="rounded-xl bg-surface-muted px-3 py-2.5 text-sm font-semibold">{t.participante_id ? "Servicio externo asignado" : t.responsable_user_id ? "Operario asignado" : "Sin asignar"}</p>}</div></div>
           );
         }) : <Empty text="No hay trabajos registrados." />}
       </div>
