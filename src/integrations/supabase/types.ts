@@ -2865,7 +2865,7 @@ export type Database = {
         }[]
       }
       listar_participantes_servicio: {
-        Args: Record<PropertyKey, never>
+        Args: { _area?: string | null }
         Returns: {
           id: string
           nombre: string
