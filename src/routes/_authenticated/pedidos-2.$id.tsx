@@ -47,15 +47,31 @@ function Pedido2Detalle() {
     queryKey: ["pedidos-2-trabajos", id],
     enabled: Boolean(id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,created_at").eq("pedido_id", id).order("created_at");
+      const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,sede_id,created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     },
   });
 
-  const { data: participantesServicio = [], error: participantesServicioError } = useQuery({ queryKey: ["pedidos-2-participantes-servicio"], enabled: Boolean(sesion?.esAdmin), queryFn: async () => { if (!sesion?.esAdmin) return []; const { data, error } = await supabase.rpc("listar_participantes_servicio"); if (error) throw error; return data ?? []; } });
+  const { data: participantesServicio = [], error: participantesServicioError } = useQuery({
+    queryKey: ["pedidos-2-participantes-servicio", trabajos.map((t) => t.area).join("|")],
+    enabled: Boolean(sesion?.esAdmin && trabajos.length > 0),
+    queryFn: async () => {
+      if (!sesion?.esAdmin || trabajos.length === 0) return [];
+      const areas = [...new Set(trabajos.map((t) => String(t.area || "").trim()).filter(Boolean))];
+      const resultados = await Promise.all(
+        areas.map(async (area) => {
+          const { data, error } = await supabase.rpc("listar_participantes_servicio", { _area: area });
+          if (error) throw error;
+          return data ?? [];
+        }),
+      );
+      const porId = new Map<string, (typeof resultados[number])[number]>();
+      resultados.flat().forEach((p) => porId.set(p.id, p));
+      return [...porId.values()];
+    },
+  });
 
-  const sedeProduccionId = trabajos.find((trabajo) => trabajo.sede_id)?.sede_id ?? pedido?.sede_id ?? null;
 
   const { data: operarios = [], error: operariosError } = useQuery({
     queryKey: ["pedidos-2-operarios", sedeProduccionId, sesion?.esAdmin],
@@ -510,6 +526,11 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
           const operariosDelArea = operarios.filter((operario) =>
             operario.areas.some((area) => areaCoincide(area, t.area)),
           );
+          const tieneCapacidadInterna = capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, t.area));
+          const externosCompatibles = participantesServicio.filter((p) =>
+            (p.especialidad || "").split(" · ").some((e) => areaCoincide(e, t.area)),
+          );
+          const mostrarExternos = !tieneCapacidadInterna || Boolean(t.participante_id);
           return (
             <div key={t.id} className="flex flex-col gap-3 rounded-xl border border-border bg-surface-sunken p-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
@@ -518,7 +539,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                   {t.area} · {t.prioridad || "normal"} · {t.estado}
                 </p>
               </div>
-              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]"><label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Responsable de ejecución</label>{puedeAsignarResponsable ? <><select value={t.participante_id ? `externo:${t.participante_id}` : t.responsable_user_id ? `interno:${t.responsable_user_id}` : ""} disabled={asignandoTrabajoId === t.id} onChange={(e) => { const value=e.target.value; if (!value) { void asignarResponsable(t.id,null); return; } if (value.startsWith("externo:")) void asignarParticipanteExterno(t.id,value.slice(8)); else if (value.startsWith("interno:")) void asignarResponsable(t.id,value.slice(8)); }} className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60"><option value="">Sin asignar</option>{operariosDelArea.length > 0 ? <optgroup label={`Taller propio · ${t.area}`}>{operariosDelArea.map((operario) => <option key={`i-${operario.id}`} value={`interno:${operario.id}`}>{operario.nombre}</option>)}</optgroup> : null}{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).length > 0 ? <optgroup label="Participantes externos compatibles">{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).map((p) => <option key={`e-${p.id}`} value={`externo:${p.id}`}>{p.nombre} · {p.tipo_participante === "organizacion" ? "Organización / taller" : p.tipo_participante === "profesional" ? "Profesional" : p.tipo_participante === "servicio" ? "Servicio especializado" : p.tipo_participante === "proveedor" ? "Proveedor" : p.tipo_participante} · {p.especialidad}</option>)}</optgroup> : null}</select>{operariosDelArea.length === 0 ? <p className="text-[10px] text-warning">No hay operarios internos activos para {t.area}. Asigna un usuario con rol Operario y área {t.area} en Gestión → Usuarios, o selecciona un participante externo compatible del ecosistema.</p> : null}{operariosError ? <p className="text-[10px] text-danger">No se pudo consultar responsables: {operariosError}</p> : null}{participantesServicio.filter((p) => (p.especialidad || "").split(" · ").some((e) => e.trim().toLowerCase() === String(t.area || "").trim().toLowerCase())).length === 0 ? <p className="text-[10px] text-muted-foreground">No hay participantes externos con capacidad configurada para {t.area}.</p> : null}{t.participante_id ? <p className="text-[10px] text-muted-foreground">El taller externo recibirá y repartirá internamente este servicio.</p> : null}</> : <p className="rounded-xl bg-surface-muted px-3 py-2.5 text-sm font-semibold">{t.participante_id ? "Servicio externo asignado" : t.responsable_user_id ? "Operario asignado" : "Sin asignar"}</p>}</div></div>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]"><label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Responsable de ejecución</label>{puedeAsignarResponsable ? <><select value={t.participante_id ? `externo:${t.participante_id}` : t.responsable_user_id ? `interno:${t.responsable_user_id}` : ""} disabled={asignandoTrabajoId === t.id} onChange={(e) => { const value=e.target.value; if (!value) { void asignarResponsable(t.id,null); return; } if (value.startsWith("externo:")) void asignarParticipanteExterno(t.id,value.slice(8)); else if (value.startsWith("interno:")) void asignarResponsable(t.id,value.slice(8)); }} className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60"><option value="">Sin asignar</option>{operariosDelArea.length > 0 ? <optgroup label={`Taller propio · ${t.area}`}>{operariosDelArea.map((operario) => <option key={`i-${operario.id}`} value={`interno:${operario.id}`}>{operario.nombre}</option>)}</optgroup> : null}{mostrarExternos && externosCompatibles.length > 0 ? <optgroup label="Participantes externos compatibles">{externosCompatibles.map((p) => <option key={`e-${p.id}`} value={`externo:${p.id}`}>{p.nombre} · {p.tipo_participante === "organizacion" ? "Organización / taller" : p.tipo_participante === "profesional" ? "Profesional" : p.tipo_participante === "servicio" ? "Servicio especializado" : p.tipo_participante === "proveedor" ? "Proveedor" : p.tipo_participante} · {p.especialidad}</option>)}</optgroup> : null}</select>{operariosDelArea.length === 0 ? <p className="text-[10px] text-warning">No hay operarios internos activos para {t.area}. Asigna un usuario con rol Operario y área {t.area} en Gestión → Usuarios, o selecciona un participante externo compatible del ecosistema.</p> : null}{operariosError ? <p className="text-[10px] text-danger">No se pudo consultar responsables: {operariosError}</p> : null}{mostrarExternos && externosCompatibles.length === 0 ? <p className="text-[10px] text-muted-foreground">No hay participantes externos con capacidad configurada para {t.area}.</p> : null}{tieneCapacidadInterna && !t.participante_id ? <p className="text-[10px] text-muted-foreground">Este taller tiene habilitada la capacidad {t.area}; la ejecución se gestiona internamente.</p> : null}{capacidadesSedeError ? <p className="text-[10px] text-danger">No se pudo consultar las capacidades del taller.</p> : null}{t.participante_id ? <p className="text-[10px] text-muted-foreground">El taller externo recibirá y repartirá internamente este servicio.</p> : null}</> : <p className="rounded-xl bg-surface-muted px-3 py-2.5 text-sm font-semibold">{t.participante_id ? "Servicio externo asignado" : t.responsable_user_id ? "Operario asignado" : "Sin asignar"}</p>}</div></div>
           );
         }) : <Empty text="No hay trabajos registrados." />}
       </div>
