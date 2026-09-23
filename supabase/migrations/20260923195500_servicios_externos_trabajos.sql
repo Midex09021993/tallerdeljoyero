@@ -3,6 +3,7 @@ create or replace function public.listar_participantes_servicio()
 returns table (
   id uuid,
   nombre text,
+  tipo_participante text,
   especialidad text
 )
 language plpgsql
@@ -18,6 +19,7 @@ begin
   select
     ep.id,
     ep.nombre,
+    ep.tipo_participante,
     string_agg(distinct e.nombre, ' · ' order by e.nombre) as especialidad
   from public.ecosistema_participantes ep
   join public.participante_especialidades pe
