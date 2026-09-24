@@ -771,7 +771,7 @@ function CotizacionDetallePage() {
                         <p className="font-medium">✓ Operación comercial creada</p>
                         {contratoNumero ? <p className="mt-1 text-xs text-muted-foreground">Contrato: {contratoNumero}</p> : null}
                       </div>
-                      <Link to="/pedidos-2/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
+                      <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
                     </div>
                   ) : (
                     <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedidoYContrato()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">

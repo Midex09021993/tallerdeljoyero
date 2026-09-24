@@ -8,9 +8,9 @@ import { useCrearPedido, usePedidos, useSedes, type PedidoNuevo } from "@/lib/ta
 import { useSesion } from "@/lib/auth";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/pedidos-2/nuevo")({
-  head: () => ({ meta: [{ title: "Nuevo pedido — Pedidos 2" }] }),
-  component: NuevoPedido2,
+export const Route = createFileRoute("/_authenticated/pedidos/nuevo")({
+  head: () => ({ meta: [{ title: "Nuevo pedido — Pedidos" }] }),
+  component: NuevoPedido,
 });
 
 function hoy() {
@@ -48,7 +48,7 @@ function Campo({ label, value, onChange, placeholder, type = "text", required = 
   );
 }
 
-function NuevoPedido2() {
+function NuevoPedido() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
@@ -63,7 +63,7 @@ function NuevoPedido2() {
   }, [clienteBusqueda]);
 
   const { data: clientes = [] } = useQuery({
-    queryKey: ["pedidos-2-nuevo-clientes", clienteBusquedaDebounced],
+    queryKey: ["pedidos-nuevo-clientes", clienteBusquedaDebounced],
     enabled: clienteBusquedaDebounced.length >= 2,
     queryFn: async () => {
       const termino = clienteBusquedaDebounced.replace(/[%_,]/g, "");
@@ -83,7 +83,7 @@ function NuevoPedido2() {
   const [clienteId, setClienteId] = useState("");
   const [contratoId, setContratoId] = useState("");
   const { data: contratosCliente = [], isFetching: buscandoContratos } = useQuery({
-    queryKey: ["pedidos-2-nuevo-contratos", clienteId],
+    queryKey: ["pedidos-nuevo-contratos", clienteId],
     enabled: Boolean(clienteId),
     queryFn: async () => {
       const { data: cotizacionesCliente, error: errorCotizaciones } = await supabase
@@ -254,7 +254,7 @@ function NuevoPedido2() {
 
       const resultado = await crear.mutateAsync(nuevo);
       toast.success(`Pedido ${resultado?.referencia ?? nuevo.referencia} creado correctamente.`);
-      navigate({ to: "/pedidos-2/$id", params: { id: resultado.id } });
+      navigate({ to: "/pedidos/$id", params: { id: resultado.id } });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo crear el pedido.");
     }
@@ -266,7 +266,7 @@ function NuevoPedido2() {
 
   return (
     <AppShell titulo="Nuevo pedido" subtitulo="Registrar una joya desde recepción y dejarla lista para su recorrido operativo"
-      acciones={<button type="button" onClick={() => navigate({ to: "/pedidos-2" })} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4" /> Volver a Pedidos</button>}>
+      acciones={<button type="button" onClick={() => navigate({ to: "/pedidos" })} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4" /> Volver a Pedidos</button>}>
       <form onSubmit={submit} className="mx-auto max-w-6xl">
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <div className="space-y-5">
