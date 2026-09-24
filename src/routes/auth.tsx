@@ -185,7 +185,6 @@ function LoginPage() {
             </div>
 
             {modoAlta ? (
-              {modoAlta ? (
               <>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   Nombre
@@ -200,7 +199,6 @@ function LoginPage() {
                   <input required value={dni} onChange={(e) => setDni(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
                 </label>
               </>
-            ) : null}
             ) : null}
 
             <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
