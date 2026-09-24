@@ -46,7 +46,6 @@ import {
 import {
   AREAS,
   areaCoincide,
-  correoDesdeUsuario,
   normalizarArea,
   rolEtiqueta,
   useSesion,
@@ -1400,7 +1399,6 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   const [form, setForm] = useState({
     nombre: "",
-    usuario: "",
     password: "",
     dni: "",
     telefono: "",
@@ -1409,7 +1407,6 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     acceso_desde: "",
     acceso_hasta: "",
   });
-  const [areas, setAreas] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
   const [usuarioPorEliminar, setUsuarioPorEliminar] = useState<Usuario | null>(null);
@@ -1420,29 +1417,24 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    if (form.rol === "operario" && areas.length === 0) {
-      toast.error("Elige al menos un área de trabajo para el operario");
-      return;
-    }
     setGuardando(true);
     try {
       await crear({
         data: {
-          correo: correoDesdeUsuario(form.usuario || form.dni),
+          correo: `${form.dni.replace(/\s+/g, "")}@taller.local`,
           password: form.password,
           nombre: form.nombre,
           dni: form.dni,
           telefono: form.telefono,
           rol: form.rol,
           sede_id: form.sede_id || null,
-          areas: form.rol === "operario" ? areas : [],
+          areas: [],
           acceso_desde: form.acceso_desde || null,
           acceso_hasta: form.acceso_hasta || null,
         },
       });
       toast.success("Usuario creado");
-      setForm({ ...form, nombre: "", usuario: "", password: "", dni: "", telefono: "" });
-      setAreas([]);
+      setForm({ ...form, nombre: "", password: "", dni: "", telefono: "", acceso_desde: "", acceso_hasta: "" });
       qc.invalidateQueries({ queryKey: ["usuarios"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo crear el usuario");
@@ -1476,11 +1468,6 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           />
           <input
             className={inputCls}
-            placeholder="Usuario o DNI de acceso"
-            value={form.usuario}
-            onChange={(e) => setForm({ ...form, usuario: e.target.value })}
-            required
-          />
           <input
             className={inputCls}
             type="password"
@@ -1494,6 +1481,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
               className={inputCls}
               placeholder="DNI"
               value={form.dni}
+              required
               onChange={(e) => setForm({ ...form, dni: e.target.value })}
             />
             <input
@@ -1552,35 +1540,6 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
               </label>
             </div>
           </div>
-
-          {form.rol === "operario" ? (
-            <div className="rounded-lg border border-border p-3">
-              <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                Áreas habilitadas
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {AREAS.map((a) => {
-                  const activo = areas.includes(a);
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() =>
-                        setAreas(activo ? areas.filter((x) => x !== a) : [...areas, a])
-                      }
-                      className={`rounded-full px-3 py-1 text-[11px] ${
-                        activo
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-surface-muted text-muted-foreground"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
 
           <button
             type="submit"
