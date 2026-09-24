@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
+import { CatalogoModeloDialog, type CatalogoProductoEditor } from "@/components/CatalogoModeloDialog";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +39,35 @@ function formatPrice(value: number | null, moneda: string | null) {
 
 function CatalogoPage() {
   const { data: sesion } = useSesion();
+  const queryClient = useQueryClient();
+  const [editorAbierto, setEditorAbierto] = useState(false);
+  const [modeloEditando, setModeloEditando] = useState<CatalogoProductoEditor | null>(null);
+  const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
+  const puedeGestionar = Boolean(sesion?.esAdmin);
+  const abrirNuevo = () => { setModeloEditando(null); setEditorAbierto(true); };
+  const abrirEdicion = (producto: Producto) => {
+    const row = productoRows.find((item) => item.id === producto.id);
+    if (!row) return;
+    setModeloEditando(row); setEditorAbierto(true);
+  };
+  const cambiarFlag = async (id: string, campo: "publicado" | "destacado", valor: boolean) => {
+    if (!puedeGestionar || guardandoAccion) return;
+    setGuardandoAccion(campo + ":" + id);
+    try {
+      const { error } = await supabase.from("catalogo_productos").update({ [campo]: valor }).eq("id", id);
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion?.sede?.id] });
+    } catch (error) { window.alert(error instanceof Error ? error.message : "No se pudo actualizar el modelo."); }
+    finally { setGuardandoAccion(null); }
+  };
+  const compartir = async (producto: Producto) => {
+    if (!catalogoConfig?.slug) return;
+    const url = window.location.origin + "/" + catalogoConfig.slug;
+    try {
+      if (navigator.share) await navigator.share({ title: producto.nombre, text: producto.nombre + " · " + (catalogoConfig.nombre_publico ?? "Catálogo"), url });
+      else await navigator.clipboard.writeText(url);
+    } catch {}
+  };
   const { data: catalogoConfig } = useQuery({
     queryKey: ["catalogo-config-publico", sesion?.sede?.id],
     enabled: Boolean(sesion?.sede?.id),
@@ -139,8 +169,8 @@ function CatalogoPage() {
               <ExternalLink className="size-4" /> Configurar catálogo público
             </span>
           )}
-          {sesion?.esAdmin ? (
-            <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground">
+          {puedeGestionar ? (
+            <button type="button" onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground">
               <Plus className="size-4" /> Nuevo modelo
             </button>
           ) : null}
@@ -195,8 +225,7 @@ function CatalogoPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
-                  <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button>
-                  <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
+                  {puedeGestionar ? <><button type="button" onClick={() => void cambiarFlag(p.id, "publicado", p.estado !== "Publicado")} disabled={guardandoAccion === "publicado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.estado === "Publicado" ? "Retirar" : "Publicar"}</button><button type="button" onClick={() => void cambiarFlag(p.id, "destacado", !p.destacado)} disabled={guardandoAccion === "destacado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.destacado ? "Quitar destacado" : "Destacar"}</button></> : null}<button type="button" onClick={() => abrirEdicion(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button><button type="button" onClick={() => void compartir(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
                 </div>
               </div>
             </article>
@@ -209,6 +238,8 @@ function CatalogoPage() {
           </div>
         )}
       </section>
+
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} sedeId={sesion?.sede?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.sede?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.sede.id] }); }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
         <div className="grid gap-3 md:grid-cols-3">
