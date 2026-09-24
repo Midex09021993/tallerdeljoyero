@@ -111,10 +111,10 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     if (sedeError) throw new Error("No se pudo preparar la sede inicial");
 
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
-      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
+      email: emailNormalizado,
       password: data.password,
       email_confirm: true,
-      user_metadata: { usuario: data.usuario.trim().toLowerCase(), nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
+      user_metadata: { usuario: usuarioNormalizado, nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
     });
 
     if (error || !creado.user) {
@@ -123,7 +123,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
-      usuario: data.usuario.trim().toLowerCase(),
+      usuario: usuarioNormalizado,
       nombre: data.nombre,
       apellidos: data.apellidos,
       dni: data.dni,
@@ -148,6 +148,114 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Lista las cuentas reales de Auth y las reconcilia con los datos administrativos. */
+export const listarUsuarios = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: misRolesRaw, error: misRolesError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (misRolesError) throw new Error("No se pudo verificar tu rol administrativo");
+
+    const misRoles = (misRolesRaw ?? []).map((r) => r.role);
+    const esDueno = misRoles.includes("dueno");
+    const esGerente = misRoles.includes("gerente");
+    if (!esDueno && !esGerente) throw new Error("No tienes permiso para consultar usuarios");
+
+    let page = 1;
+    const authUsers: NonNullable<Awaited<ReturnType<typeof supabaseAdmin.auth.admin.listUsers>>["data"]>["users"] = [];
+    while (true) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) throw new Error("No se pudieron consultar las cuentas del sistema");
+      authUsers.push(...data.users);
+      if (data.users.length < 1000) break;
+      page += 1;
+    }
+
+    const [{ data: perfiles, error: perfilesError }, { data: roles, error: rolesError }, { data: areas, error: areasError }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, usuario, nombre, apellidos, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta"),
+      supabaseAdmin.from("user_roles").select("user_id, role, sede_id"),
+      supabaseAdmin.from("user_areas").select("user_id, area"),
+    ]);
+    if (perfilesError || rolesError || areasError) {
+      throw new Error("No se pudo reconciliar la información administrativa de los usuarios");
+    }
+
+    const perfilesMap = new Map((perfiles ?? []).map((p) => [p.id, p]));
+    const rolesMap = new Map<string, { role: string; sede_id: string | null }[]>();
+    for (const role of roles ?? []) {
+      const actuales = rolesMap.get(role.user_id) ?? [];
+      actuales.push({ role: role.role, sede_id: role.sede_id ?? null });
+      rolesMap.set(role.user_id, actuales);
+    }
+    const areasMap = new Map<string, string[]>();
+    for (const area of areas ?? []) {
+      const actuales = areasMap.get(area.user_id) ?? [];
+      actuales.push(area.area);
+      areasMap.set(area.user_id, actuales);
+    }
+
+    let sedeGerente: string | null = null;
+    if (esGerente && !esDueno) {
+      const { data: perfilGerente } = await supabaseAdmin
+        .from("profiles")
+        .select("sede_id")
+        .eq("id", context.userId)
+        .maybeSingle();
+      sedeGerente = perfilGerente?.sede_id ?? null;
+    }
+
+    return authUsers
+      .map((authUser) => {
+        const perfil = perfilesMap.get(authUser.id);
+        const rolesUsuario = rolesMap.get(authUser.id) ?? [];
+        const sedeId = perfil?.sede_id ?? rolesUsuario.find((r) => r.sede_id)?.sede_id ?? null;
+        const usuario =
+          perfil?.usuario?.trim() ||
+          (typeof authUser.user_metadata?.usuario === "string" ? authUser.user_metadata.usuario : "") ||
+          authUser.email?.split("@")[0] ||
+          authUser.id;
+        const nombre =
+          perfil?.nombre?.trim() ||
+          (typeof authUser.user_metadata?.nombre === "string" ? authUser.user_metadata.nombre : "");
+        const apellidos =
+          perfil?.apellidos?.trim() ||
+          (typeof authUser.user_metadata?.apellidos === "string" ? authUser.user_metadata.apellidos : "");
+        const dni =
+          perfil?.dni?.trim() ||
+          (typeof authUser.user_metadata?.dni === "string" ? authUser.user_metadata.dni : "");
+        const telefono =
+          perfil?.telefono?.trim() ||
+          (typeof authUser.user_metadata?.telefono === "string" ? authUser.user_metadata.telefono : "");
+
+        return {
+          id: authUser.id,
+          usuario,
+          nombre,
+          apellidos,
+          dni,
+          telefono,
+          sede_id: sedeId,
+          activo: perfil?.activo ?? true,
+          acceso_desde: perfil?.acceso_desde ?? null,
+          acceso_hasta: perfil?.acceso_hasta ?? null,
+          roles: rolesUsuario.map((r) => r.role),
+          areas: areasMap.get(authUser.id) ?? [],
+          perfil_completo: Boolean(perfil),
+        };
+      })
+      .filter((usuario) => {
+        if (esDueno) return true;
+        const rolesUsuario = rolesMap.get(usuario.id) ?? [];
+        return !rolesUsuario.some((r) => r.role === "dueno" || r.role === "gerente") &&
+          usuario.sede_id != null &&
+          usuario.sede_id === sedeGerente;
+      });
+  });
+
 /** Alta de usuarios por parte de un dueño o gerente. */
 export const crearUsuario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -166,12 +274,18 @@ export const crearUsuario = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const usuarioNormalizado = data.usuario.trim().toLowerCase();
+    const emailNormalizado = `${usuarioNormalizado}@taller.local`;
+    const { data: existente } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (existente.users.some((u) => (u.email ?? "").toLowerCase() === emailNormalizado)) {
+      throw new Error("Ese usuario ya existe. Búscalo en Usuarios y usa Editar en lugar de crear otra cuenta.");
+    }
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
-      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
+      email: emailNormalizado,
       password: data.password,
       email_confirm: true,
       user_metadata: {
-        usuario: data.usuario.trim().toLowerCase(),
+        usuario: usuarioNormalizado,
         nombre: data.nombre,
         apellidos: data.apellidos,
         dni: data.dni,
@@ -182,7 +296,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
-      usuario: data.usuario.trim().toLowerCase(),
+      usuario: usuarioNormalizado,
       nombre: data.nombre,
       apellidos: data.apellidos,
       dni: data.dni,
@@ -300,11 +414,33 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: destinoRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role, sede_id")
+      .eq("user_id", data.id);
+    if (!misRoles.includes("dueno")) {
+      if ((destinoRoles ?? []).some((r) => r.role === "dueno" || r.role === "gerente")) {
+        return { ok: false, error: "Un gerente sólo puede editar personal operativo de su sede" };
+      }
+      const { data: miPerfil } = await supabaseAdmin.from("profiles").select("sede_id").eq("id", context.userId).maybeSingle();
+      const sedeDestino = data.sede_id ?? (destinoRoles ?? []).find((r) => r.sede_id)?.sede_id ?? null;
+      if (!miPerfil?.sede_id || sedeDestino !== miPerfil.sede_id) {
+        return { ok: false, error: "Sólo puedes editar usuarios de tu sede" };
+      }
+    }
+    const { data: authActual, error: authActualError } = await supabaseAdmin.auth.admin.getUserById(data.id);
+    if (authActualError || !authActual.user) return { ok: false, error: "La cuenta de autenticación no existe" };
+    const usuarioNormalizado = data.usuario.trim().toLowerCase();
+    const emailNormalizado = \`${usuarioNormalizado}@taller.local\`;
+    const { data: todosAuth } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (todosAuth?.users.some((u) => u.id !== data.id && (u.email ?? "").toLowerCase() === emailNormalizado)) {
+      return { ok: false, error: "Ese usuario ya pertenece a otra cuenta" };
+    }
 
     const { error: errPerfil } = await supabaseAdmin
       .from("profiles")
       .update({
-        usuario: data.usuario.trim().toLowerCase(),
+        usuario: usuarioNormalizado,
         nombre: data.nombre,
         apellidos: data.apellidos,
         dni: data.dni,
@@ -333,10 +469,10 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
 
     // El usuario es la credencial estable; el DNI es sólo dato personal.
     const cambios: Record<string, unknown> = {
-      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
+      email: emailNormalizado,
       email_confirm: true,
       user_metadata: {
-        usuario: data.usuario.trim().toLowerCase(),
+        usuario: usuarioNormalizado,
         nombre: data.nombre,
         apellidos: data.apellidos,
         dni: data.dni,
