@@ -181,7 +181,13 @@ export const listarUsuarios = createServerFn({ method: "GET" })
       supabaseAdmin.from("user_areas").select("user_id, area"),
     ]);
     if (perfilesError || rolesError || areasError) {
-      throw new Error("No se pudo reconciliar la información administrativa de los usuarios");
+      const detalles = [
+        perfilesError ? `profiles: ${perfilesError.message}` : null,
+        rolesError ? `user_roles: ${rolesError.message}` : null,
+        areasError ? `user_areas: ${areasError.message}` : null,
+      ].filter(Boolean).join(" | ");
+      console.error("[listarUsuarios] Error al reconciliar usuarios:", detalles);
+      throw new Error(`No se pudo reconciliar la información administrativa de los usuarios: ${detalles}`);
     }
 
     const perfilesMap = new Map((perfiles ?? []).map((p) => [p.id, p]));
