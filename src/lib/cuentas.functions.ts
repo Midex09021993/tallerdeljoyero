@@ -437,28 +437,29 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       return { ok: false, error: "Ese usuario ya pertenece a otra cuenta" };
     }
 
-    const { error: errPerfil } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        usuario: usuarioNormalizado,
-        nombre: data.nombre,
-        apellidos: data.apellidos,
-        dni: data.dni,
-        telefono: data.telefono,
-        sede_id: data.sede_id,
-        activo: data.activo,
-        acceso_desde: data.acceso_desde,
-        acceso_hasta: data.acceso_hasta,
-      })
-      .eq("id", data.id);
+    const { error: errPerfil } = await supabaseAdmin.from("profiles").upsert({
+      id: data.id,
+      usuario: usuarioNormalizado,
+      nombre: data.nombre,
+      apellidos: data.apellidos,
+      dni: data.dni,
+      telefono: data.telefono,
+      sede_id: data.sede_id,
+      activo: data.activo,
+      acceso_desde: data.acceso_desde,
+      acceso_hasta: data.acceso_hasta,
+    });
     if (errPerfil) return { ok: false, error: errPerfil.message };
 
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
-    await supabaseAdmin
+    const { error: errRolDelete } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
+    if (errRolDelete) return { ok: false, error: errRolDelete.message };
+    const { error: errRolInsert } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: data.id, role: data.rol, sede_id: data.sede_id });
+    if (errRolInsert) return { ok: false, error: errRolInsert.message };
 
-    await supabaseAdmin.from("user_areas").delete().eq("user_id", data.id);
+    const { error: errAreasDelete } = await supabaseAdmin.from("user_areas").delete().eq("user_id", data.id);
+    if (errAreasDelete) return { ok: false, error: errAreasDelete.message };
     const areas = data.rol === "operario" ? normalizarAreas(data.areas) : [];
     if (areas.length > 0) {
       const { error: errAreas } = await supabaseAdmin
