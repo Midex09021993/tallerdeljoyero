@@ -123,7 +123,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
-      usuario: usuarioNormalizado,
+      usuario: data.usuario.trim().toLowerCase(),
       nombre: data.nombre,
       apellidos: data.apellidos,
       dni: data.dni,
