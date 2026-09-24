@@ -63,7 +63,7 @@ function NuevoPedido() {
   }, [clienteBusqueda]);
 
   const { data: clientes = [] } = useQuery({
-    queryKey: ["pedidos-2-nuevo-clientes", clienteBusquedaDebounced],
+    queryKey: ["pedidos-nuevo-clientes", clienteBusquedaDebounced],
     enabled: clienteBusquedaDebounced.length >= 2,
     queryFn: async () => {
       const termino = clienteBusquedaDebounced.replace(/[%_,]/g, "");
@@ -83,7 +83,7 @@ function NuevoPedido() {
   const [clienteId, setClienteId] = useState("");
   const [contratoId, setContratoId] = useState("");
   const { data: contratosCliente = [], isFetching: buscandoContratos } = useQuery({
-    queryKey: ["pedidos-2-nuevo-contratos", clienteId],
+    queryKey: ["pedidos-nuevo-contratos", clienteId],
     enabled: Boolean(clienteId),
     queryFn: async () => {
       const { data: cotizacionesCliente, error: errorCotizaciones } = await supabase
