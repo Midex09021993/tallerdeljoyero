@@ -27,7 +27,6 @@ type Seccion = {
   to:
     | "/inicio"
     | "/pedidos"
-    | "/pedidos-2"
     | "/cotizaciones"
     | "/diseno-3d"
     | "/impresion-3d"
