@@ -39,6 +39,8 @@ function LoginPage() {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
+  const [apellidos, setApellidos] = useState("");
+  const [dni, setDni] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
@@ -59,10 +61,11 @@ function LoginPage() {
       if (modoAlta) {
         await registrarPrimerDueno({
           data: {
-            correo: email,
+            usuario: usuario.trim(),
             password,
             nombre,
-            dni: usuario.trim(),
+            apellidos,
+            dni: dni.trim(),
             telefono: "",
             rol: "dueno",
             sede_id: null,
@@ -182,14 +185,26 @@ function LoginPage() {
             </div>
 
             {modoAlta ? (
-              <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
-                Nombre completo
-                <input required value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
-              </label>
+              {modoAlta ? (
+              <>
+                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                  Nombre
+                  <input required value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                </label>
+                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                  Apellidos
+                  <input required value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                </label>
+                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                  DNI
+                  <input required value={dni} onChange={(e) => setDni(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                </label>
+              </>
+            ) : null}
             ) : null}
 
             <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
-              Usuario o DNI
+              Usuario
               <span className="relative mt-2 block">
                 <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
                 <input required autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
