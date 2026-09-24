@@ -15,6 +15,7 @@ import {
   Gem,
   FileSpreadsheet,
   Wrench,
+  BookOpen,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
