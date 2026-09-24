@@ -64,7 +64,9 @@ export type Sesion = {
   user: User;
   perfil: {
     id: string;
+    usuario: string;
     nombre: string;
+    apellidos: string;
     dni: string;
     telefono: string;
     sede_id: string | null;
@@ -104,7 +106,7 @@ export function useSesion() {
       const [{ data: perfil }, { data: roles }, { data: areas }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta")
+          .select("id, usuario, nombre, apellidos, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta")
           .eq("id", user.id)
           .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
@@ -139,7 +141,7 @@ export function useSesion() {
 
       return {
         user,
-        perfil: perfil ?? { id: user.id, nombre: "", dni: "", telefono: "", sede_id: null },
+        perfil: perfil ?? { id: user.id, usuario: "", nombre: "", apellidos: "", dni: "", telefono: "", sede_id: null },
         roles: listaRoles,
         areas: (areas ?? []).map((a) => a.area),
         sede,
@@ -164,10 +166,10 @@ export function inicioSegunRol(s: Sesion, opciones?: { movilTablet?: boolean }):
   return "/inicio";
 }
 
-/** Permite entrar con DNI o correo. El DNI se convierte en un correo interno. */
+/** Convierte el usuario del sistema en el identificador técnico de Supabase Auth. */
 export function correoDesdeUsuario(usuario: string) {
   const limpio = usuario.trim().toLowerCase();
-  return limpio.includes("@") ? limpio : `${limpio.replace(/\s+/g, "")}@taller.local`;
+  return limpio.includes("@") ? limpio : `${limpio}@taller.local`;
 }
 
 export function useCerrarSesion() {
