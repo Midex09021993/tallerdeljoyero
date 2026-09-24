@@ -31,9 +31,10 @@ function normalizarAreas(areas: string[]): string[] {
 }
 
 type NuevoUsuario = {
-  correo: string;
+  usuario: string;
   password: string;
   nombre: string;
+  apellidos: string;
   dni: string;
   telefono: string;
   rol: "dueno" | "gerente" | "operario" | "monitor" | "cliente";
@@ -44,10 +45,12 @@ type NuevoUsuario = {
 };
 
 function validar(input: NuevoUsuario): NuevoUsuario {
-  if (!input.correo || !input.correo.includes("@")) throw new Error("Usuario o correo no válido");
+  if (!input.usuario?.trim()) throw new Error("El usuario es obligatorio");
+  if (!/^[a-zA-Z0-9._-]{3,50}$/.test(input.usuario.trim())) throw new Error("El usuario debe tener entre 3 y 50 caracteres y sólo puede usar letras, números, punto, guion y guion bajo");
   if (!input.password || input.password.length < 6)
     throw new Error("La contraseña debe tener al menos 6 caracteres");
-  if (!input.nombre) throw new Error("El nombre es obligatorio");
+  if (!input.nombre?.trim()) throw new Error("El nombre es obligatorio");
+  if (!input.apellidos?.trim()) throw new Error("Los apellidos son obligatorios");
   if (!input.dni?.trim()) throw new Error("El DNI es obligatorio");
   if (input.acceso_desde && input.acceso_hasta && input.acceso_hasta < input.acceso_desde)
     throw new Error("La fecha final debe ser posterior a la inicial");
@@ -108,10 +111,10 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     if (sedeError) throw new Error("No se pudo preparar la sede inicial");
 
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.correo,
+      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
       password: data.password,
       email_confirm: true,
-      user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
+      user_metadata: { usuario: data.usuario.trim().toLowerCase(), nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
     });
 
     if (error || !creado.user) {
@@ -246,7 +249,9 @@ export const borrarUsuario = createServerFn({ method: "POST" })
 
 type EdicionUsuario = {
   id: string;
+  usuario: string;
   nombre: string;
+  apellidos: string;
   dni: string;
   telefono: string;
   sede_id: string | null;
@@ -264,7 +269,9 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
   .inputValidator((input: EdicionUsuario) => input)
   .handler(async ({ data, context }): Promise<{ ok: boolean; error?: string }> => {
     if (!data.id) return { ok: false, error: "Usuario no válido" };
-    if (!data.nombre) return { ok: false, error: "El nombre es obligatorio" };
+    if (!data.usuario?.trim() || !/^[a-zA-Z0-9._-]{3,50}$/.test(data.usuario.trim())) return { ok: false, error: "El usuario no es válido" };
+    if (!data.nombre?.trim()) return { ok: false, error: "El nombre es obligatorio" };
+    if (!data.apellidos?.trim()) return { ok: false, error: "Los apellidos son obligatorios" };
     if (data.password && data.password.length < 6)
       return { ok: false, error: "La contraseña debe tener al menos 6 caracteres" };
     if (data.acceso_desde && data.acceso_hasta && data.acceso_hasta < data.acceso_desde)
@@ -287,7 +294,9 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     const { error: errPerfil } = await supabaseAdmin
       .from("profiles")
       .update({
+        usuario: data.usuario.trim().toLowerCase(),
         nombre: data.nombre,
+        apellidos: data.apellidos,
         dni: data.dni,
         telefono: data.telefono,
         sede_id: data.sede_id,
@@ -312,15 +321,18 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       if (errAreas) return { ok: false, error: `No se guardaron las áreas: ${errAreas.message}` };
     }
 
-    // El acceso se hace con DNI → correo sintético, así que el correo de la
-    // cuenta debe seguir siempre al DNI del perfil.
+    // El usuario es la credencial estable; el DNI es sólo dato personal.
     const cambios: Record<string, unknown> = {
-      user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
+      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
+      email_confirm: true,
+      user_metadata: {
+        usuario: data.usuario.trim().toLowerCase(),
+        nombre: data.nombre,
+        apellidos: data.apellidos,
+        dni: data.dni,
+        telefono: data.telefono,
+      },
     };
-    if (data.dni) {
-      cambios["email"] = `${data.dni.replace(/\s+/g, "")}@taller.local`;
-      cambios["email_confirm"] = true;
-    }
     if (data.password) cambios["password"] = data.password;
 
     {
