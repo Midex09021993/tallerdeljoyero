@@ -112,7 +112,7 @@ function CatalogoPage() {
       acciones={
         <div className="flex flex-wrap gap-2">
           {catalogoConfig?.slug ? (
-            <a href={`/catalogo-publico/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+            <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
               <ExternalLink className="size-4" /> Ver catálogo público
             </a>
           ) : (
@@ -174,7 +174,7 @@ function CatalogoPage() {
                   {p.precioDesde ? <p className="mt-3 text-sm font-semibold">{p.precioDesde}</p> : null}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/catalogo-publico/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
+                  {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
                   <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button>
                   <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
                 </div>

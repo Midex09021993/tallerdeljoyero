@@ -22,7 +22,7 @@ function CatalogoPublicoLanding() {
         <h1 className="mt-3 font-display text-5xl tracking-tight">Cada joyería tiene su propio catálogo.</h1>
         <p className="mx-auto mt-5 max-w-lg text-sm leading-7 text-[#746b62]">
           Los catálogos públicos utilizan un enlace único por sede. El formato general es
-          <span className="mx-1 rounded bg-white px-2 py-1 font-mono text-xs">/catalogo-publico/&lt;slug&gt;</span>
+          <span className="mx-1 rounded bg-white px-2 py-1 font-mono text-xs">/&lt;slug&gt;</span>
           para mantener separada la publicación de cada taller.
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-2">

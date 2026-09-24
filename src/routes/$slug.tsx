@@ -4,11 +4,11 @@ import { ArrowRight, BookOpen, Box, Instagram, MessageCircle, Search, Share2, Sp
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/catalogo-publico/$slug")({
+export const Route = createFileRoute("/$slug")({
   head: () => ({
     meta: [
-      { title: "Catálogo digital" },
-      { name: "description", content: "Catálogo digital público de una joyería o taller." },
+      { title: "Showroom digital" },
+      { name: "description", content: "Showroom digital público de una joyería o taller." },
     ],
   }),
   component: CatalogoPublicoPage,
@@ -51,15 +51,24 @@ type Producto = {
   destacado: boolean;
 };
 
+const RESERVED_SLUGS = new Set([
+  "auth", "c", "catalogo", "catalogo-publico", "inicio", "pedidos", "pedidos-2",
+  "cotizaciones", "gestion", "operario", "taller", "herramientas", "perfil",
+  "joya", "aurum-render", "aurum-render-public", "lovable",
+]);
+
 function CatalogoPublicoPage() {
   const { slug } = Route.useParams();
+  const slugNormalizado = slug.trim().toLowerCase();
+  const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
 
   const { data: rows = [], isLoading, error } = useQuery({
-    queryKey: ["catalogo-publico", slug],
+    queryKey: ["portal-publico", slugNormalizado],
+    enabled: !slugReservado,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: slug });
+      const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado });
       if (error) throw error;
       return (data ?? []) as CatalogoRow[];
     },
@@ -106,7 +115,7 @@ function CatalogoPublicoPage() {
     return <EstadoCatalogo titulo="Cargando catálogo…" texto="Estamos preparando la publicación de esta joyería." />;
   }
 
-  if (error || !config) {
+  if (slugReservado || error || !config) {
     return (
       <EstadoCatalogo
         titulo="Catálogo no disponible"
@@ -125,7 +134,7 @@ function CatalogoPublicoPage() {
             ) : null}
             <div className="min-w-0">
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
-              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.25em] text-[#8a6b36]">Catálogo digital</p>
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.25em] text-[#8a6b36]">Showroom digital</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -149,7 +158,7 @@ function CatalogoPublicoPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(180,145,75,.16),transparent_38%)]" />
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-24">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#8a6b36]">Catálogo · {config.slug}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#8a6b36]">Showroom · {config.slug}</p>
             <h1 className="mt-4 max-w-xl font-display text-5xl leading-[.95] tracking-tight">{config.descripcion_publica || "Joyas hechas para quedarse."}</h1>
             <p className="mt-6 max-w-lg text-sm leading-7 text-[#625b54]">
               Explora los modelos publicados por {config.nombre_publico} y solicita una propuesta personalizada directamente con el taller.
