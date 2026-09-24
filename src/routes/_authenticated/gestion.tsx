@@ -1398,8 +1398,10 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
   const borrar = useServerFn(borrarUsuario);
 
   const [form, setForm] = useState({
-    nombre: "",
+    usuario: "",
     password: "",
+    nombre: "",
+    apellidos: "",
     dni: "",
     telefono: "",
     rol: (esDueno ? "gerente" : "operario") as Rol,
@@ -1421,9 +1423,10 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
     try {
       await crear({
         data: {
-          correo: `${form.dni.replace(/\s+/g, "")}@taller.local`,
+          usuario: form.usuario,
           password: form.password,
           nombre: form.nombre,
+          apellidos: form.apellidos,
           dni: form.dni,
           telefono: form.telefono,
           rol: form.rol,
@@ -1434,7 +1437,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
         },
       });
       toast.success("Usuario creado");
-      setForm({ ...form, nombre: "", password: "", dni: "", telefono: "", acceso_desde: "", acceso_hasta: "" });
+      setForm({ ...form, usuario: "", password: "", nombre: "", apellidos: "", dni: "", telefono: "", acceso_desde: "", acceso_hasta: "" });
       qc.invalidateQueries({ queryKey: ["usuarios"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo crear el usuario");
@@ -1461,9 +1464,23 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
         <form onSubmit={enviar} className="space-y-3 p-6">
           <input
             className={inputCls}
-            placeholder="Nombre completo"
+            placeholder="Usuario"
+            value={form.usuario}
+            onChange={(e) => setForm({ ...form, usuario: e.target.value })}
+            required
+          />
+          <input
+            className={inputCls}
+            placeholder="Nombre"
             value={form.nombre}
             onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+            required
+          />
+          <input
+            className={inputCls}
+            placeholder="Apellidos"
+            value={form.apellidos}
+            onChange={(e) => setForm({ ...form, apellidos: e.target.value })}
             required
           />
           <input
@@ -1554,7 +1571,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Nombre", "DNI", "Rol", "Sede", "Áreas", "Acceso", ""].map((h) => (
+                {["Usuario", "Nombre", "DNI", "Rol", "Sede", "Áreas", "Acceso", ""].map((h) => (
                   <th
                     key={h}
                     className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
@@ -1568,7 +1585,8 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
               {usuarios
                 .map((u) => (
                   <tr key={u.id} className="hover:bg-surface-muted/60">
-                    <td className="px-6 py-3 text-sm">{u.nombre || "—"}</td>
+                    <td className="px-6 py-3 text-xs font-medium">{u.usuario || "—"}</td>
+                    <td className="px-6 py-3 text-sm">{u.nombre || "—"} {u.apellidos || ""}</td>
                     <td className="px-6 py-3 text-xs text-muted-foreground">{u.dni || "—"}</td>
                     <td className="px-6 py-3 text-xs">
                       {u.roles.map((r) => rolEtiqueta[r as Rol] ?? r).join(", ") || "Sin rol"}
@@ -1614,7 +1632,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                     ? [
                         fila,
                         <tr key={`${u.id}-edit`} className="bg-surface-muted/40">
-                          <td colSpan={7} className="px-6 py-4">
+                          <td colSpan={8} className="px-6 py-4">
                             <EditorUsuario
                               usuario={u}
                               sedes={sedes}
@@ -1683,7 +1701,9 @@ function EditorUsuario({
   const qc = useQueryClient();
   const actualizar = useServerFn(actualizarUsuario);
   const [datos, setDatos] = useState({
+    usuario: usuario.usuario,
     nombre: usuario.nombre,
+    apellidos: usuario.apellidos,
     dni: usuario.dni,
     telefono: usuario.telefono,
     sede_id: usuario.sede_id ?? "",
@@ -1707,7 +1727,9 @@ function EditorUsuario({
       const res = await actualizar({
         data: {
           id: usuario.id,
+          usuario: datos.usuario,
           nombre: datos.nombre,
+          apellidos: datos.apellidos,
           dni: datos.dni,
           telefono: datos.telefono,
           sede_id: datos.sede_id || null,
@@ -1738,9 +1760,23 @@ function EditorUsuario({
       <div className="grid gap-3 md:grid-cols-3">
         <input
           className={inputCls}
+          placeholder="Usuario"
+          value={datos.usuario}
+          onChange={(e) => setDatos({ ...datos, usuario: e.target.value })}
+          required
+        />
+        <input
+          className={inputCls}
           placeholder="Nombre"
           value={datos.nombre}
           onChange={(e) => setDatos({ ...datos, nombre: e.target.value })}
+          required
+        />
+        <input
+          className={inputCls}
+          placeholder="Apellidos"
+          value={datos.apellidos}
+          onChange={(e) => setDatos({ ...datos, apellidos: e.target.value })}
           required
         />
         <input
