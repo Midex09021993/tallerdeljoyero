@@ -1662,7 +1662,9 @@ export function useGuardarSede() {
 
 export type Usuario = {
   id: string;
+  usuario: string;
   nombre: string;
+  apellidos: string;
   dni: string;
   telefono: string;
   sede_id: string | null;
@@ -1681,7 +1683,7 @@ export function useUsuarios() {
         supabase
           .from("profiles")
           .select(
-            "id, nombre, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta",
+            "id, usuario, nombre, apellidos, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta",
           )
           .order("nombre"),
         supabase.from("user_roles").select("user_id, role"),
