@@ -51,15 +51,24 @@ type Producto = {
   destacado: boolean;
 };
 
+const RESERVED_SLUGS = new Set([
+  "auth", "c", "catalogo", "catalogo-publico", "inicio", "pedidos", "pedidos-2",
+  "cotizaciones", "gestion", "operario", "taller", "herramientas", "perfil",
+  "joya", "aurum-render", "aurum-render-public", "lovable",
+]);
+
 function CatalogoPublicoPage() {
   const { slug } = Route.useParams();
+  const slugNormalizado = slug.trim().toLowerCase();
+  const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
 
   const { data: rows = [], isLoading, error } = useQuery({
-    queryKey: ["catalogo-publico", slug],
+    queryKey: ["portal-publico", slugNormalizado],
+    enabled: !slugReservado,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: slug });
+      const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado });
       if (error) throw error;
       return (data ?? []) as CatalogoRow[];
     },
@@ -106,7 +115,7 @@ function CatalogoPublicoPage() {
     return <EstadoCatalogo titulo="Cargando catálogo…" texto="Estamos preparando la publicación de esta joyería." />;
   }
 
-  if (error || !config) {
+  if (slugReservado || error || !config) {
     return (
       <EstadoCatalogo
         titulo="Catálogo no disponible"
