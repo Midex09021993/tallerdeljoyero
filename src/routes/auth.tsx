@@ -17,7 +17,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Ingreso al sistema del taller de joyería con usuario o DNI y contraseña interna. Cada perfil accede a su propia vista.",
+          "Ingreso al sistema del taller de joyería con usuario y contraseña. Cada perfil accede a su propia vista.",
       },
       { property: "og:title", content: "Acceso al sistema — Aurum Lab" },
       { property: "og:description", content: "Ingreso interno del taller de joyería." },
