@@ -34,6 +34,7 @@ import {
   useInventario,
   usePedidos,
   useSedes,
+  useUsuarios,
   type Gasto,
   type Material,
   type Pedido,
