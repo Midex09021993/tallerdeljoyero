@@ -185,6 +185,7 @@ const ORDEN_MENU: Record<string, number> = {
   // El flujo comercial parte de la cotización; ventas y pedidos vienen después.
   "/inicio": 0,
   "/clientes": 5,
+  "/catalogo": 7,
   "/cotizaciones": 10,
   "/pedidos-2": 20,
   "/pedidos": 21,
