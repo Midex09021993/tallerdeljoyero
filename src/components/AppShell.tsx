@@ -59,7 +59,7 @@ type AtrasMovil = false | { to?: string; onClick?: () => void };
 const secciones: Seccion[] = [
   { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
-  { to: "/pedidos-2", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
+  { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
   { to: "/clientes", label: "Clientes", icono: Users, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
@@ -92,7 +92,7 @@ const CAPACIDADES_MENU = [
 ] as const;
 
 const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
-  "/pedidos-2": "Pedidos",
+  "/pedidos": "Pedidos",
   "/cotizaciones": "Cotizaciones",
   "/clientes": "Clientes",
   "/ventas-2": "Ventas",
@@ -190,8 +190,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/clientes": 5,
   "/catalogo": 7,
   "/cotizaciones": 10,
-  "/pedidos-2": 20,
-  "/pedidos": 21,
+  "/pedidos": 20,
   "/ventas-2": 30,
   "/ventas": 31,
   "/inventario": 40,
