@@ -99,7 +99,7 @@ function CatalogoPublicoPage() {
 
   const destacado = productos.find((producto) => producto.destacado) ?? productos[0] ?? null;
   const whatsappHref = config?.whatsapp
-    ? `https://wa.me/${config.whatsapp.replace(/\\D/g, "")}`
+    ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}`
     : null;
 
   if (isLoading) {
