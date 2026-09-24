@@ -1471,6 +1471,14 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           />
           <input
             className={inputCls}
+            type="password"
+            placeholder="Contraseña (mín. 6)"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+          />
+          <input
+            className={inputCls}
             placeholder="Nombre"
             value={form.nombre}
             onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -1481,14 +1489,6 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
             placeholder="Apellidos"
             value={form.apellidos}
             onChange={(e) => setForm({ ...form, apellidos: e.target.value })}
-            required
-          />
-          <input
-            className={inputCls}
-            type="password"
-            placeholder="Contraseña interna (mín. 6)"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
           />
           <div className="grid grid-cols-2 gap-3">
