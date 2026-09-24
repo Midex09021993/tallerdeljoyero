@@ -11,13 +11,13 @@ import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
-  head: () => ({ meta: [{ title: "Pedido 2 — Taller del Joyero" }, { name: "description", content: "Ficha operativa del pedido." }] }),
-  component: Pedido2Detalle,
+  head: () => ({ meta: [{ title: "Pedido — Taller del Joyero" }, { name: "description", content: "Ficha operativa del pedido." }] }),
+  component: PedidoDetalle,
 });
 
 type Tab = "resumen" | "produccion" | "comercial" | "archivos" | "historial";
 
-function Pedido2Detalle() {
+function PedidoDetalle() {
   const { id } = useParams({ from: "/_authenticated/pedidos/$id" });
   const navigate = useNavigate();
   const { data: pedidos = [] } = usePedidos();
@@ -343,7 +343,7 @@ function Pedido2Detalle() {
   };
 
   if (!pedido) {
-    return <AppShell titulo="Pedido 2"><div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">No se encontró el pedido.</div></AppShell>;
+    return <AppShell titulo="Pedido"><div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">No se encontró el pedido.</div></AppShell>;
   }
 
   const estado = pedido.estado;
