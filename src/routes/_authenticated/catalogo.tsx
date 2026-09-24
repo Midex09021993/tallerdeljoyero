@@ -17,67 +17,24 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 type Producto = {
-  id: string;
-  codigo: string;
-  nombre: string;
-  categoria: string;
-  descripcion: string;
-  imagen: string;
-  coleccion: string;
-  destacado?: boolean;
-  precioDesde?: string;
-  estado: "Publicado" | "Borrador";
+  id: string; codigo: string; nombre: string; categoria: string; descripcion: string;
+  imagen: string | null; coleccion: string; destacado: boolean;
+  precioDesde: string | null; estado: "Publicado" | "Borrador";
 };
-
-const DEMO: Producto[] = [
-  {
-    id: "demo-1",
-    codigo: "TDJ-A024",
-    nombre: "Aretes Punto de Luz",
-    categoria: "Aretes",
-    descripcion: "Diseño delicado para uso diario, disponible en diferentes aleaciones y piedras.",
-    imagen: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?auto=format&fit=crop&w=900&q=85",
-    coleccion: "Esenciales",
-    destacado: true,
-    precioDesde: "Desde S/ 480",
-    estado: "Publicado",
-  },
-  {
-    id: "demo-2",
-    codigo: "TDJ-R018",
-    nombre: "Anillo Aura",
-    categoria: "Anillos",
-    descripcion: "Silueta contemporánea preparada para variantes de oro y piedra central.",
-    imagen: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=900&q=85",
-    coleccion: "Esenciales",
-    destacado: true,
-    precioDesde: "Desde S/ 1,250",
-    estado: "Publicado",
-  },
-  {
-    id: "demo-3",
-    codigo: "TDJ-C011",
-    nombre: "Collar Línea",
-    categoria: "Collares",
-    descripcion: "Pieza minimalista con lectura limpia y posibilidad de personalización.",
-    imagen: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=85",
-    coleccion: "Línea Contemporánea",
-    destacado: false,
-    precioDesde: "Desde S/ 890",
-    estado: "Publicado",
-  },
-  {
-    id: "demo-4",
-    codigo: "TDJ-R031",
-    nombre: "Anillo Prisma",
-    categoria: "Anillos",
-    descripcion: "Modelo en preparación para publicación. La ficha técnica permanece interna.",
-    imagen: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=900&q=85",
-    coleccion: "Nueva colección",
-    destacado: false,
-    estado: "Borrador",
-  },
-];
+type ProductoRow = {
+  id: string; codigo: string; nombre: string; categoria: string; descripcion: string | null;
+  imagen_principal_url: string | null; precio_desde: number | null; moneda: string;
+  publicado: boolean; destacado: boolean; orden: number;
+};
+type ColeccionRow = {
+  producto_id: string; coleccion_id: string; coleccion: { nombre: string } | null;
+};
+function formatPrice(value: number | null, moneda: string | null) {
+  if (value === null || value === undefined) return null;
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency", currency: moneda || "PEN", maximumFractionDigits: 0,
+  }).format(value);
+}
 
 function CatalogoPage() {
   const { data: sesion } = useSesion();
@@ -98,12 +55,74 @@ function CatalogoPage() {
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todos");
 
-  const categorias = ["Todos", ...new Set(DEMO.map((p) => p.categoria))];
-  const productos = useMemo(() => DEMO.filter((p) => {
+  const { data: productoRows = [], isLoading: productosLoading, error: productosError } = useQuery({
+    queryKey: ["catalogo-productos", sesion?.sede?.id],
+    enabled: Boolean(sesion?.sede?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("catalogo_productos")
+        .select("id, codigo, nombre, categoria, descripcion, imagen_principal_url, precio_desde, moneda, publicado, destacado, orden")
+        .eq("sede_id", sesion!.sede!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as ProductoRow[];
+    },
+    staleTime: 30_000,
+  });
+
+  const productoIds = useMemo(() => productoRows.map((p) => p.id), [productoRows]);
+  const { data: coleccionRows = [] } = useQuery({
+    queryKey: ["catalogo-producto-colecciones", sesion?.sede?.id, productoIds],
+    enabled: productoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("catalogo_productos_colecciones")
+        .select("producto_id, coleccion_id, coleccion:catalogo_colecciones(nombre)")
+        .in("producto_id", productoIds);
+      if (error) throw error;
+      return (data ?? []) as ColeccionRow[];
+    },
+    staleTime: 30_000,
+  });
+
+  const coleccionesPorProducto = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of coleccionRows) if (row.coleccion?.nombre) map.set(row.producto_id, row.coleccion.nombre);
+    return map;
+  }, [coleccionRows]);
+
+  const todosLosProductos = useMemo<Producto[]>(
+    () => productoRows.map((p) => ({
+      id: p.id, codigo: p.codigo, nombre: p.nombre, categoria: p.categoria,
+      descripcion: p.descripcion ?? "", imagen: p.imagen_principal_url,
+      coleccion: coleccionesPorProducto.get(p.id) ?? "Sin colección",
+      destacado: p.destacado, precioDesde: formatPrice(p.precio_desde, p.moneda),
+      estado: p.publicado ? "Publicado" : "Borrador",
+    })),
+    [productoRows, coleccionesPorProducto],
+  );
+  const categorias = useMemo(
+    () => ["Todos", ...new Set(todosLosProductos.map((p) => p.categoria))],
+    [todosLosProductos],
+  );
+  const productos = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    return (!q || [p.nombre, p.codigo, p.categoria, p.coleccion].join(" ").toLowerCase().includes(q))
-      && (categoria === "Todos" || p.categoria === categoria);
-  }), [busqueda, categoria]);
+    return todosLosProductos.filter((p) =>
+      (!q || [p.nombre, p.codigo, p.categoria, p.coleccion].join(" ").toLowerCase().includes(q))
+      && (categoria === "Todos" || p.categoria === categoria),
+    );
+  }, [todosLosProductos, busqueda, categoria]);
+
+  if (productosLoading) return (
+    <AppShell titulo="Catálogo" subtitulo="Cargando modelos publicados y borradores…">
+      <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">Consultando el catálogo maestro de esta sede.</div>
+    </AppShell>
+  );
+  if (productosError) return (
+    <AppShell titulo="Catálogo" subtitulo="No se pudo cargar el catálogo maestro">
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8">
+        <p className="font-semibold text-destructive">Error al consultar los modelos</p>
+        <p className="mt-2 text-sm text-muted-foreground">{productosError.message}</p>
+      </div>
+    </AppShell>
+  );
 
   return (
     <AppShell
@@ -129,10 +148,10 @@ function CatalogoPage() {
       }
     >
       <div className="grid gap-4 md:grid-cols-4">
-        <Kpi label="Modelos" value={DEMO.length.toString()} icon={BookOpen} />
-        <Kpi label="Publicados" value={DEMO.filter((p) => p.estado === "Publicado").length.toString()} icon={ExternalLink} />
-        <Kpi label="Colecciones" value={new Set(DEMO.map((p) => p.coleccion)).size.toString()} icon={Sparkles} />
-        <Kpi label="Destacados" value={DEMO.filter((p) => p.destacado).length.toString()} icon={Sparkles} />
+        <Kpi label="Modelos" value={todosLosProductos.length.toString()} icon={BookOpen} />
+        <Kpi label="Publicados" value={todosLosProductos.filter((p) => p.estado === "Publicado").length.toString()} icon={ExternalLink} />
+        <Kpi label="Colecciones" value={new Set(todosLosProductos.map((p) => p.coleccion)).size.toString()} icon={Sparkles} />
+        <Kpi label="Destacados" value={todosLosProductos.filter((p) => p.destacado).length.toString()} icon={Sparkles} />
       </div>
 
       <section className="mt-6 overflow-hidden rounded-[26px] border border-gold/15 bg-card shadow-card">
@@ -159,11 +178,12 @@ function CatalogoPage() {
           </div>
         </div>
 
-        <div className={vista === "grid" ? "grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3" : "divide-y divide-border"}>
+        {productos.length ? (
+          <div className={vista === "grid" ? "grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3" : "divide-y divide-border"}>
           {productos.map((p) => (
             <article key={p.id} className={vista === "grid" ? "group bg-card" : "flex gap-4 bg-card p-4"}>
               <div className={vista === "grid" ? "relative aspect-[4/3] overflow-hidden" : "relative size-28 shrink-0 overflow-hidden rounded-xl"}>
-                <img src={p.imagen} alt={p.nombre} className="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                {p.imagen ? <img src={p.imagen} alt={p.nombre} className="size-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="grid size-full place-items-center bg-surface-muted"><ImageIcon className="size-10 text-muted-foreground" /></div>}
                 <span className="absolute left-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider">{p.estado}</span>
               </div>
               <div className={vista === "grid" ? "p-5" : "flex flex-1 items-center justify-between gap-4"}>
@@ -181,7 +201,13 @@ function CatalogoPage() {
               </div>
             </article>
           ))}
-        </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-card p-10 text-center">
+            <p className="font-semibold">No hay modelos para mostrar.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Crea el primer modelo desde este catálogo para que pueda publicarse.</p>
+          </div>
+        )}
       </section>
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
