@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { FechaInput } from "@/components/FechaInput";
@@ -34,7 +34,6 @@ import {
   useInventario,
   usePedidos,
   useSedes,
-  useUsuarios,
   type Gasto,
   type Material,
   type Pedido,
@@ -51,7 +50,7 @@ import {
   useSesion,
   type Rol,
 } from "@/lib/auth";
-import { actualizarUsuario, borrarUsuario, crearUsuario } from "@/lib/cuentas.functions";
+import { actualizarUsuario, borrarUsuario, crearUsuario, listarUsuarios } from "@/lib/cuentas.functions";
 import { ConfiguracionCalculadoras } from "@/components/ConfiguracionCalculadoras";
 import { AurumRenderConfig } from "@/components/AurumRenderConfig";
 import { SolicitudesAccesoOwner } from "@/components/SolicitudesAccesoOwner";
@@ -1386,13 +1385,14 @@ function ModuloAutomatizacion({
 
 function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia: string | null }) {
   const qc = useQueryClient();
-  const { data: todos = [] } = useUsuarios();
-  // Un gerente solo ve a los usuarios de su propia sede (nunca al dueño ni a otras sedes).
-  const usuarios = esDueno
-    ? todos
-    : todos.filter(
-        (u) => !u.roles.includes("dueno") && u.sede_id != null && u.sede_id === sedePropia,
-      );
+  const listar = useServerFn(listarUsuarios);
+  const { data: todos = [] } = useQuery({
+    queryKey: ["usuarios"],
+    queryFn: () => listar(),
+  });
+  // La función administrativa aplica el alcance correcto en servidor:
+  // dueño = todas las cuentas; gerente = sólo personal operativo de su sede.
+  const usuarios = todos;
   const { data: sedes = [] } = useSedes();
   const crear = useServerFn(crearUsuario);
   const borrar = useServerFn(borrarUsuario);
@@ -1585,7 +1585,12 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
               {usuarios
                 .map((u) => (
                   <tr key={u.id} className="hover:bg-surface-muted/60">
-                    <td className="px-6 py-3 text-xs font-medium">{u.usuario || "—"}</td>
+                    <td className="px-6 py-3 text-xs font-medium">
+                      <div>{u.usuario || "—"}</div>
+                      {"perfil_completo" in u && !(u as typeof u & { perfil_completo: boolean }).perfil_completo ? (
+                        <span className="text-[10px] text-warning">Perfil pendiente de completar</span>
+                      ) : null}
+                    </td>
                     <td className="px-6 py-3 text-sm">{u.nombre || "—"} {u.apellidos || ""}</td>
                     <td className="px-6 py-3 text-xs text-muted-foreground">{u.dni || "—"}</td>
                     <td className="px-6 py-3 text-xs">
