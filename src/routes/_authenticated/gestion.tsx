@@ -1468,8 +1468,6 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           />
           <input
             className={inputCls}
-          <input
-            className={inputCls}
             type="password"
             placeholder="Contraseña interna (mín. 6)"
             value={form.password}
