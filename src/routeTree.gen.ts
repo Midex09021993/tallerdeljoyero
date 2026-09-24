@@ -222,12 +222,6 @@ const AuthenticatedPedidosNuevoRoute =
     path: '/nuevo',
     getParentRoute: () => AuthenticatedPedidosRoute,
   } as any)
-const AuthenticatedPedidosIndexRoute =
-  AuthenticatedPedidosIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedPedidosRoute,
-  } as any)
 const AuthenticatedTrabajosIdRoute = AuthenticatedTrabajosIdRouteImport.update({
   id: '/trabajos/$id',
   path: '/trabajos/$id',
@@ -276,7 +270,6 @@ export interface FileRoutesByFullPath {
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
-  '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
@@ -287,11 +280,9 @@ export interface FileRoutesByFullPath {
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
-  '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
-  '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -359,7 +350,6 @@ export interface FileRoutesById {
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
-  '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
@@ -370,11 +360,9 @@ export interface FileRoutesById {
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
-  '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/_authenticated/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/_authenticated/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
-  '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
