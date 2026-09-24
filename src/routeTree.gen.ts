@@ -817,19 +817,6 @@ const AuthenticatedCotizacionesRouteWithChildren =
 
 interface AuthenticatedPedidosRouteChildren {
   AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
-  AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
-}
-
-const AuthenticatedPedidosRouteChildren: AuthenticatedPedidosRouteChildren = {
-  AuthenticatedPedidosIdRoute: AuthenticatedPedidosIdRoute,
-  AuthenticatedPedidosIndexRoute: AuthenticatedPedidosIndexRoute,
-}
-
-const AuthenticatedPedidosRouteWithChildren =
-  AuthenticatedPedidosRoute._addFileChildren(AuthenticatedPedidosRouteChildren)
-
-interface AuthenticatedPedidosRouteChildren {
-  AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
   AuthenticatedPedidosNuevoRoute: typeof AuthenticatedPedidosNuevoRoute
   AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
 }
