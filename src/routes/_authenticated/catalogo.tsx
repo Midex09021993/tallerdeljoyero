@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
@@ -79,6 +81,19 @@ const DEMO: Producto[] = [
 
 function CatalogoPage() {
   const { data: sesion } = useSesion();
+  const { data: catalogoConfig } = useQuery({
+    queryKey: ["catalogo-config-publico", sesion?.sede?.id],
+    enabled: Boolean(sesion?.sede?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("catalogo_configuracion")
+        .select("slug, visible, nombre_publico")
+        .eq("sede_id", sesion!.sede!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
   const [vista, setVista] = useState<"grid" | "lista">("grid");
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todos");
@@ -96,9 +111,15 @@ function CatalogoPage() {
       subtitulo="Portafolio de modelos · gestión interna y publicación externa"
       acciones={
         <div className="flex flex-wrap gap-2">
-          <Link to="/catalogo-publico" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
-            <ExternalLink className="size-4" /> Ver catálogo público
-          </Link>
+          {catalogoConfig?.slug ? (
+            <a href={`/catalogo-publico/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+              <ExternalLink className="size-4" /> Ver catálogo público
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-muted px-3.5 py-2.5 text-xs font-semibold text-muted-foreground">
+              <ExternalLink className="size-4" /> Configurar catálogo público
+            </span>
+          )}
           {sesion?.esAdmin ? (
             <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground">
               <Plus className="size-4" /> Nuevo modelo
@@ -153,7 +174,7 @@ function CatalogoPage() {
                   {p.precioDesde ? <p className="mt-3 text-sm font-semibold">{p.precioDesde}</p> : null}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {p.estado === "Publicado" ? <Link to="/catalogo-publico" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</Link> : null}
+                  {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/catalogo-publico/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
                   <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button>
                   <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
                 </div>
