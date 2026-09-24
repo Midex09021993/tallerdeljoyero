@@ -44,7 +44,8 @@ type Seccion = {
     | "/perfil"
     | "/aurum-render"
     | "/herramientas"
-    | "/migracion";
+    | "/migracion"
+    | "/catalogo";
   label: string;
   area?: string;
   roles?: Rol[];
@@ -73,6 +74,7 @@ const secciones: Seccion[] = [
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
   { to: "/migracion", label: "Migración", roles: ["dueno", "gerente"], icono: FileSpreadsheet, grupo: "administracion" },
+  { to: "/catalogo", label: "Catálogo", icono: BookOpen, grupo: "comercial" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
 
@@ -100,6 +102,7 @@ const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
   "/compras": "Compras",
   "/herramientas": "Herramientas",
   "/migracion": "Migración",
+  "/catalogo": "Catálogo",
 };
 
 function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
