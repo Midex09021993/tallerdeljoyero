@@ -90,7 +90,7 @@ function Venta2Detalle() {
     <AppShell
       titulo={pedido.referencia}
       subtitulo={`${pedido.cliente || "Cliente pendiente"} · ${pedido.sede_nombre || "Taller no asignado"}`}
-      acciones={<div className="flex flex-wrap gap-2"><button type="button" onClick={()=>navigate({to:"/ventas-2"})} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4"/> Ventas</button><Link to="/pedidos-2/$id" params={{id}} className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold">Ver pedido operativo</Link></div>}
+      acciones={<div className="flex flex-wrap gap-2"><button type="button" onClick={()=>navigate({to:"/ventas-2"})} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4"/> Ventas</button><Link to="/pedidos/$id" params={{id}} className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold">Ver pedido operativo</Link></div>}
     >
       <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-6 sm:p-8">
@@ -120,7 +120,7 @@ function Venta2Detalle() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">Acciones comerciales</p><p className="mt-1 text-xs text-muted-foreground">Ejecuta únicamente el siguiente paso disponible del cierre.</p></div>
           <div className="flex flex-wrap gap-2">
-            {estado === "En Producción" ? <Link to="/pedidos-2/$id" params={{id}} className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep">Ver proceso de producción</Link> : null}
+            {estado === "En Producción" ? <Link to="/pedidos/$id" params={{id}} className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs font-bold text-gold-deep">Ver proceso de producción</Link> : null}
             {estado === "Listo para Entrega" && pedido.packing_estado !== "Preparado" ? <button type="button" onClick={() => void ejecutar("packing")} disabled={guardando} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black">Preparar packing</button> : null}
             {estado === "Listo para Entrega" && pedido.packing_estado === "Preparado" ? <button type="button" onClick={() => setAccion("despachar")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-black">Preparar despacho</button> : null}
             {estado === "En Camino" ? <button type="button" onClick={() => setAccion("entregar")} className="rounded-xl bg-success px-4 py-2.5 text-xs font-bold text-white">Registrar entrega</button> : null}
