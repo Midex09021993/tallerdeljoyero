@@ -174,9 +174,28 @@ export const crearUsuario = createServerFn({ method: "POST" })
     });
     if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
 
+    const misRoles = (roles ?? []).map((r) => r.role);
+    if (!misRoles.includes("dueno") && !misRoles.includes("gerente")) {
+      throw new Error("No tienes permiso para crear usuarios");
+    }
+    if (data.rol === "dueno" && !misRoles.includes("dueno")) {
+      throw new Error("Sólo un dueño puede crear otro dueño");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
+      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { usuario: data.usuario.trim().toLowerCase(), nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
+    });
+    if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
+
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
+      usuario: data.usuario.trim().toLowerCase(),
       nombre: data.nombre,
+      apellidos: data.apellidos,
       dni: data.dni,
       telefono: data.telefono,
       sede_id: data.sede_id,
@@ -184,6 +203,25 @@ export const crearUsuario = createServerFn({ method: "POST" })
       acceso_hasta: data.acceso_hasta ?? null,
     });
     if (perfilError) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw new Error("Usuario creado en Auth, pero no se pudo crear el perfil");
+    }
+
+    const { error: rolError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: creado.user.id, role: data.rol, sede_id: data.sede_id });
+    if (rolError) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw new Error("Usuario creado, pero no se pudo asignar el rol");
+    }
+
+    const areasAlta = data.rol === "operario" ? normalizarAreas(data.areas) : [];
+    if (areasAlta.length > 0) {
+      const { error: errAreas } = await supabaseAdmin
+        .from("user_areas")
+        .insert(areasAlta.map((area) => ({ user_id: creado.user!.id, area })));
+      if (errAreas) {
+        await supabaseAdmin.auth.admin.deleteUser(creado.user.id);    if (perfilError) {
       await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
       throw new Error("Usuario creado en Auth, pero no se pudo crear el perfil");
     }
