@@ -440,12 +440,14 @@ export type Database = {
           created_at: string
           descripcion: string
           id: string
+          metadata: Json
           orden: number
           precio_unitario: number
           tipo: string
           total_costo: number
           total_precio: number
           unidad: string
+          updated_at: string
         }
         Insert: {
           cantidad?: number
@@ -454,12 +456,14 @@ export type Database = {
           created_at?: string
           descripcion?: string
           id?: string
+          metadata?: Json
           orden?: number
           precio_unitario?: number
           tipo?: string
           total_costo?: number
           total_precio?: number
           unidad?: string
+          updated_at?: string
         }
         Update: {
           cantidad?: number
@@ -468,12 +472,14 @@ export type Database = {
           created_at?: string
           descripcion?: string
           id?: string
+          metadata?: Json
           orden?: number
           precio_unitario?: number
           tipo?: string
           total_costo?: number
           total_precio?: number
           unidad?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -549,6 +555,38 @@ export type Database = {
           },
         ]
       }
+      cotizacion_respuestas_cliente: {
+        Row: {
+          accion: string
+          comentario: string
+          cotizacion_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          accion: string
+          comentario?: string
+          cotizacion_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          accion?: string
+          comentario?: string
+          cotizacion_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_respuestas_cliente_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           anticipo: number
@@ -568,7 +606,10 @@ export type Database = {
           notas_internas: string
           numero: string
           proyecto_joya_id: string | null
+          reemplaza_id: string | null
           sede_id: string | null
+          seguimiento_codigo: string
+          seguimiento_token: string
           subtotal: number
           subtotal_costo: number
           total: number
@@ -593,7 +634,10 @@ export type Database = {
           notas_internas?: string
           numero?: string
           proyecto_joya_id?: string | null
+          reemplaza_id?: string | null
           sede_id?: string | null
+          seguimiento_codigo?: string
+          seguimiento_token?: string
           subtotal?: number
           subtotal_costo?: number
           total?: number
@@ -618,7 +662,10 @@ export type Database = {
           notas_internas?: string
           numero?: string
           proyecto_joya_id?: string | null
+          reemplaza_id?: string | null
           sede_id?: string | null
+          seguimiento_codigo?: string
+          seguimiento_token?: string
           subtotal?: number
           subtotal_costo?: number
           total?: number
@@ -648,6 +695,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cotizaciones_reemplaza_id_fkey"
+            columns: ["reemplaza_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cotizaciones_sede_id_fkey"
             columns: ["sede_id"]
             isOneToOne: false
@@ -667,6 +721,7 @@ export type Database = {
           nombre: string
           notas_owner: string | null
           razon_social: string | null
+          sede_id: string | null
           telefono: string | null
           tipo_participante: string
           updated_at: string
@@ -681,6 +736,7 @@ export type Database = {
           nombre: string
           notas_owner?: string | null
           razon_social?: string | null
+          sede_id?: string | null
           telefono?: string | null
           tipo_participante?: string
           updated_at?: string
@@ -695,11 +751,20 @@ export type Database = {
           nombre?: string
           notas_owner?: string | null
           razon_social?: string | null
+          sede_id?: string | null
           telefono?: string | null
           tipo_participante?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ecosistema_participantes_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       especialidades: {
         Row: {
@@ -727,39 +792,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      sede_especialidades: {
-        Row: {
-          created_at: string
-          especialidad_id: string
-          sede_id: string
-        }
-        Insert: {
-          created_at?: string
-          especialidad_id: string
-          sede_id: string
-        }
-        Update: {
-          created_at?: string
-          especialidad_id?: string
-          sede_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sede_especialidades_especialidad_id_fkey"
-            columns: ["especialidad_id"]
-            isOneToOne: false
-            referencedRelation: "especialidades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sede_especialidades_sede_id_fkey"
-            columns: ["sede_id"]
-            isOneToOne: false
-            referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       gastos: {
         Row: {
@@ -2359,6 +2391,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sede_especialidades: {
+        Row: {
+          created_at: string
+          especialidad_id: string
+          sede_id: string
+        }
+        Insert: {
+          created_at?: string
+          especialidad_id: string
+          sede_id: string
+        }
+        Update: {
+          created_at?: string
+          especialidad_id?: string
+          sede_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sede_especialidades_especialidad_id_fkey"
+            columns: ["especialidad_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sede_especialidades_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sedes: {
         Row: {
           activa: boolean
@@ -2770,6 +2835,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      asignar_participante_externo_trabajo: {
+        Args: { _participante_id: string; _trabajo_id: string }
+        Returns: Json
+      }
+      asignar_responsable_trabajo: {
+        Args: { _responsable_user_id: string; _trabajo_id: string }
+        Returns: Json
+      }
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
         Returns: undefined
@@ -2850,64 +2923,7 @@ export type Database = {
         Args: { _cotizacion_id: string }
         Returns: string
       }
-      asignar_responsable_trabajo: {
-        Args: { _responsable_user_id: string | null; _trabajo_id: string }
-        Returns: Json
-      }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
-      listar_respuestas_cotizacion: {
-        Args: { _cotizacion_id: string }
-        Returns: {
-          id: string
-          accion: string
-          comentario: string
-          created_at: string
-        }[]
-      }
-      listar_participantes_servicio: {
-        Args: { _area?: string | null }
-        Returns: {
-          id: string
-          nombre: string
-          tipo_participante: string
-          especialidad: string | null
-        }[]
-      }
-      asignar_participante_externo_trabajo: {
-        Args: { _participante_id: string | null; _trabajo_id: string }
-        Returns: Json
-      }
-      listar_operarios_por_area: {
-        Args: { _sede_id: string }
-        Returns: {
-          areas: string[]
-          id: string
-          nombre: string
-        }[]
-      }
-      listar_trabajos_operario: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          pedido_id: string
-          area: string
-          ubicacion: string
-          titulo: string
-          descripcion: string
-          estado: string
-          prioridad: string
-          tipo: string
-          fecha_planificada: string | null
-          fecha_inicio: string | null
-          fecha_fin: string | null
-          notas: string
-          responsable_user_id: string | null
-        }[]
-      }
-      tomar_trabajo: {
-        Args: { _trabajo_id: string }
-        Returns: Json
-      }
       es_interno: { Args: { _user_id: string }; Returns: boolean }
       guardar_detalles_cotizacion: {
         Args: { _cotizacion_id: string; _detalles: Json }
@@ -2919,6 +2935,61 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      listar_operarios_por_area: {
+        Args: { _sede_id: string }
+        Returns: {
+          areas: string[]
+          id: string
+          nombre: string
+        }[]
+      }
+      listar_participantes_servicio:
+        | {
+            Args: never
+            Returns: {
+              especialidad: string
+              id: string
+              nombre: string
+              tipo_participante: string
+            }[]
+          }
+        | {
+            Args: { _area?: string }
+            Returns: {
+              especialidad: string
+              id: string
+              nombre: string
+              tipo_participante: string
+            }[]
+          }
+      listar_respuestas_cotizacion: {
+        Args: { _cotizacion_id: string }
+        Returns: {
+          accion: string
+          comentario: string
+          created_at: string
+          id: string
+        }[]
+      }
+      listar_trabajos_operario: {
+        Args: never
+        Returns: {
+          area: string
+          descripcion: string
+          estado: string
+          fecha_fin: string
+          fecha_inicio: string
+          fecha_planificada: string
+          id: string
+          notas: string
+          pedido_id: string
+          prioridad: string
+          responsable_user_id: string
+          tipo: string
+          titulo: string
+          ubicacion: string
+        }[]
       }
       mi_sede: { Args: { _user_id: string }; Returns: string }
       mover_pedido_a_area: {
@@ -3025,6 +3096,62 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      responder_cotizacion_cliente: {
+        Args: { _accion: string; _codigo: string; _comentario?: string }
+        Returns: Json
+      }
+      seguimiento_cotizacion: {
+        Args: { _token: string }
+        Returns: {
+          anticipo: number
+          cliente: string
+          descuento: number
+          detalles: Json
+          especificaciones: Json
+          estado: string
+          fecha_emision: string
+          fecha_entrega_solicitada: string
+          fecha_vencimiento: string
+          identidad_comercial: Json
+          impuestos: number
+          moneda: string
+          notas_cliente: string
+          numero: string
+          sede: string
+          subtotal: number
+          total: number
+          trabajo: string
+          version: number
+        }[]
+      }
+      seguimiento_cotizacion_codigo: {
+        Args: { _codigo: string }
+        Returns: {
+          anticipo: number
+          cliente: string
+          descuento: number
+          detalles: Json
+          especificaciones: Json
+          estado: string
+          fecha_emision: string
+          fecha_entrega_solicitada: string
+          fecha_vencimiento: string
+          identidad_comercial: Json
+          impuestos: number
+          moneda: string
+          notas_cliente: string
+          numero: string
+          sede: string
+          subtotal: number
+          total: number
+          trabajo: string
+          version: number
+        }[]
+      }
+      seguimiento_cotizacion_pdf_url: {
+        Args: { _codigo: string }
+        Returns: string
       }
       seguimiento_pedido: {
         Args: { _ref: string }
