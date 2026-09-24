@@ -111,10 +111,10 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     if (sedeError) throw new Error("No se pudo preparar la sede inicial");
 
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
-      email: emailNormalizado,
+      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
       password: data.password,
       email_confirm: true,
-      user_metadata: { usuario: usuarioNormalizado, nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
+      user_metadata: { usuario: data.usuario.trim().toLowerCase(), nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
     });
 
     if (error || !creado.user) {
@@ -431,7 +431,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     const { data: authActual, error: authActualError } = await supabaseAdmin.auth.admin.getUserById(data.id);
     if (authActualError || !authActual.user) return { ok: false, error: "La cuenta de autenticación no existe" };
     const usuarioNormalizado = data.usuario.trim().toLowerCase();
-    const emailNormalizado = \`${usuarioNormalizado}@taller.local\`;
+    const emailNormalizado = `${usuarioNormalizado}@taller.local`;
     const { data: todosAuth } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (todosAuth?.users.some((u) => u.id !== data.id && (u.email ?? "").toLowerCase() === emailNormalizado)) {
       return { ok: false, error: "Ese usuario ya pertenece a otra cuenta" };
