@@ -157,6 +157,9 @@ function seccionesVisibles(
     const habilitadas = new Set(capacidades);
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
+      // Catálogo es un módulo administrativo/comercial del dueño y gerente:
+      // debe estar disponible aunque todavía no exista la relación sede_especialidades.
+      if (s.to === "/catalogo") return true;
       const capacidadComercial = CAPACIDADES_COMERCIALES_MENU[s.to];
       if (capacidadComercial) return habilitadas.has(capacidadComercial);
       const capacidadSistema = CAPACIDADES_SISTEMA_MENU[s.to];
