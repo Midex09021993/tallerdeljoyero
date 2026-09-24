@@ -123,7 +123,9 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
+      usuario: data.usuario.trim().toLowerCase(),
       nombre: data.nombre,
+      apellidos: data.apellidos,
       dni: data.dni,
       telefono: data.telefono,
       sede_id: sede?.id ?? null,
@@ -165,10 +167,10 @@ export const crearUsuario = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.correo,
+      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
       password: data.password,
       email_confirm: true,
-      user_metadata: { nombre: data.nombre, dni: data.dni, telefono: data.telefono },
+      user_metadata: { usuario: data.usuario.trim().toLowerCase(), nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
     });
     if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
 
