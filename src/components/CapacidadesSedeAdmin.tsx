@@ -23,6 +23,7 @@ const CAPACIDADES_COMERCIALES = [
   "Cotizaciones",
   "Clientes",
   "Ventas",
+  "Catálogo",
 ] as const;
 
 const CAPACIDADES_INVENTARIO = [
