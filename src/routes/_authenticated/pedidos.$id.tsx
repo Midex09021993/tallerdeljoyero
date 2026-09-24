@@ -44,7 +44,7 @@ function Pedido2Detalle() {
   }, [pedido?.id]);
 
   const { data: trabajos = [], isLoading: loadingTrabajos } = useQuery({
-    queryKey: ["pedidos-2-trabajos", id],
+    queryKey: ["pedidos-trabajos", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,sede_id,created_at").eq("pedido_id", id).order("created_at");
@@ -54,7 +54,7 @@ function Pedido2Detalle() {
   });
 
   const { data: participantesServicio = [], error: participantesServicioError } = useQuery({
-    queryKey: ["pedidos-2-participantes-servicio", trabajos.map((t) => t.area).join("|")],
+    queryKey: ["pedidos-participantes-servicio", trabajos.map((t) => t.area).join("|")],
     enabled: Boolean(sesion?.esAdmin && trabajos.length > 0),
     queryFn: async () => {
       if (!sesion?.esAdmin || trabajos.length === 0) return [];
@@ -76,7 +76,7 @@ function Pedido2Detalle() {
   const sedeProduccionId = trabajos.find((trabajo) => trabajo.sede_id)?.sede_id ?? pedido?.sede_id ?? null;
 
   const { data: capacidadesSede = [], error: capacidadesSedeError } = useQuery({
-    queryKey: ["pedidos-2-capacidades-sede", sedeProduccionId],
+    queryKey: ["pedidos-capacidades-sede", sedeProduccionId],
     enabled: Boolean(sedeProduccionId && sesion?.esAdmin),
     queryFn: async () => {
       if (!sedeProduccionId || !sesion?.esAdmin) return [];
@@ -97,7 +97,7 @@ function Pedido2Detalle() {
   });
 
   const { data: operarios = [], error: operariosError } = useQuery({
-    queryKey: ["pedidos-2-operarios", sedeProduccionId, sesion?.esAdmin],
+    queryKey: ["pedidos-operarios", sedeProduccionId, sesion?.esAdmin],
     enabled: Boolean(sedeProduccionId && sesion?.esAdmin),
     queryFn: async () => {
       if (!sedeProduccionId || !sesion?.esAdmin) return [];
@@ -110,7 +110,7 @@ function Pedido2Detalle() {
   });
 
   const { data: ordenes = [] } = useQuery({
-    queryKey: ["pedidos-2-op", id],
+    queryKey: ["pedidos-op", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("ordenes_produccion").select("id,numero,estado,prioridad,fecha_planificada_inicio,fecha_planificada_fin,fecha_inicio,fecha_fin,responsable_user_id,created_at").eq("pedido_id", id).order("created_at");
@@ -120,7 +120,7 @@ function Pedido2Detalle() {
   });
 
   const { data: resumenCosto } = useQuery({
-    queryKey: ["pedidos-2-costos", ordenes[0]?.id],
+    queryKey: ["pedidos-costos", ordenes[0]?.id],
     enabled: Boolean(ordenes[0]?.id),
     queryFn: async () => {
       const { data, error } = await supabase.from("orden_produccion_resumen_costos").select("costo_estimado,costo_materiales,costo_mano_obra,costo_externo,costo_indirecto,costo_ajustes,costo_real,venta,margen,margen_porcentaje,moneda,calculado_at").eq("orden_produccion_id", ordenes[0]?.id ?? "").maybeSingle();
@@ -130,7 +130,7 @@ function Pedido2Detalle() {
   });
 
   const { data: controles = [] } = useQuery({
-    queryKey: ["pedidos-2-qc", id, ordenes.map((o) => o.id).join(",")],
+    queryKey: ["pedidos-qc", id, ordenes.map((o) => o.id).join(",")],
     enabled: Boolean(id) && ordenes.length > 0,
     queryFn: async () => {
       const ordenIds = ordenes.map((o) => o.id);
@@ -145,7 +145,7 @@ function Pedido2Detalle() {
   });
 
   const { data: piezas = [] } = useQuery({
-    queryKey: ["pedidos-2-piezas", id],
+    queryKey: ["pedidos-piezas", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("piezas_terminadas").select("id,numero_pieza,cantidad,estado,peso_final,created_at").eq("pedido_id", id).order("created_at");
@@ -155,7 +155,7 @@ function Pedido2Detalle() {
   });
 
   const { data: archivos = [] } = useQuery({
-    queryKey: ["pedidos-2-archivos", id],
+    queryKey: ["pedidos-archivos", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_archivos").select("id,nombre,tipo,grupo,version,poster,es_vigente_fabricacion,created_at").eq("pedido_id", id).order("created_at", { ascending: false });
@@ -165,7 +165,7 @@ function Pedido2Detalle() {
   });
 
   const { data: eventos = [] } = useQuery({
-    queryKey: ["pedidos-2-eventos", id],
+    queryKey: ["pedidos-eventos", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("produccion_eventos").select("id,tipo,estado_anterior,estado_nuevo,usuario_id,datos,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(150);
@@ -175,7 +175,7 @@ function Pedido2Detalle() {
   });
 
   const { data: movimientos = [] } = useQuery({
-    queryKey: ["pedidos-2-movimientos", id],
+    queryKey: ["pedidos-movimientos", id],
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_movimientos").select("id,area_origen,area_destino,accion,usuario_id,nota,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100);
@@ -203,7 +203,7 @@ function Pedido2Detalle() {
           ? "Operario asignado al trabajo."
           : "Responsable retirado del trabajo.",
       );
-      await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] });
+      await queryClient.invalidateQueries({ queryKey: ["pedidos-trabajos", id] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo asignar el operario.");
     } finally {
@@ -211,7 +211,7 @@ function Pedido2Detalle() {
     }
   };
 
-  const asignarParticipanteExterno = async (trabajoId: string, participanteId: string | null) => { if (!sesion?.esAdmin || asignandoTrabajoId) return; setAsignandoTrabajoId(trabajoId); try { const { error } = await supabase.rpc("asignar_participante_externo_trabajo", { _trabajo_id: trabajoId, _participante_id: participanteId }); if (error) throw error; toast.success(participanteId ? "Servicio externo asignado al trabajo." : "Servicio externo retirado del trabajo."); await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] }); } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo asignar el servicio externo."); } finally { setAsignandoTrabajoId(null); } };
+  const asignarParticipanteExterno = async (trabajoId: string, participanteId: string | null) => { if (!sesion?.esAdmin || asignandoTrabajoId) return; setAsignandoTrabajoId(trabajoId); try { const { error } = await supabase.rpc("asignar_participante_externo_trabajo", { _trabajo_id: trabajoId, _participante_id: participanteId }); if (error) throw error; toast.success(participanteId ? "Servicio externo asignado al trabajo." : "Servicio externo retirado del trabajo."); await queryClient.invalidateQueries({ queryKey: ["pedidos-trabajos", id] }); } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo asignar el servicio externo."); } finally { setAsignandoTrabajoId(null); } };
 
   const prepararProduccion = async () => {
     if (!pedido || preparandoProduccion) return;
@@ -226,10 +226,10 @@ function Pedido2Detalle() {
         `Producción preparada: ${resultado?.numero ?? "OP"} · ${resultado?.trabajos ?? 0} operaciones · ${resultado?.piezas ?? 0} pieza(s).`,
       );
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-eventos", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-op", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-trabajos", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-eventos", id] }),
         queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
       ]);
 
@@ -258,7 +258,7 @@ function Pedido2Detalle() {
           }
         }
 
-        await queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] });
+        await queryClient.invalidateQueries({ queryKey: ["pedidos-trabajos", id] });
       }
     } catch (error) {
       const detalle = error && typeof error === "object" && "message" in error
@@ -289,9 +289,9 @@ function Pedido2Detalle() {
       setDescripcionCalidad("");
       setMotivoCalidad("");
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-qc", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-op", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-qc", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-piezas", id] }),
         queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
       ]);
     } catch (error) {
@@ -310,8 +310,8 @@ function Pedido2Detalle() {
       if (error) throw error;
       toast.success(nuevoEstado === "verificada" ? "Pieza verificada." : nuevoEstado === "liberada" ? "Pieza liberada." : "Pieza rechazada.");
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-op", id] }),
       ]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo actualizar la pieza.");
@@ -329,10 +329,10 @@ function Pedido2Detalle() {
       if (error) throw error;
       toast.success(`Orden ${ordenPrincipal.numero}: ${nuevoEstado.replaceAll("_", " ")}`);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-op", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-trabajos", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-qc", id] }),
-        queryClient.invalidateQueries({ queryKey: ["pedidos-2-piezas", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-op", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-trabajos", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-qc", id] }),
+        queryClient.invalidateQueries({ queryKey: ["pedidos-piezas", id] }),
         queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
       ]);
     } catch (error) {
