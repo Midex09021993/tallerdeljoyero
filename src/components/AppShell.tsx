@@ -96,6 +96,7 @@ const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
   "/cotizaciones": "Cotizaciones",
   "/clientes": "Clientes",
   "/ventas-2": "Ventas",
+  "/catalogo": "Catálogo",
 };
 
 const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
@@ -103,7 +104,6 @@ const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
   "/compras": "Compras",
   "/herramientas": "Herramientas",
   "/migracion": "Migración",
-  "/catalogo": "Catálogo",
 };
 
 function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
