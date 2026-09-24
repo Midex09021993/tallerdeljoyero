@@ -48,6 +48,9 @@ function validar(input: NuevoUsuario): NuevoUsuario {
   if (!input.password || input.password.length < 6)
     throw new Error("La contraseña debe tener al menos 6 caracteres");
   if (!input.nombre) throw new Error("El nombre es obligatorio");
+  if (!input.dni?.trim()) throw new Error("El DNI es obligatorio");
+  if (input.acceso_desde && input.acceso_hasta && input.acceso_hasta < input.acceso_desde)
+    throw new Error("La fecha final debe ser posterior a la inicial");
   return input;
 }
 
