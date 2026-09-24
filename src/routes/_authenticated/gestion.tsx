@@ -1646,7 +1646,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                 })}
               {usuarios.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-8 text-sm text-muted-foreground">
                     Sin usuarios todavía.
                   </td>
                 </tr>
