@@ -104,7 +104,7 @@ function Ventas2Page() {
           </table>
         </div>
         <div className="divide-y divide-border lg:hidden">{lista.map((p)=>(
-          <button key={p.id} type="button" onClick={()=>navigate({to:"/ventas-2/$id",params:{id:p.id}})} className="w-full p-4 text-left transition hover:bg-surface-muted/50">
+          <button key={p.id} type="button" onClick={()=>navigate({to:"/ventas/$id",params:{id:p.id}})} className="w-full p-4 text-left transition hover:bg-surface-muted/50">
             <div className="flex items-start justify-between gap-3"><div><b className="text-sm">{p.referencia}</b><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado}/></div>
             <p className="mt-4 text-sm font-medium">{p.trabajo || p.pieza || "Pedido"}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold"><span className="rounded-lg bg-gold/10 px-2 py-1 text-gold-deep">{p.sede_nombre || "Taller no asignado"}</span><span className="rounded-lg bg-surface-muted px-2 py-1">{money(saldoPedido(p))} pendiente</span></div>
