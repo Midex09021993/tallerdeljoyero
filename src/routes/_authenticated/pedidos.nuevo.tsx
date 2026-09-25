@@ -350,7 +350,10 @@ function NuevoPedido() {
             grupo: referencia.clave,
             version: 1,
           });
-          if (errorArchivo) throw errorArchivo;
+          if (errorArchivo) {
+            await supabase.storage.from("pedidos").remove([rutaArchivo]);
+            throw errorArchivo;
+          }
           referenciasSubidas.push(rutaArchivo);
         }
       } catch (errorArchivos) {
