@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 280">
+<defs><filter id="p"><feGaussianBlur stdDeviation=".35"/></filter></defs>
+<g fill="none" stroke="#8d9298" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="208" cy="184" rx="105" ry="55" transform="rotate(-17 208 184)" stroke-width="2"/>
+<ellipse cx="208" cy="184" rx="92" ry="46" transform="rotate(-17 208 184)" stroke-width="1"/>
+<path d="M116 174c10-47 34-91 76-108 35-14 72-5 96 24 12 15 20 31 26 51" stroke-width="2.2"/>
+<path d="M139 166c9-35 28-68 60-82 27-12 55-6 74 15 10 11 17 25 22 39" stroke-width="1"/>
+<path d="M171 105l-8-25 20-30 32 8 20 27-4 25" stroke-width="2"/>
+<path d="M163 80l20 17 32-1 20-19M173 105c22 15 48 18 72 8" stroke-width="1"/>
+<path d="M137 143c31 23 68 30 104 20 27-7 48-21 65-40M128 157c29 24 68 35 107 27 33-6 59-23 77-47" stroke-width="1"/>
+<circle cx="181" cy="55" r="28" stroke-width="2"/>
+<circle cx="181" cy="55" r="23" stroke-width="1"/>
+<path d="M154 55l27-27 27 27-27 27zM164 39l17 43 17-43M154 55h54M165 71l16-43 16 43" stroke-width="1"/>
+<path d="M181 22v66M151 55h60" stroke="#a7abb0" stroke-width=".8" stroke-dasharray="4 5"/>
+<path d="M88 215c42 21 83 31 126 31 54 0 102-16 142-47M95 223c38 24 82 35 128 35 56 0 105-17 145-50" stroke="#b3b7bb" stroke-width=".8"/>
+</g></svg>
