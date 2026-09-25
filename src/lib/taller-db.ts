@@ -571,12 +571,36 @@ export function usePedidos() {
       // La tabla pedidos es la fuente principal de esta bandeja.
       // Los datos comerciales son enriquecimiento opcional: un problema de RLS,
       // esquema o permisos en esa tabla nunca debe ocultar pedidos operativos.
-      const { data: pedidosData, error: pedidosError } = await supabase
+      const pedidoSelectMinimo =
+        "id, referencia, pieza, cliente, material, estado, entrega, sede_id, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado";
+
+      let pedidosData: Array<Record<string, unknown>> | null = null;
+      let pedidosError: { message?: string; code?: string; details?: string } | null = null;
+
+      const principal = await supabase
         .from("pedidos")
         .select(CAMPOS_PEDIDO_BASE)
         .order("created_at", { ascending: false });
 
-      if (pedidosError) throw pedidosError;
+      pedidosData = (principal.data ?? null) as Array<Record<string, unknown>> | null;
+      pedidosError = principal.error;
+
+      // Si el backend oficial todavía tiene un desfase de esquema, la bandeja no
+      // debe desaparecer completa por una columna opcional. Reintentamos con el
+      // núcleo histórico que no depende de las ampliaciones recientes.
+      if (pedidosError) {
+        const minimo = await supabase
+          .from("pedidos")
+          .select(pedidoSelectMinimo)
+          .order("created_at", { ascending: false });
+
+        pedidosData = (minimo.data ?? null) as Array<Record<string, unknown>> | null;
+        pedidosError = minimo.error;
+
+        if (pedidosError) {
+          throw pedidosError;
+        }
+      }
 
       const { data: comercialesData, error: comercialesError } = await supabase
         .from("pedido_comercial")
