@@ -175,7 +175,7 @@ function Inicio() {
                 Casting: "/casting",
                 Taller: "/taller",
                 "Corte Láser": "/corte-laser",
-                Ventas: "/ventas-2",
+                Ventas: "/ventas",
               };
               const destino = destinos[area];
               return (
