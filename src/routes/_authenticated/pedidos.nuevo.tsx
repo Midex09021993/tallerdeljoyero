@@ -360,6 +360,11 @@ function NuevoPedido() {
         if (referenciasSubidas.length) {
           await supabase.storage.from("pedidos").remove(referenciasSubidas);
         }
+        await supabase
+          .from("pedido_archivos")
+          .delete()
+          .eq("pedido_id", resultado.id)
+          .eq("tipo", "referencia_diseno_3d");
         toast.warning(
           `Pedido ${resultado?.referencia ?? nuevo.referencia} creado, pero no se pudieron guardar todas las referencias: ${errorArchivos instanceof Error ? errorArchivos.message : "error de archivos"}`,
         );
