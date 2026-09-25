@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
     const { data: quote, error: quoteError } = await admin
       .from("cotizaciones")
-      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id,identidad_comercial_id")
+      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id,identidad_comercial_id,identidad_comercial")
       .eq("id", cotizacionId)
       .maybeSingle();
 
@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
     }
 
-    const [{ data: cliente }, { data: proyecto }, { data: sede }, { data: identidad }, { data: detalles }] = await Promise.all([
+    const [{ data: cliente }, { data: proyecto }, { data: sede }, { data: identidadActual }, { data: detalles }] = await Promise.all([
       admin.from("clientes").select("nombre,telefono,email").eq("id", quote.cliente_id).maybeSingle(),
       quote.proyecto_joya_id
         ? admin.from("proyectos_joya").select("codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras,cantidad_piezas").eq("id", quote.proyecto_joya_id).maybeSingle()
@@ -136,6 +136,10 @@ Deno.serve(async (req) => {
         : Promise.resolve({ data: null }),
       admin.from("cotizacion_detalles").select("orden,tipo,descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", quote.id).order("orden"),
     ]);
+
+    const identidad = quote.identidad_comercial && typeof quote.identidad_comercial === "object" && Object.keys(quote.identidad_comercial).length > 0
+      ? { ...(identidadActual ?? {}), ...(quote.identidad_comercial as Record<string, unknown>) }
+      : identidadActual;
 
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
