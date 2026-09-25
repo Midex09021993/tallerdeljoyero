@@ -79,7 +79,7 @@ function PedidosPage() {
 
         <div className="divide-y divide-border lg:hidden">{lista.map((p) => <button key={p.id} type="button" onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })} className="w-full p-4 text-left hover:bg-surface-muted/60"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold">{p.referencia}</p><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado} /></div><p className="mt-3 text-sm">{p.trabajo || p.pieza || "Sin descripción"}</p><div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground"><span>{p.sede_nombre || "Taller no asignado"} · {p.area_actual || "Sin ubicación"}</span><span>{fmtFecha(p.fecha_entrega ?? p.entrega) || "Sin fecha"}</span></div></button>)}</div>
 
-        {isError ? <div className="m-4 rounded-xl border border-danger/30 bg-danger/5 p-4 text-xs"><p className="font-semibold text-danger">Error real de carga de pedidos</p><pre className="mt-2 whitespace-pre-wrap break-words text-muted-foreground">{error instanceof Error ? error.message : String(error)}</pre></div> : null}
+        {isError ? <div className="m-4 rounded-xl border border-danger/30 bg-danger/5 p-4 text-xs"><p className="font-semibold text-danger">Error real de carga de pedidos</p><pre className="mt-2 whitespace-pre-wrap break-words text-muted-foreground">{error instanceof Error ? error.message : JSON.stringify(error, null, 2)}</pre></div> : null}
         {!isLoading && !isError && lista.length === 0 ? <div className="p-12 text-center text-sm text-muted-foreground">No hay pedidos en esta vista.</div> : null}
       </section>
 
