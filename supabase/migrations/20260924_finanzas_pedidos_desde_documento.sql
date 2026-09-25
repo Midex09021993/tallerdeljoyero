@@ -21,11 +21,18 @@ begin
     raise exception 'El documento comercial no existe';
   end if;
 
-  select coalesce(sum(cp.monto), 0)
-    into v_pagado
-  from public.contrato_pagos cp
-  where cp.contrato_id = new.contrato_id
-    and (tg_op <> 'UPDATE' or cp.id <> old.id);
+  if tg_op = 'UPDATE' then
+    select coalesce(sum(cp.monto), 0)
+      into v_pagado
+    from public.contrato_pagos cp
+    where cp.contrato_id = new.contrato_id
+      and cp.id <> old.id;
+  else
+    select coalesce(sum(cp.monto), 0)
+      into v_pagado
+    from public.contrato_pagos cp
+    where cp.contrato_id = new.contrato_id;
+  end if;
 
   if v_pagado + new.monto > v_total then
     raise exception 'El pago supera el saldo disponible. Saldo actual: %, pago: %',
