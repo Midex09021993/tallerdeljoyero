@@ -1,1116 +1,134 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AppShell, MobileBackButton } from "@/components/AppShell";
-import { FichaDorada } from "@/components/FichaDorada";
+import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { AlertCircle, ArrowRight, Banknote, Box, CheckCircle2, ClipboardList, CreditCard, PackageCheck, Search, Truck } from "lucide-react";
+import { AppShell } from "@/components/AppShell";
 import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { areaCoincide, useSesion } from "@/lib/auth";
+import { estadoClases, esEstadoFinalPedido, resumenFinancieroContrato, useContratos, usePagosContratos, usePedidos, type Pedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { areaCoincide } from "@/lib/auth";
-import {
-  esEstadoFinalPedido,
-  estadoClases,
-  resumenFinancieroContrato,
-  useActualizarPedido,
-  useContratos,
-  useCrearContratoDesdePedido,
-  usePagosContratos,
-  usePedidos,
-  useRegistrarPagoContrato,
-  type Contrato,
-  type PagoContrato,
-  type Pedido,
-  type ResumenFinancieroContrato,
-} from "@/lib/taller-db";
-import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/ventas")({
-  head: () => ({
-    meta: [
-      { title: "Área ventas — Aurum Lab" },
-      {
-        name: "description",
-        content:
-          "Pedidos listos para atención comercial, coordinación con cliente y entrega en la joyería.",
-      },
-      { property: "og:title", content: "Área ventas — Aurum Lab" },
-      {
-        property: "og:description",
-        content: "Seguimiento de pedidos asignados al área comercial.",
-      },
-    ],
-  }),
-  component: VentasPage,
+  head: () => ({ meta: [{ title: "Ventas — Taller del Joyero" }, { name: "description", content: "Centro comercial de cobros, cartera, despacho y entrega del taller." }] }),
+  component: Ventas2Page,
 });
 
-function VentasPage() {
+type Vista = "cartera" | "cobros" | "despacho" | "entregados";
+
+function Ventas2Page() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
-  const esAdmin = Boolean(sesion?.esAdmin);
-  const puedeRegistrarPago =
-    esAdmin || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
-  const { data: pedidos = [] } = usePedidos();
-  const { data: contratos = [] } = useContratos(puedeRegistrarPago);
-  const { data: pagos = [] } = usePagosContratos(contratos, puedeRegistrarPago);
-  const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } =
-    useSedeFiltroDueno();
-  const actualizar = useActualizarPedido();
-  const registrarPago = useRegistrarPagoContrato();
-  const crearContrato = useCrearContratoDesdePedido();
-  const [busca, setBusca] = useState("");
-  const [listoId, setListoId] = useState<string | null>(null);
-  const [envioId, setEnvioId] = useState<string | null>(null);
-  const [entregaId, setEntregaId] = useState<string | null>(null);
-  const [pagoId, setPagoId] = useState<string | null>(null);
-  const [historialPagosId, setHistorialPagosId] = useState<string | null>(null);
-  const usuarioId = sesion?.user.id ?? null;
+  const puedeGestionar = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
+  const { data: pedidos = [], isLoading: loadingPedidos } = usePedidos();
+  const { data: contratos = [], isLoading: loadingContratos } = useContratos(puedeGestionar);
+  const { data: pagos = [] } = usePagosContratos(contratos, puedeGestionar);
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const [vista, setVista] = useState<Vista>("cartera");
+  const [busqueda, setBusqueda] = useState("");
 
-  const ejecutarEntrega = async (pedidoId: string, accion: string, datos: Record<string, unknown> = {}) => {
-    const { error } = await supabase.rpc("transicionar_entrega_pedido", {
-      _pedido_id: pedidoId,
-      _accion: accion,
-      _datos: datos as never,
-    });
-    if (error) {
-      toast.error(error.message);
-      return false;
-    }
-    toast.success(
-      accion === "packing"
-        ? "Packing preparado"
-        : accion === "despachar"
-          ? "Pedido despachado"
-          : accion === "entregar"
-            ? "Entrega registrada"
-            : "Pedido listo para entrega",
-    );
-    return true;
+  const pedidosSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
+  const pedidosVenta = pedidosSede.filter((p) => p.area_actual === "Área ventas" || ["Listo para Entrega", "En Camino", "Entregado"].includes(p.estado));
+  const activos = pedidosVenta.filter((p) => !esEstadoFinalPedido(p.estado));
+  const porEntregar = pedidosVenta.filter((p) => p.estado === "Listo para Entrega" || p.ventas_estado === "Listo para Entrega");
+  const enCamino = pedidosVenta.filter((p) => p.estado === "En Camino" || p.ventas_estado === "En Camino");
+  const entregados = pedidosVenta.filter((p) => p.estado === "Entregado" || p.ventas_estado === "Entregado");
+
+  const finanzas = useMemo(() => contratos.map((c) => ({ contratoId: c.id, ...resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id)) })), [contratos, pagos]);
+  const finanzasPorContrato = useMemo(() => new Map(finanzas.map((f) => [f.contratoId, f])), [finanzas]);
+  const saldoPedido = (p: Pedido) => {
+    const financiero = p.contrato_id ? finanzasPorContrato.get(p.contrato_id) : undefined;
+    return financiero ? financiero.saldo : p.saldo;
   };
+  const totalVenta = finanzas.reduce((s, f) => s + f.total, 0);
+  const totalCobrado = finanzas.reduce((s, f) => s + f.abonado, 0);
+  const totalPendiente = finanzas.reduce((s, f) => s + f.saldo, 0);
+  const cobrosPendientes = finanzas.filter((f) => f.saldo > 0).length;
 
-
-  const pedidosPorSede = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
-  const enVentas = pedidosPorSede.filter((p) => p.area_actual === "Área ventas");
-  const filtrados = useMemo(() => {
-    const t = busca.trim().toLowerCase();
-    if (!t) return enVentas;
-    return enVentas.filter((p) =>
-      [
-        p.referencia,
-        p.cliente,
-        p.contrato,
-        p.trabajo,
-        p.pieza,
-        p.sede_nombre,
-        p.medio_envio,
-        p.guia_envio,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(t),
-    );
-  }, [busca, enVentas]);
-
-  const pendientesEntrega = filtrados.filter((p) => {
-    const estado = estadoVenta(p);
-    return p.area_actual === "Área ventas" && ["Pendiente", "Listo para Entrega"].includes(estado);
+  const base = vista === "cobros" ? pedidosVenta.filter((p) => saldoPedido(p) > 0 || !p.contrato_id) : vista === "despacho" ? [...porEntregar, ...enCamino] : vista === "entregados" ? entregados : activos;
+  const lista = base.filter((p) => {
+    const q = busqueda.trim().toLowerCase();
+    return !q || [p.referencia, p.cliente, p.trabajo, p.pieza, p.contrato, p.guia_envio, p.medio_envio].some((v) => (v ?? "").toLowerCase().includes(q));
   });
-  const enviados = filtrados.filter((p) => estadoVenta(p) === "En Camino");
-  const entregados = pedidosPorSede.filter((p) => estadoVenta(p) === "Entregado");
-  const contratosPorClave = useMemo(() => crearIndiceContratos(contratos), [contratos]);
-  const pagosPorContrato = useMemo(() => crearIndicePagos(pagos), [pagos]);
-
-  const abrirPedido = (id: string) =>
-    navigate({ to: "/pedidos/$id", params: { id }, search: { from: "ventas" } });
-
-  const contenido = (
-    <>
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-gold/80">Seguimiento comercial</p>
-          <h2 className="mt-1 text-xl font-semibold">Bandeja de ventas</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Pedidos que requieren seguimiento, cobro, despacho o entrega.</p>
-        </div>
-        <input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar pedido, cliente, contrato o guía..."
-          className="h-11 w-full rounded-xl border border-border bg-card px-3.5 text-sm shadow-[0_12px_28px_-24px_hsl(var(--gold)/.4)] outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/10 sm:w-80"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_.85fr]">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Bandeja comercial</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Pedidos que requieren seguimiento o cierre.</p>
-        </div>
-        <input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar pedido, cliente, contrato o guía..."
-          className="h-10 w-full rounded-xl border border-border bg-card px-3.5 text-sm outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 sm:w-80"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <SeccionVentas titulo="Pendientes de entrega" cantidad={pendientesEntrega.length}>
-          {pendientesEntrega.length === 0 ? (
-            <Vacio texto="No hay pedidos pendientes de entrega." />
-          ) : (
-            pendientesEntrega.map((pedido) => {
-              const listo = estadoVenta(pedido) === "Listo para Entrega";
-              const puedeEditarEntrega = esAdmin || estadoVenta(pedido) !== "Entregado";
-              return (
-                <PedidoVentaCard
-                  key={pedido.id}
-                  pedido={pedido}
-                  resumenFinanciero={resumenFinancieroPedido(
-                    pedido,
-                    contratosPorClave,
-                    pagosPorContrato,
-                  )}
-                  pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
-                  puedeRegistrarPago={puedeRegistrarPago}
-                  pagoAbierto={pagoId === pedido.id}
-                  historialAbierto={historialPagosId === pedido.id}
-                  guardandoPago={registrarPago.isPending}
-                  guardandoCrearContrato={crearContrato.isPending}
-                  onToggleHistorial={() =>
-                    setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
-                  }
-                  onRegistrarPago={() => {
-                    setPagoId(pagoId === pedido.id ? null : pedido.id);
-                    setHistorialPagosId(pedido.id);
-                  }}
-                  onGuardarPago={(datos) => {
-                    const contrato = contratoPedido(pedido, contratosPorClave);
-                    if (!contrato) return;
-                    registrarPago.mutate(
-                      { contrato, usuarioId, ...datos },
-                      { onSuccess: () => setPagoId(null) },
-                    );
-                  }}
-                  onCrearContrato={() => crearContrato.mutate(pedido)}
-                  accionPrincipal={listo ? (pedido.packing_estado === "Preparado" ? "Registrar envío" : "Preparar packing") : "Marcar listo para entrega"}
-                  {...(listo && pedido.packing_estado === "Preparado" && puedeEditarEntrega ? { accionSecundaria: "Entregado" } : {})}
-                  onAbrir={() => abrirPedido(pedido.id)}
-                  onAccion={() => {
-                    if (!listo) {
-                      setListoId(pedido.id);
-                      setEnvioId(null);
-                      setEntregaId(null);
-                    } else if (pedido.packing_estado !== "Preparado") {
-                      void ejecutarEntrega(pedido.id, "packing").then((ok) => {
-                        if (ok) setListoId(null);
-                      });
-                    } else {
-                      setEnvioId(pedido.id);
-                      setEntregaId(null);
-                      setListoId(null);
-                    }
-                  }}
-                  onAccionSecundaria={() => {
-                    setEntregaId(pedido.id);
-                    setEnvioId(null);
-                    setListoId(null);
-                  }}
-                >
-                  {listoId === pedido.id ? (
-                    <FormularioListoEntrega
-                      pedido={pedido}
-                      guardando={actualizar.isPending}
-                      onCancelar={() => setListoId(null)}
-                      onGuardar={(datos) => {
-                        void ejecutarEntrega(pedido.id, "listo_entrega", datos).then((ok) => {
-                          if (ok) setListoId(null);
-                        });
-                      }}
-                    />
-                  ) : null}
-                  {envioId === pedido.id ? (
-                    <FormularioEnvio
-                      pedido={pedido}
-                      guardando={actualizar.isPending}
-                      onCancelar={() => setEnvioId(null)}
-                      onGuardar={(datos) => {
-                        void ejecutarEntrega(pedido.id, "despachar", datos).then((ok) => {
-                          if (ok) setEnvioId(null);
-                        });
-                      }}
-                    />
-                  ) : null}
-                  {entregaId === pedido.id ? (
-                    <FormularioEntrega
-                      pedido={pedido}
-                      resumenFinanciero={resumenFinancieroPedido(
-                        pedido,
-                        contratosPorClave,
-                        pagosPorContrato,
-                      )}
-                      guardando={actualizar.isPending}
-                      onCancelar={() => setEntregaId(null)}
-                      onGuardar={(datos) => {
-                        void ejecutarEntrega(pedido.id, "entregar", datos).then((ok) => {
-                          if (ok) setEntregaId(null);
-                        });
-                      }}
-                    />
-                  ) : null}
-                </PedidoVentaCard>
-              );
-            })
-          )}
-        </SeccionVentas>
-
-        <SeccionVentas titulo="En camino" cantidad={enviados.length}>
-          {enviados.length === 0 ? (
-            <Vacio texto="Sin pedidos enviados." />
-          ) : (
-            enviados.map((pedido) => (
-              <PedidoVentaCard
-                key={pedido.id}
-                pedido={pedido}
-                resumenFinanciero={resumenFinancieroPedido(
-                  pedido,
-                  contratosPorClave,                  pagosPorContrato,
-                )}
-                pagos={pagosPedido(pedido, contratosPorClave, pagosPorContrato)}
-                puedeRegistrarPago={puedeRegistrarPago}
-                pagoAbierto={pagoId === pedido.id}
-                historialAbierto={historialPagosId === pedido.id}
-                guardandoPago={registrarPago.isPending}
-                guardandoCrearContrato={crearContrato.isPending}
-                onToggleHistorial={() =>
-                  setHistorialPagosId(historialPagosId === pedido.id ? null : pedido.id)
-                }
-                onRegistrarPago={() => {
-                  setPagoId(pagoId === pedido.id ? null : pedido.id);
-                  setHistorialPagosId(pedido.id);
-                }}
-                onGuardarPago={(datos) => {
-                  const contrato = contratoPedido(pedido, contratosPorClave);
-                  if (!contrato) return;
-                  registrarPago.mutate(
-                    { contrato, usuarioId, ...datos },
-                    { onSuccess: () => setPagoId(null) },
-                  );
-                }}
-                onCrearContrato={() => crearContrato.mutate(pedido)}
-                accionPrincipal="Marcar entregado"
-                onAbrir={() => abrirPedido(pedido.id)}
-                onAccion={() => {
-                  setEntregaId(pedido.id);
-                  setEnvioId(null);
-                  setListoId(null);
-                }}
-              >
-                {entregaId === pedido.id ? (
-                  <FormularioEntrega
-                    pedido={pedido}                    resumenFinanciero={resumenFinancieroPedido(
-                      pedido,
-                      contratosPorClave,
-                      pagosPorContrato,
-                    )}
-                    guardando={actualizar.isPending}
-                    onCancelar={() => setEntregaId(null)}
-                    onGuardar={(datos) => {
-                      const ahora = new Date().toISOString();
-                      actualizar.mutate(
-                        {
-                          id: pedido.id,
-                          area_actual: "Área ventas",
-                          estado: "Entregado",
-                          ventas_estado: "Entregado",
-                          packing_estado: "Entregado al cliente",
-                          usuario_entrega: usuarioId,
-                          entregado_at: ahora,
-                          ventas_actualizado_por: usuarioId,
-                          ventas_actualizado_en: ahora,
-                          ...datos,
-                        },
-                        { onSuccess: () => setEntregaId(null) },
-                      );
-                    }}
-                  />
-                ) : null}
-              </PedidoVentaCard>
-            ))
-          )}
-        </SeccionVentas>
-
-      </div>
-    </>
-  );
-
-  if (sesion?.rolPrincipal === "operario") {
-    return (
-      <main className="min-h-screen bg-background px-4 py-5 pb-8 text-foreground sm:px-6">
-        <header className="sticky top-0 z-30 -mx-4 mb-3 flex items-start justify-between gap-3 bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-5 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Cola de trabajo
-            </p>
-            <h1 className="mt-1 font-display text-3xl">Área ventas</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Entregas, envíos y cierre comercial.
-            </p>
-          </div>
-          <MobileBackButton atrasMovil={{ to: "/inicio" }} />
-        </header>
-        {contenido}
-      </main>
-    );
-  }
 
   return (
     <AppShell
-      titulo="Área ventas"
-      subtitulo={`Recepción comercial, packing, despacho y entrega · ${etiquetaSede}`}
-      ocultarAccionesCelular
-      acciones={
-        <>
-          <SelectorSedeDueno
-            esDueno={esDueno}
-            sedes={sedes}
-            value={sedeFiltro}
-            onChange={setSedeFiltro}
-          />
-          <FichaDorada
-            indicador="Atención"
-            titulo="Por entregar"
-            valor={pendientesEntrega.length}
-            descripcion="Pedidos pendientes"
-            disabled
-          />
-          <FichaDorada
-            indicador="Despacho"
-            titulo="En camino"
-            valor={enviados.length}
-            descripcion="Despachos activos"
-            disabled
-          />
-          <FichaDorada
-            indicador="Histórico"
-            titulo="Entregados"
-            valor={entregados.length}
-            descripcion="Entregas registradas"
-            disabled
-          />
-        </>
-      }
+      titulo="Ventas"
+      subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : "Control comercial y cierre de pedidos"}
+      acciones={<SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />}
     >
-      {contenido}
+      <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
+        <div className="relative p-6 sm:p-8">
+          <div className="pointer-events-none absolute -right-24 -top-32 size-80 rounded-full bg-gold/10 blur-3xl" />
+          <div className="relative grid gap-7 xl:grid-cols-[1fr_420px] xl:items-end">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.22em] text-gold">Centro comercial</p>
+              <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">Dinero, entrega y cierre</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Una vista operativa para saber qué está pendiente de cobro, qué puede entregarse y qué pedidos ya cerraron.</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface-muted/70 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">Saldo de cartera</p>
+              <p className="mt-2 text-3xl font-semibold tabular-nums">{money(totalPendiente)}</p>
+              <div className="mt-3 flex items-center justify-between text-xs"><span className="text-muted-foreground">{cobrosPendientes} contratos pendientes</span><span className="font-semibold">{money(totalCobrado)} cobrado</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Metric icon={ClipboardList} label="Cartera activa" value={activos.length} />
+        <Metric icon={CreditCard} label="Pendiente de cobro" value={money(totalPendiente)} tone="warning" />
+        <Metric icon={Banknote} label="Cobrado" value={money(totalCobrado)} tone="positive" />
+        <Metric icon={Truck} label="Listos para entregar" value={porEntregar.length} />
+        <Metric icon={PackageCheck} label="En camino" value={enCamino.length} />
+      </div>
+
+      <section className="mt-5 overflow-hidden rounded-[24px] border border-border bg-card shadow-card">
+        <div className="border-b border-border p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div><h2 className="text-lg font-semibold">Flujo comercial</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona el momento del ciclo que quieres gestionar.</p></div>
+            <div className="relative w-full lg:w-80"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar pedido, cliente, contrato o guía…" className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-gold/50" /></div>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([["cartera","Cartera",activos.length],["cobros","Cobros",cobrosPendientes],["despacho","Despacho",porEntregar.length+enCamino.length],["entregados","Cerrados",entregados.length]] as const).map(([id,label,count]) => (
+              <button key={id} type="button" onClick={() => setVista(id)} className={`rounded-xl border px-3 py-3 text-left transition ${vista===id ? "border-gold/30 bg-gold/[.07] shadow-card" : "border-border bg-surface-muted hover:border-gold/20"}`}>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+                <span className="mt-1 block text-xl font-semibold tabular-nums">{count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full text-left">
+            <thead className="border-b border-border bg-surface-muted/60"><tr>{["Pedido","Cliente","Taller","Venta","Estado","Compromiso","Saldo",""] .map((h)=><th key={h} className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
+            <tbody className="divide-y divide-border">{lista.map((p)=><VentaRow key={p.id} pedido={{...p, saldo: saldoPedido(p)}} onOpen={()=>navigate({to:"/ventas/$id",params:{id:p.id}})}/>)}</tbody>
+          </table>
+        </div>
+        <div className="divide-y divide-border lg:hidden">{lista.map((p)=>(
+          <button key={p.id} type="button" onClick={()=>navigate({to:"/ventas-2/$id",params:{id:p.id}})} className="w-full p-4 text-left transition hover:bg-surface-muted/50">
+            <div className="flex items-start justify-between gap-3"><div><b className="text-sm">{p.referencia}</b><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado}/></div>
+            <p className="mt-4 text-sm font-medium">{p.trabajo || p.pieza || "Pedido"}</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold"><span className="rounded-lg bg-gold/10 px-2 py-1 text-gold-deep">{p.sede_nombre || "Taller no asignado"}</span><span className="rounded-lg bg-surface-muted px-2 py-1">{money(saldoPedido(p))} pendiente</span></div>
+            <div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>{p.medio_envio || "Entrega en taller"}</span><span>{fmtFecha(p.fecha_entrega) || "Sin fecha"}</span></div>
+          </button>
+        ))}</div>
+        {!lista.length ? <div className="p-12 text-center text-sm text-muted-foreground">No hay registros en esta vista.</div> : null}
+      </section>
+
+      <section className="mt-5 grid gap-4 lg:grid-cols-3">
+        <AreaCard icon={CreditCard} title="Cobranza" text={`${cobrosPendientes} contratos tienen saldo pendiente por ${money(totalPendiente)}.`} />
+        <AreaCard icon={Truck} title="Despacho" text={`${porEntregar.length} pedidos esperan preparación o entrega y ${enCamino.length} están en camino.`} />
+        <AreaCard icon={CheckCircle2} title="Cierre" text={`${entregados.length} pedidos aparecen como entregados en la vista actual.`} />
+      </section>
     </AppShell>
   );
 }
 
-function estadoVenta(pedido: Pedido) {
-  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.estado))
-    return pedido.estado;
-  if (["Listo para Entrega", "En Camino", "Entregado"].includes(pedido.ventas_estado)) {
-    return pedido.ventas_estado;
-  }
-  if (esEstadoFinalPedido(pedido.estado)) return pedido.estado;
-  return "Pendiente";
+function VentaRow({ pedido:p, onOpen }: { pedido:Pedido; onOpen:()=>void }) {
+  const dias = p.fecha_entrega ? Math.ceil((new Date(p.fecha_entrega).getTime()-new Date().setHours(0,0,0,0))/86400000) : null;
+  const estado = p.estado === "Entregado" || p.ventas_estado === "Entregado" ? "Entregado" : p.estado === "En Camino" || p.ventas_estado === "En Camino" ? "En Camino" : p.estado === "Listo para Entrega" || p.ventas_estado === "Listo para Entrega" ? "Listo para Entrega" : p.ventas_estado || p.estado;
+  return <tr onClick={onOpen} className="cursor-pointer hover:bg-surface-muted/60"><td className="px-5 py-4"><b className="text-sm">{p.referencia}</b>{p.contrato?<span className="block text-[10px] text-muted-foreground">{p.contrato}</span>:null}</td><td className="px-5 py-4 text-sm">{p.cliente||"Cliente pendiente"}</td><td className="px-5 py-4"><span className="inline-flex rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold">{p.sede_nombre||"Taller no asignado"}</span></td><td className="px-5 py-4 text-sm">{money(p.importe)}</td><td className="px-5 py-4"><Status estado={estado}/></td><td className="px-5 py-4 text-xs">{fmtFecha(p.fecha_entrega)||"—"}{dias!==null&&dias<0&&!esEstadoFinalPedido(p.estado)?<span className="ml-2 font-semibold text-danger">Vencido</span>:null}</td><td className="px-5 py-4 text-sm font-semibold">{money(p.saldo)}</td><td className="px-5 py-4 text-right"><ArrowRight className="ml-auto size-4 text-muted-foreground"/></td></tr>;
 }
-
-function formatCurrency(valor: number) {
-  return new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 2,
-  }).format(valor);
-}
-
-function crearIndiceContratos(contratos: Contrato[]) {
-  const indice = new Map<string, Contrato>();
-  contratos.forEach((contrato) => {
-    if (contrato.id) indice.set(contrato.id, contrato);
-    if (contrato.numero) indice.set(contrato.numero, contrato);
-  });
-  return indice;
-}
-
-function crearIndicePagos(pagos: PagoContrato[]) {
-  const indice = new Map<string, PagoContrato[]>();
-  pagos.forEach((pago) => {
-    [pago.contrato_id, pago.contrato_numero].filter(Boolean).forEach((clave) => {
-      const lista = indice.get(clave) ?? [];
-      lista.push(pago);
-      indice.set(clave, lista);
-    });
-  });
-  return indice;
-}
-
-function contratoPedido(pedido: Pedido, contratosPorClave: Map<string, Contrato>) {
-  return (
-    (pedido.contrato_id ? contratosPorClave.get(pedido.contrato_id) : null) ??
-    (pedido.contrato ? contratosPorClave.get(pedido.contrato) : null) ??
-    null
-  );
-}
-
-function pagosPedido(
-  pedido: Pedido,
-  contratosPorClave: Map<string, Contrato>,
-  pagosPorContrato: Map<string, PagoContrato[]>,
-) {
-  const contrato = contratoPedido(pedido, contratosPorClave);
-  if (!contrato) return [];
-  return pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero) ?? [];
-}
-
-function resumenFinancieroPedido(
-  pedido: Pedido,
-  contratosPorClave: Map<string, Contrato>,
-  pagosPorContrato: Map<string, PagoContrato[]>,
-): ResumenFinancieroContrato {
-  const contrato = contratoPedido(pedido, contratosPorClave);
-  return resumenFinancieroContrato(
-    contrato,
-    contrato ? (pagosPorContrato.get(contrato.id) ?? pagosPorContrato.get(contrato.numero)) : [],
-  );
-}
-
-function SeccionVentas({
-  titulo,
-  cantidad,
-  children,
-}: {
-  titulo: string;
-  cantidad: number;
-  children: ReactNode;
-}) {
-  return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <h2 className="text-sm font-medium">{titulo}</h2>
-        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-          {cantidad}
-        </span>
-      </div>
-      <div className="space-y-3 p-3 sm:p-4">{children}</div>
-    </section>
-  );
-}
-
-function Vacio({ texto }: { texto: string }) {
-  return <p className="px-4 py-8 text-sm text-muted-foreground">{texto}</p>;
-}
-
-function fechaHoy() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function PedidoVentaCard({
-  pedido,
-  resumenFinanciero,
-  pagos,
-  puedeRegistrarPago,
-  pagoAbierto,
-  historialAbierto,
-  guardandoPago,
-  guardandoCrearContrato,
-  accionPrincipal,
-  accionSecundaria,
-  onAbrir,
-  onAccion,
-  onAccionSecundaria,
-  onToggleHistorial,
-  onRegistrarPago,
-  onGuardarPago,
-  onCrearContrato,
-  children,
-}: {
-  pedido: Pedido;
-  resumenFinanciero: ResumenFinancieroContrato;
-  pagos: PagoContrato[];
-  puedeRegistrarPago: boolean;
-  pagoAbierto: boolean;
-  historialAbierto: boolean;
-  guardandoPago: boolean;
-  guardandoCrearContrato: boolean;
-  accionPrincipal: string;
-  accionSecundaria?: string;
-  onAbrir: () => void;
-  onAccion: () => void;
-  onAccionSecundaria?: () => void;
-  onToggleHistorial: () => void;
-  onRegistrarPago: () => void;
-  onGuardarPago: (datos: { fecha: string; concepto: string; monto: number }) => void;
-  onCrearContrato: () => void;
-  children?: ReactNode;
-}) {
-  const estadoComercial = estadoVenta(pedido);
-  const tieneSaldo = resumenFinanciero.saldo > 0;
-  const tieneContratoFinanciero = resumenFinanciero.origen === "contrato";
-  return (
-    <article className="overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-card transition-shadow hover:shadow-raised">
-      <div className="flex items-center gap-3 border-b border-gold/20 bg-surface-sunken px-4 py-3 sm:px-5">
-        <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Pedido
-        </span>
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          {pedido.referencia}
-        </span>
-      </div>
-      <div className="p-4 sm:p-5">
-      <button type="button" onClick={onAbrir} className="block w-full text-left">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{pedido.referencia}</p>
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">{pedido.cliente}</p>
-          </div>
-          <span
-            className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${estadoClases[estadoComercial] ?? "bg-success-soft text-success"}`}
-          >
-            {estadoComercial}
-          </span>
-        </div>
-        <p className="mt-3 line-clamp-2 text-sm text-foreground">
-          {pedido.trabajo || pedido.pieza}
-        </p>
-        <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Taller</dt>
-            <dd className="mt-0.5 truncate text-foreground">{pedido.sede_nombre || "Sin sede"}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Entrega</dt>
-            <dd className="mt-0.5 text-foreground">              {fmtFecha(pedido.fecha_entrega ?? pedido.entrega) ?? "Sin fecha"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Envío</dt>
-            <dd className="mt-0.5 truncate text-foreground">{pedido.medio_envio || "Pendiente"}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Listo</dt>
-            <dd className="mt-0.5 truncate text-foreground">
-              {fmtFecha(pedido.fecha_listo_entrega) ?? "Pendiente"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Entregado
-            </dt>
-            <dd className="mt-0.5 truncate text-foreground">
-              {fmtFecha(pedido.fecha_entregado) ?? "Pendiente"}
-            </dd>
-          </div>
-        </dl>
-
-        <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <div className="rounded-xl bg-surface-muted p-2.5">
-            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Contrato</dt>
-            <dd className="mt-1 truncate font-medium text-foreground">{pedido.contrato || "—"}</dd>
-          </div>
-          <div className="rounded-xl bg-surface-muted p-2.5">
-            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Origen</dt>
-            <dd className="mt-1 truncate font-medium text-foreground">{pedido.origen || "—"}</dd>
-          </div>
-          <div className="rounded-xl bg-surface-muted p-2.5">
-            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Venta</dt>
-            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(resumenFinanciero.total || Number(pedido.importe) || 0)}</dd>
-          </div>
-          <div className="rounded-xl bg-surface-muted p-2.5">
-            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Pagado</dt>
-            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(resumenFinanciero.abonado || Number(pedido.a_cuenta) || 0)}</dd>
-          </div>
-        </dl>
-
-        {tieneContratoFinanciero ? (
-          <div            className={`mt-3 rounded-xl border p-3 text-xs ${
-              tieneSaldo
-                ? "border-warning/25 bg-warning-soft text-warning"
-                : "border-success/20 bg-success-soft text-success"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider">
-                  Estado financiero
-                </p>
-                <p className="mt-1 font-semibold">{resumenFinanciero.estado}</p>
-              </div>
-              {tieneSaldo ? (
-                <p className="text-right font-semibold">
-                  Saldo pendiente: {formatCurrency(resumenFinanciero.saldo)}
-                </p>
-              ) : (
-                <p className="text-right font-semibold">Sin saldo pendiente</p>
-              )}
-            </div>
-            <dl className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
-              <div>
-                <dt className="opacity-75">Total</dt>
-                <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.total)}</dd>
-              </div>
-              <div>
-                <dt className="opacity-75">Abonado</dt>
-                <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.abonado)}</dd>
-              </div>
-              <div>
-                <dt className="opacity-75">Saldo</dt>
-                <dd className="mt-0.5 font-medium">{formatCurrency(resumenFinanciero.saldo)}</dd>
-              </div>
-            </dl>
-          </div>
-        ) : (
-          <div className="mt-3 rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
-            <p className="font-semibold">No existe un documento comercial asociado.</p>
-            <p className="mt-1 opacity-80">
-              Crea o asocia un documento comercial antes de registrar pagos o consultar saldos.
-            </p>
-          </div>
-        )}
-      </button>
-      <div className="mt-4 rounded-xl border border-gold/20 bg-surface-sunken/50 p-3">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Guía rápida de ventas
-        </p>
-        <div className="mt-2 grid gap-2 text-[11px] text-muted-foreground sm:grid-cols-3">
-          <p><span className="font-semibold text-success">Pago</span> · registra un abono del cliente.</p>
-          <p><span className="font-semibold text-foreground">Envío</span> · cuando sale por encomienda.</p>
-          <p><span className="font-semibold text-gold">Entregado</span> · cuando recoge en tienda.</p>
-        </div>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {tieneContratoFinanciero ? (
-          <button
-            type="button"
-            onClick={onToggleHistorial}
-            className="rounded-xl border border-border px-3 py-2 text-xs font-medium"
-          >
-            {historialAbierto ? "Ocultar historial de pagos" : "Ver historial de pagos"}
-          </button>
-        ) : null}
-        {puedeRegistrarPago && tieneContratoFinanciero ? (
-          <button
-            type="button"
-            onClick={onRegistrarPago}
-            className="rounded-xl border border-success/25 bg-success-soft px-3 py-2 text-xs font-medium text-success"
-          >
-            Registrar pago
-          </button>
-        ) : null}
-        {puedeRegistrarPago && !tieneContratoFinanciero ? (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={onCrearContrato}
-              disabled={guardandoCrearContrato || !pedido.contrato.trim()}
-              className="rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-xs font-medium text-warning disabled:opacity-50"
-            >
-              {guardandoCrearContrato ? "Creando..." : "Crear contrato"}
-            </button>
-            <button
-              type="button"
-              disabled
-              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground opacity-60"
-              title="Disponible cuando se implemente documentos comerciales"
-            >
-              Asociar boleta
-            </button>
-            <button
-              type="button"
-              disabled
-              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground opacity-60"
-              title="Disponible cuando se implemente documentos comerciales"
-            >
-              Asociar factura
-            </button>
-            <button
-              type="button"
-              disabled
-              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground opacity-60"
-              title="Disponible cuando se implemente documentos comerciales"
-            >
-              Asociar documento comercial
-            </button>
-          </div>
-        ) : null}
-      </div>
-      {historialAbierto ? <HistorialPagos pagos={pagos} /> : null}
-      {pagoAbierto ? (
-        <FormularioPagoVentas guardando={guardandoPago} onGuardar={onGuardarPago} />
-      ) : null}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onAccion}
-          className="min-w-[140px] flex-1 rounded-xl border border-gold/25 bg-gold/[.07] px-3 py-2.5 text-xs font-semibold text-foreground shadow-[0_12px_28px_-24px_hsl(var(--gold)/.65)] transition hover:-translate-y-0.5 hover:border-gold/40 hover:bg-gold/[.11]"
-          title="Registrar el envío cuando el pedido sale por encomienda"
-        >
-          📦 {accionPrincipal}
-        </button>
-        {accionSecundaria && onAccionSecundaria ? (
-          <button
-            type="button"
-            onClick={onAccionSecundaria}
-            className="min-w-[110px] flex-1 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2.5 text-xs font-medium text-gold"
-          >
-            ✓ {accionSecundaria}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={onAbrir}
-          className="rounded-xl border border-border px-3 py-2.5 text-xs font-medium"
-        >
-          Ficha
-        </button>
-      </div>
-      {children}
-      </div>
-    </article>
-  );
-}
-
-function FormularioListoEntrega({
-  pedido,
-  guardando,
-  onCancelar,
-  onGuardar,
-}: {
-  pedido: Pedido;
-  guardando: boolean;
-  onCancelar: () => void;
-  onGuardar: (datos: { fecha_listo_entrega: string; listo_entrega_observaciones: string }) => void;
-}) {
-  return (
-    <form
-      className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/40 p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        onGuardar({
-          fecha_listo_entrega: String(fd.get("fecha_listo_entrega") || fechaHoy()),
-          listo_entrega_observaciones: String(fd.get("listo_entrega_observaciones") || ""),
-        });
-      }}
-    >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Fecha listo para entrega
-          <input
-            name="fecha_listo_entrega"
-            type="date"
-            defaultValue={pedido.fecha_listo_entrega ?? fechaHoy()}
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-      </div>
-      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
-        Observaciones
-        <textarea
-          name="listo_entrega_observaciones"
-          defaultValue={pedido.listo_entrega_observaciones}
-          rows={3}
-          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
-        />
-      </label>
-      <div className="mt-3 flex gap-2">
-        <button
-          type="submit"
-          disabled={guardando}
-          className="flex-1 rounded-lg border border-gold/25 bg-gold/[.08] px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-gold/[.12] disabled:opacity-50"
-        >
-          {guardando ? "Guardando..." : "Confirmar listo"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancelar}
-          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium"
-        >
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function FormularioEnvio({
-  pedido,
-  guardando,
-  onCancelar,
-  onGuardar,
-}: {
-  pedido: Pedido;
-  guardando: boolean;
-  onCancelar: () => void;
-  onGuardar: (datos: {
-    medio_envio: string;
-    guia_envio: string;
-    fecha_envio: string;
-    receptor_envio: string;
-    notas_ventas: string;
-    notas_envio: string;
-  }) => void;
-}) {
-  return (
-    <form
-      className="mt-4 rounded-xl border border-border bg-surface-muted p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        onGuardar({
-          medio_envio: String(fd.get("medio_envio") || ""),
-          guia_envio: String(fd.get("guia_envio") || ""),
-          fecha_envio: String(fd.get("fecha_envio") || new Date().toISOString().slice(0, 10)),
-          receptor_envio: String(fd.get("receptor_envio") || ""),
-          notas_ventas: String(fd.get("notas_ventas") || ""),
-          notas_envio: String(fd.get("notas_ventas") || ""),
-        });
-      }}
-    >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Medio de envío
-          <input
-            name="medio_envio"
-            defaultValue={pedido.medio_envio}
-            placeholder="Recojo, motorizado, Olva, Shalom..."
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Guía / comprobante
-          <input            name="guia_envio"
-            defaultValue={pedido.guia_envio}
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Fecha de envío
-          <input
-            name="fecha_envio"
-            type="date"
-            defaultValue={pedido.fecha_envio ?? new Date().toISOString().slice(0, 10)}
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Recibe / contacto
-          <input
-            name="receptor_envio"
-            defaultValue={pedido.receptor_envio || pedido.cliente}
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-      </div>
-      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
-        Nota de ventas
-        <textarea
-          name="notas_ventas"
-          defaultValue={pedido.notas_envio || pedido.notas_ventas}
-          rows={3}
-          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
-        />
-      </label>
-      <div className="mt-3 flex gap-2">
-        <button
-          type="submit"
-          disabled={guardando}
-          className="flex-1 rounded-lg bg-success px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
-        >
-          {guardando ? "Guardando..." : "Guardar envío"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancelar}          className="rounded-lg border border-border px-4 py-2 text-xs font-medium"
-        >
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function FormularioEntrega({
-  pedido,
-  resumenFinanciero,
-  guardando,
-  onCancelar,
-  onGuardar,
-}: {
-  pedido: Pedido;
-  resumenFinanciero: ResumenFinancieroContrato;
-  guardando: boolean;
-  onCancelar: () => void;
-  onGuardar: (datos: {
-    fecha_entregado: string;
-    receptor_envio: string;
-    notas_ventas: string;
-    notas_entrega: string;
-  }) => void;
-}) {
-  const requiereConfirmacionSaldo = resumenFinanciero.saldo > 0;
-  return (
-    <form
-      className="mt-4 rounded-xl border border-success/20 bg-success-soft/40 p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        if (requiereConfirmacionSaldo && fd.get("confirmar_saldo") !== "on") {
-          return;
-        }
-        onGuardar({
-          fecha_entregado: String(
-            fd.get("fecha_entregado") || new Date().toISOString().slice(0, 10),
-          ),
-          receptor_envio: String(
-            fd.get("receptor_envio") || pedido.receptor_envio || pedido.cliente,
-          ),
-          notas_ventas: String(fd.get("notas_ventas") || pedido.notas_ventas || ""),
-          notas_entrega: String(fd.get("notas_ventas") || pedido.notas_entrega || ""),
-        });
-      }}
-    >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Fecha entregado
-          <input
-            name="fecha_entregado"
-            type="date"
-            defaultValue={pedido.fecha_entregado ?? new Date().toISOString().slice(0, 10)}
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Recibe / contacto
-          <input
-            name="receptor_envio"
-            defaultValue={pedido.receptor_envio || pedido.cliente}
-            className="mt-1 h-11 w-full rounded-lg border border-border bg-card px-3 text-base text-foreground sm:text-sm"
-          />
-        </label>
-      </div>
-      <label className="mt-3 block text-[10px] uppercase tracking-wider text-muted-foreground">
-        Nota de entrega
-        <textarea
-          name="notas_ventas"
-          defaultValue={pedido.notas_entrega || pedido.notas_ventas}
-          rows={3}
-          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
-        />
-      </label>
-      {requiereConfirmacionSaldo ? (
-        <label className="mt-3 flex items-start gap-2 rounded-xl border border-warning/25 bg-warning-soft p-3 text-xs text-warning">
-          <input name="confirmar_saldo" type="checkbox" required className="mt-0.5" />
-          <span>
-            Existe un saldo pendiente de {formatCurrency(resumenFinanciero.saldo)}. Confirmo que
-            deseo registrar la entrega con saldo pendiente.
-          </span>
-        </label>
-      ) : null}
-      <div className="mt-3 flex gap-2">
-        <button
-          type="submit"
-          disabled={guardando}
-          className="flex-1 rounded-lg bg-success px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
-        >
-          {guardando ? "Guardando..." : "Confirmar entrega"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancelar}
-          className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium"
-        >
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function HistorialPagos({ pagos }: { pagos: PagoContrato[] }) {
-  return (
-    <div className="mt-3 rounded-xl border border-border bg-card p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Historial de pagos
-      </p>
-      <div className="mt-3 space-y-2">
-        {pagos.length > 0 ? (
-          pagos.map((pago) => (
-            <div key={pago.id} className="grid grid-cols-[1fr_auto] gap-3 text-xs">
-              <div>
-                <p className="font-medium text-foreground">{fmtFecha(pago.fecha)}</p>
-                <p className="text-muted-foreground">{pago.concepto}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {pago.usuario_nombre || "Sin usuario registrado"}
-                </p>
-              </div>
-              <p className="font-semibold text-foreground">{formatCurrency(pago.monto)}</p>
-            </div>
-          ))
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Este contrato todavía no tiene pagos registrados.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FormularioPagoVentas({
-  guardando,
-  onGuardar,
-}: {
-  guardando: boolean;
-  onGuardar: (datos: { fecha: string; concepto: string; monto: number }) => void;
-}) {
-  return (
-    <form
-      className="mt-3 rounded-xl border border-success/20 bg-success-soft/40 p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        onGuardar({
-          fecha: String(fd.get("fecha") || fechaHoy()),
-          concepto: String(fd.get("concepto") || "Abono"),
-          monto: Number(fd.get("monto")) || 0,
-        });
-      }}
-    >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Fecha
-          <input
-            name="fecha"
-            type="date"
-            defaultValue={fechaHoy()}
-            className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
-          />
-        </label>
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Concepto
-          <input
-            name="concepto"
-            defaultValue="Abono"
-            className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
-          />
-        </label>
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Monto
-          <input
-            name="monto"
-            type="number"
-            min="0.01"
-            step="0.01"
-            className="mt-1 h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
-          />
-        </label>
-      </div>
-      <button
-        type="submit"
-        disabled={guardando}
-        className="mt-3 w-full rounded-lg bg-success px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
-      >
-        {guardando ? "Guardando..." : "Guardar pago en contrato"}
-      </button>
-    </form>
-  );
-}
+function Status({estado}:{estado:string}){return <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${estadoClases[estado]??"bg-surface-muted text-muted-foreground"}`}>{estado}</span>}
+function Metric({icon:Icon,label,value,tone="neutral"}:{icon:typeof ClipboardList;label:string;value:number|string;tone?:"neutral"|"warning"|"positive"}){return <div className="rounded-2xl border border-border bg-card p-4 shadow-card"><div className="flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl bg-surface-muted text-gold"><Icon className="size-4"/></span><span className={`text-xl font-semibold tabular-nums ${tone==="warning"?"text-warning":tone==="positive"?"text-success":"text-foreground"}`}>{value}</span></div><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p></div>}
+function AreaCard({icon:Icon,title,text}:{icon:typeof CreditCard;title:string;text:string}){return <div className="rounded-2xl border border-border bg-card p-5"><Icon className="size-5 text-gold"/><h3 className="mt-3 text-sm font-semibold">{title}</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></div>}
+function money(v:number|null|undefined){return new Intl.NumberFormat("es-PE",{style:"currency",currency:"PEN"}).format(Number(v)||0)}
