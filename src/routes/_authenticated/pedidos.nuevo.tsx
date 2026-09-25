@@ -304,7 +304,7 @@ function NuevoPedido() {
       fecha_entrega: form.fecha_entrega || null,
       area_actual: "Pedidos",
       // La ruta se define al preparar producción; al recibir el pedido puede quedar vacía.
-      ruta: tipoOperacion === "fabricacion" ? ruta : [],
+      ruta: [],
       notas: form.notas.trim(),
       talla: form.talla.trim(),
       cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
@@ -442,6 +442,20 @@ function NuevoPedido() {
       <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}{clientePredictivo.telefono ? <span className="ml-2 opacity-70">{clientePredictivo.telefono}</span> : null}
     </button> : hayVariasCoincidencias ? <span className="text-muted-foreground">Hay varias coincidencias. Continúa escribiendo para precisar.</span> : null}
   </div> : null}</div>
+  <div className="grid gap-4 sm:grid-cols-2">
+    <label className="block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de operación</span>
+      <select value={tipoOperacion} onChange={(e) => setTipoOperacion(e.target.value as "fabricacion" | "reparacion" | "venta_stock")} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
+        <option value="fabricacion">Fabricación</option>
+        <option value="reparacion">Reparación / servicio</option>
+        <option value="venta_stock">Venta de stock</option>
+      </select>
+    </label>
+    <div className="rounded-xl border border-border bg-surface-muted px-3 py-3 text-xs text-muted-foreground">
+      <p className="font-semibold text-foreground">Ruta productiva</p>
+      <p className="mt-1">Se define posteriormente al preparar el pedido. No es obligatoria durante la recepción.</p>
+    </div>
+  </div>
   <div className="sm:col-span-2">
     <label className="block">
       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Origen comercial</span>
@@ -503,8 +517,11 @@ function NuevoPedido() {
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de fabricación</h2><p className="mt-1 text-xs text-muted-foreground">Opcional al recibir. Para fabricación, puedes dejar la ruta pendiente y definirla al preparar producción.</p></div></div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{tipoOperacion === "fabricacion" ? rutas.map((area) => <button key={area} type="button" onClick={() => toggleRuta(area)} className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}><span>{area}</span>{ruta.includes(area) ? <Check className="size-4 text-gold" /> : null}</button>) : <p className="rounded-xl border border-border bg-surface-muted px-3 py-3 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">Esta operación no requiere una ruta de fabricación al recibir el pedido.</p>}</div>
+              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de producción</h2><p className="mt-1 text-xs text-muted-foreground">La ruta se determina al preparar producción, cuando ya conocemos qué áreas deben intervenir.</p></div></div>
+              <div className="mt-5 rounded-xl border border-border bg-surface-muted px-4 py-3 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">Pendiente de planificación</p>
+                <p className="mt-1">El pedido se registra primero. Después se define la ruta exacta según la operación, capacidad del taller y características de la pieza.</p>
+              </div>
             </section>
 
             <section className="rounded-[24px] border border-border bg-card shadow-card">
