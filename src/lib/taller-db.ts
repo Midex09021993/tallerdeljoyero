@@ -2077,23 +2077,33 @@ export function useArchivosPedidos() {
         .limit(300);
       if (error) throw error;
 
-      return (data ?? []).map((a) => {
-        const { pedidos, ...resto } = a as typeof a & {
-          pedidos: {
-            referencia: string;
-            cliente: string;
-            trabajo: string;
-            area_actual: string;
-          } | null;
-        };
-        return {
-          ...resto,
-          referencia: pedidos?.referencia ?? "",
-          cliente: pedidos?.cliente ?? "",
-          trabajo: pedidos?.trabajo ?? "",
-          area_actual: pedidos?.area_actual ?? "",
-        };
-      });
+      return Promise.all(
+        (data ?? []).map(async (a) => {
+          const { pedidos, ...resto } = a as typeof a & {
+            pedidos: {
+              referencia: string;
+              cliente: string;
+              trabajo: string;
+              area_actual: string;
+            } | null;
+          };
+          let poster = resto.poster ?? "";
+          if (!poster && resto.url && /\\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || "")) {
+            const { data: firmado } = await supabase.storage
+              .from("pedidos")
+              .createSignedUrl(resto.url, 3600);
+            poster = firmado?.signedUrl ?? "";
+          }
+          return {
+            ...resto,
+            poster,
+            referencia: pedidos?.referencia ?? "",
+            cliente: pedidos?.cliente ?? "",
+            trabajo: pedidos?.trabajo ?? "",
+            area_actual: pedidos?.area_actual ?? "",
+          };
+        }),
+      );
     },
   });
 }
