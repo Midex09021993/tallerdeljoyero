@@ -105,7 +105,7 @@ const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
   "/migracion": "Migración",
 };
 
-function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
+export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
   const { esDueno, sedeFiltro } = useSedeFiltroDueno();
 
   return useQuery({
@@ -184,7 +184,7 @@ function seccionesVisibles(
 
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
 const ORDEN_MENU: Record<string, number> = {
-  // El flujo comercial parte de la cotización; ventas y pedidos vienen después.
+  // El orden visual no implica dependencia: Pedidos puede operar sin Cotizaciones.
   "/inicio": 0,
   "/clientes": 5,
   "/catalogo": 7,
