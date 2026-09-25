@@ -312,6 +312,8 @@ export type Pedido = {
   sede_nombre: string | null;
   telefono: string;
   origen: string;
+  canal_captacion: string;
+  tipo_operacion: "fabricacion" | "reparacion" | "venta_stock";
   contrato: string;
   contrato_id: string | null;
   cotizacion_id: string | null;
