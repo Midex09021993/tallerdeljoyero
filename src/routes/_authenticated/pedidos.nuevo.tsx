@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, ClipboardList, Factory, ImagePlus, Trash2, Upload, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ClipboardList, Factory, ImagePlus, Trash2, Upload, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -179,6 +179,7 @@ function NuevoPedido() {
     importe: "", a_cuenta: "", origen: "", contrato: "", notas: "",
   });
   const [ruta, setRuta] = useState<string[]>([]);
+  const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
   const [referencias, setReferencias] = useState<Record<ReferenciaClave, { file: File; preview: string } | null>>({
     perspectiva: null,
     superior: null,
@@ -441,14 +442,24 @@ function NuevoPedido() {
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de fabricación</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona las áreas que deberán intervenir en esta joya.</p></div></div>
+              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{rutas.map((area) => <button key={area} type="button" onClick={() => toggleRuta(area)} className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}><span>{area}</span>{ruta.includes(area) ? <Check className="size-4 text-gold" /> : null}</button>)}</div>
+            </section>
+
+            <section className="rounded-[24px] border border-border bg-card shadow-card">
+              <button type="button" onClick={() => setReferenciasAbiertas((actual) => !actual)} className="flex w-full items-center justify-between gap-4 p-5 text-left sm:p-6" aria-expanded={referenciasAbiertas}>
+                <div className="flex items-start gap-3">
                 <span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ImagePlus className="size-5" /></span>
                 <div>
                   <h2 className="text-base font-semibold">Referencias del trabajo</h2>
                   <p className="mt-1 text-xs text-muted-foreground">Opcional. Imágenes que sirven como referencia para Diseño 3D.</p>
                 </div>
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                </div>
+                <ChevronDown className={`size-5 shrink-0 text-muted-foreground transition-transform ${referenciasAbiertas ? "rotate-180" : ""}`} />
+              </button>
+              {referenciasAbiertas ? (
+                <div className="border-t border-border px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+                  <div className="grid gap-3 sm:grid-cols-2">
                 {referenciasTrabajo.map((referencia) => (
                   <ReferenciaImagen
                     key={referencia.clave}
@@ -470,13 +481,12 @@ function NuevoPedido() {
                     }}
                   />
                 ))}
-              </div>
+                  </div>
+                </div>
+              ) : null}
             </section>
 
-            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de fabricación</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona las áreas que deberán intervenir en esta joya.</p></div></div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{rutas.map((area) => <button key={area} type="button" onClick={() => toggleRuta(area)} className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}><span>{area}</span>{ruta.includes(area) ? <Check className="size-4 text-gold" /> : null}</button>)}</div>
-            </section>
+
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <h2 className="text-base font-semibold">Fechas y documentación</h2>
