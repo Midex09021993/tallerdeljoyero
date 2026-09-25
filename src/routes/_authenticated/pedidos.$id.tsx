@@ -426,7 +426,7 @@ function PedidoDetalle() {
     <AppShell
       titulo={pedido.referencia}
       subtitulo={pedido.cliente ? `${pedido.cliente} · ${pedido.sede_nombre ?? "Sede"}` : "Pedido sin cliente asociado"}
-      acciones={<div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => navigate({ to: "/pedidos" })} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4" /> Pedidos</button>{estado === "Listo para Entrega" ? <Link to="/ventas-2/$id" params={{ id }} className="rounded-xl bg-gold px-3 py-2.5 text-xs font-bold text-black">Ir a Ventas</Link> : null}</div>}
+      acciones={<div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => navigate({ to: "/pedidos" })} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold"><ArrowLeft className="size-4" /> Pedidos</button>{estado === "Listo para Entrega" ? <Link to="/ventas/$id" params={{ id }} className="rounded-xl bg-gold px-3 py-2.5 text-xs font-bold text-black">Ir a Ventas</Link> : null}</div>}
     >
       <section className="overflow-hidden rounded-[26px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-5 sm:p-7">
