@@ -10,7 +10,9 @@ import {
   Scissors,
 } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { AppShell, Panel, StatCard } from "@/components/AppShell";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { AppShell, Panel, StatCard, useCapacidadesMenu } from "@/components/AppShell";
 import {
   rolEtiqueta,
   useSesion,
@@ -38,6 +40,8 @@ export const Route = createFileRoute("/_authenticated/inicio")({
 function Inicio() {
   const { data: sesion, isLoading } = useSesion();
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
+  const { data: capacidades = [] } = useCapacidadesMenu(sesion);
+  const capacidadesSet = useMemo(() => new Set(capacidades), [capacidades]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,18 +78,17 @@ function Inicio() {
     return { activos, produccion, recepcion, vencidos, hoy, urgentes, atencion };
   }, [pedidos]);
 
-  const cargaAreas = useMemo(
-    () =>
-      [
-        ["Diseño 3D", LayoutGrid],
-        ["Impresión 3D", Boxes],
-        ["Casting", Gem],
-        ["Taller", Hammer],
-        ["Corte Láser", Scissors],
-        ["Área ventas", PackageCheck],
-      ] as const,
-    [],
-  );
+  const cargaAreas = useMemo(() => {
+    const todas = [
+      ["Diseño 3D", LayoutGrid, "Diseño 3D"],
+      ["Impresión", Boxes, "Impresión 3D"],
+      ["Casting", Gem, "Casting"],
+      ["Taller", Hammer, "Taller"],
+      ["Corte Láser", Scissors, "Corte Láser"],
+      ["Ventas", PackageCheck, "Ventas"],
+    ] as const;
+    return todas.filter(([, , capacidad]) => capacidadesSet.has(capacidad));
+  }, [capacidadesSet]);
 
   // Los operarios usan exclusivamente /operario como bandeja única.
 
@@ -99,7 +102,7 @@ function Inicio() {
         <>
           <Link to="/pedidos" className="rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised">Ver pedidos</Link>
           <Link to="/pedidos/nuevo" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nuevo pedido</Link>
-          <Link to="/cotizaciones" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nueva cotización</Link>
+          {capacidadesSet.has("Cotizaciones") ? <Link to="/cotizaciones" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nueva cotización</Link> : null}
         </>
       }
     >
@@ -174,7 +177,7 @@ function Inicio() {
                 Casting: "/casting",
                 Taller: "/taller",
                 "Corte Láser": "/corte-laser",
-                "Área ventas": "/ventas-2",
+                Ventas: "/ventas-2",
               };
               const destino = destinos[area];
               return (
