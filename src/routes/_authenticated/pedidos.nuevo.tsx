@@ -46,87 +46,14 @@ const referenciasTrabajo: Array<{ clave: ReferenciaClave; etiqueta: string }> = 
   { clave: "izquierda", etiqueta: "Izquierda" },
 ];
 
-function BocetoReferencia({ clave }: { clave: ReferenciaClave }) {
-  const line = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.35,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-  const fine = { ...line, strokeWidth: 0.95, opacity: 0.82 };
-  const guide = { ...line, strokeWidth: 0.75, strokeDasharray: "3 4", opacity: 0.48 };
+const referenciaVisual: Record<ReferenciaClave, string> = {
+  perspectiva: "/referencias/perspectiva.svg",
+  superior: "/referencias/superior.svg",
+  frontal: "/referencias/frontal.svg",
+  izquierda: "/referencias/izquierda.svg",
+};
 
-  const piedra = (cx: number, cy: number, r: number) => (
-    <g>
-      <circle cx={cx} cy={cy} r={r} {...line} />
-      <circle cx={cx} cy={cy} r={r * 0.82} {...fine} />
-      <path d={`M ${cx-r*0.82} ${cy} L ${cx} ${cy-r*0.82} L ${cx+r*0.82} ${cy} L ${cx} ${cy+r*0.82} Z`} {...fine} />
-      <path d={`M ${cx-r*0.55} ${cy-r*0.55} L ${cx} ${cy+r*0.82} L ${cx+r*0.55} ${cy-r*0.55}`} {...fine} />
-      <path d={`M ${cx-r*0.55} ${cy+r*0.55} L ${cx} ${cy-r*0.82} L ${cx+r*0.55} ${cy+r*0.55}`} {...fine} />
-    </g>
-  );
 
-  if (clave === "superior") {
-    return (
-      <svg viewBox="0 0 280 170" aria-hidden="true" className="h-40 w-full text-muted-foreground/30">
-        <path d="M68 80 C48 73 31 72 17 76 M68 96 C48 103 31 104 17 100 M212 80 C232 73 249 72 263 76 M212 96 C232 103 249 104 263 100" {...fine} />
-        <path d="M69 76 C91 67 105 63 120 63 C135 63 149 67 171 76 M69 100 C91 109 105 113 120 113 C135 113 149 109 171 100" {...line} />
-        <path d="M69 76 C78 85 78 91 69 100 M171 76 C162 85 162 91 171 100" {...line} />
-        <circle cx="120" cy="88" r="38" {...line} />
-        <circle cx="120" cy="88" r="31" {...fine} />
-        {piedra(120, 88, 23)}
-        <circle cx="120" cy="50" r="5" {...fine} />
-        <circle cx="120" cy="126" r="5" {...fine} />
-        <circle cx="82" cy="88" r="5" {...fine} />
-        <circle cx="158" cy="88" r="5" {...fine} />
-        <path d="M120 39 V137 M65 88 H175" {...guide} />
-      </svg>
-    );
-  }
-
-  if (clave === "frontal") {
-    return (
-      <svg viewBox="0 0 280 170" aria-hidden="true" className="h-40 w-full text-muted-foreground/30">
-        <ellipse cx="140" cy="123" rx="58" ry="34" {...line} />
-        <ellipse cx="140" cy="123" rx="49" ry="28" {...fine} />
-        <path d="M82 123 C84 96 94 69 111 55 C120 48 129 45 140 45 C151 45 160 48 169 55 C186 69 196 96 198 123" {...line} />
-        <path d="M105 64 L116 39 L140 27 L164 39 L175 64 M116 39 L140 53 L164 39" {...line} />
-        <path d="M105 64 C116 72 128 76 140 76 C152 76 164 72 175 64" {...fine} />
-        <path d="M122 52 L126 68 M158 52 L154 68" {...fine} />
-        {piedra(140, 39, 14)}
-        <path d="M140 20 V151 M65 123 H215" {...guide} />
-      </svg>
-    );
-  }
-
-  if (clave === "izquierda") {
-    return (
-      <svg viewBox="0 0 280 170" aria-hidden="true" className="h-40 w-full text-muted-foreground/30">
-        <path d="M128 132 C122 112 120 91 124 72 C127 58 134 49 140 49 C146 49 153 58 156 72 C160 91 158 112 152 132" {...line} />
-        <path d="M124 72 C128 65 133 60 140 58 C147 60 152 65 156 72" {...fine} />
-        <path d="M128 132 C135 136 145 136 152 132 M126 124 C134 127 146 127 154 124" {...fine} />
-        <path d="M128 72 L130 43 L140 28 L150 43 L152 72" {...line} />
-        <path d="M130 43 L140 50 L150 43" {...fine} />
-        {piedra(140, 36, 10)}
-        <path d="M140 17 V148 M103 132 H177" {...guide} />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 280 170" aria-hidden="true" className="h-40 w-full text-muted-foreground/30">
-      <ellipse cx="137" cy="119" rx="59" ry="31" transform="rotate(-17 137 119)" {...line} />
-      <path d="M82 104 C89 80 102 59 121 50 C137 42 153 46 166 57 C175 65 181 75 185 88" {...line} />
-      <path d="M98 98 C104 79 115 65 127 59 C139 53 151 57 160 66 C166 72 170 80 173 88" {...fine} />
-      <path d="M121 50 L115 35 L126 22 L142 25 L153 39 L150 50" {...line} />
-      <path d="M115 35 L126 44 L142 43 L153 39" {...fine} />
-      <path d="M102 78 C116 87 130 91 145 88 C157 86 168 81 175 74" {...fine} />
-      {piedra(130, 31, 13)}
-      <path d="M130 17 V150 M66 119 H195" {...guide} />
-    </svg>
-  );
-}
 function ReferenciaImagen({
   clave,
   etiqueta,
@@ -165,7 +92,7 @@ function ReferenciaImagen({
         </>
       ) : (
         <label htmlFor={inputId} className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-end gap-1 px-5 pb-5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground">
-          <div className="w-full -mb-1"><BocetoReferencia clave={clave} /></div>
+          <div className="w-full -mb-1"><img src={referenciaVisual[clave]} alt="" aria-hidden="true" className="h-40 w-full object-contain opacity-80" /></div>
           <span className="grid size-10 place-items-center rounded-xl border border-dashed border-border bg-background">
             <ImagePlus className="size-5" />
           </span>
