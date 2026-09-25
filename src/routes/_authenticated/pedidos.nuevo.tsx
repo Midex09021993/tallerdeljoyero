@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, ClipboardList, Factory, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ClipboardList, Factory, ImagePlus, Trash2, Upload, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useCrearPedido, usePedidos, useSedes, type PedidoNuevo } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 import { toast } from "sonner";
+import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 export const Route = createFileRoute("/_authenticated/pedidos/nuevo")({
   head: () => ({ meta: [{ title: "Nuevo pedido — Pedidos" }] }),
@@ -35,6 +36,75 @@ function siguienteReferencia(sede: string, refs: string[]) {
 }
 
 const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
+
+type ReferenciaClave = "perspectiva" | "superior" | "frontal" | "izquierda";
+
+const referenciasTrabajo: Array<{ clave: ReferenciaClave; etiqueta: string }> = [
+  { clave: "perspectiva", etiqueta: "Perspectiva" },
+  { clave: "superior", etiqueta: "Superior" },
+  { clave: "frontal", etiqueta: "Frontal" },
+  { clave: "izquierda", etiqueta: "Izquierda" },
+];
+
+function ReferenciaImagen({
+  clave,
+  etiqueta,
+  valor,
+  onCambiar,
+  onEliminar,
+}: {
+  clave: ReferenciaClave;
+  etiqueta: string;
+  valor: { file: File; preview: string } | null;
+  onCambiar: (file: File) => void;
+  onEliminar: () => void;
+}) {
+  const inputId = `referencia-${clave}`;
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-background">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider">{etiqueta}</span>
+        {valor ? (
+          <button type="button" onClick={onEliminar} className="inline-flex items-center gap-1 text-[10px] font-semibold text-danger hover:underline">
+            <Trash2 className="size-3" /> Eliminar
+          </button>
+        ) : null}
+      </div>
+      {valor ? (
+        <>
+          <div className="aspect-[4/3] bg-surface-muted">
+            <img src={valor.preview} alt={`Referencia ${etiqueta}`} className="size-full object-contain" />
+          </div>
+          <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
+            <p className="min-w-0 truncate text-[10px] text-muted-foreground">{valor.file.name}</p>
+            <label htmlFor={inputId} className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[10px] font-semibold hover:bg-surface-muted">
+              <Upload className="size-3" /> Reemplazar
+            </label>
+          </div>
+        </>
+      ) : (
+        <label htmlFor={inputId} className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-2 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground">
+          <span className="grid size-10 place-items-center rounded-xl border border-dashed border-border">
+            <ImagePlus className="size-5" />
+          </span>
+          <span className="text-xs font-semibold">Subir imagen</span>
+          <span className="text-[10px]">Opcional</span>
+        </label>
+      )}
+      <input
+        id={inputId}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.currentTarget.value = "";
+          if (file) onCambiar(file);
+        }}
+      />
+    </div>
+  );
+}
 
 function Campo({ label, value, onChange, placeholder, type = "text", required = false }: {
   label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean;
@@ -109,6 +179,12 @@ function NuevoPedido() {
     importe: "", a_cuenta: "", origen: "", contrato: "", notas: "",
   });
   const [ruta, setRuta] = useState<string[]>([]);
+  const [referencias, setReferencias] = useState<Record<ReferenciaClave, { file: File; preview: string } | null>>({
+    perspectiva: null,
+    superior: null,
+    frontal: null,
+    izquierda: null,
+  });
 
   const sede = sedes.find((s) => s.id === sedeId);
   const clientePredictivo = useMemo(() => {
@@ -253,6 +329,38 @@ function NuevoPedido() {
       nuevo.cliente_id = clienteFinalId;
 
       const resultado = await crear.mutateAsync(nuevo);
+      const referenciasSubidas: string[] = [];
+      try {
+        for (const referencia of referenciasTrabajo) {
+          const seleccion = referencias[referencia.clave];
+          if (!seleccion) continue;
+
+          const rutaArchivo = `${resultado.id}/referencias/${referencia.clave}-${Date.now()}-${nombreSeguro(seleccion.file.name)}`;
+          await subirConProgreso({
+            bucket: "pedidos",
+            ruta: rutaArchivo,
+            file: seleccion.file,
+          });
+          const { error: errorArchivo } = await supabase.from("pedido_archivos").insert({
+            pedido_id: resultado.id,
+            tipo: "referencia_diseno_3d",
+            nombre: seleccion.file.name,
+            url: rutaArchivo,
+            es_enlace: false,
+            grupo: referencia.clave,
+            version: 1,
+          });
+          if (errorArchivo) throw errorArchivo;
+          referenciasSubidas.push(rutaArchivo);
+        }
+      } catch (errorArchivos) {
+        if (referenciasSubidas.length) {
+          await supabase.storage.from("pedidos").remove(referenciasSubidas);
+        }
+        toast.warning(
+          `Pedido ${resultado?.referencia ?? nuevo.referencia} creado, pero no se pudieron guardar todas las referencias: ${errorArchivos instanceof Error ? errorArchivos.message : "error de archivos"}`,
+        );
+      }
       toast.success(`Pedido ${resultado?.referencia ?? nuevo.referencia} creado correctamente.`);
       navigate({ to: "/pedidos/$id", params: { id: resultado.id } });
     } catch (error) {
@@ -321,6 +429,39 @@ function NuevoPedido() {
                 <Campo label="Talla / medida" value={form.talla} onChange={(v) => set("talla", v)} placeholder="Ej. 18" />
                 <Campo label="Cantidad" value={form.cantidad_piezas} onChange={(v) => set("cantidad_piezas", v)} type="number" placeholder="1" />
                 <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Contacto" />
+              </div>
+            </section>
+
+            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
+              <div className="flex items-start gap-3">
+                <span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ImagePlus className="size-5" /></span>
+                <div>
+                  <h2 className="text-base font-semibold">Referencias del trabajo</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">Opcional. Imágenes que sirven como referencia para Diseño 3D.</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {referenciasTrabajo.map((referencia) => (
+                  <ReferenciaImagen
+                    key={referencia.clave}
+                    clave={referencia.clave}
+                    etiqueta={referencia.etiqueta}
+                    valor={referencias[referencia.clave]}
+                    onCambiar={(file) => {
+                      const anterior = referencias[referencia.clave];
+                      if (anterior) URL.revokeObjectURL(anterior.preview);
+                      setReferencias((actual) => ({
+                        ...actual,
+                        [referencia.clave]: { file, preview: URL.createObjectURL(file) },
+                      }));
+                    }}
+                    onEliminar={() => {
+                      const anterior = referencias[referencia.clave];
+                      if (anterior) URL.revokeObjectURL(anterior.preview);
+                      setReferencias((actual) => ({ ...actual, [referencia.clave]: null }));
+                    }}
+                  />
+                ))}
               </div>
             </section>
 
