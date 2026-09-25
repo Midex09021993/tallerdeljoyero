@@ -275,10 +275,6 @@ end;
 $$;
 
 revoke all on function public.crear_cotizacion_comercial(
-  uuid,text,text,text,uuid,uuid,text,numeric,numeric,numeric,date,date,text,text,text
-) from public, anon;
-
-revoke all on function public.crear_cotizacion_comercial(
   uuid,text,text,text,uuid,uuid,text,numeric,numeric,numeric,numeric,numeric,date,date,text,text,text
 ) from public, anon;
 
