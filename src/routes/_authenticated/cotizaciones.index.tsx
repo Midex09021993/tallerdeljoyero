@@ -45,6 +45,7 @@ type Cotizacion = {
 };
 
 type Sede = { id: string; nombre: string };
+type IdentidadComercial = { id: string; sede_id: string | null; nombre_comercial: string; moneda_codigo: string; moneda_simbolo: string; impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean };
 
 
 function money(n: number, moneda = "PEN") {
@@ -81,6 +82,7 @@ function CotizacionesPage() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [sedes, setSedes] = useState<Sede[]>([]);
+  const [identidad, setIdentidad] = useState<IdentidadComercial | null>(null);
   const [busca, setBusca] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -95,19 +97,32 @@ function CotizacionesPage() {
   const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
-    const [{ data: p }, { data: q }, { data: s }] = await Promise.all([
+    const [{ data: p }, { data: q }, { data: s }, { data: identidadData }] = await Promise.all([
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").order("nombre"),
+      sesion?.sede?.id
+        ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.sede.id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     if (p) setProyectos(p);
     if (q) setCotizaciones(q);
     if (s) setSedes(s);
+    const identidadActiva = (identidadData ?? null) as IdentidadComercial | null;
+    setIdentidad(identidadActiva);
+    if (identidadActiva) {
+      setImpuestoActivo(Boolean(identidadActiva.impuesto_activo));
+      setForm((actual) => ({
+        ...actual,
+        moneda: identidadActiva.moneda_codigo,
+        tasaImpuesto: Number(identidadActiva.impuesto_tasa) || 0,
+      }));
+    }
   };
 
   useEffect(() => {
     if (puedeGestionarCotizaciones) void cargar();
-  }, [puedeGestionarCotizaciones]);
+  }, [puedeGestionarCotizaciones, sesion?.sede?.id]);
 
   useEffect(() => {
     if (!puedeGestionarCotizaciones || !sesion?.sede?.id) return;
@@ -290,7 +305,7 @@ function CotizacionesPage() {
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
-      setForm({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+      setForm({ cliente_id: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
@@ -468,9 +483,9 @@ function CotizacionesPage() {
     ))}
   </div>
 </section>
-<label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
+<label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value={identidad?.moneda_codigo ?? "PEN"}>{identidad?.moneda_simbolo ? `${identidad.moneda_simbolo} ` : ""}{identidad?.moneda_codigo ?? "PEN"} · moneda del taller</option>{(identidad?.moneda_codigo ?? "PEN") !== "USD" ? <option value="USD">US$ USD · alternativa</option> : null}</select></label>
               <div className="hidden sm:block" />
-              <div className="text-xs text-muted-foreground"><div className="flex items-center justify-between gap-3"><span>Impuesto (%)</span><button type="button" onClick={() => setImpuestoActivo(v => !v)} aria-pressed={impuestoActivo} title={impuestoActivo ? "Desactivar impuesto" : "Activar impuesto"} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${impuestoActivo ? "border-gold/25 bg-gold/10 text-gold" : "border-border bg-background text-muted-foreground"}`}>{impuestoActivo ? <ToggleRight className="size-4" /> : <ToggleLeft className="size-4" />}{impuestoActivo ? "Activo" : "Desactivado"}</button></div><input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} disabled={!impuestoActivo} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50" /><span className="mt-1 block text-[10px] text-muted-foreground">{impuestoActivo ? "Se aplicará sobre el subtotal después del descuento." : "El impuesto no se aplicará a esta cotización."}</span></div>
+              <div className="text-xs text-muted-foreground"><div className="mb-2 rounded-lg border border-border bg-surface-muted/40 px-3 py-2"><b className="text-foreground">{identidad?.nombre_comercial ?? "Taller"}</b><span className="ml-2">{identidad?.impuesto_nombre ?? "Impuesto"} configurado: {Number(identidad?.impuesto_tasa ?? 0)}%</span></div><div className="flex items-center justify-between gap-3"><span>Impuesto (%)</span><button type="button" onClick={() => setImpuestoActivo(v => !v)} aria-pressed={impuestoActivo} title={impuestoActivo ? "Desactivar impuesto" : "Activar impuesto"} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${impuestoActivo ? "border-gold/25 bg-gold/10 text-gold" : "border-border bg-background text-muted-foreground"}`}>{impuestoActivo ? <ToggleRight className="size-4" /> : <ToggleLeft className="size-4" />}{impuestoActivo ? "Activo" : "Desactivado"}</button></div><input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} disabled={!impuestoActivo} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50" /><span className="mt-1 block text-[10px] text-muted-foreground">{impuestoActivo ? "Se aplicará sobre el subtotal después del descuento." : "El impuesto no se aplicará a esta cotización."}</span></div>
               <label className="text-xs text-muted-foreground">Válida hasta<input type="date" min={new Date().toISOString().slice(0, 10)} value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">7 días por defecto. Puedes ajustarla según el acuerdo comercial.</span></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota para cliente<textarea value={form.notas_cliente} onChange={e => setForm({...form,notas_cliente:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
               <label className="text-xs text-muted-foreground sm:col-span-2">Nota interna<textarea value={form.notas_internas} onChange={e => setForm({...form,notas_internas:e.target.value})} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
