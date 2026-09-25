@@ -242,8 +242,8 @@ export function AppShell({
         <aside className="sticky top-0 hidden h-screen max-h-screen w-64 shrink-0 flex-col overflow-hidden bg-ink text-ink-foreground lg:flex">
           <div className="p-8">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
-              Taller del Joyero
+            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
+              {sesion?.sede?.nombre ?? "Taller del Joyero"}
             </p>
           </div>
 
