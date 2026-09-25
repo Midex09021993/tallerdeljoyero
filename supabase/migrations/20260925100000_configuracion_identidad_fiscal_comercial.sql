@@ -16,6 +16,9 @@ alter table public.identidades_comerciales
 alter table public.identidades_comerciales
   drop constraint if exists identidades_comerciales_impuesto_tasa_check;
 
+alter table public.cotizaciones
+  drop constraint if exists cotizaciones_moneda_check;
+
 alter table public.identidades_comerciales
   add constraint identidades_comerciales_impuesto_tasa_check
   check (impuesto_tasa >= 0 and impuesto_tasa <= 100);
