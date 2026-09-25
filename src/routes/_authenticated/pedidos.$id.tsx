@@ -23,6 +23,37 @@ function PedidoDetalle() {
   const { data: pedidos = [] } = usePedidos();
   const { data: sesion } = useSesion();
   const pedido = pedidos.find((p) => p.id === id);
+
+  const { data: contratoFinanciero } = useQuery({
+    queryKey: ["pedido-contrato-financiero", pedido?.contrato_id],
+    enabled: Boolean(pedido?.contrato_id),
+    queryFn: async () => {
+      if (!pedido?.contrato_id) return null;
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("id,numero,total,abonado,moneda:sede_id")
+        .eq("id", pedido.contrato_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: pagosContrato = [] } = useQuery({
+    queryKey: ["pedido-contrato-pagos", pedido?.contrato_id],
+    enabled: Boolean(pedido?.contrato_id),
+    queryFn: async () => {
+      if (!pedido?.contrato_id) return [];
+      const { data, error } = await supabase
+        .from("contrato_pagos")
+        .select("id,fecha,concepto,monto,usuario_id,created_at,profiles(nombre)")
+        .eq("contrato_id", pedido.contrato_id)
+        .order("fecha", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const [tab, setTab] = useState<Tab>("resumen");
   const [transicionando, setTransicionando] = useState(false);
   const [resultadoCalidad, setResultadoCalidad] = useState("aprobado");
@@ -418,7 +449,7 @@ function PedidoDetalle() {
 
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} participantesServicio={participantesServicio} capacidadesSede={capacidadesSede} capacidadesSedeError={capacidadesSedeError} operariosError={operariosError?.message ?? participantesServicioError?.message ?? null} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} asignarParticipanteExterno={asignarParticipanteExterno} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} /> : null}
-      {tab === "comercial" ? <Comercial pedido={pedido} /> : null}
+      {tab === "comercial" ? <Comercial pedido={pedido} contrato={contratoFinanciero} pagos={pagosContrato} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
     </AppShell>
@@ -629,16 +660,18 @@ function comercialNumero(valor: unknown, fallback = 0) {
   return Number.isFinite(numero) ? numero : fallback;
 }
 
-function Comercial({ pedido }: { pedido: any }) {
+function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: any; pagos?: any[] }) {
   const especificaciones = comercialObjeto(pedido.especificaciones_comerciales);
   const detalles = comercialLista(pedido.cotizacion_detalles);
   const subtotal = comercialNumero(especificaciones.subtotal, comercialNumero(pedido.importe));
   const descuento = comercialNumero(especificaciones.descuento);
   const impuestos = comercialNumero(especificaciones.impuestos);
-  const total = comercialNumero(especificaciones.total, comercialNumero(pedido.importe));
-  const anticipo = comercialNumero(especificaciones.anticipo, comercialNumero(pedido.a_cuenta));
-  const saldo = Math.max(0, total - anticipo);
-  const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : anticipo > 0 ? "Pago parcial" : "Pendiente";
+  const totalSnapshot = comercialNumero(especificaciones.total, comercialNumero(pedido.importe));
+  const total = contrato ? comercialNumero(contrato.total, totalSnapshot) : totalSnapshot;
+  const pagosTotal = pagos.reduce((suma: number, pago: any) => suma + comercialNumero(pago.monto), 0);
+  const pagado = pagos.length > 0 ? pagosTotal : contrato ? comercialNumero(contrato.abonado) : comercialNumero(especificaciones.anticipo, comercialNumero(pedido.a_cuenta));
+  const saldo = Math.max(0, total - pagado);
+  const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : pagado > 0 ? "Pago parcial" : "Pendiente";
   const cotizacion = typeof especificaciones.cotizacion_numero === "string" ? especificaciones.cotizacion_numero : "";
   const version = especificaciones.cotizacion_version;
   const moneda = typeof especificaciones.moneda === "string" && especificaciones.moneda ? especificaciones.moneda : "PEN";
@@ -681,10 +714,10 @@ function Comercial({ pedido }: { pedido: any }) {
           <Dato label="Descuento" value={money(descuento, moneda)} />
           <Dato label="Impuestos" value={money(impuestos, moneda)} />
           <Dato label="Total" value={money(total, moneda)} />
-          <Dato label="Anticipo" value={money(anticipo, moneda)} />
+          <Dato label="Pagado" value={money(pagado, moneda)} />
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Dato label="Saldo" value={money(saldo, moneda)} />
+          <Dato label="Saldo pendiente" value={money(saldo, moneda)} />
           <Dato label="Estado de pago" value={estadoPago} />
         </div>
       </section>
