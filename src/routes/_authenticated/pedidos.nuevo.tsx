@@ -191,7 +191,6 @@ function NuevoPedido() {
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
     origen: "", canal_captacion: "", contrato: "", importe_directo: "", notas: "",
   });
-  const [ruta, setRuta] = useState<string[]>([]);
   const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
   const [referencias, setReferencias] = useState<Record<ReferenciaClave, { file: File; preview: string } | null>>({
     perspectiva: null,
