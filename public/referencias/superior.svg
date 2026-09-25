@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 280">
+<g fill="none" stroke="#8d9298" stroke-linecap="round" stroke-linejoin="round">
+<path d="M66 133c-24-11-43-12-57-7M66 151c-24 11-43 12-57 7M354 133c24-11 43-12 57-7M354 151c24 11 43 12 57 7" stroke-width="1"/>
+<path d="M72 128c35-19 73-29 105-29h66c32 0 70 10 105 29M72 156c35 19 73 29 105 29h66c32 0 70-10 105-29" stroke-width="2"/>
+<path d="M72 128c13 10 13 18 0 28M348 128c-13 10-13 18 0 28" stroke-width="2"/>
+<circle cx="210" cy="142" r="58" stroke-width="2.2"/>
+<circle cx="210" cy="142" r="48" stroke-width="1"/>
+<circle cx="210" cy="142" r="34" stroke-width="2"/>
+<circle cx="210" cy="142" r="28" stroke-width="1"/>
+<path d="M182 142l28-28 28 28-28 28zM190 122l20 48 20-48M182 142h56M190 162l20-48 20 48" stroke-width="1"/>
+<circle cx="210" cy="84" r="7" stroke-width="1"/>
+<circle cx="210" cy="200" r="7" stroke-width="1"/>
+<circle cx="152" cy="142" r="7" stroke-width="1"/>
+<circle cx="268" cy="142" r="7" stroke-width="1"/>
+<path d="M210 72v140M140 142h140" stroke="#a7abb0" stroke-width=".8" stroke-dasharray="4 5"/>
+<path d="M109 113c31-18 64-26 101-26 37 0 70 8 101 26M109 171c31 18 64 26 101 26 37 0 70-8 101-26" stroke="#b3b7bb" stroke-width=".8"/>
+</g></svg>
