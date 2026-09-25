@@ -2088,7 +2088,7 @@ export function useArchivosPedidos() {
             } | null;
           };
           let poster = resto.poster ?? "";
-          if (!poster && resto.url && /\\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || "")) {
+          if (!poster && resto.url && /\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || "")) {
             const { data: firmado } = await supabase.storage
               .from("pedidos")
               .createSignedUrl(resto.url, 3600);
