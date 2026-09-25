@@ -34,7 +34,6 @@ type Seccion = {
     | "/corte-laser"
     | "/taller"
     | "/ventas"
-    | "/ventas-2"
     | "/clientes"
     | "/inventario"
     | "/compras"
