@@ -148,10 +148,10 @@ function traceBoundary(component: Point[], width: number, height: number, foregr
   return clean.length >= 8 ? clean : boundary;
 }
 
-function traceContours(data: Uint8ClampedArray, width: number, height: number, threshold: number, ignoreLessThan = 12) {
+function traceContours(data: Uint8ClampedArray, width: number, height: number, cutoff: number, threshold: number, ignoreLessThan = 12, useAlpha = false) {
   const foreground = new Uint8Array(width * height);
   for (let i = 0; i < width * height; i++) {
-    foreground[i] = luminance(data[i * 4]!, data[i * 4 + 1]!, data[i * 4 + 2]!) < threshold ? 1 : 0;
+    const value = luminance(data[i * 4]!, data[i * 4 + 1]!, data[i * 4 + 2]!);\n    const alpha = data[i * 4 + 3]!;\n    foreground[i] = (useAlpha ? alpha >= threshold : value >= cutoff && value <= threshold) ? 1 : 0;
   }
 
   const visited = new Uint8Array(width * height);
@@ -192,6 +192,25 @@ function traceContours(data: Uint8ClampedArray, width: number, height: number, t
   return contours.sort((a, b) => b.area - a.area);
 }
 
+function smoothClosedPath(points: Point[], amount: number) {
+  if (points.length < 4 || amount <= 0) return points;
+  const passes = Math.min(3, Math.max(0, Math.round(amount * 2)));
+  let current = points;
+  for (let pass = 0; pass < passes; pass++) {
+    const next: Point[] = [];
+    for (let i = 0; i < current.length; i++) {
+      const p = current[i]!;
+      const q = current[(i + 1) % current.length]!;
+      next.push(
+        { x: p.x * 0.75 + q.x * 0.25, y: p.y * 0.75 + q.y * 0.25 },
+        { x: p.x * 0.25 + q.x * 0.75, y: p.y * 0.25 + q.y * 0.75 },
+      );
+    }
+    current = next;
+  }
+  return current;
+}
+
 function pathFromPoints(points: Point[]) {
   if (!points.length) return "";
   const n = points.length;
@@ -222,25 +241,25 @@ function normalizeContours(contours: Contour[], widthMm: number, heightMm: numbe
   }));
 }
 
-function svgFile(contours: Contour[], widthMm: number, heightMm: number) {
+function svgFile(contours: Contour[], widthMm: number, heightMm: number, outputMode: "cut" | "engrave") {
   const normalized = normalizeContours(contours, widthMm, heightMm);
-  const paths = normalized.map((c) => `<path d="${pathFromPoints(c.points)}" />`).join("\n  ");
+  const paths = normalized.map((c) => `<path d="${pathFromPoints(c.points)}" />`).join("\n  ");\n  const label = outputMode === "cut" ? "CORTE" : "GRABADO";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}">
-  <g id="LASER" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="0.01">
+  <g id="${label}" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="0.01">
     ${paths}
   </g>
 </svg>
 `;
 }
 
-function dxfFile(contours: Contour[], widthMm: number, heightMm: number) {
+function dxfFile(contours: Contour[], widthMm: number, heightMm: number, outputMode: "cut" | "engrave") {
   const normalized = normalizeContours(contours, widthMm, heightMm);
-  const entities = normalized.map((contour) => {
+  const layer = outputMode === "cut" ? "CORTE" : "GRABADO";\n  const entities = normalized.map((contour) => {
     const vertices = contour.points.map((p) =>
       `10\n${p.x.toFixed(4)}\n20\n${(heightMm - p.y).toFixed(4)}\n`,
     ).join("");
-    return `0\nLWPOLYLINE\n8\nLASER\n90\n${contour.points.length}\n70\n1\n${vertices}`;
+    return `0\nLWPOLYLINE\n8\n${layer}\n90\n${contour.points.length}\n70\n1\n${vertices}`;
   }).join("\n");
   return `0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n${entities}\n0\nENDSEC\n0\nEOF\n`;
 }
@@ -276,7 +295,7 @@ export function VectorizadorLaser() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceName, setSourceName] = useState("diseño");
-  const [threshold, setThreshold] = useState(150);
+  const [cutoff, setCutoff] = useState(0);\n  const [threshold, setThreshold] = useState(150);\n  const [smoothness, setSmoothness] = useState(0);\n  const [useAlpha, setUseAlpha] = useState(false);\n  const [outputMode, setOutputMode] = useState<"cut" | "engrave">("cut");\n  const [unit, setUnit] = useState<"mm" | "in">("mm");
   const [simplification, setSimplification] = useState(2);\n  const [ignoreLessThan, setIgnoreLessThan] = useState(24);\n  const [singleContour, setSingleContour] = useState(true);
   const [widthMm, setWidthMm] = useState(30);
   const [contours, setContours] = useState<Contour[]>([]);
@@ -310,7 +329,7 @@ export function VectorizadorLaser() {
       ctx.drawImage(img, 0, 0, width, height);
       const pixels = ctx.getImageData(0, 0, width, height);
       setSourceSize({ width: img.naturalWidth, height: img.naturalHeight });
-      setContours(traceContours(pixels.data, width, height, threshold, ignoreLessThan));
+      setContours(traceContours(pixels.data, width, height, cutoff, threshold, ignoreLessThan, useAlpha));
       setProcessing(false);
     };
     img.onerror = () => {
@@ -324,11 +343,13 @@ export function VectorizadorLaser() {
     processImage(sourceFile);
     // Reprocess only when the source or threshold changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sourceFile, threshold, ignoreLessThan]);
+  }, [sourceFile, cutoff, threshold, ignoreLessThan, useAlpha]);
 
   const cleanContours = useMemo(
-    () => contours.map(c => ({ ...c, points: simplify(c.points, simplification) })).filter(c => c.points.length >= 3),
-    [contours, simplification],
+    () => contours
+      .map(c => ({ ...c, points: smoothClosedPath(simplify(c.points, simplification), smoothness) }))
+      .filter(c => c.points.length >= 3),
+    [contours, simplification, smoothness],
   );
   const outputContours = singleContour ? cleanContours.slice(0, 1) : cleanContours.slice(0, 12);
   const points = outputContours[0]?.points ?? [];
@@ -344,7 +365,7 @@ export function VectorizadorLaser() {
 
   const download = (kind: "svg" | "dxf") => {
     if (!points.length) return;
-    const exportContours = outputContours;\n    const content = kind === "svg" ? svgFile(exportContours, widthMm, heightMm) : dxfFile(exportContours, widthMm, heightMm);
+    const exportContours = outputContours;\n    const content = kind === "svg" ? svgFile(exportContours, widthMm, heightMm, outputMode) : dxfFile(exportContours, widthMm, heightMm, outputMode);
     const blob = new Blob([content], { type: kind === "svg" ? "image/svg+xml" : "application/dxf" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -398,11 +419,22 @@ export function VectorizadorLaser() {
 
           <div>
             <div className="flex items-center justify-between text-xs font-semibold">
-              <span>Umbral</span><span className="tabular-nums text-muted-foreground">{threshold}</span>
+              <span>Rango de brillo</span><span className="tabular-nums text-muted-foreground">{cutoff}–{threshold}</span>
             </div>
-            <input type="range" min="30" max="240" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} className="mt-2 w-full accent-[hsl(var(--gold))]" />
-            <p className="mt-1 text-[10px] text-muted-foreground">Separa el dibujo del fondo.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <input aria-label="Corte inferior" type="range" min="0" max="240" value={cutoff} onChange={(e) => setCutoff(Math.min(Number(e.target.value), threshold))} className="w-full accent-[hsl(var(--gold))]" />
+              <input aria-label="Umbral superior" type="range" min="30" max="255" value={threshold} onChange={(e) => setThreshold(Math.max(Number(e.target.value), cutoff))} className="w-full accent-[hsl(var(--gold))]" />
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">Controla qué tonos entran al trazado, como en los trazadores profesionales.</p>
           </div>
+
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3">
+            <input type="checkbox" checked={useAlpha} onChange={(e) => setUseAlpha(e.target.checked)} className="accent-[hsl(var(--gold))]" />
+            <span>
+              <span className="block text-xs font-semibold">Usar transparencia</span>
+              <span className="block text-[10px] text-muted-foreground">Útil para PNG con fondo transparente.</span>
+            </span>
+          </label>
 
           <div>
             <div className="flex items-center justify-between text-xs font-semibold">
@@ -422,10 +454,29 @@ export function VectorizadorLaser() {
 
           <div>
             <div className="flex items-center justify-between text-xs font-semibold">
-              <span>Ancho real de fabricación</span><span className="tabular-nums text-muted-foreground">{widthMm.toFixed(1)} mm</span>
+              <span>Suavizado de curvas</span><span className="tabular-nums text-muted-foreground">{smoothness.toFixed(1)}</span>
+            </div>
+            <input type="range" min="0" max="1" step="0.25" value={smoothness} onChange={(e) => setSmoothness(Number(e.target.value))} className="mt-2 w-full accent-[hsl(var(--gold))]" />
+            <p className="mt-1 text-[10px] text-muted-foreground">Convierte trazos muy dentados en curvas más limpias. Verifica esquinas pequeñas.</p>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold">
+              <span>Operación</span>
+              <span className="text-muted-foreground">{outputMode === "cut" ? "CORTE" : "GRABADO"}</span>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setOutputMode("cut")} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${outputMode === "cut" ? "border-gold bg-gold/10 text-gold" : "border-border"}`}>Corte</button>
+              <button type="button" onClick={() => setOutputMode("engrave")} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${outputMode === "engrave" ? "border-gold bg-gold/10 text-gold" : "border-border"}`}>Grabado</button>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold">
+              <span>Ancho real de fabricación</span><span className="tabular-nums text-muted-foreground">{displayWidth.toFixed(2)} {unit}</span>
             </div>
             <input type="range" min="1" max="150" step="0.5" value={widthMm} onChange={(e) => setWidthMm(Number(e.target.value))} className="mt-2 w-full accent-[hsl(var(--gold))]" />
-            <p className="mt-1 text-[10px] text-muted-foreground">La geometría exportada queda en milímetros y conserva la proporción del vector.</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">La geometría exportada queda en milímetros y conserva la proporción del vector.</p>\n            <div className="mt-2 flex gap-2">\n              <button type="button" onClick={() => setUnit("mm")} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold ${unit === "mm" ? "bg-gold text-gold-foreground" : "border border-border"}`}>mm</button>\n              <button type="button" onClick={() => setUnit("in")} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold ${unit === "in" ? "bg-gold text-gold-foreground" : "border border-border"}`}>in</button>\n            </div>
           </div>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3">
@@ -487,8 +538,8 @@ export function VectorizadorLaser() {
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Contornos</p><p className="mt-1 text-xl font-semibold">{outputContours.length}</p></div>
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nodos</p><p className="mt-1 text-xl font-semibold">{totalPoints}</p></div>
-          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tamaño</p><p className="mt-1 text-xl font-semibold">{widthMm.toFixed(1)} × {heightMm.toFixed(1)} mm</p></div>
-          <div className={`rounded-xl border p-4 ${closed ? "border-success/20 bg-success-soft" : "border-danger/20 bg-danger/10"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Validación</p><p className="mt-1 flex items-center gap-1 text-sm font-semibold">{closed ? <><ShieldCheck className="size-4 text-success" /> Geometría válida</> : selfIntersecting ? "Autocruce detectado" : duplicatePoints ? "Segmentos duplicados" : "Revisar geometría"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tamaño</p><p className="mt-1 text-xl font-semibold">{displayWidth.toFixed(2)} × {displayHeight.toFixed(2)} {unit}</p></div>
+          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Modo</p><p className="mt-1 text-xl font-semibold">{outputMode === "cut" ? "Corte" : "Grabado"}</p></div>\n          <div className={`rounded-xl border p-4 ${closed ? "border-success/20 bg-success-soft" : "border-danger/20 bg-danger/10"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Validación</p><p className="mt-1 flex items-center gap-1 text-sm font-semibold">{closed ? <><ShieldCheck className="size-4 text-success" /> Geometría válida</> : selfIntersecting ? "Autocruce detectado" : duplicatePoints ? "Segmentos duplicados" : "Revisar geometría"}</p></div>
         </div>
       ) : null}
     </section>
