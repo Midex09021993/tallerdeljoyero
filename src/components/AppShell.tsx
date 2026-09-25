@@ -93,7 +93,7 @@ const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
   "/pedidos": "Pedidos",
   "/cotizaciones": "Cotizaciones",
   "/clientes": "Clientes",
-  "/ventas-2": "Ventas",
+  "/ventas": "Ventas",
   "/catalogo": "Catálogo",
 };
 
