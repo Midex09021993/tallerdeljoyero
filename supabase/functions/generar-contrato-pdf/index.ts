@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     if (contrato.cotizacion_id) {
       const { data } = await admin
         .from("cotizaciones")
-        .select("id,numero,version,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,identidad_comercial_id,notas_cliente")
+        .select("id,numero,version,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,identidad_comercial_id,identidad_comercial,notas_cliente")
         .eq("id", contrato.cotizacion_id)
         .maybeSingle();
       cotizacion = data;
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
     const [
       { data: cliente },
       { data: proyecto },
-      { data: identidad },
+      { data: identidadActual },
       { data: sede },
       { data: detalles },
       { data: plantilla },
@@ -148,6 +148,10 @@ Deno.serve(async (req) => {
         ? admin.from("plantillas_contrato").select("id,version,contenido").eq("identidad_comercial_id", identidadId).eq("activa", true).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
+
+    const identidad = cotizacion?.identidad_comercial && typeof cotizacion.identidad_comercial === "object" && Object.keys(cotizacion.identidad_comercial).length > 0
+      ? { ...(identidadActual ?? {}), ...(cotizacion.identidad_comercial as Record<string, unknown>) }
+      : identidadActual;
 
     const defaultContent = {
       titulo: "CONTRATO DE FABRICACIÓN DE JOYERÍA",
