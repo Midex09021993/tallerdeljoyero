@@ -174,7 +174,7 @@ function NuevoPedido() {
       if (!cotizacionIds.length) return [];
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,numero,origen,cotizacion_id")
+        .select("id,numero,origen,cotizacion_id,total,abonado")
         .in("cotizacion_id", cotizacionIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -185,7 +185,7 @@ function NuevoPedido() {
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
-    importe: "", a_cuenta: "", origen: "", contrato: "", notas: "",
+    origen: "", contrato: "", notas: "",
   });
   const [ruta, setRuta] = useState<string[]>([]);
   const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
@@ -197,6 +197,8 @@ function NuevoPedido() {
   });
 
   const sede = sedes.find((s) => s.id === sedeId);
+  const contratoSeleccionado = contratosCliente.find((contrato) => contrato.id === contratoId) ?? null;
+  const totalComercial = contratoSeleccionado ? Number(contratoSeleccionado.total) || 0 : 0;
   const clientePredictivo = useMemo(() => {
     const termino = clienteBusqueda.trim().toLowerCase();
     if (termino.length < 2 || clienteId || !clientes.length) return null;
@@ -264,8 +266,11 @@ function NuevoPedido() {
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
-      importe: Number(form.importe) || 0,
-      a_cuenta: Number(form.a_cuenta) || 0,
+      // El importe comercial no se captura manualmente en recepción.
+      // Si existe contrato, el total proviene del documento comercial.
+      // Los pagos se registran posteriormente como movimientos de contrato.
+      importe: totalComercial,
+      a_cuenta: 0,
       sede_id: sedeId,
       telefono: form.telefono.trim(),
       origen: form.origen.trim(),
@@ -516,11 +521,35 @@ function NuevoPedido() {
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card">
               <h2 className="text-sm font-semibold">Condición comercial</h2>
-              <div className="mt-4 space-y-4">
-                <Campo label="Importe de venta" value={form.importe} onChange={(v) => set("importe", v)} type="number" placeholder="0.00" />
-                <Campo label="A cuenta" value={form.a_cuenta} onChange={(v) => set("a_cuenta", v)} type="number" placeholder="0.00" />
+              <p className="mt-1 text-xs text-muted-foreground">
+                El valor comercial proviene del documento asociado. Los pagos no se registran en recepción.
+              </p>
+              <div className="mt-4 rounded-xl border border-border bg-surface-muted p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Documento comercial</p>
+                <p className="mt-1 text-sm font-semibold">
+                  {contratoSeleccionado?.numero || "Sin contrato vinculado"}
+                </p>
+                {contratoSeleccionado?.origen ? (
+                  <p className="mt-1 text-[10px] text-muted-foreground">{contratoSeleccionado.origen}</p>
+                ) : null}
               </div>
-              <div className="mt-4 rounded-xl bg-surface-muted p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Saldo inicial</p><p className="mt-1 text-lg font-semibold">S/ {Math.max((Number(form.importe) || 0) - (Number(form.a_cuenta) || 0), 0).toFixed(2)}</p></div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl bg-surface-muted p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Importe de venta</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">
+                    {contratoSeleccionado ? `S/ ${totalComercial.toFixed(2)}` : "Pendiente"}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface-muted p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pagos</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {contratoSeleccionado ? "Se registran en Ventas" : "Sin documento comercial"}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+                Recepción no modifica el precio ni registra amortizaciones. Al registrar un pago, el ERP calcula automáticamente el total pagado y el saldo pendiente.
+              </p>
             </section>
 
             <button disabled={crear.isPending} type="submit" className="w-full rounded-2xl bg-gold px-4 py-3.5 text-sm font-bold text-gold-foreground shadow-raised disabled:cursor-not-allowed disabled:opacity-50">{crear.isPending ? "Creando pedido…" : "Crear pedido"}</button>
