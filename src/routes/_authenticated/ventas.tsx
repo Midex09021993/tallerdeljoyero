@@ -611,12 +611,12 @@ function PedidoVentaCard({
             <dd className="mt-1 truncate font-medium text-foreground">{pedido.origen || "—"}</dd>
           </div>
           <div className="rounded-xl bg-surface-muted p-2.5">
-            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Precio pedido</dt>
-            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(Number(pedido.importe) || 0)}</dd>
+            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Venta</dt>
+            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(resumenFinanciero.total || Number(pedido.importe) || 0)}</dd>
           </div>
           <div className="rounded-xl bg-surface-muted p-2.5">
-            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">A cuenta</dt>
-            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(Number(pedido.a_cuenta) || 0)}</dd>
+            <dt className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Pagado</dt>
+            <dd className="mt-1 truncate font-medium text-foreground">{formatCurrency(resumenFinanciero.abonado || Number(pedido.a_cuenta) || 0)}</dd>
           </div>
         </dl>
 
