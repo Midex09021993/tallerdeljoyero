@@ -435,8 +435,10 @@ export type MovimientoInventario = {
 };
 
 export type PedidoNuevo = {
-  /** Ruta comercial elegida al registrar el pedido. No se persiste: determina cómo se crea/vincula el documento financiero. */
+  /** Origen comercial del pedido: no obliga a una ruta productiva. */
   origen_comercial?: "cotizacion" | "directo" | "pendiente";
+  tipo_operacion?: "fabricacion" | "reparacion" | "venta_stock";
+  canal_captacion?: string | null;
   referencia: string;
   pieza: string;
   cliente: string;
@@ -492,7 +494,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, origen, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
+  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, origen, canal_captacion, tipo_operacion, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sedes(nombre)";
 
 const CAMPOS_PEDIDO_COMERCIAL =
   "pedido_id, telefono, importe, a_cuenta, saldo, cotizacion_detalles, especificaciones_comerciales, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at";
@@ -597,6 +599,8 @@ export function usePedidos() {
           sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
           telefono: textoCampo(comercial, "telefono"),
           origen: textoCampo(p, "origen"),
+          canal_captacion: textoCampo(p, "canal_captacion"),
+          tipo_operacion: (p["tipo_operacion"] === "reparacion" || p["tipo_operacion"] === "venta_stock" ? p["tipo_operacion"] : "fabricacion"),
           contrato: textoCampo(p, "contrato"),
           contrato_id: typeof p["contrato_id"] === "string" ? p["contrato_id"] : null,
           cotizacion_id: typeof p["cotizacion_id"] === "string" ? p["cotizacion_id"] : null,
