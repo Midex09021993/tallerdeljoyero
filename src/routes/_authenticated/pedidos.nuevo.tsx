@@ -174,7 +174,7 @@ function NuevoPedido() {
       if (!cotizacionIds.length) return [];
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,numero,origen,cotizacion_id,total,abonado")
+        .select("id,numero,origen,cotizacion_id,total,abonado,sede_id")
         .in("cotizacion_id", cotizacionIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -253,6 +253,10 @@ function NuevoPedido() {
     }
     if (!ruta.length) {
       toast.error("Selecciona al menos un área de la ruta.");
+      return;
+    }
+    if (contratoSeleccionado && contratoSeleccionado.sede_id && contratoSeleccionado.sede_id !== sedeId) {
+      toast.error("El documento comercial pertenece a otro taller. Selecciona el taller correcto.");
       return;
     }
 
