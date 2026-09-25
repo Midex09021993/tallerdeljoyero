@@ -37,7 +37,6 @@ import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
-import { Route as AuthenticatedVentas2RouteImport } from './routes/_authenticated/ventas-2'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
@@ -47,7 +46,7 @@ import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos.$id'
 import { Route as AuthenticatedPedidosNuevoRouteImport } from './routes/_authenticated/pedidos.nuevo'
 import { Route as AuthenticatedTrabajosIdRouteImport } from './routes/_authenticated/trabajos.$id'
-import { Route as AuthenticatedVentas2IdRouteImport } from './routes/_authenticated/ventas-2.$id'
+import { Route as AuthenticatedVentasIdRouteImport } from './routes/_authenticated/ventas.$id'
 import { Route as CCodigoPdfRouteImport } from './routes/c/$codigo/pdf'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -197,11 +196,6 @@ const AuthenticatedVentasRoute = AuthenticatedVentasRouteImport.update({
   path: '/ventas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedVentas2Route = AuthenticatedVentas2RouteImport.update({
-  id: '/ventas-2',
-  path: '/ventas-2',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const CCodigoRoute = CCodigoRouteImport.update({
   id: '/c/$codigo',
   path: '/c/$codigo',
@@ -252,10 +246,10 @@ const AuthenticatedTrabajosIdRoute = AuthenticatedTrabajosIdRouteImport.update({
   path: '/trabajos/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedVentas2IdRoute = AuthenticatedVentas2IdRouteImport.update({
+const AuthenticatedVentasIdRoute = AuthenticatedVentasIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => AuthenticatedVentas2Route,
+  getParentRoute: () => AuthenticatedVentasRoute,
 } as any)
 const CCodigoPdfRoute = CCodigoPdfRouteImport.update({
   id: '/pdf',
@@ -306,8 +300,8 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
-  '/ventas': typeof AuthenticatedVentasRoute
-  '/ventas-2': typeof AuthenticatedVentas2RouteWithChildren
+  '/ventas': typeof AuthenticatedVentasRouteWithChildren
+  '/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -315,7 +309,6 @@ export interface FileRoutesByFullPath {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
-  '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
   '/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -349,7 +342,6 @@ export interface FileRoutesByTo {
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRoute
-  '/ventas-2': typeof AuthenticatedVentas2RouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -357,7 +349,6 @@ export interface FileRoutesByTo {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
-  '/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
@@ -394,16 +385,14 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
-  '/_authenticated/ventas': typeof AuthenticatedVentasRoute
-  '/_authenticated/ventas-2': typeof AuthenticatedVentas2RouteWithChildren
-  '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
+  '/_authenticated/ventas/$id': typeof AuthenticatedVentasIdRoute  '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
-  '/_authenticated/ventas-2/$id': typeof AuthenticatedVentas2IdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
   '/_authenticated/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -441,7 +430,7 @@ export interface FileRouteTypes {
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
-    | '/ventas-2'
+    
     | '/c/$codigo'
     | '/joya/$token'
     | '/contratos/$id'
@@ -449,7 +438,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/pedidos/nuevo'
     | '/trabajos/$id'
-    | '/ventas-2/$id'
+    
     | '/c/$codigo/pdf'
     | '/cotizaciones/'
     | '/pedidos/'
@@ -483,7 +472,7 @@ export interface FileRouteTypes {
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
-    | '/ventas-2'
+    
     | '/c/$codigo'
     | '/joya/$token'
     | '/contratos/$id'
@@ -491,7 +480,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/pedidos/nuevo'
     | '/trabajos/$id'
-    | '/ventas-2/$id'
+    
     | '/c/$codigo/pdf'
     | '/cotizaciones'
     | '/pedidos'
@@ -528,7 +517,7 @@ export interface FileRouteTypes {
     | '/_authenticated/taller'
     | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
-    | '/_authenticated/ventas-2'
+    
     | '/c/$codigo'
     | '/joya/$token'
     | '/_authenticated/contratos/$id'
@@ -536,7 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos/$id'
     | '/_authenticated/pedidos/nuevo'
     | '/_authenticated/trabajos/$id'
-    | '/_authenticated/ventas-2/$id'
+    
     | '/c/$codigo/pdf'
     | '/_authenticated/cotizaciones/'
     | '/_authenticated/pedidos/'
@@ -758,13 +747,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVentasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ventas-2': {
-      id: '/_authenticated/ventas-2'
-      path: '/ventas-2'
-      fullPath: '/ventas-2'
-      preLoaderRoute: typeof AuthenticatedVentas2RouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/c/$codigo': {
       id: '/c/$codigo'
       path: '/c/$codigo'
@@ -828,12 +810,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrabajosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ventas-2/$id': {
-      id: '/_authenticated/ventas-2/$id'
+    '/_authenticated/ventas/$id': {
+      id: '/_authenticated/ventas/$id'
       path: '/$id'
-      fullPath: '/ventas-2/$id'
-      preLoaderRoute: typeof AuthenticatedVentas2IdRouteImport
-      parentRoute: typeof AuthenticatedVentas2Route
+      fullPath: '/ventas/$id'
+      preLoaderRoute: typeof AuthenticatedVentasIdRouteImport
+      parentRoute: typeof AuthenticatedVentasRoute
     }
     '/c/$codigo/pdf': {
       id: '/c/$codigo/pdf'
@@ -897,17 +879,6 @@ const AuthenticatedPedidosRouteChildren: AuthenticatedPedidosRouteChildren = {
 const AuthenticatedPedidosRouteWithChildren =
   AuthenticatedPedidosRoute._addFileChildren(AuthenticatedPedidosRouteChildren)
 
-interface AuthenticatedVentas2RouteChildren {
-  AuthenticatedVentas2IdRoute: typeof AuthenticatedVentas2IdRoute
-}
-
-const AuthenticatedVentas2RouteChildren: AuthenticatedVentas2RouteChildren = {
-  AuthenticatedVentas2IdRoute: AuthenticatedVentas2IdRoute,
-}
-
-const AuthenticatedVentas2RouteWithChildren =
-  AuthenticatedVentas2Route._addFileChildren(AuthenticatedVentas2RouteChildren)
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
@@ -929,8 +900,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
-  AuthenticatedVentasRoute: typeof AuthenticatedVentasRoute
-  AuthenticatedVentas2Route: typeof AuthenticatedVentas2RouteWithChildren
+  AuthenticatedVentasRoute: typeof AuthenticatedVentasRouteWithChildren
   AuthenticatedContratosIdRoute: typeof AuthenticatedContratosIdRoute
   AuthenticatedTrabajosIdRoute: typeof AuthenticatedTrabajosIdRoute
 }
@@ -956,8 +926,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
-  AuthenticatedVentasRoute: AuthenticatedVentasRoute,
-  AuthenticatedVentas2Route: AuthenticatedVentas2RouteWithChildren,
+  AuthenticatedVentasRoute: AuthenticatedVentasRouteWithChildren,
   AuthenticatedContratosIdRoute: AuthenticatedContratosIdRoute,
   AuthenticatedTrabajosIdRoute: AuthenticatedTrabajosIdRoute,
 }
@@ -990,6 +959,17 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
+interface AuthenticatedVentasRouteChildren {
+  AuthenticatedVentasIdRoute: typeof AuthenticatedVentasIdRoute
+}
+
+const AuthenticatedVentasRouteChildren: AuthenticatedVentasRouteChildren = {
+  AuthenticatedVentasIdRoute: AuthenticatedVentasIdRoute,
+}
+
+const AuthenticatedVentasRouteWithChildren =
+  AuthenticatedVentasRoute._addFileChildren(AuthenticatedVentasRouteChildren)
+
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
