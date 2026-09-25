@@ -189,7 +189,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/catalogo": 7,
   "/cotizaciones": 10,
   "/pedidos": 20,
-  "/ventas-2": 30,
+  "/ventas": 30,
   "/ventas": 31,
   "/inventario": 40,
   "/compras": 45,
