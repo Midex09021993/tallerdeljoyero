@@ -25,7 +25,7 @@ function diasEntrega(fecha: string | null | undefined) {
 function PedidosPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
-  const { data: pedidos = [], isLoading } = usePedidos();
+  const { data: pedidos = [], isLoading, isError, error } = usePedidos();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const [vista, setVista] = useState<Vista>("todos");
   const [busqueda, setBusqueda] = useState("");
@@ -49,7 +49,7 @@ function PedidosPage() {
   return (
     <AppShell
       titulo="Pedidos"
-      subtitulo={isLoading ? "Cargando operación…" : `${activos.length} pedidos activos · ${sesion?.esDueno ? etiquetaSede : sesion?.sede?.nombre ?? "Tu sede"}`}
+      subtitulo={isLoading ? "Cargando operación…" : isError ? "No se pudo cargar la operación" : `${activos.length} pedidos activos · ${sesion?.esDueno ? etiquetaSede : sesion?.sede?.nombre ?? "Tu sede"}`}
       acciones={<div className="flex flex-wrap items-center gap-2"><SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />{sesion?.esAdmin ? <button type="button" onClick={() => navigate({ to: "/pedidos/nuevo" })} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground shadow-card"><Plus className="size-4" /> Nuevo pedido</button> : null}</div>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -79,10 +79,11 @@ function PedidosPage() {
 
         <div className="divide-y divide-border lg:hidden">{lista.map((p) => <button key={p.id} type="button" onClick={() => navigate({ to: "/pedidos/$id", params: { id: p.id } })} className="w-full p-4 text-left hover:bg-surface-muted/60"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold">{p.referencia}</p><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado} /></div><p className="mt-3 text-sm">{p.trabajo || p.pieza || "Sin descripción"}</p><div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground"><span>{p.sede_nombre || "Taller no asignado"} · {p.area_actual || "Sin ubicación"}</span><span>{fmtFecha(p.fecha_entrega ?? p.entrega) || "Sin fecha"}</span></div></button>)}</div>
 
-        {!isLoading && lista.length === 0 ? <div className="p-12 text-center text-sm text-muted-foreground">No hay pedidos en esta vista.</div> : null}
+        {isError ? <div className="m-4 rounded-xl border border-danger/30 bg-danger/5 p-4 text-xs"><p className="font-semibold text-danger">Error real de carga de pedidos</p><pre className="mt-2 whitespace-pre-wrap break-words text-muted-foreground">{error instanceof Error ? error.message : String(error)}</pre></div> : null}
+        {!isLoading && !isError && lista.length === 0 ? <div className="p-12 text-center text-sm text-muted-foreground">No hay pedidos en esta vista.</div> : null}
       </section>
 
-      {sesion?.esAdmin && !isLoading && pedidos.length === 0 ? (
+      {sesion?.esAdmin && (isError || (!isLoading && pedidos.length === 0)) ? (
         <section className="mt-4 rounded-2xl border border-warning/30 bg-warning-soft/30 p-4 text-xs">
           <p className="font-semibold text-warning">Diagnóstico temporal de sesión</p>
           <div className="mt-2 grid gap-1 text-muted-foreground sm:grid-cols-2">
@@ -103,17 +104,11 @@ function PedidosPage() {
           <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-lg">
             <div className="flex items-start gap-3">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger"><Trash2 className="size-4" /></span>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-danger">Eliminar pedido</p>
-                <h2 className="mt-1 text-base font-semibold">¿Eliminar definitivamente {porBorrar.referencia}?</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Esta acción no se puede deshacer.</p>
-              </div>
+              <div><p className="text-[10px] font-bold uppercase tracking-wider text-danger">Eliminar pedido</p><h2 className="mt-1 text-base font-semibold">¿Eliminar definitivamente {porBorrar.referencia}?</h2><p className="mt-2 text-sm text-muted-foreground">Esta acción no se puede deshacer.</p></div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setPorBorrar(null)} disabled={borrar.isPending} className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-surface-muted">Cancelar</button>
-              <button type="button" disabled={borrar.isPending} onClick={() => borrar.mutate(porBorrar.id, { onSuccess: () => setPorBorrar(null) })} className="inline-flex items-center gap-2 rounded-lg bg-danger px-3 py-2 text-xs font-semibold text-surface hover:opacity-90 disabled:opacity-50">
-                <Trash2 className="size-3.5" /> {borrar.isPending ? "Eliminando…" : "Sí, eliminar"}
-              </button>
+              <button type="button" disabled={borrar.isPending} onClick={() => borrar.mutate(porBorrar.id, { onSuccess: () => setPorBorrar(null) })} className="inline-flex items-center gap-2 rounded-lg bg-danger px-3 py-2 text-xs font-semibold text-surface hover:opacity-90 disabled:opacity-50"><Trash2 className="size-3.5" /> {borrar.isPending ? "Eliminando…" : "Sí, eliminar"}</button>
             </div>
           </div>
         </div>
@@ -135,10 +130,7 @@ function PedidoRow({ pedido: p, esDueno, onOpen, onDelete }: { pedido: any; esDu
 function Status({ estado }: { estado: string }) { return <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${estadoClases[estado] ?? "bg-surface-muted text-muted-foreground"}`}>{estado}</span>; }
 function Metric({ icon: Icon, label, value, tone = "neutral", onClick, active }: { icon: typeof ClipboardList; label: string; value: number; tone?: "neutral" | "warning" | "positive"; onClick: () => void; active: boolean }) {
   return <button type="button" onClick={onClick} aria-pressed={active} className={`w-full rounded-2xl border bg-card p-4 text-left shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold/30 ${active ? "border-gold/50 ring-1 ring-gold/20" : "border-border"}`}>
-    <div className="flex items-center justify-between">
-      <span className="grid size-9 place-items-center rounded-xl bg-surface-muted text-gold"><Icon className="size-4" /></span>
-      <span className={`text-2xl font-semibold tabular-nums ${tone === "warning" ? "text-warning" : tone === "positive" ? "text-success" : "text-foreground"}`}>{value}</span>
-    </div>
+    <div className="flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl bg-surface-muted text-gold"><Icon className="size-4" /></span><span className={`text-2xl font-semibold tabular-nums ${tone === "warning" ? "text-warning" : tone === "positive" ? "text-success" : "text-foreground"}`}>{value}</span></div>
     <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
   </button>;
 }
