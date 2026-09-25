@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronDown, ClipboardList, Factory, ImagePlus, Trash2, Upload, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, useCapacidadesMenu } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useCrearPedido, usePedidos, useSedes, type PedidoNuevo } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
@@ -130,6 +130,8 @@ function Campo({ label, value, onChange, placeholder, type = "text", required = 
 function NuevoPedido() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
+  const { data: capacidades = [] } = useCapacidadesMenu(sesion);
+  const cotizacionesHabilitadas = capacidades.includes("Cotizaciones");
   const { data: pedidos = [] } = usePedidos();
   const { data: sedes = [] } = useSedes();
   const crear = useCrearPedido();
@@ -160,10 +162,11 @@ function NuevoPedido() {
   });
 
   const [clienteId, setClienteId] = useState("");
+  const [origenComercial, setOrigenComercial] = useState<"directo" | "cotizacion" | "pendiente">("directo");
   const [contratoId, setContratoId] = useState("");
   const { data: contratosCliente = [], isFetching: buscandoContratos } = useQuery({
     queryKey: ["pedidos-nuevo-contratos", clienteId],
-    enabled: Boolean(clienteId),
+    enabled: Boolean(clienteId && cotizacionesHabilitadas && origenComercial === "cotizacion"),
     queryFn: async () => {
       const { data: cotizacionesCliente, error: errorCotizaciones } = await supabase
         .from("cotizaciones")
@@ -185,7 +188,7 @@ function NuevoPedido() {
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
-    origen: "", contrato: "", notas: "",
+    origen: "", contrato: "", importe_directo: "", notas: "",
   });
   const [ruta, setRuta] = useState<string[]>([]);
   const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
@@ -198,7 +201,11 @@ function NuevoPedido() {
 
   const sede = sedes.find((s) => s.id === sedeId);
   const contratoSeleccionado = contratosCliente.find((contrato) => contrato.id === contratoId) ?? null;
-  const totalComercial = contratoSeleccionado ? Number(contratoSeleccionado.total) || 0 : 0;
+  const totalComercial = origenComercial === "cotizacion"
+    ? (contratoSeleccionado ? Number(contratoSeleccionado.total) || 0 : 0)
+    : origenComercial === "directo"
+      ? Math.max(0, Number(form.importe_directo) || 0)
+      : 0;
   const clientePredictivo = useMemo(() => {
     const termino = clienteBusqueda.trim().toLowerCase();
     if (termino.length < 2 || clienteId || !clientes.length) return null;
@@ -222,6 +229,12 @@ function NuevoPedido() {
     // ser borrada por el estado inicial de la consulta.
     if (!clienteId) return;
 
+    if (origenComercial !== "cotizacion") {
+      setContratoId("");
+      set("contrato", "");
+      return;
+    }
+
     if (contratosCliente.length === 1) {
       const contrato = contratosCliente[0];
       if (contrato) {
@@ -231,7 +244,7 @@ function NuevoPedido() {
     } else if (!contratosCliente.length && !buscandoContratos) {
       setContratoId("");
     }
-  }, [clienteId, contratosCliente, buscandoContratos]);
+  }, [clienteId, contratosCliente, buscandoContratos, origenComercial]);
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -255,30 +268,39 @@ function NuevoPedido() {
       toast.error("Selecciona al menos un área de la ruta.");
       return;
     }
+    if (origenComercial === "cotizacion" && !contratoSeleccionado) {
+      toast.error("Selecciona el documento comercial aprobado que origina este pedido.");
+      return;
+    }
+    if (origenComercial === "directo" && totalComercial <= 0) {
+      toast.error("Ingresa el precio acordado para la venta directa.");
+      return;
+    }
     if (contratoSeleccionado && contratoSeleccionado.sede_id && contratoSeleccionado.sede_id !== sedeId) {
       toast.error("El documento comercial pertenece a otro taller. Selecciona el taller correcto.");
       return;
     }
 
     const nuevo: PedidoNuevo = {
+      origen_comercial: origenComercial,
       referencia: siguienteReferencia(sede?.nombre ?? "Taller", pedidos.map((p) => p.referencia)),
       pieza: form.trabajo.trim(),
       trabajo: form.trabajo.trim(),
       cliente: form.cliente.trim() || "Cliente pendiente de registrar",
       cliente_id: clienteId || null,
-      contrato_id: contratoId || null,
+      contrato_id: origenComercial === "cotizacion" ? (contratoId || null) : null,
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
-      // El importe comercial no se captura manualmente en recepción.
-      // Si existe contrato, el total proviene del documento comercial.
-      // Los pagos se registran posteriormente como movimientos de contrato.
+      // Cotización: el importe proviene del documento aprobado.
+      // Venta directa: el precio se captura una sola vez y el ERP crea el documento financiero.
+      // Precio pendiente: el pedido existe sin saldo financiero hasta definir el precio.
       importe: totalComercial,
       a_cuenta: 0,
       sede_id: sedeId,
       telefono: form.telefono.trim(),
       origen: form.origen.trim(),
-      contrato: form.contrato.trim(),
+      contrato: origenComercial === "cotizacion" ? form.contrato.trim() : "",
       fecha_ingreso: form.fecha_ingreso || hoy(),
       fecha_entrega: form.fecha_entrega || null,
       area_actual: "Pedidos",
@@ -422,31 +444,52 @@ function NuevoPedido() {
   </div> : null}</div>
   <div className="sm:col-span-2">
     <label className="block">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Contrato</span>
-      {clienteId && contratosCliente.length > 0 ? (
-        <select
-          value={contratoId || ""}
-          onChange={(e) => {
-            const id = e.target.value;
-            setContratoId(id);
-            const contrato = contratosCliente.find((item) => item.id === id);
-            set("contrato", contrato?.numero ?? "");
-          }}
-          className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50"
-        >
-          <option value="">Sin contrato previo</option>
-          {contratosCliente.map((contrato) => <option key={contrato.id} value={contrato.id}>{contrato.numero}{contrato.origen ? ` · ${contrato.origen}` : ""}</option>)}
-        </select>
-      ) : (
-        <input
-          value={form.contrato}
-          onChange={(e) => { set("contrato", e.target.value); setContratoId(""); }}
-          placeholder={clienteId ? (buscandoContratos ? "Puedes escribir una referencia mientras comprobamos contratos…" : "Escribir referencia de contrato") : "Escribir referencia de contrato"}
-          className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10"
-        />
-      )}
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Origen comercial</span>
+      <select value={origenComercial} onChange={(e) => {
+        const valor = e.target.value as "directo" | "cotizacion" | "pendiente";
+        if (valor === "cotizacion" && !cotizacionesHabilitadas) return;
+        setOrigenComercial(valor);
+        setContratoId("");
+        set("contrato", "");
+      }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
+        <option value="directo">Venta directa</option>
+        {cotizacionesHabilitadas ? <option value="cotizacion">Desde cotización</option> : null}
+        <option value="pendiente">Precio pendiente</option>
+      </select>
     </label>
-    {clienteId && contratosCliente.length > 0 ? <p className="mt-1 text-[10px] text-muted-foreground">Contrato vinculado previamente al cliente.</p> : null}
+    {origenComercial === "cotizacion" ? (
+      <div className="mt-3">
+        <label className="block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Documento comercial</span>
+          {clienteId && contratosCliente.length > 0 ? (
+            <select value={contratoId || ""} onChange={(e) => {
+              const id = e.target.value;
+              setContratoId(id);
+              const contrato = contratosCliente.find((item) => item.id === id);
+              set("contrato", contrato?.numero ?? "");
+            }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
+              <option value="">Seleccionar documento</option>
+              {contratosCliente.map((contrato) => <option key={contrato.id} value={contrato.id}>{contrato.numero}{contrato.origen ? ` · ${contrato.origen}` : ""}</option>)}
+            </select>
+          ) : (
+            <p className="mt-1.5 rounded-xl border border-border bg-surface-muted px-3 py-3 text-xs text-muted-foreground">
+              {clienteId ? (buscandoContratos ? "Buscando documentos comerciales…" : "Este cliente no tiene un documento comercial disponible.") : "Selecciona primero un cliente."}
+            </p>
+          )}
+        </label>
+      </div>
+    ) : null}
+    {origenComercial === "directo" ? (
+      <div className="mt-3">
+        <Campo label="Precio de venta acordado" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="Ej. 1500.00" type="number" required />
+        <p className="mt-1 text-[10px] text-muted-foreground">Al crear el pedido se genera automáticamente su documento financiero. Los pagos se registran después como movimientos.</p>
+      </div>
+    ) : null}
+    {origenComercial === "pendiente" ? (
+      <p className="mt-3 rounded-xl border border-border bg-surface-muted px-3 py-3 text-[10px] leading-4 text-muted-foreground">
+        El pedido puede entrar al taller sin precio definido. Cuando se acuerde el valor, se crea el documento financiero desde Ventas.
+      </p>
+    ) : null}
   </div>
                 <Campo label="Origen / lugar" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Ej. Lima, Trujillo, Arequipa o Colombia…" />
                 <Campo label="Descripción del trabajo / joya" value={form.trabajo} onChange={(v) => set("trabajo", v)} placeholder="Ej. Anillo de compromiso" required />
@@ -525,37 +568,20 @@ function NuevoPedido() {
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card">
               <h2 className="text-sm font-semibold">Condición comercial</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                El valor comercial proviene del documento asociado. Los pagos no se registran en recepción.
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">El pedido puede venir de una cotización, ser una venta directa o quedar pendiente de precio.</p>
               <div className="mt-4 rounded-xl border border-border bg-surface-muted p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Documento comercial</p>
-                <p className="mt-1 text-sm font-semibold">
-                  {contratoSeleccionado?.numero || "Sin contrato vinculado"}
-                </p>
-                {contratoSeleccionado?.origen ? (
-                  <p className="mt-1 text-[10px] text-muted-foreground">{contratoSeleccionado.origen}</p>
-                ) : null}
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Origen</p>
+                <p className="mt-1 text-sm font-semibold">{origenComercial === "cotizacion" ? "Desde cotización" : origenComercial === "directo" ? "Venta directa" : "Precio pendiente"}</p>
+                {contratoSeleccionado?.numero ? <p className="mt-1 text-[10px] text-muted-foreground">{contratoSeleccionado.numero}</p> : null}
               </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-surface-muted p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Importe de venta</p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums">
-                    {contratoSeleccionado ? `S/ ${totalComercial.toFixed(2)}` : "Pendiente"}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-surface-muted p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pagos</p>
-                  <p className="mt-1 text-sm font-semibold">
-                    {contratoSeleccionado ? "Se registran en Ventas" : "Sin documento comercial"}
-                  </p>
-                </div>
+              <div className="mt-3 rounded-xl bg-surface-muted p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Venta</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums">{totalComercial > 0 ? `S/ ${totalComercial.toFixed(2)}` : "Pendiente"}</p>
               </div>
               <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
-                Recepción no modifica el precio ni registra amortizaciones. Al registrar un pago, el ERP calcula automáticamente el total pagado y el saldo pendiente.
+                {origenComercial === "pendiente" ? "El precio se puede definir posteriormente. Mientras tanto, el pedido no tiene saldo financiero." : "El precio queda asociado a un único documento financiero. Los pagos se registran como movimientos y el saldo se calcula automáticamente."}
               </p>
             </section>
-
             <button disabled={crear.isPending} type="submit" className="w-full rounded-2xl bg-gold px-4 py-3.5 text-sm font-bold text-gold-foreground shadow-raised disabled:cursor-not-allowed disabled:opacity-50">{crear.isPending ? "Creando pedido…" : "Crear pedido"}</button>
             <p className="px-2 text-center text-[11px] leading-5 text-muted-foreground">Al crear, el pedido queda en <strong>Recibido</strong>, asociado al taller y visible inmediatamente en Pedidos.</p>
           </aside>
