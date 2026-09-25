@@ -46,6 +46,67 @@ const referenciasTrabajo: Array<{ clave: ReferenciaClave; etiqueta: string }> = 
   { clave: "izquierda", etiqueta: "Izquierda" },
 ];
 
+function BocetoReferencia({ clave }: { clave: ReferenciaClave }) {
+  const common = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.5,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  if (clave === "superior") {
+    return (
+      <svg viewBox="0 0 240 150" aria-hidden="true" className="h-28 w-full text-muted-foreground/20">
+        <ellipse cx="120" cy="82" rx="32" ry="28" {...common} />
+        <ellipse cx="120" cy="82" rx="25" ry="22" {...common} />
+        <path d="M88 72 C65 66 47 66 29 72 M88 92 C65 98 47 98 29 92 M152 72 C175 66 193 66 211 72 M152 92 C175 98 193 98 211 92" {...common} />
+        <path d="M120 54 V110 M92 82 H148" {...common} strokeDasharray="3 4" />
+        <circle cx="120" cy="82" r="7" {...common} />
+        <path d="M115 77 L120 72 L125 77 L120 82 Z" {...common} />
+      </svg>
+    );
+  }
+
+  if (clave === "frontal") {
+    return (
+      <svg viewBox="0 0 240 150" aria-hidden="true" className="h-28 w-full text-muted-foreground/20">
+        <path d="M72 113 C76 83 87 60 120 60 C153 60 164 83 168 113" {...common} />
+        <ellipse cx="120" cy="113" rx="48" ry="27" {...common} />
+        <path d="M97 61 L105 38 L120 29 L135 38 L143 61 M105 38 L120 48 L135 38" {...common} />
+        <path d="M120 29 V123 M55 113 H185" {...common} strokeDasharray="3 4" />
+        <circle cx="120" cy="38" r="10" {...common} />
+        <path d="M113 38 L120 31 L127 38 L120 45 Z" {...common} />
+      </svg>
+    );
+  }
+
+  if (clave === "izquierda") {
+    return (
+      <svg viewBox="0 0 240 150" aria-hidden="true" className="h-28 w-full text-muted-foreground/20">
+        <path d="M105 116 C101 94 101 72 111 58 C116 51 124 51 129 58 C139 72 139 94 135 116" {...common} />
+        <path d="M111 58 L113 34 L120 27 L127 34 L129 58" {...common} />
+        <path d="M101 116 C112 121 128 121 139 116" {...common} />
+        <path d="M120 20 V128 M84 116 H156" {...common} strokeDasharray="3 4" />
+        <circle cx="120" cy="34" r="8" {...common} />
+        <path d="M115 34 L120 29 L125 34 L120 39 Z" {...common} />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 240 150" aria-hidden="true" className="h-28 w-full text-muted-foreground/20">
+      <ellipse cx="119" cy="104" rx="45" ry="25" transform="rotate(-18 119 104)" {...common} />
+      <path d="M82 91 C89 71 99 50 119 44 C140 38 157 50 163 68" {...common} />
+      <path d="M97 83 C103 67 111 55 121 52 C132 49 142 56 146 66" {...common} />
+      <path d="M119 44 L112 31 L120 22 L133 27 L139 40" {...common} />
+      <circle cx="123" cy="31" r="11" {...common} />
+      <path d="M116 31 L123 24 L130 31 L123 38 Z" {...common} />
+      <path d="M119 18 V126 M63 104 H174" {...common} strokeDasharray="3 4" />
+    </svg>
+  );
+}
+
 function ReferenciaImagen({
   clave,
   etiqueta,
@@ -83,8 +144,9 @@ function ReferenciaImagen({
           </div>
         </>
       ) : (
-        <label htmlFor={inputId} className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-2 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground">
-          <span className="grid size-10 place-items-center rounded-xl border border-dashed border-border">
+        <label htmlFor={inputId} className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-end gap-2 px-5 pb-6 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground">
+          <BocetoReferencia clave={clave} />
+          <span className="grid size-10 place-items-center rounded-xl border border-dashed border-border bg-background">
             <ImagePlus className="size-5" />
           </span>
           <span className="text-xs font-semibold">Subir imagen</span>
