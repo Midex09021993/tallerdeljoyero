@@ -210,7 +210,6 @@ function GestionPage() {
       {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
       {modulo === "comercial" && puedeUsuarios ? <ConfiguracionComercial /> : null}
       {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sesion?.sede?.nombre ?? undefined} /> : null}
-      {modulo === "identidad" && puedeUsuarios ? <ConfiguracionIdentidadComercial /> : null}
     </AppShell>
   );
 }
