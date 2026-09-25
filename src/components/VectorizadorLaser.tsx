@@ -277,8 +277,7 @@ export function VectorizadorLaser() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceName, setSourceName] = useState("diseño");
   const [threshold, setThreshold] = useState(150);
-  const [simplification, setSimplification] = useState(2);\n  const [ignoreLessThan, setIgnoreLessThan] = useState(24);\n  const [preserveAspect, setPreserveAspect] = useState(true);
-  const [singleContour, setSingleContour] = useState(true);
+  const [simplification, setSimplification] = useState(2);\n  const [ignoreLessThan, setIgnoreLessThan] = useState(24);\n  const [singleContour, setSingleContour] = useState(true);
   const [widthMm, setWidthMm] = useState(30);
   const [contours, setContours] = useState<Contour[]>([]);
   const [sourceSize, setSourceSize] = useState({ width: 0, height: 0 });
