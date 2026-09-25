@@ -610,13 +610,35 @@ export function usePedidos() {
         console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
       }
 
+      const sedeIds = [
+        ...new Set(
+          ((pedidosData ?? []) as Array<Record<string, unknown>>)
+            .map((pedido) => pedido["sede_id"])
+            .filter((id): id is string => typeof id === "string" && id.length > 0),
+        ),
+      ];
+      const { data: sedesData, error: sedesError } = sedeIds.length
+        ? await supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+        : { data: [], error: null };
+
+      if (sedesError) {
+        console.warn("[Pedidos] No se pudo cargar el nombre de las sedes; se muestran los pedidos igualmente.", sedesError);
+      }
+
+      const nombresSede = new Map(
+        ((sedesData ?? []) as Array<{ id: string; nombre: string | null }>).map((sede) => [
+          sede.id,
+          sede.nombre ?? "",
+        ]),
+      );
+
       const comercialesPorPedido = new Map(
         ((comercialesData ?? []) as Array<Record<string, unknown>>).map((comercial) => [
           textoCampo(comercial, "pedido_id"), comercial,
         ]),
       );
 
-      return ((pedidosData ?? []) as Array<Record<string, unknown>>).map(({ sedes, ...p }) => {
+      return ((pedidosData ?? []) as Array<Record<string, unknown>>).map((p) => {
         const comercial = comercialesPorPedido.get(textoCampo(p, "id")) ?? {};
         return {
           ...p,
@@ -631,7 +653,7 @@ export function usePedidos() {
           importe: Number(comercial["importe"]) || 0,
           a_cuenta: Number(comercial["a_cuenta"]) || 0,
           saldo: Math.max((Number(comercial["importe"]) || 0) - (Number(comercial["a_cuenta"]) || 0), 0),
-          sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
+          sede_nombre: nombresSede.get(textoCampo(p, "sede_id")) ?? null,
           sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
           telefono: textoCampo(comercial, "telefono"),
           origen: textoCampo(p, "origen"),
