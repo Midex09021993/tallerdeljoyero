@@ -31,7 +31,7 @@ function PedidoDetalle() {
       if (!pedido?.contrato_id) return null;
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,numero,total,abonado,moneda:sede_id")
+        .select("id,numero,total,abonado")
         .eq("id", pedido.contrato_id)
         .maybeSingle();
       if (error) throw error;
