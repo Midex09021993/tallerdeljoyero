@@ -435,6 +435,8 @@ export type MovimientoInventario = {
 };
 
 export type PedidoNuevo = {
+  /** Ruta comercial elegida al registrar el pedido. No se persiste: determina cómo se crea/vincula el documento financiero. */
+  origen_comercial?: "cotizacion" | "directo" | "pendiente";
   referencia: string;
   pieza: string;
   cliente: string;
@@ -1251,38 +1253,88 @@ export function useCrearPedido() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (pedido: PedidoNuevo) => {
-      // Adopción progresiva: un pedido puede existir sin cliente, cotización
-      // ni contrato registrados en Aurum Lab. El taller puede seguir usando
-      // sus documentos externos y conectarlos después.
+      // Un Pedido puede nacer sin Cotización. Cuando la recepción registra una
+      // venta directa con precio, se crea aquí su documento financiero antes de
+      // persistir el pedido y se vincula por contrato_id. Así el precio y los
+      // pagos tienen una única fuente de verdad desde el primer momento.
+      const { origen_comercial = "pendiente", ...datosEntrada } = pedido;
       const pedidoConContexto = {
-        ...pedido,
-        cliente: pedido.cliente.trim() || "Cliente pendiente de registrar",
-        contrato: pedido.contrato?.trim() ?? "",
-        cliente_id: pedido.cliente_id ?? null,
-        cotizacion_id: pedido.cotizacion_id ?? null,
-        contrato_id: pedido.contrato_id ?? null,
+        ...datosEntrada,
+        cliente: datosEntrada.cliente.trim() || "Cliente pendiente de registrar",
+        contrato: datosEntrada.contrato?.trim() ?? "",
+        cliente_id: datosEntrada.cliente_id ?? null,
+        cotizacion_id: datosEntrada.cotizacion_id ?? null,
+        contrato_id: datosEntrada.contrato_id ?? null,
       };
-      const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContexto);
-      const respuesta = await supabase
-        .from("pedidos")
-        .insert(datosOperativos as unknown as TablesInsert<"pedidos">)
-        .select("id, referencia, cliente, sede_id")
-        .single();
-      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
-      const { data, error } =
-        respuesta.error &&
-        esErrorCampoFaltante(respuesta.error) &&
-        "contrato_id" in pedidoConContexto
-          ? await supabase
-              .from("pedidos")
-              .insert(sinContratoId as unknown as TablesInsert<"pedidos">)
-              .select("id, referencia, cliente, sede_id")
-              .single()
-          : respuesta;
-      if (error) throw error;
-      if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
-      await upsertPedidoComercial(data.id, pedidoConContexto);
-      return data;
+
+      let contratoDirecto: { id: string | null; numero: string; creado: boolean } | null = null;
+      let pedidoCreadoId: string | null = null;
+
+      try {
+        if (origen_comercial === "directo") {
+          const importe = Number(datosEntrada.importe) || 0;
+          if (importe <= 0) {
+            throw new Error("La venta directa debe tener un importe mayor que cero.");
+          }
+
+          const numero = `VD-${datosEntrada.referencia}`;
+          contratoDirecto = await asegurarContratoComercial({
+            numero,
+            cliente: pedidoConContexto.cliente,
+            telefono: datosEntrada.telefono ?? "",
+            origen: "Pedido directo",
+            importe,
+            sede_id: datosEntrada.sede_id ?? null,
+            notas: "Documento comercial creado automáticamente desde un pedido directo.",
+          });
+
+          if (!contratoDirecto.id) {
+            throw new Error("No se pudo crear el documento financiero de la venta directa.");
+          }
+
+          pedidoConContexto.contrato = contratoDirecto.numero;
+          pedidoConContexto.contrato_id = contratoDirecto.id;
+        }
+
+        if (origen_comercial === "cotizacion" && !pedidoConContexto.contrato_id) {
+          throw new Error("Selecciona una cotización/documento comercial antes de crear el pedido.");
+        }
+
+        const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContexto);
+        const respuesta = await supabase
+          .from("pedidos")
+          .insert(datosOperativos as unknown as TablesInsert<"pedidos">)
+          .select("id, referencia, cliente, sede_id")
+          .single();
+
+        const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
+        const { data, error } =
+          respuesta.error &&
+          esErrorCampoFaltante(respuesta.error) &&
+          "contrato_id" in pedidoConContexto
+            ? await supabase
+                .from("pedidos")
+                .insert(sinContratoId as unknown as TablesInsert<"pedidos">)
+                .select("id, referencia, cliente, sede_id")
+                .single()
+            : respuesta;
+
+        if (error) throw error;
+        if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
+        pedidoCreadoId = data.id;
+        await upsertPedidoComercial(data.id, pedidoConContexto);
+        return data;
+      } catch (error) {
+        // Compensación para no dejar un documento financiero huérfano si falla
+        // la creación del pedido o su información comercial.
+        if (pedidoCreadoId) {
+          await supabase.from("pedidos").delete().eq("id", pedidoCreadoId);
+        }
+        if (contratoDirecto?.creado && contratoDirecto.id) {
+          await supabase.from("contratos").delete().eq("id", contratoDirecto.id);
+        }
+        throw error;
+      }
     },
     onSuccess: (pedido) => {
       void qc.invalidateQueries({ queryKey: ["pedidos"] });
