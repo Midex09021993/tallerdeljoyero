@@ -167,7 +167,7 @@ function PedidoDetalle() {
 
       return Promise.all(
         (Array.isArray(data) ? data : []).map(async (archivo) => {
-          if (archivo.poster || !archivo.url || !/\\.(jpe?g|png|webp|gif)$/i.test(archivo.nombre || "")) {
+          if (archivo.poster || !archivo.url || !/\.(jpe?g|png|webp|gif)$/i.test(archivo.nombre || "")) {
             return archivo;
           }
           const { data: firmado } = await supabase.storage
