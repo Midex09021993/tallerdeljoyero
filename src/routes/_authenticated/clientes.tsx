@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppShell, Panel } from "@/components/AppShell";
+import { AppShell, Panel, useCapacidadesMenu } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
 import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,8 @@ function money(n: number) {
 
 function ClientesPage() {
   const { data: sesion } = useSesion();
+  const { data: capacidades = [] } = useCapacidadesMenu(sesion);
+  const cotizacionesHabilitadas = capacidades.includes("Cotizaciones");
   const puedeVer = Boolean(sesion?.esAdmin) || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [seleccionado, setSeleccionado] = useState<Cliente | null>(null);
@@ -84,12 +86,14 @@ function ClientesPage() {
     void (async () => {
       const [ped, cot] = await Promise.all([
         supabase.from("pedidos").select("id,referencia,estado,importe,fecha_entrega").eq("cliente_id", seleccionado.id).order("created_at", { ascending: false }).limit(8),
-        supabase.from("cotizaciones").select("id,numero,estado,total").eq("cliente_id", seleccionado.id).order("created_at", { ascending: false }).limit(8),
+        cotizacionesHabilitadas
+          ? supabase.from("cotizaciones").select("id,numero,estado,total").eq("cliente_id", seleccionado.id).order("created_at", { ascending: false }).limit(8)
+          : Promise.resolve({ data: [], error: null }),
       ]);
       setPedidos((ped.data ?? []) as PedidoRef[]);
       setCotizaciones((cot.data ?? []) as CotRef[]);
     })();
-  }, [seleccionado?.id, seleccionado?.nombre]);
+  }, [seleccionado?.id, seleccionado?.nombre, cotizacionesHabilitadas]);
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -257,7 +261,7 @@ function ClientesPage() {
                 </div>
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <Link to="/pedidos" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pedidos</span><ShoppingBag className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{pedidos.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Pedidos registrados</span></Link>
-                  <Link to="/cotizaciones" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Ver cotizaciones</span></Link>
+                  {cotizacionesHabilitadas ? <Link to="/cotizaciones" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Ver cotizaciones</span></Link> : null}
                 </div>
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
