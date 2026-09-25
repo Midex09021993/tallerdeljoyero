@@ -163,6 +163,7 @@ function NuevoPedido() {
 
   const [clienteId, setClienteId] = useState("");
   const [origenComercial, setOrigenComercial] = useState<"directo" | "cotizacion" | "pendiente">("directo");
+  const [tipoOperacion, setTipoOperacion] = useState<"fabricacion" | "reparacion" | "venta_stock">("fabricacion");
   const [contratoId, setContratoId] = useState("");
   const { data: contratosCliente = [], isFetching: buscandoContratos } = useQuery({
     queryKey: ["pedidos-nuevo-contratos", clienteId],
@@ -188,7 +189,7 @@ function NuevoPedido() {
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
-    origen: "", contrato: "", importe_directo: "", notas: "",
+    origen: "", canal_captacion: "", contrato: "", importe_directo: "", notas: "",
   });
   const [ruta, setRuta] = useState<string[]>([]);
   const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
@@ -264,10 +265,6 @@ function NuevoPedido() {
       toast.error("Indica qué joya o trabajo se está recibiendo.");
       return;
     }
-    if (!ruta.length) {
-      toast.error("Selecciona al menos un área de la ruta.");
-      return;
-    }
     if (origenComercial === "cotizacion" && !contratoSeleccionado) {
       toast.error("Selecciona el documento comercial aprobado que origina este pedido.");
       return;
@@ -283,6 +280,8 @@ function NuevoPedido() {
 
     const nuevo: PedidoNuevo = {
       origen_comercial: origenComercial,
+      tipo_operacion: tipoOperacion,
+      canal_captacion: form.canal_captacion.trim() || null,
       referencia: siguienteReferencia(sede?.nombre ?? "Taller", pedidos.map((p) => p.referencia)),
       pieza: form.trabajo.trim(),
       trabajo: form.trabajo.trim(),
@@ -304,7 +303,8 @@ function NuevoPedido() {
       fecha_ingreso: form.fecha_ingreso || hoy(),
       fecha_entrega: form.fecha_entrega || null,
       area_actual: "Pedidos",
-      ruta,
+      // La ruta se define al preparar producción; al recibir el pedido puede quedar vacía.
+      ruta: tipoOperacion === "fabricacion" ? ruta : [],
       notas: form.notas.trim(),
       talla: form.talla.trim(),
       cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
@@ -503,8 +503,8 @@ function NuevoPedido() {
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de fabricación</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona las áreas que deberán intervenir en esta joya.</p></div></div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{rutas.map((area) => <button key={area} type="button" onClick={() => toggleRuta(area)} className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}><span>{area}</span>{ruta.includes(area) ? <Check className="size-4 text-gold" /> : null}</button>)}</div>
+              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de fabricación</h2><p className="mt-1 text-xs text-muted-foreground">Opcional al recibir. Para fabricación, puedes dejar la ruta pendiente y definirla al preparar producción.</p></div></div>
+              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{tipoOperacion === "fabricacion" ? rutas.map((area) => <button key={area} type="button" onClick={() => toggleRuta(area)} className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}><span>{area}</span>{ruta.includes(area) ? <Check className="size-4 text-gold" /> : null}</button>) : <p className="rounded-xl border border-border bg-surface-muted px-3 py-3 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">Esta operación no requiere una ruta de fabricación al recibir el pedido.</p>}</div>
             </section>
 
             <section className="rounded-[24px] border border-border bg-card shadow-card">
@@ -554,7 +554,8 @@ function NuevoPedido() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Campo label="Fecha de ingreso" value={form.fecha_ingreso} onChange={(v) => set("fecha_ingreso", v)} type="date" required />
                 <Campo label="Fecha prometida de entrega" value={form.fecha_entrega} onChange={(v) => set("fecha_entrega", v)} type="date" />
-                <Campo label="Origen de captación" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Web, tienda, referido…" />
+                <Campo label="Origen / lugar" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Ej. Lima, Trujillo, Colombia…" />
+                <Campo label="Canal de captación" value={form.canal_captacion} onChange={(v) => set("canal_captacion", v)} placeholder="WhatsApp, Instagram, tienda, referido…" />
               </div>
               <label className="mt-4 block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notas de recepción</span><textarea value={form.notas} onChange={(e) => set("notas", e.target.value)} rows={4} placeholder="Detalles importantes para fabricación o atención al cliente…" className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-gold/50" /></label>
             </section>
