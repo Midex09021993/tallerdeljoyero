@@ -215,7 +215,13 @@ function CotizacionesPage() {
 
   const subtotalConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.precio * item.cantidad), 0);
   const costoConceptos = conceptos.reduce((sum, item) => sum + Math.max(0, item.costo * item.cantidad), 0);
-  const impuestoCalculado = impuestoActivo ? Math.max(0, subtotalConceptos - form.descuento) * (Number(form.tasaImpuesto) || 0) / 100 : 0;
+  const baseImponible = Math.max(0, subtotalConceptos - form.descuento);
+  const tasaImpuestoDecimal = (Number(form.tasaImpuesto) || 0) / 100;
+  const impuestoCalculado = impuestoActivo
+    ? identidad?.impuesto_incluido
+      ? baseImponible - baseImponible / (1 + tasaImpuestoDecimal || 1)
+      : baseImponible * tasaImpuestoDecimal
+    : 0;
   const totalAprobadas = cotizacionesVigentes.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
