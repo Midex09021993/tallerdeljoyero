@@ -57,10 +57,8 @@ import { AurumRenderConfig } from "@/components/AurumRenderConfig";
 import { SolicitudesAccesoOwner } from "@/components/SolicitudesAccesoOwner";
 import { EcosistemaParticipantesOwner } from "@/components/EcosistemaParticipantesOwner";
 import { EspecialidadesOwner } from "@/components/EspecialidadesOwner";
-import { ConfiguracionFiscal } from "@/components/ConfiguracionFiscal";
-import { ConfiguracionContratos } from "@/components/ConfiguracionContratos";
-import { ConfiguracionIdentidadComercial } from "@/components/ConfiguracionIdentidadComercial";
 import { CapacidadesSedeAdmin } from "@/components/CapacidadesSedeAdmin";
+import { ConfiguracionComercial } from "@/components/ConfiguracionComercial";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -102,10 +100,8 @@ type Modulo =
   | "solicitudesAcceso"
   | "ecosistema"
   | "especialidades"
-  | "fiscal"
-  | "contratos"
   | "capacidades"
-  | "identidad";
+  | "comercial";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -144,15 +140,13 @@ function GestionPage() {
     { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
     { id: "capacidades", label: "Capacidades del taller", visible: puedeUsuarios },
-    { id: "identidad", label: "Identidad · moneda · impuestos", visible: puedeUsuarios },
+    { id: "comercial", label: "Comercial · identidad y contratos", visible: puedeUsuarios },
     { id: "sedes", label: "Sedes", visible: esDueno },
     { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
     { id: "aurumRender", label: "AURUM Render", visible: esDueno },
     { id: "solicitudesAcceso", label: "Solicitudes de acceso", visible: esDueno },
     { id: "ecosistema", label: "Ecosistema", visible: esDueno },
     { id: "especialidades", label: "Especialidades", visible: esDueno },
-    { id: "fiscal", label: "Fiscalidad", visible: esDueno },
-    { id: "contratos", label: "Contratos", visible: puedeUsuarios },
   ];
 
   return (
@@ -214,8 +208,7 @@ function GestionPage() {
       {modulo === "solicitudesAcceso" && esDueno ? <SolicitudesAccesoOwner /> : null}
       {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
       {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
-      {modulo === "fiscal" && esDueno ? <ConfiguracionFiscal /> : null}
-      {modulo === "contratos" && puedeUsuarios ? <ConfiguracionContratos /> : null}
+      {modulo === "comercial" && puedeUsuarios ? <ConfiguracionComercial /> : null}
       {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sesion?.sede?.nombre ?? undefined} /> : null}
       {modulo === "identidad" && puedeUsuarios ? <ConfiguracionIdentidadComercial /> : null}
     </AppShell>
