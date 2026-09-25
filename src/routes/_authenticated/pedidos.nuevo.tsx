@@ -248,7 +248,6 @@ function NuevoPedido() {
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
-  const toggleRuta = (area: string) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
