@@ -568,13 +568,23 @@ export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
     queryFn: async (): Promise<Pedido[]> => {
-      const [{ data: pedidosData, error: pedidosError }, { data: comercialesData, error: comercialesError }] =
-        await Promise.all([
-          supabase.from("pedidos").select(CAMPOS_PEDIDO_BASE).order("created_at", { ascending: false }),
-          supabase.from("pedido_comercial").select(CAMPOS_PEDIDO_COMERCIAL),
-        ]);
+      // La tabla pedidos es la fuente principal de esta bandeja.
+      // Los datos comerciales son enriquecimiento opcional: un problema de RLS,
+      // esquema o permisos en esa tabla nunca debe ocultar pedidos operativos.
+      const { data: pedidosData, error: pedidosError } = await supabase
+        .from("pedidos")
+        .select(CAMPOS_PEDIDO_BASE)
+        .order("created_at", { ascending: false });
+
       if (pedidosError) throw pedidosError;
-      if (comercialesError && !esErrorCampoFaltante(comercialesError)) throw comercialesError;
+
+      const { data: comercialesData, error: comercialesError } = await supabase
+        .from("pedido_comercial")
+        .select(CAMPOS_PEDIDO_COMERCIAL);
+
+      if (comercialesError && !esErrorCampoFaltante(comercialesError)) {
+        console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
+      }
 
       const comercialesPorPedido = new Map(
         ((comercialesData ?? []) as Array<Record<string, unknown>>).map((comercial) => [
