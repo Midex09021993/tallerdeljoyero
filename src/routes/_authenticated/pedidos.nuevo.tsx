@@ -211,6 +211,7 @@ function NuevoPedido() {
 
   const sede = sedes.find((s) => s.id === sedeId);
   const cotizacionSeleccionada = cotizacionesCliente.find((cotizacion) => cotizacion.id === cotizacionId) ?? null;
+  const contratoSeleccionado = contratosCliente.find((contrato) => contrato.id === contratoId) ?? null;
   const origenComercial: "directo" | "cotizacion" = cotizacionSeleccionada ? "cotizacion" : "directo";
   const totalComercial = cotizacionSeleccionada
     ? Math.max(0, Number(cotizacionSeleccionada.total) || 0)
