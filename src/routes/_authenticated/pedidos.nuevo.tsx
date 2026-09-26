@@ -162,24 +162,33 @@ function NuevoPedido() {
   });
 
   const [clienteId, setClienteId] = useState("");
-  const [origenComercial, setOrigenComercial] = useState<"directo" | "cotizacion" | "pendiente">("directo");
+  const [cotizacionId, setCotizacionId] = useState("");
   const [tipoOperacion, setTipoOperacion] = useState<"fabricacion" | "reparacion" | "venta_stock">("fabricacion");
   const [contratoId, setContratoId] = useState("");
-  const { data: contratosCliente = [], isFetching: buscandoContratos } = useQuery({
-    queryKey: ["pedidos-nuevo-contratos", clienteId],
-    enabled: Boolean(clienteId && cotizacionesHabilitadas && origenComercial === "cotizacion"),
+  const { data: cotizacionesCliente = [], isFetching: buscandoCotizaciones } = useQuery({
+    queryKey: ["pedidos-nuevo-cotizaciones", clienteId, sedeId],
+    enabled: Boolean(clienteId && sedeId && cotizacionesHabilitadas),
     queryFn: async () => {
-      const { data: cotizacionesCliente, error: errorCotizaciones } = await supabase
+      const { data, error } = await supabase
         .from("cotizaciones")
-        .select("id")
-        .eq("cliente_id", clienteId);
-      if (errorCotizaciones) throw errorCotizaciones;
-      const cotizacionIds = (cotizacionesCliente ?? []).map((c) => c.id);
-      if (!cotizacionIds.length) return [];
+        .select("id,numero,version,total,moneda,sede_id,estado,proyecto_joya_id")
+        .eq("cliente_id", clienteId)
+        .eq("sede_id", sedeId)
+        .eq("estado", "aprobada")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: contratosCliente = [] } = useQuery({
+    queryKey: ["pedidos-nuevo-contratos", clienteId, sedeId, cotizacionId],
+    enabled: Boolean(clienteId && sedeId && cotizacionId),
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
         .select("id,numero,origen,cotizacion_id,total,abonado,sede_id")
-        .in("cotizacion_id", cotizacionIds)
+        .eq("sede_id", sedeId)
+        .eq("cotizacion_id", cotizacionId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -200,12 +209,12 @@ function NuevoPedido() {
   });
 
   const sede = sedes.find((s) => s.id === sedeId);
+  const cotizacionSeleccionada = cotizacionesCliente.find((cotizacion) => cotizacion.id === cotizacionId) ?? null;
   const contratoSeleccionado = contratosCliente.find((contrato) => contrato.id === contratoId) ?? null;
-  const totalComercial = origenComercial === "cotizacion"
-    ? (contratoSeleccionado ? Number(contratoSeleccionado.total) || 0 : 0)
-    : origenComercial === "directo"
-      ? Math.max(0, Number(form.importe_directo) || 0)
-      : 0;
+  const origenComercial: "directo" | "cotizacion" = cotizacionSeleccionada ? "cotizacion" : "directo";
+  const totalComercial = cotizacionSeleccionada
+    ? Math.max(0, Number(cotizacionSeleccionada.total) || 0)
+    : Math.max(0, Number(form.importe_directo) || 0);
   const clientePredictivo = useMemo(() => {
     const termino = clienteBusqueda.trim().toLowerCase();
     if (termino.length < 2 || clienteId || !clientes.length) return null;
@@ -223,28 +232,22 @@ function NuevoPedido() {
   const hayVariasCoincidencias = !clienteId && clienteBusqueda.trim().length >= 2 && clientes.length > 1;
 
   useEffect(() => {
-    // La búsqueda de contratos solo debe controlar el campo cuando
-    // realmente se ha seleccionado un cliente existente. Para un cliente
-    // nuevo, la referencia de contrato es completamente manual y no debe
-    // ser borrada por el estado inicial de la consulta.
-    if (!clienteId) return;
-
-    if (origenComercial !== "cotizacion") {
+    if (!clienteId || !cotizacionId) {
       setContratoId("");
       set("contrato", "");
       return;
     }
-
-    if (contratosCliente.length === 1) {
-      const contrato = contratosCliente[0];
-      if (contrato) {
-        setContratoId(contrato.id);
-        set("contrato", contrato.numero);
-      }
-    } else if (!contratosCliente.length && !buscandoContratos) {
+    if (contratoId && !contratosCliente.some((contrato) => contrato.id === contratoId)) {
       setContratoId("");
+      set("contrato", "");
     }
-  }, [clienteId, contratosCliente, buscandoContratos, origenComercial]);
+  }, [clienteId, cotizacionId, contratoId, contratosCliente]);
+
+  useEffect(() => {
+    setCotizacionId("");
+    setContratoId("");
+    set("contrato", "");
+  }, [sedeId]);
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -263,8 +266,8 @@ function NuevoPedido() {
       toast.error("Indica qué joya o trabajo se está recibiendo.");
       return;
     }
-    if (origenComercial === "cotizacion" && !contratoSeleccionado) {
-      toast.error("Selecciona el documento comercial aprobado que origina este pedido.");
+    if (origenComercial === "cotizacion" && !cotizacionSeleccionada) {
+      toast.error("Selecciona una cotización aprobada para que el origen comercial quede registrado automáticamente.");
       return;
     }
     if (origenComercial === "directo" && totalComercial <= 0) {
@@ -285,7 +288,8 @@ function NuevoPedido() {
       trabajo: form.trabajo.trim(),
       cliente: form.cliente.trim() || "Cliente pendiente de registrar",
       cliente_id: clienteId || null,
-      contrato_id: origenComercial === "cotizacion" ? (contratoId || null) : null,
+      contrato_id: contratoId || null,
+      cotizacion_id: cotizacionId || null,
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
@@ -297,7 +301,7 @@ function NuevoPedido() {
       sede_id: sedeId,
       telefono: form.telefono.trim(),
       origen: form.origen.trim(),
-      contrato: origenComercial === "cotizacion" ? form.contrato.trim() : "",
+      contrato: form.contrato.trim(),
       fecha_ingreso: form.fecha_ingreso || hoy(),
       fecha_entrega: form.fecha_entrega || null,
       area_actual: "Pedidos",
@@ -428,7 +432,7 @@ function NuevoPedido() {
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Identificación del pedido</h2><p className="mt-1 text-xs text-muted-foreground">Define qué joya entra al sistema y a quién pertenece.</p></div></div>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setContratoId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
+                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setCotizacionId(""); setContratoId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
   {!clienteId && clienteBusqueda.trim().length >= 2 ? <div className="mt-1 min-h-5 text-[11px]">
     {clientePredictivo ? <button type="button" onClick={async () => {
         setClienteId(clientePredictivo.id);
@@ -455,53 +459,57 @@ function NuevoPedido() {
     </div>
   </div>
   <div className="sm:col-span-2">
-    <label className="block">
+    <div className="rounded-xl border border-border bg-surface-muted px-3 py-3">
       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Origen comercial</span>
-      <select value={origenComercial} onChange={(e) => {
-        const valor = e.target.value as "directo" | "cotizacion" | "pendiente";
-        if (valor === "cotizacion" && !cotizacionesHabilitadas) return;
-        setOrigenComercial(valor);
-        setContratoId("");
-        set("contrato", "");
-      }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
-        <option value="directo">Venta directa</option>
-        {cotizacionesHabilitadas ? <option value="cotizacion">Desde cotización</option> : null}
-        <option value="pendiente">Precio pendiente</option>
-      </select>
-    </label>
-    {origenComercial === "cotizacion" ? (
+      <p className="mt-1 text-sm font-semibold text-foreground">{cotizacionSeleccionada ? "Cotización aprobada" : "Venta directa"}</p>
+      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+        {cotizacionSeleccionada
+          ? "Se determina automáticamente porque el pedido está vinculado a una cotización aprobada. No se puede cambiar manualmente."
+          : "No se seleccionó una cotización. Este pedido se registra directamente desde Pedidos."}
+      </p>
+    </div>
+    {cotizacionesHabilitadas ? (
       <div className="mt-3">
         <label className="block">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Documento comercial</span>
-          {clienteId && contratosCliente.length > 0 ? (
-            <select value={contratoId || ""} onChange={(e) => {
-              const id = e.target.value;
-              setContratoId(id);
-              const contrato = contratosCliente.find((item) => item.id === id);
-              set("contrato", contrato?.numero ?? "");
-            }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
-              <option value="">Seleccionar documento</option>
-              {contratosCliente.map((contrato) => <option key={contrato.id} value={contrato.id}>{contrato.numero}{contrato.origen ? ` · ${contrato.origen}` : ""}</option>)}
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cotización aprobada <span className="font-normal normal-case">(opcional)</span></span>
+          {clienteId && cotizacionesCliente.length > 0 ? (
+            <select value={cotizacionId} onChange={(e) => { setCotizacionId(e.target.value); setContratoId(""); set("contrato", ""); }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
+              <option value="">Sin cotización — pedido directo</option>
+              {cotizacionesCliente.map((cotizacion) => <option key={cotizacion.id} value={cotizacion.id}>{cotizacion.numero} · v{cotizacion.version} · {Number(cotizacion.total || 0).toFixed(2)} {cotizacion.moneda}</option>)}
             </select>
           ) : (
-            <p className="mt-1.5 rounded-xl border border-border bg-surface-muted px-3 py-3 text-xs text-muted-foreground">
-              {clienteId ? (buscandoContratos ? "Buscando documentos comerciales…" : "Este cliente no tiene un documento comercial disponible.") : "Selecciona primero un cliente."}
+            <p className="mt-1.5 rounded-xl border border-border bg-background px-3 py-3 text-xs text-muted-foreground">
+              {clienteId ? (buscandoCotizaciones ? "Buscando cotizaciones aprobadas…" : "Este cliente no tiene cotizaciones aprobadas en este taller.") : "Selecciona primero un cliente para consultar sus cotizaciones aprobadas."}
             </p>
           )}
         </label>
       </div>
     ) : null}
-    {origenComercial === "directo" ? (
+    {cotizacionSeleccionada ? (
+      <>
+        <div className="mt-3 rounded-xl border border-border bg-background px-3 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Precio de venta acordado</p>
+          <p className="mt-1 text-base font-semibold text-foreground">{Number(cotizacionSeleccionada.total || 0).toFixed(2)} {cotizacionSeleccionada.moneda}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">Tomado automáticamente de {cotizacionSeleccionada.numero} · versión {cotizacionSeleccionada.version}.</p>
+        </div>
+        {contratosCliente.length > 0 ? (
+          <div className="mt-3">
+            <label className="block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Contrato <span className="font-normal normal-case">(opcional)</span></span>
+              <select value={contratoId} onChange={(e) => { const id = e.target.value; setContratoId(id); const contrato = contratosCliente.find((item) => item.id === id); set("contrato", contrato?.numero ?? ""); }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
+                <option value="">Sin contrato</option>
+                {contratosCliente.map((contrato) => <option key={contrato.id} value={contrato.id}>{contrato.numero}{contrato.origen ? " · " + contrato.origen : ""}</option>)}
+              </select>
+            </label>
+          </div>
+        ) : null}
+      </>
+    ) : (
       <div className="mt-3">
         <Campo label="Precio de venta acordado" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="Ej. 1500.00" type="number" required />
-        <p className="mt-1 text-[10px] text-muted-foreground">Al crear el pedido se genera automáticamente su documento financiero. Los pagos se registran después como movimientos.</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">Al crear el pedido directo se genera su documento financiero. La ausencia de cotización es la que determina este origen.</p>
       </div>
-    ) : null}
-    {origenComercial === "pendiente" ? (
-      <p className="mt-3 rounded-xl border border-border bg-surface-muted px-3 py-3 text-[10px] leading-4 text-muted-foreground">
-        El pedido puede entrar al taller sin precio definido. Cuando se acuerde el valor, se crea el documento financiero desde Ventas.
-      </p>
-    ) : null}
+    )}
   </div>
                 <Campo label="Origen / lugar" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Ej. Lima, Trujillo, Arequipa o Colombia…" />
                 <Campo label="Descripción del trabajo / joya" value={form.trabajo} onChange={(v) => set("trabajo", v)} placeholder="Ej. Anillo de compromiso" required />
