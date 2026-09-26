@@ -456,7 +456,6 @@ export type PedidoNuevo = {
   sede_id: string | null;
   telefono: string;
   origen: string;
-  origen_comercial?: "cotizacion" | "directo";
   contrato: string;
   contrato_id?: string | null;
   cotizacion_id?: string | null;
@@ -1340,19 +1339,19 @@ export function useCrearPedido() {
 
       try {
         if (origenComercial === "directo") {
-          const importe = Number(datosEntrada.importe) || 0;
+          const importe = Number(pedidoConContexto.importe) || 0;
           if (importe <= 0) {
             throw new Error("La venta directa debe tener un importe mayor que cero.");
           }
 
-          const numero = `VD-${datosEntrada.referencia}`;
+          const numero = `VD-${pedidoConContexto.referencia}`;
           contratoDirecto = await asegurarContratoComercial({
             numero,
             cliente: pedidoConContexto.cliente,
-            telefono: datosEntrada.telefono ?? "",
+            telefono: pedidoConContexto.telefono ?? "",
             origen: "Pedido directo",
             importe,
-            sede_id: datosEntrada.sede_id ?? null,
+            sede_id: pedidoConContexto.sede_id ?? null,
             notas: "Documento comercial creado automáticamente desde un pedido directo.",
           });
 
