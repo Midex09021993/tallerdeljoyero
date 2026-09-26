@@ -366,6 +366,8 @@ export function VectorizadorLaser() {
   const points = outputContours[0]?.points ?? [];
   const aspect = sourceSize.width && sourceSize.height ? sourceSize.height / sourceSize.width : 0.667;
   const heightMm = Math.max(0.1, widthMm * aspect);
+  const displayWidth = unit === "in" ? widthMm / 25.4 : widthMm;
+  const displayHeight = unit === "in" ? heightMm / 25.4 : heightMm;
   const totalPoints = outputContours.reduce((sum, c) => sum + c.points.length, 0);
   const selfIntersecting = outputContours.some((c) => hasSelfIntersection(c.points));
   const duplicatePoints = outputContours.some((c) => c.points.some((p, i) => {
@@ -488,7 +490,11 @@ export function VectorizadorLaser() {
               <span>Ancho real de fabricación</span><span className="tabular-nums text-muted-foreground">{displayWidth.toFixed(2)} {unit}</span>
             </div>
             <input type="range" min="1" max="150" step="0.5" value={widthMm} onChange={(e) => setWidthMm(Number(e.target.value))} className="mt-2 w-full accent-[hsl(var(--gold))]" />
-            <p className="mt-1 text-[10px] text-muted-foreground">La geometría exportada queda en milímetros y conserva la proporción del vector.</p>\n            <div className="mt-2 flex gap-2">\n              <button type="button" onClick={() => setUnit("mm")} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold ${unit === "mm" ? "bg-gold text-gold-foreground" : "border border-border"}`}>mm</button>\n              <button type="button" onClick={() => setUnit("in")} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold ${unit === "in" ? "bg-gold text-gold-foreground" : "border border-border"}`}>in</button>\n            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">La geometría exportada queda en milímetros y conserva la proporción del vector.</p>
+            <div className="mt-2 flex gap-2">
+              <button type="button" onClick={() => setUnit("mm")} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold ${unit === "mm" ? "bg-gold text-gold-foreground" : "border border-border"}`}>mm</button>
+              <button type="button" onClick={() => setUnit("in")} className={`rounded-md px-2.5 py-1 text-[10px] font-semibold ${unit === "in" ? "bg-gold text-gold-foreground" : "border border-border"}`}>in</button>
+            </div>
           </div>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3">
@@ -551,7 +557,8 @@ export function VectorizadorLaser() {
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Contornos</p><p className="mt-1 text-xl font-semibold">{outputContours.length}</p></div>
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nodos</p><p className="mt-1 text-xl font-semibold">{totalPoints}</p></div>
           <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tamaño</p><p className="mt-1 text-xl font-semibold">{displayWidth.toFixed(2)} × {displayHeight.toFixed(2)} {unit}</p></div>
-          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Modo</p><p className="mt-1 text-xl font-semibold">{outputMode === "cut" ? "Corte" : "Grabado"}</p></div>\n          <div className={`rounded-xl border p-4 ${closed ? "border-success/20 bg-success-soft" : "border-danger/20 bg-danger/10"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Validación</p><p className="mt-1 flex items-center gap-1 text-sm font-semibold">{closed ? <><ShieldCheck className="size-4 text-success" /> Geometría válida</> : selfIntersecting ? "Autocruce detectado" : duplicatePoints ? "Segmentos duplicados" : "Revisar geometría"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-4"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Modo</p><p className="mt-1 text-xl font-semibold">{outputMode === "cut" ? "Corte" : "Grabado"}</p></div>
+          <div className={`rounded-xl border p-4 ${closed ? "border-success/20 bg-success-soft" : "border-danger/20 bg-danger/10"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Validación</p><p className="mt-1 flex items-center gap-1 text-sm font-semibold">{closed ? <><ShieldCheck className="size-4 text-success" /> Geometría válida</> : selfIntersecting ? "Autocruce detectado" : duplicatePoints ? "Segmentos duplicados" : "Revisar geometría"}</p></div>
         </div>
       ) : null}
     </section>
