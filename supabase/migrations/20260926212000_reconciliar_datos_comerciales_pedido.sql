@@ -57,7 +57,7 @@ alter table public.pedido_comercial
   add column if not exists a_cuenta numeric not null default 0,
   add column if not exists saldo numeric not null default 0,
   add column if not exists cotizacion_detalles jsonb not null default '[]'::jsonb,
-  add column if not exists especificaciones_comerciales jsonb not null default '{}':jsonb;
+  add column if not exists especificaciones_comerciales jsonb not null default '{}'::jsonb;
 
 -- Corrige el literal JSON por compatibilidad si el esquema ya existía.
 alter table public.pedido_comercial
