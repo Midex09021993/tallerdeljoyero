@@ -151,7 +151,9 @@ function traceBoundary(component: Point[], width: number, height: number, foregr
 function traceContours(data: Uint8ClampedArray, width: number, height: number, cutoff: number, threshold: number, ignoreLessThan = 12, useAlpha = false) {
   const foreground = new Uint8Array(width * height);
   for (let i = 0; i < width * height; i++) {
-    const value = luminance(data[i * 4]!, data[i * 4 + 1]!, data[i * 4 + 2]!);\n    const alpha = data[i * 4 + 3]!;\n    foreground[i] = (useAlpha ? alpha >= threshold : value >= cutoff && value <= threshold) ? 1 : 0;
+    const value = luminance(data[i * 4]!, data[i * 4 + 1]!, data[i * 4 + 2]!);
+    const alpha = data[i * 4 + 3]!;
+    foreground[i] = (useAlpha ? alpha >= threshold : value >= cutoff && value <= threshold) ? 1 : 0;
   }
 
   const visited = new Uint8Array(width * height);
@@ -243,7 +245,8 @@ function normalizeContours(contours: Contour[], widthMm: number, heightMm: numbe
 
 function svgFile(contours: Contour[], widthMm: number, heightMm: number, outputMode: "cut" | "engrave") {
   const normalized = normalizeContours(contours, widthMm, heightMm);
-  const paths = normalized.map((c) => `<path d="${pathFromPoints(c.points)}" />`).join("\n  ");\n  const label = outputMode === "cut" ? "CORTE" : "GRABADO";
+  const paths = normalized.map((c) => `<path d="${pathFromPoints(c.points)}" />`).join("\n  ");
+  const label = outputMode === "cut" ? "CORTE" : "GRABADO";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}">
   <g id="${label}" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="0.01">
@@ -255,7 +258,8 @@ function svgFile(contours: Contour[], widthMm: number, heightMm: number, outputM
 
 function dxfFile(contours: Contour[], widthMm: number, heightMm: number, outputMode: "cut" | "engrave") {
   const normalized = normalizeContours(contours, widthMm, heightMm);
-  const layer = outputMode === "cut" ? "CORTE" : "GRABADO";\n  const entities = normalized.map((contour) => {
+  const layer = outputMode === "cut" ? "CORTE" : "GRABADO";
+  const entities = normalized.map((contour) => {
     const vertices = contour.points.map((p) =>
       `10\n${p.x.toFixed(4)}\n20\n${(heightMm - p.y).toFixed(4)}\n`,
     ).join("");
@@ -295,8 +299,15 @@ export function VectorizadorLaser() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceName, setSourceName] = useState("diseño");
-  const [cutoff, setCutoff] = useState(0);\n  const [threshold, setThreshold] = useState(150);\n  const [smoothness, setSmoothness] = useState(0);\n  const [useAlpha, setUseAlpha] = useState(false);\n  const [outputMode, setOutputMode] = useState<"cut" | "engrave">("cut");\n  const [unit, setUnit] = useState<"mm" | "in">("mm");
-  const [simplification, setSimplification] = useState(2);\n  const [ignoreLessThan, setIgnoreLessThan] = useState(24);\n  const [singleContour, setSingleContour] = useState(true);
+  const [cutoff, setCutoff] = useState(0);
+  const [threshold, setThreshold] = useState(150);
+  const [smoothness, setSmoothness] = useState(0);
+  const [useAlpha, setUseAlpha] = useState(false);
+  const [outputMode, setOutputMode] = useState<"cut" | "engrave">("cut");
+  const [unit, setUnit] = useState<"mm" | "in">("mm");
+  const [simplification, setSimplification] = useState(2);
+  const [ignoreLessThan, setIgnoreLessThan] = useState(24);
+  const [singleContour, setSingleContour] = useState(true);
   const [widthMm, setWidthMm] = useState(30);
   const [contours, setContours] = useState<Contour[]>([]);
   const [sourceSize, setSourceSize] = useState({ width: 0, height: 0 });
@@ -365,7 +376,8 @@ export function VectorizadorLaser() {
 
   const download = (kind: "svg" | "dxf") => {
     if (!points.length) return;
-    const exportContours = outputContours;\n    const content = kind === "svg" ? svgFile(exportContours, widthMm, heightMm, outputMode) : dxfFile(exportContours, widthMm, heightMm, outputMode);
+    const exportContours = outputContours;
+    const content = kind === "svg" ? svgFile(exportContours, widthMm, heightMm, outputMode) : dxfFile(exportContours, widthMm, heightMm, outputMode);
     const blob = new Blob([content], { type: kind === "svg" ? "image/svg+xml" : "application/dxf" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
