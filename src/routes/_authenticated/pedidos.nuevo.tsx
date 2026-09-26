@@ -229,6 +229,7 @@ function NuevoPedido() {
   }, [clienteBusqueda, clienteId, clientes]);
 
   const hayVariasCoincidencias = !clienteId && clienteBusqueda.trim().length >= 2 && clientes.length > 1;
+  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   useEffect(() => {
     if (!clienteId || !cotizacionId) {
@@ -247,9 +248,6 @@ function NuevoPedido() {
     setContratoId("");
     set("contrato", "");
   }, [sedeId]);
-
-  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
-
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
