@@ -1322,21 +1322,22 @@ export function useCrearPedido() {
       // venta directa con precio, se crea aquí su documento financiero antes de
       // persistir el pedido y se vincula por contrato_id. Así el precio y los
       // pagos tienen una única fuente de verdad desde el primer momento.
-      const { origen_comercial = "pendiente", ...datosEntrada } = pedido;
+      const origenComercial = pedido.cotizacion_id ? "cotizacion" : "directo";
       const pedidoConContexto = {
-        ...datosEntrada,
-        cliente: datosEntrada.cliente.trim() || "Cliente pendiente de registrar",
-        contrato: datosEntrada.contrato?.trim() ?? "",
-        cliente_id: datosEntrada.cliente_id ?? null,
-        cotizacion_id: datosEntrada.cotizacion_id ?? null,
-        contrato_id: datosEntrada.contrato_id ?? null,
+        ...pedido,
+        origen_comercial: origenComercial,
+        cliente: pedido.cliente.trim() || "Cliente pendiente de registrar",
+        contrato: pedido.contrato?.trim() ?? "",
+        cliente_id: pedido.cliente_id ?? null,
+        cotizacion_id: pedido.cotizacion_id ?? null,
+        contrato_id: pedido.contrato_id ?? null,
       };
 
       let contratoDirecto: { id: string | null; numero: string; creado: boolean } | null = null;
       let pedidoCreadoId: string | null = null;
 
       try {
-        if (origen_comercial === "directo") {
+        if (origenComercial === "directo") {
           const importe = Number(datosEntrada.importe) || 0;
           if (importe <= 0) {
             throw new Error("La venta directa debe tener un importe mayor que cero.");
@@ -1361,8 +1362,8 @@ export function useCrearPedido() {
           pedidoConContexto.contrato_id = contratoDirecto.id;
         }
 
-        if (origen_comercial === "cotizacion" && !pedidoConContexto.contrato_id) {
-          throw new Error("Selecciona una cotización/documento comercial antes de crear el pedido.");
+        if (origenComercial === "cotizacion" && !pedidoConContexto.cotizacion_id) {
+          throw new Error("El pedido con origen Cotización debe conservar la cotización de origen.");
         }
 
         const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContexto);
