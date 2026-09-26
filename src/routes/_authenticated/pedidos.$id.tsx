@@ -531,7 +531,7 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, pue
           <Dato label="Talla" value={pedido.talla || "—"} />
           <Dato label="Peso estimado" value={pedido.peso_estimado ? `${pedido.peso_estimado} g` : "—"} />
           <Dato label="Cantidad" value={String(pedido.cantidad_piezas ?? "—")} />
-          <Dato label="Origen" value={pedido.origen || "—"} />
+          <Dato label="Origen comercial" value={pedido.origen_comercial === "cotizacion" ? "Cotización" : "Venta directa"} />
           <Dato label="Taller / sede" value={pedido.sede_nombre || "—"} />
         </div>
       </section>
