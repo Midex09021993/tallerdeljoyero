@@ -438,7 +438,7 @@ export type MovimientoInventario = {
 
 export type PedidoNuevo = {
   /** Origen comercial del pedido: no obliga a una ruta productiva. */
-  origen_comercial?: "cotizacion" | "directo" | "pendiente";
+  origen_comercial?: "cotizacion" | "directo";
   tipo_operacion?: "fabricacion" | "reparacion" | "venta_stock";
   canal_captacion?: string | null;
   referencia: string;
