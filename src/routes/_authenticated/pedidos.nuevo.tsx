@@ -289,6 +289,7 @@ function NuevoPedido() {
       cliente_id: clienteId || null,
       contrato_id: contratoId || null,
       cotizacion_id: cotizacionId || null,
+      proyecto_joya_id: cotizacionSeleccionada?.proyecto_joya_id ?? null,
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
