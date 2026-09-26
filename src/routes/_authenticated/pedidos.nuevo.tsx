@@ -165,6 +165,7 @@ function NuevoPedido() {
   const [cotizacionId, setCotizacionId] = useState("");
   const [tipoOperacion, setTipoOperacion] = useState<"fabricacion" | "reparacion" | "venta_stock">("fabricacion");
   const [contratoId, setContratoId] = useState("");
+  const [sedeId, setSedeId] = useState(sesion?.perfil.sede_id ?? sedes[0]?.id ?? "");
   const { data: cotizacionesCliente = [], isFetching: buscandoCotizaciones } = useQuery({
     queryKey: ["pedidos-nuevo-cotizaciones", clienteId, sedeId],
     enabled: Boolean(clienteId && sedeId && cotizacionesHabilitadas),
@@ -194,7 +195,6 @@ function NuevoPedido() {
       return data ?? [];
     },
   });
-  const [sedeId, setSedeId] = useState(sesion?.perfil.sede_id ?? sedes[0]?.id ?? "");
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
@@ -210,7 +210,6 @@ function NuevoPedido() {
 
   const sede = sedes.find((s) => s.id === sedeId);
   const cotizacionSeleccionada = cotizacionesCliente.find((cotizacion) => cotizacion.id === cotizacionId) ?? null;
-  const contratoSeleccionado = contratosCliente.find((contrato) => contrato.id === contratoId) ?? null;
   const origenComercial: "directo" | "cotizacion" = cotizacionSeleccionada ? "cotizacion" : "directo";
   const totalComercial = cotizacionSeleccionada
     ? Math.max(0, Number(cotizacionSeleccionada.total) || 0)
