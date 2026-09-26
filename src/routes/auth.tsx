@@ -46,7 +46,7 @@ function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo">("ecosistema");
-  const modoAlta = Boolean(estado?.vacio && estado?.disponible !== false);
+  const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
   useEffect(() => {
     if (sesion) navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });

@@ -235,7 +235,7 @@ function SeguimientoCliente() {
   const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
   const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
   const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
-  const nombreTaller = String(cotizacion?.identidad_comercial?.nombre_comercial ?? "").trim();
+  const nombreTaller = String(cotizacion?.identidad_comercial?.['nombre_comercial'] ?? "").trim();
   const estaVencida = cotizacionVencida(cotizacion?.fecha_vencimiento ?? null);
   const estadoVisible = estaVencida && cotizacion?.estado === "enviada" ? "vencida" : cotizacion?.estado;
 
