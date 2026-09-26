@@ -1337,6 +1337,8 @@ export type Database = {
           cantidad_piezas: number
           cliente: string
           contrato: string
+          cotizacion_id: string | null
+          origen_comercial: string
           contrato_id: string | null
           created_at: string
           entrega: string
@@ -1389,6 +1391,8 @@ export type Database = {
           cantidad_piezas?: number
           cliente: string
           contrato?: string
+          cotizacion_id?: string | null
+          origen_comercial?: string
           contrato_id?: string | null
           created_at?: string
           entrega?: string
@@ -1441,6 +1445,8 @@ export type Database = {
           cantidad_piezas?: number
           cliente?: string
           contrato?: string
+          cotizacion_id?: string | null
+          origen_comercial?: string
           contrato_id?: string | null
           created_at?: string
           entrega?: string
@@ -1492,6 +1498,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
             referencedColumns: ["id"]
           },
           {
