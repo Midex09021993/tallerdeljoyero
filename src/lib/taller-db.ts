@@ -312,6 +312,7 @@ export type Pedido = {
   sede_nombre: string | null;
   telefono: string;
   origen: string;
+  origen_comercial: "cotizacion" | "directo";
   canal_captacion: string;
   tipo_operacion: "fabricacion" | "reparacion" | "venta_stock";
   contrato: string;
