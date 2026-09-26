@@ -119,7 +119,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     });
 
     if (error || !creado.user) {
-      throw new Error(error?.message ?? "No se pudo crear el usuario");
+      throw new Error(/already been registered/i.test(error?.message ?? "") ? "Ya existe una cuenta con ese usuario o correo." : (error?.message ?? "No se pudo crear el usuario"));
     }
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
@@ -299,7 +299,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
         telefono: data.telefono,
       },
     });
-    if (error || !creado.user) throw new Error(error?.message ?? "No se pudo crear el usuario");
+    if (error || !creado.user) throw new Error(/already been registered/i.test(error?.message ?? "") ? "Ya existe una cuenta con ese usuario o correo." : (error?.message ?? "No se pudo crear el usuario"));
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
