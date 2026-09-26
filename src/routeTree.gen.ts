@@ -301,7 +301,6 @@ export interface FileRoutesByFullPath {
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
-  '/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -309,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
+  '/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
   '/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -341,7 +341,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
-  '/ventas': typeof AuthenticatedVentasRoute
+  '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -349,6 +349,7 @@ export interface FileRoutesByTo {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
+  '/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
@@ -386,13 +387,14 @@ export interface FileRoutesById {
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
-  '/_authenticated/ventas/$id': typeof AuthenticatedVentasIdRoute  '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
+  '/_authenticated/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
   '/_authenticated/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -430,7 +432,6 @@ export interface FileRouteTypes {
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
-    
     | '/c/$codigo'
     | '/joya/$token'
     | '/contratos/$id'
@@ -438,7 +439,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/pedidos/nuevo'
     | '/trabajos/$id'
-    
+    | '/ventas/$id'
     | '/c/$codigo/pdf'
     | '/cotizaciones/'
     | '/pedidos/'
@@ -472,7 +473,6 @@ export interface FileRouteTypes {
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
-    
     | '/c/$codigo'
     | '/joya/$token'
     | '/contratos/$id'
@@ -480,7 +480,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/pedidos/nuevo'
     | '/trabajos/$id'
-    
+    | '/ventas/$id'
     | '/c/$codigo/pdf'
     | '/cotizaciones'
     | '/pedidos'
@@ -517,7 +517,6 @@ export interface FileRouteTypes {
     | '/_authenticated/taller'
     | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
-    
     | '/c/$codigo'
     | '/joya/$token'
     | '/_authenticated/contratos/$id'
@@ -525,7 +524,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos/$id'
     | '/_authenticated/pedidos/nuevo'
     | '/_authenticated/trabajos/$id'
-    
+    | '/_authenticated/ventas/$id'
     | '/c/$codigo/pdf'
     | '/_authenticated/cotizaciones/'
     | '/_authenticated/pedidos/'
@@ -879,6 +878,17 @@ const AuthenticatedPedidosRouteChildren: AuthenticatedPedidosRouteChildren = {
 const AuthenticatedPedidosRouteWithChildren =
   AuthenticatedPedidosRoute._addFileChildren(AuthenticatedPedidosRouteChildren)
 
+interface AuthenticatedVentasRouteChildren {
+  AuthenticatedVentasIdRoute: typeof AuthenticatedVentasIdRoute
+}
+
+const AuthenticatedVentasRouteChildren: AuthenticatedVentasRouteChildren = {
+  AuthenticatedVentasIdRoute: AuthenticatedVentasIdRoute,
+}
+
+const AuthenticatedVentasRouteWithChildren =
+  AuthenticatedVentasRoute._addFileChildren(AuthenticatedVentasRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
@@ -959,17 +969,6 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
-interface AuthenticatedVentasRouteChildren {
-  AuthenticatedVentasIdRoute: typeof AuthenticatedVentasIdRoute
-}
-
-const AuthenticatedVentasRouteChildren: AuthenticatedVentasRouteChildren = {
-  AuthenticatedVentasIdRoute: AuthenticatedVentasIdRoute,
-}
-
-const AuthenticatedVentasRouteWithChildren =
-  AuthenticatedVentasRoute._addFileChildren(AuthenticatedVentasRouteChildren)
-
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
