@@ -34,11 +34,18 @@ function getSupabaseConfig() {
   // Lovable Cloud is the sole source of the production Supabase connection.
   // Never fall back to a hardcoded project: a missing variable must fail clearly
   // instead of silently connecting the application to the wrong backend.
-  // Backend oficial de Lovable para este ERP.
-  // Se fija explícitamente para evitar que un entorno heredado conecte el
-  // frontend a otro proyecto Supabase.
-  const SUPABASE_URL = "https://ynetgjhghfhvyinwvqkl.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_L_4p3qc_tRUdL4P5x73bWA_qzZwU-ZO";
+  const SUPABASE_URL = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    const missing = [
+      ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
+      ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
+    ];
+    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
+    console.error(`[Supabase] ${message}`);
+    throw new Error(message);
+  }
 
   return { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY };
 }
