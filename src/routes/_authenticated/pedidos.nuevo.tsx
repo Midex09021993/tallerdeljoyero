@@ -258,7 +258,7 @@ function NuevoPedido() {
       trabajo: form.trabajo.trim(),
       cliente: form.cliente.trim() || "Cliente pendiente de registrar",
       cliente_id: clienteId || null,
-      contrato_id: contratoId || null,
+      contrato_id: null,
       cotizacion_id: cotizacionId || null,
       proyecto_joya_id: cotizacionSeleccionada?.proyecto_joya_id ?? null,
       material: form.material.trim(),
