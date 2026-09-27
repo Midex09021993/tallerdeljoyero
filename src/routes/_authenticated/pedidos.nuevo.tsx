@@ -602,8 +602,6 @@ function NuevoPedido() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Campo label="Fecha de ingreso" value={form.fecha_ingreso} onChange={(v) => set("fecha_ingreso", v)} type="date" required />
                 <Campo label="Fecha prometida de entrega" value={form.fecha_entrega} onChange={(v) => set("fecha_entrega", v)} type="date" />
-                <Campo label="Origen / lugar" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Ej. Lima, Trujillo, Colombia…" />
-                <Campo label="Canal de captación" value={form.canal_captacion} onChange={(v) => set("canal_captacion", v)} placeholder="WhatsApp, Instagram, tienda, referido…" />
               </div>
               <label className="mt-4 block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notas de recepción</span><textarea value={form.notas} onChange={(e) => set("notas", e.target.value)} rows={4} placeholder="Detalles importantes para fabricación o atención al cliente…" className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-gold/50" /></label>
             </section>
