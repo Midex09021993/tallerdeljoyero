@@ -240,7 +240,7 @@ function CatalogoPage() {
         )}
       </section>
 
-      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} sedeId={sesion?.participante?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.sede.id] }); }} />
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
         <div className="grid gap-3 md:grid-cols-3">
