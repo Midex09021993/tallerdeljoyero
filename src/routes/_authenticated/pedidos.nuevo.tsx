@@ -38,6 +38,9 @@ function siguienteReferencia(sede: string, refs: string[]) {
 
 const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
 
+const ordenarRutaFabricacion = (seleccion: string[]) =>
+  rutas.filter((area) => seleccion.includes(area));
+
 type ReferenciaClave = "perspectiva" | "superior" | "frontal" | "izquierda";
 
 const referenciasTrabajo: Array<{ clave: ReferenciaClave; etiqueta: string }> = [
@@ -328,7 +331,7 @@ function NuevoPedido() {
       fecha_ingreso: form.fecha_ingreso || hoy(),
       fecha_entrega: form.fecha_entrega || null,
       area_actual: "Pedidos",
-      ruta: rutaProduccion,
+      ruta: ordenarRutaFabricacion(rutaProduccion),
       notas: form.notas.trim(),
       talla: form.talla.trim(),
       cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
@@ -499,7 +502,15 @@ function NuevoPedido() {
                   const externa = (capacidadesExternasRuta[area] ?? []).length > 0;
                   const disponible = rutasDisponibles.includes(area);
                   return <label key={area} className={`${activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : disponible ? "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted" : "flex cursor-not-allowed items-center gap-3 rounded-xl border border-border bg-surface-muted px-4 py-3 opacity-50"}`}>
-                    <input type="checkbox" checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
+                    <input type="checkbox" checked={activa} onChange={() =>
+  setRutaProduccion((actual) =>
+    ordenarRutaFabricacion(
+      activa
+        ? actual.filter((x) => x !== area)
+        : [...actual, area],
+    ),
+  )
+} className="size-4 accent-gold" />
                     <span>
                       <span className="block text-sm font-semibold">{area}</span>
                       <span className="block text-[9px] text-muted-foreground">{interna && externa ? "Interna + externa" : interna ? "Capacidad interna" : externa ? "Servicio externo disponible" : "Sin capacidad disponible"}</span>
