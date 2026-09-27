@@ -230,10 +230,21 @@ export function AppShell({
     capacidadesCargadas ? capacidadesMenu : undefined,
   );
   const visiblesOrdenadas = ordenarMenu(visibles);
-  const nombreVisible = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
+  const nombrePersonal = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
     .map((valor) => valor?.trim())
     .filter(Boolean)
-    .join(" ") || sesion?.perfil.usuario?.trim() || sesion?.user.email?.trim() || "Usuario";
+    .join(" ");
+  // Las cuentas internas pueden usar usuario@taller.local como credencial técnica.
+  // Nunca lo mostramos como identidad visual: si falta el nombre personal,
+  // mostramos el taller/participante asociado y mantenemos el rol debajo.
+  const nombreVisible =
+    nombrePersonal ||
+    sesion?.participante?.nombre?.trim() ||
+    (sesion?.perfil.usuario?.trim() && !sesion.perfil.usuario.trim().includes("@taller.local")
+      ? sesion.perfil.usuario.trim()
+      : "") ||
+    "Usuario";
+  const tallerVisible = sesion?.participante?.nombre?.trim() || sesion?.sede?.nombre?.trim() || "";
   const inicial = nombreVisible.charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
 
@@ -295,6 +306,7 @@ export function AppShell({
                 <p className="truncate text-xs font-medium">{nombreVisible}</p>
                 <p className="truncate text-[10px] text-ink-foreground/40">
                   {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+                  {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
                 </p>
               </div>
             </div>
@@ -358,6 +370,7 @@ export function AppShell({
                 <p className="truncate text-xs font-medium">{nombreVisible}</p>
                 <p className="truncate text-[10px] text-muted-foreground">
                   {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+                  {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
                 </p>
               </div>
               <button
