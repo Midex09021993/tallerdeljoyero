@@ -286,7 +286,6 @@ function NuevoPedido() {
     }
 
     const nuevo: PedidoNuevo = {
-      origen_comercial: origenComercial,
       referencia: siguienteReferencia(sede?.nombre ?? "Taller", pedidos.map((p) => p.referencia)),
       pieza: form.trabajo.trim(),
       trabajo: form.trabajo.trim(),
