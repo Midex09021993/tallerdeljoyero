@@ -32,20 +32,19 @@ export const Route = createFileRoute("/_authenticated")({
       ...(perfil?.participante_id ? [perfil.participante_id] : []),
     ]));
 
-    if (participanteIds.length === 0) {
-      await supabase.auth.signOut();
-      throw redirect({ to: "/auth" });
-    }
+    // Cuentas aún sin vincular al ecosistema conservan acceso (compatibilidad
+    // histórica). Sólo se bloquea si todos sus participantes vinculados están inactivos.
+    if (participanteIds.length > 0) {
+      const { data: participantes, error: errPart } = await supabase
+        .from("ecosistema_participantes")
+        .select("id")
+        .in("id", participanteIds)
+        .eq("estado", "activo");
 
-    const { data: participantes } = await supabase
-      .from("ecosistema_participantes")
-      .select("id")
-      .in("id", participanteIds)
-      .eq("estado", "activo");
-
-    if ((participantes ?? []).length === 0) {
-      await supabase.auth.signOut();
-      throw redirect({ to: "/auth" });
+      if (!errPart && (participantes ?? []).length === 0) {
+        await supabase.auth.signOut();
+        throw redirect({ to: "/auth" });
+      }
     }
 
     return { user };
