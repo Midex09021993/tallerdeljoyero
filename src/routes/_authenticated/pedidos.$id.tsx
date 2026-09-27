@@ -648,7 +648,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                   <p className="rounded-xl bg-surface-muted px-3 py-2.5 text-sm font-semibold">{t.participante_id ? "Ejecución externa" : "Pendiente de definir ejecución"}</p>
                 )}
                 {capacidadesSedeError ? <p className="text-[10px] text-danger">No se pudo consultar las capacidades del taller.</p> : null}
-              </div></div></div>
+              </div></div>
           );
         }) : <Empty text="No hay trabajos registrados." />}
       </div>
