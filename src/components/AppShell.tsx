@@ -256,7 +256,7 @@ export function AppShell({
           <div className="p-8">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
             <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
-              {sesion?.sede?.nombre ?? "Taller del Joyero"}
+              {sesion?.participante?.nombre ?? sesion?.sede?.nombre ?? ""}
             </p>
           </div>
 
