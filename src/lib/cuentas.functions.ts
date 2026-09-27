@@ -412,7 +412,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
 
     const { error: rolError } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: creado.user.id, role: data.rol, sede_id: data.sede_id });
+      .insert({ user_id: creado.user.id, role: data.rol, sede_id: participanteDestino.sede_id ?? data.sede_id, participante_id: participanteDestino.id });
     if (rolError) {
       await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
       throw new Error("Usuario creado, pero no se pudo asignar el rol");
@@ -482,6 +482,7 @@ type EdicionUsuario = {
   dni: string;
   telefono: string;
   sede_id: string | null;
+  participante_id?: string | null;
   rol: "dueno" | "gerente" | "operario" | "monitor" | "cliente";
   areas: string[];
   activo: boolean;
@@ -545,7 +546,8 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       apellidos: data.apellidos,
       dni: data.dni,
       telefono: data.telefono,
-      sede_id: data.sede_id,
+      sede_id: participanteDestino?.sede_id ?? data.sede_id,
+      participante_id: participanteDestino?.id ?? data.participante_id ?? null,
       activo: data.activo,
       acceso_desde: data.acceso_desde,
       acceso_hasta: data.acceso_hasta,
@@ -554,14 +556,14 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
 
     const { error: errRolDelete } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
     if (errRolDelete) return { ok: false, error: errRolDelete.message };
-    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id);
+    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id, data.participante_id ?? null);
     if (!participanteDestino?.id) {
       return { ok: false, error: "El taller seleccionado no está vinculado al ecosistema" };
     }
 
     const { error: errRolInsert } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: data.id, role: data.rol, sede_id: data.sede_id });
+      .insert({ user_id: data.id, role: data.rol, sede_id: participanteDestino.sede_id ?? data.sede_id, participante_id: participanteDestino.id });
     if (errRolInsert) return { ok: false, error: errRolInsert.message };
 
     try {
