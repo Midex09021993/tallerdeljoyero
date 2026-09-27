@@ -140,7 +140,6 @@ function PedidoDetalle() {
         ruta.map(async (area) => {
           const { data, error } = await supabase.rpc("listar_participantes_servicio", {
             _area: area,
-            _especialidad_id: null,
           });
           if (error) throw error;
           return [area, data ?? []] as const;
