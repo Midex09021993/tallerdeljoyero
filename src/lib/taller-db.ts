@@ -1752,15 +1752,24 @@ export function useEnviarAArea() {
 
 export function useSedes() {
   return useQuery({
+    // La clave se conserva para compatibilidad con componentes existentes.
+    // La fuente real ya es Ecosistema.
     queryKey: ["sedes"],
     queryFn: async (): Promise<Sede[]> => {
       const { data, error } = await supabase
-        .from("sedes")
-        .select("id, nombre, ciudad, modo, activa")
-        .eq("activa", true)
+        .from("ecosistema_participantes")
+        .select("id, nombre, ciudad, sede_id, estado")
+        .eq("estado", "activo")
+        .not("sede_id", "is", null)
         .order("nombre");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((participante) => ({
+        id: participante.sede_id as string,
+        nombre: participante.nombre,
+        ciudad: participante.ciudad ?? "",
+        modo: "ecosistema",
+        activa: true,
+      }));
     },
   });
 }
