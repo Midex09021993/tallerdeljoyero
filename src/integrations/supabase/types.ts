@@ -27,7 +27,8 @@ export type Database = {
           metadata: Json
           nombre: string
           notas: string
-          sede_id: string
+          participante_id: string | null
+          sede_id: string | null
           telefono: string | null
           tipo: string
           whatsapp: string | null
@@ -44,7 +45,8 @@ export type Database = {
           metadata?: Json
           nombre: string
           notas?: string
-          sede_id: string
+          participante_id?: string | null
+          sede_id?: string | null
           telefono?: string | null
           tipo?: string
           whatsapp?: string | null
@@ -61,12 +63,20 @@ export type Database = {
           metadata?: Json
           nombre?: string
           notas?: string
-          sede_id?: string
+          participante_id?: string | null
+          sede_id?: string | null
           telefono?: string | null
           tipo?: string
           whatsapp?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "clientes_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "clientes_sede_id_fkey"
             columns: ["sede_id"]
@@ -1909,6 +1919,7 @@ export type Database = {
           packing_estado: string
           packing_preparado_at: string | null
           packing_preparado_por: string | null
+          participante_id: string | null
           peso_estimado: string
           piedras: string
           pieza: string
@@ -1970,6 +1981,7 @@ export type Database = {
           packing_estado?: string
           packing_preparado_at?: string | null
           packing_preparado_por?: string | null
+          participante_id?: string | null
           peso_estimado?: string
           piedras?: string
           pieza: string
@@ -2031,6 +2043,7 @@ export type Database = {
           packing_estado?: string
           packing_preparado_at?: string | null
           packing_preparado_por?: string | null
+          participante_id?: string | null
           peso_estimado?: string
           piedras?: string
           pieza?: string
@@ -2071,6 +2084,13 @@ export type Database = {
             columns: ["cotizacion_id"]
             isOneToOne: false
             referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
             referencedColumns: ["id"]
           },
           {
@@ -2295,6 +2315,7 @@ export type Database = {
           dni: string
           id: string
           nombre: string
+          participante_id: string | null
           sede_id: string | null
           telefono: string
           updated_at: string
@@ -2309,6 +2330,7 @@ export type Database = {
           dni?: string
           id: string
           nombre?: string
+          participante_id?: string | null
           sede_id?: string | null
           telefono?: string
           updated_at?: string
@@ -2323,12 +2345,20 @@ export type Database = {
           dni?: string
           id?: string
           nombre?: string
+          participante_id?: string | null
           sede_id?: string | null
           telefono?: string
           updated_at?: string
           usuario?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_sede_id_fkey"
             columns: ["sede_id"]

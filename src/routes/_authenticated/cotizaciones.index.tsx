@@ -40,12 +40,12 @@ const tiposPartida: Array<{ value: TipoPartida; label: string }> = [
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
-  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null; participante_id: string | null;
+  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null; participante_id?: string | null;
   cliente?: { nombre: string } | null;
 };
 
 type Sede = { id: string; nombre: string };
-type IdentidadComercial = { id: string; sede_id: string | null; participante_id: string | null; nombre_comercial: string; moneda_codigo: string; moneda_simbolo: string; impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean };
+type IdentidadComercial = { id: string; sede_id: string | null; participante_id?: string | null; nombre_comercial: string; moneda_codigo: string; moneda_simbolo: string; impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean };
 
 
 function money(n: number, moneda = "PEN") {
@@ -99,10 +99,10 @@ function CotizacionesPage() {
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }, { data: identidadData }] = await Promise.all([
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
-      supabase.from("sedes").select("id,nombre").eq("estado","activo").order("nombre"),
-      sesion?.participante?.id
-        ? supabase.from("identidades_comerciales").select("id,sede_id,participante_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("participante_id", sesion.participante.id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
+      supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
+      sesion?.participante?.sede_id
+        ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.participante.sede_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
     if (p) setProyectos(p);

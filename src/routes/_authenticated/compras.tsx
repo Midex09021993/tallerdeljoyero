@@ -36,7 +36,11 @@ function ComprasPage() {
     queryKey: ["compras", sesion?.participante?.id],
     enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("compras").select("id,numero,proveedor_nombre,estado,fecha_emision,total,moneda,notas").eq("participante_id", sesion!.participante!.id).order("created_at", { ascending: false });
+      const sedeId = sesion!.participante!.sede_id;
+      const base = supabase.from("compras").select("id,numero,proveedor_nombre,estado,fecha_emision,total,moneda,notas");
+      const { data, error } = sedeId
+        ? await base.eq("sede_id", sedeId).order("created_at", { ascending: false })
+        : await base.order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -45,7 +49,9 @@ function ComprasPage() {
     queryKey: ["compras-materiales", sesion?.participante?.id],
     enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("inventario").select("id,material,codigo,unidad,costo_unitario,activo").eq("participante_id", sesion!.participante!.id).eq("activo", true).order("material");
+      const sedeId = sesion!.participante!.sede_id;
+      const base = supabase.from("inventario").select("id,material,codigo,unidad,costo_unitario,activo").eq("activo", true);
+      const { data, error } = sedeId ? await base.eq("sede_id", sedeId).order("material") : await base.order("material");
       if (error) throw error;
       return data ?? [];
     },
@@ -64,13 +70,15 @@ function ComprasPage() {
     setGuardando(true);
     try {
       const numero = "OC-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
-      const { data: compra, error } = await supabase.from("compras").insert({ participante_id: sesion.participante.id, sede_id: sesion.participante.sede_id, numero, proveedor_nombre: proveedor.trim(), estado: "ordenada", subtotal: totalBorrador, total: totalBorrador, notas: notas.trim(), creado_por: sesion.user.id }).select("id").single();
+      const sedeCompra = sesion.participante.sede_id ?? sesion.sede?.id;
+      if (!sedeCompra) { toast.error("No hay una sede activa para registrar la compra"); return; }
+      const { data: compra, error } = await supabase.from("compras").insert({ sede_id: sedeCompra, numero, proveedor_nombre: proveedor.trim(), estado: "ordenada", subtotal: totalBorrador, total: totalBorrador, notas: notas.trim(), creado_por: sesion.user.id }).select("id").single();
       if (error || !compra) throw error ?? new Error("No se pudo crear la compra");
       const { error: detailError } = await supabase.from("compra_detalles").insert(validas.map(l => ({ compra_id: compra.id, material_id: l.material_id, cantidad: Number(l.cantidad), unidad: l.unidad, costo_unitario: Number(l.costo_unitario), descripcion: materiales.find(m => m.id === l.material_id)?.material ?? "" })));
       if (detailError) { await supabase.from("compras").delete().eq("id", compra.id); throw detailError; }
       toast.success("Orden de compra creada");
       setProveedor(""); setNotas(""); setLineas([{ material_id: "", cantidad: "", costo_unitario: "", unidad: "" }]);
-      await qc.invalidateQueries({ queryKey: ["compras", sesion.sede.id] });
+      await qc.invalidateQueries({ queryKey: ["compras", sesion.participante.id] });
     } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo guardar la compra"); }
     finally { setGuardando(false); }
   };
