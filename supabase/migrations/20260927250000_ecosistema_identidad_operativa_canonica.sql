@@ -15,7 +15,8 @@ from public.ecosistema_participantes ep
 where ic.participante_id is null
   and ic.sede_id = ep.sede_id;
 
-drop constraint if exists identidades_comerciales_participante_id_fkey on public.identidades_comerciales;
+alter table public.identidades_comerciales
+  drop constraint if exists identidades_comerciales_participante_id_fkey;
 alter table public.identidades_comerciales
   add constraint identidades_comerciales_participante_id_fkey
   foreign key (participante_id) references public.ecosistema_participantes(id)
