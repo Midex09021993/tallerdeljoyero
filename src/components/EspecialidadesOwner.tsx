@@ -149,6 +149,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
       }
       toast.success("Especialidades asignadas");
       await qc.invalidateQueries({ queryKey: ["participante-especialidades", participante.id] });
+      await qc.invalidateQueries({ queryKey: ["preparacion-participantes"] });
       onClose();
     } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudieron guardar"); }
     finally { setGuardando(false); }
