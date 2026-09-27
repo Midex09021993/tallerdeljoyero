@@ -8,7 +8,7 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   select pc.participante_id
   from public.participante_cuentas pc
   join public.ecosistema_participantes ep on ep.id = pc.participante_id
