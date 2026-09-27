@@ -147,8 +147,8 @@ Deno.serve(async (req) => {
       identidadId
         ? admin.from("identidades_comerciales").select("id,nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,email,telefono,color_principal,pie_documento").eq("id", identidadId).maybeSingle()
         : Promise.resolve({ data: null }),
-      contrato.sede_id
-        ? admin.from("sedes").select("nombre").eq("id", contrato.sede_id).maybeSingle()
+      contrato.participante_id
+        ? admin.from("ecosistema_participantes").select("nombre").eq("id", contrato.participante_id).maybeSingle()
         : Promise.resolve({ data: null }),
       cotizacion?.id
         ? admin.from("cotizacion_detalles").select("orden,tipo,descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", cotizacion.id).order("orden")
