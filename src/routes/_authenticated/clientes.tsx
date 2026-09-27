@@ -121,7 +121,7 @@ function ClientesPage() {
     if (!form.nombre.trim()) return;
     setGuardando(true);
     try {
-      if (!sesion?.sede?.id) throw new Error("No hay una sede activa para guardar el cliente.");
+      if (!sesion?.participante?.id) throw new Error("No hay un taller activo del Ecosistema para guardar el cliente.");
       const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, participante_id: sesion.participante.id };
       const result = seleccionado
         ? await supabase.from("clientes").update(payload).eq("id", seleccionado.id)
