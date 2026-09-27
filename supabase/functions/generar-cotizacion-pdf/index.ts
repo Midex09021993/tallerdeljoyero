@@ -109,15 +109,23 @@ Deno.serve(async (req) => {
 
     if (quoteError || !quote) return json({ error: "Cotización no encontrada." }, 404);
 
-    const [{ data: profile }, { data: roles }, { data: areas }] = await Promise.all([
-      admin.from("profiles").select("sede_id").eq("id", user.id).maybeSingle(),
+    const [{ data: roles }, { data: areas }, { data: cuenta }] = await Promise.all([
       admin.from("user_roles").select("role").eq("user_id", user.id),
       admin.from("user_areas").select("area").eq("user_id", user.id),
+      admin
+        .from("participante_cuentas")
+        .select("participante_id, ecosistema_participantes!inner(id,sede_id,estado)")
+        .eq("user_id", user.id)
+        .eq("estado", "activo")
+        .eq("ecosistema_participantes.estado", "activo")
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     const esAdmin = (roles ?? []).some((r: any) => r.role === "dueno" || r.role === "gerente");
     const esVentas = (areas ?? []).some((a: any) => clean(a.area).toLowerCase() === "área ventas");
-    const mismaSede = !!quote.sede_id && !!profile?.sede_id && quote.sede_id === profile.sede_id;
+    const participante = (cuenta as any)?.ecosistema_participantes;
+    const mismaSede = !!quote.sede_id && !!participante?.sede_id && quote.sede_id === participante.sede_id;
 
     if (!esAdmin && (!esVentas || !mismaSede)) {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
