@@ -456,73 +456,6 @@ function NuevoPedido() {
       <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}{clientePredictivo.telefono ? <span className="ml-2 opacity-70">{clientePredictivo.telefono}</span> : null}
     </button> : hayVariasCoincidencias ? <span className="text-muted-foreground">Hay varias coincidencias. Continúa escribiendo para precisar.</span> : null}
   </div> : null}</div>
-  <div className="grid gap-4 sm:grid-cols-2">
-    <label className="block">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de operación</span>
-      <select value={tipoOperacion} onChange={(e) => setTipoOperacion(e.target.value as "fabricacion" | "reparacion" | "venta_stock")} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
-        <option value="fabricacion">Fabricación</option>
-        <option value="reparacion">Reparación / servicio</option>
-        <option value="venta_stock">Venta de stock</option>
-      </select>
-    </label>
-    <div className="rounded-xl border border-border bg-surface-muted px-3 py-3 text-xs text-muted-foreground">
-      <p className="font-semibold text-foreground">Ruta productiva</p>
-      <p className="mt-1">Se define posteriormente al preparar el pedido. No es obligatoria durante la recepción.</p>
-    </div>
-  </div>
-  <div className="sm:col-span-2">
-    <div className="rounded-xl border border-border bg-surface-muted px-3 py-3">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Origen comercial</span>
-      <p className="mt-1 text-sm font-semibold text-foreground">{cotizacionSeleccionada ? "Cotización aprobada" : "Venta directa"}</p>
-      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
-        {cotizacionSeleccionada
-          ? "Se determina automáticamente porque el pedido está vinculado a una cotización aprobada. No se puede cambiar manualmente."
-          : "No se seleccionó una cotización. Este pedido se registra directamente desde Pedidos."}
-      </p>
-    </div>
-    {cotizacionesHabilitadas ? (
-      <div className="mt-3">
-        <label className="block">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cotización aprobada <span className="font-normal normal-case">(opcional)</span></span>
-          {clienteId && cotizacionesCliente.length > 0 ? (
-            <select value={cotizacionId} onChange={(e) => { setCotizacionId(e.target.value); setContratoId(""); set("contrato", ""); }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
-              <option value="">Sin cotización — pedido directo</option>
-              {cotizacionesCliente.map((cotizacion) => <option key={cotizacion.id} value={cotizacion.id}>{cotizacion.numero} · v{cotizacion.version} · {Number(cotizacion.total || 0).toFixed(2)} {cotizacion.moneda}</option>)}
-            </select>
-          ) : (
-            <p className="mt-1.5 rounded-xl border border-border bg-background px-3 py-3 text-xs text-muted-foreground">
-              {clienteId ? (buscandoCotizaciones ? "Buscando cotizaciones aprobadas…" : "Este cliente no tiene cotizaciones aprobadas en este taller.") : "Selecciona primero un cliente para consultar sus cotizaciones aprobadas."}
-            </p>
-          )}
-        </label>
-      </div>
-    ) : null}
-    {cotizacionSeleccionada ? (
-      <>
-        <div className="mt-3 rounded-xl border border-border bg-background px-3 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Precio de venta acordado</p>
-          <p className="mt-1 text-base font-semibold text-foreground">{Number(cotizacionSeleccionada.total || 0).toFixed(2)} {cotizacionSeleccionada.moneda}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">Tomado automáticamente de {cotizacionSeleccionada.numero} · versión {cotizacionSeleccionada.version}.</p>
-        </div>
-        {contratosCliente.length > 0 ? (
-          <div className="mt-3">
-            <label className="block">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Contrato <span className="font-normal normal-case">(opcional)</span></span>
-              <select value={contratoId} onChange={(e) => { const id = e.target.value; setContratoId(id); const contrato = contratosCliente.find((item) => item.id === id); set("contrato", contrato?.numero ?? ""); }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50">
-                <option value="">Sin contrato</option>
-                {contratosCliente.map((contrato) => <option key={contrato.id} value={contrato.id}>{contrato.numero}{contrato.origen ? " · " + contrato.origen : ""}</option>)}
-              </select>
-            </label>
-          </div>
-        ) : null}
-      </>
-    ) : (
-      <div className="mt-3">
-        <Campo label="Precio de venta acordado" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="Ej. 1500.00" type="number" required />
-        <p className="mt-1 text-[10px] text-muted-foreground">Al crear el pedido directo se genera su documento financiero. La ausencia de cotización es la que determina este origen.</p>
-      </div>
-    )}
-  </div>
                 <Campo label="Origen / lugar" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Ej. Lima, Trujillo, Arequipa o Colombia…" />
                 <Campo label="Descripción del trabajo / joya" value={form.trabajo} onChange={(v) => set("trabajo", v)} placeholder="Ej. Anillo de compromiso" required />
                 <Campo label="Peso" value={form.peso_estimado} onChange={(v) => set("peso_estimado", v)} placeholder="Ej. 4.20 g" />
@@ -534,28 +467,7 @@ function NuevoPedido() {
               </div>
             </section>
 
-            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de producción</h2><p className="mt-1 text-xs text-muted-foreground">Define el recorrido previsto. La producción todavía no se prepara aquí.</p></div></div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                {rutas.map((area) => {
-                  const activa = rutaProduccion.includes(area);
-                  return <label key={area} className={activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted"}>
-                    <input type="checkbox" checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
-                    <span className="text-sm font-semibold">{area}</span>
-                  </label>;
-                })}
-              </div>
-              <p className="mt-3 text-[10px] text-muted-foreground">Puedes dejarla vacía si el recorrido se definirá posteriormente en el Centro Operativo.</p>
-            </section>        <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Referencias del trabajo</h2><p className="mt-1 text-xs text-muted-foreground">Opcionales. Conservan referencias proporcionadas por el cliente o por otra plataforma.</p></div></div>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <Campo label="Cotización externa" value={form.cotizacion_externa} onChange={(v) => set("cotizacion_externa", v)} placeholder="Número de cotización externa" />
-                <Campo label="Contrato externo" value={form.contrato_externo} onChange={(v) => set("contrato_externo", v)} placeholder="Número de contrato externo" />
-                <Campo label="Referencia externa" value={form.referencia_externa} onChange={(v) => set("referencia_externa", v)} placeholder="Código o referencia del cliente" />
-              </div>
-            </section>
-
-            <section className="rounded-[24px] border border-border bg-card shadow-card">
+         <section className="rounded-[24px] border border-border bg-card shadow-card">
               <button type="button" onClick={() => setReferenciasAbiertas((actual) => !actual)} className="flex w-full items-center justify-between gap-4 p-5 text-left sm:p-6" aria-expanded={referenciasAbiertas}>
                 <div className="flex items-start gap-3">
                 <span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ImagePlus className="size-5" /></span>
