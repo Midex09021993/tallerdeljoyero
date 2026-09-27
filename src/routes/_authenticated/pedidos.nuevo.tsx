@@ -196,6 +196,33 @@ function NuevoPedido() {
   });
 
   const sede = sedes.find((s) => s.id === sedeId);
+
+  const { data: capacidadesExternasRuta = {}, error: capacidadesExternasRutaError } = useQuery({
+    queryKey: ["pedidos-nuevo-ruta-capacidades-externas", sedeId],
+    enabled: Boolean(sesion?.esAdmin && sedeId),
+    queryFn: async () => {
+      const resultados = await Promise.all(
+        rutas.map(async (area) => {
+          const { data, error } = await supabase.rpc("listar_participantes_servicio", {
+            _area: area,
+          });
+          if (error) throw error;
+          return [area, data ?? []] as const;
+        }),
+      );
+      return Object.fromEntries(resultados);
+    },
+  });
+
+  const capacidadesInternasRuta = useMemo(() => {
+    const nombres = new Set((capacidades ?? []).map((c: any) => String(c?.nombre ?? c)));
+    return rutas.filter((area) => nombres.has(area));
+  }, [capacidades]);
+
+  const rutasDisponibles = rutas.filter((area) =>
+    capacidadesInternasRuta.includes(area) || (capacidadesExternasRuta[area] ?? []).length > 0,
+  );
+
   const cotizacionSeleccionada = cotizacionesCliente.find((cotizacion) => cotizacion.id === cotizacionId) ?? null;
   const origenComercial: "directo" | "cotizacion" = cotizacionSeleccionada ? "cotizacion" : "directo";
   const totalComercial = cotizacionSeleccionada
@@ -444,12 +471,20 @@ function NuevoPedido() {
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 {rutas.map((area) => {
                   const activa = rutaProduccion.includes(area);
-                  return <label key={area} className={activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted"}>
-                    <input type="checkbox" checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
-                    <span className="text-sm font-semibold">{area}</span>
+                  const interna = capacidadesInternasRuta.includes(area);
+                  const externa = (capacidadesExternasRuta[area] ?? []).length > 0;
+                  const disponible = rutasDisponibles.includes(area);
+                  return <label key={area} className={`${activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : disponible ? "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted" : "flex cursor-not-allowed items-center gap-3 rounded-xl border border-border bg-surface-muted px-4 py-3 opacity-50"}`}>
+                    <input type="checkbox" disabled={!disponible && !activa} checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
+                    <span>
+                      <span className="block text-sm font-semibold">{area}</span>
+                      <span className="block text-[9px] text-muted-foreground">{interna && externa ? "Interna + externa" : interna ? "Capacidad interna" : externa ? "Servicio externo disponible" : "Sin capacidad disponible"}</span>
+                    </span>
                   </label>;
                 })}
               </div>
+              {capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudo consultar el directorio de servicios externos.</p> : null}
+              {!capacidadesExternasRutaError && rutasDisponibles.length === 0 ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">La sede no tiene capacidades internas ni servicios externos disponibles para esta ruta.</p> : null}
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
