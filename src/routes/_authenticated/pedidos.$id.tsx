@@ -679,8 +679,7 @@ function Mini({ icon: Icon, title, value, detail }: { icon: typeof Factory; titl
 
 function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, ordenPrincipal, trabajosCompletos, piezaVerificada, calidadFinalAprobada, transicionando, transicionar, verificarPieza, puedeAsignarResponsable, operarios, participantesPorTrabajo, capacidadesSede, capacidadesSedeError, operariosError, asignandoTrabajoId, asignarResponsable, asignarParticipanteExterno, resultadoCalidad, setResultadoCalidad, tipoCalidad, setTipoCalidad, descripcionCalidad, setDescripcionCalidad, motivoCalidad, setMotivoCalidad, guardandoCalidad, registrarCalidad, cantidadRequerida, preparandoProduccion, prepararProduccion, ruta, participantesPorAreaPreparacion, participantesPreparacionError, preparacionAbierta, abrirPreparacion, cerrarPreparacion, seleccionesExternas, setSeleccionExterna }: { trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; costo: any; loading: boolean; ordenPrincipal: any; trabajosCompletos: boolean; piezaVerificada: boolean; calidadFinalAprobada: boolean; transicionando: boolean; transicionar: (estado: string) => Promise<void>; verificarPieza: (id: string, estado: "verificada"|"liberada"|"rechazada") => Promise<void>; puedeAsignarResponsable: boolean; operarios: { id: string; nombre: string; areas: string[] }[]; participantesPorTrabajo: Record<string, { id: string; nombre: string; tipo_participante?: string | null; especialidad?: string | null }[]>; capacidadesSede: { id: string; nombre: string }[]; capacidadesSedeError: Error | null; operariosError: string | null; asignandoTrabajoId: string | null; asignarResponsable: (trabajoId: string, responsableUserId: string | null) => Promise<void>; asignarParticipanteExterno: (trabajoId: string, participanteId: string | null) => Promise<void>; resultadoCalidad: string; setResultadoCalidad: (v:string)=>void; tipoCalidad:string; setTipoCalidad:(v:string)=>void; descripcionCalidad:string; setDescripcionCalidad:(v:string)=>void; motivoCalidad:string; setMotivoCalidad:(v:string)=>void; guardandoCalidad:boolean; registrarCalidad:()=>Promise<void>; cantidadRequerida:number; preparandoProduccion:boolean; prepararProduccion:(externosSeleccionados?: Record<string,string>)=>Promise<void>; ruta:string[]; participantesPorAreaPreparacion:Record<string,{id:string;nombre:string;tipo_participante?:string|null;especialidad?:string|null}[]>; participantesPreparacionError:string|null; preparacionAbierta:boolean; abrirPreparacion:()=>void; cerrarPreparacion:()=>void; seleccionesExternas:Record<string,string>; setSeleccionExterna:(area:string,participanteId:string)=>void }) {
   const areasExternas = ruta.filter((area) => !capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, area)));
-  const faltanExternos = areasExternas.filter((area) => !seleccionesExternas[area]);
-  const puedeConfirmarPreparacion = ruta.length > 0 && !participantesPreparacionError && faltanExternos.length === 0;
+  const puedeConfirmarPreparacion = ruta.length > 0;
 
   return <div className="space-y-5">
     {preparacionAbierta ? <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -708,13 +707,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                 </div>
                 <span className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase ${interna ? "bg-emerald-500/10 text-emerald-700" : "bg-warning-soft text-warning"}`}>{interna ? "Interna" : "Externa"}</span>
               </div>
-              {!interna ? <div className="mt-4">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Servicio / profesional externo</label>
-                <select value={seleccionesExternas[area] ?? ""} onChange={(e) => setSeleccionExterna(area, e.target.value)} disabled={preparandoProduccion || !participantes.length} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60">
-                  <option value="">{participantes.length ? "Seleccionar..." : "No hay servicios/profesionales compatibles configurados"}</option>
-                  {participantes.map((p) => <option key={p.id} value={p.id}>{p.nombre} · {p.tipo_participante === "organizacion" ? "Taller / organización" : p.tipo_participante === "profesional" ? "Profesional" : p.tipo_participante === "servicio" ? "Servicio especializado" : p.tipo_participante === "proveedor" ? "Proveedor" : p.tipo_participante ?? ""}{p.especialidad ? ` · ${p.especialidad}` : ""}</option>)}
-                </select>
-              </div> : null}
+              {!interna ? <div className="mt-4 rounded-xl border border-border bg-card px-3 py-2.5 text-[10px] text-muted-foreground">La ejecución se definirá en Producción. Allí podrás elegir entre capacidad interna o taller, proveedor o profesional externo.</div> : null}
             </div>;
           })}
         </div>
@@ -722,7 +715,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
         {faltanExternos.length ? <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft p-3 text-xs text-warning">Falta seleccionar ejecución externa para: {faltanExternos.join(", ")}.</p> : null}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={cerrarPreparacion} disabled={preparandoProduccion} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Cancelar</button>
-          <button type="button" disabled={preparandoProduccion || !puedeConfirmarPreparacion} onClick={() => void prepararProduccion(seleccionesExternas)} className="rounded-xl bg-gold px-5 py-2.5 text-xs font-bold text-black disabled:cursor-not-allowed disabled:opacity-50">{preparandoProduccion ? "Preparando producción…" : "Confirmar y preparar producción"}</button>
+          <button type="button" disabled={preparandoProduccion || !puedeConfirmarPreparacion} onClick={() => void prepararProduccion()} className="rounded-xl bg-gold px-5 py-2.5 text-xs font-bold text-black disabled:cursor-not-allowed disabled:opacity-50">{preparandoProduccion ? "Preparando producción…" : "Confirmar y preparar producción"}</button>
         </div>
       </div>
     </div> : null}
