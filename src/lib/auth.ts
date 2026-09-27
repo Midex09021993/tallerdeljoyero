@@ -97,8 +97,36 @@ export function useSesion() {
         participantes = (data ?? []) as Sesion["participantes"];
       }
 
-      const participanteId = participantes[0]?.id ?? perfil?.participante_id ?? null;
-      const participante = participantes.find((p) => p.id === participanteId) ?? null;
+      // Si todavía no existe cuenta explícita en participante_cuentas, usamos
+      // temporalmente profiles.participante_id y luego profiles.sede_id para
+      // resolver el participante canónico. Esto evita perder la identidad visual
+      // durante la migración sin convertir sede_id en fuente de autorización.
+      let participanteResuelto = participantes[0] ?? null;
+
+      if (!participanteResuelto && perfil?.participante_id) {
+        const { data } = await supabase
+          .from("ecosistema_participantes")
+          .select("id, nombre, ciudad, sede_id")
+          .eq("id", perfil.participante_id)
+          .eq("estado", "activo")
+          .maybeSingle();
+        participanteResuelto = (data ?? null) as Sesion["participante"];
+      }
+
+      if (!participanteResuelto && perfil?.sede_id) {
+        const { data } = await supabase
+          .from("ecosistema_participantes")
+          .select("id, nombre, ciudad, sede_id")
+          .eq("sede_id", perfil.sede_id)
+          .eq("estado", "activo")
+          .order("nombre")
+          .limit(1)
+          .maybeSingle();
+        participanteResuelto = (data ?? null) as Sesion["participante"];
+      }
+
+      const participanteId = participanteResuelto?.id ?? null;
+      const participante = participanteResuelto;
 
       // Objeto legacy para componentes que aún muestran el nombre del taller.
       // No se consulta sedes: el dato operativo proviene del participante.
