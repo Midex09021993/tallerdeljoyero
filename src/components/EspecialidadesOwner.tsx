@@ -169,19 +169,20 @@ export function Asignador({ participante, especialidades, onClose }: { participa
   async function guardar() {
     setGuardando(true);
     try {
-      if (participante.sede_id) {
+      const sedeId = participante.sede_id;
+      if (sedeId) {
         const del = await supabase
           .from("sede_especialidades")
           .delete()
-          .eq("sede_id", participante.sede_id);
+          .eq("sede_id", sedeId);
         if (del.error) throw del.error;
         if (ids.length) {
           const { error } = await supabase
             .from("sede_especialidades")
-            .insert(ids.map(especialidad_id => ({ sede_id: participante.sede_id, especialidad_id })));
+            .insert(ids.map(especialidad_id => ({ sede_id: sedeId, especialidad_id })));
           if (error) throw error;
         }
-        await qc.invalidateQueries({ queryKey: ["sede-especialidades", participante.sede_id] });
+        await qc.invalidateQueries({ queryKey: ["sede-especialidades", sedeId] });
         await qc.invalidateQueries({ queryKey: ["menu-capacidades"] });
       } else {
         const del = await supabase.from("participante_especialidades").delete().eq("participante_id", participante.id);
