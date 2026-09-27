@@ -45,6 +45,58 @@ type NuevoUsuario = {
   acceso_hasta?: string | null;
 };
 
+async function resolverParticipantePorSede(supabaseAdmin: any, sedeId: string | null) {
+  if (!sedeId) return null;
+  const { data, error } = await supabaseAdmin
+    .from("ecosistema_participantes")
+    .select("id, sede_id, estado")
+    .eq("sede_id", sedeId)
+    .eq("estado", "activo")
+    .maybeSingle();
+  if (error) throw new Error("No se pudo resolver el taller del usuario");
+  return data ?? null;
+}
+
+async function usuarioComparteParticipante(
+  supabaseAdmin: any,
+  actorUserId: string,
+  targetUserId: string,
+) {
+  const [{ data: actor }, { data: target }] = await Promise.all([
+    supabaseAdmin
+      .from("participante_cuentas")
+      .select("participante_id")
+      .eq("user_id", actorUserId)
+      .eq("estado", "activo"),
+    supabaseAdmin
+      .from("participante_cuentas")
+      .select("participante_id")
+      .eq("user_id", targetUserId)
+      .eq("estado", "activo"),
+  ]);
+  const propios = new Set((actor ?? []).map((x: any) => x.participante_id));
+  return (target ?? []).some((x: any) => propios.has(x.participante_id));
+}
+
+async function asegurarCuentaParticipantePrincipal(
+  supabaseAdmin: any,
+  userId: string,
+  participanteId: string,
+) {
+  const { error } = await supabaseAdmin
+    .from("participante_cuentas")
+    .upsert(
+      {
+        participante_id: participanteId,
+        user_id: userId,
+        relacion: "principal",
+        estado: "activo",
+      },
+      { onConflict: "participante_id,user_id" },
+    );
+  if (error) throw new Error("No se pudo vincular la cuenta con el taller");
+}
+
 function validar(input: NuevoUsuario): NuevoUsuario {
   if (!input.usuario?.trim()) throw new Error("El usuario es obligatorio");
   if (!/^[a-zA-Z0-9._-]{3,50}$/.test(input.usuario.trim())) throw new Error("El usuario debe tener entre 3 y 50 caracteres y sólo puede usar letras, números, punto, guion y guion bajo");
@@ -109,7 +161,12 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
       .eq("nombre", "FADILAB")
       .maybeSingle();
 
-    if (sedeError) throw new Error("No se pudo preparar la sede inicial");
+    if (sedeError || !sede?.id) throw new Error("No se pudo preparar el taller inicial");
+
+    const participante = await resolverParticipantePorSede(supabaseAdmin, sede.id);
+    if (!participante?.id) {
+      throw new Error("El taller FADILAB todavía no está vinculado al ecosistema. Primero debe aplicarse la migración de talleres.");
+    }
 
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
       email: `${data.usuario.trim().toLowerCase()}@taller.local`,
@@ -139,11 +196,18 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
 
     const { error: rolError } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: creado.user.id, role: "dueno", sede_id: sede?.id ?? null });
+      .insert({ user_id: creado.user.id, role: "dueno", sede_id: sede.id });
 
     if (rolError) {
       await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
       throw new Error("No se pudo asignar el rol inicial");
+    }
+
+    try {
+      await asegurarCuentaParticipantePrincipal(supabaseAdmin, creado.user.id, participante.id);
+    } catch (error) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw error;
     }
 
     return { ok: true };
@@ -205,20 +269,28 @@ export const listarUsuarios = createServerFn({ method: "GET" })
       areasMap.set(area.user_id, actuales);
     }
 
-    let sedeGerente: string | null = null;
-    if (esGerente && !esDueno) {
-      const { data: perfilGerente } = await supabaseAdmin
-        .from("profiles")
-        .select("sede_id")
-        .eq("id", context.userId)
-        .maybeSingle();
-      sedeGerente = perfilGerente?.sede_id ?? null;
+    const { data: cuentasParticipantes, error: cuentasParticipantesError } = await supabaseAdmin
+      .from("participante_cuentas")
+      .select("user_id, participante_id, estado")
+      .eq("estado", "activo");
+    if (cuentasParticipantesError) {
+      throw new Error("No se pudo reconciliar la pertenencia de los usuarios a los talleres");
     }
+
+    const participantesPorUsuario = new Map<string, Set<string>>();
+    for (const cuenta of cuentasParticipantes ?? []) {
+      const actuales = participantesPorUsuario.get(cuenta.user_id) ?? new Set<string>();
+      actuales.add(cuenta.participante_id);
+      participantesPorUsuario.set(cuenta.user_id, actuales);
+    }
+
+    const participantesDelGerente = participantesPorUsuario.get(context.userId) ?? new Set<string>();
 
     return authUsers
       .map((authUser) => {
         const perfil = perfilesMap.get(authUser.id);
         const rolesUsuario = rolesMap.get(authUser.id) ?? [];
+        const participanteIds = participantesPorUsuario.get(authUser.id) ?? new Set<string>();
         const sedeId = perfil?.sede_id ?? rolesUsuario.find((r) => r.sede_id)?.sede_id ?? null;
         const usuario =
           perfil?.usuario?.trim() ||
@@ -257,9 +329,9 @@ export const listarUsuarios = createServerFn({ method: "GET" })
       .filter((usuario) => {
         if (esDueno) return true;
         const rolesUsuario = rolesMap.get(usuario.id) ?? [];
+        const participantesUsuario = participantesPorUsuario.get(usuario.id) ?? new Set<string>();
         return !rolesUsuario.some((r) => r.role === "dueno" || r.role === "gerente") &&
-          usuario.sede_id != null &&
-          usuario.sede_id === sedeGerente;
+          [...participantesUsuario].some((id) => participantesDelGerente.has(id));
       });
   });
 
@@ -281,6 +353,25 @@ export const crearUsuario = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id);
+    if (!participanteDestino?.id) {
+      throw new Error("El taller seleccionado no está vinculado al ecosistema");
+    }
+
+    if (!misRoles.includes("dueno")) {
+      const pertenece = await usuarioComparteParticipante(supabaseAdmin, context.userId, context.userId);
+      if (!pertenece) throw new Error("Tu cuenta no está vinculada a ningún taller");
+      const { data: misCuentas } = await supabaseAdmin
+        .from("participante_cuentas")
+        .select("participante_id")
+        .eq("user_id", context.userId)
+        .eq("estado", "activo");
+      if (!(misCuentas ?? []).some((c: any) => c.participante_id === participanteDestino.id)) {
+        throw new Error("No puedes crear usuarios fuera de tu taller");
+      }
+    }
+
     const usuarioNormalizado = data.usuario.trim().toLowerCase();
     const emailNormalizado = `${usuarioNormalizado}@taller.local`;
     const { data: existente } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -325,6 +416,13 @@ export const crearUsuario = createServerFn({ method: "POST" })
       throw new Error("Usuario creado, pero no se pudo asignar el rol");
     }
 
+    try {
+      await asegurarCuentaParticipantePrincipal(supabaseAdmin, creado.user.id, participanteDestino.id);
+    } catch (error) {
+      await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
+      throw error;
+    }
+
     const areasAlta = data.rol === "operario" ? normalizarAreas(data.areas) : [];
     if (areasAlta.length > 0) {
       const { error: errAreas } = await supabaseAdmin
@@ -364,12 +462,8 @@ export const borrarUsuario = createServerFn({ method: "POST" })
       if (destino.includes("dueno") || destino.includes("gerente")) {
         throw new Error("No puedes eliminar a un dueño ni a otro gerente");
       }
-      const [{ data: yo }, { data: otro }] = await Promise.all([
-        admin.from("profiles").select("sede_id").eq("id", context.userId).maybeSingle(),
-        admin.from("profiles").select("sede_id").eq("id", data.id).maybeSingle(),
-      ]);
-      if (!yo?.sede_id || yo.sede_id !== otro?.sede_id) {
-        throw new Error("Sólo puedes eliminar usuarios de tu sede");
+      if (!(await usuarioComparteParticipante(admin, context.userId, data.id))) {
+        throw new Error("Sólo puedes eliminar usuarios de un taller al que perteneces");
       }
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -429,10 +523,8 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       if ((destinoRoles ?? []).some((r) => r.role === "dueno" || r.role === "gerente")) {
         return { ok: false, error: "Un gerente sólo puede editar personal operativo de su sede" };
       }
-      const { data: miPerfil } = await supabaseAdmin.from("profiles").select("sede_id").eq("id", context.userId).maybeSingle();
-      const sedeDestino = data.sede_id ?? (destinoRoles ?? []).find((r) => r.sede_id)?.sede_id ?? null;
-      if (!miPerfil?.sede_id || sedeDestino !== miPerfil.sede_id) {
-        return { ok: false, error: "Sólo puedes editar usuarios de tu sede" };
+      if (!(await usuarioComparteParticipante(supabaseAdmin, context.userId, data.id))) {
+        return { ok: false, error: "Sólo puedes editar usuarios de un taller al que perteneces" };
       }
     }
     const { data: authActual, error: authActualError } = await supabaseAdmin.auth.admin.getUserById(data.id);
@@ -460,10 +552,21 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
 
     const { error: errRolDelete } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
     if (errRolDelete) return { ok: false, error: errRolDelete.message };
+    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id);
+    if (!participanteDestino?.id) {
+      return { ok: false, error: "El taller seleccionado no está vinculado al ecosistema" };
+    }
+
     const { error: errRolInsert } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: data.id, role: data.rol, sede_id: data.sede_id });
     if (errRolInsert) return { ok: false, error: errRolInsert.message };
+
+    try {
+      await asegurarCuentaParticipantePrincipal(supabaseAdmin, data.id, participanteDestino.id);
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "No se pudo vincular el usuario al taller" };
+    }
 
     const { error: errAreasDelete } = await supabaseAdmin.from("user_areas").delete().eq("user_id", data.id);
     if (errAreasDelete) return { ok: false, error: errAreasDelete.message };
