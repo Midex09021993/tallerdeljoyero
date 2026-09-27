@@ -367,17 +367,37 @@ export function AppShell({
 
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/80 to-transparent" aria-hidden="true" />
-              <div className="scrollbar-hidden flex gap-2 overflow-x-auto pb-1 pr-8">
-              {visiblesOrdenadas.map((s) => (
-                <Link
-                  key={s.to}
-                  to={s.to}
-                  className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-                  activeProps={{ className: "bg-gold/10 text-gold-deep border-gold/20" }}
-                >
-                  {s.label}
-                </Link>
-              ))}
+              <div className="scrollbar-hidden flex gap-5 overflow-x-auto pb-1 pr-8">
+                {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
+                  const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
+                  if (!items.length) return null;
+                  const nombres = {
+                    principal: "Principal",
+                    comercial: "Comercial",
+                    produccion: "Producción",
+                    inventario: "Inventario",
+                    aurum: "AURUM Studio",
+                    herramientas: "Herramientas",
+                    administracion: "Administración",
+                  } as const;
+                  return (
+                    <div key={grupo} className="shrink-0">
+                      <p className="mb-2 px-1 text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{nombres[grupo]}</p>
+                      <div className="flex gap-2">
+                        {items.map((s) => (
+                          <Link
+                            key={s.to}
+                            to={s.to}
+                            className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
+                            activeProps={{ className: "bg-gold/10 text-gold-deep border-gold/20" }}
+                          >
+                            {s.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </nav>
