@@ -288,6 +288,7 @@ begin
   create index if not exists gastos_participante_idx on public.gastos(participante_id);
   create index if not exists inventario_participante_idx on public.inventario(participante_id);
   create index if not exists inventario_joyas_participante_idx on public.inventario_joyas(participante_id);
+  create index if not exists inventario_joyas_importaciones_participante_idx on public.inventario_joyas_importaciones(participante_id);
   create index if not exists ordenes_produccion_participante_idx on public.ordenes_produccion(participante_id);
   create index if not exists pedidos_participante_idx on public.pedidos(participante_id);
   create index if not exists perfiles_participante_idx on public.profiles(participante_id);
@@ -298,6 +299,21 @@ begin
 
   -- 6. Verificación: ningún registro que antes pertenecía a una sede
   -- puede quedar sin su participante equivalente.
+  -- sede_especialidades no recibe participante_id: es una relación N:N
+  -- de compatibilidad y su equivalente canónico es participante_especialidades.
+  if exists (
+    select 1
+    from public.ecosistema_participantes ep
+    join public.sedes s on s.id = ep.sede_id
+    join public.sede_especialidades se on se.sede_id = s.id
+    left join public.participante_especialidades pe
+      on pe.participante_id = ep.id
+     and pe.especialidad_id = se.especialidad_id
+    where pe.participante_id is null
+  ) then
+    raise exception 'Consolidacion abortada: existen capacidades de sede sin equivalente en participante_especialidades';
+  end if;
+
   select count(*)
     into v_missing
   from (
