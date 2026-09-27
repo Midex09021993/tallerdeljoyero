@@ -1,5 +1,13 @@
 -- Unifica las capacidades de una sede integrada con su participante en Ecosistema.
--- sede_especialidades es la fuente de verdad para organizaciones que representan una sede.
+-- sede_especialidades es la fuente de verdad durante la compatibilidad.
+-- La identidad canonica futura sera participante_id.
+
+alter table public.ecosistema_participantes
+  add column if not exists sede_id uuid references public.sedes(id) on delete set null;
+
+create unique index if not exists ecosistema_participantes_sede_unq
+  on public.ecosistema_participantes(sede_id)
+  where sede_id is not null;
 
 create or replace function public.sincronizar_especialidades_participante_sede()
 returns trigger
