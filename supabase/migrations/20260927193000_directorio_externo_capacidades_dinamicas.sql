@@ -33,7 +33,7 @@ begin
     on e.id = pe.especialidad_id
   where ep.estado = 'activo'
     and e.activa = true
-    and e.categoria = 'Producción'
+    and lower(trim(e.categoria)) like 'producción%'
     and (
       nullif(trim(_area), '') is null
       or lower(
@@ -114,7 +114,7 @@ begin
         on e.id = pe.especialidad_id
       where pe.participante_id = _participante_id
         and e.activa = true
-        and e.categoria = 'Producción'
+        and lower(trim(e.categoria)) like 'producción%'
         and lower(
           regexp_replace(
             translate(coalesce(e.nombre, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
