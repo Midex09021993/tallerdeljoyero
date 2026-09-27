@@ -8,11 +8,12 @@ language sql
 stable
 security definer
 set search_path = public
-as $$
+as $
   select pc.participante_id
   from public.participante_cuentas pc
   join public.ecosistema_participantes ep on ep.id = pc.participante_id
-  where pc.user_id = _user_id
+  where pc.user_id = auth.uid()
+    and _user_id = auth.uid()
     and pc.estado = 'activo'
     and ep.estado = 'activo'
   order by pc.created_at asc
@@ -30,7 +31,8 @@ as $$
     select 1
     from public.participante_cuentas pc
     join public.ecosistema_participantes ep on ep.id = pc.participante_id
-    where pc.user_id = _user_id
+    where pc.user_id = auth.uid()
+      and _user_id = auth.uid()
       and pc.participante_id = _participante_id
       and pc.estado = 'activo'
       and ep.estado = 'activo'
@@ -49,7 +51,8 @@ as $$
   select ep.sede_id
   from public.participante_cuentas pc
   join public.ecosistema_participantes ep on ep.id = pc.participante_id
-  where pc.user_id = _user_id
+  where pc.user_id = auth.uid()
+    and _user_id = auth.uid()
     and pc.estado = 'activo'
     and ep.estado = 'activo'
   order by pc.created_at asc
@@ -64,14 +67,14 @@ security definer
 set search_path = public
 as $$
   select
-    public.has_role(_user_id, 'dueno')
+    public.has_role(auth.uid(), 'dueno')
     or _sede_id is null
     or exists (
       select 1
       from public.ecosistema_participantes ep
       where ep.sede_id = _sede_id
         and ep.estado = 'activo'
-        and public.tiene_participante(_user_id, ep.id)
+        and public.tiene_participante(auth.uid(), ep.id)
     )
 $$;
 
