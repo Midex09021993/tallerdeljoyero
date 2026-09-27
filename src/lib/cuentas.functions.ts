@@ -539,6 +539,11 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       return { ok: false, error: "Ese usuario ya pertenece a otra cuenta" };
     }
 
+    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id, data.participante_id ?? null);
+    if (!participanteDestino?.id) {
+      return { ok: false, error: "El taller seleccionado no está vinculado al ecosistema" };
+    }
+
     const { error: errPerfil } = await supabaseAdmin.from("profiles").upsert({
       id: data.id,
       usuario: usuarioNormalizado,
@@ -546,8 +551,8 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       apellidos: data.apellidos,
       dni: data.dni,
       telefono: data.telefono,
-      sede_id: participanteDestino?.sede_id ?? data.sede_id,
-      participante_id: participanteDestino?.id ?? data.participante_id ?? null,
+      sede_id: participanteDestino.sede_id ?? data.sede_id,
+      participante_id: participanteDestino.id,
       activo: data.activo,
       acceso_desde: data.acceso_desde,
       acceso_hasta: data.acceso_hasta,
@@ -556,10 +561,6 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
 
     const { error: errRolDelete } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
     if (errRolDelete) return { ok: false, error: errRolDelete.message };
-    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id, data.participante_id ?? null);
-    if (!participanteDestino?.id) {
-      return { ok: false, error: "El taller seleccionado no está vinculado al ecosistema" };
-    }
 
     const { error: errRolInsert } = await supabaseAdmin
       .from("user_roles")
