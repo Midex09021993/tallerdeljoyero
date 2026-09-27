@@ -348,7 +348,7 @@ function LoginPage() {
                   <div className="rounded-2xl border border-gold/20 bg-gold/[0.06] p-5">
                     <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Flujo principal</p>
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {["Cliente","Proyecto Joya","Cotización","Pedido","Preparar producción","Orden de producción","Trabajos","Piezas","Control de calidad","Producción terminada","Entrega"].map((item,i)=><span key={item} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white">{item}{i<10?<ArrowRight className="size-3 text-gold"/>:null}</span>)}
+                      {["Cliente","Proyecto","Cotización","Pedido","Preparar producción","Orden de producción","Trabajos","Piezas","Control de calidad","Producción terminada","Entrega"].map((item,i)=><span key={item} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white">{item}{i<10?<ArrowRight className="size-3 text-gold"/>:null}</span>)}
                     </div>
                     <p className="mt-5 text-xs leading-relaxed text-white/55">Comercial organiza el proyecto, la cotización y el pedido; producción coordina las órdenes, los trabajos y las piezas; inventario acompaña las compras, los materiales y los movimientos. Las herramientas técnicas y AURUM Render se conectan cuando aportan al proyecto.</p>
                   </div>
