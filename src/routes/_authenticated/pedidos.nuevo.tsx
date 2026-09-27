@@ -290,10 +290,6 @@ function NuevoPedido() {
       toast.error("No se pudieron consultar todas las capacidades disponibles para la ruta.");
       return;
     }
-    if (tipoOperacion === "fabricacion" && rutaProduccion.some((area) => !rutasDisponibles.includes(area))) {
-      toast.error("La ruta contiene un área que ya no tiene capacidad interna ni servicio externo disponible.");
-      return;
-    }
     if (origenComercial === "cotizacion" && !cotizacionSeleccionada) {
       toast.error("Selecciona una cotización aprobada para que el origen comercial quede registrado automáticamente.");
       return;
@@ -503,7 +499,7 @@ function NuevoPedido() {
                   const externa = (capacidadesExternasRuta[area] ?? []).length > 0;
                   const disponible = rutasDisponibles.includes(area);
                   return <label key={area} className={`${activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : disponible ? "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted" : "flex cursor-not-allowed items-center gap-3 rounded-xl border border-border bg-surface-muted px-4 py-3 opacity-50"}`}>
-                    <input type="checkbox" disabled={!disponible && !activa} checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
+                    <input type="checkbox" checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
                     <span>
                       <span className="block text-sm font-semibold">{area}</span>
                       <span className="block text-[9px] text-muted-foreground">{interna && externa ? "Interna + externa" : interna ? "Capacidad interna" : externa ? "Servicio externo disponible" : "Sin capacidad disponible"}</span>
@@ -512,7 +508,7 @@ function NuevoPedido() {
                 })}
               </div>
               {capacidadesSedeRutaError || capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudieron consultar todas las capacidades disponibles para la ruta.</p> : null}
-              {!capacidadesSedeRutaError && !capacidadesExternasRutaError && rutasDisponibles.length === 0 ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">La sede no tiene capacidades internas ni servicios externos disponibles para esta ruta.</p> : null}
+              {!capacidadesSedeRutaError && !capacidadesExternasRutaError && rutasDisponibles.length === 0 ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">No hay capacidad interna ni servicio externo configurado todavía. Puedes seleccionar igualmente la ruta; la ejecución se distribuirá en Producción.</p> : null}
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
