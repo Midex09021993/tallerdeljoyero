@@ -79,28 +79,28 @@ function PedidoDetalle() {
     queryKey: ["pedidos-trabajos", id],
     enabled: Boolean(id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,sede_id,created_at").eq("pedido_id", id).order("created_at");
+      const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,sede_id,especialidad_id,especialidades(nombre,categoria),created_at").eq("pedido_id", id).order("created_at");
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     },
   });
 
-  const { data: participantesServicio = [], error: participantesServicioError } = useQuery({
-    queryKey: ["pedidos-participantes-servicio", trabajos.map((t) => t.area).join("|")],
+  const { data: participantesPorTrabajo = {}, error: participantesServicioError } = useQuery({
+    queryKey: ["pedidos-participantes-servicio", trabajos.map((t) => `${t.id}:${t.area}:${t.especialidad_id ?? ""}`).join("|")],
     enabled: Boolean(sesion?.esAdmin && trabajos.length > 0),
     queryFn: async () => {
-      if (!sesion?.esAdmin || trabajos.length === 0) return [];
-      const areas = [...new Set(trabajos.map((t) => String(t.area || "").trim()).filter(Boolean))];
+      if (!sesion?.esAdmin || trabajos.length === 0) return {};
       const resultados = await Promise.all(
-        areas.map(async (area) => {
-          const { data, error } = await supabase.rpc("listar_participantes_servicio", { _area: area });
+        trabajos.map(async (trabajo) => {
+          const { data, error } = await supabase.rpc("listar_participantes_servicio", {
+            _area: String(trabajo.area || "").trim(),
+            _especialidad_id: trabajo.especialidad_id ?? null,
+          });
           if (error) throw error;
-          return data ?? [];
+          return [trabajo.id, data ?? []] as const;
         }),
       );
-      const porId = new Map<string, (typeof resultados[number])[number]>();
-      resultados.flat().forEach((p) => porId.set(p.id, p));
-      return [...porId.values()];
+      return Object.fromEntries(resultados);
     },
   });
 
@@ -114,8 +114,9 @@ function PedidoDetalle() {
       if (!sedeProduccionId || !sesion?.esAdmin) return [];
       const { data, error } = await supabase
         .from("sede_especialidades")
-        .select("especialidad_id, especialidades!inner(nombre)")
-        .eq("sede_id", sedeProduccionId);
+        .select("especialidad_id, especialidades!inner(nombre,categoria)")
+        .eq("sede_id", sedeProduccionId)
+        .eq("especialidades.categoria", "Producción");
       if (error) throw error;
       return (data ?? [])
         .map((row: any) => ({
@@ -616,16 +617,14 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
       <div className="mt-4 space-y-2">
         {trabajos.length ? trabajos.map((t) => {
           const tieneCapacidadInterna = capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, t.area));
-          const externosCompatibles = participantesServicio.filter((p) =>
-            (p.especialidad || "").split(" · ").some((e) => areaCoincide(e, t.area)),
-          );
+          const externosCompatibles = participantesPorTrabajo[t.id] ?? [];
           const mostrarExternos = !tieneCapacidadInterna || Boolean(t.participante_id);
           return (
             <div key={t.id} className="flex flex-col gap-3 rounded-xl border border-border bg-surface-sunken p-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{t.titulo}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t.area} · {t.prioridad || "normal"} · {t.estado}
+                  {t.area}{t.especialidades?.nombre ? ` · ${t.especialidades.nombre}` : ""} · {t.prioridad || "normal"} · {t.estado}
                 </p>
               </div>
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[300px]">
@@ -633,7 +632,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                 {tieneCapacidadInterna && !t.participante_id ? (
                   <div className="rounded-xl border border-border bg-card px-3 py-2.5">
                     <p className="text-sm font-semibold">Taller propio</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">La sede tiene habilitada la capacidad {t.area}.</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">La sede tiene habilitada la capacidad {t.area}{t.especialidades?.nombre ? ` · ${t.especialidades.nombre}` : ""}.</p>
                   </div>
                 ) : puedeAsignarResponsable ? (
                   <>
