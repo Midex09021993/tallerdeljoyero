@@ -1,5 +1,7 @@
--- Hacer el directorio externo robusto ante acentos y diferencias de escritura.
--- La capacidad productiva debe coincidir semánticamente con el área solicitada.
+-- Directorio externo dinámico por capacidad productiva.
+-- La fuente de verdad es participante_especialidades + especialidades.
+-- Se normaliza el nombre de la capacidad para tolerar acentos, espacios y
+-- separadores sin convertir capacidades distintas en equivalentes.
 create or replace function public.listar_participantes_servicio(
   _area text default null
 )
@@ -31,10 +33,26 @@ begin
     on e.id = pe.especialidad_id
   where ep.estado = 'activo'
     and e.activa = true
+    and e.categoria = 'Producción'
     and (
       nullif(trim(_area), '') is null
-      or lower(trim(translate(e.nombre, 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN')))
-         = lower(trim(translate(_area, 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN')))
+      or lower(
+        regexp_replace(
+          translate(coalesce(e.nombre, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
+          '[^a-z0-9]+',
+          '',
+          'g'
+        )
+      )
+      =
+      lower(
+        regexp_replace(
+          translate(coalesce(_area, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
+          '[^a-z0-9]+',
+          '',
+          'g'
+        )
+      )
     )
   group by ep.id, ep.nombre, ep.tipo_participante
   order by ep.nombre;
@@ -46,7 +64,7 @@ revoke all on function public.listar_participantes_servicio(text) from public, a
 grant execute on function public.listar_participantes_servicio() to authenticated;
 grant execute on function public.listar_participantes_servicio(text) to authenticated;
 
--- La misma regla debe proteger la asignación final del trabajo.
+-- La misma regla protege la asignación final del trabajo.
 create or replace function public.asignar_participante_externo_trabajo(
   _trabajo_id uuid,
   _participante_id uuid
@@ -96,8 +114,24 @@ begin
         on e.id = pe.especialidad_id
       where pe.participante_id = _participante_id
         and e.activa = true
-        and lower(trim(translate(e.nombre, 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN')))
-            = lower(trim(translate(v_trabajo.area, 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN')))
+        and e.categoria = 'Producción'
+        and lower(
+          regexp_replace(
+            translate(coalesce(e.nombre, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
+            '[^a-z0-9]+',
+            '',
+            'g'
+          )
+        )
+        =
+        lower(
+          regexp_replace(
+            translate(coalesce(v_trabajo.area, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
+            '[^a-z0-9]+',
+            '',
+            'g'
+          )
+        )
     ) then
       raise exception 'El participante externo no tiene configurada la especialidad %', v_trabajo.area;
     end if;
