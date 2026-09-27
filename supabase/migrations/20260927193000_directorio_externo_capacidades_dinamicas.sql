@@ -43,9 +43,7 @@ begin
 end;
 $$;
 
-revoke all on function public.listar_participantes_servicio() from public, anon;
 revoke all on function public.listar_participantes_servicio(text) from public, anon;
-grant execute on function public.listar_participantes_servicio() to authenticated;
 grant execute on function public.listar_participantes_servicio(text) to authenticated;
 
 -- La misma regla protege la asignación final del trabajo.
