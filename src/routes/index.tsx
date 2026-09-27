@@ -289,7 +289,7 @@ function LandingPage() {
           </div>
 
           <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {[
+            {([
               [Calculator, "Yeso / Agua", "Proporciones para mezclas de joyería."],
               [Gem, "Aleación de Oro", "Cálculo de aleaciones y ley final."],
               [Sparkles, "Conversor de Tallas", "Equivalencias entre escalas de anillos."],
