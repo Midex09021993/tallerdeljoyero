@@ -415,7 +415,17 @@ function NuevoPedido() {
       toast.success(`Pedido ${resultado?.referencia ?? nuevo.referencia} creado correctamente.`);
       navigate({ to: "/pedidos/$id", params: { id: resultado.id } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo crear el pedido.");
+      const detalle = error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null
+          ? [
+              "message" in error ? String(error.message ?? "") : "",
+              "details" in error ? String(error.details ?? "") : "",
+              "hint" in error ? String(error.hint ?? "") : "",
+              "code" in error ? `Código ${String(error.code ?? "")}` : "",
+            ].filter(Boolean).join(" · ")
+          : String(error ?? "Error desconocido");
+      toast.error(detalle || "No se pudo crear el pedido.");
     }
   };
 
