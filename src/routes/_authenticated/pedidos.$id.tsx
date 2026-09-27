@@ -72,28 +72,6 @@ function PedidoDetalle() {
 
   const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
 
-  const { data: capacidadesExternasRuta = {}, error: capacidadesExternasRutaError } = useQuery({
-    queryKey: ["pedidos-ruta-capacidades-externas", sedeProduccionId],
-    enabled: Boolean(sesion?.esAdmin && sedeProduccionId),
-    queryFn: async () => {
-      const resultados = await Promise.all(
-        rutas.map(async (area) => {
-          const { data, error } = await supabase.rpc("listar_participantes_servicio", {
-            _area: area,
-          });
-          if (error) throw error;
-          return [area, data ?? []] as const;
-        }),
-      );
-      return Object.fromEntries(resultados);
-    },
-  });
-
-  const rutasDisponibles = rutas.filter((area) =>
-    capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, area)) ||
-    (capacidadesExternasRuta[area] ?? []).length > 0,
-  );
-
   useEffect(() => {
     if (!pedido) return;
     setRuta((Array.isArray(pedido.ruta) ? pedido.ruta : []).filter((area: string) => rutas.includes(area)));
@@ -152,6 +130,28 @@ function PedidoDetalle() {
         .filter((row) => row.nombre);
     },
   });
+
+  const { data: capacidadesExternasRuta = {}, error: capacidadesExternasRutaError } = useQuery({
+    queryKey: ["pedidos-ruta-capacidades-externas", sedeProduccionId],
+    enabled: Boolean(sesion?.esAdmin && sedeProduccionId),
+    queryFn: async () => {
+      const resultados = await Promise.all(
+        rutas.map(async (area) => {
+          const { data, error } = await supabase.rpc("listar_participantes_servicio", {
+            _area: area,
+          });
+          if (error) throw error;
+          return [area, data ?? []] as const;
+        }),
+      );
+      return Object.fromEntries(resultados);
+    },
+  });
+
+  const rutasDisponibles = rutas.filter((area) =>
+    capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, area)) ||
+    (capacidadesExternasRuta[area] ?? []).length > 0,
+  );
 
   const { data: participantesPorAreaPreparacion = {}, error: participantesPreparacionError } = useQuery({
     queryKey: ["preparacion-participantes", sedeProduccionId, ruta.join("|")],
