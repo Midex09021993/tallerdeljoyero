@@ -110,10 +110,11 @@ Deno.serve(async (req) => {
         .maybeSingle(),
     ]);
 
-    const esAdmin = (roles ?? []).some((r: any) => r.role === "dueno" || r.role === "gerente");
+    const esDueno = (roles ?? []).some((r: any) => r.role === "dueno");
+    const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
     const participante = (cuenta as any)?.ecosistema_participantes;
     const mismaSede = !!contrato.sede_id && !!participante?.sede_id && contrato.sede_id === participante.sede_id;
-    if (!esAdmin && !mismaSede) {
+    if (!esDueno && (!esGerente || !mismaSede)) {
       return json({ error: "No tienes acceso a este contrato." }, 403);
     }
 
