@@ -31,7 +31,6 @@ import {
   useCrearGasto,
   useGastos,
   useGuardarConfigArea,
-  useGuardarSede,
   useInventario,
   usePedidos,
   useSedes,
@@ -95,7 +94,6 @@ type Modulo =
   | "respaldo"
   | "automatizacion"
   | "usuarios"
-  | "sedes"
   | "calculadoras"
   | "aurumRender"
   | "solicitudesAcceso"
@@ -142,7 +140,6 @@ function GestionPage() {
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
     { id: "capacidades", label: "Capacidades del taller", visible: puedeUsuarios },
     { id: "comercial", label: "Comercial · identidad y contratos", visible: puedeUsuarios },
-    { id: "sedes", label: "Sedes", visible: esDueno },
     { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
     { id: "aurumRender", label: "AURUM Render", visible: esDueno },
     { id: "solicitudesAcceso", label: "Solicitudes de acceso", visible: esDueno },
@@ -203,8 +200,7 @@ function GestionPage() {
       {modulo === "usuarios" && puedeUsuarios ? (
         <ModuloUsuarios esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
       ) : null}
-      {modulo === "sedes" && esDueno ? <ModuloSedes /> : null}
-      {modulo === "calculadoras" && esDueno ? <ConfiguracionCalculadoras /> : null}
+       {modulo === "calculadoras" && esDueno ? <ConfiguracionCalculadoras /> : null}
       {modulo === "aurumRender" && esDueno ? <AurumRenderConfig /> : null}
       {modulo === "solicitudesAcceso" && esDueno ? <SolicitudesAccesoOwner /> : null}
       {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
@@ -1898,92 +1894,5 @@ function EditorUsuario({
         </button>
       </div>
     </form>
-  );
-}
-
-/* ---------------- Sedes ---------------- */
-
-function ModuloSedes() {
-  const { data: sedes = [] } = useSedes();
-  const guardar = useGuardarSede();
-  const [nueva, setNueva] = useState({ nombre: "", ciudad: "", modo: "completo" });
-
-  return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
-      <Panel titulo="Nueva sede">
-        <form
-          className="space-y-3 p-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            guardar.mutate(nueva, {
-              onSuccess: () => {
-                toast.success("Sede creada");
-                setNueva({ nombre: "", ciudad: "", modo: "completo" });
-              },
-              onError: (err) => toast.error(err instanceof Error ? err.message : "Error"),
-            });
-          }}
-        >
-          <input
-            className={inputCls}
-            placeholder="Nombre de la sede"
-            value={nueva.nombre}
-            onChange={(e) => setNueva({ ...nueva, nombre: e.target.value })}
-            required
-          />
-          <input
-            className={inputCls}
-            placeholder="Ciudad"
-            value={nueva.ciudad}
-            onChange={(e) => setNueva({ ...nueva, ciudad: e.target.value })}
-          />
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-          >
-            Crear sede
-          </button>
-        </form>
-      </Panel>
-
-      <Panel titulo="Sedes del grupo">
-        <ul className="divide-y divide-border">
-          {sedes.map((s) => (
-            <li key={s.id} className="grid gap-3 px-6 py-4 sm:grid-cols-2 sm:items-center">
-              <input
-                className={inputCls}
-                defaultValue={s.nombre}
-                onBlur={(e) =>
-                  e.target.value !== s.nombre &&
-                  guardar.mutate({
-                    id: s.id,
-                    nombre: e.target.value,
-                    ciudad: s.ciudad,
-                    modo: s.modo,
-                  })
-                }
-              />
-              <input
-                className={inputCls}
-                defaultValue={s.ciudad}
-                placeholder="Ciudad"
-                onBlur={(e) =>
-                  e.target.value !== s.ciudad &&
-                  guardar.mutate({
-                    id: s.id,
-                    nombre: s.nombre,
-                    ciudad: e.target.value,
-                    modo: s.modo,
-                  })
-                }
-              />
-            </li>
-          ))}
-          {sedes.length === 0 ? (
-            <li className="px-6 py-6 text-sm text-muted-foreground">Sin sedes.</li>
-          ) : null}
-        </ul>
-      </Panel>
-    </div>
   );
 }
