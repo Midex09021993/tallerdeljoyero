@@ -31,15 +31,11 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function getSupabaseConfig() {
-  // Lovable Cloud should inject these values. Keep the connected production
-  // backend as a public-client fallback so the app still starts when the
-  // build environment does not expose the VITE_* variables.
-  const SUPABASE_URL =
-    (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ||
-    "https://zziynehbcclmwhletack.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY =
-    (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_P6XZlEmgVbjKm53tre_DJA_pdDG-Jzm";
+  // Lovable Cloud is the sole source of the production Supabase connection.
+  // Never fall back to a hardcoded project: a missing variable must fail clearly
+  // instead of silently connecting the application to the wrong backend.
+  const SUPABASE_URL = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
