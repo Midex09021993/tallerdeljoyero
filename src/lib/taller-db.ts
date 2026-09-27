@@ -1390,6 +1390,24 @@ export function useCrearPedido() {
         if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
         pedidoCreadoId = data.id;
         await upsertPedidoComercial(data.id, pedidoConContexto);
+
+        const anticipoInicial = Math.max(0, Number(pedidoConContexto.a_cuenta) || 0);
+        if (origenComercial === "directo" && anticipoInicial > 0 && contratoDirecto?.creado && contratoDirecto.id) {
+          const { data: usuarioActual } = await supabase.auth.getUser();
+          if (!usuarioActual.user?.id) {
+            throw new Error("No se pudo identificar al usuario que registra el anticipo.");
+          }
+          const { error: errorAnticipo } = await supabase.from("contrato_pagos").insert({
+            contrato_id: contratoDirecto.id,
+            contrato_numero: contratoDirecto.numero,
+            fecha: new Date().toISOString().slice(0, 10),
+            concepto: "Anticipo inicial del pedido",
+            monto: anticipoInicial,
+            usuario_id: usuarioActual.user.id,
+          });
+          if (errorAnticipo) throw errorAnticipo;
+        }
+
         return data;
       } catch (error) {
         // Compensación para no dejar un documento financiero huérfano si falla
