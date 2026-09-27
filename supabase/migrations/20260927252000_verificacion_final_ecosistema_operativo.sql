@@ -73,7 +73,7 @@ begin
     select id from public.clientes where sede_id is not null and participante_id is null
     union all select id from public.config_areas where sede_id is not null and participante_id is null
     union all select id from public.contratos where sede_id is not null and participante_id is null
-    union all select id from public.cotizacion_numeradores where sede_id is not null and participante_id is null
+    union all select gen_random_uuid() from public.cotizacion_numeradores where sede_id is not null and participante_id is null
     union all select id from public.cotizaciones where sede_id is not null and participante_id is null
     union all select id from public.gastos where sede_id is not null and participante_id is null
     union all select id from public.inventario where sede_id is not null and participante_id is null
