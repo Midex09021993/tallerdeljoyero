@@ -29,7 +29,7 @@ export const Route = createFileRoute("/auth")({
 function LoginPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data: sesion } = useSesion();
+  const { data: sesion, refetch: refetchSesion } = useSesion();
   const { data: estado } = useQuery({
     queryKey: ["sistema-vacio"],
     queryFn: () => sistemaSinDuenos(),
@@ -77,7 +77,11 @@ function LoginPage() {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) throw new Error("Usuario o contraseña incorrectos");
       await qc.invalidateQueries();
-      navigate({ to: "/" });
+      const { data: sesionActualizada, error: errorSesion } = await refetchSesion();
+      if (errorSesion || !sesionActualizada) {
+        throw new Error("La sesión se creó, pero no se pudo resolver el acceso al taller");
+      }
+      navigate({ to: inicioSegunRol(sesionActualizada, { movilTablet: esVistaMovilTablet() }), replace: true });
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : "No se pudo iniciar sesión");
     } finally {
