@@ -106,7 +106,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     const { data: sede, error: sedeError } = await supabaseAdmin
       .from("sedes")
       .select("id")
-      .eq("nombre", "Gerencia general")
+      .eq("nombre", "FADILAB")
       .maybeSingle();
 
     if (sedeError) throw new Error("No se pudo preparar la sede inicial");
