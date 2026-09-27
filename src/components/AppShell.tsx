@@ -230,7 +230,11 @@ export function AppShell({
     capacidadesCargadas ? capacidadesMenu : undefined,
   );
   const visiblesOrdenadas = ordenarMenu(visibles);
-  const inicial = (sesion?.perfil.nombre || "?").charAt(0).toUpperCase();
+  const nombreVisible = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
+    .map((valor) => valor?.trim())
+    .filter(Boolean)
+    .join(" ") || sesion?.perfil.usuario?.trim() || sesion?.user.email?.trim() || "Usuario";
+  const inicial = nombreVisible.charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
 
   return (
@@ -288,7 +292,7 @@ export function AppShell({
                 {inicial}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
+                <p className="truncate text-xs font-medium">{nombreVisible}</p>
                 <p className="truncate text-[10px] text-ink-foreground/40">
                   {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
                 </p>
@@ -351,7 +355,7 @@ export function AppShell({
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-xs font-medium">{sesion?.perfil.nombre || "Usuario"}</p>
+                <p className="truncate text-xs font-medium">{nombreVisible}</p>
                 <p className="truncate text-[10px] text-muted-foreground">
                   {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
                 </p>
