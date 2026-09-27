@@ -137,8 +137,8 @@ Deno.serve(async (req) => {
       quote.proyecto_joya_id
         ? admin.from("proyectos_joya").select("codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras,cantidad_piezas").eq("id", quote.proyecto_joya_id).maybeSingle()
         : Promise.resolve({ data: null }),
-      quote.sede_id
-        ? admin.from("sedes").select("nombre").eq("id", quote.sede_id).maybeSingle()
+      quote.participante_id
+        ? admin.from("ecosistema_participantes").select("nombre").eq("id", quote.participante_id).maybeSingle()
         : Promise.resolve({ data: null }),
       quote.identidad_comercial_id
         ? admin.from("identidades_comerciales").select("nombre_comercial,razon_social,ruc,logo_url").eq("id", quote.identidad_comercial_id).maybeSingle()
