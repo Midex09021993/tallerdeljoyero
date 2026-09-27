@@ -50,10 +50,13 @@ export function usePushDueno(sesion: Sesion | null | undefined) {
   return {estado, cargando, paso, mensaje, activar};
 }
 const etiquetaErrorPaso: Partial<Record<PasoPush, string>> = {validando: "Validación del navegador", "notification-api": "Notification API", permiso: "Permiso del navegador", "service-worker": "Service Worker", "push-manager": "PushManager", vapid: "Clave VAPID", "vapid-conversion": "Conversión VAPID", supabase: "Guardado en Supabase", "edge-function": "Error Edge Function"};
-export async function notificarNuevoPedidoADueno(pedido: Pick<Pedido, "id" | "referencia" | "cliente" | "sede_id">) {
+export async function notificarNuevoPedidoADueno(pedido: Pick<Pedido, "id" | "referencia" | "cliente" | "sede_id" | "participante_id">) {
   try {
     let sede = "";
-    if (pedido.sede_id) { const {data} = await supabase.from("sedes").select("nombre").eq("id", pedido.sede_id).maybeSingle(); sede = data?.nombre ?? ""; }
+    if (pedido.participante_id) {
+      const {data} = await supabase.from("ecosistema_participantes").select("nombre").eq("id", pedido.participante_id).maybeSingle();
+      sede = data?.nombre ?? "";
+    }
     const {data: {user}} = await supabase.auth.getUser();
     let registrado_por = "";
     if (user?.id) { const {data} = await supabase.from("profiles").select("nombre").eq("id", user.id).maybeSingle(); registrado_por = data?.nombre ?? ""; }
