@@ -56,23 +56,22 @@ function ClientesPage() {
     const esDueno = Boolean(sesion.esDueno);
     const clientesQuery = supabase
       .from("clientes")
-      .select("id,nombre,telefono,email,estado,created_at,sede_id")
+      .select("id,nombre,telefono,email,estado,created_at,sede_id,participante_id")
       .order("nombre");
     const { data: clientesData, error: clientesError } = esDueno
       ? await clientesQuery
       : await clientesQuery.eq("sede_id", sesion.sede.id);
     if (clientesError) throw clientesError;
 
-    const sedeIds = [...new Set((clientesData ?? []).map((cliente) => cliente.sede_id).filter(Boolean))];
-    const { data: sedesData, error: sedesError } = sedeIds.length
-      ? await supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+    const participanteIds = [...new Set((clientesData ?? []).map((cliente) => cliente.participante_id).filter(Boolean))];
+    const { data: participantesData, error: participantesError } = participanteIds.length
+      ? await supabase.from("ecosistema_participantes").select("id,nombre").in("id", participanteIds)
       : { data: [], error: null };
-    if (sedesError) throw sedesError;
-
-    const sedeNombrePorId = new Map((sedesData ?? []).map((sede) => [sede.id, sede.nombre]));
+    if (participantesError) throw participantesError;
+    const participanteNombrePorId = new Map((participantesData ?? []).map((p) => [p.id, p.nombre]));
     const clientesConSede = (clientesData ?? []).map((cliente) => ({
       ...cliente,
-      sede_nombre: sedeNombrePorId.get(cliente.sede_id) ?? "Sede no identificada",
+      sede_nombre: participanteNombrePorId.get(cliente.participante_id) ?? "Taller no identificado",
     })) as Cliente[];
 
     setClientes(clientesConSede);
