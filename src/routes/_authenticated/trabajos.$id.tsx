@@ -61,7 +61,6 @@ function TrabajoOperativoPage() {
   const [relojAhora, setRelojAhora] = useState(Date.now());
   const [especialidadSeleccionada, setEspecialidadSeleccionada] = useState("");
   const [guardandoEspecialidad, setGuardandoEspecialidad] = useState(false);
-  useEffect(() => { setEspecialidadSeleccionada(trabajo?.especialidad_id ?? ""); }, [trabajo?.especialidad_id]);
 
   const { data: sesionesTiempo = [] } = useQuery({
     queryKey: ["trabajo-tiempos", id],
@@ -263,6 +262,8 @@ function TrabajoOperativoPage() {
     () => archivosPedido.filter((a) => a.es_vigente_fabricacion),
     [archivosPedido],
   );
+
+  useEffect(() => { setEspecialidadSeleccionada(trabajo?.especialidad_id ?? ""); }, [trabajo?.especialidad_id]);
 
   const guardarEspecialidad = async () => {
     if (!sesion?.esAdmin || !trabajo || guardandoEspecialidad) return;
