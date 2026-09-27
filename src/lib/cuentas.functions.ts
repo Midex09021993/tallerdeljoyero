@@ -40,19 +40,20 @@ type NuevoUsuario = {
   telefono: string;
   rol: "dueno" | "gerente" | "operario" | "monitor" | "cliente";
   sede_id: string | null;
+  participante_id?: string | null;
   areas: string[];
   acceso_desde?: string | null;
   acceso_hasta?: string | null;
 };
 
-async function resolverParticipantePorSede(supabaseAdmin: any, sedeId: string | null) {
-  if (!sedeId) return null;
-  const { data, error } = await supabaseAdmin
+async function resolverParticipantePorSede(supabaseAdmin: any, sedeId: string | null, participanteId: string | null = null) {
+  if (!sedeId && !participanteId) return null;
+  let query = supabaseAdmin
     .from("ecosistema_participantes")
     .select("id, sede_id, estado")
-    .eq("sede_id", sedeId)
-    .eq("estado", "activo")
-    .maybeSingle();
+    .eq("estado", "activo");
+  query = participanteId ? query.eq("id", participanteId) : query.eq("sede_id", sedeId);
+  const { data, error } = await query.maybeSingle();
   if (error) throw new Error("No se pudo resolver el taller del usuario");
   return data ?? null;
 }
@@ -155,15 +156,14 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
       throw new Error("El sistema ya tiene usuarios registrados");
     }
 
-    const { data: sede, error: sedeError } = await supabaseAdmin
-      .from("sedes")
-      .select("id")
+    const { data: participante, error: participanteError } = await supabaseAdmin
+      .from("ecosistema_participantes")
+      .select("id, sede_id, estado")
       .eq("nombre", "FADILAB")
+      .eq("estado", "activo")
       .maybeSingle();
 
-    if (sedeError || !sede?.id) throw new Error("No se pudo preparar el taller inicial");
-
-    const participante = await resolverParticipantePorSede(supabaseAdmin, sede.id);
+    if (participanteError || !participante?.id) throw new Error("No se pudo preparar el taller inicial");
     if (!participante?.id) {
       throw new Error("El taller FADILAB todavía no está vinculado al ecosistema. Primero debe aplicarse la migración de talleres.");
     }
@@ -186,7 +186,8 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
       apellidos: data.apellidos,
       dni: data.dni,
       telefono: data.telefono,
-      sede_id: sede?.id ?? null,
+      sede_id: participante.sede_id ?? null,
+      participante_id: participante.id,
     });
 
     if (perfilError) {
@@ -196,7 +197,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
 
     const { error: rolError } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: creado.user.id, role: "dueno", sede_id: sede.id });
+      .insert({ user_id: creado.user.id, role: "dueno", sede_id: participante.sede_id, participante_id: participante.id });
 
     if (rolError) {
       await supabaseAdmin.auth.admin.deleteUser(creado.user.id);
@@ -354,7 +355,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id);
+    const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id, data.participante_id ?? null);
     if (!participanteDestino?.id) {
       throw new Error("El taller seleccionado no está vinculado al ecosistema");
     }
@@ -399,7 +400,8 @@ export const crearUsuario = createServerFn({ method: "POST" })
       apellidos: data.apellidos,
       dni: data.dni,
       telefono: data.telefono,
-      sede_id: data.sede_id,
+      sede_id: participanteDestino.sede_id ?? data.sede_id,
+      participante_id: participanteDestino.id,
       acceso_desde: data.acceso_desde ?? null,
       acceso_hasta: data.acceso_hasta ?? null,
     });
