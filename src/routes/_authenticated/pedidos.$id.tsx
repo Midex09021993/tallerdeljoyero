@@ -324,28 +324,7 @@ function PedidoDetalle() {
       if (error) throw error;
       const resultado = data as { numero?: string; trabajos?: number; piezas?: number; externos_pendientes?: number } | null;
 
-      // Las operaciones externas deben quedar resueltas antes de liberar la OP.
-      const { data: trabajosPreparados, error: trabajosPreparadosError } = await supabase
-        .from("trabajos")
-        .select("id,area,tipo,participante_id")
-        .eq("pedido_id", pedido.id);
-
-      if (trabajosPreparadosError) throw trabajosPreparadosError;
-
-      for (const trabajo of trabajosPreparados ?? []) {
-        if (trabajo.tipo !== "externo" || trabajo.participante_id) continue;
-        const participanteId = externosSeleccionados[String(trabajo.area || "")];
-        if (!participanteId) {
-          throw new Error(`La operación ${trabajo.area} requiere seleccionar un taller, proveedor o profesional externo.`);
-        }
-        const { error: participanteError } = await supabase.rpc("asignar_participante_externo_trabajo", {
-          _trabajo_id: trabajo.id,
-          _participante_id: participanteId,
-        });
-        if (participanteError) throw participanteError;
-      }
-
-      // Preparar producción y liberar la OP forman una sola decisión:
+      // La ruta solo define qué áreas deben intervenir.\n      // La distribución interna o externa se resuelve posteriormente en Producción.\n\n      // Preparar producción y liberar la OP forman una sola decisión:
       // una vez definida la ruta, el pedido queda listo para entrar al flujo productivo.
       const { data: opCreada, error: opCreadaError } = await supabase
         .from("ordenes_produccion")
@@ -530,7 +509,7 @@ function PedidoDetalle() {
         {([["resumen","Resumen",ClipboardList],["produccion","Producción",Factory],["comercial","Comercial",UserRound],["archivos","Archivos",FileText],["historial","Historial",History]] as const).map(([idTab,label,Icon]) => <button key={idTab} type="button" onClick={() => setTab(idTab)} className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold ${tab === idTab ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground"}`}><Icon className="size-4" />{label}</button>)}
       </div>
 
-      {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} capacidadesSede={capacidadesSede} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (capacidadesExternasRutaError) { toast.error("No se puede guardar la ruta mientras no se pueda consultar el directorio externo."); return; } if (ruta.some((area) => !rutasDisponibles.includes(area))) { toast.error("La ruta contiene un área sin capacidad interna ni servicio externo disponible."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} rutasDisponibles={rutasDisponibles} capacidadesExternasRuta={capacidadesExternasRuta} capacidadesExternasRutaError={capacidadesExternasRutaError?.message ?? null} /> : null}
+      {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} capacidadesSede={capacidadesSede} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (capacidadesExternasRutaError) { toast.error("No se puede guardar la ruta mientras no se pueda consultar el directorio externo."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} rutasDisponibles={rutasDisponibles} capacidadesExternasRuta={capacidadesExternasRuta} capacidadesExternasRutaError={capacidadesExternasRutaError?.message ?? null} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} participantesPorTrabajo={participantesPorTrabajo} capacidadesSede={capacidadesSede} capacidadesSedeError={capacidadesSedeError} operariosError={operariosError?.message ?? participantesServicioError?.message ?? null} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} asignarParticipanteExterno={asignarParticipanteExterno} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} ruta={ruta} capacidadesSede={capacidadesSede} participantesPorAreaPreparacion={participantesPorAreaPreparacion} participantesPreparacionError={participantesPreparacionError?.message ?? null} preparacionAbierta={preparacionAbierta} abrirPreparacion={abrirPreparacion} cerrarPreparacion={() => setPreparacionAbierta(false)} seleccionesExternas={seleccionesExternas} setSeleccionExterna={(area, participanteId) => setSeleccionesExternas((actual) => ({ ...actual, [area]: participanteId }))} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} contrato={contratoFinanciero} pagos={pagosContrato} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
@@ -635,8 +614,8 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, pue
   const disponible = rutasDisponibles.includes(area);
   const seleccionada = ruta.includes(area);
   return (
-    <button key={area} type="button" disabled={!puedeEditarRuta || (!disponible && !seleccionada)} onClick={() => toggleRuta(area)}
-      className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${seleccionada ? "border-gold bg-gold/10 text-foreground" : disponible ? "border-border bg-background text-muted-foreground hover:bg-surface-muted" : "border-danger/20 bg-danger/5 text-danger"}`}>
+    <button key={area} type="button" disabled={!puedeEditarRuta} onClick={() => toggleRuta(area)}
+      className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${seleccionada ? "border-gold bg-gold/10 text-foreground" : disponible ? "border-border bg-background text-muted-foreground hover:bg-surface-muted" : "border-border bg-surface-muted text-muted-foreground hover:bg-surface-muted"}`}>
       <span>
         <span className="block">{area}</span>
         <span className="mt-1 block text-[9px] font-normal">
@@ -649,7 +628,7 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, pue
 })}
         </div>
         {capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudo consultar el directorio de servicios externos.</p> : null}
-        {ruta.some((area) => !rutasDisponibles.includes(area)) ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Hay áreas seleccionadas cuya capacidad interna y externa ya no está disponible. Resuelve esa capacidad antes de preparar la producción.</p> : null}
+        {ruta.some((area) => !rutasDisponibles.includes(area)) ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Hay áreas sin capacidad interna o servicio externo configurado. Puedes mantenerlas en la ruta; la ejecución se definirá posteriormente en Producción.</p> : null}
         {ruta.length ? <div className="mt-4 rounded-xl bg-surface-muted p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Orden de recorrido</p><p className="mt-1 text-xs font-semibold">{ruta.map((area, index) => `${index + 1}. ${area}`).join("  →  ")}</p></div> : <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Este pedido aún no tiene una ruta de fabricación. Debes definirla antes de preparar la producción.</p>}
         {puedeEditarRuta ? <div className="mt-4 flex justify-end"><button type="button" disabled={guardandoRuta || !ruta.length} onClick={() => void guardarRuta()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50">{guardandoRuta ? "Guardando ruta…" : "Guardar ruta"}</button></div> : null}
         {!puedeEditarRuta && ordenes.length ? <p className="mt-3 text-[10px] text-muted-foreground">La ruta queda bloqueada después de preparar la producción para conservar la trazabilidad.</p> : null}
@@ -710,7 +689,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">Preparación de producción</p>
             <h3 className="mt-1 font-display text-2xl">Revisar ruta de fabricación</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Antes de crear la OP, verifica qué áreas serán internas y qué operaciones requieren un servicio externo.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Antes de crear la OP, verifica la ruta. La distribución interna o externa se definirá posteriormente en Producción.</p>
           </div>
           <button type="button" onClick={cerrarPreparacion} disabled={preparandoProduccion} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-50">Cerrar</button>
         </div>
@@ -724,7 +703,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">{index + 1}</span>
                   <div>
                     <p className="text-sm font-bold">{area}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{interna ? "La sede tiene esta capacidad. La ejecución será interna." : "La sede no tiene esta capacidad. Debe seleccionarse un taller, proveedor o profesional externo."}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{interna ? "La sede tiene esta capacidad. La ejecución será interna." : "La sede no tiene esta capacidad interna. En Producción podrás asignar un taller, proveedor o profesional externo."}</p>
                   </div>
                 </div>
                 <span className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase ${interna ? "bg-emerald-500/10 text-emerald-700" : "bg-warning-soft text-warning"}`}>{interna ? "Interna" : "Externa"}</span>
