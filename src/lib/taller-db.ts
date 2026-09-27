@@ -310,6 +310,8 @@ export type Pedido = {
   a_cuenta: number;
   saldo: number;
   sede_id: string | null;
+  participante_id: string | null;
+  participante_nombre: string | null;
   sede_nombre: string | null;
   telefono: string;
   origen: string;
