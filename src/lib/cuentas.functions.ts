@@ -320,6 +320,131 @@ export const aprobarSolicitudAcceso = createServerFn({ method: "POST" })
     return { ok: true, participanteId: participante.id, creado: true };
   });
 
+
+/**
+ * Invita al responsable de una solicitud aprobada y deja su cuenta
+ * vinculada al participante. El responsable recibe el enlace de alta
+ * por correo y queda como gerente del taller, no como dueño global.
+ */
+export const invitarResponsableSolicitudAcceso = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { solicitudId: string }) => input)
+  .handler(async ({ data, context }) => {
+    if (!data.solicitudId) throw new Error("Solicitud no válida");
+
+    const { data: roles, error: rolesError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (rolesError) throw new Error("No se pudo verificar tu rol");
+    if (!(roles ?? []).some((r) => r.role === "dueno")) {
+      throw new Error("Sólo el Dueño puede invitar al responsable de un taller");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: solicitud, error: solicitudError } = await supabaseAdmin
+      .from("solicitudes_acceso")
+      .select("id, nombre, email, telefono, estado, participante_id")
+      .eq("id", data.solicitudId)
+      .maybeSingle();
+
+    if (solicitudError) throw new Error("No se pudo consultar la solicitud");
+    if (!solicitud) throw new Error("La solicitud ya no existe");
+    if (solicitud.estado !== "aprobada" || !solicitud.participante_id) {
+      throw new Error("Primero debes aprobar la solicitud y crear su participante");
+    }
+
+    const email = solicitud.email?.trim().toLowerCase();
+    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      throw new Error("La solicitud no tiene un correo válido para enviar la invitación");
+    }
+
+    const { data: participante, error: participanteError } = await supabaseAdmin
+      .from("ecosistema_participantes")
+      .select("id, sede_id, nombre, estado")
+      .eq("id", solicitud.participante_id)
+      .maybeSingle();
+    if (participanteError || !participante) throw new Error("El participante de la solicitud no existe");
+    if (participante.estado !== "activo") throw new Error("El participante del taller no está activo");
+
+    const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (authUsersError) throw new Error("No se pudo comprobar si el correo ya tiene una cuenta");
+    const existente = authUsers.users.find((u) => (u.email ?? "").toLowerCase() === email);
+
+    if (existente) {
+      const { data: cuentaExistente } = await supabaseAdmin
+        .from("participante_cuentas")
+        .select("id, estado")
+        .eq("participante_id", participante.id)
+        .eq("user_id", existente.id)
+        .maybeSingle();
+      if (cuentaExistente?.estado === "activo") {
+        throw new Error("El responsable ya tiene una cuenta activa vinculada a este taller");
+      }
+      throw new Error("Ese correo ya pertenece a una cuenta del sistema. Debe vincularse o editarse desde Usuarios, no crear otra cuenta.");
+    }
+
+    const { data: invitado, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: {
+        nombre: solicitud.nombre,
+        telefono: solicitud.telefono ?? null,
+        participante_id: participante.id,
+        sede_id: participante.sede_id ?? null,
+        rol: "gerente",
+      },
+    });
+
+    if (inviteError || !invitado.user) {
+      throw new Error(inviteError?.message ?? "No se pudo enviar la invitación");
+    }
+
+    const userId = invitado.user.id;
+    const cleanup = async () => {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+    };
+
+    const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
+      id: userId,
+      usuario: email.split("@")[0].slice(0, 50),
+      nombre: solicitud.nombre,
+      apellidos: "",
+      dni: "",
+      telefono: solicitud.telefono ?? "",
+      sede_id: participante.sede_id ?? null,
+      participante_id: participante.id,
+      activo: true,
+    });
+
+    if (perfilError) {
+      await cleanup();
+      throw new Error("Se envió la invitación, pero no se pudo crear el perfil del responsable");
+    }
+
+    const { error: rolError } = await supabaseAdmin.from("user_roles").insert({
+      user_id: userId,
+      role: "gerente",
+      sede_id: participante.sede_id ?? null,
+      participante_id: participante.id,
+    });
+
+    if (rolError) {
+      await supabaseAdmin.from("profiles").delete().eq("id", userId);
+      await cleanup();
+      throw new Error("Se envió la invitación, pero no se pudo asignar el rol del responsable");
+    }
+
+    try {
+      await asegurarCuentaParticipantePrincipal(supabaseAdmin, userId, participante.id);
+    } catch (error) {
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+      await supabaseAdmin.from("profiles").delete().eq("id", userId);
+      await cleanup();
+      throw error;
+    }
+
+    return { ok: true, userId, participanteId: participante.id, email };
+  });
+
 /** Lista las cuentas reales de Auth y las reconcilia con los datos administrativos. */
 export const listarUsuarios = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
