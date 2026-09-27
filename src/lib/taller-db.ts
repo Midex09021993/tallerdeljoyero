@@ -1343,7 +1343,7 @@ export function useCrearPedido() {
             throw new Error("La venta directa debe tener un importe mayor que cero.");
           }
 
-          const numero = `VD-${pedidoConContexto.referencia}`;
+          const numero = pedidoConContexto.contrato?.trim() || `VD-${pedidoConContexto.referencia}`;
           contratoDirecto = await asegurarContratoComercial({
             numero,
             cliente: pedidoConContexto.cliente,
