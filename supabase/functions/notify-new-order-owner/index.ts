@@ -55,24 +55,33 @@ Deno.serve(async (req) => {
     const pedidoId = String(payload.pedido_id ?? "");
 
     let sedeIdPedido = "";
+    let participanteIdPedido = "";
     if (!prueba && pedidoId) {
-      const { data: pedido } = await admin.from("pedidos").select("id, referencia, cliente, sede_id").eq("id", pedidoId).maybeSingle();
+      const { data: pedido } = await admin.from("pedidos").select("id, referencia, cliente, sede_id, participante_id").eq("id", pedidoId).maybeSingle();
       if (pedido) {
         referencia ||= pedido.referencia ?? "";
         cliente ||= pedido.cliente ?? "";
         sedeIdPedido = pedido.sede_id ?? "";
+        participanteIdPedido = pedido.participante_id ?? "";
       }
     }
 
     if (!sedeNombre) {
-      let sedeId = sedeIdPedido;
-      if (!sedeId) {
-        const { data: perfilSede } = await admin.from("profiles").select("sede_id").eq("id", userId).maybeSingle();
-        sedeId = perfilSede?.sede_id ?? "";
+      let participanteId = participanteIdPedido;
+      if (!participanteId) {
+        const { data: cuentaActor } = await admin
+          .from("participante_cuentas")
+          .select("participante_id")
+          .eq("user_id", userId)
+          .eq("estado", "activo")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        participanteId = cuentaActor?.participante_id ?? "";
       }
-      if (sedeId) {
-        const { data: sede } = await admin.from("sedes").select("nombre").eq("id", sedeId).maybeSingle();
-        sedeNombre = sede?.nombre ?? "";
+      if (participanteId) {
+        const { data: participante } = await admin.from("ecosistema_participantes").select("nombre").eq("id", participanteId).maybeSingle();
+        sedeNombre = participante?.nombre ?? "";
       }
     }
 
@@ -83,8 +92,8 @@ Deno.serve(async (req) => {
 
     let ownerIds: string[] = [];
 
-    let participanteId = "";
-    if (sedeIdPedido) {
+    let participanteId = participanteIdPedido;
+    if (!participanteId && sedeIdPedido) {
       const { data: participante } = await admin
         .from("ecosistema_participantes")
         .select("id")
