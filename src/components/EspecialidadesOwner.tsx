@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 type Especialidad = { id: string; nombre: string; categoria: string | null; activa: boolean };
-type Participante = { id: string; nombre: string; razon_social: string | null };
+type Participante = { id: string; nombre: string; razon_social: string | null; sede_id?: string | null };
 type Relacion = { participante_id: string; especialidad_id: string };
 
 export function EspecialidadesOwner() {
@@ -29,7 +29,7 @@ export function EspecialidadesOwner() {
   const { data: participantes = [] } = useQuery({
     queryKey: ["ecosistema-participantes"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("ecosistema_participantes").select("id,nombre,razon_social").order("nombre");
+      const { data, error } = await supabase.from("ecosistema_participantes").select("id,nombre,razon_social,sede_id").order("nombre");
       if (error) throw error;
       return (data ?? []) as Participante[];
     },
@@ -118,10 +118,26 @@ export function Asignador({ participante, especialidades, onClose }: { participa
   const qc = useQueryClient();
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const fuenteKey = participante.sede_id ? "sede" : "participante";
   const { data: actuales = [], isLoading } = useQuery({
-    queryKey: ["participante-especialidades", participante.id],
+    queryKey: ["participante-especialidades", participante.id, fuenteKey],
     queryFn: async () => {
-      const { data, error } = await supabase.from("participante_especialidades").select("participante_id,especialidad_id").eq("participante_id", participante.id);
+      if (participante.sede_id) {
+        const { data, error } = await supabase
+          .from("sede_especialidades")
+          .select("sede_id,especialidad_id")
+          .eq("sede_id", participante.sede_id);
+        if (error) throw error;
+        return (data ?? []).map((r) => ({
+          participante_id: participante.id,
+          especialidad_id: r.especialidad_id,
+        })) as Relacion[];
+      }
+
+      const { data, error } = await supabase
+        .from("participante_especialidades")
+        .select("participante_id,especialidad_id")
+        .eq("participante_id", participante.id);
       if (error) throw error;
       return (data ?? []) as Relacion[];
     },
@@ -141,14 +157,31 @@ export function Asignador({ participante, especialidades, onClose }: { participa
   async function guardar() {
     setGuardando(true);
     try {
-      const del = await supabase.from("participante_especialidades").delete().eq("participante_id", participante.id);
-      if (del.error) throw del.error;
-      if (ids.length) {
-        const { error } = await supabase.from("participante_especialidades").insert(ids.map(especialidad_id => ({ participante_id: participante.id, especialidad_id })));
-        if (error) throw error;
+      if (participante.sede_id) {
+        const del = await supabase
+          .from("sede_especialidades")
+          .delete()
+          .eq("sede_id", participante.sede_id);
+        if (del.error) throw del.error;
+        if (ids.length) {
+          const { error } = await supabase
+            .from("sede_especialidades")
+            .insert(ids.map(especialidad_id => ({ sede_id: participante.sede_id, especialidad_id })));
+          if (error) throw error;
+        }
+        await qc.invalidateQueries({ queryKey: ["sede-especialidades", participante.sede_id] });
+        await qc.invalidateQueries({ queryKey: ["menu-capacidades"] });
+      } else {
+        const del = await supabase.from("participante_especialidades").delete().eq("participante_id", participante.id);
+        if (del.error) throw del.error;
+        if (ids.length) {
+          const { error } = await supabase.from("participante_especialidades").insert(ids.map(especialidad_id => ({ participante_id: participante.id, especialidad_id })));
+          if (error) throw error;
+        }
       }
       toast.success("Especialidades asignadas");
       await qc.invalidateQueries({ queryKey: ["participante-especialidades", participante.id] });
+      await qc.invalidateQueries({ queryKey: ["preparacion-participantes"] });
       await qc.invalidateQueries({ queryKey: ["preparacion-participantes"] });
       onClose();
     } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudieron guardar"); }
@@ -157,7 +190,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
 
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-xl">
-      <div className="border-b border-border p-5"><p className="text-lg font-semibold">Especialidades · {participante.nombre}</p><p className="text-xs text-muted-foreground">Selecciona las capacidades que este participante puede ofrecer.</p></div>
+      <div className="border-b border-border p-5"><p className="text-lg font-semibold">Especialidades · {participante.nombre}</p><p className="text-xs text-muted-foreground">{participante.sede_id ? "Este participante representa una sede integrada. Las capacidades se toman de la configuración de la sede y son la misma fuente que usa Gerencia." : "Selecciona las capacidades que este participante puede ofrecer."}</p></div>
       <div className="grid gap-2 p-5 sm:grid-cols-2">{opciones.filter(e => e.activa).map(e => <label key={e.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"><input type="checkbox" checked={ids.includes(e.id)} onChange={ev => setSeleccionadas((ids.includes(e.id) ? ids.filter(x => x !== e.id) : [...ids, e.id]))} /><span><span className="block text-sm">{e.nombre}</span><span className="text-xs text-muted-foreground">{e.categoria || "Sin categoría"}</span></span></label>)}</div>
       {isLoading ? <p className="px-5 pb-3 text-xs text-muted-foreground">Cargando asignaciones…</p> : null}
       <div className="flex justify-end gap-2 border-t border-border p-5"><Button variant="outline" onClick={onClose}>Cancelar</Button><Button disabled={guardando || isLoading} onClick={() => void guardar()}>{guardando ? "Guardando…" : `Guardar (${ids.length})`}</Button></div>
