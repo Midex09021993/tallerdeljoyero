@@ -38,6 +38,8 @@ const CAPACIDADES_ADMINISTRACION = [
   "Migración",
 ] as const;
 
+const SUBCAPACIDADES_TALLER = ["Engaste", "Pulido", "Grabado"] as const;
+
 export function CapacidadesSedeAdmin({
   sedeId,
   sedeNombre,
@@ -119,6 +121,23 @@ export function CapacidadesSedeAdmin({
   }, [especialidades]);
 
   function cambiar(id: string, activo: boolean) {
+    const especialidad = especialidades.find((e) => e.id === id)?.nombre ?? "";
+    const idsSubtaller = new Set(
+      especialidades
+        .filter((e) => SUBCAPACIDADES_TALLER.includes(e.nombre as (typeof SUBCAPACIDADES_TALLER)[number]))
+        .map((e) => e.id),
+    );
+
+    if (activo) {
+      if (especialidad === "Taller") {
+        setSeleccionadas(ids.filter((x) => x !== id && !idsSubtaller.has(x)));
+        return;
+      }
+
+      const taller = especialidades.find((e) => e.nombre === "Taller");
+      if (taller && !ids.includes(taller.id) && idsSubtaller.has(id)) return;
+    }
+
     setSeleccionadas(activo ? ids.filter((x) => x !== id) : [...ids, id]);
   }
 
@@ -142,7 +161,7 @@ export function CapacidadesSedeAdmin({
         if (error) throw error;
       }
 
-      toast.success("Capacidades del taller actualizadas");
+      toast.success("Capacidades de la sede actualizadas");
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["sede-especialidades", sedeId] }),
@@ -206,6 +225,13 @@ export function CapacidadesSedeAdmin({
             <div className="space-y-2">
               {items.map((e) => {
                 const activo = ids.includes(e.id);
+                const esSubcapacidadTaller = SUBCAPACIDADES_TALLER.includes(
+                  e.nombre as (typeof SUBCAPACIDADES_TALLER)[number],
+                );
+                const taller = especialidades.find((item) => item.nombre === "Taller");
+                const tallerActivo = taller ? ids.includes(taller.id) : false;
+                const subcapacidadBloqueada = esSubcapacidadTaller && !tallerActivo;
+
                 return (
                   <label
                     key={e.id}
@@ -214,11 +240,15 @@ export function CapacidadesSedeAdmin({
                     <input
                       type="checkbox"
                       checked={activo}
-                      disabled={guardando}
+                      disabled={guardando || subcapacidadBloqueada}
                       onChange={() => cambiar(e.id, activo)}
                     />
                     <span className="text-sm">{e.nombre}</span>
-                    {categoria === "Producción" ? (
+                    {esSubcapacidadTaller ? (
+                      <span className="ml-auto text-[10px] font-semibold uppercase text-muted-foreground">
+                        {subcapacidadBloqueada ? "Requiere Taller" : "Subcapacidad"}
+                      </span>
+                    ) : categoria === "Producción" ? (
                       <span
                         className={
                           activo
