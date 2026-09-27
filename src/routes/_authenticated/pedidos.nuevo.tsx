@@ -165,7 +165,6 @@ function NuevoPedido() {
   const [clienteId, setClienteId] = useState("");
   const [cotizacionId, setCotizacionId] = useState("");
   const [tipoOperacion, setTipoOperacion] = useState<"fabricacion" | "reparacion" | "venta_stock">("fabricacion");
-  const [contratoId, setContratoId] = useState("");
   const [sedeId, setSedeId] = useState(sesion?.perfil.sede_id ?? sedes[0]?.id ?? "");
   const { data: cotizacionesCliente = [], isFetching: buscandoCotizaciones } = useQuery({
     queryKey: ["pedidos-nuevo-cotizaciones", clienteId, sedeId],
@@ -177,20 +176,6 @@ function NuevoPedido() {
         .eq("cliente_id", clienteId)
         .eq("sede_id", sedeId)
         .eq("estado", "aprobada")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  const { data: contratosCliente = [] } = useQuery({
-    queryKey: ["pedidos-nuevo-contratos", clienteId, sedeId, cotizacionId],
-    enabled: Boolean(clienteId && sedeId && cotizacionId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contratos")
-        .select("id,numero,origen,cotizacion_id,total,abonado,sede_id")
-        .eq("sede_id", sedeId)
-        .eq("cotizacion_id", cotizacionId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -212,7 +197,6 @@ function NuevoPedido() {
 
   const sede = sedes.find((s) => s.id === sedeId);
   const cotizacionSeleccionada = cotizacionesCliente.find((cotizacion) => cotizacion.id === cotizacionId) ?? null;
-  const contratoSeleccionado = contratosCliente.find((contrato) => contrato.id === contratoId) ?? null;
   const origenComercial: "directo" | "cotizacion" = cotizacionSeleccionada ? "cotizacion" : "directo";
   const totalComercial = cotizacionSeleccionada
     ? Math.max(0, Number(cotizacionSeleccionada.total) || 0)
@@ -237,20 +221,7 @@ function NuevoPedido() {
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   useEffect(() => {
-    if (!clienteId || !cotizacionId) {
-      setContratoId("");
-      set("contrato", "");
-      return;
-    }
-    if (contratoId && !contratosCliente.some((contrato) => contrato.id === contratoId)) {
-      setContratoId("");
-      set("contrato", "");
-    }
-  }, [clienteId, cotizacionId, contratoId, contratosCliente]);
-
-  useEffect(() => {
     setCotizacionId("");
-    setContratoId("");
     set("contrato", "");
   }, [sedeId]);
 
@@ -278,10 +249,6 @@ function NuevoPedido() {
     }
     if (anticipoComercial > totalComercial) {
       toast.error("El anticipo no puede ser mayor que el precio total.");
-      return;
-    }
-    if (contratoSeleccionado && contratoSeleccionado.sede_id && contratoSeleccionado.sede_id !== sedeId) {
-      toast.error("El documento comercial pertenece a otro taller. Selecciona el taller correcto.");
       return;
     }
 
@@ -446,7 +413,7 @@ function NuevoPedido() {
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Identificación del pedido</h2><p className="mt-1 text-xs text-muted-foreground">Define qué joya entra al sistema y a quién pertenece.</p></div></div>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setCotizacionId(""); setContratoId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
+                <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setCotizacionId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
   {!clienteId && clienteBusqueda.trim().length >= 2 ? <div className="mt-1 min-h-5 text-[11px]">
     {clientePredictivo ? <button type="button" onClick={async () => {
         setClienteId(clientePredictivo.id);
