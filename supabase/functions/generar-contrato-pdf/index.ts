@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
 
     const { data: contrato, error: contratoError } = await admin
       .from("contratos")
-      .select("id,numero,version,cliente,telefono,origen,total,abonado,saldo,sede_id,notas,cotizacion_id,identidad_comercial_id,plantilla_contrato_id,plantilla_version,estado_firma")
+      .select("id,numero,version,cliente,telefono,origen,total,abonado,saldo,sede_id,participante_id,notas,cotizacion_id,identidad_comercial_id,plantilla_contrato_id,plantilla_version,estado_firma")
       .eq("id", contratoId)
       .maybeSingle();
 
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     const esDueno = (roles ?? []).some((r: any) => r.role === "dueno");
     const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
     const participante = (cuenta as any)?.ecosistema_participantes;
-    const mismaSede = !!contrato.sede_id && !!participante?.sede_id && contrato.sede_id === participante.sede_id;
+    const mismoParticipante = !!contrato.participante_id && !!participante?.participante_id && contrato.participante_id === participante.participante_id;
     if (!esDueno && (!esGerente || !mismaSede)) {
       return json({ error: "No tienes acceso a este contrato." }, 403);
     }
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
     if (contrato.cotizacion_id) {
       const { data } = await admin
         .from("cotizaciones")
-        .select("id,numero,version,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,identidad_comercial_id,identidad_comercial,notas_cliente")
+        .select("id,numero,version,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,participante_id,identidad_comercial_id,identidad_comercial,notas_cliente")
         .eq("id", contrato.cotizacion_id)
         .maybeSingle();
       cotizacion = data;
