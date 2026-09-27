@@ -199,8 +199,7 @@ function NuevoPedido() {
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
-    origen: "", canal_captacion: "", contrato: "", importe_directo: "", a_cuenta: "", notas: "",
-    cotizacion_externa: "", contrato_externo: "", referencia_externa: "",
+    origen: "", contrato: "", importe_directo: "", a_cuenta: "", notas: "",
   });
   const [rutaProduccion, setRutaProduccion] = useState<string[]>([]);
   const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
@@ -288,8 +287,6 @@ function NuevoPedido() {
 
     const nuevo: PedidoNuevo = {
       origen_comercial: origenComercial,
-      tipo_operacion: tipoOperacion,
-      canal_captacion: form.canal_captacion.trim() || null,
       referencia: siguienteReferencia(sede?.nombre ?? "Taller", pedidos.map((p) => p.referencia)),
       pieza: form.trabajo.trim(),
       trabajo: form.trabajo.trim(),
@@ -298,7 +295,6 @@ function NuevoPedido() {
       contrato_id: contratoId || null,
       cotizacion_id: cotizacionId || null,
       proyecto_joya_id: cotizacionSeleccionada?.proyecto_joya_id ?? null,
-      especificaciones_comerciales: { cotizacion_externa: form.cotizacion_externa.trim() || null, contrato_externo: form.contrato_externo.trim() || null, referencia_externa: form.referencia_externa.trim() || null },
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
