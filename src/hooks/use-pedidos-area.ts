@@ -30,7 +30,7 @@ const ESTADOS_TRABAJO_ACTIVOS: TrabajoBandeja["estado"][] = [
 
 export type PedidoOperativo = Pick<Pedido,
   | "id" | "referencia" | "pieza" | "cliente" | "material" | "estado" | "entrega"
-  | "sede_id" | "sede_nombre" | "trabajo" | "fecha_entrega" | "area_actual" | "ruta"
+  | "sede_id" | "participante_id" | "participante_nombre" | "sede_nombre" | "trabajo" | "fecha_entrega" | "area_actual" | "ruta"
   | "area_desde" | "notas" | "talla" | "cantidad_piezas" | "piedras" | "peso_estimado"
   | "corte_texto" | "corte_tipografia" | "corte_ubicacion" | "corte_observaciones"
 >;
@@ -60,10 +60,11 @@ export function usePedidosDeArea(area: string) {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((pedido) => {
-        const sedes = pedido.sedes as { nombre: string } | null;
+        const participante = pedido.ecosistema_participantes as { nombre: string } | null;
         return {
           ...pedido,
-          sede_nombre: sedes?.nombre ?? null,
+          participante_nombre: participante?.nombre ?? null,
+          sede_nombre: participante?.nombre ?? null,
           cliente: pedido.cliente ?? "",
           material: pedido.material ?? "",
           trabajo: pedido.trabajo ?? "",
