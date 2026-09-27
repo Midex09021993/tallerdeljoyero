@@ -1764,24 +1764,6 @@ export function useSedes() {
   });
 }
 
-export function useGuardarSede() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (sede: { id?: string; nombre: string; ciudad: string; modo: string }) => {
-      const { error } = sede.id
-        ? await supabase
-            .from("sedes")
-            .update({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo })
-            .eq("id", sede.id)
-        : await supabase
-            .from("sedes")
-            .insert({ nombre: sede.nombre, ciudad: sede.ciudad, modo: sede.modo });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["sedes"] }),
-  });
-}
-
 export type Usuario = {
   id: string;
   usuario: string;
