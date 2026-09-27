@@ -614,25 +614,25 @@ export function usePedidos() {
         console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
       }
 
-      const sedeIds = [
+      const participanteIds = [
         ...new Set(
           ((pedidosData ?? []) as Array<Record<string, unknown>>)
-            .map((pedido) => pedido["sede_id"])
+            .map((pedido) => pedido["participante_id"])
             .filter((id): id is string => typeof id === "string" && id.length > 0),
         ),
       ];
-      const { data: sedesData, error: sedesError } = sedeIds.length
-        ? await supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+      const { data: participantesData, error: participantesError } = participanteIds.length
+        ? await supabase.from("ecosistema_participantes").select("id,nombre").in("id", participanteIds)
         : { data: [], error: null };
 
-      if (sedesError) {
-        console.warn("[Pedidos] No se pudo cargar el nombre de las sedes; se muestran los pedidos igualmente.", sedesError);
+      if (participantesError) {
+        console.warn("[Pedidos] No se pudo cargar el nombre del participante; se muestran los pedidos igualmente.", participantesError);
       }
 
-      const nombresSede = new Map(
-        ((sedesData ?? []) as Array<{ id: string; nombre: string | null }>).map((sede) => [
-          sede.id,
-          sede.nombre ?? "",
+      const nombresParticipante = new Map(
+        ((participantesData ?? []) as Array<{ id: string; nombre: string | null }>).map((participante) => [
+          participante.id,
+          participante.nombre ?? "",
         ]),
       );
 
@@ -657,7 +657,9 @@ export function usePedidos() {
           importe: Number(comercial["importe"]) || 0,
           a_cuenta: Number(comercial["a_cuenta"]) || 0,
           saldo: Math.max((Number(comercial["importe"]) || 0) - (Number(comercial["a_cuenta"]) || 0), 0),
-          sede_nombre: nombresSede.get(textoCampo(p, "sede_id")) ?? null,
+          participante_id: typeof p["participante_id"] === "string" ? p["participante_id"] : null,
+          participante_nombre: nombresParticipante.get(textoCampo(p, "participante_id")) ?? null,
+          sede_nombre: nombresParticipante.get(textoCampo(p, "participante_id")) ?? null,
           sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
           telefono: textoCampo(comercial, "telefono"),
           origen: textoCampo(p, "origen"),
