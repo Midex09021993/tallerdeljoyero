@@ -199,7 +199,7 @@ function NuevoPedido() {
   const [form, setForm] = useState({
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
-    origen: "", canal_captacion: "", contrato: "", importe_directo: "", notas: "",
+    origen: "", canal_captacion: "", contrato: "", importe_directo: "", a_cuenta: "", notas: "",
     cotizacion_externa: "", contrato_externo: "", referencia_externa: "",
   });
   const [rutaProduccion, setRutaProduccion] = useState<string[]>([]);
@@ -218,6 +218,8 @@ function NuevoPedido() {
   const totalComercial = cotizacionSeleccionada
     ? Math.max(0, Number(cotizacionSeleccionada.total) || 0)
     : Math.max(0, Number(form.importe_directo) || 0);
+  const anticipoComercial = Math.max(0, Number(form.a_cuenta) || 0);
+  const saldoComercial = Math.max(0, totalComercial - anticipoComercial);
   const clientePredictivo = useMemo(() => {
     const termino = clienteBusqueda.trim().toLowerCase();
     if (termino.length < 2 || clienteId || !clientes.length) return null;
@@ -272,7 +274,11 @@ function NuevoPedido() {
       return;
     }
     if (origenComercial === "directo" && totalComercial <= 0) {
-      toast.error("Ingresa el precio acordado para la venta directa.");
+      toast.error("Ingresa el precio total acordado.");
+      return;
+    }
+    if (anticipoComercial > totalComercial) {
+      toast.error("El anticipo no puede ser mayor que el precio total.");
       return;
     }
     if (contratoSeleccionado && contratoSeleccionado.sede_id && contratoSeleccionado.sede_id !== sedeId) {
@@ -300,7 +306,8 @@ function NuevoPedido() {
       // Venta directa: el precio se captura una sola vez y el ERP crea el documento financiero.
       // Precio pendiente: el pedido existe sin saldo financiero hasta definir el precio.
       importe: totalComercial,
-      a_cuenta: 0,
+      a_cuenta: anticipoComercial,
+      saldo: saldoComercial,
       sede_id: sedeId,
       telefono: form.telefono.trim(),
       origen: form.origen.trim(),
@@ -542,19 +549,21 @@ function NuevoPedido() {
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card">
               <h2 className="text-sm font-semibold">Condición comercial</h2>
-              <p className="mt-1 text-xs text-muted-foreground">El pedido puede venir de una cotización, ser una venta directa o quedar pendiente de precio.</p>
-              <div className="mt-4 rounded-xl border border-border bg-surface-muted p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Origen</p>
-                <p className="mt-1 text-sm font-semibold">{origenComercial === "cotizacion" ? "Desde cotización" : origenComercial === "directo" ? "Venta directa" : "Precio pendiente"}</p>
-                {contratoSeleccionado?.numero ? <p className="mt-1 text-[10px] text-muted-foreground">{contratoSeleccionado.numero}</p> : null}
+              <p className="mt-1 text-xs text-muted-foreground">Registra el precio acordado y el anticipo. El saldo se calcula automáticamente.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Campo label="Precio total" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="0.00" type="number" required />
+                <Campo label="Anticipo" value={form.a_cuenta} onChange={(v) => set("a_cuenta", v)} placeholder="0.00" type="number" />
               </div>
-              <div className="mt-3 rounded-xl bg-surface-muted p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Venta</p>
-                <p className="mt-1 text-lg font-semibold tabular-nums">{totalComercial > 0 ? `S/ ${totalComercial.toFixed(2)}` : "Pendiente"}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-border bg-surface-muted p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Saldo pendiente</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">S/ {saldoComercial.toFixed(2)}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-surface-muted p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Estado de pago</p>
+                  <p className="mt-1 text-sm font-semibold">{totalComercial > 0 && saldoComercial <= 0 ? "Pagado" : anticipoComercial > 0 ? "Pago parcial" : "Pendiente"}</p>
+                </div>
               </div>
-              <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
-                {origenComercial === "pendiente" ? "El precio se puede definir posteriormente. Mientras tanto, el pedido no tiene saldo financiero." : "El precio queda asociado a un único documento financiero. Los pagos se registran como movimientos y el saldo se calcula automáticamente."}
-              </p>
             </section>
             <button disabled={crear.isPending} type="submit" className="w-full rounded-2xl bg-gold px-4 py-3.5 text-sm font-bold text-gold-foreground shadow-raised disabled:cursor-not-allowed disabled:opacity-50">{crear.isPending ? "Creando pedido…" : "Crear pedido"}</button>
             <p className="px-2 text-center text-[11px] leading-5 text-muted-foreground">Al crear, el pedido queda en <strong>Recibido</strong>, asociado al taller y visible inmediatamente en Pedidos.</p>
