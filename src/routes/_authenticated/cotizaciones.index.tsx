@@ -40,7 +40,7 @@ const tiposPartida: Array<{ value: TipoPartida; label: string }> = [
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
-  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null;
+  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null; participante_id: string | null;
   cliente?: { nombre: string } | null;
 };
 
@@ -122,7 +122,7 @@ function CotizacionesPage() {
 
   useEffect(() => {
     if (puedeGestionarCotizaciones) void cargar();
-  }, [puedeGestionarCotizaciones, sesion?.sede?.id]);
+  }, [puedeGestionarCotizaciones, sesion?.participante?.id]);
 
   useEffect(() => {
     if (!puedeGestionarCotizaciones || !sesion?.sede?.id) return;
@@ -136,7 +136,7 @@ function CotizacionesPage() {
           .from("clientes")
           .select("id,nombre,telefono,email")
           .eq("estado", "activo")
-          .eq("sede_id", sesion?.sede?.id ?? "")
+          .eq("participante_id", sesion?.participante?.id ?? "")
           .order("nombre")
           .limit(20);
 
@@ -156,7 +156,7 @@ function CotizacionesPage() {
     }, termino ? 250 : 0);
 
     return () => window.clearTimeout(timer);
-  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.sede?.id, form.cliente_id]);
+  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.participante?.id, form.cliente_id]);
 
   // Una cotización es una entidad comercial; sus versiones son historial.
   // El listado muestra únicamente la versión vigente (la de mayor número)
@@ -164,7 +164,7 @@ function CotizacionesPage() {
   const cotizacionesVigentes = useMemo(() => {
     const mapa = new Map<string, Cotizacion>();
     for (const q of cotizaciones) {
-      const clave = `${q.sede_id ?? "sin-sede"}|${q.numero}`;
+      const clave = `${q.participante_id ?? "sin-participante"}|${q.numero}`;
       const actual = mapa.get(clave);
       if (!actual || Number(q.version) > Number(actual.version)) {
         mapa.set(clave, q);
@@ -382,7 +382,7 @@ function CotizacionesPage() {
                     </td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
                     <td className="p-0 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
-                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.sede_id)?.nombre ?? "Taller no asignado"}</Link></td>
+                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.participante_id)?.nombre ?? "Taller no asignado"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className={"rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider " + (q.estado === "requiere_revision" ? "border-gold/30 bg-gold/10 text-gold" : "border-gold/15 bg-gold/[0.035] text-muted-foreground")}>{etiquetaEstadoCotizacion(q.estado)}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
                     <td className="p-0 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{money(Number(q.total), q.moneda)}</Link></td>
