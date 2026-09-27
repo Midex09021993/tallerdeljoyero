@@ -96,7 +96,6 @@ function PedidoDetalle() {
         trabajos.map(async (trabajo) => {
           const { data, error } = await supabase.rpc("listar_participantes_servicio", {
             _area: String(trabajo.area || "").trim(),
-            _especialidad_id: trabajo.especialidad_id ?? null,
           });
           if (error) throw error;
           return [trabajo.id, data ?? []] as const;
