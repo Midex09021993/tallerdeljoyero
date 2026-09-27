@@ -282,6 +282,18 @@ function NuevoPedido() {
       toast.error("Indica qué joya o trabajo se está recibiendo.");
       return;
     }
+    if (tipoOperacion === "fabricacion" && !rutaProduccion.length) {
+      toast.error("Selecciona al menos un área disponible para la ruta de fabricación.");
+      return;
+    }
+    if (tipoOperacion === "fabricacion" && (capacidadesSedeRutaError || capacidadesExternasRutaError)) {
+      toast.error("No se pudieron consultar todas las capacidades disponibles para la ruta.");
+      return;
+    }
+    if (tipoOperacion === "fabricacion" && rutaProduccion.some((area) => !rutasDisponibles.includes(area))) {
+      toast.error("La ruta contiene un área que ya no tiene capacidad interna ni servicio externo disponible.");
+      return;
+    }
     if (origenComercial === "cotizacion" && !cotizacionSeleccionada) {
       toast.error("Selecciona una cotización aprobada para que el origen comercial quede registrado automáticamente.");
       return;
