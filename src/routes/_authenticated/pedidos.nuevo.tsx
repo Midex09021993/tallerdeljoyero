@@ -441,31 +441,7 @@ function NuevoPedido() {
       <form onSubmit={submit} className="mx-auto max-w-6xl">
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <div className="space-y-5">
-            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Identificación del pedido</h2><p className="mt-1 text-xs text-muted-foreground">Define qué joya entra al sistema y a quién pertenece.</p></div></div>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                a.clave}
-                    etiqueta={referencia.etiqueta}
-                    valor={referencias[referencia.clave]}
-                    onCambiar={(file) => {
-                      const anterior = referencias[referencia.clave];
-                      if (anterior) URL.revokeObjectURL(anterior.preview);
-                      setReferencias((actual) => ({
-                        ...actual,
-                        [referencia.clave]: { file, preview: URL.createObjectURL(file) },
-                      }));
-                    }}
-                    onEliminar={() => {
-                      const anterior = referencias[referencia.clave];
-                      if (anterior) URL.revokeObjectURL(anterior.preview);
-                      setReferencias((actual) => ({ ...actual, [referencia.clave]: null }));
-                    }}
-                  />
-                ))}
-                  </div>
-                </div>
-              ) : null}
-            </section>
+            
 
 
 
