@@ -1757,6 +1757,7 @@ export function useSedes() {
       const { data, error } = await supabase
         .from("sedes")
         .select("id, nombre, ciudad, modo, activa")
+        .eq("activa", true)
         .order("nombre");
       if (error) throw error;
       return data ?? [];
