@@ -1343,23 +1343,9 @@ export function useCrearPedido() {
             throw new Error("La venta directa debe tener un importe mayor que cero.");
           }
 
-          const numero = pedidoConContexto.contrato?.trim() || `VD-${pedidoConContexto.referencia}`;
-          contratoDirecto = await asegurarContratoComercial({
-            numero,
-            cliente: pedidoConContexto.cliente,
-            telefono: pedidoConContexto.telefono ?? "",
-            origen: "Pedido directo",
-            importe,
-            sede_id: pedidoConContexto.sede_id ?? null,
-            notas: "Documento comercial creado automáticamente desde un pedido directo.",
-          });
-
-          if (!contratoDirecto.id) {
-            throw new Error("No se pudo crear el documento financiero de la venta directa.");
-          }
-
-          pedidoConContexto.contrato = contratoDirecto.numero;
-          pedidoConContexto.contrato_id = contratoDirecto.id;
+          // Los números capturados desde Pedidos pueden venir de un sistema
+          // externo. Son referencias de trazabilidad, no documentos del ERP.
+          pedidoConContexto.contrato_id = null;
         }
 
         if (origenComercial === "cotizacion" && !pedidoConContexto.cotizacion_id) {
