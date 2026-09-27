@@ -23,8 +23,6 @@ export const AREAS = [
   "Área ventas",
 ] as const;
 
-export type Area = (typeof AREAS)[number];
-
 export const areaAliases: Record<string, string> = {
   "Servicio láser": "Corte Láser",
   "Corte láser": "Corte Láser",
@@ -47,7 +45,6 @@ export function areaCoincide(areaA: string | null | undefined, areaB: string | n
   return normalizarArea(areaA) === normalizarArea(areaB);
 }
 
-/** Ruta de la app por área habilitada. */
 export const areaRuta: Record<string, string> = {
   Pedidos: "/pedidos",
   "Diseño 3D": "/diseno-3d",
@@ -70,6 +67,7 @@ export type Sesion = {
     dni: string;
     telefono: string;
     sede_id: string | null;
+    participante_id: string | null;
     activo?: boolean;
     acceso_desde?: string | null;
     acceso_hasta?: string | null;
@@ -77,6 +75,7 @@ export type Sesion = {
   roles: Rol[];
   areas: string[];
   sede: { id: string; nombre: string; ciudad: string; modo: string } | null;
+  participante: { id: string; nombre: string; ciudad: string | null } | null;
   esDueno: boolean;
   esAdmin: boolean;
   rolPrincipal: Rol;
@@ -85,8 +84,6 @@ export type Sesion = {
 export function useSesion() {
   return useQuery({
     queryKey: ["sesion"],
-    // Los permisos (rol y áreas) deben reflejarse de inmediato tras un cambio
-    // hecho por el dueño o gerente: no se cachean.
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
     refetchOnMount: "always",
@@ -96,26 +93,30 @@ export function useSesion() {
 
     queryFn: async (): Promise<Sesion | null> => {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.warn("[auth] Error al leer sesión persistida", sessionError.message);
-      }
+      if (sessionError) console.warn("[auth] Error al leer sesión persistida", sessionError.message);
 
       const user = sessionData.session?.user;
       if (!user) return null;
 
-      const [{ data: perfil }, { data: roles }, { data: areas }] = await Promise.all([
+      const [{ data: perfil }, { data: roles }, { data: areas }, { data: cuenta }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, usuario, nombre, apellidos, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta")
+          .select("id, usuario, nombre, apellidos, dni, telefono, sede_id, participante_id, activo, acceso_desde, acceso_hasta")
           .eq("id", user.id)
           .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
         supabase.from("user_areas").select("area").eq("user_id", user.id),
+        supabase
+          .from("participante_cuentas")
+          .select("participante_id, estado")
+          .eq("user_id", user.id)
+          .eq("estado", "activo")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
       ]);
 
       const listaRoles = (roles ?? []).map((r) => r.role as Rol);
-
-      // Ventana de acceso: cuenta desactivada o fuera del periodo permitido.
       const hoy = new Date().toISOString().slice(0, 10);
       const bloqueado =
         perfil != null &&
@@ -126,6 +127,19 @@ export function useSesion() {
         await supabase.auth.signOut();
         return null;
       }
+
+      const participanteId = cuenta?.participante_id ?? perfil?.participante_id ?? null;
+      let participante = null as Sesion["participante"];
+      if (participanteId) {
+        const { data } = await supabase
+          .from("ecosistema_participantes")
+          .select("id, nombre, ciudad")
+          .eq("id", participanteId)
+          .eq("estado", "activo")
+          .maybeSingle();
+        participante = data ?? null;
+      }
+
       let sede = null as Sesion["sede"];
       if (perfil?.sede_id) {
         const { data } = await supabase
@@ -134,6 +148,14 @@ export function useSesion() {
           .eq("id", perfil.sede_id)
           .maybeSingle();
         sede = data ?? null;
+      } else if (participanteId) {
+        const { data } = await supabase
+          .from("ecosistema_participantes")
+          .select("sede_id, sedes!left(id, nombre, ciudad, modo)")
+          .eq("id", participanteId)
+          .maybeSingle();
+        const linked = Array.isArray(data?.sedes) ? data.sedes[0] : data?.sedes;
+        sede = linked ?? null;
       }
 
       const orden: Rol[] = ["dueno", "gerente", "operario", "monitor", "cliente"];
@@ -141,10 +163,14 @@ export function useSesion() {
 
       return {
         user,
-        perfil: perfil ?? { id: user.id, usuario: "", nombre: "", apellidos: "", dni: "", telefono: "", sede_id: null },
+        perfil: perfil ?? {
+          id: user.id, usuario: "", nombre: "", apellidos: "", dni: "", telefono: "",
+          sede_id: null, participante_id: participanteId
+        },
         roles: listaRoles,
         areas: (areas ?? []).map((a) => a.area),
         sede,
+        participante,
         esDueno: listaRoles.includes("dueno"),
         esAdmin: listaRoles.includes("dueno") || listaRoles.includes("gerente"),
         rolPrincipal,
@@ -166,7 +192,6 @@ export function inicioSegunRol(s: Sesion, opciones?: { movilTablet?: boolean }):
   return "/inicio";
 }
 
-/** Convierte el usuario del sistema en el identificador técnico de Supabase Auth. */
 export function correoDesdeUsuario(usuario: string) {
   const limpio = usuario.trim().toLowerCase();
   return limpio.includes("@") ? limpio : `${limpio}@taller.local`;
@@ -192,7 +217,6 @@ export function useSincronizarSesion() {
         qc.clear();
         return;
       }
-
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
         void qc.invalidateQueries({ queryKey: ["sesion"] });
       }
