@@ -283,7 +283,7 @@ function PedidoDetalle() {
 
       if (opCreadaError) throw opCreadaError;
 
-      if (opCreada?.id && opCreada.estado === "borrador") {
+      if (opCreada?.id && opCreada.estado === "borrador" && !resultado?.externos_pendientes) {
         const { error: liberarError } = await supabase.rpc("transicionar_orden_produccion", {
           _orden_id: opCreada.id,
           _nuevo_estado: "liberada",
