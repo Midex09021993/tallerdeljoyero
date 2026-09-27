@@ -17,7 +17,7 @@ export type CatalogoProductoEditor = {
 type Props = {
   open: boolean;
   producto: CatalogoProductoEditor | null;
-  sedeId: string;
+  participanteId: string;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -26,7 +26,7 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-export function CatalogoModeloDialog({ open, producto, sedeId, onClose, onSaved }: Props) {
+export function CatalogoModeloDialog({ open, producto, participanteId, onClose, onSaved }: Props) {
   const [form, setForm] = useState({ codigo: "", nombre: "", slug: "", categoria: "Sin categoría", descripcion: "", imagen_principal_url: "", precio_desde: "", moneda: "PEN" });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function CatalogoModeloDialog({ open, producto, sedeId, onClose, onSaved 
     setError(null);
     try {
       const payload = {
-        sede_id: sedeId,
+        participante_id: participanteId,
         codigo,
         nombre,
         slug,
@@ -72,7 +72,7 @@ export function CatalogoModeloDialog({ open, producto, sedeId, onClose, onSaved 
         moneda: form.moneda.trim().toUpperCase() || "PEN",
       };
       const result = producto
-        ? await supabase.from("catalogo_productos").update(payload).eq("id", producto.id)
+        ? await supabase.from("catalogo_productos").update(payload).eq("id", producto.id).eq("participante_id", participanteId)
         : await supabase.from("catalogo_productos").insert(payload);
       if (result.error) throw result.error;
       onSaved();
