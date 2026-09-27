@@ -13,7 +13,8 @@ as $$
   from public.participante_cuentas pc
   join public.ecosistema_participantes ep on ep.id = pc.participante_id
   where pc.user_id = _user_id
-    and coalesce(ep.activo, true)
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
   order by pc.created_at asc
   limit 1
 $$;
@@ -31,7 +32,8 @@ as $$
     join public.ecosistema_participantes ep on ep.id = pc.participante_id
     where pc.user_id = _user_id
       and pc.participante_id = _participante_id
-      and coalesce(ep.activo, true)
+      and pc.estado = 'activo'
+      and ep.estado = 'activo'
   )
 $$;
 
@@ -49,10 +51,14 @@ as $$
       select 1
       from public.ecosistema_participantes ep
       where ep.sede_id = _sede_id
+        and ep.estado = 'activo'
         and public.tiene_participante(_user_id, ep.id)
     )
 $$;
 
+revoke execute on function public.mi_participante(uuid) from public;
+revoke execute on function public.tiene_participante(uuid,uuid) from public;
+revoke execute on function public.ve_sede(uuid,uuid) from public;
 grant execute on function public.mi_participante(uuid) to authenticated;
 grant execute on function public.tiene_participante(uuid,uuid) to authenticated;
 grant execute on function public.ve_sede(uuid,uuid) to authenticated;
