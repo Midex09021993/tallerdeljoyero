@@ -99,8 +99,8 @@ function CotizacionesPage() {
   const cargar = async () => {
     const [{ data: p }, { data: q }, { data: s }, { data: identidadData }] = await Promise.all([
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
-      supabase.from("sedes").select("id,nombre").order("nombre"),
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
+      supabase.from("ecosistema_participantes").select("id,nombre").eq("estado","activo").order("nombre"),
       sesion?.sede?.id
         ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.sede.id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
