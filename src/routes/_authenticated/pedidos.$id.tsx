@@ -131,6 +131,7 @@ function PedidoDetalle() {
     },
   });
 
+
   const { data: capacidadesExternasRuta = {}, error: capacidadesExternasRutaError } = useQuery({
     queryKey: ["pedidos-ruta-capacidades-externas", sedeProduccionId],
     enabled: Boolean(sesion?.esAdmin && sedeProduccionId),
