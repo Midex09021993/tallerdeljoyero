@@ -266,17 +266,17 @@ function LoginPage() {
                 <>
                   <div className="max-w-3xl">
                     <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Lo que ya puedes usar</p>
-                    <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Una plataforma que ya reúne el trabajo real del taller.</h3>
+                    <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Una plataforma para organizar el trabajo real de tu taller.</h3>
                     <p className="mt-2 text-sm leading-relaxed text-white/60">
-                      Además de las herramientas gratuitas de entrada, Aurum Lab integra gestión, pedidos, producción, fichas técnicas, trazabilidad y visualización 3D en un mismo entorno.
+                      Desde un taller pequeño hasta una organización con varias áreas y sedes, Aurum Lab conecta la gestión comercial, los pedidos, la producción, el inventario y las herramientas técnicas en un mismo entorno.
                     </p>
                   </div>
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {[
-                      { icon: Boxes, title: "Gestiona tu taller", text: "Clientes, cotizaciones, pedidos, trabajos, inventario, pagos y entregas." },
-                      { icon: PackageCheck, title: "Controla la producción", text: "Rutas por área, trabajos, responsables, estados, tiempos e incidencias." },
-                      { icon: Sparkles, title: "Visualiza en 3D", text: "AURUM Render para visualizar diseños de joyería con materiales, piedras y escenas." },
+                      { icon: Boxes, title: "Gestiona tu taller", text: "Clientes, proyectos, cotizaciones, pedidos, inventario y entregas; información comercial separada de los datos internos." },
+                      { icon: PackageCheck, title: "Controla la producción", text: "Del pedido a la orden de producción, los trabajos, las piezas y el control de calidad, con responsables y seguimiento por área." },
+                      { icon: Sparkles, title: "Visualiza en 3D", text: "AURUM Render (beta) para explorar diseños de joyería con metales, gemas, iluminación y escenas." },
                       { icon: Calculator, title: "Herramientas para joyeros", text: "Yeso / agua, aleaciones de oro, tallas y visualización y peso 3D." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
@@ -292,7 +292,7 @@ function LoginPage() {
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Producción y trazabilidad</p>
                       <h3 className="mt-2 text-base font-semibold text-white">Cada trabajo puede seguir su recorrido.</h3>
                       <p className="mt-1.5 text-xs leading-relaxed text-white/55">
-                        Desde el pedido y su ruta de fabricación hasta el área responsable, la ficha técnica, el estado, el tiempo y las incidencias.
+                        El pedido se prepara para producción y se organiza en órdenes, trabajos y piezas. Cada etapa puede registrar responsables, avances, incidencias y control de calidad.
                       </p>
                     </article>
                     <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
@@ -301,6 +301,19 @@ function LoginPage() {
                       <p className="mt-1.5 text-xs leading-relaxed text-white/55">
                         Material, talla, piedras, peso, cantidad, instrucciones, archivos técnicos, ruta y datos de fabricación.
                       </p>
+                    </article>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Comercial y producción</p>
+                      <h3 className="mt-2 text-base font-semibold text-white">Del acuerdo con el cliente al trabajo del taller.</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">Clientes, proyectos, cotizaciones y pedidos se conectan con la preparación de producción, las órdenes, los trabajos y las piezas. Los documentos para clientes mantienen separados los costos y las notas internas.</p>
+                    </article>
+                    <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Talleres, áreas y responsables</p>
+                      <h3 className="mt-2 text-base font-semibold text-white">Una operación adaptada a cada taller.</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">Un equipo pequeño puede trabajar de forma conjunta; una organización más grande puede distribuir tareas por áreas y sedes. Cada usuario accede a las funciones e información que le corresponden, sin exponer la administración interna de Aurum Lab.</p>
                     </article>
                   </div>
 
@@ -315,14 +328,14 @@ function LoginPage() {
 
               {seccionPlataforma === "participantes" ? (
                 <>
-                  <p className="max-w-3xl text-sm leading-relaxed text-white/60">El ecosistema está pensado para distintas formas de participación, sin convertir cada actividad en un rol administrativo del taller.</p>
+                  <p className="max-w-3xl text-sm leading-relaxed text-white/60">Aurum Lab está pensado para talleres y organizaciones de distintos tamaños. Cada persona trabaja con las funciones y la información que corresponden a su taller y su área. Las modalidades del ecosistema se incorporan progresivamente.</p>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {[
-                      {icon:Boxes,title:"Taller / Joyería",text:"Gestiona proyectos, producción y relaciones comerciales."},
-                      {icon:UserRound,title:"Profesional independiente",text:"Diseño, modelado 3D, gemología, fotografía y otras especialidades."},
-                      {icon:ShoppingBag,title:"Vendedor / Comercializador",text:"Tiendas, vendedores y representantes comerciales del sector joyero."},
-                      {icon:PackageCheck,title:"Proveedor del sector joyero",text:"Materiales, piedras, insumos, herramientas y productos."},
-                      {icon:Network,title:"Servicio especializado",text:"Casting, engaste, grabado, pulido, láser y otros procesos."},
+                      {icon:Boxes,title:"Taller / Joyería",text:"Organiza el trabajo de un taller pequeño o de una organización con áreas, responsables y varias sedes."},
+                      {icon:UserRound,title:"Profesional independiente",text:"Participación prevista para diseño, modelado 3D, gemología, fotografía y otras especialidades."},
+                      {icon:ShoppingBag,title:"Vendedor / Comercializador",text:"Modalidad del ecosistema para tiendas, vendedores y representantes comerciales del sector joyero."},
+                      {icon:PackageCheck,title:"Proveedor del sector joyero",text:"Modalidad del ecosistema para materiales, piedras, insumos, herramientas y productos."},
+                      {icon:Network,title:"Servicio especializado",text:"Modalidad del ecosistema para casting, engaste, grabado, pulido, láser y otros procesos."},
                       {icon:UsersRound,title:"Talento / Prácticas",text:"Futuro espacio para aprendices, practicantes y oportunidades profesionales."},
                       {icon:Headphones,title:"Institución educativa",text:"Futuro espacio para cursos, capacitación y programas especializados."},
                     ].map(({icon:Icon,title,text}) => <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 hover:border-gold/35"><Icon className="size-6 text-gold"/><h3 className="mt-3 text-sm font-semibold text-white">{title}</h3><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{text}</p></article>)}
@@ -335,15 +348,15 @@ function LoginPage() {
                   <div className="rounded-2xl border border-gold/20 bg-gold/[0.06] p-5">
                     <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Flujo principal</p>
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {["Cliente","Proyecto Joya","Cotización","Pedido","Producción","Inventario","Entrega"].map((item,i)=><span key={item} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white">{item}{i<6?<ArrowRight className="size-3 text-gold"/>:null}</span>)}
+                      {["Cliente","Proyecto Joya","Cotización","Pedido","Preparar producción","Orden de producción","Trabajos","Piezas","Control de calidad","Producción terminada","Entrega"].map((item,i)=><span key={item} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white">{item}{i<10?<ArrowRight className="size-3 text-gold"/>:null}</span>)}
                     </div>
-                    <p className="mt-5 text-xs leading-relaxed text-white/55">AURUM, las herramientas técnicas y la red profesional se conectan al flujo cuando aportan información o servicios al proyecto.</p>
+                    <p className="mt-5 text-xs leading-relaxed text-white/55">Comercial organiza el proyecto, la cotización y el pedido; producción coordina las órdenes, los trabajos y las piezas; inventario acompaña las compras, los materiales y los movimientos. Las herramientas técnicas y AURUM Render se conectan cuando aportan al proyecto.</p>
                   </div>
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
                     {[
                       {title:"Diseñar",text:"Definir la pieza, sus especificaciones y visualización."},
-                      {title:"Producir",text:"Coordinar trabajos, responsables, ubicaciones y seguimiento."},
-                      {title:"Entregar",text:"Gestionar inventario, preparación, entrega e historial."},
+                      {title:"Producir",text:"Preparar órdenes, distribuir trabajos por área y registrar piezas, avances y calidad."},
+                      {title:"Entregar",text:"Consultar materiales y movimientos de inventario, preparar la entrega y conservar el historial."},
                     ].map((x)=><article key={x.title} className="rounded-2xl border border-white/10 p-4"><p className="text-sm font-semibold text-gold">{x.title}</p><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{x.text}</p></article>)}
                   </div>
                 </>
