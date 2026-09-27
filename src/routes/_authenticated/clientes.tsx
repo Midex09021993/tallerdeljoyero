@@ -13,7 +13,8 @@ type Cliente = {
   email: string | null;
   estado: string;
   created_at: string;
-  sede_id: string;
+  sede_id: string | null;
+  participante_id: string | null;
   sede_nombre: string;
 };
 
@@ -52,7 +53,7 @@ function ClientesPage() {
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "" });
 
   const cargar = async () => {
-    if (!sesion?.sede?.id) return;
+    if (!sesion?.participante?.id) return;
     const esDueno = Boolean(sesion.esDueno);
     const clientesQuery = supabase
       .from("clientes")
@@ -60,7 +61,7 @@ function ClientesPage() {
       .order("nombre");
     const { data: clientesData, error: clientesError } = esDueno
       ? await clientesQuery
-      : await clientesQuery.eq("sede_id", sesion.sede.id);
+      : await clientesQuery.eq("participante_id", sesion.participante.id);
     if (clientesError) throw clientesError;
 
     const participanteIds = [...new Set((clientesData ?? []).map((cliente) => cliente.participante_id).filter(Boolean))];
@@ -78,7 +79,7 @@ function ClientesPage() {
     if (seleccionado) setSeleccionado(clientesConSede.find((c) => c.id === seleccionado.id) ?? null);
   };
 
-  useEffect(() => { if (puedeVer) void cargar(); }, [puedeVer]);
+  useEffect(() => { if (puedeVer) void cargar(); }, [puedeVer, sesion?.participante?.id]);
 
   useEffect(() => {
     if (!seleccionado) { setPedidos([]); setCotizaciones([]); return; }
@@ -121,7 +122,7 @@ function ClientesPage() {
     setGuardando(true);
     try {
       if (!sesion?.sede?.id) throw new Error("No hay una sede activa para guardar el cliente.");
-      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, sede_id: sesion.sede.id };
+      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, participante_id: sesion.participante.id };
       const result = seleccionado
         ? await supabase.from("clientes").update(payload).eq("id", seleccionado.id)
         : await supabase.from("clientes").insert(payload);
@@ -132,12 +133,12 @@ function ClientesPage() {
         const { data } = await supabase
           .from("clientes")
           .select("id,nombre,telefono,email,estado,created_at,sede_id")
-          .eq("sede_id", sesion.sede.id)
+          .eq("participante_id", sesion.participante.id)
           .eq("nombre", payload.nombre)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (data) setSeleccionado({ ...data, sede_nombre: sesion.sede.nombre });
+        if (data) setSeleccionado({ ...data, sede_nombre: sesion.participante.nombre });
       }
     } catch (error) {
       console.error(error);
