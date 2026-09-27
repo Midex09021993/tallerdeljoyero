@@ -134,6 +134,7 @@ function PedidoDetalle() {
   const { data: participantesPorAreaPreparacion = {}, error: participantesPreparacionError } = useQuery({
     queryKey: ["preparacion-participantes", sedeProduccionId, ruta.join("|")],
     enabled: Boolean(sesion?.esAdmin && sedeProduccionId && ruta.length && preparacionAbierta),
+    refetchOnMount: "always",
     queryFn: async () => {
       if (!sedeProduccionId || !ruta.length) return {};
       const resultados = await Promise.all(
