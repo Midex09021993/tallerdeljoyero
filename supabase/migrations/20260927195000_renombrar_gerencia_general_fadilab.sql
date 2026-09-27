@@ -7,7 +7,7 @@ begin
     where lower(trim(nombre)) = 'gerencia general'
   ) and exists (
     select 1 from public.sedes
-    where lower(trim(nombre)) = 'fad ilab'
+    where lower(trim(nombre)) = 'fadilab'
   ) then
     raise exception 'No se puede renombrar Gerencia general: ya existe FADILAB';
   end if;
