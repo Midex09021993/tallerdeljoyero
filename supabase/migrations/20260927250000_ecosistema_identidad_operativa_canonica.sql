@@ -103,36 +103,58 @@ from public.ecosistema_participantes ep
 where ic.participante_id is null
   and ic.sede_id = ep.sede_id;
 
-if exists (
-  select 1
-  from public.identidades_comerciales
-  where sede_id is not null and participante_id is null
-) then
-  raise exception 'Quedaron identidades comerciales sin participante_id';
-end if;
+do $$
+declare
+  v_fallas integer;
+begin
+  select count(*)
+    into v_fallas
+  from (
+    select id from public.clientes where sede_id is not null and participante_id is null
+    union all
+    select id from public.config_areas where sede_id is not null and participante_id is null
+    union all
+    select id from public.contratos where sede_id is not null and participante_id is null
+    union all
+    select id from public.cotizacion_numeradores where sede_id is not null and participante_id is null
+    union all
+    select id from public.cotizaciones where sede_id is not null and participante_id is null
+    union all
+    select id from public.gastos where sede_id is not null and participante_id is null
+    union all
+    select id from public.inventario where sede_id is not null and participante_id is null
+    union all
+    select id from public.inventario_joyas where sede_id is not null and participante_id is null
+    union all
+    select id from public.inventario_joyas_importaciones where sede_id is not null and participante_id is null
+    union all
+    select id from public.ordenes_produccion where sede_id is not null and participante_id is null
+    union all
+    select id from public.pedido_entrega_eventos where sede_id is not null and participante_id is null
+    union all
+    select id from public.pedidos where sede_id is not null and participante_id is null
+    union all
+    select id from public.procesos where sede_id is not null and participante_id is null
+    union all
+    select id from public.profiles where sede_id is not null and participante_id is null
+    union all
+    select id from public.proyectos_joya where sede_id is not null and participante_id is null
+    union all
+    select id from public.tareas_taller where sede_id is not null and participante_id is null
+    union all
+    select id from public.trabajos where sede_id is not null and participante_id is null
+    union all
+    select id from public.user_roles where sede_id is not null and participante_id is null
+    union all
+    select id from public.identidades_comerciales where sede_id is not null and participante_id is null
+  ) pendientes;
 
-if exists (
-  select 1
-  from public.pedidos
-  where sede_id is not null and participante_id is null
-) then
-  raise exception 'Quedaron pedidos sin participante_id';
-end if;
-
-if exists (
-  select 1
-  from public.cotizaciones
-  where sede_id is not null and participante_id is null
-) then
-  raise exception 'Quedaron cotizaciones sin participante_id';
-end if;
-
-if exists (
-  select 1
-  from public.trabajos
-  where sede_id is not null and participante_id is null
-) then
-  raise exception 'Quedaron trabajos sin participante_id';
-end if;
+  if v_fallas > 0 then
+    raise exception
+      'Ecosistema abortado: quedaron % registros con sede_id pero sin participante_id',
+      v_fallas;
+  end if;
+end;
+$$;
 
 commit;
