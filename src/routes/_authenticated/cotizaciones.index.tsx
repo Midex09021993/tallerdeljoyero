@@ -100,7 +100,7 @@ function CotizacionesPage() {
     const [{ data: p }, { data: q }, { data: s }, { data: identidadData }] = await Promise.all([
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
-      supabase.from("ecosistema_participantes").select("id,nombre").eq("estado","activo").order("nombre"),
+      supabase.from("sedes").select("id,nombre").eq("estado","activo").order("nombre"),
       sesion?.participante?.id
         ? supabase.from("identidades_comerciales").select("id,sede_id,participante_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("participante_id", sesion.participante.id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
@@ -382,7 +382,7 @@ function CotizacionesPage() {
                     </td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
                     <td className="p-0 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
-                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.participante_id)?.nombre ?? "Taller no asignado"}</Link></td>
+                    <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.sede_id)?.nombre ?? "Taller no asignado"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className={"rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider " + (q.estado === "requiere_revision" ? "border-gold/30 bg-gold/10 text-gold" : "border-gold/15 bg-gold/[0.035] text-muted-foreground")}>{etiquetaEstadoCotizacion(q.estado)}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
                     <td className="p-0 text-right font-semibold tabular-nums"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{money(Number(q.total), q.moneda)}</Link></td>
