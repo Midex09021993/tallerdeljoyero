@@ -61,6 +61,7 @@ function TrabajoOperativoPage() {
   const [relojAhora, setRelojAhora] = useState(Date.now());
   const [especialidadSeleccionada, setEspecialidadSeleccionada] = useState("");
   const [guardandoEspecialidad, setGuardandoEspecialidad] = useState(false);
+  useEffect(() => { setEspecialidadSeleccionada(trabajo?.especialidad_id ?? ""); }, [trabajo?.especialidad_id]);
 
   const { data: sesionesTiempo = [] } = useQuery({
     queryKey: ["trabajo-tiempos", id],
@@ -199,7 +200,8 @@ function TrabajoOperativoPage() {
         .from("especialidades")
         .select("id,nombre,categoria")
         .eq("activa", true)
-        .order("categoria", { ascending: true, nullsFirst: true })
+        .eq("categoria", "Subcapacidad Taller")
+        .order("nombre", { ascending: true })
         .order("nombre", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -378,8 +380,31 @@ function TrabajoOperativoPage() {
           </dl></div>
         </details>
 
-        <details open className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
-          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">2</span><span className="text-sm font-bold">Especificaciones de la pieza</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+                {trabajo.area === "Taller" && sesion?.esAdmin ? (
+          <section className="rounded-2xl border border-gold/10 bg-card shadow-raised">
+            <div className="border-b border-border bg-gold/[0.035] px-5 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Ruteo productivo</p>
+              <h2 className="mt-1 text-sm font-bold">Subcapacidad de Taller</h2>
+              <p className="mt-1 text-xs text-muted-foreground">La capacidad principal sigue siendo Taller. Aquí solo defines el detalle operativo que necesita el trabajo.</p>
+            </div>
+            <div className="p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label className="min-w-0 flex-1 text-xs font-semibold">Subcapacidad
+                  <select value={especialidadSeleccionada} onChange={(e) => setEspecialidadSeleccionada(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm">
+                    <option value="">Taller general</option>
+                    {especialidades.map((especialidad) => <option key={especialidad.id} value={especialidad.id}>{especialidad.nombre}</option>)}
+                  </select>
+                </label>
+                <button type="button" disabled={guardandoEspecialidad || especialidadSeleccionada === (trabajo.especialidad_id ?? "")} onClick={() => void guardarEspecialidad()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground disabled:opacity-50">
+                  {guardandoEspecialidad ? "Guardando…" : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+<details open className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">3</span><span className="text-sm font-bold">Especificaciones de la pieza</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-border p-5">
             <div className="grid gap-2 sm:grid-cols-2">
               {[
