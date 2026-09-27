@@ -684,7 +684,12 @@ function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: an
   const pagado = pagos.length > 0 ? pagosTotal : contrato ? comercialNumero(contrato.abonado) : comercialNumero(especificaciones.anticipo, comercialNumero(pedido.a_cuenta));
   const saldo = Math.max(0, total - pagado);
   const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : pagado > 0 ? "Pago parcial" : "Pendiente";
-  const cotizacion = typeof especificaciones.cotizacion_numero === "string" ? especificaciones.cotizacion_numero : "";
+  const cotizacion = typeof especificaciones.cotizacion_numero === "string"
+    ? especificaciones.cotizacion_numero
+    : typeof especificaciones.referencia_cotizacion_externa === "string"
+      ? especificaciones.referencia_cotizacion_externa
+      : "";
+  const cotizacionExterna = !pedido.cotizacion_id && Boolean(especificaciones.referencia_cotizacion_externa);
   const version = especificaciones.cotizacion_version;
   const moneda = typeof especificaciones.moneda === "string" && especificaciones.moneda ? especificaciones.moneda : "PEN";
   const identidad = typeof especificaciones.identidad_comercial === "string" ? especificaciones.identidad_comercial : "";
@@ -697,14 +702,14 @@ function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: an
           <div>
             <h3 className="text-xs font-bold uppercase tracking-[.16em]">Relación comercial</h3>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {cotizacion ? `Snapshot de la cotización ${cotizacion}${version ? ` · v${version}` : ""}` : "Pedido registrado sin cotización vinculada"}
+              {cotizacion ? (cotizacionExterna ? `Referencia externa de cotización: ${cotizacion}` : `Snapshot de la cotización ${cotizacion}${version ? ` · v${version}` : ""}`) : "Pedido registrado sin cotización vinculada"}
             </p>
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Dato label="Cliente" value={pedido.cliente || "Sin cliente"} />
-          <Dato label="Cotización" value={cotizacion ? `${cotizacion}${version ? ` · v${version}` : ""}` : "—"} />
-          <Dato label="Contrato" value={pedido.contrato || "Sin contrato"} />
+          <Dato label={cotizacionExterna ? "Cotización externa" : "Cotización"} value={cotizacion ? `${cotizacion}${!cotizacionExterna && version ? ` · v${version}` : ""}` : "—"} />
+          <Dato label={contrato ? "Contrato" : "Contrato / referencia externa"} value={contrato?.numero || pedido.contrato || "—"} />
           <Dato label="Origen" value={pedido.origen || "—"} />
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
