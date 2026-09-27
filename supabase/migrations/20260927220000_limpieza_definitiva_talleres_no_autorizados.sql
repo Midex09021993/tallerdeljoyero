@@ -262,10 +262,38 @@ begin
    where q.sede_id in (select id from _cleanup_sedes_excluidas);
 
   delete from public.proyectos_joya pj
-   where pj.sede_id in (select id from _cleanup_sedes_excluidas);
+   where pj.sede_id in (select id from _cleanup_sedes_excluidas)
+     and not exists (
+       select 1
+       from public.cotizaciones q
+       where q.proyecto_joya_id = pj.id
+         and q.sede_id not in (select id from _cleanup_sedes_excluidas)
+         and q.sede_id is not null
+     )
+     and not exists (
+       select 1
+       from public.pedidos p
+       where p.proyecto_joya_id = pj.id
+         and p.sede_id not in (select id from _cleanup_sedes_excluidas)
+         and p.sede_id is not null
+     );
 
   delete from public.clientes c
-   where c.sede_id in (select id from _cleanup_sedes_excluidas);
+   where c.sede_id in (select id from _cleanup_sedes_excluidas)
+     and not exists (
+       select 1
+       from public.cotizaciones q
+       where q.cliente_id = c.id
+         and q.sede_id not in (select id from _cleanup_sedes_excluidas)
+         and q.sede_id is not null
+     )
+     and not exists (
+       select 1
+       from public.pedidos p
+       where p.cliente_id = c.id
+         and p.sede_id not in (select id from _cleanup_sedes_excluidas)
+         and p.sede_id is not null
+     );
 
   -- ============================================================
   -- 5. INVENTARIO Y CATÁLOGOS PROPIOS DE LA SEDE
