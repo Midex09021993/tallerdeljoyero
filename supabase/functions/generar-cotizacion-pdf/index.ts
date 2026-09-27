@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     const participante = (cuenta as any)?.ecosistema_participantes;
     const mismoParticipante = !!quote.participante_id && !!participante?.participante_id && quote.participante_id === participante.participante_id;
 
-    if (!esDueno && (!esGerente || !mismaSede) && (!esVentas || !mismaSede)) {
+    if (!esDueno && (!esGerente || !mismoParticipante) && (!esVentas || !mismoParticipante)) {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
     }
 
