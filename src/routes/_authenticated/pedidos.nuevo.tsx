@@ -547,7 +547,7 @@ function NuevoPedido() {
               <p className="mt-1 text-xs text-muted-foreground">Registra el precio acordado y el anticipo. El saldo se calcula automáticamente.</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Campo label="N° contrato (opcional)" value={form.contrato} onChange={(v) => set("contrato", v)} placeholder="Ej. CTR-2026-0001" />
-                <Campo label="N° cotización (opcional)" value={form.cotizacion_numero} onChange={(v) => set("cotizacion_numero", v)} placeholder="Ej. COT-2026-0001" />
+                <Campo label="N° cotización (opcional)" value={form.cotizacion_numero} onChange={(v) => { set("cotizacion_numero", v); setCotizacionId(""); }} placeholder="Ej. COT-2026-0001" />
                 <Campo label="Precio total" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="0.00" type="number" required />
                 <Campo label="Anticipo" value={form.a_cuenta} onChange={(v) => set("a_cuenta", v)} placeholder="0.00" type="number" />
               </div>
