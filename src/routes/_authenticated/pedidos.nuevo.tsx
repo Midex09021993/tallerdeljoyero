@@ -467,6 +467,28 @@ function NuevoPedido() {
               </div>
             </section>
 
+            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
+              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de producción</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona el recorrido previsto para este pedido.</p></div></div>
+              <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                {rutas.map((area) => {
+                  const activa = rutaProduccion.includes(area);
+                  return <label key={area} className={activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted"}>
+                    <input type="checkbox" checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
+                    <span className="text-sm font-semibold">{area}</span>
+                  </label>;
+                })}
+              </div>
+            </section>
+
+            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
+              <h2 className="text-base font-semibold">Fechas y documentación</h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Campo label="Fecha de ingreso" value={form.fecha_ingreso} onChange={(v) => set("fecha_ingreso", v)} type="date" required />
+                <Campo label="Fecha prometida de entrega" value={form.fecha_entrega} onChange={(v) => set("fecha_entrega", v)} type="date" />
+              </div>
+              <label className="mt-4 block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notas de recepción</span><textarea value={form.notas} onChange={(e) => set("notas", e.target.value)} rows={4} placeholder="Detalles importantes para fabricación o atención al cliente…" className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-gold/50" /></label>
+            </section>
+
          <section className="rounded-[24px] border border-border bg-card shadow-card">
               <button type="button" onClick={() => setReferenciasAbiertas((actual) => !actual)} className="flex w-full items-center justify-between gap-4 p-5 text-left sm:p-6" aria-expanded={referenciasAbiertas}>
                 <div className="flex items-start gap-3">
