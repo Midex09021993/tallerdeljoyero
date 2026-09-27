@@ -70,9 +70,18 @@ export default {
       if (adminError) throw adminError;
       if (!esAdmin) return Response.json({ error: "Solo un administrador puede importar inventario" }, { status: 403, headers: corsHeaders });
 
-      const { data: perfil, error: perfilError } = await ctx.supabase.from("profiles").select("sede_id").eq("id", userId).single();
-      if (perfilError) throw perfilError;
-      if (!perfil?.sede_id) return Response.json({ error: "El usuario no tiene una sede asignada" }, { status: 422, headers: corsHeaders });
+      const { data: cuenta } = await ctx.supabase
+        .from("participante_cuentas")
+        .select("participante_id, ecosistema_participantes!inner(id,sede_id,estado)")
+        .eq("user_id", userId)
+        .eq("estado", "activo")
+        .eq("ecosistema_participantes.estado", "activo")
+        .limit(1)
+        .maybeSingle();
+      const participante = (cuenta as any)?.ecosistema_participantes;
+      if (!cuenta?.participante_id || !participante?.id || !participante?.sede_id) {
+        return Response.json({ error: "El usuario no está vinculado a un taller activo" }, { status: 422, headers: corsHeaders });
+      }
 
       const form = await req.formData();
       const file = form.get("archivo");
@@ -116,7 +125,8 @@ export default {
       if (!validos.length) throw new Error("No hay registros válidos para importar");
 
       const { data: lote, error: loteError } = await ctx.supabase.from("inventario_joyas_importaciones").insert({
-        sede_id: perfil.sede_id,
+        sede_id: participante.sede_id,
+        participante_id: cuenta.participante_id,
         nombre_archivo: file.name,
         filas_detectadas: rows.length,
         filas_importadas: 0,
@@ -126,7 +136,8 @@ export default {
       if (loteError) throw loteError;
 
       const payload = validos.map((r) => ({
-        sede_id: perfil.sede_id,
+        sede_id: participante.sede_id,
+        participante_id: cuenta.participante_id,
         importacion_id: lote.id,
         ...r,
         origen: "excel",
