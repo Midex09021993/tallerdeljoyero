@@ -6,9 +6,9 @@ import { Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
-type Sede = { id: string; nombre: string };
+type Participante = { id: string; nombre: string; ciudad: string | null };
 type Identidad = {
-  id: string; sede_id: string | null; nombre_comercial: string; razon_social: string | null; ruc: string | null;
+  id: string; sede_id: string | null; participante_id: string | null; nombre_comercial: string; razon_social: string | null; ruc: string | null;
   logo_url: string | null; email: string | null; telefono: string | null; whatsapp: string | null;
   direccion: string | null; ciudad: string | null; sitio_web: string | null; color_principal: string | null;
   pie_documento: string | null; pais_codigo: string; pais_nombre: string; moneda_codigo: string; moneda_simbolo: string;
@@ -27,9 +27,9 @@ const CAMPOS = [
   "impuesto_activo","impuesto_nombre","impuesto_tasa","impuesto_incluido","identificador_fiscal_label","zona_horaria",
 ].join(",");
 
-function nuevo(sedeId: string): Omit<Identidad, "id"> {
+function nuevo(participanteId: string): Omit<Identidad, "id"> {
   return {
-    sede_id: sedeId, nombre_comercial: "Taller del Joyero", razon_social: "", ruc: "", logo_url: "", email: "",
+    sede_id: null, participante_id: participanteId, nombre_comercial: "Taller del Joyero", razon_social: "", ruc: "", logo_url: "", email: "",
     telefono: "", whatsapp: "", direccion: "", ciudad: "", sitio_web: "", color_principal: "#B58A3A", pie_documento: "",
     pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true,
     impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima",
@@ -40,9 +40,9 @@ export function ConfiguracionIdentidadComercial() {
   const { data: sesion } = useSesion();
   const puedeEditar = Boolean(sesion?.esDueno || sesion?.roles.includes("gerente"));
   const [identidades, setIdentidades] = useState<Identidad[]>([]);
-  const [sedes, setSedes] = useState<Sede[]>([]);
+  const [participantes, setParticipantes] = useState<Participante[]>([]);
   const [identidadId, setIdentidadId] = useState("");
-  const [sedeNueva, setSedeNueva] = useState("");
+  const [participanteNuevo, setParticipanteNuevo] = useState("");
   const [form, setForm] = useState<Identidad | null>(null);
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -51,21 +51,28 @@ export function ConfiguracionIdentidadComercial() {
   async function cargar() {
     if (!puedeEditar) return;
     setCargando(true);
-    const { data: sedesData } = await supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre");
-    const sedesVisibles = sesion?.esDueno ? ((sedesData ?? []) as Sede[]) : ((sedesData ?? []) as Sede[]).filter((x) => x.id === sesion?.sede?.id);
-    setSedes(sedesVisibles);
-    if (!sedeNueva && sedesVisibles[0]) setSedeNueva(sedesVisibles[0].id);
+    const { data: participantesData, error: participantesError } = await supabase
+      .from("ecosistema_participantes")
+      .select("id,nombre,ciudad")
+      .eq("estado", "activo")
+      .order("nombre");
+    if (participantesError) { toast.error(participantesError.message); setCargando(false); return; }
+    const participantesDisponibles = sesion?.esDueno
+      ? ((participantesData ?? []) as Participante[])
+      : ((participantesData ?? []) as Participante[]).filter((x) => sesion?.participantes.some((p) => p.id === x.id));
+    setParticipantes(participantesDisponibles);
+    if (!participanteNuevo && participantesDisponibles[0]) setParticipanteNuevo(participantesDisponibles[0].id);
 
     const { data, error } = await supabase.from("identidades_comerciales").select(CAMPOS).eq("activa", true).order("nombre_comercial");
     if (error) { toast.error(error.message); setCargando(false); return; }
     const filas = (data ?? []) as unknown as Identidad[];
-    const propias = sesion?.esDueno ? filas : filas.filter((x) => x.sede_id === sesion?.sede?.id);
+    const propias = sesion?.esDueno ? filas : filas.filter((x) => x.participante_id === sesion?.participante?.id);
     setIdentidades(propias);
     if (!identidadId && propias[0]) setIdentidadId(propias[0].id);
     setCargando(false);
   }
 
-  useEffect(() => { void cargar(); }, [puedeEditar, sesion?.esDueno, sesion?.sede?.id]);
+  useEffect(() => { void cargar(); }, [puedeEditar, sesion?.esDueno, sesion?.participante?.id, sesion?.participantes]);
 
   useEffect(() => {
     const actual = identidades.find((x) => x.id === identidadId);
@@ -82,9 +89,9 @@ export function ConfiguracionIdentidadComercial() {
   }
 
   async function crearIdentidad() {
-    if (!sedeNueva) return toast.error("Selecciona una sede.");
+    if (!participanteNuevo) return toast.error("Selecciona un taller del Ecosistema.");
     setCreando(true);
-    const { data, error } = await supabase.from("identidades_comerciales").insert(nuevo(sedeNueva)).select(CAMPOS).single();
+    const { data, error } = await supabase.from("identidades_comerciales").insert(nuevo(participanteNuevo)).select(CAMPOS).single();
     if (error) toast.error(error.message);
     else {
       toast.success("Identidad comercial creada.");
@@ -98,7 +105,7 @@ export function ConfiguracionIdentidadComercial() {
   async function guardar() {
     if (!form) return;
     if (!form.nombre_comercial.trim()) return toast.error("El nombre comercial es obligatorio.");
-    if (!form.sede_id) return toast.error("La identidad debe pertenecer a una sede.");
+    if (!form.participante_id) return toast.error("La identidad debe pertenecer a un taller del Ecosistema.");
     const tasa = Number(form.impuesto_tasa);
     if (!Number.isFinite(tasa) || tasa < 0 || tasa > 100) return toast.error("La tasa de impuesto debe estar entre 0 y 100.");
     if (!/^[A-Z]{3}$/.test(form.moneda_codigo.trim().toUpperCase())) return toast.error("La moneda debe usar un código de 3 letras.");
@@ -131,12 +138,12 @@ export function ConfiguracionIdentidadComercial() {
             <p className="text-xs text-muted-foreground">La identidad es la fuente de verdad para cotizaciones y contratos. No creamos una tabla paralela.</p>
             <div className="flex flex-wrap gap-3">
               {sesion?.esDueno ? (
-                <select value={sedeNueva} onChange={e=>setSedeNueva(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
-                  <option value="">Seleccionar sede</option>
+                <select value={participanteNuevo} onChange={e=>setParticipanteNuevo(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+                  <option value="">Seleccionar taller</option>
                   {sedes.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                 </select>
               ) : null}
-              <button type="button" onClick={()=>void crearIdentidad()} disabled={creando || !sedeNueva} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
+              <button type="button" onClick={()=>void crearIdentidad()} disabled={creando || !participanteNuevo} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
                 <Plus className="size-4" />{creando ? "Creando…" : "Crear identidad"}
               </button>
             </div>
@@ -148,7 +155,7 @@ export function ConfiguracionIdentidadComercial() {
           accion={<button type="button" onClick={() => void guardar()} disabled={guardando} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"><Save className="size-4" />{guardando ? "Guardando…" : "Guardar cambios"}</button>}
         >
           <div className="space-y-6 p-5">
-            {identidades.length > 1 ? <label className="block text-xs font-semibold text-muted-foreground">Identidad activa<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={identidadId} onChange={e=>setIdentidadId(e.target.value)}>{identidades.map(x=><option key={x.id} value={x.id}>{x.nombre_comercial} · {sedes.find(s=>s.id===x.sede_id)?.nombre ?? "sede"}</option>)}</select></label> : null}
+            {identidades.length > 1 ? <label className="block text-xs font-semibold text-muted-foreground">Identidad activa<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={identidadId} onChange={e=>setIdentidadId(e.target.value)}>{identidades.map(x=><option key={x.id} value={x.id}>{x.nombre_comercial} · {participantes.find(p=>p.id===x.participante_id)?.nombre ?? "taller"}</option>)}</select></label> : null}
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">Nombre comercial<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.nombre_comercial} onChange={e=>campo("nombre_comercial",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">Razón social<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.razon_social ?? ""} onChange={e=>campo("razon_social",e.target.value)} /></label>
