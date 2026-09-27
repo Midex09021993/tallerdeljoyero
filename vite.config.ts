@@ -12,7 +12,7 @@ const PUBLIC_URL =
 const PUBLIC_KEY =
   process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
   process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-  "sb_publishable_L_4p3qc_tRUdL4P5x73bWA_qzZwU-ZO";
+  "sb_publishable_I37emY5b4Sy5q6LpARRaXA_uSk9l9Md";
 const PUBLIC_ID =
   process.env["VITE_SUPABASE_PROJECT_ID"] || process.env["SUPABASE_PROJECT_ID"] || "ynetgjhghfhvyinwvqkl";
 
