@@ -214,6 +214,112 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Aprueba una solicitud pública y la convierte en una identidad operativa del Ecosistema.
+ * No crea credenciales: la cuenta de acceso se vincula después de forma explícita.
+ */
+export const aprobarSolicitudAcceso = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { solicitudId: string }) => input)
+  .handler(async ({ data, context }) => {
+    if (!data.solicitudId) throw new Error("Solicitud no válida");
+
+    const { data: roles, error: rolesError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (rolesError) throw new Error("No se pudo verificar tu rol");
+    if (!(roles ?? []).some((r) => r.role === "dueno")) {
+      throw new Error("Sólo el Dueño puede aprobar solicitudes de acceso");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: solicitud, error: solicitudError } = await supabaseAdmin
+      .from("solicitudes_acceso")
+      .select("id, tipo_solicitante, nombre, empresa, email, telefono, ciudad, especialidades, descripcion, estado, participante_id")
+      .eq("id", data.solicitudId)
+      .maybeSingle();
+    if (solicitudError) throw new Error("No se pudo consultar la solicitud");
+    if (!solicitud) throw new Error("La solicitud ya no existe");
+    if (solicitud.participante_id) {
+      if (solicitud.estado !== "aprobada") {
+        const { error } = await supabaseAdmin.from("solicitudes_acceso").update({
+          estado: "aprobada",
+          revisado_por: context.userId,
+          revisado_at: new Date().toISOString(),
+        }).eq("id", solicitud.id);
+        if (error) throw new Error("La solicitud ya tenía participante, pero no se pudo actualizar su estado");
+      }
+      return { ok: true, participanteId: solicitud.participante_id, creado: false };
+    }
+    if (solicitud.estado !== "pendiente") throw new Error("Sólo se pueden aprobar solicitudes pendientes");
+
+    const tipoParticipante = solicitud.tipo_solicitante === "taller" ? "organizacion" : solicitud.tipo_solicitante;
+    const nombreBase = (solicitud.empresa?.trim() || solicitud.nombre.trim()).slice(0, 160);
+    const ciudad = (solicitud.ciudad?.trim() || "").slice(0, 80);
+
+    // Sede legacy de compatibilidad: se crea una sola vez y queda enlazada al participante canónico.
+    let sedeId: string | null = null;
+    let sedeCreada = false;
+    const { data: sedeExistente } = await supabaseAdmin
+      .from("sedes")
+      .select("id, nombre, ciudad")
+      .eq("nombre", nombreBase)
+      .maybeSingle();
+    if (sedeExistente) {
+      sedeId = sedeExistente.id;
+    } else {
+      const { data: sedeNueva, error: sedeError } = await supabaseAdmin
+        .from("sedes")
+        .insert({ nombre: nombreBase, ciudad, modo: "completo", activa: true })
+        .select("id")
+        .single();
+      if (sedeError || !sedeNueva) throw new Error("No se pudo crear la sede del nuevo participante");
+      sedeId = sedeNueva.id;
+      sedeCreada = true;
+    }
+
+    const { data: participante, error: participanteError } = await supabaseAdmin
+      .from("ecosistema_participantes")
+      .insert({
+        tipo_participante: tipoParticipante,
+        nombre: nombreBase,
+        email: solicitud.email.trim().toLowerCase(),
+        telefono: solicitud.telefono?.trim() || null,
+        ciudad: ciudad || null,
+        descripcion: solicitud.descripcion?.trim() || null,
+        estado: "activo",
+        sede_id: sedeId,
+        metadata: { solicitud_acceso_id: solicitud.id, especialidades: solicitud.especialidades ?? [] },
+      })
+      .select("id")
+      .single();
+
+    if (participanteError || !participante) {
+      if (sedeCreada && sedeId) await supabaseAdmin.from("sedes").delete().eq("id", sedeId);
+      throw new Error("No se pudo crear el participante del Ecosistema");
+    }
+
+    const { error: solicitudUpdateError } = await supabaseAdmin
+      .from("solicitudes_acceso")
+      .update({
+        estado: "aprobada",
+        participante_id: participante.id,
+        revisado_por: context.userId,
+        revisado_at: new Date().toISOString(),
+      })
+      .eq("id", solicitud.id)
+      .is("participante_id", null);
+
+    if (solicitudUpdateError) {
+      await supabaseAdmin.from("ecosistema_participantes").delete().eq("id", participante.id);
+      if (sedeCreada && sedeId) await supabaseAdmin.from("sedes").delete().eq("id", sedeId);
+      throw new Error("No se pudo cerrar la aprobación de la solicitud");
+    }
+
+    return { ok: true, participanteId: participante.id, creado: true };
+  });
+
 /** Lista las cuentas reales de Auth y las reconcilia con los datos administrativos. */
 export const listarUsuarios = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
