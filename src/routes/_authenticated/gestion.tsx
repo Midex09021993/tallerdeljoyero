@@ -210,7 +210,7 @@ function GestionPage() {
       {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
       {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
       {modulo === "comercial" && puedeUsuarios ? <ConfiguracionComercial /> : null}
-      {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sesion?.sede?.nombre ?? undefined} /> : null}
+      {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sedes.find((s) => s.id === sedeActiva)?.nombre ?? sesion?.sede?.nombre ?? undefined} esDueno={esDueno} /> : null}
     </AppShell>
   );
 }
