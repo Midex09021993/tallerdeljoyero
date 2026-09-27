@@ -742,7 +742,6 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
         </div>
         {participantesPreparacionError ? <p className="mt-4 rounded-xl border border-danger/20 bg-danger-soft p-3 text-xs text-danger">{participantesPreparacionError}</p> : null}
         {areasExternas.some((area) => !seleccionesExternas[area]) ? <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Las áreas externas sin selección quedarán pendientes para resolverlas en Producción.</p> : null}
-        {faltanExternos.length ? <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft p-3 text-xs text-warning">Falta seleccionar ejecución externa para: {faltanExternos.join(", ")}.</p> : null}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={cerrarPreparacion} disabled={preparandoProduccion} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Cancelar</button>
           <button type="button" disabled={preparandoProduccion || !puedeConfirmarPreparacion} onClick={() => void prepararProduccion()} className="rounded-xl bg-gold px-5 py-2.5 text-xs font-bold text-black disabled:cursor-not-allowed disabled:opacity-50">{preparandoProduccion ? "Preparando producción…" : "Confirmar y preparar producción"}</button>
