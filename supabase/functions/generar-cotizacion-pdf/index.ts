@@ -122,12 +122,13 @@ Deno.serve(async (req) => {
         .maybeSingle(),
     ]);
 
-    const esAdmin = (roles ?? []).some((r: any) => r.role === "dueno" || r.role === "gerente");
+    const esDueno = (roles ?? []).some((r: any) => r.role === "dueno");
+    const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
     const esVentas = (areas ?? []).some((a: any) => clean(a.area).toLowerCase() === "área ventas");
     const participante = (cuenta as any)?.ecosistema_participantes;
     const mismaSede = !!quote.sede_id && !!participante?.sede_id && quote.sede_id === participante.sede_id;
 
-    if (!esAdmin && (!esVentas || !mismaSede)) {
+    if (!esDueno && (!esGerente || !mismaSede) && (!esVentas || !mismaSede)) {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
     }
 
