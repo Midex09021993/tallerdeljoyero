@@ -283,6 +283,9 @@ function NuevoPedido() {
       cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
       piedras: form.piedras.trim(),
       peso_estimado: form.peso_estimado.trim(),
+      especificaciones_comerciales: form.cotizacion_numero.trim()
+        ? { referencia_cotizacion_externa: form.cotizacion_numero.trim() }
+        : {},
     };
 
     try {
@@ -514,7 +517,7 @@ function NuevoPedido() {
               <p className="mt-1 text-xs text-muted-foreground">Registra el precio acordado y el anticipo. El saldo se calcula automáticamente.</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Campo label="N° contrato (opcional)" value={form.contrato} onChange={(v) => set("contrato", v)} placeholder="Ej. CTR-2026-0001" />
-                <Campo label="N° cotización (opcional)" value={form.cotizacion_numero} onChange={(v) => { set("cotizacion_numero", v); setCotizacionId(""); }} onBlur={async () => { const numero = form.cotizacion_numero.trim(); if (!numero) return; const { data, error } = await supabase.from("cotizaciones").select("id,numero,version,total,moneda,sede_id,estado,proyecto_joya_id").eq("numero", numero).eq("sede_id", sedeId).eq("estado", "aprobada").maybeSingle(); if (error) { toast.error(error.message); return; } if (!data) { toast.error("No se encontró una cotización aprobada con ese número en este taller."); return; } setCotizacionId(data.id); }} placeholder="Ej. COT-2026-0001" />
+                <Campo label="N° cotización (referencia externa, opcional)" value={form.cotizacion_numero} onChange={(v) => set("cotizacion_numero", v)} placeholder="Ej. COT-EXT-2026-0001" />
                 <Campo label="Precio total" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="0.00" type="number" required />
                 <Campo label="Anticipo" value={form.a_cuenta} onChange={(v) => set("a_cuenta", v)} placeholder="0.00" type="number" />
               </div>
