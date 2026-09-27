@@ -197,6 +197,22 @@ function NuevoPedido() {
 
   const sede = sedes.find((s) => s.id === sedeId);
 
+  const { data: capacidadesSedeRuta = [], error: capacidadesSedeRutaError } = useQuery({
+    queryKey: ["pedidos-nuevo-capacidades-sede", sedeId],
+    enabled: Boolean(sesion?.esAdmin && sedeId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sede_especialidades")
+        .select("especialidad_id, especialidades!inner(nombre,categoria)")
+        .eq("sede_id", sedeId)
+        .eq("especialidades.categoria", "Producción");
+      if (error) throw error;
+      return (data ?? [])
+        .map((row: any) => Array.isArray(row.especialidades) ? row.especialidades[0]?.nombre : row.especialidades?.nombre)
+        .filter(Boolean);
+    },
+  });
+
   const { data: capacidadesExternasRuta = {}, error: capacidadesExternasRutaError } = useQuery({
     queryKey: ["pedidos-nuevo-ruta-capacidades-externas", sedeId],
     enabled: Boolean(sesion?.esAdmin && sedeId),
@@ -214,10 +230,10 @@ function NuevoPedido() {
     },
   });
 
-  const capacidadesInternasRuta = useMemo(() => {
-    const nombres = new Set((capacidades ?? []).map((c: any) => String(c?.nombre ?? c)));
-    return rutas.filter((area) => nombres.has(area));
-  }, [capacidades]);
+  const capacidadesInternasRuta = useMemo(
+    () => rutas.filter((area) => (capacidadesSedeRuta as string[]).some((nombre) => String(nombre).trim().toLowerCase() === area.trim().toLowerCase())),
+    [capacidadesSedeRuta],
+  );
 
   const rutasDisponibles = rutas.filter((area) =>
     capacidadesInternasRuta.includes(area) || (capacidadesExternasRuta[area] ?? []).length > 0,
@@ -483,8 +499,8 @@ function NuevoPedido() {
                   </label>;
                 })}
               </div>
-              {capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudo consultar el directorio de servicios externos.</p> : null}
-              {!capacidadesExternasRutaError && rutasDisponibles.length === 0 ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">La sede no tiene capacidades internas ni servicios externos disponibles para esta ruta.</p> : null}
+              {capacidadesSedeRutaError || capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudieron consultar todas las capacidades disponibles para la ruta.</p> : null}
+              {!capacidadesSedeRutaError && !capacidadesExternasRutaError && rutasDisponibles.length === 0 ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">La sede no tiene capacidades internas ni servicios externos disponibles para esta ruta.</p> : null}
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
