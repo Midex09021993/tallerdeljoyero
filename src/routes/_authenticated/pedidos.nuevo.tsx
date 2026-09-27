@@ -116,13 +116,13 @@ function ReferenciaImagen({
   );
 }
 
-function Campo({ label, value, onChange, placeholder, type = "text", required = false }: {
-  label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean;
+function Campo({ label, value, onChange, placeholder, type = "text", required = false, onBlur }: {
+  label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean; onBlur?: () => void;
 }) {
   return (
     <label className="block">
       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}{required ? " *" : ""}</span>
-      <input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      <input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder}
         className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" />
     </label>
   );
@@ -547,7 +547,7 @@ function NuevoPedido() {
               <p className="mt-1 text-xs text-muted-foreground">Registra el precio acordado y el anticipo. El saldo se calcula automáticamente.</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Campo label="N° contrato (opcional)" value={form.contrato} onChange={(v) => set("contrato", v)} placeholder="Ej. CTR-2026-0001" />
-                <Campo label="N° cotización (opcional)" value={form.cotizacion_numero} onChange={(v) => { set("cotizacion_numero", v); setCotizacionId(""); }} placeholder="Ej. COT-2026-0001" />
+                <Campo label="N° cotización (opcional)" value={form.cotizacion_numero} onChange={(v) => { set("cotizacion_numero", v); setCotizacionId(""); }} onBlur={async () => { const numero = form.cotizacion_numero.trim(); if (!numero) return; const { data, error } = await supabase.from("cotizaciones").select("id,numero,version,total,moneda,sede_id,estado,proyecto_joya_id").eq("numero", numero).eq("sede_id", sedeId).eq("estado", "aprobada").maybeSingle(); if (error) { toast.error(error.message); return; } if (!data) { toast.error("No se encontró una cotización aprobada con ese número en este taller."); return; } setCotizacionId(data.id); }} placeholder="Ej. COT-2026-0001" />
                 <Campo label="Precio total" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="0.00" type="number" required />
                 <Campo label="Anticipo" value={form.a_cuenta} onChange={(v) => set("a_cuenta", v)} placeholder="0.00" type="number" />
               </div>
