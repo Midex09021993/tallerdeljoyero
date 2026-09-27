@@ -55,9 +55,9 @@ function CatalogoPage() {
     if (!puedeGestionar || guardandoAccion) return;
     setGuardandoAccion(campo + ":" + id);
     try {
-      const { error } = await supabase.from("catalogo_productos").update({ [campo]: valor }).eq("id", id);
+      const { error } = await supabase.from("catalogo_productos").update({ [campo]: valor }).eq("id", id).eq("participante_id", sesion!.participante!.id);
       if (error) throw error;
-      await queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion?.sede?.id] });
+      await queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion?.participante?.id] });
     } catch (error) { window.alert(error instanceof Error ? error.message : "No se pudo actualizar el modelo."); }
     finally { setGuardandoAccion(null); }
   };
@@ -70,13 +70,13 @@ function CatalogoPage() {
     } catch {}
   };
   const { data: catalogoConfig } = useQuery({
-    queryKey: ["catalogo-config-publico", sesion?.sede?.id],
-    enabled: Boolean(sesion?.sede?.id),
+    queryKey: ["catalogo-config-publico", sesion?.participante?.id],
+    enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("catalogo_configuracion")
         .select("slug, visible, nombre_publico")
-        .eq("sede_id", sesion!.sede!.id)
+        .eq("participante_id", sesion!.participante!.id)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -87,12 +87,12 @@ function CatalogoPage() {
   const [categoria, setCategoria] = useState("Todos");
 
   const { data: productoRows = [], isLoading: productosLoading, error: productosError } = useQuery({
-    queryKey: ["catalogo-productos", sesion?.sede?.id],
-    enabled: Boolean(sesion?.sede?.id),
+    queryKey: ["catalogo-productos", sesion?.participante?.id],
+    enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
       const { data, error } = await supabase.from("catalogo_productos")
         .select("id, codigo, nombre, categoria, descripcion, imagen_principal_url, precio_desde, moneda, publicado, destacado, orden")
-        .eq("sede_id", sesion!.sede!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
+        .eq("participante_id", sesion!.participante!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
       if (error) throw error;
       return (data ?? []) as ProductoRow[];
     },
@@ -101,7 +101,7 @@ function CatalogoPage() {
 
   const productoIds = useMemo(() => productoRows.map((p) => p.id), [productoRows]);
   const { data: coleccionRows = [] } = useQuery({
-    queryKey: ["catalogo-producto-colecciones", sesion?.sede?.id, productoIds],
+    queryKey: ["catalogo-producto-colecciones", sesion?.participante?.id, productoIds],
     enabled: productoIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase.from("catalogo_productos_colecciones")
@@ -240,7 +240,7 @@ function CatalogoPage() {
         )}
       </section>
 
-      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} sedeId={sesion?.sede?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.sede?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.sede.id] }); }} />
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} sedeId={sesion?.participante?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.sede.id] }); }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
         <div className="grid gap-3 md:grid-cols-3">
