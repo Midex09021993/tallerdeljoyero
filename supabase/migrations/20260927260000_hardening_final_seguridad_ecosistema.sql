@@ -59,4 +59,45 @@ grant execute on function public.cambiar_estado_trabajo(uuid, text) to authentic
 revoke all on function public.tomar_trabajo(uuid) from public;
 grant execute on function public.tomar_trabajo(uuid) to authenticated;
 
+-- ============================================================
+-- VERIFICACIONES DE CIERRE
+-- ============================================================
+
+do $
+declare
+  rls_enabled boolean;
+  anon_execute boolean;
+begin
+  select c.relrowsecurity
+    into rls_enabled
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and c.relname = 'cotizacion_numeradores';
+
+  if not coalesce(rls_enabled, false) then
+    raise exception 'CIERRE SEGURIDAD: cotizacion_numeradores sigue sin RLS';
+  end if;
+
+  select has_function_privilege(
+    'anon',
+    'public.mi_sede(uuid)',
+    'EXECUTE'
+  ) into anon_execute;
+
+  if anon_execute then
+    raise exception 'CIERRE SEGURIDAD: anon conserva EXECUTE sobre mi_sede(uuid)';
+  end if;
+
+  select has_function_privilege(
+    'anon',
+    'public.ve_sede(uuid,uuid)',
+    'EXECUTE'
+  ) into anon_execute;
+
+  if anon_execute then
+    raise exception 'CIERRE SEGURIDAD: anon conserva EXECUTE sobre ve_sede(uuid,uuid)';
+  end if;
+end $;
+
 commit;
