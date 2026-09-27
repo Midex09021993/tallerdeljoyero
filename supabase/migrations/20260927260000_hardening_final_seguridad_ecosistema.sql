@@ -63,7 +63,7 @@ grant execute on function public.tomar_trabajo(uuid) to authenticated;
 -- VERIFICACIONES DE CIERRE
 -- ============================================================
 
-do $
+do $$
 declare
   rls_enabled boolean;
   anon_execute boolean;
@@ -98,6 +98,6 @@ begin
   if anon_execute then
     raise exception 'CIERRE SEGURIDAD: anon conserva EXECUTE sobre ve_sede(uuid,uuid)';
   end if;
-end $;
+end $$;
 
 commit;
