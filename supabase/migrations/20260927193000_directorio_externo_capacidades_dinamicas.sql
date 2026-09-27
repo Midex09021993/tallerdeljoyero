@@ -33,37 +33,10 @@ begin
     on e.id = pe.especialidad_id
   where ep.estado = 'activo'
     and e.activa = true
-    and lower(
-      regexp_replace(
-        translate(
-          coalesce(e.categoria, ''),
-          'áéíóúÁÉÍÓÚüÜñÑ',
-          'aeiouAEIOUuUnN'
-        ),
-        '[^a-z0-9]+',
-        '',
-        'g'
-      )
-    ) like 'produccion%'
+    and lower(trim(e.categoria)) like 'producción%'
     and (
       nullif(trim(_area), '') is null
-      or lower(
-        regexp_replace(
-          translate(coalesce(e.nombre, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
-          '[^a-z0-9]+',
-          '',
-          'g'
-        )
-      )
-      =
-      lower(
-        regexp_replace(
-          translate(coalesce(_area, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
-          '[^a-z0-9]+',
-          '',
-          'g'
-        )
-      )
+      or lower(trim(e.nombre)) = lower(trim(_area))
     )
   group by ep.id, ep.nombre, ep.tipo_participante
   order by ep.nombre;
@@ -126,23 +99,7 @@ begin
       where pe.participante_id = _participante_id
         and e.activa = true
         and lower(trim(e.categoria)) like 'producción%'
-        and lower(
-          regexp_replace(
-            translate(coalesce(e.nombre, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
-            '[^a-z0-9]+',
-            '',
-            'g'
-          )
-        )
-        =
-        lower(
-          regexp_replace(
-            translate(coalesce(v_trabajo.area, ''), 'áéíóúÁÉÍÓÚüÜñÑ', 'aeiouAEIOUuUnN'),
-            '[^a-z0-9]+',
-            '',
-            'g'
-          )
-        )
+        and lower(trim(e.nombre)) = lower(trim(v_trabajo.area))
     ) then
       raise exception 'El participante externo no tiene configurada la especialidad %', v_trabajo.area;
     end if;
