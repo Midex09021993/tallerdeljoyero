@@ -324,7 +324,29 @@ function PedidoDetalle() {
       if (error) throw error;
       const resultado = data as { numero?: string; trabajos?: number; piezas?: number; externos_pendientes?: number } | null;
 
-      // La ruta solo define qué áreas deben intervenir.\n      // La distribución interna o externa se resuelve posteriormente en Producción.\n\n      // Preparar producción y liberar la OP forman una sola decisión:
+      // La ruta define qué áreas deben intervenir.
+      // Si ya seleccionamos un servicio externo compatible, lo asignamos ahora.
+      // Si no seleccionamos ninguno, la operación queda pendiente para Producción.
+
+      const { data: trabajosPreparados, error: trabajosPreparadosError } = await supabase
+        .from("trabajos")
+        .select("id,area,tipo,participante_id")
+        .eq("pedido_id", pedido.id);
+
+      if (trabajosPreparadosError) throw trabajosPreparadosError;
+
+      for (const trabajo of trabajosPreparados ?? []) {
+        if (trabajo.tipo !== "externo" || trabajo.participante_id) continue;
+        const participanteId = externosSeleccionados[String(trabajo.area || "")];
+        if (!participanteId) continue;
+        const { error: participanteError } = await supabase.rpc("asignar_participante_externo_trabajo", {
+          _trabajo_id: trabajo.id,
+          _participante_id: participanteId,
+        });
+        if (participanteError) throw participanteError;
+      }
+
+      // Preparar producción y liberar la OP forman una sola decisión:
       // una vez definida la ruta, el pedido queda listo para entrar al flujo productivo.
       const { data: opCreada, error: opCreadaError } = await supabase
         .from("ordenes_produccion")
@@ -688,7 +710,7 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">Preparación de producción</p>
             <h3 className="mt-1 font-display text-2xl">Revisar ruta de fabricación</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Antes de crear la OP, verifica la ruta. La distribución interna o externa se definirá posteriormente en Producción.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Antes de crear la OP, verifica la ruta y, si existe un servicio externo habilitado, selecciona quién ejecutará esa área.</p>
           </div>
           <button type="button" onClick={cerrarPreparacion} disabled={preparandoProduccion} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-50">Cerrar</button>
         </div>
@@ -707,11 +729,19 @@ function Produccion({ trabajos, ordenes, controles, piezas, costo, loading, orde
                 </div>
                 <span className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase ${interna ? "bg-emerald-500/10 text-emerald-700" : "bg-warning-soft text-warning"}`}>{interna ? "Interna" : "Externa"}</span>
               </div>
-              {!interna ? <div className="mt-4 rounded-xl border border-border bg-card px-3 py-2.5 text-[10px] text-muted-foreground">La ejecución se definirá en Producción. Allí podrás elegir entre capacidad interna o taller, proveedor o profesional externo.</div> : null}
+              {!interna ? <div className="mt-4">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Servicio / profesional externo</label>
+                <select value={seleccionesExternas[area] ?? ""} onChange={(e) => setSeleccionExterna(area, e.target.value)} disabled={preparandoProduccion || !participantes.length} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-card px-3 text-sm disabled:opacity-60">
+                  <option value="">{participantes.length ? "Seleccionar servicio externo..." : "No hay servicios/profesionales compatibles configurados"}</option>
+                  {participantes.map((p) => <option key={p.id} value={p.id}>{p.nombre} · {p.tipo_participante === "organizacion" ? "Taller / organización" : p.tipo_participante === "profesional" ? "Profesional" : p.tipo_participante === "servicio" ? "Servicio especializado" : p.tipo_participante === "proveedor" ? "Proveedor" : p.tipo_participante ?? ""}{p.especialidad ? ` · ${p.especialidad}` : ""}</option>)}
+                </select>
+                <p className="mt-1.5 text-[10px] text-muted-foreground">{participantes.length ? "Solo aparecen participantes con esta capacidad habilitada." : "Puedes preparar la OP y resolver esta ejecución posteriormente desde Producción."}</p>
+              </div> : null}
             </div>;
           })}
         </div>
         {participantesPreparacionError ? <p className="mt-4 rounded-xl border border-danger/20 bg-danger-soft p-3 text-xs text-danger">{participantesPreparacionError}</p> : null}
+        {areasExternas.some((area) => !seleccionesExternas[area]) ? <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Las áreas externas sin selección quedarán pendientes para resolverlas en Producción.</p> : null}
         {faltanExternos.length ? <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft p-3 text-xs text-warning">Falta seleccionar ejecución externa para: {faltanExternos.join(", ")}.</p> : null}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={cerrarPreparacion} disabled={preparandoProduccion} className="rounded-xl border border-border px-4 py-2.5 text-xs font-bold disabled:opacity-50">Cancelar</button>
