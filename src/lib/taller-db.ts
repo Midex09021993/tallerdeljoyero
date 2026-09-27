@@ -1326,7 +1326,6 @@ export function useCrearPedido() {
       const origenComercial = pedido.cotizacion_id ? "cotizacion" : "directo";
       const pedidoConContexto = {
         ...pedido,
-        origen_comercial: origenComercial,
         cliente: pedido.cliente.trim() || "Cliente pendiente de registrar",
         contrato: pedido.contrato?.trim() ?? "",
         cliente_id: pedido.cliente_id ?? null,
