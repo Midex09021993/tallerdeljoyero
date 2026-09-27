@@ -33,19 +33,19 @@ function ComprasPage() {
   const [guardando, setGuardando] = useState(false);
 
   const { data: compras = [] } = useQuery({
-    queryKey: ["compras", sesion?.sede?.id],
-    enabled: Boolean(sesion?.sede?.id),
+    queryKey: ["compras", sesion?.participante?.id],
+    enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("compras").select("id,numero,proveedor_nombre,estado,fecha_emision,total,moneda,notas").eq("sede_id", sesion!.sede!.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("compras").select("id,numero,proveedor_nombre,estado,fecha_emision,total,moneda,notas").eq("participante_id", sesion!.participante!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
   });
   const { data: materiales = [] } = useQuery({
-    queryKey: ["compras-materiales", sesion?.sede?.id],
-    enabled: Boolean(sesion?.sede?.id),
+    queryKey: ["compras-materiales", sesion?.participante?.id],
+    enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("inventario").select("id,material,codigo,unidad,costo_unitario,activo").eq("sede_id", sesion!.sede!.id).eq("activo", true).order("material");
+      const { data, error } = await supabase.from("inventario").select("id,material,codigo,unidad,costo_unitario,activo").eq("participante_id", sesion!.participante!.id).eq("activo", true).order("material");
       if (error) throw error;
       return data ?? [];
     },
@@ -58,13 +58,13 @@ function ComprasPage() {
   };
 
   const guardarCompra = async () => {
-    if (!sesion?.sede?.id || !sesion.esAdmin || !proveedor.trim()) return;
+    if (!sesion?.participante?.id || !sesion.esAdmin || !proveedor.trim()) return;
     const validas = lineas.filter(l => l.material_id && Number(l.cantidad) > 0 && Number(l.costo_unitario) >= 0);
     if (!validas.length) { toast.error("Agrega al menos un material válido"); return; }
     setGuardando(true);
     try {
       const numero = "OC-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
-      const { data: compra, error } = await supabase.from("compras").insert({ sede_id: sesion.sede.id, numero, proveedor_nombre: proveedor.trim(), estado: "ordenada", subtotal: totalBorrador, total: totalBorrador, notas: notas.trim(), creado_por: sesion.user.id }).select("id").single();
+      const { data: compra, error } = await supabase.from("compras").insert({ participante_id: sesion.participante.id, sede_id: sesion.participante.sede_id, numero, proveedor_nombre: proveedor.trim(), estado: "ordenada", subtotal: totalBorrador, total: totalBorrador, notas: notas.trim(), creado_por: sesion.user.id }).select("id").single();
       if (error || !compra) throw error ?? new Error("No se pudo crear la compra");
       const { error: detailError } = await supabase.from("compra_detalles").insert(validas.map(l => ({ compra_id: compra.id, material_id: l.material_id, cantidad: Number(l.cantidad), unidad: l.unidad, costo_unitario: Number(l.costo_unitario), descripcion: materiales.find(m => m.id === l.material_id)?.material ?? "" })));
       if (detailError) { await supabase.from("compras").delete().eq("id", compra.id); throw detailError; }
