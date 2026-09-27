@@ -140,7 +140,7 @@ export function ConfiguracionIdentidadComercial() {
               {sesion?.esDueno ? (
                 <select value={participanteNuevo} onChange={e=>setParticipanteNuevo(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
                   <option value="">Seleccionar taller</option>
-                  {sedes.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                  {participantes.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                 </select>
               ) : null}
               <button type="button" onClick={()=>void crearIdentidad()} disabled={creando || !participanteNuevo} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
