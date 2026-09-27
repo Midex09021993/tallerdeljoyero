@@ -200,7 +200,9 @@ function NuevoPedido() {
     cliente: "", telefono: "", trabajo: "", material: "", talla: "", piedras: "",
     peso_estimado: "", cantidad_piezas: "1", fecha_ingreso: hoy(), fecha_entrega: "",
     origen: "", canal_captacion: "", contrato: "", importe_directo: "", notas: "",
+    cotizacion_externa: "", contrato_externo: "", referencia_externa: "",
   });
+  const [rutaProduccion, setRutaProduccion] = useState<string[]>([]);
   const [referenciasAbiertas, setReferenciasAbiertas] = useState(false);
   const [referencias, setReferencias] = useState<Record<ReferenciaClave, { file: File; preview: string } | null>>({
     perspectiva: null,
@@ -290,6 +292,7 @@ function NuevoPedido() {
       contrato_id: contratoId || null,
       cotizacion_id: cotizacionId || null,
       proyecto_joya_id: cotizacionSeleccionada?.proyecto_joya_id ?? null,
+      especificaciones_comerciales: { cotizacion_externa: form.cotizacion_externa.trim() || null, contrato_externo: form.contrato_externo.trim() || null, referencia_externa: form.referencia_externa.trim() || null },
       material: form.material.trim(),
       estado: "Recibido",
       entrega: form.fecha_entrega || "",
@@ -305,8 +308,7 @@ function NuevoPedido() {
       fecha_ingreso: form.fecha_ingreso || hoy(),
       fecha_entrega: form.fecha_entrega || null,
       area_actual: "Pedidos",
-      // La ruta se define al preparar producción; al recibir el pedido puede quedar vacía.
-      ruta: [],
+      ruta: rutaProduccion,
       notas: form.notas.trim(),
       talla: form.talla.trim(),
       cantidad_piezas: Math.max(1, Number(form.cantidad_piezas) || 1),
@@ -533,10 +535,23 @@ function NuevoPedido() {
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de producción</h2><p className="mt-1 text-xs text-muted-foreground">La ruta se determina al preparar producción, cuando ya conocemos qué áreas deben intervenir.</p></div></div>
-              <div className="mt-5 rounded-xl border border-border bg-surface-muted px-4 py-3 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground">Pendiente de planificación</p>
-                <p className="mt-1">El pedido se registra primero. Después se define la ruta exacta según la operación, capacidad del taller y características de la pieza.</p>
+              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de producción</h2><p className="mt-1 text-xs text-muted-foreground">Define el recorrido previsto. La producción todavía no se prepara aquí.</p></div></div>
+              <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                {rutas.map((area) => {
+                  const activa = rutaProduccion.includes(area);
+                  return <label key={area} className={activa ? "flex cursor-pointer items-center gap-3 rounded-xl border border-gold/50 bg-gold/5 px-4 py-3" : "flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 hover:bg-surface-muted"}>
+                    <input type="checkbox" checked={activa} onChange={() => setRutaProduccion((actual) => activa ? actual.filter((x) => x !== area) : [...actual, area])} className="size-4 accent-gold" />
+                    <span className="text-sm font-semibold">{area}</span>
+                  </label>;
+                })}
+              </div>
+              <p className="mt-3 text-[10px] text-muted-foreground">Puedes dejarla vacía si el recorrido se definirá posteriormente en el Centro Operativo.</p>
+            </section>        <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
+              <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Referencias del trabajo</h2><p className="mt-1 text-xs text-muted-foreground">Opcionales. Conservan referencias proporcionadas por el cliente o por otra plataforma.</p></div></div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Campo label="Cotización externa" value={form.cotizacion_externa} onChange={(v) => set("cotizacion_externa", v)} placeholder="Número de cotización externa" />
+                <Campo label="Contrato externo" value={form.contrato_externo} onChange={(v) => set("contrato_externo", v)} placeholder="Número de contrato externo" />
+                <Campo label="Referencia externa" value={form.referencia_externa} onChange={(v) => set("referencia_externa", v)} placeholder="Código o referencia del cliente" />
               </div>
             </section>
 
