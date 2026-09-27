@@ -37,6 +37,25 @@ as $$
   )
 $$;
 
+-- Compatibilidad: las politicas antiguas que comparan sede_id pasan a
+-- resolver primero el participante del usuario.
+create or replace function public.mi_sede(_user_id uuid)
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select ep.sede_id
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  where pc.user_id = _user_id
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+  order by pc.created_at asc
+  limit 1
+$$;
+
 create or replace function public.ve_sede(_user_id uuid, _sede_id uuid)
 returns boolean
 language sql
@@ -58,9 +77,11 @@ $$;
 
 revoke execute on function public.mi_participante(uuid) from public;
 revoke execute on function public.tiene_participante(uuid,uuid) from public;
+revoke execute on function public.mi_sede(uuid) from public;
 revoke execute on function public.ve_sede(uuid,uuid) from public;
 grant execute on function public.mi_participante(uuid) to authenticated;
 grant execute on function public.tiene_participante(uuid,uuid) to authenticated;
+grant execute on function public.mi_sede(uuid) to authenticated;
 grant execute on function public.ve_sede(uuid,uuid) to authenticated;
 
 -- Verificacion estructural: toda cuenta debe apuntar a un participante existente.
