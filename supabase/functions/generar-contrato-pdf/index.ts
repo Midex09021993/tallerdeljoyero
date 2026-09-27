@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
     const participante = (cuenta as any)?.ecosistema_participantes;
     const mismoParticipante = !!contrato.participante_id && !!participante?.participante_id && contrato.participante_id === participante.participante_id;
-    if (!esDueno && (!esGerente || !mismaSede)) {
+    if (!esDueno && (!esGerente || !mismoParticipante)) {
       return json({ error: "No tienes acceso a este contrato." }, 403);
     }
 
