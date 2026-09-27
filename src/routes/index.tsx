@@ -12,6 +12,7 @@ import {
   Sparkles,
   UsersRound,
   Workflow,
+  type LucideIcon,
 } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
@@ -294,8 +295,7 @@ function LandingPage() {
               [Sparkles, "Conversor de Tallas", "Equivalencias entre escalas de anillos."],
               [Monitor, "Visualizador y Peso 3D", "Visualización y estimación de peso."],
               [Gem, "AURUM Render", "Visualización 3D de joyería."],
-            ].map(([Icon, title, text]) => {
-              const ToolIcon = Icon as typeof Gem;
+            ] as [LucideIcon, string, string][]).map(([ToolIcon, title, text]) => {
               return (
                 <article key={String(title)} className="rounded-2xl border border-white/10 bg-black/20 p-5">
                   <ToolIcon className="size-6 text-[#d4af37]" />
