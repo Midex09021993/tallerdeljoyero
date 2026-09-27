@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
     const { data: quote, error: quoteError } = await admin
       .from("cotizaciones")
-      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id,identidad_comercial_id,identidad_comercial")
+      .select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,notas_cliente,cliente_id,proyecto_joya_id,sede_id,participante_id,identidad_comercial_id,identidad_comercial")
       .eq("id", cotizacionId)
       .maybeSingle();
 
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
     const esVentas = (areas ?? []).some((a: any) => clean(a.area).toLowerCase() === "área ventas");
     const participante = (cuenta as any)?.ecosistema_participantes;
-    const mismaSede = !!quote.sede_id && !!participante?.sede_id && quote.sede_id === participante.sede_id;
+    const mismoParticipante = !!quote.participante_id && !!participante?.participante_id && quote.participante_id === participante.participante_id;
 
     if (!esDueno && (!esGerente || !mismaSede) && (!esVentas || !mismaSede)) {
       return json({ error: "No tienes acceso comercial a esta cotización." }, 403);
