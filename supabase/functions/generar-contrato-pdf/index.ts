@@ -98,13 +98,21 @@ Deno.serve(async (req) => {
 
     if (contratoError || !contrato) return json({ error: "Contrato no encontrado." }, 404);
 
-    const [{ data: profile }, { data: roles }] = await Promise.all([
-      admin.from("profiles").select("sede_id").eq("id", user.id).maybeSingle(),
+    const [{ data: roles }, { data: cuenta }] = await Promise.all([
       admin.from("user_roles").select("role").eq("user_id", user.id),
+      admin
+        .from("participante_cuentas")
+        .select("participante_id, ecosistema_participantes!inner(id,sede_id,estado)")
+        .eq("user_id", user.id)
+        .eq("estado", "activo")
+        .eq("ecosistema_participantes.estado", "activo")
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     const esAdmin = (roles ?? []).some((r: any) => r.role === "dueno" || r.role === "gerente");
-    const mismaSede = !!contrato.sede_id && !!profile?.sede_id && contrato.sede_id === profile.sede_id;
+    const participante = (cuenta as any)?.ecosistema_participantes;
+    const mismaSede = !!contrato.sede_id && !!participante?.sede_id && contrato.sede_id === participante.sede_id;
     if (!esAdmin && !mismaSede) {
       return json({ error: "No tienes acceso a este contrato." }, 403);
     }
