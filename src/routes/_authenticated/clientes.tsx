@@ -64,7 +64,7 @@ function ClientesPage() {
       : await clientesQuery.eq("participante_id", sesion.participante.id);
     if (clientesError) throw clientesError;
 
-    const participanteIds = [...new Set((clientesData ?? []).map((cliente) => cliente.participante_id).filter(Boolean))];
+    const participanteIds = [...new Set((clientesData ?? []).map((cliente) => cliente.participante_id).filter((id): id is string => Boolean(id)))];
     const { data: participantesData, error: participantesError } = participanteIds.length
       ? await supabase.from("ecosistema_participantes").select("id,nombre").in("id", participanteIds)
       : { data: [], error: null };
@@ -72,7 +72,7 @@ function ClientesPage() {
     const participanteNombrePorId = new Map((participantesData ?? []).map((p) => [p.id, p.nombre]));
     const clientesConSede = (clientesData ?? []).map((cliente) => ({
       ...cliente,
-      sede_nombre: participanteNombrePorId.get(cliente.participante_id) ?? "Taller no identificado",
+      sede_nombre: participanteNombrePorId.get(cliente.participante_id ?? "") ?? "Taller no identificado",
     })) as Cliente[];
 
     setClientes(clientesConSede);
@@ -132,7 +132,7 @@ function ClientesPage() {
       if (!seleccionado) {
         const { data } = await supabase
           .from("clientes")
-          .select("id,nombre,telefono,email,estado,created_at,sede_id")
+          .select("id,nombre,telefono,email,estado,created_at,sede_id,participante_id")
           .eq("participante_id", sesion.participante.id)
           .eq("nombre", payload.nombre)
           .order("created_at", { ascending: false })

@@ -145,11 +145,11 @@ export function useSesion() {
       // El perfil administrativo es la fuente principal. Si una cuenta Auth
       // todavía no tiene fila en profiles, usamos los metadatos de Auth como
       // identidad de respaldo para no mostrar "Usuario".
-      const nombreAuth = typeof user.user_metadata?.nombre === "string" ? user.user_metadata.nombre.trim() : "";
-      const apellidosAuth = typeof user.user_metadata?.apellidos === "string" ? user.user_metadata.apellidos.trim() : "";
+      const nombreAuth = typeof user.user_metadata?.["nombre"] === "string" ? user.user_metadata["nombre"].trim() : "";
+      const apellidosAuth = typeof user.user_metadata?.["apellidos"] === "string" ? user.user_metadata["apellidos"].trim() : "";
       const usuarioAuth =
-        typeof user.user_metadata?.usuario === "string"
-          ? user.user_metadata.usuario.trim()
+        typeof user.user_metadata?.["usuario"] === "string"
+          ? user.user_metadata["usuario"].trim()
           : (user.email?.split("@")[0] ?? "").trim();
 
       return {
@@ -159,8 +159,8 @@ export function useSesion() {
           usuario: usuarioAuth,
           nombre: nombreAuth,
           apellidos: apellidosAuth,
-          dni: typeof user.user_metadata?.dni === "string" ? user.user_metadata.dni.trim() : "",
-          telefono: typeof user.user_metadata?.telefono === "string" ? user.user_metadata.telefono.trim() : "",
+          dni: typeof user.user_metadata?.["dni"] === "string" ? user.user_metadata["dni"].trim() : "",
+          telefono: typeof user.user_metadata?.["telefono"] === "string" ? user.user_metadata["telefono"].trim() : "",
           sede_id: participante?.sede_id ?? null,
           participante_id: participanteId
         },
