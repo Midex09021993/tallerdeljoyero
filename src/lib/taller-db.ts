@@ -500,7 +500,7 @@ export type PedidoNuevo = {
 };
 
 const CAMPOS_PEDIDO_BASE =
-  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, origen, origen_comercial, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones";
+  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, participante_id, origen, origen_comercial, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones";
 
 const CAMPOS_PEDIDO_COMERCIAL =
   "pedido_id, telefono, importe, a_cuenta, saldo, cotizacion_detalles, especificaciones_comerciales, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at";
@@ -614,6 +614,9 @@ export function usePedidos() {
         console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
       }
 
+      // La identidad operativa del pedido puede venir por participante_id (canónica)
+      // o por sede_id (compatibilidad histórica). Resolvemos ambas para que nunca
+      // aparezca "Taller no asignado" cuando el pedido sí tiene taller.
       const participanteIds = [
         ...new Set(
           ((pedidosData ?? []) as Array<Record<string, unknown>>)
@@ -621,18 +624,39 @@ export function usePedidos() {
             .filter((id): id is string => typeof id === "string" && id.length > 0),
         ),
       ];
+      const sedeIds = [
+        ...new Set(
+          ((pedidosData ?? []) as Array<Record<string, unknown>>)
+            .map((pedido) => pedido["sede_id"])
+            .filter((id): id is string => typeof id === "string" && id.length > 0),
+        ),
+      ];
       const { data: participantesData, error: participantesError } = participanteIds.length
-        ? await supabase.from("ecosistema_participantes").select("id,nombre").in("id", participanteIds)
+        ? await supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
         : { data: [], error: null };
 
       if (participantesError) {
-        console.warn("[Pedidos] No se pudo cargar el nombre del participante; se muestran los pedidos igualmente.", participantesError);
+        console.warn("[Pedidos] No se pudo cargar el nombre del participante; se usa la sede como respaldo.", participantesError);
+      }
+
+      const { data: sedesData, error: sedesError } = sedeIds.length
+        ? await supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+        : { data: [], error: null };
+
+      if (sedesError) {
+        console.warn("[Pedidos] No se pudo cargar el nombre de la sede.", sedesError);
       }
 
       const nombresParticipante = new Map(
         ((participantesData ?? []) as Array<{ id: string; nombre: string | null }>).map((participante) => [
           participante.id,
           participante.nombre ?? "",
+        ]),
+      );
+      const nombresSede = new Map(
+        ((sedesData ?? []) as Array<{ id: string; nombre: string | null }>).map((sede) => [
+          sede.id,
+          sede.nombre ?? "",
         ]),
       );
 
@@ -659,7 +683,10 @@ export function usePedidos() {
           saldo: Math.max((Number(comercial["importe"]) || 0) - (Number(comercial["a_cuenta"]) || 0), 0),
           participante_id: typeof p["participante_id"] === "string" ? p["participante_id"] : null,
           participante_nombre: nombresParticipante.get(textoCampo(p, "participante_id")) ?? null,
-          sede_nombre: nombresParticipante.get(textoCampo(p, "participante_id")) ?? null,
+          sede_nombre:
+            nombresParticipante.get(textoCampo(p, "participante_id")) ??
+            nombresSede.get(textoCampo(p, "sede_id")) ??
+            null,
           sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
           telefono: textoCampo(comercial, "telefono"),
           origen: textoCampo(p, "origen"),
