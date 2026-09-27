@@ -132,7 +132,7 @@ function CotizacionDetallePage() {
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("numero", q.numero)
-      .eq("sede_id", q.sede_id)
+      .eq("sede_id", q.participante_id)
       .order("version", { ascending: false });
     setVersiones(versionesRelacionadas ?? [q]);
 
@@ -157,9 +157,9 @@ function CotizacionDetallePage() {
     if (respuestasError) {
       setError(respuestasError.message);
     }
-    if (q.sede_id) {
-      const { data: sede } = await supabase.from("sedes").select("nombre").eq("id", q.sede_id).maybeSingle();
-      setSedeNombre(sede?.nombre ?? null);
+    if (q.participante_id) {
+      const { data: participante } = await supabase.from("ecosistema_participantes").select("nombre").eq("id", q.participante_id).maybeSingle();
+      setSedeNombre(participante?.nombre ?? null);
     } else {
       setSedeNombre(null);
     }
