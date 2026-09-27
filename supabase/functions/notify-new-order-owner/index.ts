@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
 
     let ownerIds: string[] = [];
 
+    let participanteId = "";
     if (sedeIdPedido) {
       const { data: participante } = await admin
         .from("ecosistema_participantes")
@@ -90,39 +91,48 @@ Deno.serve(async (req) => {
         .eq("sede_id", sedeIdPedido)
         .eq("estado", "activo")
         .maybeSingle();
+      participanteId = participante?.id ?? "";
+    } else if (prueba) {
+      const { data: cuentaActor } = await admin
+        .from("participante_cuentas")
+        .select("participante_id")
+        .eq("user_id", userId)
+        .eq("estado", "activo")
+        .limit(1)
+        .maybeSingle();
+      participanteId = cuentaActor?.participante_id ?? "";
+    }
 
-      if (!participante?.id) return json({ ok: true, sent: 0, reason: "El taller del pedido no está vinculado al ecosistema" });
+    if (!participanteId) return json({ ok: true, sent: 0, reason: "No se pudo determinar el taller" });
 
+    if (!prueba) {
       const { data: actorCuenta } = await admin
         .from("participante_cuentas")
         .select("participante_id")
         .eq("user_id", userId)
-        .eq("participante_id", participante.id)
+        .eq("participante_id", participanteId)
         .eq("estado", "activo")
         .maybeSingle();
-
       if (!actorCuenta) return json({ error: "No autorizado para este taller" }, 403);
-
-      const { data: owners, error: ownersError } = await admin
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "dueno");
-
-      if (ownersError) return json({ error: ownersError.message }, 500);
-
-      const ids = [...new Set((owners ?? []).map((row) => row.user_id).filter(Boolean))];
-      const { data: cuentasOwner, error: cuentasOwnerError } = await admin
-        .from("participante_cuentas")
-        .select("user_id")
-        .eq("participante_id", participante.id)
-        .eq("estado", "activo")
-        .in("user_id", ids);
-
-      if (cuentasOwnerError) return json({ error: cuentasOwnerError.message }, 500);
-      ownerIds = [...new Set((cuentasOwner ?? []).map((row) => row.user_id).filter(Boolean))];
-    } else {
-      return json({ ok: true, sent: 0, reason: "No se pudo determinar el taller del pedido" });
     }
+
+    const { data: owners, error: ownersError } = await admin
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "dueno");
+
+    if (ownersError) return json({ error: ownersError.message }, 500);
+
+    const ids = [...new Set((owners ?? []).map((row) => row.user_id).filter(Boolean))];
+    const { data: cuentasOwner, error: cuentasOwnerError } = await admin
+      .from("participante_cuentas")
+      .select("user_id")
+      .eq("participante_id", participanteId)
+      .eq("estado", "activo")
+      .in("user_id", ids);
+
+    if (cuentasOwnerError) return json({ error: cuentasOwnerError.message }, 500);
+    ownerIds = [...new Set((cuentasOwner ?? []).map((row) => row.user_id).filter(Boolean))];
     if (!ownerIds.length) return json({ ok: true, sent: 0, reason: "No hay usuarios dueno" });
 
     const { data: subscriptions, error: subscriptionsError } = await admin.from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth").in("user_id", ownerIds);
