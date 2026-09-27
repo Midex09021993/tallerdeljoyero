@@ -72,6 +72,28 @@ function PedidoDetalle() {
 
   const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
 
+  const { data: capacidadesExternasRuta = {}, error: capacidadesExternasRutaError } = useQuery({
+    queryKey: ["pedidos-ruta-capacidades-externas", sedeProduccionId],
+    enabled: Boolean(sesion?.esAdmin && sedeProduccionId),
+    queryFn: async () => {
+      const resultados = await Promise.all(
+        rutas.map(async (area) => {
+          const { data, error } = await supabase.rpc("listar_participantes_servicio", {
+            _area: area,
+          });
+          if (error) throw error;
+          return [area, data ?? []] as const;
+        }),
+      );
+      return Object.fromEntries(resultados);
+    },
+  });
+
+  const rutasDisponibles = rutas.filter((area) =>
+    capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, area)) ||
+    (capacidadesExternasRuta[area] ?? []).length > 0,
+  );
+
   useEffect(() => {
     if (!pedido) return;
     setRuta((Array.isArray(pedido.ruta) ? pedido.ruta : []).filter((area: string) => rutas.includes(area)));
@@ -507,7 +529,7 @@ function PedidoDetalle() {
         {([["resumen","Resumen",ClipboardList],["produccion","Producción",Factory],["comercial","Comercial",UserRound],["archivos","Archivos",FileText],["historial","Historial",History]] as const).map(([idTab,label,Icon]) => <button key={idTab} type="button" onClick={() => setTab(idTab)} className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold ${tab === idTab ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground"}`}><Icon className="size-4" />{label}</button>)}
       </div>
 
-      {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} /> : null}
+      {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} toggleRuta={(area) => setRuta((actual) => actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area])} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const { error } = await supabase.from("pedidos").update({ ruta, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} rutasDisponibles={rutasDisponibles} capacidadesExternasRuta={capacidadesExternasRuta} capacidadesExternasRutaError={capacidadesExternasRutaError?.message ?? null} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} participantesPorTrabajo={participantesPorTrabajo} capacidadesSede={capacidadesSede} capacidadesSedeError={capacidadesSedeError} operariosError={operariosError?.message ?? participantesServicioError?.message ?? null} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} asignarParticipanteExterno={asignarParticipanteExterno} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} ruta={ruta} capacidadesSede={capacidadesSede} participantesPorAreaPreparacion={participantesPorAreaPreparacion} participantesPreparacionError={participantesPreparacionError?.message ?? null} preparacionAbierta={preparacionAbierta} abrirPreparacion={abrirPreparacion} cerrarPreparacion={() => setPreparacionAbierta(false)} seleccionesExternas={seleccionesExternas} setSeleccionExterna={(area, participanteId) => setSeleccionesExternas((actual) => ({ ...actual, [area]: participanteId }))} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} contrato={contratoFinanciero} pagos={pagosContrato} /> : null}
       {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
@@ -518,7 +540,7 @@ function PedidoDetalle() {
 
 function Dato({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-surface-muted px-3 py-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold truncate">{value}</p></div>; }
 
-function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, puedeEditarRuta, guardandoRuta, toggleRuta, guardarRuta }: { pedido: any; trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; dias: number | null; ruta: string[]; puedeEditarRuta: boolean; guardandoRuta: boolean; toggleRuta: (area: string) => void; guardarRuta: () => Promise<void> }) {
+function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, puedeEditarRuta, guardandoRuta, toggleRuta, guardarRuta, rutasDisponibles, capacidadesExternasRuta, capacidadesExternasRutaError }: { pedido: any; trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; dias: number | null; ruta: string[]; puedeEditarRuta: boolean; guardandoRuta: boolean; toggleRuta: (area: string) => void; guardarRuta: () => Promise<void>; rutasDisponibles: string[]; capacidadesExternasRuta: Record<string, any[]>; capacidadesExternasRutaError: Error | null }) {
   const completados = trabajos.filter((t) => t.estado === "completado").length;
   const rechazadas = piezas.filter((p) => p.estado === "rechazada").length;
   const piezasValidas = piezas.filter((p) => ["verificada", "liberada"].includes(p.estado));
@@ -605,13 +627,27 @@ function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, pue
           {ruta.length ? <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold-deep">{ruta.length} {ruta.length === 1 ? "área" : "áreas"}</span> : <span className="rounded-full bg-warning-soft px-2.5 py-1 text-[10px] font-bold text-warning">Ruta pendiente</span>}
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"].map((area) => (
-            <button key={area} type="button" disabled={!puedeEditarRuta} onClick={() => toggleRuta(area)}
-              className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-70 ${ruta.includes(area) ? "border-gold bg-gold/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-surface-muted"}`}>
-              <span>{area}</span>{ruta.includes(area) ? <CheckCircle2 className="size-4 text-gold" /> : null}
-            </button>
-          ))}
+          {rutas.map((area) => {
+  const interna = capacidadesSede.some((capacidad) => areaCoincide(capacidad.nombre, area));
+  const externa = (capacidadesExternasRuta[area] ?? []).length > 0;
+  const disponible = rutasDisponibles.includes(area);
+  const seleccionada = ruta.includes(area);
+  return (
+    <button key={area} type="button" disabled={!puedeEditarRuta || (!disponible && !seleccionada)} onClick={() => toggleRuta(area)}
+      className={`flex items-center justify-between rounded-xl border px-3 py-3 text-left text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${seleccionada ? "border-gold bg-gold/10 text-foreground" : disponible ? "border-border bg-background text-muted-foreground hover:bg-surface-muted" : "border-danger/20 bg-danger/5 text-danger"}`}>
+      <span>
+        <span className="block">{area}</span>
+        <span className="mt-1 block text-[9px] font-normal">
+          {interna && externa ? "Interna + externa" : interna ? "Capacidad interna" : externa ? "Servicio externo disponible" : "Sin capacidad disponible"}
+        </span>
+      </span>
+      {seleccionada ? <CheckCircle2 className="size-4 text-gold" /> : null}
+    </button>
+  );
+})}
         </div>
+        {capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudo consultar el directorio de servicios externos.</p> : null}
+        {ruta.some((area) => !rutasDisponibles.includes(area)) ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Hay áreas seleccionadas cuya capacidad interna y externa ya no está disponible. Resuelve esa capacidad antes de preparar la producción.</p> : null}
         {ruta.length ? <div className="mt-4 rounded-xl bg-surface-muted p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Orden de recorrido</p><p className="mt-1 text-xs font-semibold">{ruta.map((area, index) => `${index + 1}. ${area}`).join("  →  ")}</p></div> : <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">Este pedido aún no tiene una ruta de fabricación. Debes definirla antes de preparar la producción.</p>}
         {puedeEditarRuta ? <div className="mt-4 flex justify-end"><button type="button" disabled={guardandoRuta || !ruta.length} onClick={() => void guardarRuta()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50">{guardandoRuta ? "Guardando ruta…" : "Guardar ruta"}</button></div> : null}
         {!puedeEditarRuta && ordenes.length ? <p className="mt-3 text-[10px] text-muted-foreground">La ruta queda bloqueada después de preparar la producción para conservar la trazabilidad.</p> : null}
