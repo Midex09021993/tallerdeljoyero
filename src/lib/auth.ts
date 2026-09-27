@@ -46,7 +46,8 @@ export type Sesion = {
   roles: Rol[];
   areas: string[];
   sede: { id: string; nombre: string; ciudad: string; modo: string } | null;
-  participante: { id: string; nombre: string; ciudad: string | null } | null;
+  participante: { id: string; nombre: string; ciudad: string | null; sede_id: string | null } | null;
+  participantes: Array<{ id: string; nombre: string; ciudad: string | null; sede_id: string | null }>;
   esDueno: boolean; esAdmin: boolean; rolPrincipal: Rol;
 };
 
@@ -60,15 +61,15 @@ export function useSesion() {
       const user = sessionData.session?.user;
       if (!user) return null;
 
-      const [{ data: perfil }, { data: roles }, { data: areas }, { data: cuenta }] = await Promise.all([
+      const [{ data: perfil }, { data: roles }, { data: areas }, { data: cuentas }] = await Promise.all([
         supabase.from("profiles")
-          .select("id, usuario, nombre, apellidos, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta")
+          .select("id, usuario, nombre, apellidos, dni, telefono, sede_id, participante_id, activo, acceso_desde, acceso_hasta")
           .eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
         supabase.from("user_areas").select("area").eq("user_id", user.id),
-        supabase.from("participante_cuentas").select("participante_id, estado")
+        supabase.from("participante_cuentas").select("participante_id, estado, created_at")
           .eq("user_id", user.id).eq("estado", "activo")
-          .order("created_at", { ascending: true }).limit(1).maybeSingle(),
+          .order("created_at", { ascending: true }),
       ]);
 
       const listaRoles = (roles ?? []).map((r) => r.role as Rol);
@@ -80,20 +81,35 @@ export function useSesion() {
       );
       if (bloqueado) { await supabase.auth.signOut(); return null; }
 
-      const participanteId = cuenta?.participante_id ?? null;
-      let participante = null as Sesion["participante"];
-      if (participanteId) {
+      // Ecosistema es la fuente de verdad de pertenencia. sede_id queda solo
+      // como compatibilidad histórica del perfil y nunca se usa para autorizar.
+      const participanteIds = Array.from(new Set([
+        ...((cuentas ?? []).map((c) => c.participante_id).filter(Boolean) as string[]),
+        ...(perfil?.participante_id ? [perfil.participante_id] : []),
+      ]));
+      let participantes: Sesion["participantes"] = [];
+      if (participanteIds.length > 0) {
         const { data } = await supabase.from("ecosistema_participantes")
-          .select("id, nombre, ciudad").eq("id", participanteId).eq("estado", "activo").maybeSingle();
-        participante = data ?? null;
+          .select("id, nombre, ciudad, sede_id")
+          .in("id", participanteIds)
+          .eq("estado", "activo")
+          .order("nombre");
+        participantes = (data ?? []) as Sesion["participantes"];
       }
 
-      let sede = null as Sesion["sede"];
-      if (perfil?.sede_id) {
-        const { data } = await supabase.from("sedes")
-          .select("id, nombre, ciudad, modo").eq("id", perfil.sede_id).maybeSingle();
-        sede = data ?? null;
-      }
+      const participanteId = participantes[0]?.id ?? perfil?.participante_id ?? null;
+      const participante = participantes.find((p) => p.id === participanteId) ?? null;
+
+      // Objeto legacy para componentes que aún muestran el nombre del taller.
+      // No se consulta sedes: el dato operativo proviene del participante.
+      const sede = participante
+        ? {
+            id: participante.sede_id ?? participante.id,
+            nombre: participante.nombre,
+            ciudad: participante.ciudad ?? "",
+            modo: "ecosistema",
+          }
+        : null;
 
       const orden: Rol[] = ["dueno", "gerente", "operario", "monitor", "cliente"];
       const rolPrincipal = orden.find((r) => listaRoles.includes(r)) ?? "cliente";
@@ -102,9 +118,9 @@ export function useSesion() {
         user,
         perfil: perfil ?? {
           id: user.id, usuario: "", nombre: "", apellidos: "", dni: "", telefono: "",
-          sede_id: null, participante_id: participanteId
+          sede_id: participante?.sede_id ?? null, participante_id: participanteId
         },
-        roles: listaRoles, areas: (areas ?? []).map((a) => a.area), sede, participante,
+        roles: listaRoles, areas: (areas ?? []).map((a) => a.area), sede, participante, participantes,
         esDueno: listaRoles.includes("dueno"),
         esAdmin: listaRoles.includes("dueno") || listaRoles.includes("gerente"),
         rolPrincipal,
