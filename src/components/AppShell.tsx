@@ -27,6 +27,7 @@ type Seccion = {
   to:
     | "/inicio"
     | "/pedidos"
+    | "/produccion"
     | "/cotizaciones"
     | "/diseno-3d"
     | "/impresion-3d"
@@ -58,6 +59,7 @@ const secciones: Seccion[] = [
   { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
+  { to: "/produccion", label: "Producción", icono: Factory, grupo: "produccion" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
   { to: "/clientes", label: "Clientes", icono: Users, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
@@ -189,6 +191,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/catalogo": 7,
   "/cotizaciones": 10,
   "/pedidos": 20,
+  "/produccion": 25,
   "/ventas": 30,
   "/inventario": 40,
   "/compras": 45,
