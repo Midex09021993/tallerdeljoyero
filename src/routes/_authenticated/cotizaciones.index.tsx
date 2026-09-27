@@ -45,7 +45,7 @@ type Cotizacion = {
 };
 
 type Sede = { id: string; nombre: string };
-type IdentidadComercial = { id: string; sede_id: string | null; nombre_comercial: string; moneda_codigo: string; moneda_simbolo: string; impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean };
+type IdentidadComercial = { id: string; sede_id: string | null; participante_id: string | null; nombre_comercial: string; moneda_codigo: string; moneda_simbolo: string; impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean };
 
 
 function money(n: number, moneda = "PEN") {
@@ -101,8 +101,8 @@ function CotizacionesPage() {
       supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("ecosistema_participantes").select("id,nombre").eq("estado","activo").order("nombre"),
-      sesion?.sede?.id
-        ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.sede.id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
+      sesion?.participante?.id
+        ? supabase.from("identidades_comerciales").select("id,sede_id,participante_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("participante_id", sesion.participante.id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
     if (p) setProyectos(p);
@@ -125,7 +125,7 @@ function CotizacionesPage() {
   }, [puedeGestionarCotizaciones, sesion?.participante?.id]);
 
   useEffect(() => {
-    if (!puedeGestionarCotizaciones || !sesion?.sede?.id) return;
+    if (!puedeGestionarCotizaciones || !sesion?.participante?.id) return;
     const termino = busquedaCliente.trim();
     if (form.cliente_id && !termino) return;
 
@@ -283,7 +283,7 @@ function CotizacionesPage() {
         _cliente_telefono: form.cliente_id ? null : nuevoCliente.telefono.trim() || null,
         _cliente_email: form.cliente_id ? null : nuevoCliente.email.trim() || null,
         _proyecto_joya_id: null,
-        _sede_id: sesion?.sede?.id ?? null,
+        _sede_id: sesion?.participante?.sede_id ?? null,
         _moneda: form.moneda,
         _cantidad: primero.cantidad,
         _costo_unitario: primero.costo,
