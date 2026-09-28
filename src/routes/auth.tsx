@@ -125,13 +125,8 @@ function LoginPage() {
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
         <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
-            <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl [@media(max-height:800px)]:lg:text-[3.4rem]">Aurum Lab</p>
-            <p className="mt-4 text-[10px] uppercase tracking-[0.42em] text-white/50 sm:text-xs">
-              Sistema del taller de joyería
-            </p>
-            <p className="mt-8 max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:lg:text-[1.7rem]">
+            <p className="max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl [@media(max-height:800px)]:lg:text-[1.7rem]">
               Tus clientes. Tus trabajos. Tu crecimiento. Tus herramientas.
-            </p>
             <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-3">
               Todo conectado en un solo lugar. Acceso seguro según tu rol.
             </p>
