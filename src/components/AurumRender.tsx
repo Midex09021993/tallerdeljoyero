@@ -225,6 +225,7 @@ export function AurumRender() {
           rotation: gemEnvironmentRotation,
           intensityScale: gemEnvironmentIntensityScale,
         });
+        invalidateRenderRef.current?.();
       };
       let gemEnvironmentRequestId = 0;
       const cargarEntornoGema = (key="gemNeutral", rotation=.28, intensityScale=.98) => {
