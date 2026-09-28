@@ -85,7 +85,7 @@ function PedidoDetalle() {
     queryKey: ["pedidos-trabajos", id],
     enabled: Boolean(id),
     queryFn: async () => {
-      const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,sede_id,especialidad_id,especialidades(nombre,categoria),created_at").eq("pedido_id", id).order("created_at");
+      const { data, error } = await supabase.from("trabajos").select("id,titulo,area,estado,prioridad,responsable_user_id,participante_id,sede_id,especialidad_id,secuencia,especialidades(nombre,categoria),created_at").eq("pedido_id", id).order("secuencia", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true });
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     },
