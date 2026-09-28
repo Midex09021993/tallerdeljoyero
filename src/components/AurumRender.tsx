@@ -16,7 +16,7 @@ import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions, setAurumInclusionsVisible } from "../lib/aurum/gems";
-import { setAurumGemRenderQuality } from "../lib/aurum/live-gem-material";
+import { setAurumGemRenderQuality, setAurumLiveMaterialQuality } from "../lib/aurum/live-gem-material";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
@@ -464,6 +464,7 @@ export function AurumRender() {
         // photographic shader. This avoids paying the custom optical layer on
         // every interactive fragment while preserving the beauty pipeline.
         setAurumGemRenderQuality(modelo,live ? "live" : "beauty");
+        setAurumLiveMaterialQuality(modelo,live ? "live" : "beauty");
         if (live) {
           renderer.shadowMap.enabled=false;
           renderer.shadowMap.needsUpdate=false;
