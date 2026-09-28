@@ -3047,6 +3047,28 @@ export type Database = {
           ubicacion: string
         }[]
       }
+      listar_servicios_externos_recibidos: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          area: string
+          cantidad_piezas: number
+          descripcion: string
+          estado: string
+          fecha_fin: string
+          fecha_inicio: string
+          fecha_planificada: string
+          id: string
+          notas: string
+          origen_participante_id: string
+          origen_participante_nombre: string
+          pedido_id: string
+          pieza: string
+          prioridad: string
+          referencia_pedido: string
+          titulo: string
+          material: string
+        }[]
+      }
       mi_sede: { Args: { _user_id: string }; Returns: string }
       mover_pedido_a_area: {
         Args: { _destino: string; _motivo?: string; _pedido_id: string }
