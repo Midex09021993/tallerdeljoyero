@@ -31,11 +31,12 @@ export function applyAurumIJEWELPresentationCamera(
   controls: { target: THREE.Vector3; update: () => void },
   model: THREE.Object3D | null,
 ) {
-  const target = model
-    ? new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3())
+  const bounds = model ? new THREE.Box3().setFromObject(model) : null;
+  const target = bounds
+    ? bounds.getCenter(new THREE.Vector3())
     : new THREE.Vector3(0, 0, 0);
-  const size = model
-    ? new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3())
+  const size = bounds
+    ? bounds.getSize(new THREE.Vector3())
     : new THREE.Vector3(2.6, 2.6, 2.6);
   const radius = Math.max(size.length() * .5, 1.3);
   // The VJSON coordinates are stored in the viewer coordinate system; after
@@ -55,7 +56,8 @@ export function applyAurumIJEWELPresentationCamera(
   const distance = AURUM_IJEWEL_REFERENCE.camera.distance;
   camera.fov = AURUM_IJEWEL_REFERENCE.camera.fov;
   camera.up.set(...AURUM_IJEWEL_REFERENCE.camera.up);
-  if (model) target.set(0,0,0);
+  // Center the actual normalized product volume. The iJewel reference frame
+  // is visually centered; using world origin here shifts grounded models upward.
   controls.target.copy(target);
   camera.position.copy(target).add(direction.multiplyScalar(distance));
   camera.lookAt(target);
