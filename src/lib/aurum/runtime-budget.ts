@@ -14,6 +14,7 @@ export type AurumRuntimeBudget = {
   pixelRatioCap:number;
   transmissionScaleCap:number;
   interactionTransmissionScale:number;
+  interactionPixelRatio:number;
 };
 
 export function countAurumTriangles(root:any):number {
@@ -32,13 +33,13 @@ export function getAurumRuntimeBudget(triangleCount:number):AurumRuntimeBudget {
   const triangles=Math.max(0,Math.floor(Number(triangleCount)||0));
 
   if(triangles<=200_000){
-    return {triangleCount:triangles,tier:"web",pixelRatioCap:1.5,transmissionScaleCap:.62,interactionTransmissionScale:.24};
+    return {triangleCount:triangles,tier:"web",pixelRatioCap:1.5,transmissionScaleCap:.50,interactionTransmissionScale:.14,interactionPixelRatio:1.0};
   }
   if(triangles<=500_000){
-    return {triangleCount:triangles,tier:"dense",pixelRatioCap:1.25,transmissionScaleCap:.48,interactionTransmissionScale:.20};
+    return {triangleCount:triangles,tier:"dense",pixelRatioCap:1.25,transmissionScaleCap:.32,interactionTransmissionScale:.11,interactionPixelRatio:.90};
   }
   if(triangles<=900_000){
-    return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.10,transmissionScaleCap:.38,interactionTransmissionScale:.18};
+    return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.10,transmissionScaleCap:.25,interactionTransmissionScale:.09,interactionPixelRatio:.82};
   }
-  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.0,transmissionScaleCap:.34,interactionTransmissionScale:.16};
+  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.0,transmissionScaleCap:.20,interactionTransmissionScale:.07,interactionPixelRatio:.75};
 }
