@@ -162,6 +162,14 @@ export async function normalizeAurumModel(
     return object;
   }
 
+  // GLB ya fue parseado por parseAurumInput(). No lo serializamos ni
+  // parseamos una segunda vez: conservar el Object3D original evita una
+  // conversión redundante y mantiene intactas sus normales/materiales authored.
+  if (extension === "glb") {
+    object?.updateMatrixWorld?.(true);
+    return object;
+  }
+
   const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
   const interno = (await new GLTFLoader().parseAsync(glb,"")).scene;
   return interno;
