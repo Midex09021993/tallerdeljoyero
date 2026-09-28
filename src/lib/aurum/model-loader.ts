@@ -146,7 +146,13 @@ export function preprocessAurumModel(object: THREE.Object3D) {
         x.userData = { ...x.userData, aurumNormalsSuspicious:true, aurumNormalRepairAvailable:true, aurumNormalRepairRatio:Number(normalInspection.suspiciousRatio.toFixed(3)) };
       }
     }
-    geometry.computeBoundingBox(); geometry.computeBoundingSphere(); x.castShadow = true; x.receiveShadow = true;
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+    // Gemstone transmission already costs a full optical pass. Casting a shadow
+    // from every facet duplicates that work in the shadow pass and adds little
+    // visible information at jewelry scale. Keep metal/opaque parts as shadow
+    // casters; gems still receive shadows for contact/readability.
+    x.castShadow = !gem;
+    x.receiveShadow = true;
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
   });
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
