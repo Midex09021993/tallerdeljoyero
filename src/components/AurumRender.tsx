@@ -605,7 +605,6 @@ export function AurumRender() {
         capturar:(resolution:"normal"|"hd"|"fullhd"="hd")=>{
           const previousQuality=measuredQualityId;
           const previousPixelRatio=renderer.getPixelRatio?.() ?? 1;
-          const previousComposerPixelRatio=renderQuality.pixelRatio;
           const previousWidth=nodo.clientWidth||900;
           const previousHeight=nodo.clientHeight||600;
           const sizes={
@@ -614,80 +613,87 @@ export function AurumRender() {
             fullhd:{width:1920,height:1080},
           } as const;
           const target=sizes[resolution]??sizes.hd;
-          aplicarCalidadRender("ultra");
-
-          // CAPTURA = perfil fotográfico temporal. El visor normal no conserva
-          // el framebuffer: la imagen se obtiene del buffer final del composer.
-          const captureQuality={
-            ...getAurumRenderQuality("ultra"),
-            pixelRatio:1,
-            transmissionScale:.82,
-            shadows:true,
-            taa:true,
-            progressiveFrameCount:16,
-            ssr:true,
-            ssrIntensity:1,
-            ssrMaxDistance:1,
-            ssrThickness:.018,
-            ssao:true,
-            ssaoIntensity:.12,
-            ssaoFalloff:1.3,
-            bloom:true,
-            bloomIntensity:.20,
-            bloomThreshold:1.35,
-            bloomRadius:.6,
-          };
-          renderQuality=captureQuality as any;
-          measuredQualityId="ultra";
-          renderer.setPixelRatio(1);
-          composer?.setPixelRatio?.(1);
-          composer?.setSize?.(target.width,target.height);
-          camara.aspect=target.width/target.height;
-          camara.updateProjectionMatrix();
-          applyPostQuality?.(captureQuality,{capture:true});
-          (renderer as any).transmissionResolutionScale=.82;
-          renderer.shadowMap.enabled=true;
-          renderer.shadowMap.needsUpdate=true;
-          if(taaPass) taaPass.accumulate=true;
-          if(taaPass) taaPass.accumulateIndex=-1;
-
-          // El composer conserva el resultado final en su readBuffer cuando no
-          // renderiza a la pantalla. Three recomienda leer el render target
-          // directamente para este tipo de captura.
           const previousRenderToScreen=composer?.renderToScreen;
-          if(composer) composer.renderToScreen=false;
-          for(let i=0;i<16;i++) composer?.render();
-          const buffer=composer?.readBuffer;
-          if(!buffer) throw new Error("No se pudo obtener el buffer de captura");
+          let data:string|null=null;
 
-          const pixels=new Uint8Array(target.width*target.height*4);
-          renderer.readRenderTargetPixels(buffer,0,0,target.width,target.height,pixels);
-          const canvas=document.createElement("canvas");
-          canvas.width=target.width; canvas.height=target.height;
-          const ctx=canvas.getContext("2d");
-          if(!ctx) throw new Error("No se pudo preparar la imagen");
-          const imageData=ctx.createImageData(target.width,target.height);
-          const rowBytes=target.width*4;
-          for(let y=0;y<target.height;y++){
-            const src=y*rowBytes;
-            const dst=(target.height-1-y)*rowBytes;
-            imageData.data.set(pixels.subarray(src,src+rowBytes),dst);
+          try{
+            aplicarCalidadRender("ultra");
+
+            // CAPTURA = perfil fotográfico temporal. El visor normal no conserva
+            // el framebuffer: la imagen se obtiene del buffer final del composer.
+            const captureQuality={
+              ...getAurumRenderQuality("ultra"),
+              pixelRatio:1,
+              transmissionScale:.82,
+              shadows:true,
+              taa:true,
+              progressiveFrameCount:16,
+              ssr:true,
+              ssrIntensity:1,
+              ssrMaxDistance:1,
+              ssrThickness:.018,
+              ssao:true,
+              ssaoIntensity:.12,
+              ssaoFalloff:1.3,
+              bloom:true,
+              bloomIntensity:.20,
+              bloomThreshold:1.35,
+              bloomRadius:.6,
+            };
+            renderQuality=captureQuality as any;
+            measuredQualityId="ultra";
+            renderer.setPixelRatio(1);
+            composer?.setPixelRatio?.(1);
+            composer?.setSize?.(target.width,target.height);
+            camara.aspect=target.width/target.height;
+            camara.updateProjectionMatrix();
+            applyPostQuality?.(captureQuality,{capture:true});
+            (renderer as any).transmissionResolutionScale=.82;
+            renderer.shadowMap.enabled=true;
+            renderer.shadowMap.needsUpdate=true;
+            if(taaPass) taaPass.accumulate=true;
+            if(taaPass) taaPass.accumulateIndex=-1;
+
+            // El composer mantiene el resultado final en readBuffer cuando
+            // renderToScreen es falso. Leemos ese buffer directamente y no el
+            // framebuffer interactivo.
+            if(composer) composer.renderToScreen=false;
+            for(let i=0;i<16;i++) composer?.render();
+            const buffer=composer?.readBuffer;
+            if(!buffer) throw new Error("No se pudo obtener el buffer de captura");
+
+            const pixels=new Uint8Array(target.width*target.height*4);
+            renderer.readRenderTargetPixels(buffer,0,0,target.width,target.height,pixels);
+
+            const canvas=document.createElement("canvas");
+            canvas.width=target.width;
+            canvas.height=target.height;
+            const ctx=canvas.getContext("2d");
+            if(!ctx) throw new Error("No se pudo preparar la imagen");
+
+            const imageData=ctx.createImageData(target.width,target.height);
+            const rowBytes=target.width*4;
+            for(let y=0;y<target.height;y++){
+              const src=y*rowBytes;
+              const dst=(target.height-1-y)*rowBytes;
+              imageData.data.set(pixels.subarray(src,src+rowBytes),dst);
+            }
+            ctx.putImageData(imageData,0,0);
+            data=canvas.toDataURL("image/png");
+            return data;
+          } finally {
+            if(composer) composer.renderToScreen=previousRenderToScreen??true;
+            aplicarCalidadRender(previousQuality);
+            renderer.setPixelRatio(previousPixelRatio);
+            composer?.setPixelRatio?.(previousPixelRatio);
+            renderer.setSize(previousWidth,previousHeight,false);
+            composer?.setSize?.(previousWidth,previousHeight);
+            camara.aspect=previousWidth/previousHeight;
+            camara.updateProjectionMatrix();
+            renderer.shadowMap.needsUpdate=true;
+            invalidateRenderRef.current?.();
+            if(taaPass) taaPass.accumulateIndex=-1;
           }
-          ctx.putImageData(imageData,0,0);
-          const data=canvas.toDataURL("image/png");
-          if(composer) composer.renderToScreen=previousRenderToScreen??true;
-
-          aplicarCalidadRender(previousQuality);
-          renderer.setPixelRatio(previousPixelRatio);
-          composer?.setPixelRatio?.(previousPixelRatio);
-          renderer.setSize(previousWidth,previousHeight,false);
-          composer?.setSize?.(previousWidth,previousHeight);
-          camara.aspect=previousWidth/previousHeight;
-          camara.updateProjectionMatrix();
-          renderer.shadowMap.needsUpdate=true;
-          invalidateRenderRef.current?.();
-          if(taaPass) taaPass.accumulateIndex=-1;
-          return data;
         },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
