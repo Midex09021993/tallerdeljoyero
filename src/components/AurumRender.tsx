@@ -415,20 +415,36 @@ export function AurumRender() {
                   ...(m.userData??{}),
                   aurumLiveClearcoatStored:Number(m.clearcoat??0),
                   aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
+                  aurumLiveDispersionStored:Number(m.dispersion??0),
+                  aurumLiveIridescenceStored:Number(m.iridescence??0),
                 };
               }
-              if (Number(m.clearcoat??0)!==0 || Number(m.clearcoatRoughness??0)!==0) {
+              if (
+                Number(m.clearcoat??0)!==0 ||
+                Number(m.clearcoatRoughness??0)!==0 ||
+                Number(m.dispersion??0)!==0 ||
+                Number(m.iridescence??0)!==0
+              ) {
                 m.clearcoat=0;
                 m.clearcoatRoughness=0;
+                // Dispersion/iridescence introduce extra physical shader work.
+                // LIVE keeps the core IOR/transmission/refraction path intact;
+                // CAPTURE restores the authored optical effects.
+                m.dispersion=0;
+                m.iridescence=0;
                 m.needsUpdate=true;
               }
             } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
               m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
               m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
+              m.dispersion=Number(m.userData.aurumLiveDispersionStored??0);
+              m.iridescence=Number(m.userData.aurumLiveIridescenceStored??0);
               m.needsUpdate=true;
               const next={...(m.userData??{})};
               delete next.aurumLiveClearcoatStored;
               delete next.aurumLiveClearcoatRoughnessStored;
+              delete next.aurumLiveDispersionStored;
+              delete next.aurumLiveIridescenceStored;
               m.userData=next;
             }
           });
