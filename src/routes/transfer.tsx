@@ -77,6 +77,7 @@ function TransferPage() {
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState(0);
 
   const total = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
 
@@ -88,7 +89,7 @@ function TransferPage() {
     ).slice(0, 10);
 
     if (unique.reduce((sum, file) => sum + file.size, 0) > MAX_BYTES) {
-      setError("La transferencia no puede superar 50 MB.");
+      setError("La transferencia no puede superar 500 MB.");
       return;
     }
     setFiles(unique);
@@ -97,6 +98,7 @@ function TransferPage() {
   const generate = async () => {
     if (!files.length) return;
     setBusy(true);
+    setProgress(0);
     setError("");
     try {
       const data = await createTransfer(files, setProgress);
@@ -145,7 +147,7 @@ function TransferPage() {
                   <UploadCloud className="size-8" />
                 </div>
                 <h2 className="mt-5 text-xl font-semibold">Suelta tus archivos aquí</h2>
-                <p className="mt-2 text-sm text-white/50">o selecciónalos desde tu equipo · hasta 10 archivos · 50 MB</p>
+                <p className="mt-2 text-sm text-white/50">o selecciónalos desde tu equipo · hasta 10 archivos · 500 MB</p>
                 <span className="mt-5 rounded-xl bg-[#d7ad48] px-5 py-2.5 text-sm font-semibold text-black">
                   Seleccionar archivos
                 </span>
@@ -169,7 +171,7 @@ function TransferPage() {
                   ))}
                   <div className="flex items-center justify-between pt-2 text-xs text-white/40">
                     <span>{files.length} archivo{files.length === 1 ? "" : "s"}</span>
-                    <span>{formatBytes(total)} / 50 MB</span>
+                    <span>{formatBytes(total)} / 500 MB</span>
                   </div>
                 </div>
               )}
@@ -182,7 +184,7 @@ function TransferPage() {
                 onClick={generate}
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {busy ? "Creando enlace seguro…" : <>Crear enlace de un solo uso <ArrowRight className="size-4" /></>}
+                {busy ? `Subiendo… ${progress}%` : <>Crear enlace de un solo uso <ArrowRight className="size-4" /></>}
               </button>
             </section>
 
