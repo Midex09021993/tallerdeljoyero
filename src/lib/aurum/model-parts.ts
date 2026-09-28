@@ -69,7 +69,9 @@ export function getAurumModelParts(
 
     const attrs = x.userData?.attributes || {};
     const meta = x.userData?.aurumRhino;
-    const layerIndex = Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1;
+    const layerIndex = Number.isInteger(meta?.layerIndex)
+      ? Number(meta.layerIndex)
+      : (Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1);
     const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
     const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
     const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
@@ -77,9 +79,9 @@ export function getAurumModelParts(
       ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa)
       : clasificarCapa(capa || "",colorCapa));
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
-    const matrixSlot = layerIndex>=0 && layer
-      ? matrixLayerSlot(layer,layerIndex,categoria)
-      : undefined;
+    const matrixSlot = Number.isFinite(Number(meta?.matrixSlot))
+      ? Number(meta.matrixSlot)
+      : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria) : undefined);
 
     result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
