@@ -55,7 +55,7 @@ type Producto = {
 const RESERVED_SLUGS = new Set([
   "auth", "c", "catalogo", "catalogo-publico", "inicio", "pedidos",
   "cotizaciones", "gestion", "operario", "taller", "herramientas", "perfil",
-  "joya", "aurum-render", "aurum-render-public", "lovable",
+  "joya", "aurum-render", "aurum-render-public", "transfer", "lovable",
 ]);
 
 function CatalogoPublicoPage() {
