@@ -165,9 +165,8 @@ function LoginPage() {
                 <button
                   key={id}
                   type="button"
-                  aria-expanded={herramientaSeleccionada === id}
-                  onClick={() => setHerramientaSeleccionada((actual) => actual === id ? null : id)}
-                  className={`rounded-xl border p-4 text-left transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3 ${herramientaSeleccionada === id ? "border-gold/60 bg-gold/10" : "border-white/10 bg-white/[0.025]"}`}
+                  onClick={() => setHerramientaSeleccionada(id)}
+                  className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-left transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3"
                 >
                   <Gem className="size-6 text-gold" />
                   <p className="mt-4 text-sm font-semibold text-white">{titulo}</p>
@@ -176,39 +175,6 @@ function LoginPage() {
                 </button>
               ))}
             </div>
-
-            {herramientaSeleccionada ? (
-              <div className="mt-3 rounded-xl border border-gold/25 bg-gold/[0.05] p-4">
-                {herramientaSeleccionada === "yeso" ? (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">Yeso / Agua</p>
-                    <p className="mt-1 text-sm text-white/65">Calculadora para definir proporciones de mezcla para trabajos de joyería.</p>
-                  </>
-                ) : herramientaSeleccionada === "oro" ? (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">Aleación de Oro</p>
-                    <p className="mt-1 text-sm text-white/65">Calculadora para obtener la cantidad de metal de liga necesaria según la ley deseada.</p>
-                  </>
-                ) : herramientaSeleccionada === "tallas" ? (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">Conversor de Tallas</p>
-                    <p className="mt-1 text-sm text-white/65">Consulta equivalencias de tallas de anillo entre diferentes sistemas.</p>
-                  </>
-                ) : herramientaSeleccionada === "transfer" ? (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">AURUM Transfer</p>
-                    <p className="mt-1 text-sm text-white/65">Envía modelos y archivos de fabricación mediante un enlace privado de un solo uso.</p>
-                    <a href="/transfer" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-xs font-semibold uppercase tracking-wider text-ink hover:opacity-90">Abrir AURUM Transfer <ArrowRight className="size-4" /></a>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">AURUM Render · Beta</p>
-                    <p className="mt-1 text-sm text-white/65">Visualiza tus diseños 3D con materiales, gemas, iluminación y escenas.</p>
-                    <a href="/aurum-render-public" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-xs font-semibold uppercase tracking-wider text-ink hover:opacity-90">Probar AURUM Render <ArrowRight className="size-4" /></a>
-                  </>
-                )}
-              </div>
-            ) : null}
 
             <div className="mt-5 flex flex-wrap gap-3">
               <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
@@ -439,7 +405,7 @@ function LoginPage() {
         </div>
       </footer>
 
-      <HerramientasFlotantes />
+      <HerramientasFlotantes herramientaInicial={herramientaSeleccionada} />
     </main>
   );
 }
