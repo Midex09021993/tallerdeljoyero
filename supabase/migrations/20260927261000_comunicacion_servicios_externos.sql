@@ -156,6 +156,9 @@ begin
 end;
 $$;
 
+-- Limpia la firma histórica para evitar una sobrecarga antigua en PostgREST.
+drop function if exists public.cambiar_estado_trabajo(text);
+
 -- El receptor puede cambiar estado de un servicio externo que pertenece a su participante.
 create or replace function public.cambiar_estado_trabajo(_trabajo_id uuid, _nuevo_estado text)
 returns void
