@@ -59,7 +59,6 @@ import { EcosistemaParticipantesOwner } from "@/components/EcosistemaParticipant
 import { EspecialidadesOwner } from "@/components/EspecialidadesOwner";
 import { CapacidadesSedeAdmin } from "@/components/CapacidadesSedeAdmin";
 import { ConfiguracionComercial } from "@/components/ConfiguracionComercial";
-import { ServiciosExternosEnviadosAdmin } from "@/components/ServiciosExternosEnviadosAdmin";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -101,8 +100,7 @@ type Modulo =
   | "ecosistema"
   | "especialidades"
   | "capacidades"
-  | "comercial"
-  | "serviciosExternos";
+  | "comercial";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -142,7 +140,6 @@ function GestionPage() {
     { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
     { id: "capacidades", label: "Capacidades del taller", visible: puedeUsuarios },
     { id: "comercial", label: "Comercial · identidad y contratos", visible: puedeUsuarios },
-    { id: "serviciosExternos", label: "Servicios externos", visible: puedeUsuarios },
     { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
     { id: "aurumRender", label: "AURUM Render", visible: esDueno },
     { id: "solicitudesAcceso", label: "Solicitudes de acceso", visible: esDueno },
@@ -209,7 +206,6 @@ function GestionPage() {
       {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
       {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
       {modulo === "comercial" && puedeUsuarios ? <ConfiguracionComercial /> : null}
-      {modulo === "serviciosExternos" && puedeUsuarios ? <ServiciosExternosEnviadosAdmin sedeId={sedeActiva} /> : null}
       {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sedes.find((s) => s.id === sedeActiva)?.nombre ?? sesion?.sede?.nombre ?? undefined} esDueno={esDueno} /> : null}
     </AppShell>
   );
