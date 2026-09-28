@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { AppShell, Panel, StatCard, useCapacidadesMenu } from "@/components/AppShell";
+import { ServiciosExternosRecibidos } from "@/components/ServiciosExternosRecibidos";
 import {
   rolEtiqueta,
   useSesion,
@@ -105,6 +106,8 @@ function Inicio() {
       }
     >
       <div className="space-y-6">
+        <ServiciosExternosRecibidos />
+
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatCard etiqueta="Pedidos activos" valor={String(resumen.activos.length)} />
           <StatCard etiqueta="En producción" valor={String(resumen.produccion.length)} />
