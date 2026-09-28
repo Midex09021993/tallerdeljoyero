@@ -107,6 +107,7 @@ export function AurumRender() {
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
+  const invalidateRenderRef = useRef<(() => void) | null>(null);
   const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
@@ -190,7 +191,10 @@ export function AurumRender() {
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
       renderer.shadowMap.enabled = renderQuality.shadows;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.shadowMap.autoUpdate = true;
+      // Lighting and geometry are static between user changes. Build the shadow map only
+      // when a light/model/quality change explicitly marks it dirty.
+      renderer.shadowMap.autoUpdate = false;
+      renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
@@ -290,9 +294,16 @@ export function AurumRender() {
           }
         });
         lightingController.create();
+        renderer.shadowMap.needsUpdate = true;
+        invalidateRenderRef.current?.();
         setRenderQualityId(id);
       };
-      const actualizarLucesAurum = (patch:any) => lightingController.update(patch);
+      const actualizarLucesAurum = (patch:any) => {
+        lightingController.update(patch);
+        // Lighting changes affect both the beauty frame and the shadow map.
+        renderer.shadowMap.needsUpdate = true;
+        invalidateRenderRef.current?.();
+      };
       lucesRef.current = actualizarLucesAurum;
       // Inicializar las luces configurables desde el arranque del visor.
       lightingController.create();
@@ -607,6 +618,7 @@ export function AurumRender() {
           applyPostQuality?.(captureQuality,{capture:true});
           (renderer as any).transmissionResolutionScale=.82;
           renderer.shadowMap.enabled=true;
+          renderer.shadowMap.needsUpdate=true;
           if(taaPass) taaPass.accumulate=true;
           if(taaPass) taaPass.accumulateIndex=-1;
 
@@ -617,6 +629,8 @@ export function AurumRender() {
           const data=renderer.domElement.toDataURL("image/png");
 
           aplicarCalidadRender(previousQuality);
+          renderer.shadowMap.needsUpdate=true;
+          invalidateRenderRef.current?.();
           if(taaPass) taaPass.accumulateIndex=-1;
           return data;
         },
@@ -768,6 +782,7 @@ export function AurumRender() {
         }
       );
       frameRef.current = viewerLoop.frame;
+      invalidateRenderRef.current = viewerLoop.invalidate;
       const obs = viewerLoop.observer;
 
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
@@ -787,6 +802,8 @@ export function AurumRender() {
           gemEnvironmentController,
           composer,
         });
+        viewerLoop.stop();
+        invalidateRenderRef.current = null;
       };
 
       // startAurumViewerLoop ya inicia el RAF/render loop.
@@ -807,10 +824,10 @@ export function AurumRender() {
     cleanup();
   };
   },[]);
-  useEffect(()=>apiRef.current?.material(materialActivo),[materialActivo]);
-  useEffect(()=>apiRef.current?.escenario(escenarioId),[escenarioId]);
-  useEffect(()=>apiRef.current?.iluminacion(iluminacionId),[iluminacionId]);
-  useEffect(()=>apiRef.current?.vista(vista),[vista]);
+  useEffect(()=>{ apiRef.current?.material(materialActivo); invalidateRenderRef.current?.(); },[materialActivo]);
+  useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
+  useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
+  useEffect(()=>{ apiRef.current?.vista(vista); invalidateRenderRef.current?.(); },[vista]);
 
   const cargarArchivo=useCallback(async(file:File)=>{
     setCargando(true);
@@ -824,6 +841,7 @@ export function AurumRender() {
     }
     try {
       await apiRef.current?.cargar(file,(p:string)=>setPaso(p));
+      invalidateRenderRef.current?.();
       setArchivo(file.name);
       setFormatoInterno("GLB");
       setCaptura(null);
@@ -850,7 +868,7 @@ export function AurumRender() {
       setPaso(null);
     }
   },[]);
-  const limpiar=()=>{apiRef.current?.limpiar();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
+  const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
     apiRef.current?.calidad(id);
