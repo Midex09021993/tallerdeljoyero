@@ -3,13 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardList, Factory, FileText, History, PackageCheck, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardList, Factory, FileText, History, PackageCheck, Upload, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePedidos, estadoClases, esEstadoFinalPedido } from "@/lib/taller-db";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
+import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   head: () => ({ meta: [{ title: "Pedido — Taller del Joyero" }, { name: "description", content: "Ficha operativa del pedido." }] }),
@@ -574,7 +575,7 @@ function PedidoDetalle() {
       {tab === "resumen" ? <Resumen pedido={pedido} trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} dias={dias} ruta={ruta} puedeEditarRuta={Boolean(sesion?.esAdmin && !ordenPrincipal)} guardandoRuta={guardandoRuta} capacidadesSede={capacidadesSede} toggleRuta={(area) => setRuta((actual) => ordenarRutaFabricacion(actual.includes(area) ? actual.filter((x) => x !== area) : [...actual, area]))} guardarRuta={async () => { if (!pedido || !sesion?.esAdmin) return; if (!ruta.length) { toast.error("Selecciona al menos un área de la ruta."); return; } if (capacidadesExternasRutaError) { toast.error("No se puede guardar la ruta mientras no se pueda consultar el directorio externo."); return; } if (ordenPrincipal) { toast.error("La ruta ya no puede modificarse porque la producción ya fue preparada."); return; } setGuardandoRuta(true); const rutaOrdenada = ordenarRutaFabricacion(ruta); const { error } = await supabase.from("pedidos").update({ ruta: rutaOrdenada, updated_at: new Date().toISOString() }).eq("id", pedido.id); setGuardandoRuta(false); if (error) { toast.error(error.message || "No se pudo guardar la ruta."); return; } await queryClient.invalidateQueries({ queryKey: ["pedidos"] }); toast.success("Ruta de fabricación guardada."); }} rutasDisponibles={rutasDisponibles} capacidadesExternasRuta={capacidadesExternasRuta} capacidadesExternasRutaError={capacidadesExternasRutaError?.message ?? null} /> : null}
       {tab === "produccion" ? <Produccion trabajos={trabajos} ordenes={ordenes} controles={controles} piezas={piezas} costo={resumenCosto} loading={loadingTrabajos} ordenPrincipal={ordenPrincipal} trabajosCompletos={trabajosCompletos} piezaVerificada={piezaVerificada} calidadFinalAprobada={calidadFinalAprobada} transicionando={transicionando} transicionar={transicionar} verificarPieza={verificarPieza} puedeAsignarResponsable={Boolean(sesion?.esAdmin)} operarios={operarios} participantesPorTrabajo={participantesPorTrabajo} capacidadesSede={capacidadesSede} capacidadesSedeError={capacidadesSedeError} operariosError={operariosError?.message ?? participantesServicioError?.message ?? null} asignandoTrabajoId={asignandoTrabajoId} asignarResponsable={asignarResponsable} asignarParticipanteExterno={asignarParticipanteExterno} resultadoCalidad={resultadoCalidad} setResultadoCalidad={setResultadoCalidad} tipoCalidad={tipoCalidad} setTipoCalidad={setTipoCalidad} descripcionCalidad={descripcionCalidad} setDescripcionCalidad={setDescripcionCalidad} motivoCalidad={motivoCalidad} setMotivoCalidad={setMotivoCalidad} guardandoCalidad={guardandoCalidad} registrarCalidad={registrarCalidad} cantidadRequerida={pedido.cantidad_piezas ?? 1} preparandoProduccion={preparandoProduccion} prepararProduccion={prepararProduccion} reconciliarServiciosExternos={reconciliarServiciosExternos} ruta={ruta} capacidadesSede={capacidadesSede} participantesPorAreaPreparacion={participantesPorAreaPreparacion} participantesPreparacionError={participantesPreparacionError?.message ?? null} preparacionAbierta={preparacionAbierta} abrirPreparacion={abrirPreparacion} cerrarPreparacion={() => setPreparacionAbierta(false)} seleccionesExternas={seleccionesExternas} setSeleccionExterna={(area, participanteId) => setSeleccionesExternas((actual) => ({ ...actual, [area]: participanteId }))} /> : null}
       {tab === "comercial" ? <Comercial pedido={pedido} contrato={contratoFinanciero} pagos={pagosContrato} /> : null}
-      {tab === "archivos" ? <Archivos archivos={archivos} /> : null}
+      {tab === "archivos" ? <Archivos pedidoId={id} archivos={archivos} puedeSubir={Boolean(sesion?.esAdmin)} onSubido={() => queryClient.invalidateQueries({ queryKey: ["pedidos-archivos", id] })} /> : null}
       {tab === "historial" ? <Historial eventos={eventos} movimientos={movimientos} /> : null}
     </AppShell>
   );
@@ -953,30 +954,109 @@ function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: an
   );
 }
 
-function Archivos({ archivos }: { archivos: any[] }) {
+function Archivos({ pedidoId, archivos, puedeSubir, onSubido }: { pedidoId: string; archivos: any[]; puedeSubir: boolean; onSubido: () => void }) {
+  const [subiendo, setSubiendo] = useState(false);
+  const [progreso, setProgreso] = useState(0);
+
+  const subirArchivo = async (file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const permitidos = ["3dm", "stl", "3mf", "dxf", "step", "stp", "iges", "igs", "pdf", "jpg", "jpeg", "png", "webp"];
+    if (!permitidos.includes(ext)) {
+      toast.error("Formato no permitido. Usa 3DM, STL, 3MF, DXF, STEP, IGES, PDF o imagen.");
+      return;
+    }
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("El archivo supera el límite de 200 MB.");
+      return;
+    }
+
+    setSubiendo(true);
+    setProgreso(0);
+    const ruta = `${pedidoId}/tecnicos/${Date.now()}-${nombreSeguro(file.name)}`;
+    try {
+      await subirConProgreso({
+        bucket: "pedidos",
+        ruta,
+        file,
+        onProgreso: setProgreso,
+      });
+
+      const { error } = await supabase.from("pedido_archivos").insert({
+        pedido_id: pedidoId,
+        tipo: "archivo_tecnico",
+        nombre: file.name,
+        url: ruta,
+        es_enlace: false,
+        grupo: ext === "3dm" ? "Diseño 3D" : ext === "dxf" ? "Corte Láser" : ext === "stl" || ext === "3mf" ? "Impresión 3D" : "Documento técnico",
+        version: 1,
+        es_vigente_fabricacion: true,
+      });
+
+      if (error) {
+        await supabase.storage.from("pedidos").remove([ruta]);
+        throw error;
+      }
+
+      toast.success(`Archivo ${file.name} agregado al pedido.`);
+      onSubido();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo subir el archivo.");
+    } finally {
+      setSubiendo(false);
+      setProgreso(0);
+    }
+  };
+
   return (
     <section className="rounded-2xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[.16em]">Referencias y documentos</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{archivos.length} archivos registrados</p>
+          <h3 className="text-xs font-bold uppercase tracking-[.16em]">Archivos técnicos del pedido</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Un solo pedido puede contener el diseño maestro y los archivos necesarios para cada operación.</p>
         </div>
-        <FileText className="size-5 text-gold" />
+        {puedeSubir ? (
+          <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl bg-foreground px-3 py-2.5 text-xs font-semibold text-background ${subiendo ? "pointer-events-none opacity-60" : ""}`}>
+            <Upload className="size-4" />
+            {subiendo ? `Subiendo ${progreso}%` : "Agregar archivo técnico"}
+            <input
+              type="file"
+              className="sr-only"
+              accept=".3dm,.stl,.3mf,.dxf,.step,.stp,.iges,.igs,.pdf,.jpg,.jpeg,.png,.webp"
+              disabled={subiendo}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.currentTarget.value = "";
+                if (file) void subirArchivo(file);
+              }}
+            />
+          </label>
+        ) : null}
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {archivos.map((a) => (
-          <div key={a.id} className="overflow-hidden rounded-xl border border-border">
-            <div className="grid aspect-[4/3] place-items-center bg-surface-muted">
-              {a.poster ? <img src={a.poster} alt={a.nombre || ""} className="size-full object-contain" /> : <FileText className="size-8 text-muted-foreground" />}
-            </div>
-            <div className="p-3">
-              <p className="truncate text-sm font-semibold">{a.nombre}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground">{a.grupo || a.tipo || "Archivo"} · v{a.version ?? 1}{a.es_vigente_fabricacion ? " · Vigente" : ""}</p>
-            </div>
-          </div>
-        ))}
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {archivos.map((a) => {
+          const extension = a.nombre?.split(".").pop()?.toUpperCase() || "ARCHIVO";
+          return (
+            <a
+              key={a.id}
+              href={a.url ? supabase.storage.from("pedidos").getPublicUrl(a.url).data.publicUrl : undefined}
+              target="_blank"
+              rel="noreferrer"
+              className="overflow-hidden rounded-xl border border-border transition hover:border-gold/40"
+            >
+              <div className="grid aspect-[4/2] place-items-center bg-surface-muted">
+                {a.poster ? <img src={a.poster} alt={a.nombre || ""} className="size-full object-contain" /> : <FileText className="size-8 text-muted-foreground" />}
+              </div>
+              <div className="p-3">
+                <p className="truncate text-sm font-semibold">{a.nombre}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{a.grupo || a.tipo || "Archivo"} · {extension} · v{a.version ?? 1}{a.es_vigente_fabricacion ? " · Vigente" : ""}</p>
+              </div>
+            </a>
+          );
+        })}
       </div>
       {!archivos.length ? <Empty text="No hay referencias ni archivos registrados." /> : null}
+      {subiendo ? <p className="mt-3 text-[11px] text-muted-foreground">No cierres esta ventana hasta completar la subida.</p> : null}
     </section>
   );
 }
