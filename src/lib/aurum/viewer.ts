@@ -123,7 +123,9 @@ export function createAurumWebGLViewer(
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
-    preserveDrawingBuffer: true,
+    // Capture uses a dedicated render target; the interactive canvas does not
+    // need a preserved default framebuffer.
+    preserveDrawingBuffer: false,
     powerPreference: "high-performance",
   });
   const requestedPixelRatio = Math.max(1, Math.min(2, Number(options.pixelRatio ?? 2)));
