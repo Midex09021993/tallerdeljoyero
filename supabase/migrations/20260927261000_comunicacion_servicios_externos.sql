@@ -255,7 +255,7 @@ returns table (
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_uid uuid := (select auth.uid());
 begin
@@ -306,7 +306,7 @@ begin
     )
   order by t.fecha_planificada nulls first, t.created_at;
 end;
-$;
+$$;
 
 
 create or replace function public.obtener_ficha_servicio_externo(_trabajo_id uuid)
@@ -314,7 +314,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_uid uuid := (select auth.uid());
   v_trabajo public.trabajos;
@@ -430,7 +430,7 @@ begin
     ), '[]'::jsonb)
   );
 end;
-$;
+$$;
 
 revoke all on function public.obtener_ficha_servicio_externo(uuid) from public, anon;
 grant execute on function public.obtener_ficha_servicio_externo(uuid) to authenticated;
