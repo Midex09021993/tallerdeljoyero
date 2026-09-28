@@ -105,13 +105,28 @@ Deno.serve(async (req) => {
         return json({ error: "La transferencia supera el límite de 2 GB." }, 413);
       }
 
-      const { error: insertError } = await supabase.from("aurum_transfers").insert({
-        token_hash: await sha256(token),
-        files: metadata,
+      const { data: transfer, error: insertError } = await supabase
+        .from("aurum_transfers")
+        .insert({
+          token_hash: await sha256(token),
+          files: metadata,
+          file_count: metadata.length,
+          total_bytes: total,
+        })
+        .select("id")
+        .single();
+      if (insertError || !transfer) throw insertError ?? new Error("No se pudo registrar la transferencia.");
+
+      const { error: usageError } = await supabase.from("aurum_transfer_usage").insert({
+        transfer_id: transfer.id,
         file_count: metadata.length,
         total_bytes: total,
+        status: "available",
       });
-      if (insertError) throw insertError;
+      if (usageError) {
+        // El historial es administrativo y no debe bloquear una transferencia válida.
+        console.error("[aurum-transfer-create] usage history", usageError);
+      }
 
       return json({ token, file_count: metadata.length, total_bytes: total, expires_in_hours: 24 });
     }
