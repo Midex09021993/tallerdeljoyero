@@ -276,10 +276,19 @@ function TrabajoOperativoPage() {
         });
         if (error) throw error;
         const ficha = data as { archivos?: Array<Record<string, unknown>> } | null;
-        return (ficha?.archivos ?? []) as Array<{
+        const archivos = (ficha?.archivos ?? []) as Array<{
           id: string; nombre: string; tipo: string; url: string; es_enlace: boolean;
           grupo: string; version: number; es_vigente_fabricacion: boolean;
         }>;
+        return Promise.all(
+          archivos.map(async (archivo) => {
+            if (!archivo.url || archivo.es_enlace) return archivo;
+            const { data: firmado } = await supabase.storage
+              .from("pedidos")
+              .createSignedUrl(archivo.url, 3600);
+            return { ...archivo, url: firmado?.signedUrl ?? "" };
+          }),
+        );
       }
       const { data, error } = await supabase
         .from("pedido_archivos")
