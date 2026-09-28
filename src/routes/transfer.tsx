@@ -56,7 +56,7 @@ async function createTransfer(files: File[], onProgress: (pct: number) => void) 
   const total = files.reduce((s, f) => s + f.size, 0) || 1;
   const loaded = files.map(() => 0);
   for (let i = 0; i < files.length; i++) {
-    await putFile(prep.uploads[i].signedUrl, files[i], (l) => {
+    await putFile(prep.uploads[i]!.signedUrl, files[i]!, (l) => {
       loaded[i] = l;
       onProgress(Math.min(99, Math.round((loaded.reduce((a, b) => a + b, 0) / total) * 100)));
     });
@@ -99,7 +99,7 @@ function TransferPage() {
     setBusy(true);
     setError("");
     try {
-      const data = await createTransfer(files);
+      const data = await createTransfer(files, setProgress);
       setLink(`${window.location.origin}/transfer/${data.token}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear el enlace.");
