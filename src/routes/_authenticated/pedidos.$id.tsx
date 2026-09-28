@@ -327,8 +327,8 @@ function PedidoDetalle() {
       const resultado = data as { numero?: string; trabajos?: number; piezas?: number; externos_pendientes?: number } | null;
 
       // La ruta define qué áreas deben intervenir.
-      // Si ya seleccionamos un servicio externo compatible, lo asignamos ahora.
-      // Si no seleccionamos ninguno, la operación queda pendiente para Producción.
+      // Las operaciones sin capacidad interna muestran un selector externo.
+      // La selección del administrador se persiste después de crear los trabajos.
 
       const { data: trabajosPreparados, error: trabajosPreparadosError } = await supabase
         .from("trabajos")
@@ -338,9 +338,9 @@ function PedidoDetalle() {
       if (trabajosPreparadosError) throw trabajosPreparadosError;
 
       for (const trabajo of trabajosPreparados ?? []) {
-        if (trabajo.tipo !== "externo" || trabajo.participante_id) continue;
         const participanteId = externosSeleccionados[String(trabajo.area || "")];
-        if (!participanteId) continue;
+        if (!participanteId || trabajo.participante_id === participanteId) continue;
+
         const { error: participanteError } = await supabase.rpc("asignar_participante_externo_trabajo", {
           _trabajo_id: trabajo.id,
           _participante_id: participanteId,
@@ -348,8 +348,23 @@ function PedidoDetalle() {
         if (participanteError) throw participanteError;
       }
 
-      // Preparar producción y liberar la OP forman una sola decisión:
-      // una vez definida la ruta, el pedido queda listo para entrar al flujo productivo.
+      // Verificamos el estado real después de las asignaciones.
+      const { data: trabajosFinales, error: trabajosFinalesError } = await supabase
+        .from("trabajos")
+        .select("id,area,tipo,participante_id")
+        .eq("pedido_id", pedido.id);
+
+      if (trabajosFinalesError) throw trabajosFinalesError;
+
+      const externosPendientes = (trabajosFinales ?? []).filter((trabajo) => {
+        const tieneCapacidadInterna = capacidadesSede.some((capacidad) =>
+          areaCoincide(capacidad.nombre, trabajo.area),
+        );
+        return !tieneCapacidadInterna && !trabajo.participante_id;
+      }).length;
+
+      // La OP solo se libera cuando todas las operaciones que el taller
+      // no puede ejecutar tienen un servicio/profesional externo asignado.
       const { data: opCreada, error: opCreadaError } = await supabase
         .from("ordenes_produccion")
         .select("id,estado")
@@ -360,7 +375,7 @@ function PedidoDetalle() {
 
       if (opCreadaError) throw opCreadaError;
 
-      if (opCreada?.id && opCreada.estado === "borrador" && !resultado?.externos_pendientes) {
+      if (opCreada?.id && opCreada.estado === "borrador" && externosPendientes === 0) {
         const { error: liberarError } = await supabase.rpc("transicionar_orden_produccion", {
           _orden_id: opCreada.id,
           _nuevo_estado: "liberada",
@@ -369,8 +384,8 @@ function PedidoDetalle() {
       }
 
       toast.success(
-        resultado?.externos_pendientes
-          ? `Producción preparada: ${resultado.numero ?? "OP"} · ${resultado.trabajos ?? 0} operaciones · ${resultado.piezas ?? 0} pieza(s). ${resultado.externos_pendientes} operación(es) requieren servicio externo.`
+        externosPendientes > 0
+          ? `Producción preparada: ${resultado.numero ?? "OP"} · ${resultado.trabajos ?? 0} operaciones · ${resultado.piezas ?? 0} pieza(s). ${externosPendientes} operación(es) requieren servicio externo.`
           : `Producción preparada: ${resultado?.numero ?? "OP"} · ${resultado?.trabajos ?? 0} operaciones · ${resultado?.piezas ?? 0} pieza(s). La OP quedó liberada.`,
       );
       await Promise.all([
