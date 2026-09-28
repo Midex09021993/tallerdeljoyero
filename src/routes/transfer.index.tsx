@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight, Check, Copy, FileUp, Link2, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
 
-export const Route = createFileRoute("/transfer")({
+export const Route = createFileRoute("/transfer/")({
   head: () => ({
     meta: [
       { title: "AURUM Transfer — Envía archivos de joyería" },
