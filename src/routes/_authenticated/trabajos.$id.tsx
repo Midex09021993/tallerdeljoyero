@@ -6,6 +6,7 @@ import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Play, Pape
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
+import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 type ArchivoTecnico = {
   id: string;
@@ -494,7 +495,7 @@ function TrabajoOperativoPage() {
 ) : null}
 
 <details className="group overflow-hidden rounded-2xl border border-success/20 bg-card shadow-raised">
-          <summary className="flex cursor-pointer list-none items-center justify-between bg-success/[0.04] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-success/10 text-xs font-bold text-success">4</span><span className="text-sm font-bold">Diseño y archivos <span className="ml-1 text-xs text-muted-foreground">({archivosPedido.length})</span></span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-success/[0.04] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-success/10 text-xs font-bold text-success">4</span><span className="text-sm font-bold">Archivos del servicio <span className="ml-1 text-xs text-muted-foreground">({archivosPedido.length})</span></span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-success/20 p-5">
             <div className="rounded-2xl border border-success/20 bg-success/[0.03] p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-wider text-success">Archivo vigente para fabricación</p><p className="mt-1 text-sm font-semibold">Diseño aprobado</p></div><span className="rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-bold text-success">{archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}</span></div>
               {archivosVigentes.length > 0 ? <div className="mt-3 space-y-2">{archivosVigentes.map((archivo) => <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-background p-3"><span className="min-w-0"><span className="block truncate text-sm font-semibold">{archivo.nombre}</span><span className="mt-1 block text-[10px] text-muted-foreground">Versión {archivo.version} · {archivo.grupo || "Técnico"}</span></span><span className="shrink-0 text-xs font-semibold text-success">Abrir</span></a>)}</div> : <p className="mt-3 text-sm text-muted-foreground">Aún no hay un archivo aprobado para fabricación.</p>}
