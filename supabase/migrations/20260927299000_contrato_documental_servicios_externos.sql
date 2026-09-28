@@ -31,21 +31,25 @@ begin
   from public.trabajos t
   where t.id = _trabajo_id;
 
-  if v_trabajo.id is null or v_trabajo.tipo <> 'externo' then
-    raise exception 'El trabajo no es un servicio externo';
+  if v_trabajo.id is null then
+    raise exception 'Trabajo no encontrado';
   end if;
 
-  if not (
-    public.es_admin(v_uid)
-    or exists (
-      select 1
-      from public.participante_cuentas pc
-      where pc.user_id = v_uid
-        and pc.participante_id = v_trabajo.participante_id
-        and pc.estado = 'activo'
-    )
-  ) then
-    raise exception 'No tienes acceso a este servicio externo';
+  if v_trabajo.tipo = 'externo' then
+    if not (
+      public.es_admin(v_uid)
+      or exists (
+        select 1
+        from public.participante_cuentas pc
+        where pc.user_id = v_uid
+          and pc.participante_id = v_trabajo.participante_id
+          and pc.estado = 'activo'
+      )
+    ) then
+      raise exception 'No tienes acceso a este servicio externo';
+    end if;
+  elsif not public.es_admin(v_uid) then
+    raise exception 'Solo un administrador puede preparar los requisitos de un servicio externo';
   end if;
 
   -- La ficha técnica es estructurada y viaja mediante obtener_ficha_servicio_externo.
