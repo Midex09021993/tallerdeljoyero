@@ -11,6 +11,7 @@ import {
   PackageCheck,
   Scissors,
   UserRound,
+  ExternalLink,
   Users,
   Gem,
   FileSpreadsheet,
@@ -44,7 +45,8 @@ type Seccion = {
     | "/aurum-render"
     | "/herramientas"
     | "/migracion"
-    | "/catalogo";
+    | "/catalogo"
+    | "/servicios-externos";
   label: string;
   area?: string;
   roles?: Rol[];
@@ -66,6 +68,7 @@ const secciones: Seccion[] = [
   { to: "/casting", label: "Casting", area: "Casting", icono: Landmark, grupo: "produccion" },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
   { to: "/taller", label: "Taller", area: "Taller", icono: Hammer, grupo: "produccion" },
+  { to: "/servicios-externos", label: "Servicios externos", icono: ExternalLink, grupo: "produccion" },
   { to: "/ventas", label: "Ventas", area: "Área ventas", icono: PackageCheck, grupo: "comercial" },
   { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "inventario" },
   { to: "/compras", label: "Compras", roles: ["dueno", "gerente"], icono: Boxes, grupo: "inventario" },
@@ -173,7 +176,7 @@ function seccionesVisibles(
   // dentro de esa pantalla para evitar duplicar interfaces (/taller, /casting, etc.).
   // Herramientas y Perfil permanecen como destinos independientes.
   const asignadas = areas ?? [];
-  const inicio = secciones.filter((s) => s.to === "/operario");
+  const inicio = secciones.filter((s) => s.to === "/operario" || s.to === "/servicios-externos");
   const herramientas = secciones.filter(
     (s) => s.to === "/herramientas" && asignadas.some((area) => areaCoincide(area, "Taller")),
   );
