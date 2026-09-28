@@ -205,7 +205,7 @@ function TransferPage() {
                 <p className="mt-3 text-sm leading-6 text-white/65">
                   Si trabajas con joyería, aquí también puedes visualizar modelos, preparar fabricación y conectar el trabajo entre talleres.
                 </p>
-                <a href="/auth?conoce=plataforma" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#d7ad48]">
+                <a href="/auth#conoce-plataforma" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#d7ad48]">
                   Conoce la plataforma <ArrowRight className="size-4" />
                 </a>
               </div>
