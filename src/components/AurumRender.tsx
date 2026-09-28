@@ -576,13 +576,15 @@ export function AurumRender() {
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
         capturar:()=>{
           const previousQuality=measuredQualityId;
-          const previousRenderQuality={...renderQuality};
+          aplicarCalidadRender("ultra");
+
+          // CAPTURA = perfil fotográfico temporal. No cambia el modo de
+          // visualización elegido por el usuario; al terminar se restaura.
           const captureQuality={
             ...getAurumRenderQuality("ultra"),
             pixelRatio:1.75,
             transmissionScale:.82,
             shadows:true,
-            shadowMapSize:2048,
           };
           renderQuality=captureQuality as any;
           measuredQualityId="ultra";
@@ -593,17 +595,12 @@ export function AurumRender() {
           renderer.shadowMap.enabled=true;
           taaPass?.accumulate=true;
           if(taaPass) taaPass.accumulateIndex=-1;
+
+          // Progressive beauty render: el costo ocurre solamente al capturar.
           for(let i=0;i<32;i++) composer?.render();
           const data=renderer.domElement.toDataURL("image/png");
 
-          renderQuality=previousRenderQuality;
-          measuredQualityId=previousQuality;
-          const restoredDpr=Math.max(1,Math.min(2,Number(previousRenderQuality.pixelRatio??1)));
-          renderer.setPixelRatio(restoredDpr);
-          composer?.setPixelRatio?.(restoredDpr);
-          applyPostQuality?.(previousRenderQuality);
-          (renderer as any).transmissionResolutionScale=previousRenderQuality.transmissionScale;
-          renderer.shadowMap.enabled=previousRenderQuality.shadows;
+          aplicarCalidadRender(previousQuality);
           if(taaPass) taaPass.accumulateIndex=-1;
           return data;
         },
