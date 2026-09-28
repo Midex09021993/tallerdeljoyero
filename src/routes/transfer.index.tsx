@@ -15,7 +15,7 @@ export const Route = createFileRoute("/transfer/")({
   component: TransferPage,
 });
 
-const MAX_BYTES = 500 * 1024 * 1024;
+const MAX_BYTES = 2 * 1024 * 1024 * 1024;
 const SUPABASE_URL = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ?? "";
 const SUPABASE_KEY = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
 
@@ -89,7 +89,7 @@ function TransferPage() {
     ).slice(0, 10);
 
     if (unique.reduce((sum, file) => sum + file.size, 0) > MAX_BYTES) {
-      setError("La transferencia no puede superar 500 MB.");
+      setError("La transferencia no puede superar 2 GB.");
       return;
     }
     setFiles(unique);
@@ -147,7 +147,7 @@ function TransferPage() {
                   <UploadCloud className="size-8" />
                 </div>
                 <h2 className="mt-5 text-xl font-semibold">Suelta tus archivos aquí</h2>
-                <p className="mt-2 text-sm text-white/50">o selecciónalos desde tu equipo · hasta 10 archivos · 500 MB</p>
+                <p className="mt-2 text-sm text-white/50">o selecciónalos desde tu equipo · hasta 10 archivos · 2 GB</p>
                 <span className="mt-5 rounded-xl bg-[#d7ad48] px-5 py-2.5 text-sm font-semibold text-black">
                   Seleccionar archivos
                 </span>
@@ -171,7 +171,7 @@ function TransferPage() {
                   ))}
                   <div className="flex items-center justify-between pt-2 text-xs text-white/40">
                     <span>{files.length} archivo{files.length === 1 ? "" : "s"}</span>
-                    <span>{formatBytes(total)} / 500 MB</span>
+                    <span>{formatBytes(total)} / 2 GB</span>
                   </div>
                 </div>
               )}
