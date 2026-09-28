@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
+import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
@@ -70,6 +72,16 @@ const AurumRenderPublicRoute = AurumRenderPublicRouteImport.update({
   id: '/aurum-render-public',
   path: '/aurum-render-public',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TransferRoute = TransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransferTokenRoute = TransferTokenRouteImport.update({
+  id: '/transfer/$token',
+  path: '/$token',
+  getParentRoute: () => TransferRoute,
 } as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -277,6 +289,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
+  '/transfer': typeof TransferRouteWithChildren
+  '/transfer/$token': typeof TransferTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
@@ -320,6 +334,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
+  '/transfer': typeof TransferRouteWithChildren
+  '/transfer/$token': typeof TransferTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
@@ -408,6 +424,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/aurum-render-public'
+    | '/transfer'
+    | '/transfer/$token'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
@@ -451,6 +469,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/aurum-render-public'
+    | '/transfer'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
@@ -493,6 +512,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$slug'
     | '/aurum-render-public'
+    | '/transfer'
+    | '/transfer/$token'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
@@ -533,11 +554,22 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
+interface TransferRouteChildren {
+  TransferTokenRoute: typeof TransferTokenRoute
+}
+
+const TransferRouteChildren: TransferRouteChildren = {
+  TransferTokenRoute: TransferTokenRoute,
+}
+
+const TransferRouteWithChildren = TransferRoute._addFileChildren(TransferRouteChildren)
+
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRoute
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
+  TransferRoute: typeof TransferRouteWithChildren
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
@@ -577,6 +609,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/aurum-render-public'
       preLoaderRoute: typeof AurumRenderPublicRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/transfer': {
+      id: '/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof TransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfer/$token': {
+      id: '/transfer/$token'
+      path: '/$token'
+      fullPath: '/transfer/$token'
+      preLoaderRoute: typeof TransferTokenRouteImport
+      parentRoute: typeof TransferRouteImport
     }
     '/auth': {
       id: '/auth'
@@ -960,6 +1006,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRoute,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
+  TransferRoute: TransferRouteWithChildren,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
