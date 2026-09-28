@@ -585,6 +585,20 @@ export function AurumRender() {
             pixelRatio:1.75,
             transmissionScale:.82,
             shadows:true,
+            // CAPTURE restores the photographic stack only for the still image.
+            taa:true,
+            progressiveFrameCount:16,
+            ssr:true,
+            ssrIntensity:1,
+            ssrMaxDistance:1,
+            ssrThickness:.018,
+            ssao:true,
+            ssaoIntensity:.12,
+            ssaoFalloff:1.3,
+            bloom:true,
+            bloomIntensity:.20,
+            bloomThreshold:1.35,
+            bloomRadius:.6,
           };
           renderQuality=captureQuality as any;
           measuredQualityId="ultra";
@@ -597,7 +611,9 @@ export function AurumRender() {
           if(taaPass) taaPass.accumulateIndex=-1;
 
           // Progressive beauty render: el costo ocurre solamente al capturar.
-          for(let i=0;i<32;i++) composer?.render();
+          // 16 accumulation frames are enough for a still while avoiding the
+          // previous 32-frame synchronous stall.
+          for(let i=0;i<16;i++) composer?.render();
           const data=renderer.domElement.toDataURL("image/png");
 
           aplicarCalidadRender(previousQuality);
