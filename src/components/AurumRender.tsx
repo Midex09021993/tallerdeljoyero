@@ -654,7 +654,7 @@ export function AurumRender() {
           if (!id) { parteActiva=null; setParteSeleccionada(null); setParteSeleccionadaNombre(null); limpiarResaltado(); return; }
           let encontrado:any=null;
           modelo?.traverse((x:any)=>{if(x.uuid===id) encontrado=x;});
-          if(encontrado) seleccionarMalla(encontrado);
+          if(encontrado) { seleccionarMalla(encontrado); invalidateRenderRef.current?.(); }
         },
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
@@ -722,6 +722,7 @@ export function AurumRender() {
           setParteSeleccionadaCategoria("otro");
           limpiarResaltado();
         }
+        invalidateRenderRef.current?.();
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
