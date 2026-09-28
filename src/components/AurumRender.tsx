@@ -258,6 +258,7 @@ export function AurumRender() {
           () => vivo && requestId === hdrRequestId,
           (next) => {
             entorno = next;
+            invalidateRenderRef.current?.();
           }
         );
       };
@@ -311,6 +312,8 @@ export function AurumRender() {
 
       const aplicarIluminacion = (id:IluminacionId) => {
         lightingController.applyPreset(id);
+        renderer.shadowMap.needsUpdate = true;
+        invalidateRenderRef.current?.();
         // Iluminación solo modifica luces. Scene conserva Environment y exposición.
       };
 
@@ -384,6 +387,7 @@ export function AurumRender() {
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva;
         applyAurumGemToTarget(target,g,aplicarEntornoGema);
+        invalidateRenderRef.current?.();
       };
       const aplicarMaterial = (m:MaterialConfig) => {
         if (!modelo) {
@@ -391,6 +395,8 @@ export function AurumRender() {
           return;
         }
         applyAurumMaterialToModel(modelo, parteActiva, m, material);
+        renderer.shadowMap.needsUpdate = true;
+        invalidateRenderRef.current?.();
       };
 
       const calibrarReflejosMetalEscena = (photo:any) => {
@@ -450,6 +456,8 @@ export function AurumRender() {
           vignetteDarkness: photo.post.vignetteDarkness,
         });
         applyPostQuality?.(renderQuality);
+        renderer.shadowMap.needsUpdate = true;
+        invalidateRenderRef.current?.();
       };
        const encuadrar = () => {
         if (!modelo) return;
@@ -459,6 +467,8 @@ export function AurumRender() {
           camera: camara, controls: controles, lights: lucesAurum,
           groundController, lightingController, scene: escena, renderer,
         }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
+        renderer.shadowMap.needsUpdate = true;
+        invalidateRenderRef.current?.();
       };
 
       // Adaptadores de entrada: cada formato produce un Object3D común.
@@ -500,6 +510,8 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
+        setAurumInclusionsVisible(modelo, measuredQualityId !== "low");
+        renderer.shadowMap.needsUpdate = true;
         // SSR iJewel: only authored metal meshes participate in screen-space
         // reflection. Gemstones keep their own environment/refraction path.
         const ssrMetalMeshes:any[]=[];
@@ -584,8 +596,8 @@ export function AurumRender() {
         },
         iluminacion:aplicarIluminacion,
         sceneStudio:(_patch:any)=>{},
-        reset:()=>{ controles.autoRotate=false; encuadrar(); },
-        autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
+        reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
+        autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
         capturar:()=>{
           const previousQuality=measuredQualityId;
           aplicarCalidadRender("ultra");
@@ -644,7 +656,7 @@ export function AurumRender() {
           if(encontrado) seleccionarMalla(encontrado);
         },
         fullscreen:()=>nodo.requestFullscreen?.(),
-        vista:camaraVista,
+        vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
         calidad:aplicarCalidadRender,
       });
       const limpiarResaltado = () => {
