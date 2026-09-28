@@ -127,39 +127,30 @@ export async function normalizeAurumModel(
         }))
     : [];
 
-  // En 3DM conservamos directamente el render mesh producido por
-  // Rhino3dmLoader. Esto elimina el round-trip 3DM -> GLB -> GLTFLoader
-  // durante el render y permite comparar el shading de la malla Rhino original.
+  // 3DM es la entrada oficial. Su representación de ejecución es el GLB
+  // generado internamente. El Object3D Rhino se usa para preparar/exportar,
+  // pero el visor trabaja finalmente sobre el GLB, igual que el activo oficial.
   if (extension === "3dm") {
-    const layers = Array.isArray(object?.userData?.layers) ? object.userData.layers : [];
-    const isLayerEffectivelyVisible = buildRhinoLayerVisibility(layers);
-
-    let i = 0;
-    object?.traverse?.((x:any) => {
-      if (!x.isMesh) return;
-
-      const meta = metadataCapas[i++];
-      if (!meta) return;
-
-      const attrs = x.userData?.attributes || {};
-      const layerIndex = resolveRhinoLayerIndex(x);
-      const objectVisible = !isRhinoObjectHidden(attrs);
-      const layerVisible = isLayerEffectivelyVisible(layerIndex, meta.capa);
-      const visible = objectVisible && layerVisible;
-
-      x.visible = x.visible !== false && visible;
+    if (!glb) throw new Error("No se generó el GLB interno del archivo 3DM.");
+    const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+    const interno = (await new GLTFLoader().parseAsync(glb,"")).scene;
+    const meshes:any[] = [];
+    interno.traverse((x:any) => { if (x.isMesh) meshes.push(x); });
+    metadataCapas.forEach((meta:any,index:number) => {
+      const x=meshes[index];
+      if (!x) return;
       x.userData = {
         ...x.userData,
         aurumRhino: {
           ...meta,
-          layerIndex,
-          visible,
-          hiddenByRhino: !visible,
+          layerIndex: meta.layerIndex ?? -1,
+          visible: x.visible !== false,
+          hiddenByRhino: x.visible === false,
         },
       };
     });
-    object?.updateMatrixWorld?.(true);
-    return object;
+    interno.updateMatrixWorld(true);
+    return interno;
   }
 
   // GLB ya fue parseado por parseAurumInput(). No lo serializamos ni
