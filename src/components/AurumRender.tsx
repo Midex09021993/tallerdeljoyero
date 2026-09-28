@@ -26,7 +26,7 @@ import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
 import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
-import { Camera, ChevronDown, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
+import { Camera, ChevronDown, Download, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
@@ -124,6 +124,8 @@ export function AurumRender() {
   const categoriaProyectoRef = useRef("Anillo");
   categoriaProyectoRef.current = categoriaProyecto;
   const [captura, setCaptura] = useState<string | null>(null);
+  const [captureMenuOpen, setCaptureMenuOpen] = useState(false);
+  const [captureResolution, setCaptureResolution] = useState<"normal"|"hd"|"fullhd">("hd");
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -600,18 +602,27 @@ export function AurumRender() {
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
-        capturar:()=>{
+        capturar:(resolution:"normal"|"hd"|"fullhd"="hd")=>{
           const previousQuality=measuredQualityId;
+          const previousPixelRatio=renderer.getPixelRatio?.() ?? 1;
+          const previousComposerPixelRatio=renderQuality.pixelRatio;
+          const previousWidth=nodo.clientWidth||900;
+          const previousHeight=nodo.clientHeight||600;
+          const sizes={
+            normal:{width:854,height:480},
+            hd:{width:1280,height:720},
+            fullhd:{width:1920,height:1080},
+          } as const;
+          const target=sizes[resolution]??sizes.hd;
           aplicarCalidadRender("ultra");
 
-          // CAPTURA = perfil fotográfico temporal. No cambia el modo de
-          // visualización elegido por el usuario; al terminar se restaura.
+          // CAPTURA = perfil fotográfico temporal. El visor normal no conserva
+          // el framebuffer: la imagen se obtiene del buffer final del composer.
           const captureQuality={
             ...getAurumRenderQuality("ultra"),
-            pixelRatio:1.75,
+            pixelRatio:1,
             transmissionScale:.82,
             shadows:true,
-            // CAPTURE restores the photographic stack only for the still image.
             taa:true,
             progressiveFrameCount:16,
             ssr:true,
@@ -628,8 +639,11 @@ export function AurumRender() {
           };
           renderQuality=captureQuality as any;
           measuredQualityId="ultra";
-          renderer.setPixelRatio(1.75);
-          composer?.setPixelRatio?.(1.75);
+          renderer.setPixelRatio(1);
+          composer?.setPixelRatio?.(1);
+          composer?.setSize?.(target.width,target.height);
+          camara.aspect=target.width/target.height;
+          camara.updateProjectionMatrix();
           applyPostQuality?.(captureQuality,{capture:true});
           (renderer as any).transmissionResolutionScale=.82;
           renderer.shadowMap.enabled=true;
@@ -637,13 +651,39 @@ export function AurumRender() {
           if(taaPass) taaPass.accumulate=true;
           if(taaPass) taaPass.accumulateIndex=-1;
 
-          // Progressive beauty render: el costo ocurre solamente al capturar.
-          // 16 accumulation frames are enough for a still while avoiding the
-          // previous 32-frame synchronous stall.
+          // El composer conserva el resultado final en su readBuffer cuando no
+          // renderiza a la pantalla. Three recomienda leer el render target
+          // directamente para este tipo de captura.
+          const previousRenderToScreen=composer?.renderToScreen;
+          if(composer) composer.renderToScreen=false;
           for(let i=0;i<16;i++) composer?.render();
-          const data=renderer.domElement.toDataURL("image/png");
+          const buffer=composer?.readBuffer;
+          if(!buffer) throw new Error("No se pudo obtener el buffer de captura");
+
+          const pixels=new Uint8Array(target.width*target.height*4);
+          renderer.readRenderTargetPixels(buffer,0,0,target.width,target.height,pixels);
+          const canvas=document.createElement("canvas");
+          canvas.width=target.width; canvas.height=target.height;
+          const ctx=canvas.getContext("2d");
+          if(!ctx) throw new Error("No se pudo preparar la imagen");
+          const imageData=ctx.createImageData(target.width,target.height);
+          const rowBytes=target.width*4;
+          for(let y=0;y<target.height;y++){
+            const src=y*rowBytes;
+            const dst=(target.height-1-y)*rowBytes;
+            imageData.data.set(pixels.subarray(src,src+rowBytes),dst);
+          }
+          ctx.putImageData(imageData,0,0);
+          const data=canvas.toDataURL("image/png");
+          if(composer) composer.renderToScreen=previousRenderToScreen??true;
 
           aplicarCalidadRender(previousQuality);
+          renderer.setPixelRatio(previousPixelRatio);
+          composer?.setPixelRatio?.(previousPixelRatio);
+          renderer.setSize(previousWidth,previousHeight,false);
+          composer?.setSize?.(previousWidth,previousHeight);
+          camara.aspect=previousWidth/previousHeight;
+          camara.updateProjectionMatrix();
           renderer.shadowMap.needsUpdate=true;
           invalidateRenderRef.current?.();
           if(taaPass) taaPass.accumulateIndex=-1;
@@ -885,7 +925,21 @@ export function AurumRender() {
     }
   },[]);
   const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
-  const capturarImagen=()=>{const d=apiRef.current?.capturar();if(d)setCaptura(d)};
+  const capturarImagen=(resolution:"normal"|"hd"|"fullhd"=captureResolution)=>{
+    try{
+      const d=apiRef.current?.capturar?.(resolution);
+      if(!d)return;
+      setCaptura(d);
+      const link=document.createElement("a");
+      link.href=d;
+      const safeName=normalizarTexto(nombreProyecto).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"aurum-render";
+      link.download=`${safeName}-${resolution}.png`;
+      link.click();
+      setCaptureMenuOpen(false);
+    }catch(e){
+      setError(e instanceof Error?e.message:"No se pudo generar la captura");
+    }
+  };
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
     apiRef.current?.calidad(id);
     setQualityOpen(false);
