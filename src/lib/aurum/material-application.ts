@@ -274,7 +274,17 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     part.material=Array.isArray(part.material)
       ? part.material.map((base:any)=>apply(base,part,thickness,null))
       : apply(part.material,part,thickness,null);
-    part.userData={...part.userData,aurumFacetNormalsApplied:true,aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",aurumOpticalThickness:thickness,aurumOpticalThicknessSpace:"local",aurumOpticalThicknessMode:"local-bounds-v1",aurumGemThicknessMapDiagnostics:null,aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part)};
+    part.userData={
+      ...part.userData,
+      aurumActiveGemId:String(gemConfig?.id??""),
+      aurumFacetNormalsApplied:true,
+      aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",
+      aurumOpticalThickness:thickness,
+      aurumOpticalThicknessSpace:"local",
+      aurumOpticalThicknessMode:"local-bounds-v1",
+      aurumGemThicknessMapDiagnostics:null,
+      aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part),
+    };
     console.warn("[AURUM][GEM MATERIAL APPLIED]", {
       mesh:part.name||part.uuid,
       selectedGem:{id:String(gemConfig?.id??""),nombre:String(gemConfig?.nombre??""),familia:String(gemConfig?.familia??""),color:String(gemConfig?.color??"")},
