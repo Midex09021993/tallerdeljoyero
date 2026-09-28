@@ -103,7 +103,12 @@ export function applyAurumInitialModelMaterials(
         if (preset.familia==="Diamante") applyAurumDiamondOptics(m);
       }
       x.material=m;
-      options.createInclusions(x,gem);
+      x.userData={
+        ...(x.userData??{}),
+        aurumActiveGemId:String(gem.id??"diamante_natural"),
+      };
+      // Procedural inclusions are deferred to CAPTURE. Creating dozens of
+      // transparent meshes during every model load is unnecessary for LIVE.
       options.applyGemEnvironment();
     }else if(meta?.categoria==="metal"){
       // First-load presentation is intentionally uniform: every metal layer starts
