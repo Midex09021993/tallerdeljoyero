@@ -16,7 +16,6 @@ import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-pub
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
-import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
@@ -41,6 +40,7 @@ import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_au
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
+import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedCotizacionesIndexRouteImport } from './routes/_authenticated/cotizaciones.index'
@@ -87,11 +87,6 @@ const CatalogoPublicoRoute = CatalogoPublicoRouteImport.update({
 const ClienteRoute = ClienteRouteImport.update({
   id: '/cliente',
   path: '/cliente',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TransferRoute = TransferRouteImport.update({
-  id: '/transfer',
-  path: '/transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAurumRenderRoute =
@@ -220,10 +215,15 @@ const JoyaTokenRoute = JoyaTokenRouteImport.update({
   path: '/joya/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TransferIndexRoute = TransferIndexRouteImport.update({
+  id: '/transfer/',
+  path: '/transfer/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransferTokenRoute = TransferTokenRouteImport.update({
-  id: '/$token',
-  path: '/$token',
-  getParentRoute: () => TransferRoute,
+  id: '/transfer/$token',
+  path: '/transfer/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedContratosIdRoute =
   AuthenticatedContratosIdRouteImport.update({
@@ -299,7 +299,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
-  '/transfer': typeof TransferRouteWithChildren
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -325,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/transfer/': typeof TransferIndexRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -345,7 +345,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
-  '/transfer': typeof TransferRouteWithChildren
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -369,6 +368,7 @@ export interface FileRoutesByTo {
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/transfer': typeof TransferIndexRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -391,7 +391,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
-  '/transfer': typeof TransferRouteWithChildren
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
@@ -417,6 +416,7 @@ export interface FileRoutesById {
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/transfer/': typeof TransferIndexRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -439,7 +439,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
-    | '/transfer'
     | '/aurum-render'
     | '/casting'
     | '/catalogo'
@@ -465,6 +464,7 @@ export interface FileRouteTypes {
     | '/c/$codigo'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/transfer/'
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
@@ -485,7 +485,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
-    | '/transfer'
     | '/aurum-render'
     | '/casting'
     | '/catalogo'
@@ -509,6 +508,7 @@ export interface FileRouteTypes {
     | '/c/$codigo'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/transfer'
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
@@ -530,7 +530,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
-    | '/transfer'
     | '/_authenticated/aurum-render'
     | '/_authenticated/casting'
     | '/_authenticated/catalogo'
@@ -556,6 +555,7 @@ export interface FileRouteTypes {
     | '/c/$codigo'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/transfer/'
     | '/_authenticated/contratos/$id'
     | '/_authenticated/cotizaciones/$id'
     | '/_authenticated/pedidos/$id'
@@ -578,9 +578,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
-  TransferRoute: typeof TransferRouteWithChildren
   CCodigoRoute: typeof CCodigoRouteWithChildren
   JoyaTokenRoute: typeof JoyaTokenRoute
+  TransferTokenRoute: typeof TransferTokenRoute
+  TransferIndexRoute: typeof TransferIndexRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -635,13 +636,6 @@ declare module '@tanstack/react-router' {
       path: '/cliente'
       fullPath: '/cliente'
       preLoaderRoute: typeof ClienteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/transfer': {
-      id: '/transfer'
-      path: '/transfer'
-      fullPath: '/transfer'
-      preLoaderRoute: typeof TransferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/aurum-render': {
@@ -812,12 +806,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoyaTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/transfer/': {
+      id: '/transfer/'
+      path: '/transfer'
+      fullPath: '/transfer/'
+      preLoaderRoute: typeof TransferIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transfer/$token': {
       id: '/transfer/$token'
-      path: '/$token'
+      path: '/transfer/$token'
       fullPath: '/transfer/$token'
       preLoaderRoute: typeof TransferTokenRouteImport
-      parentRoute: typeof TransferRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/contratos/$id': {
       id: '/_authenticated/contratos/$id'
@@ -1005,18 +1006,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface TransferRouteChildren {
-  TransferTokenRoute: typeof TransferTokenRoute
-}
-
-const TransferRouteChildren: TransferRouteChildren = {
-  TransferTokenRoute: TransferTokenRoute,
-}
-
-const TransferRouteWithChildren = TransferRoute._addFileChildren(
-  TransferRouteChildren,
-)
-
 interface CCodigoRouteChildren {
   CCodigoPdfRoute: typeof CCodigoPdfRoute
 }
@@ -1036,9 +1025,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
-  TransferRoute: TransferRouteWithChildren,
   CCodigoRoute: CCodigoRouteWithChildren,
   JoyaTokenRoute: JoyaTokenRoute,
+  TransferTokenRoute: TransferTokenRoute,
+  TransferIndexRoute: TransferIndexRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
