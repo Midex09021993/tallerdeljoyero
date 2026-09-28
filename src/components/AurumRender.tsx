@@ -381,7 +381,6 @@ export function AurumRender() {
       });
       const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
-        glbInterno = null;
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
         applyAurumMetal(mat, metalPresetFromConfig(m));
