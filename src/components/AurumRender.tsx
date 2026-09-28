@@ -593,7 +593,7 @@ export function AurumRender() {
           applyPostQuality?.(captureQuality,{capture:true});
           (renderer as any).transmissionResolutionScale=.82;
           renderer.shadowMap.enabled=true;
-          taaPass?.accumulate=true;
+          if(taaPass) taaPass.accumulate=true;
           if(taaPass) taaPass.accumulateIndex=-1;
 
           // Progressive beauty render: el costo ocurre solamente al capturar.
