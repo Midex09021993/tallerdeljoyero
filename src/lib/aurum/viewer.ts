@@ -161,12 +161,13 @@ export function startAurumViewerLoop(
   // alive once the image is stable.
   let frame = 0;
   let stopped = false;
+  let paused = false;
   let dirty = true;
   let interactionActive = false;
 
   const requestRender = () => {
     dirty = true;
-    if (!frame && !stopped) frame = requestAnimationFrame(tick);
+    if (!frame && !stopped && !paused) frame = requestAnimationFrame(tick);
   };
 
   const resize = () => {
@@ -191,7 +192,7 @@ export function startAurumViewerLoop(
 
   const tick = () => {
     frame = 0;
-    if (stopped) return;
+    if (stopped || paused) return;
 
     const changedByControls = Boolean(viewer.controls?.update?.());
     const shouldRender = dirty || changedByControls || interactionActive;
@@ -215,6 +216,16 @@ export function startAurumViewerLoop(
     observer,
     get frame() { return frame; },
     invalidate: requestRender,
+    pause: () => {
+      paused = true;
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+    },
+    resume: () => {
+      if (stopped) return;
+      paused = false;
+      requestRender();
+    },
     stop: () => {
       stopped = true;
       if (frame) cancelAnimationFrame(frame);
