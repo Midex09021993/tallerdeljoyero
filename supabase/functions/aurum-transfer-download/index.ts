@@ -123,7 +123,15 @@ Deno.serve(async (req) => {
     .update({ status: "consumed", consumed_at: new Date().toISOString() })
     .eq("id", t.id)
     .eq("status", "processing");
-  if (consumeError) console.error("[aurum-transfer-download] consume", consumeError);
+  if (consumeError) {
+    console.error("[aurum-transfer-download] consume", consumeError);
+  } else {
+    const { error: usageError } = await supabase
+      .from("aurum_transfer_usage")
+      .update({ status: "consumed", consumed_at: new Date().toISOString() })
+      .eq("transfer_id", t.id);
+    if (usageError) console.error("[aurum-transfer-download] usage history", usageError);
+  }
 
   return json({ files: out, expires_in_seconds: DOWNLOAD_WINDOW_SECONDS });
 });
