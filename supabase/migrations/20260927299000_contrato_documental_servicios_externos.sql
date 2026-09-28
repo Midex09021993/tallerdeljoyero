@@ -540,6 +540,29 @@ $;
 revoke all on function public.registrar_entrega_servicio_externo(uuid, text, text, text) from public, anon;
 grant execute on function public.registrar_entrega_servicio_externo(uuid, text, text, text) to authenticated;
 
+-- El receptor también puede leer únicamente los archivos del servicio externo
+-- que están bajo la carpeta específica de ese trabajo.
+drop policy if exists "pedidos archivos leer servicio externo" on storage.objects;
+create policy "pedidos archivos leer servicio externo"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'pedidos'
+  and (storage.foldername(name))[2] = 'servicios'
+  and storage.extension(name) = '3dm'
+  and exists (
+    select 1
+    from public.trabajos t
+    join public.participante_cuentas pc
+      on pc.participante_id = t.participante_id
+     and pc.user_id = (select auth.uid())
+     and pc.estado = 'activo'
+    where t.tipo = 'externo'
+      and t.area = 'Diseño 3D'
+      and t.id = (nullif((storage.foldername(name))[3], ''))::uuid
+      and t.pedido_id = (nullif((storage.foldername(name))[1], ''))::uuid
+  )
+);
+
 -- Permite al receptor subir únicamente el entregable 3DM de un servicio Diseño 3D.
 drop policy if exists "pedidos archivos subir autorizado" on storage.objects;
 create policy "pedidos archivos subir autorizado"
