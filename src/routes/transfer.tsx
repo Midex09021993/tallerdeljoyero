@@ -15,7 +15,7 @@ export const Route = createFileRoute("/transfer")({
   component: TransferPage,
 });
 
-const MAX_BYTES = 50 * 1024 * 1024;
+const MAX_BYTES = 500 * 1024 * 1024;
 const SUPABASE_URL = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ?? "";
 const SUPABASE_KEY = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
 
@@ -24,18 +24,50 @@ function formatBytes(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-async function createTransfer(files: File[]) {
-  const form = new FormData();
-  files.forEach((file) => form.append("files", file));
-
+async function callCreate(body: unknown) {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/aurum-transfer-create`, {
     method: "POST",
-    headers: { apikey: SUPABASE_KEY },
-    body: form,
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error ?? "No se pudo crear la transferencia.");
-  return data as { token: string };
+  return data;
+}
+
+function putFile(url: string, file: File, onProgress: (loaded: number) => void) {
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    if (file.type) xhr.setRequestHeader("Content-Type", file.type);
+    xhr.upload.onprogress = (e) => onProgress(e.loaded);
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`No se pudo subir ${file.name}.`)));
+    xhr.onerror = () => reject(new Error("Fallo de red al subir el archivo."));
+    xhr.send(file);
+  });
+}
+
+async function createTransfer(files: File[], onProgress: (pct: number) => void) {
+  const meta = files.map((f) => ({ name: f.name, size: f.size, type: f.type }));
+  const prep = (await callCreate({ action: "prepare", files: meta })) as {
+    token: string;
+    uploads: Array<{ name: string; size: number; type: string; path: string; signedUrl: string }>;
+  };
+  const total = files.reduce((s, f) => s + f.size, 0) || 1;
+  const loaded = files.map(() => 0);
+  for (let i = 0; i < files.length; i++) {
+    await putFile(prep.uploads[i].signedUrl, files[i], (l) => {
+      loaded[i] = l;
+      onProgress(Math.min(99, Math.round((loaded.reduce((a, b) => a + b, 0) / total) * 100)));
+    });
+  }
+  const done = await callCreate({
+    action: "finalize",
+    token: prep.token,
+    files: prep.uploads.map(({ name, size, type, path }) => ({ name, size, type, path })),
+  });
+  onProgress(100);
+  return done as { token: string };
 }
 
 function TransferPage() {
