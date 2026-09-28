@@ -6,7 +6,7 @@ import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } fro
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
-import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Droplets, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, Ruler, Scale, Send, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
@@ -141,37 +141,83 @@ function LoginPage() {
             </p>
           </div>
 
-          <section id="herramientas" className="mt-10 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-2.5">
-            <div className="flex items-center gap-3">
-              <Gem className="size-7 text-gold" />
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-gold sm:text-base">
-                  Herramientas gratuitas para joyeros
+          <section className="mt-6 max-w-5xl rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/[0.10] via-black/35 to-black/45 p-5 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-3 [@media(max-height:800px)]:p-3.5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-gold">Aurum Lab · Plataforma para joyeros</p>
+                <h2 className="mt-2 font-display text-2xl italic leading-tight text-white sm:text-3xl">
+                  Más que un ERP para joyería
                 </h2>
-                <p className="mt-1 text-xs text-white/60 sm:text-sm">
-                  Calcula, visualiza y optimiza tus proyectos desde cualquier dispositivo.
+                <p className="mt-2 max-w-xl text-xs leading-relaxed text-white/65 sm:text-sm">
+                  Herramientas gratuitas, visualización 3D, transferencia de archivos y gestión especializada para talleres de joyería.
                 </p>
               </div>
+              <a href="#herramientas" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-ink transition hover:opacity-90">
+                Explorar herramientas gratis <ArrowRight className="size-4" />
+              </a>
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 [@media(max-height:800px)]:mt-3">
+            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-white/10 pt-4 sm:gap-3">
               {[
-                ["yeso", "Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
-                ["oro", "Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
-                ["tallas", "Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
-                ["transfer", "AURUM Transfer", "Envía modelos y archivos de fabricación con un enlace privado de un solo uso."],
-                ["render", "AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
-              ].map(([id, titulo, descripcion]) => (
+                ["+150", "cálculos realizados"],
+                ["+20", "talleres registrados"],
+                ["+5", "herramientas disponibles"],
+              ].map(([valor, label]) => (
+                <div key={label} className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-center">
+                  <p className="text-lg font-semibold text-gold sm:text-xl">{valor}</p>
+                  <p className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/45 sm:text-[10px]">{label}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="herramientas" className="mt-10 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-2.5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <Gem className="size-7 text-gold" />
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-gold sm:text-base">
+                    Herramientas gratuitas para joyeros
+                  </h2>
+                  <p className="mt-1 text-xs text-white/60 sm:text-sm">
+                    Empieza aquí. Resuelve una necesidad técnica y descubre el ecosistema Aurum Lab.
+                  </p>
+                </div>
+              </div>
+              <span className="hidden rounded-full border border-gold/20 bg-gold/[0.06] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-gold sm:inline-flex">
+                Acceso gratuito
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 [@media(max-height:800px)]:mt-3">
+              {[
+                ["yeso", "Calculadora Yeso / Agua", "Relaciones de mezcla y factores de corrección.", Droplets],
+                ["oro", "Calculadora de Aleación de Oro", "Calcula la liga necesaria para tu aleación.", Gem],
+                ["tallas", "Conversor de Tallas", "Convierte tallas de anillo entre escalas.", Ruler],
+                ["peso3d", "Visualizador y Peso 3D", "Visualiza modelos y estima peso según material.", Boxes],
+                ["render", "AURUM RENDER", "Explora tus diseños 3D con materiales y escenas.", Sparkles],
+                ["transfer", "AURUM TRANSFERS", "Envía archivos de fabricación mediante enlaces privados.", Send],
+              ] as const).map(([id, titulo, descripcion, Icon]) => (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setHerramientaSeleccionada(id)}
-                  className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-left transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3"
+                  onClick={() => {
+                    if (id === "render") {
+                      navigate({ to: "/aurum-render-public" });
+                      return;
+                    }
+                    if (id === "transfer") {
+                      navigate({ to: "/transfer" });
+                      return;
+                    }
+                    setHerramientaSeleccionada(id);
+                  }}
+                  className="group rounded-xl border border-white/10 bg-white/[0.025] p-4 text-left transition hover:-translate-y-0.5 hover:border-gold/40 hover:bg-gold/[0.045] [@media(max-height:800px)]:p-3"
                 >
-                  <Gem className="size-6 text-gold" />
-                  <p className="mt-4 text-sm font-semibold text-white">{titulo}</p>
-                  <p className="mt-2 text-[11px] leading-relaxed text-white/50">{descripcion}</p>
-                  {id === "render" ? <span className="mt-3 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
+                  <Icon className="size-5 text-gold transition group-hover:scale-105" />
+                  <p className="mt-3 text-sm font-semibold text-white">{titulo}</p>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{descripcion}</p>
+                  {id === "render" ? <span className="mt-2 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
                 </button>
               ))}
             </div>
