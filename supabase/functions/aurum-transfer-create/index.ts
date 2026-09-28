@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
 
-    // Paso 1: preparar URLs firmadas de subida directa (permite hasta 500 MB).
+    // Paso 1: preparar URLs firmadas de subida directa (permite hasta 2 GB).
     if (body.action === "prepare") {
       const files = validate(body.files);
       if (typeof files === "string") return json({ error: files }, 400);
