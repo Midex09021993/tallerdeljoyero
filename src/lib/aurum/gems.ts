@@ -13,6 +13,12 @@ export const clearAurumInclusions=(target:any)=>{
   remove.forEach(child=>{child.parent?.remove(child);child.geometry?.dispose?.();child.material?.dispose?.();});
 };
 
+export const setAurumInclusionsVisible=(target:any,visible:boolean)=>{
+  target?.traverse?.((child:any)=>{
+    if(child.userData?.aurumInternalInclusion) child.visible=visible;
+  });
+};
+
 const addEmeraldInclusions=(THREE:any,target:any,config:any,size:any)=>{
   let s=(config.seed>>>0)||1;
   const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
@@ -86,7 +92,7 @@ const addPeridotInclusions=(THREE:any,target:any,config:any,size:any)=>{
     // GIA's "lily pad" inclusions are reflective, disk-shaped fracture
     // inclusions. They are modeled as thin paired discs, not as random dots.
     const r=scale*(.018+rnd()*.032);
-    const ring=new THREE.Mesh(new THREE.RingGeometry(r*.45,r,10,1),new THREE.MeshPhysicalMaterial({color:0xb7c09a,roughness:.18,metalness:.05,transmission:.04,transparent:true,opacity:.18+strength*.10,depthWrite:false,envMapIntensity:.8,side:THREE.DoubleSide}));
+    const ring=new THREE.Mesh(new THREE.RingGeometry(r*.45,r,10,1),new THREE.MeshPhysicalMaterial({color:0xb7c09a,roughness:.18,metalness:.05,transmission:.04,transparent:true,opacity:.18+strength*.10,depthWrite:false,envMapIntensity:.8,side:THREE.DoubleSide,forceSinglePass:true}));
     ring.position.set((rnd()-.5)*size.x*.52,(rnd()-.5)*size.y*.52,(rnd()-.5)*size.z*.52);
     ring.rotation.set(rnd()*3,rnd()*3,rnd()*3); ring.scale.z=.32;
     ring.userData={aurumInternalInclusion:true,aurumInclusionType:"peridot-lily-pad"}; target.add(ring);
@@ -164,7 +170,7 @@ const addSunstoneCopperInclusions=(THREE:any,target:any,config:any,size:any)=>{
     const diameter=scale*(.00025+rnd()*.0028);
     const length=scale*(.01+rnd()*.06);
     const geo=new THREE.CircleGeometry(diameter,6);
-    const mat=new THREE.MeshPhysicalMaterial({color:0xb56a35,metalness:.72,roughness:.18,transmission:.02,transparent:true,opacity:.08+strength*.16,side:THREE.DoubleSide,depthWrite:false});
+    const mat=new THREE.MeshPhysicalMaterial({color:0xb56a35,metalness:.72,roughness:.18,transmission:.02,transparent:true,opacity:.08+strength*.16,side:THREE.DoubleSide,forceSinglePass:true,depthWrite:false});
     const p=new THREE.Mesh(geo,mat);
     p.scale.x=1.5+rnd()*4.0;
     p.position.set((rnd()-.5)*size.x*.46,(rnd()-.5)*size.y*.46,(rnd()-.5)*size.z*.46);
@@ -181,7 +187,7 @@ const addPhenomenalPlates=(THREE:any,target:any,config:any,size:any,phenomenon:"
   const color=phenomenon==="orient"?0xd8c9b0:phenomenon==="iridescence"?0x6d7884:phenomenon==="peristerescence"?0xbfcbd4:0xb07a42;
   for(let i=0;i<count;i++){
     const g=new THREE.PlaneGeometry(scale*(.012+rnd()*.028),scale*(.003+rnd()*.008));
-    const m=new THREE.MeshPhysicalMaterial({color,roughness:.16,metalness:.02,transmission:.05,transparent:true,opacity:.025+strength*.045,side:THREE.DoubleSide,depthWrite:false,envMapIntensity:.45});
+    const m=new THREE.MeshPhysicalMaterial({color,roughness:.16,metalness:.02,transmission:.05,transparent:true,opacity:.025+strength*.045,side:THREE.DoubleSide,forceSinglePass:true,depthWrite:false,envMapIntensity:.45});
     const p=new THREE.Mesh(g,m);
     p.position.set((rnd()-.5)*size.x*.48,(rnd()-.5)*size.y*.48,(rnd()-.5)*size.z*.48);
     p.rotation.set(rnd()*Math.PI,rnd()*Math.PI,rnd()*Math.PI);
