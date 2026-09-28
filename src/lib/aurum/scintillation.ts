@@ -345,8 +345,56 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   };
 
   material.customProgramCacheKey=()=>`aurum-scintillation-v8-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
+
+  // Keep the complete photographic shader available for capture, but allow the
+  // interactive viewer to switch to a lean native MeshPhysicalMaterial shader.
+  // This is the key distinction from a naive "lower quality" toggle: geometry,
+  // IOR, transmission and authored facet normals remain intact while the
+  // additional per-fragment optical effects are deferred to the beauty render.
+  material.userData={
+    ...(material.userData??{}),
+    aurumBeautyOnBeforeCompile:material.onBeforeCompile,
+    aurumBeautyProgramCacheKey:material.customProgramCacheKey,
+    aurumLiveShaderQuality:"beauty",
+    aurumLiveDispersionStored:Number(material.dispersion??0),
+    aurumLiveIridescenceStored:Number(material.iridescence??0),
+  };
   material.needsUpdate=true;
   return material;
+};
+
+export type AurumGemShaderQuality = "live"|"beauty";
+
+export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)=>{
+  const apply=(material:any)=>{
+    if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
+    const ud=material.userData;
+    if(quality==="live"){
+      if(ud.aurumLiveShaderQuality!=="live"){
+        ud.aurumLiveDispersionStored=Number(material.dispersion??ud.aurumLiveDispersionStored??0);
+        ud.aurumLiveIridescenceStored=Number(material.iridescence??ud.aurumLiveIridescenceStored??0);
+        material.dispersion=0;
+        material.iridescence=0;
+        material.onBeforeCompile=()=>{};
+        material.customProgramCacheKey=()=>`aurum-gem-live-v1-${String(ud.aurumGemFamily??"gem")}`;
+        ud.aurumLiveShaderQuality="live";
+        material.needsUpdate=true;
+      }
+    }else if(ud.aurumLiveShaderQuality!=="beauty"){
+      material.dispersion=Number(ud.aurumLiveDispersionStored??0);
+      material.iridescence=Number(ud.aurumLiveIridescenceStored??0);
+      material.onBeforeCompile=ud.aurumBeautyOnBeforeCompile;
+      material.customProgramCacheKey=ud.aurumBeautyProgramCacheKey;
+      ud.aurumLiveShaderQuality="beauty";
+      material.needsUpdate=true;
+    }
+  };
+  if(target?.isMaterial) apply(target);
+  else target?.traverse?.((o:any)=>{
+    if(!o?.isMesh)return;
+    if(Array.isArray(o.material))o.material.forEach(apply);
+    else apply(o.material);
+  });
 };
 
 /** Runtime UV excitation: 0=normal, 1=LWUV 365nm, 2=SWUV 254nm. */
