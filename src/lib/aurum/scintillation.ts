@@ -367,10 +367,18 @@ export type AurumGemShaderQuality = "live"|"beauty";
 
 export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)=>{
   const apply=(material:any)=>{
-    if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
-    const ud=material.userData;
+    if(!material?.isMeshPhysicalMaterial)return;
+    const ud=material.userData??{};
+    const isAurumGem=Boolean(ud.aurumOpticalProfile||ud.aurumGemFamily||ud.aurumActiveGemId);
+    if(!isAurumGem)return;
     if(quality==="live"){
       if(ud.aurumLiveShaderQuality!=="live"){
+        // Initial-load gemstones may not have the photographic custom shader yet.
+        // Store their native callbacks too, so every gem gets the same LIVE path.
+        if(ud.aurumLiveOriginalOnBeforeCompile===undefined){
+          ud.aurumLiveOriginalOnBeforeCompile=material.onBeforeCompile;
+          ud.aurumLiveOriginalProgramCacheKey=material.customProgramCacheKey;
+        }
         // Root cause of the LIVE slowdown: MeshPhysicalMaterial transmission
         // forces Three.js to maintain a separate transmission render target and
         // render opaque scene content into it every frame. LIVE does not need that
@@ -423,8 +431,8 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
       material.thicknessMap=ud.aurumLiveThicknessMapStored??null;
       material.dispersion=Number(ud.aurumLiveDispersionStored??0);
       material.iridescence=Number(ud.aurumLiveIridescenceStored??0);
-      material.onBeforeCompile=ud.aurumBeautyOnBeforeCompile;
-      material.customProgramCacheKey=ud.aurumBeautyProgramCacheKey;
+      material.onBeforeCompile=ud.aurumBeautyOnBeforeCompile ?? ud.aurumLiveOriginalOnBeforeCompile;
+      material.customProgramCacheKey=ud.aurumBeautyProgramCacheKey ?? ud.aurumLiveOriginalProgramCacheKey;
       ud.aurumLiveShaderQuality="beauty";
       material.needsUpdate=true;
     }
