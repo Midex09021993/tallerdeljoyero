@@ -140,7 +140,10 @@ export function useSesion() {
         : null;
 
       const orden: Rol[] = ["dueno", "gerente", "operario", "monitor", "cliente"];
-      const rolPrincipal = orden.find((r) => listaRoles.includes(r)) ?? "cliente";
+      const rolPrincipal = orden.find((r) => listaRoles.includes(r));
+      if (!rolPrincipal) {
+        throw new Error("La cuenta está autenticada, pero no tiene un rol operativo válido. Verifica user_roles antes de continuar.");
+      }
 
       // El perfil administrativo es la fuente principal. Si una cuenta Auth
       // todavía no tiene fila en profiles, usamos los metadatos de Auth como
