@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Send, Wrench } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
@@ -28,10 +28,16 @@ const HERRAMIENTAS: Herramienta[] = [
 ];
 
 /** Menú lateral flotante de herramientas públicas para la pantalla de acceso. */
-export function HerramientasFlotantes() {
+export function HerramientasFlotantes({ herramientaInicial }: { herramientaInicial?: string | null }) {
   const navigate = useNavigate();
   const [abierto, setAbierto] = useState(false);
-  const [activa, setActiva] = useState<string>("yeso");
+  const [activa, setActiva] = useState<string>(herramientaInicial || "yeso");
+
+  useEffect(() => {
+    if (!herramientaInicial) return;
+    setActiva(herramientaInicial);
+    setAbierto(true);
+  }, [herramientaInicial]);
 
   return (
     <div className="fixed bottom-20 left-0 z-50 flex items-center md:bottom-auto md:left-0 md:top-1/2 md:-translate-y-1/2">
