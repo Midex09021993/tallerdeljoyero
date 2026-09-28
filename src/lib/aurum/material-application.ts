@@ -204,8 +204,10 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   let applied=0;
   model.traverse((x:any)=>{
     if(!x.isMesh)return;
-    x.castShadow=true;x.receiveShadow=true;
-    const meta=selectionMeta(x),category=selectionCategory(x);
+    const category=selectionCategory(x);
+    x.castShadow=category !== "gema";
+    x.receiveShadow=true;
+    const meta=selectionMeta(x);
     const sameLayer=!!selectedLayer&&meta.capa===selectedLayer&&category===selectedCategory;
     const sameSlot=selectedSlot!=null&&meta.matrixSlot===selectedSlot&&category===selectedCategory;
     const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&(sameLayer||sameSlot));
