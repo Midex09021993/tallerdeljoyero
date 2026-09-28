@@ -468,6 +468,7 @@ export function AurumRender() {
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva;
         applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.());
+        aplicarPerfilLive();
         invalidateRenderRef.current?.();
       };
       const aplicarMaterial = (m:MaterialConfig) => {
@@ -476,6 +477,7 @@ export function AurumRender() {
           return;
         }
         applyAurumMaterialToModel(modelo, parteActiva, m, material);
+        aplicarPerfilLive();
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
