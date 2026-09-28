@@ -50,6 +50,47 @@ export type Database = {
         }
         Relationships: []
       }
+      aurum_transfer_usage: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string | null
+          file_count: number
+          id: string
+          status: string
+          total_bytes: number
+          transfer_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          file_count?: number
+          id?: string
+          status?: string
+          total_bytes?: number
+          transfer_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          file_count?: number
+          id?: string
+          status?: string
+          total_bytes?: number
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_transfer_usage_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: true
+            referencedRelation: "aurum_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           ciudad: string | null
