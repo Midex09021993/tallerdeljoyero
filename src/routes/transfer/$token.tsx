@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Download, FileArchive, Loader2, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Download, FileArchive, Loader2, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/transfer/$token")({
   head: () => ({
@@ -153,10 +153,13 @@ function TransferDownloadPage() {
                   <p className="mt-3 text-xs text-white/35">Si no finalizas, se eliminarán automáticamente en unas horas.</p>
                 </>
               )}
-              <div>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/transfer" className="mt-7 inline-flex items-center gap-2 rounded-xl border border-[#d7ad48]/30 px-5 py-3 text-sm font-semibold text-[#d7ad48]">
                   Crear mi propia transferencia
                 </Link>
+                <a href="/auth#conoce-plataforma" className="mt-7 inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 hover:border-[#d7ad48]/40 hover:text-[#d7ad48]">
+                  Conoce la plataforma <ArrowRight className="size-4" />
+                </a>
               </div>
             </>
           )}
