@@ -38,12 +38,12 @@ export function ComunidadAurumLab({ configuracion = false }: { configuracion?: b
 
   useEffect(() => {
     let activo = true;
-    void supabase
+    void (supabase as any)
       .from("configuracion_web")
       .select("calculos_realizados,talleres_registrados,herramientas_disponibles,usuarios_registrados,disenos_visualizados,renderizados_realizados,pedidos_gestionados,contratos_registrados")
       .eq("clave", "comunidad_aurum_lab")
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: { data: unknown }) => {
         if (activo && data) setDatos(data as ComunidadConfig);
         if (activo) setCargando(false);
       });
@@ -52,7 +52,7 @@ export function ComunidadAurumLab({ configuracion = false }: { configuracion?: b
 
   async function guardar() {
     setGuardando(true);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("configuracion_web")
       .update({
         calculos_realizados: datos.calculos_realizados,
