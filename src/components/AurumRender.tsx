@@ -128,6 +128,8 @@ export function AurumRender() {
   const [captura, setCaptura] = useState<string | null>(null);
   const [captureMenuOpen, setCaptureMenuOpen] = useState(false);
   const [captureResolution, setCaptureResolution] = useState<"normal"|"hd"|"fullhd">("hd");
+  const [capturePanelOpen, setCapturePanelOpen] = useState(false);
+  const [capturing, setCapturing] = useState(false);
   const captureInProgressRef = useRef(false);
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
@@ -764,30 +766,41 @@ export function AurumRender() {
           let data:string|null=null;
 
           try{
-            // CAPTURA = perfil fotográfico temporal. El visor queda pausado
-            // durante toda la operación: no hay render interactivo concurrente.
-            // La captura vive únicamente en los buffers del compositor y nunca
-            // utiliza el framebuffer persistente del canvas.
-            // El perfil interactivo y sus shadow maps se conservan al restaurar.
-
-            // CAPTURA = perfil fotográfico temporal. El visor normal no conserva
-            // el framebuffer: la imagen se obtiene del buffer final del composer.
+            // CAPTURA = modo fotográfico independiente. La resolución elegida
+            // controla el tamaño real del archivo y también el presupuesto de
+            // muestras/postprocesado. No tiene sentido gastar 16 renders completos
+            // para una imagen 854x480.
+            const captureProfiles:any={
+              normal:{
+                width:854,height:480,frames:4,ssr:false,ssao:false,
+                bloom:.12,transmission:.52
+              },
+              hd:{
+                width:1280,height:720,frames:8,ssr:false,ssao:true,
+                bloom:.16,transmission:.66
+              },
+              fullhd:{
+                width:1920,height:1080,frames:12,ssr:true,ssao:true,
+                bloom:.20,transmission:.82
+              },
+            };
+            const profile=captureProfiles[resolution]??captureProfiles.hd;
             const captureQuality={
               ...getAurumRenderQuality("ultra"),
               pixelRatio:1,
-              transmissionScale:.82,
+              transmissionScale:profile.transmission,
               shadows:true,
               taa:true,
-              progressiveFrameCount:16,
-              ssr:true,
+              progressiveFrameCount:profile.frames,
+              ssr:profile.ssr,
               ssrIntensity:1,
               ssrMaxDistance:1,
               ssrThickness:.018,
-              ssao:true,
+              ssao:profile.ssao,
               ssaoIntensity:.12,
               ssaoFalloff:1.3,
               bloom:true,
-              bloomIntensity:.20,
+              bloomIntensity:profile.bloom,
               bloomThreshold:1.35,
               bloomRadius:.6,
             };
@@ -816,7 +829,7 @@ export function AurumRender() {
             // renderToScreen es falso. Leemos ese buffer directamente y no el
             // framebuffer interactivo.
             if(composer) composer.renderToScreen=false;
-            for(let i=0;i<16;i++) composer?.render();
+            for(let i=0;i<profile.frames;i++) composer?.render();
             const buffer=composer?.readBuffer;
             if(!buffer) throw new Error("No se pudo obtener el buffer de captura");
 
@@ -1117,6 +1130,7 @@ export function AurumRender() {
   },[]);
   const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const capturarImagen=(resolution:"normal"|"hd"|"fullhd"=captureResolution)=>{
+    setCapturing(true);
     try{
       const d=apiRef.current?.capturar?.(resolution);
       if(!d)return;
@@ -1127,8 +1141,11 @@ export function AurumRender() {
       link.download=`${safeName}-${resolution}.png`;
       link.click();
       setCaptureMenuOpen(false);
+      setCapturePanelOpen(false);
     }catch(e){
       setError(e instanceof Error?e.message:"No se pudo generar la captura");
+    }finally{
+      setCapturing(false);
     }
   };
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
