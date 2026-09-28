@@ -224,9 +224,14 @@ function OperarioPage() {
                                   <p className="truncate text-lg font-semibold">
                                     {trabajo.titulo || pedido?.referencia || "Trabajo sin título"}
                                   </p>
-                                  <p className="mt-1 truncate text-xs text-muted-foreground">
-                                    {pedido?.referencia || "Pedido"} · {trabajo.area}
-                                  </p>
+                                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                    <span className="truncate">{pedido?.referencia || "Pedido"} · {trabajo.area}</span>
+                                    {trabajo.tipo === "externo" ? (
+                                      <span className="shrink-0 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold-deep">
+                                        Servicio externo
+                                      </span>
+                                    ) : null}
+                                  </div>
                                 </div>
                                 <span className="shrink-0 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase text-gold-deep">
                                   {trabajo.estado === "en_proceso"
