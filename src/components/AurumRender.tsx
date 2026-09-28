@@ -628,6 +628,18 @@ export function AurumRender() {
         setAurumInclusionsVisible(modelo, false);
         liveFastPathRef.current=true;
         aplicarPerfilLive();
+
+        // Precompile the authored LIVE materials asynchronously. Three.js
+        // recommends compileAsync when available because KHR_parallel_shader_compile
+        // reduces the visible stall caused by first-use shader compilation.
+        // We deliberately do not await it: the first preview can appear immediately.
+        if (typeof (renderer as any).compileAsync === "function") {
+          void (renderer as any).compileAsync(modelo,camara).then(() => {
+            if (perfEnabled) console.info("[AURUM][SHADERS] precompile complete");
+          }).catch((error:any) => {
+            if (perfEnabled) console.warn("[AURUM][SHADERS] precompile skipped", error);
+          });
+        }
         // SSR iJewel: only authored metal meshes participate in screen-space
         // reflection. Gemstones keep their own environment/refraction path.
         const ssrMetalMeshes:any[]=[];
