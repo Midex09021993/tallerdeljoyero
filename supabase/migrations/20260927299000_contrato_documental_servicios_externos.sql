@@ -1,0 +1,514 @@
+-- Contrato documental por servicio externo.
+-- No crea tablas nuevas: reutiliza pedido_archivos + trabajo_archivos.
+-- Entrada: archivos que el taller receptor necesita para ejecutar.
+-- Salida: archivos que el receptor debe devolver al taller de origen.
+
+begin;
+
+create or replace function public.validar_requisitos_servicio_externo(
+  _trabajo_id uuid,
+  _momento text default 'enviar'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_trabajo public.trabajos;
+  v_ext text;
+  v_tiene_entrada boolean := false;
+  v_tiene_salida boolean := false;
+  v_ficha boolean := false;
+  v_mensaje text := 'Servicio listo';
+begin
+  if v_uid is null then
+    raise exception 'Sesión no válida';
+  end if;
+
+  select t.* into v_trabajo
+  from public.trabajos t
+  where t.id = _trabajo_id;
+
+  if v_trabajo.id is null or v_trabajo.tipo <> 'externo' then
+    raise exception 'El trabajo no es un servicio externo';
+  end if;
+
+  if not (
+    public.es_admin(v_uid)
+    or exists (
+      select 1
+      from public.participante_cuentas pc
+      where pc.user_id = v_uid
+        and pc.participante_id = v_trabajo.participante_id
+        and pc.estado = 'activo'
+    )
+  ) then
+    raise exception 'No tienes acceso a este servicio externo';
+  end if;
+
+  -- La ficha técnica es estructurada y viaja mediante obtener_ficha_servicio_externo.
+  -- No se exige un PDF adicional para Casting/Taller.
+  v_ficha := true;
+
+  select lower(regexp_replace(pa.nombre, '^.*\\.', ''))
+    into v_ext
+  from public.trabajo_archivos ta
+  join public.pedido_archivos pa on pa.id = ta.pedido_archivo_id
+  where ta.trabajo_id = v_trabajo.id
+    and pa.es_vigente_fabricacion = true
+  limit 1;
+
+  if lower(trim(v_trabajo.area)) = 'impresión 3d' then
+    select exists (
+      select 1
+      from public.pedido_archivos pa
+      where pa.pedido_id = v_trabajo.pedido_id
+        and pa.es_vigente_fabricacion = true
+        and lower(regexp_replace(pa.nombre, '^.*\\.', '')) = 'stl'
+    ) into v_tiene_entrada;
+
+    if not v_tiene_entrada then
+      v_mensaje := 'Falta el archivo STL requerido para Impresión 3D';
+    end if;
+
+  elsif lower(trim(v_trabajo.area)) = 'corte láser' then
+    select exists (
+      select 1
+      from public.pedido_archivos pa
+      where pa.pedido_id = v_trabajo.pedido_id
+        and pa.es_vigente_fabricacion = true
+        and lower(regexp_replace(pa.nombre, '^.*\\.', '')) in ('dxf','svg','pdf')
+    ) into v_tiene_entrada;
+
+    if not v_tiene_entrada then
+      v_mensaje := 'Falta el archivo DXF, SVG o PDF requerido para Corte Láser';
+    end if;
+  else
+    v_tiene_entrada := true;
+  end if;
+
+  if lower(trim(v_trabajo.area)) = 'diseño 3d'
+     and lower(coalesce(_momento, 'enviar')) = 'completar' then
+    select exists (
+      select 1
+      from public.trabajo_archivos ta
+      join public.pedido_archivos pa on pa.id = ta.pedido_archivo_id
+      where ta.trabajo_id = v_trabajo.id
+        and pa.es_vigente_fabricacion = true
+        and lower(regexp_replace(pa.nombre, '^.*\\.', '')) = '3dm'
+    ) into v_tiene_salida;
+
+    if not v_tiene_salida then
+      v_mensaje := 'Falta la entrega obligatoria del archivo 3DM para Diseño 3D';
+    end if;
+  else
+    v_tiene_salida := true;
+  end if;
+
+  return jsonb_build_object(
+    'trabajo_id', v_trabajo.id,
+    'area', v_trabajo.area,
+    'momento', coalesce(_momento, 'enviar'),
+    'ficha_tecnica', v_ficha,
+    'entrada_requerida',
+      case
+        when lower(trim(v_trabajo.area)) = 'impresión 3d' then 'STL'
+        when lower(trim(v_trabajo.area)) = 'corte láser' then 'DXF / SVG / PDF'
+        else 'Ficha técnica'
+      end,
+    'entrada_disponible', v_tiene_entrada,
+    'salida_requerida',
+      case
+        when lower(trim(v_trabajo.area)) = 'diseño 3d' then '3DM'
+        else 'Sin archivo digital obligatorio'
+      end,
+    'salida_disponible', v_tiene_salida,
+    'listo', v_ficha and v_tiene_entrada and v_tiene_salida,
+    'mensaje', v_mensaje
+  );
+end;
+$$;
+
+revoke all on function public.validar_requisitos_servicio_externo(uuid, text) from public, anon;
+grant execute on function public.validar_requisitos_servicio_externo(uuid, text) to authenticated;
+
+create or replace function public.asignar_participante_externo_trabajo(
+  _trabajo_id uuid,
+  _participante_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_trabajo public.trabajos;
+  v_participante public.ecosistema_participantes;
+  v_validacion jsonb;
+begin
+  if not public.es_admin(v_uid) then
+    raise exception 'Solo un administrador puede asignar servicios externos';
+  end if;
+
+  select * into v_trabajo
+  from public.trabajos
+  where id = _trabajo_id
+  for update;
+
+  if v_trabajo.id is null then
+    raise exception 'Trabajo no encontrado';
+  end if;
+
+  if not public.ve_sede(v_uid, v_trabajo.sede_id) then
+    raise exception 'No tienes acceso al taller de este trabajo';
+  end if;
+
+  if _participante_id is not null then
+    select * into v_participante
+    from public.ecosistema_participantes
+    where id = _participante_id
+      and estado = 'activo';
+
+    if v_participante.id is null then
+      raise exception 'El servicio externo no existe o está inactivo';
+    end if;
+
+    if not exists (
+      select 1
+      from public.participante_especialidades pe
+      join public.especialidades e on e.id = pe.especialidad_id
+      where pe.participante_id = _participante_id
+        and e.activa = true
+        and lower(trim(e.nombre)) = lower(trim(v_trabajo.area))
+    ) then
+      raise exception 'El participante externo no tiene configurada la especialidad %', v_trabajo.area;
+    end if;
+
+    -- Impresión 3D y Corte Láser no pueden enviarse sin su archivo de entrada.
+    select public.validar_requisitos_servicio_externo(_trabajo_id, 'enviar')
+      into v_validacion;
+
+    if coalesce((v_validacion->>'listo')::boolean, false) = false then
+      raise exception '%', coalesce(v_validacion->>'mensaje', 'El servicio no cumple sus requisitos');
+    end if;
+  end if;
+
+  update public.trabajos
+  set participante_id = _participante_id,
+      tipo = case when _participante_id is null then 'interno' else 'externo' end,
+      responsable_user_id = null,
+      updated_at = now()
+  where id = _trabajo_id
+  returning * into v_trabajo;
+
+  -- Vincula al trabajo los archivos de entrada que correspondan a su servicio.
+  if _participante_id is not null then
+    insert into public.trabajo_archivos (trabajo_id, pedido_archivo_id)
+    select v_trabajo.id, pa.id
+    from public.pedido_archivos pa
+    where pa.pedido_id = v_trabajo.pedido_id
+      and pa.es_vigente_fabricacion = true
+      and (
+        (lower(trim(v_trabajo.area)) = 'impresión 3d'
+          and lower(regexp_replace(pa.nombre, '^.*\\.', '')) = 'stl')
+        or
+        (lower(trim(v_trabajo.area)) = 'corte láser'
+          and lower(regexp_replace(pa.nombre, '^.*\\.', '')) in ('dxf','svg','pdf'))
+        or
+        (lower(trim(v_trabajo.area)) = 'diseño 3d'
+          and lower(pa.grupo) = 'diseño 3d')
+      )
+    on conflict (trabajo_id, pedido_archivo_id) do nothing;
+  end if;
+
+  return jsonb_build_object(
+    'trabajo_id', v_trabajo.id,
+    'tipo', v_trabajo.tipo,
+    'participante_id', v_trabajo.participante_id,
+    'responsable_user_id', v_trabajo.responsable_user_id
+  );
+end;
+$$;
+
+revoke all on function public.asignar_participante_externo_trabajo(uuid, uuid) from public, anon;
+grant execute on function public.asignar_participante_externo_trabajo(uuid, uuid) to authenticated;
+
+create or replace function public.cambiar_estado_trabajo(_trabajo_id uuid, _nuevo_estado text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_trabajo public.trabajos;
+  v_validacion jsonb;
+begin
+  select t.* into v_trabajo
+  from public.trabajos t
+  where t.id = _trabajo_id
+  for update;
+
+  if v_trabajo.id is null then
+    raise exception 'Trabajo no encontrado';
+  end if;
+
+  if _nuevo_estado not in ('pendiente','en_proceso','bloqueado','completado','cancelado') then
+    raise exception 'Estado de trabajo no válido';
+  end if;
+
+  if v_trabajo.tipo = 'externo' then
+    if not exists (
+      select 1 from public.participante_cuentas pc
+      where pc.user_id = v_uid
+        and pc.participante_id = v_trabajo.participante_id
+        and pc.estado = 'activo'
+    ) then
+      raise exception 'No tienes acceso al servicio externo';
+    end if;
+
+    if public.has_role(v_uid, 'gerente') or public.has_role(v_uid, 'dueno') then
+      null;
+    elsif v_trabajo.responsable_user_id = v_uid then
+      null;
+    else
+      raise exception 'Debes tomar el trabajo antes de cambiar su estado';
+    end if;
+
+    if _nuevo_estado = 'completado' then
+      select public.validar_requisitos_servicio_externo(_trabajo_id, 'completar')
+        into v_validacion;
+      if coalesce((v_validacion->>'listo')::boolean, false) = false then
+        raise exception '%', coalesce(v_validacion->>'mensaje', 'El servicio no cumple sus requisitos de cierre');
+      end if;
+    end if;
+  else
+    if not (
+      public.has_role(v_uid, 'dueno')
+      or (
+        public.has_role(v_uid, 'gerente')
+        and public.ve_sede(v_uid, v_trabajo.sede_id)
+      )
+      or (
+        v_trabajo.responsable_user_id = v_uid
+        and public.ve_sede(v_uid, v_trabajo.sede_id)
+      )
+    ) then
+      raise exception 'No tienes permiso para cambiar este trabajo';
+    end if;
+  end if;
+
+  update public.trabajos
+  set estado = _nuevo_estado,
+      fecha_inicio = case
+        when _nuevo_estado = 'en_proceso' and fecha_inicio is null then now()
+        else fecha_inicio
+      end,
+      fecha_fin = case
+        when _nuevo_estado in ('completado','cancelado') then now()
+        when _nuevo_estado not in ('completado','cancelado') then null
+        else fecha_fin
+      end,
+      updated_at = now()
+  where id = _trabajo_id;
+end;
+$$;
+
+revoke all on function public.cambiar_estado_trabajo(uuid, text) from public, anon;
+grant execute on function public.cambiar_estado_trabajo(uuid, text) to authenticated;
+
+create or replace function public.obtener_ficha_servicio_externo(_trabajo_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_trabajo public.trabajos;
+  v_pedido public.pedidos;
+  v_receptor uuid;
+  v_requisitos jsonb;
+begin
+  if v_uid is null then
+    raise exception 'Sesión no válida';
+  end if;
+
+  select t.* into v_trabajo
+  from public.trabajos t
+  where t.id = _trabajo_id
+  for update;
+
+  if v_trabajo.id is null or v_trabajo.tipo <> 'externo' then
+    raise exception 'Servicio externo no encontrado';
+  end if;
+
+  select pc.participante_id into v_receptor
+  from public.participante_cuentas pc
+  where pc.user_id = v_uid
+    and pc.participante_id = v_trabajo.participante_id
+    and pc.estado = 'activo'
+  limit 1;
+
+  if v_receptor is null then
+    raise exception 'No tienes acceso a este servicio externo';
+  end if;
+
+  select p.* into v_pedido
+  from public.pedidos p
+  where p.id = v_trabajo.pedido_id;
+
+  if v_pedido.id is null then
+    raise exception 'Pedido de origen no encontrado';
+  end if;
+
+  select public.validar_requisitos_servicio_externo(_trabajo_id, 'enviar')
+    into v_requisitos;
+
+  return jsonb_build_object(
+    'trabajo', jsonb_build_object(
+      'id', v_trabajo.id,
+      'pedido_id', v_trabajo.pedido_id,
+      'area', v_trabajo.area,
+      'ubicacion', v_trabajo.ubicacion,
+      'titulo', v_trabajo.titulo,
+      'descripcion', v_trabajo.descripcion,
+      'estado', v_trabajo.estado,
+      'prioridad', v_trabajo.prioridad,
+      'tipo', v_trabajo.tipo,
+      'fecha_planificada', v_trabajo.fecha_planificada,
+      'fecha_inicio', v_trabajo.fecha_inicio,
+      'fecha_fin', v_trabajo.fecha_fin,
+      'notas', v_trabajo.notas,
+      'responsable_user_id', v_trabajo.responsable_user_id,
+      'especialidad_id', v_trabajo.especialidad_id
+    ),
+    'pedido', jsonb_build_object(
+      'id', v_pedido.id,
+      'referencia', v_pedido.referencia,
+      'pieza', v_pedido.pieza,
+      'trabajo', v_pedido.trabajo,
+      'material', v_pedido.material,
+      'talla', v_pedido.talla,
+      'piedras', v_pedido.piedras,
+      'peso_estimado', v_pedido.peso_estimado,
+      'cantidad_piezas', v_pedido.cantidad_piezas,
+      'fecha_ingreso', v_pedido.fecha_ingreso,
+      'fecha_entrega', v_pedido.fecha_entrega,
+      'origen', v_pedido.origen,
+      'area_actual', v_pedido.area_actual,
+      'area_desde', v_pedido.area_desde,
+      'notas', v_pedido.notas,
+      'ruta', v_pedido.ruta,
+      'corte_texto', v_pedido.corte_texto,
+      'corte_tipografia', v_pedido.corte_tipografia,
+      'corte_ubicacion', v_pedido.corte_ubicacion,
+      'corte_observaciones', v_pedido.corte_observaciones
+    ),
+    'requisitos', v_requisitos,
+    'materiales', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'id', pm.id,
+          'cantidad_planificada', pm.cantidad_planificada,
+          'unidad', pm.unidad,
+          'notas', pm.notas,
+          'material', i.material,
+          'codigo', i.codigo,
+          'inventario_unidad', i.unidad
+        )
+        order by pm.created_at
+      )
+      from public.pedido_materiales pm
+      left join public.inventario i on i.id = pm.material_id
+      where pm.pedido_id = v_pedido.id
+    ), '[]'::jsonb),
+    'archivos', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'id', pa.id,
+          'nombre', pa.nombre,
+          'tipo', pa.tipo,
+          'url', pa.url,
+          'es_enlace', pa.es_enlace,
+          'grupo', pa.grupo,
+          'version', pa.version,
+          'es_vigente_fabricacion', pa.es_vigente_fabricacion
+        )
+        order by pa.created_at desc
+      )
+      from public.trabajo_archivos ta
+      join public.pedido_archivos pa on pa.id = ta.pedido_archivo_id
+      where ta.trabajo_id = v_trabajo.id
+        and pa.es_vigente_fabricacion = true
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+revoke all on function public.obtener_ficha_servicio_externo(uuid) from public, anon;
+grant execute on function public.obtener_ficha_servicio_externo(uuid) to authenticated;
+
+-- Permite al receptor subir únicamente el entregable 3DM de un servicio Diseño 3D.
+drop policy if exists "pedidos archivos subir autorizado" on storage.objects;
+create policy "pedidos archivos subir autorizado"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'pedidos'
+  and (
+    exists (
+      select 1 from public.pedidos p
+      where p.id = (nullif(split_part(name, '/', 1), ''))::uuid
+        and public.ve_sede((select auth.uid()), p.sede_id)
+        and (
+          public.es_admin((select auth.uid()))
+          or public.has_role((select auth.uid()), 'monitor')
+          or exists (
+            select 1 from public.user_areas ua
+            where ua.user_id = (select auth.uid())
+              and lower(trim(ua.area)) = lower(trim(p.area_actual))
+          )
+          or exists (
+            select 1
+            from public.trabajos t
+            where t.pedido_id = p.id
+              and t.sede_id = p.sede_id
+              and (
+                t.responsable_user_id = (select auth.uid())
+                or exists (
+                  select 1
+                  from public.user_areas ua
+                  where ua.user_id = (select auth.uid())
+                    and lower(trim(ua.area)) = lower(trim(t.area))
+                )
+              )
+          )
+        )
+    )
+    or
+    (
+      (storage.foldername(name))[2] = 'servicios'
+      and (storage.foldername(name))[3] is not null
+      and storage.extension(name) = '3dm'
+      and exists (
+        select 1
+        from public.trabajos t
+        join public.participante_cuentas pc
+          on pc.participante_id = t.participante_id
+         and pc.user_id = (select auth.uid())
+         and pc.estado = 'activo'
+        where t.tipo = 'externo'
+          and t.area = 'Diseño 3D'
+          and t.id = (nullif((storage.foldername(name))[3], ''))::uuid
+          and t.pedido_id = (nullif((storage.foldername(name))[1], ''))::uuid
+      )
+    )
+  )
+);
+
+notify pgrst, 'reload schema';
+
+commit;
