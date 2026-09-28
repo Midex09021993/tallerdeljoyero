@@ -177,7 +177,7 @@ export async function createAurumPostPipeline(
     composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
-  const applyQuality=(next:any)=>{
+  const applyQuality=(next:any, options:{capture?:boolean}={})=>{
     if(!composer) return;
     const q=next||{};
     const high=q.pixelRatio>=1.4;
@@ -187,7 +187,7 @@ export async function createAurumPostPipeline(
     // sampleLevel=5 gives the 32-jitter sequence. SSR is composed over the
     // saved TAA beauty so neither stage is silently discarded.
     const isLowQuality=String(q?.qualityId??"") === "low" || Number(q?.pixelRatio??1.5) <= 1.01;
-    const taaEnabled=config.taa!==false && !isLowQuality;
+    const taaEnabled=Boolean(options.capture) || (config.taa!==false && !isLowQuality);
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
