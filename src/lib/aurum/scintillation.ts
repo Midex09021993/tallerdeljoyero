@@ -367,72 +367,24 @@ export type AurumGemShaderQuality = "live"|"beauty";
 
 export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)=>{
   const apply=(material:any)=>{
-    if(!material?.isMeshPhysicalMaterial)return;
-    const ud=material.userData??{};
-    const isAurumGem=Boolean(ud.aurumOpticalProfile||ud.aurumGemFamily||ud.aurumActiveGemId);
-    if(!isAurumGem)return;
+    if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
+    const ud=material.userData;
     if(quality==="live"){
       if(ud.aurumLiveShaderQuality!=="live"){
-        // Initial-load gemstones may not have the photographic custom shader yet.
-        // Store their native callbacks too, so every gem gets the same LIVE path.
-        if(ud.aurumLiveOriginalOnBeforeCompile===undefined){
-          ud.aurumLiveOriginalOnBeforeCompile=material.onBeforeCompile;
-          ud.aurumLiveOriginalProgramCacheKey=material.customProgramCacheKey;
-        }
-        // Root cause of the LIVE slowdown: MeshPhysicalMaterial transmission
-        // forces Three.js to maintain a separate transmission render target and
-        // render opaque scene content into it every frame. LIVE does not need that
-        // expensive framebuffer because jewelry gems can use their independent
-        // HDR environment as the fast optical approximation. FOTO restores the
-        // full physical transmission path.
-        ud.aurumLiveTransmissionStored=Number(material.transmission??0);
-        ud.aurumLiveThicknessStored=Number(material.thickness??0);
-        ud.aurumLiveThicknessMapStored=material.thicknessMap??null;
         ud.aurumLiveDispersionStored=Number(material.dispersion??ud.aurumLiveDispersionStored??0);
         ud.aurumLiveIridescenceStored=Number(material.iridescence??ud.aurumLiveIridescenceStored??0);
-        const liveTransmissionStrength=Math.max(0,Math.min(1,Number(material.transmission??0)));
-        ud.aurumLiveTransmissionStrength=liveTransmissionStrength;
-        material.transmission=0;
-        material.thickness=0;
-        material.thicknessMap=null;
         material.dispersion=0;
         material.iridescence=0;
-        material.onBeforeCompile=(shader:any)=>{
-          shader.uniforms.aurumLiveRefractionStrength={value:liveTransmissionStrength};
-          shader.fragmentShader=shader.fragmentShader.replace(
-            "#include <dithering_fragment>",
-            `
-              #ifdef USE_ENVMAP
-              #ifdef ENVMAP_TYPE_CUBE_UV
-              // LIVE optical path: one environment lookup instead of the
-              // renderer-wide transmission framebuffer pass.
-              vec3 aurumLiveN=normalize(normal);
-              vec3 aurumLiveV=normalize(-vViewPosition);
-              float aurumLiveEta=1.0/max(material.ior,1.0001);
-              vec3 aurumLiveDir=refract(-aurumLiveV,aurumLiveN,aurumLiveEta);
-              vec3 aurumLiveWorldDir=inverseTransformDirection(normalize(aurumLiveDir),viewMatrix);
-              vec3 aurumLiveEnv=textureCubeUV(envMap,envMapRotation*aurumLiveWorldDir,0.0).rgb;
-              float aurumLiveFresnel=pow(1.0-clamp(dot(aurumLiveN,aurumLiveV),0.0,1.0),5.0);
-              float aurumLiveMix=mix(0.18,0.72,aurumLiveRefractionStrength)*(0.72+0.28*aurumLiveFresnel);
-              gl_FragColor.rgb=mix(gl_FragColor.rgb,aurumLiveEnv,aurumLiveMix);
-              #endif
-              #endif
-              #include <dithering_fragment>
-            `
-          );
-        };
-        material.customProgramCacheKey=()=>`aurum-gem-live-env-v2-${String(ud.aurumGemFamily??"gem")}`;
+        material.onBeforeCompile=()=>{};
+        material.customProgramCacheKey=()=>`aurum-gem-live-v1-${String(ud.aurumGemFamily??"gem")}`;
         ud.aurumLiveShaderQuality="live";
         material.needsUpdate=true;
       }
     }else if(ud.aurumLiveShaderQuality!=="beauty"){
-      material.transmission=Number(ud.aurumLiveTransmissionStored??1);
-      material.thickness=Number(ud.aurumLiveThicknessStored??0);
-      material.thicknessMap=ud.aurumLiveThicknessMapStored??null;
       material.dispersion=Number(ud.aurumLiveDispersionStored??0);
       material.iridescence=Number(ud.aurumLiveIridescenceStored??0);
-      material.onBeforeCompile=ud.aurumBeautyOnBeforeCompile ?? ud.aurumLiveOriginalOnBeforeCompile;
-      material.customProgramCacheKey=ud.aurumBeautyProgramCacheKey ?? ud.aurumLiveOriginalProgramCacheKey;
+      material.onBeforeCompile=ud.aurumBeautyOnBeforeCompile;
+      material.customProgramCacheKey=ud.aurumBeautyProgramCacheKey;
       ud.aurumLiveShaderQuality="beauty";
       material.needsUpdate=true;
     }
