@@ -28,6 +28,7 @@ import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map"
 import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
+import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
 import { Camera, ChevronDown, Download, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
@@ -278,6 +279,7 @@ export function AurumRender() {
 
       let modelo:any = null;
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
+      let liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
 
@@ -392,7 +394,7 @@ export function AurumRender() {
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
+      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
@@ -1030,6 +1032,7 @@ export function AurumRender() {
         {
           onStart: () => {
             if (liveFastPathRef.current && !captureInProgressRef.current) {
+              setAurumLiveGeometryQuality(modelo,"live");
               // Interaction gets a temporary render-scale + transmission budget.
               // The model itself never changes; only the number of pixels and the
               // transmission buffer used while the camera is moving are reduced.
@@ -1045,6 +1048,7 @@ export function AurumRender() {
           },
           onEnd: () => {
             if (liveFastPathRef.current && !captureInProgressRef.current) {
+              setAurumLiveGeometryQuality(modelo,"beauty");
               const idleDpr=Math.min(
                 renderQuality.pixelRatio,
                 runtimeBudget.pixelRatioCap
