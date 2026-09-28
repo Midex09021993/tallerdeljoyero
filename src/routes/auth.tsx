@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
+import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
@@ -122,7 +123,7 @@ function LoginPage() {
       </header>
 
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
-        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1 max-[767px]:hidden">
+        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
             <p className="font-display text-5xl italic leading-none text-gold sm:text-6xl lg:text-8xl [@media(max-height:800px)]:lg:text-[3.4rem]">Aurum Lab</p>
             <p className="mt-4 text-[10px] uppercase tracking-[0.42em] text-white/50 sm:text-xs">
@@ -173,6 +174,8 @@ function LoginPage() {
               <SolicitudAcceso />
             </div>
           </section>
+
+          <ComunidadAurumLab />
         </section>
 
         <section id="login" className="mx-auto w-full max-w-[430px] max-[767px]:max-w-[430px]">
