@@ -89,8 +89,7 @@ begin
     v_tiene_entrada := true;
   end if;
 
-  if lower(trim(v_trabajo.area)) = 'diseño 3d'
-     and lower(coalesce(_momento, 'enviar')) = 'completar' then
+  if lower(trim(v_trabajo.area)) = 'diseño 3d' then
     select exists (
       select 1
       from public.trabajo_archivos ta
@@ -100,7 +99,7 @@ begin
         and lower(regexp_replace(pa.nombre, '^.*\\.', '')) = '3dm'
     ) into v_tiene_salida;
 
-    if not v_tiene_salida then
+    if lower(coalesce(_momento, 'enviar')) = 'completar' and not v_tiene_salida then
       v_mensaje := 'Falta la entrega obligatoria del archivo 3DM para Diseño 3D';
     end if;
   else
@@ -125,7 +124,7 @@ begin
         else 'Sin archivo digital obligatorio'
       end,
     'salida_disponible', v_tiene_salida,
-    'listo', v_ficha and v_tiene_entrada and v_tiene_salida,
+    'listo', v_ficha and v_tiene_entrada and case when lower(coalesce(_momento, 'enviar')) = 'completar' then v_tiene_salida else true end,
     'mensaje', v_mensaje
   );
 end;
