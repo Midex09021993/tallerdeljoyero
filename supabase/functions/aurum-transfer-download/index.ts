@@ -120,14 +120,51 @@ Deno.serve(async (req) => {
         }
         zip.end();
         if (failed) throw new Error("zip");
-        await supabase.storage.from(BUCKET).remove(files.map((f) => f.path));
-        await supabase.from("aurum_transfers").update({
-          status: "consumed",
-          consumed_at: new Date().toISOString(),
-        }).eq("id", transfer.id).eq("status", "processing");
+
+        // Una vez eliminados los archivos, la transferencia NO puede volver a estar disponible.
+        // Si el cambio de estado falla, se deja en "processing" para impedir una segunda descarga.
+        const { error: removeError } = await supabase.storage
+          .from(BUCKET)
+          .remove(files.map((f) => f.path));
+
+        if (removeError) {
+          await supabase.rpc("release_aurum_transfer", { _transfer_id: transfer.id });
+          throw removeError;
+        }
+
+        const { error: consumeError } = await supabase
+          .from("aurum_transfers")
+          .update({
+            status: "consumed",
+            consumed_at: new Date().toISOString(),
+          })
+          .eq("id", transfer.id)
+          .eq("status", "processing");
+
+        if (consumeError) {
+          console.error("[aurum-transfer-download] archivos eliminados pero no se pudo marcar consumed", consumeError);
+          // No liberar: el enlace debe permanecer inutilizable porque los archivos ya fueron eliminados.
+        }
       } catch (error) {
         console.error("[aurum-transfer-download]", error);
-        await supabase.rpc("release_aurum_transfer", { _transfer_id: transfer.id });
+        // Solo liberar cuando sabemos que los archivos NO fueron eliminados.
+        // Si la eliminación ya ocurrió, el estado processing bloquea cualquier segundo claim.
+        const { data: current } = await supabase
+          .from("aurum_transfers")
+          .select("status")
+          .eq("id", transfer.id)
+          .maybeSingle();
+
+        if (current?.status === "processing") {
+          const { data: remaining } = await supabase.storage
+            .from(BUCKET)
+            .list(transfer.id, { limit: 100 });
+
+          if ((remaining ?? []).length > 0) {
+            await supabase.rpc("release_aurum_transfer", { _transfer_id: transfer.id });
+          }
+        }
+
         try { controller.error(error); } catch { /* ya cerrado */ }
       }
     },
