@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Play, Paperclip } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Play, Paperclip, Upload } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
@@ -56,6 +56,8 @@ function TrabajoOperativoPage() {
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [archivoSeleccionado, setArchivoSeleccionado] = useState("");
   const [guardandoArchivo, setGuardandoArchivo] = useState(false);
+  const [subiendoEntrega, setSubiendoEntrega] = useState(false);
+  const [progresoEntrega, setProgresoEntrega] = useState(0);
   const [incidencia, setIncidencia] = useState({ tipo: "general", descripcion: "" });
   const [reportandoIncidencia, setReportandoIncidencia] = useState(false);
   const [relojAhora, setRelojAhora] = useState(Date.now());
@@ -258,55 +260,52 @@ function TrabajoOperativoPage() {
     },
   });
 
-  const { data: archivosPedido = [] } = useQuery({
-    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id, trabajo?.tipo],
-    enabled: Boolean(
-      trabajo?.pedido_id &&
-      (
-        trabajo?.tipo === "externo" ||
-        sesion?.esAdmin ||
-        trabajo?.responsable_user_id === sesion?.user.id ||
-        (sesion?.rolPrincipal === "operario" && (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area)))
-      )
-    ),
+  const { data: fichaArchivos = { archivos: [], requisitos: null } } = useQuery({
+    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id, trabajo?.tipo, trabajo?.id],
+    enabled: Boolean(trabajo?.pedido_id && (trabajo?.tipo === "externo" || sesion?.esAdmin || trabajo?.responsable_user_id === sesion?.user.id || (sesion?.rolPrincipal === "operario" && (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area))))),
     queryFn: async () => {
       if (trabajo?.tipo === "externo") {
-        const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
-          _trabajo_id: trabajo.id,
-        });
+        const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", { _trabajo_id: trabajo.id });
         if (error) throw error;
-        const ficha = data as { archivos?: Array<Record<string, unknown>> } | null;
-        const archivos = (ficha?.archivos ?? []) as Array<{
-          id: string; nombre: string; tipo: string; url: string; es_enlace: boolean;
-          grupo: string; version: number; es_vigente_fabricacion: boolean;
-        }>;
-        return Promise.all(
-          archivos.map(async (archivo) => {
+        const ficha = data as { archivos?: Array<Record<string, unknown>>; requisitos?: Record<string, unknown> | null } | null;
+        const archivos = (ficha?.archivos ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }>;
+        return {
+          requisitos: ficha?.requisitos ?? null,
+          archivos: await Promise.all(archivos.map(async (archivo) => {
             if (!archivo.url || archivo.es_enlace) return archivo;
-            const { data: firmado } = await supabase.storage
-              .from("pedidos")
-              .createSignedUrl(archivo.url, 3600);
+            const { data: firmado } = await supabase.storage.from("pedidos").createSignedUrl(archivo.url, 3600);
             return { ...archivo, url: firmado?.signedUrl ?? "" };
-          }),
-        );
+          })),
+        };
       }
-      const { data, error } = await supabase
-        .from("pedido_archivos")
-        .select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion")
-        .eq("pedido_id", trabajo!.pedido_id)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("pedido_archivos").select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion").eq("pedido_id", trabajo!.pedido_id).order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Array<{
-        id: string; nombre: string; tipo: string; url: string; es_enlace: boolean;
-        grupo: string; version: number; es_vigente_fabricacion: boolean;
-      }>;
+      return { requisitos: null, archivos: (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }> };
     },
   });
 
-  const archivosVigentes = useMemo(
-    () => archivosPedido.filter((a) => a.es_vigente_fabricacion),
-    [archivosPedido],
-  );
+  const archivosPedido = fichaArchivos.archivos ?? [];
+  const requisitosServicio = fichaArchivos.requisitos as { entrada_requerida?: string; entrada_disponible?: boolean; salida_requerida?: string; salida_disponible?: boolean; listo?: boolean; mensaje?: string } | null;
+
+  const archivosVigentes = useMemo(() => archivosPedido.filter((a) => a.es_vigente_fabricacion), [archivosPedido]);
+
+  const subirEntregaDiseno3D = async (file: File) => {
+    if (!trabajo || trabajo.tipo !== "externo" || trabajo.area !== "Diseño 3D") return;
+    if (file.name.toLowerCase().split(".").pop() !== "3dm") { toast.error("Diseño 3D solo acepta una entrega .3dm"); return; }
+    setSubiendoEntrega(true);
+    setProgresoEntrega(0);
+    try {
+      const ruta = trabajo.pedido_id + "/servicios/" + trabajo.id + "/" + Date.now() + "-" + nombreSeguro(file.name);
+      await subirConProgreso({ bucket: "pedidos", ruta, file, onProgreso: setProgresoEntrega });
+      const { error } = await supabase.rpc("registrar_entrega_servicio_externo", { _trabajo_id: trabajo.id, _nombre: file.name, _url: ruta, _tipo: file.type || "model/3dm" });
+      if (error) throw error;
+      toast.success("Entrega 3DM registrada para el pedido.");
+      await qc.invalidateQueries({ queryKey: ["archivos-pedido-trabajo", trabajo.pedido_id, trabajo.tipo, trabajo.id] });
+      await qc.invalidateQueries({ queryKey: ["trabajo-operativo", id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar la entrega 3DM.");
+    } finally { setSubiendoEntrega(false); setProgresoEntrega(0); }
+  };
 
   useEffect(() => { setEspecialidadSeleccionada(trabajo?.especialidad_id ?? ""); }, [trabajo?.especialidad_id]);
 
@@ -474,7 +473,27 @@ function TrabajoOperativoPage() {
           </div>
         </details>
 
-        <details className="group overflow-hidden rounded-2xl border border-success/20 bg-card shadow-raised">
+        {trabajo.tipo === "externo" ? (
+  <section className="rounded-2xl border border-gold/20 bg-card p-5 shadow-raised">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Contrato del servicio</p><h2 className="mt-1 text-lg font-semibold">Documentación requerida</h2><p className="mt-1 text-xs text-muted-foreground">Solo se comparte la documentación técnica necesaria para este servicio.</p></div>
+      <span className={requisitosServicio?.listo ? "rounded-full bg-success/10 px-3 py-1.5 text-[10px] font-bold text-success" : "rounded-full bg-warning/10 px-3 py-1.5 text-[10px] font-bold text-warning"}>{requisitosServicio?.listo ? "LISTO" : "PENDIENTE"}</span>
+    </div>
+    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="rounded-xl border border-gold/10 bg-gold/[0.02] p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Entrada</p><p className="mt-1 text-sm font-semibold">{requisitosServicio?.entrada_requerida ?? "Ficha técnica"}</p><p className="mt-1 text-xs text-muted-foreground">{requisitosServicio?.entrada_disponible ? "Disponible" : "Falta documentación"}</p></div>
+      <div className="rounded-xl border border-gold/10 bg-gold/[0.02] p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Entrega</p><p className="mt-1 text-sm font-semibold">{requisitosServicio?.salida_requerida ?? "Sin archivo digital obligatorio"}</p><p className="mt-1 text-xs text-muted-foreground">{requisitosServicio?.salida_disponible ? "Disponible" : "Pendiente de entrega"}</p></div>
+    </div>
+    {requisitosServicio?.mensaje && !requisitosServicio?.listo ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning/5 p-3 text-xs text-warning">{requisitosServicio.mensaje}</p> : null}
+    {trabajo.area === "Diseño 3D" && !requisitosServicio?.salida_disponible ? (
+      <div className="mt-4 rounded-2xl border border-gold/20 bg-gold/[0.03] p-4">
+        <p className="text-sm font-semibold">Entrega obligatoria: archivo 3DM</p><p className="mt-1 text-xs text-muted-foreground">El taller receptor debe subir el modelo 3DM generado para que el siguiente proceso pueda utilizarlo.</p>
+        <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground"><Upload className="size-4" />{subiendoEntrega ? "Subiendo " + progresoEntrega + "%" : "Subir 3DM"}<input type="file" accept=".3dm" className="hidden" disabled={subiendoEntrega} onChange={(e) => { const file = e.target.files?.[0]; e.currentTarget.value = ""; if (file) void subirEntregaDiseno3D(file); }} /></label>
+      </div>
+    ) : null}
+  </section>
+) : null}
+
+<details className="group overflow-hidden rounded-2xl border border-success/20 bg-card shadow-raised">
           <summary className="flex cursor-pointer list-none items-center justify-between bg-success/[0.04] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-success/10 text-xs font-bold text-success">4</span><span className="text-sm font-bold">Diseño y archivos <span className="ml-1 text-xs text-muted-foreground">({archivosPedido.length})</span></span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-success/20 p-5">
             <div className="rounded-2xl border border-success/20 bg-success/[0.03] p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-wider text-success">Archivo vigente para fabricación</p><p className="mt-1 text-sm font-semibold">Diseño aprobado</p></div><span className="rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-bold text-success">{archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}</span></div>
