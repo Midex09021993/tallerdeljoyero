@@ -186,7 +186,13 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
   if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
-  if (ext === "3dm") { const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js"); const loader = new Rhino3dmLoader(); loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/"); loader.setWorkerLimit(2); return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject)); }
+  if (ext === "3dm") { const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js"); const loader = new Rhino3dmLoader();
+    loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
+    // One 3DM is normally decoded by one worker. A small adaptive pool avoids
+    // unnecessarily serializing heavy WASM work on capable desktops while
+    // preventing mobile/low-core devices from spawning excessive workers.
+    const cores = typeof navigator !== "undefined" ? Number(navigator.hardwareConcurrency || 2) : 2;
+    loader.setWorkerLimit(Math.max(1, Math.min(4, Math.floor(cores / 2) || 1))); return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject)); }
   throw new Error("Formato no compatible.");
 }
 
