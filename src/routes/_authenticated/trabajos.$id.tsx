@@ -352,12 +352,19 @@ function TrabajoOperativoPage() {
   }
 
   const esResponsable = trabajo.responsable_user_id === sesion?.user.id;
+  const esReceptorServicio = Boolean(
+    trabajo.tipo === "externo" &&
+    sesion?.participante?.id &&
+    sesion.participante.id === trabajo.participante_id
+  );
   const puedeTomar = Boolean(
     sesion?.rolPrincipal === "operario" &&
     !trabajo.responsable_user_id &&
     (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area)),
   );
-  const puedeGestionar = Boolean(sesion?.esAdmin || esResponsable);
+  const puedeGestionar = trabajo.tipo === "externo"
+    ? Boolean(esReceptorServicio && (sesion?.esAdmin || esResponsable))
+    : Boolean(sesion?.esAdmin || esResponsable);
 
   const tomarTrabajo = async () => {
     if (!puedeTomar) return;
@@ -485,7 +492,7 @@ function TrabajoOperativoPage() {
       <div className="rounded-xl border border-gold/10 bg-gold/[0.02] p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Entrega</p><p className="mt-1 text-sm font-semibold">{requisitosServicio?.salida_requerida ?? "Sin archivo digital obligatorio"}</p><p className="mt-1 text-xs text-muted-foreground">{requisitosServicio?.salida_disponible ? "Disponible" : "Pendiente de entrega"}</p></div>
     </div>
     {requisitosServicio?.mensaje && !requisitosServicio?.listo ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning/5 p-3 text-xs text-warning">{requisitosServicio.mensaje}</p> : null}
-    {trabajo.area === "Diseño 3D" && !requisitosServicio?.salida_disponible ? (
+    {trabajo.area === "Diseño 3D" && esReceptorServicio && !requisitosServicio?.salida_disponible ? (
       <div className="mt-4 rounded-2xl border border-gold/20 bg-gold/[0.03] p-4">
         <p className="text-sm font-semibold">Entrega obligatoria: archivo 3DM</p><p className="mt-1 text-xs text-muted-foreground">El taller receptor debe subir el modelo 3DM generado para que el siguiente proceso pueda utilizarlo.</p>
         <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground"><Upload className="size-4" />{subiendoEntrega ? "Subiendo " + progresoEntrega + "%" : "Subir 3DM"}<input type="file" accept=".3dm" className="hidden" disabled={subiendoEntrega} onChange={(e) => { const file = e.target.files?.[0]; e.currentTarget.value = ""; if (file) void subirEntregaDiseno3D(file); }} /></label>
