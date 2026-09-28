@@ -42,7 +42,7 @@ export const setAurumGemRenderQuality=(target:any,quality:"live"|"beauty")=>{
   const apply=(mesh:any)=>{
     if(!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
     const current=Array.isArray(mesh.material)?mesh.material:[mesh.material];
-    if(!current.some((m:any)=>m?.userData?.aurumBeautyMaterial||m?.userData?.aurumLiveGemMaterial)) return;
+    if(!current.some((m:any)=>m?.userData?.aurumBeautyMaterial||m?.userData?.aurumLiveGemMaterial||m?.userData?.aurumOpticalProfile)) return;
     if(quality==="live"){
       mesh.material=current.map((m:any)=>{
         if(m?.userData?.aurumLiveGemMaterial)return m;
