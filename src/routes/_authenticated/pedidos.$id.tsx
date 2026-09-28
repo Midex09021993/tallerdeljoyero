@@ -247,13 +247,16 @@ function PedidoDetalle() {
 
       return Promise.all(
         (Array.isArray(data) ? data : []).map(async (archivo) => {
-          if (archivo.poster || !archivo.url || !/\.(jpe?g|png|webp|gif)$/i.test(archivo.nombre || "")) {
-            return archivo;
-          }
+          if (!archivo.url) return archivo;
           const { data: firmado } = await supabase.storage
             .from("pedidos")
             .createSignedUrl(archivo.url, 3600);
-          return { ...archivo, poster: firmado?.signedUrl ?? "" };
+          const esImagen = /\.(jpe?g|png|webp|gif)$/i.test(archivo.nombre || "");
+          return {
+            ...archivo,
+            signedUrl: firmado?.signedUrl ?? "",
+            poster: archivo.poster || (esImagen ? firmado?.signedUrl ?? "" : ""),
+          };
         }),
       );
     },
@@ -1039,7 +1042,7 @@ function Archivos({ pedidoId, archivos, puedeSubir, onSubido }: { pedidoId: stri
           return (
             <a
               key={a.id}
-              href={a.url ? supabase.storage.from("pedidos").getPublicUrl(a.url).data.publicUrl : undefined}
+              href={a.signedUrl || undefined}
               target="_blank"
               rel="noreferrer"
               className="overflow-hidden rounded-xl border border-border transition hover:border-gold/40"
