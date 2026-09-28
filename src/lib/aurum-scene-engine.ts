@@ -103,8 +103,10 @@ export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality
   // running around 11 FPS, while 0.40 reached around 22 FPS. Keep Low at the
   // existing fast path and use a measured middle ground for production tiers.
   low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
-  high:{pixelRatio:1.4,shadows:true,shadowMapSize:1024,transmissionScale:.55},
-  ultra:{pixelRatio:1.6,shadows:true,shadowMapSize:1536,transmissionScale:.68},
+  // Interactive production preview: preserve facet readability while avoiding
+  // an unnecessary full-screen transmission buffer at high DPR.
+  high:{pixelRatio:1.25,shadows:true,shadowMapSize:1024,transmissionScale:.50},
+  ultra:{pixelRatio:1.50,shadows:true,shadowMapSize:1536,transmissionScale:.62},
 };
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
 
