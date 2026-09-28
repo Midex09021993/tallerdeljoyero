@@ -329,7 +329,8 @@ export const applyAurumIJEWELGemParameters=(material:any,source:AurumIJEWELGemPa
     ...(material.userData??{}),
     aurumIJEWELParameters:p,
     // Reference parameters remain available for calibration/diagnostics, but
-    // the expensive custom iJewel ray solver is disabled by default.    aurumIJEWELActive:false,
+    // the expensive custom iJewel ray solver is disabled by default.
+    aurumIJEWELActive:false,
     aurumIJEWELSourceTransmission:Number(p.transmissionParameter),
     aurumIJEWELRayBounces:Math.max(1,Math.floor(Number(p.rayBounces))),
     aurumIJEWELOrientedEnvMap:Number(p.diamondOrientedEnvMap??0),
