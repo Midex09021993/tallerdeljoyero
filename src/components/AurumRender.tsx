@@ -127,6 +127,8 @@ export function AurumRender() {
   const [captureMenuOpen, setCaptureMenuOpen] = useState(false);
   const [captureResolution, setCaptureResolution] = useState<"normal"|"hd"|"fullhd">("hd");
   const captureInProgressRef = useRef(false);
+  const liveFastPathRef = useRef(true);
+  const liveTransmissionScaleRef = useRef(0.42);
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -288,8 +290,9 @@ export function AurumRender() {
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
         applyPostQuality?.(renderQuality);
-        (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
-        renderer.shadowMap.enabled = renderQuality.shadows;
+        liveTransmissionScaleRef.current=renderQuality.transmissionScale;
+        (renderer as any).transmissionResolutionScale=renderQuality.transmissionScale;
+        renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
         // Existing shadow maps must be rebuilt at the selected precision.
         // create() is intentionally called only after disposing the previous maps;
         // the controller itself is idempotent and does not need the redundant call.
@@ -301,7 +304,10 @@ export function AurumRender() {
         });
         lightingController.create();
         renderer.shadowMap.needsUpdate = true;
-        if (modelo) setAurumInclusionsVisible(modelo, id !== "low");
+        if (modelo) {
+          setAurumInclusionsVisible(modelo, false);
+          aplicarPerfilLive();
+        }
         invalidateRenderRef.current?.();
         setRenderQualityId(id);
       };
@@ -387,6 +393,78 @@ export function AurumRender() {
       };
       const limpiarInclusiones = (target:any) => clearAurumGemFromTarget(target);
       const crearInclusiones = (target:any, g:GemaConfig) => renderAurumInclusions(THREE,target,g,9173);
+
+      // LIVE material profile: iJewel's interactive view is environment-driven.
+      // Clearcoat is an additional physical layer and is not required for the
+      // reference metal/gem look. We disable it only in LIVE and restore the
+      // authored value for CAPTURE.
+      const aplicarPerfilMaterialLive = (target:any, enabled:boolean) => {
+        target?.traverse?.((x:any) => {
+          if (!x.isMesh) return;
+          const materials=Array.isArray(x.material) ? x.material : [x.material];
+          materials.forEach((m:any) => {
+            if (!m?.isMeshPhysicalMaterial) return;
+            if (enabled) {
+              if (m.userData?.aurumLiveClearcoatStored === undefined) {
+                m.userData={
+                  ...(m.userData??{}),
+                  aurumLiveClearcoatStored:Number(m.clearcoat??0),
+                  aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
+                };
+              }
+              if (Number(m.clearcoat??0)!==0 || Number(m.clearcoatRoughness??0)!==0) {
+                m.clearcoat=0;
+                m.clearcoatRoughness=0;
+                m.needsUpdate=true;
+              }
+            } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
+              m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
+              m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
+              m.needsUpdate=true;
+              const next={...(m.userData??{})};
+              delete next.aurumLiveClearcoatStored;
+              delete next.aurumLiveClearcoatRoughnessStored;
+              m.userData=next;
+            }
+          });
+        });
+      };
+
+      const aplicarPerfilLive = () => {
+        const live=liveFastPathRef.current;
+        if (!modelo) {
+          renderer.shadowMap.enabled=!live && renderQuality.shadows;
+          return;
+        }
+        aplicarPerfilMaterialLive(modelo,live);
+        if (live) {
+          renderer.shadowMap.enabled=false;
+          renderer.shadowMap.needsUpdate=false;
+        } else {
+          renderer.shadowMap.enabled=renderQuality.shadows;
+          renderer.shadowMap.needsUpdate=true;
+        }
+        liveTransmissionScaleRef.current=renderQuality.transmissionScale;
+        (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
+      };
+
+      const prepararInclusionesCaptura = () => {
+        if (!modelo) return;
+        modelo.traverse((x:any) => {
+          if (!x.isMesh || String(x.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") return;
+          const gemId=String(x.userData?.aurumActiveGemId??"diamante_natural");
+          const gem=GEMAS.find((g:any)=>String(g.id)===gemId) ?? GEMAS.find((g:any)=>g.id==="diamante_natural");
+          if (gem) crearInclusiones(x,gem);
+        });
+      };
+
+      const limpiarInclusionesCaptura = () => {
+        if (!modelo) return;
+        modelo.traverse((x:any) => {
+          if (!x.isMesh || String(x.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") return;
+          clearAurumInclusions(x);
+        });
+      };
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva;
         applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.());
@@ -419,6 +497,7 @@ export function AurumRender() {
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
+        liveFastPathRef.current = id === "ijewelReference";
         const preset = sceneController.apply(id);
         const photo = getAurumPhotographicProfile(id);
         // Change the optical environment for gemstones together with the scene.
@@ -459,7 +538,7 @@ export function AurumRender() {
           vignetteDarkness: photo.post.vignetteDarkness,
         });
         applyPostQuality?.(renderQuality);
-        renderer.shadowMap.needsUpdate = true;
+        aplicarPerfilLive();
         invalidateRenderRef.current?.();
       };
        const encuadrar = () => {
@@ -518,7 +597,7 @@ export function AurumRender() {
           applyGem:applyAurumGem,
           gemPresetFromConfig,
           configureMetal:configurarMaterial,
-          createInclusions:crearInclusiones,
+          createInclusions:()=>{},
           applyGemEnvironment:aplicarEntornoGema,
           initialMetalId:"plata925_pulida",
           initialGemId:"diamante_natural",
@@ -529,7 +608,8 @@ export function AurumRender() {
         // dozens of transparent draw calls and are not required for the base
         // product preview. CAPTURE enables them temporarily for the final image.
         setAurumInclusionsVisible(modelo, false);
-        renderer.shadowMap.needsUpdate = true;
+        liveFastPathRef.current=true;
+        aplicarPerfilLive();
         // SSR iJewel: only authored metal meshes participate in screen-space
         // reflection. Gemstones keep their own environment/refraction path.
         const ssrMetalMeshes:any[]=[];
@@ -662,8 +742,12 @@ export function AurumRender() {
             };
             renderQuality=captureQuality as any;
             measuredQualityId="ultra";
-            // CAPTURE MODE: restore procedural inclusions only for the final
-            // photographic pass; interactive LIVE mode keeps them hidden.
+            // CAPTURE MODE: temporarily restore the full authored material
+            // profile, dynamic shadows and procedural inclusions. LIVE stays
+            // lightweight and never pays this cost.
+            liveFastPathRef.current=false;
+            aplicarPerfilMaterialLive(modelo,false);
+            prepararInclusionesCaptura();
             if (modelo) setAurumInclusionsVisible(modelo, true);
             renderer.setPixelRatio(1);
             composer?.setPixelRatio?.(1);
@@ -706,7 +790,10 @@ export function AurumRender() {
             return data;
           } finally {
             if(composer) composer.renderToScreen=previousRenderToScreen??true;
+            limpiarInclusionesCaptura();
             setAurumInclusionsVisible(modelo, false);
+            liveFastPathRef.current=true;
+            aplicarPerfilMaterialLive(modelo,true);
             aplicarCalidadRender(previousQuality);
             renderer.setPixelRatio(previousPixelRatio);
             composer?.setPixelRatio?.(previousPixelRatio);
@@ -861,12 +948,30 @@ export function AurumRender() {
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
-          // Baja is a true interactive preview: bypass the full EffectComposer
-          // so TAA/LUT/vignette/output passes cannot tax every frame. High/Ultra
-          // retain the photographic post pipeline.
-          if (composer && measuredQualityId !== "low") composer.render();
+          // iJewel LIVE is a direct WebGL path: one scene render, no Composer.
+          // This preserves the calibrated renderer tone mapping while removing
+          // the unused fullscreen post-processing chain from every interaction.
+          const directLive=liveFastPathRef.current && !captureInProgressRef.current;
+          if (directLive || measuredQualityId === "low") renderer.render(escena,camara);
+          else if (composer) composer.render();
           else renderer.render(escena,camara);
           perfTick();
+        },
+        {
+          onStart: () => {
+            if (liveFastPathRef.current && !captureInProgressRef.current) {
+              // During drag, lower only the transmission buffer resolution. It is
+              // restored after interaction so the idle frame keeps its calibrated
+              // iJewel quality.
+              (renderer as any).transmissionResolutionScale=.24;
+            }
+          },
+          onEnd: () => {
+            if (liveFastPathRef.current && !captureInProgressRef.current) {
+              (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
+              invalidateRenderRef.current?.();
+            }
+          },
         }
       );
       frameRef.current = viewerLoop.frame;
