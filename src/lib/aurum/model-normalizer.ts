@@ -107,6 +107,75 @@ function resolveRhinoLayerIndex(x:any): number {
   return -1;
 }
 
+function classifyRhinoLayer(name:string,colorCapa?:string,clasificarCapa?:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
+  const n=String(name??"").trim().toLowerCase();
+  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|esmeralda|emerald|moissanita|moissanite)/.test(n)) return "gema";
+  if (/(metal|oro|gold|plata|silver|platino|platinum|met[aá]lico)/.test(n)) return "metal";
+  return clasificarCapa?.(name,colorCapa) ?? "otro";
+}
+
+function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro"):number|undefined {
+  if (category==="otro") return undefined;
+  const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
+  if (match) return Number(match[1]);
+  return undefined;
+}
+
+/**
+ * iJewel reference GLB stores authoritative MatrixGold assignment on each
+ * node: node extras contain rhinoLayer and attributes.layerIndex.
+ * Never infer assignment from mesh traversal order or GLTF material index.
+ */
+function hydrateRhinoLayerMetadata(
+  object:any,
+  clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
+) {
+  object?.traverse?.((x:any)=>{
+    if (!x?.isMesh) return;
+    const data=x.userData??{};
+    const layer=data.rhinoLayer ?? data.RhinoLayer ?? null;
+    const attrs=data.attributes ?? {};
+    const layerName=String(
+      layer?.name ??
+      layer?.Name ??
+      attrs.layerName ??
+      attrs.LayerName ??
+      data.layerName ??
+      ""
+    ).trim();
+    const layerIndex=resolveRhinoLayerIndex(x);
+    const color=layer?.color ?? layer?.Color;
+    const colorCapa=typeof color==="string"
+      ? color
+      : color
+        ? "#"+[color.r??color.R,color.g??color.G,color.b??color.B]
+            .map((v:any)=>Math.max(0,Math.min(255,Math.round(Number(v)||0))).toString(16).padStart(2,"0"))
+            .join("")
+        : undefined;
+    const category=classifyRhinoLayer(layerName,colorCapa,clasificarCapa);
+    const matrixSlot=matrixSlotFromLayer(layerName,category);
+    const existing=data.aurumRhino??{};
+    if (!layerName && !existing.capa) return;
+
+    x.userData={
+      ...data,
+      aurumRhino:{
+        ...existing,
+        capa:layerName || existing.capa || undefined,
+        colorCapa:colorCapa || existing.colorCapa || undefined,
+        categoria:category,
+        layerIndex:layerIndex>=0 ? layerIndex : (existing.layerIndex ?? -1),
+        matrixSlot:matrixSlot ?? existing.matrixSlot,
+        rhinoLayerId:layer?.id ?? layer?.Id ?? existing.rhinoLayerId ?? null,
+        rhinoMaterialIndex:attrs.materialIndex ?? existing.rhinoMaterialIndex ?? null,
+        visible:x.visible!==false,
+        hiddenByRhino:x.visible===false,
+      },
+    };
+  });
+  object.updateMatrixWorld?.(true);
+}
+
 export async function normalizeAurumModel(
   object:any,
   glb:ArrayBuffer | null,
@@ -134,21 +203,29 @@ export async function normalizeAurumModel(
     if (!glb) throw new Error("No se generó el GLB interno del archivo 3DM.");
     const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
     const interno = (await new GLTFLoader().parseAsync(glb,"")).scene;
-    const meshes:any[] = [];
-    interno.traverse((x:any) => { if (x.isMesh) meshes.push(x); });
-    metadataCapas.forEach((meta:any,index:number) => {
-      const x=meshes[index];
-      if (!x) return;
-      x.userData = {
-        ...x.userData,
-        aurumRhino: {
-          ...meta,
-          layerIndex: meta.layerIndex ?? -1,
-          visible: x.visible !== false,
-          hiddenByRhino: x.visible === false,
-        },
-      };
-    });
+    // The exported GLB already carries the layer metadata used by
+    // iJewel. Read it from the GLB itself instead of matching meshes by
+    // traversal index. Mesh order is not a stable MatrixGold layer identity.
+    hydrateRhinoLayerMetadata(interno,clasificarCapa);
+
+    // Fallback only for legacy 3DM exports that did not preserve Rhino extras.
+    if (metadataCapas.length) {
+      const unresolved:any[]=[];
+      interno.traverse((x:any)=>{ if(x.isMesh && !x.userData?.aurumRhino?.capa) unresolved.push(x); });
+      metadataCapas.forEach((meta:any,index:number)=>{
+        const x=unresolved[index];
+        if(!x) return;
+        x.userData={
+          ...x.userData,
+          aurumRhino:{
+            ...meta,
+            layerIndex:meta.layerIndex ?? -1,
+            visible:x.visible!==false,
+            hiddenByRhino:x.visible===false,
+          },
+        };
+      });
+    }
     interno.updateMatrixWorld(true);
     return interno;
   }
@@ -157,6 +234,9 @@ export async function normalizeAurumModel(
   // parseamos una segunda vez: conservar el Object3D original evita una
   // conversión redundante y mantiene intactas sus normales/materiales authored.
   if (extension === "glb") {
+    // Official iJewel-style GLBs carry the layer assignment in node extras.
+    // Hydrate it directly so the same MatrixGold layer rules work for GLB input.
+    hydrateRhinoLayerMetadata(object,clasificarCapa);
     object?.updateMatrixWorld?.(true);
     return object;
   }
