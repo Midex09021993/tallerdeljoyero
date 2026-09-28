@@ -50,6 +50,13 @@ function LoginPage() {
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
   useEffect(() => {
+    if (window.location.hash === "#conoce-plataforma") {
+      setSeccionPlataforma("ecosistema");
+      setMostrarPlataforma(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (sesion) navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
   }, [sesion, navigate]);
 
