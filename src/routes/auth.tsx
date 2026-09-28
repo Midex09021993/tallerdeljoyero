@@ -46,7 +46,7 @@ function LoginPage() {
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
-  const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo">("ecosistema");
+  const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
   useEffect(() => {
@@ -175,7 +175,6 @@ function LoginPage() {
             </div>
           </section>
 
-          <ComunidadAurumLab />
         </section>
 
         <section id="login" className="mx-auto w-full max-w-[430px] -translate-y-28 max-[767px]:max-w-[430px] max-[767px]:translate-y-0 [@media(max-height:800px)]:-translate-y-20">
@@ -260,6 +259,7 @@ function LoginPage() {
                 ["ecosistema","El ecosistema",Gem],
                 ["participantes","Quién puede participar",UsersRound],
                 ["flujo","Cómo se conecta",Grid2X2],
+                ["comunidad","Comunidad Aurum Lab",Gem],
               ] as [string, string, LucideIcon][]).map(([id,label,Icon]) => (
                 <button key={String(id)} type="button" onClick={() => setSeccionPlataforma(id as typeof seccionPlataforma)}
                   className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider transition ${seccionPlataforma===id ? "bg-gold/10 text-gold" : "text-white/45 hover:text-white"}`}>
@@ -331,6 +331,10 @@ function LoginPage() {
                     </p>
                   </div>
                 </>
+              ) : null}
+
+              {seccionPlataforma === "comunidad" ? (
+                <ComunidadAurumLab />
               ) : null}
 
               {seccionPlataforma === "participantes" ? (
