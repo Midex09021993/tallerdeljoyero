@@ -387,7 +387,7 @@ export function AurumRender() {
       const crearInclusiones = (target:any, g:GemaConfig) => renderAurumInclusions(THREE,target,g,9173);
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva;
-        applyAurumGemToTarget(target,g,aplicarEntornoGema);
+        applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.());
         invalidateRenderRef.current?.();
       };
       const aplicarMaterial = (m:MaterialConfig) => {
