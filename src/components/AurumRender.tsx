@@ -16,6 +16,7 @@ import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions, setAurumInclusionsVisible } from "../lib/aurum/gems";
+import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
@@ -441,6 +442,10 @@ export function AurumRender() {
           return;
         }
         aplicarPerfilMaterialLive(modelo,live);
+        // LIVE uses the lean native gemstone shader; CAPTURE restores the full
+        // photographic shader. This avoids paying the custom optical layer on
+        // every interactive fragment while preserving the beauty pipeline.
+        setAurumGemShaderQuality(modelo,live ? "live" : "beauty");
         if (live) {
           renderer.shadowMap.enabled=false;
           renderer.shadowMap.needsUpdate=false;
@@ -990,14 +995,27 @@ export function AurumRender() {
         {
           onStart: () => {
             if (liveFastPathRef.current && !captureInProgressRef.current) {
-              // During drag, lower only the transmission buffer resolution. It is
-              // restored after interaction so the idle frame keeps its calibrated
-              // iJewel quality.
+              // Interaction gets a temporary render-scale + transmission budget.
+              // The model itself never changes; only the number of pixels and the
+              // transmission buffer used while the camera is moving are reduced.
+              const interactionDpr=Math.min(
+                runtimeBudget.interactionPixelRatio,
+                renderQuality.pixelRatio,
+                runtimeBudget.pixelRatioCap
+              );
+              renderer.setPixelRatio(interactionDpr);
+              composer?.setPixelRatio?.(interactionDpr);
               (renderer as any).transmissionResolutionScale=runtimeBudget.interactionTransmissionScale;
             }
           },
           onEnd: () => {
             if (liveFastPathRef.current && !captureInProgressRef.current) {
+              const idleDpr=Math.min(
+                renderQuality.pixelRatio,
+                runtimeBudget.pixelRatioCap
+              );
+              renderer.setPixelRatio(idleDpr);
+              composer?.setPixelRatio?.(idleDpr);
               (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
               invalidateRenderRef.current?.();
             }
