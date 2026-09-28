@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { zipSync, strToU8 } from "npm:fflate";
+import { Zip, ZipPassThrough } from "npm:fflate@0.8.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,40 +78,68 @@ Deno.serve(async (req) => {
     return json({ error: "Esta transferencia ya fue descargada, expiró o dejó de estar disponible." }, 410);
   }
 
-  try {
-    const files = Array.isArray(transfer.files) ? transfer.files : [];
-    const archive: Record<string, Uint8Array> = {};
+  const files: Array<{ name: string; path: string }> = Array.isArray(transfer.files) ? transfer.files : [];
 
-    for (const file of files) {
-      const { data, error } = await supabase.storage.from(BUCKET).download(file.path);
-      if (error || !data) throw new Error(`No se pudo recuperar ${file.name}.`);
-      archive[file.name] = new Uint8Array(await data.arrayBuffer());
+  // Verifica que todos los archivos sigan accesibles antes de empezar a transmitir.
+  const sources: Array<{ name: string; url: string }> = [];
+  for (const file of files) {
+    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(file.path, 600);
+    if (error || !data?.signedUrl) {
+      await supabase.rpc("release_aurum_transfer", { _transfer_id: transfer.id });
+      return json({ error: "No se pudo preparar la descarga. El enlace sigue disponible para volver a intentarlo." }, 500);
     }
-
-    const zip = zipSync(archive, { level: 0 });
-
-    const { error: removeError } = await supabase.storage.from(BUCKET).remove(
-      files.map((file: { path: string }) => file.path),
-    );
-    if (removeError) throw removeError;
-
-    await supabase.from("aurum_transfers").update({
-      status: "consumed",
-      consumed_at: new Date().toISOString(),
-    }).eq("id", transfer.id).eq("status", "processing");
-
-    return new Response(zip, {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/zip",
-        "Content-Disposition": 'attachment; filename="AURUM-Transfer.zip"',
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-      },
-    });
-  } catch (error) {
-    await supabase.rpc("release_aurum_transfer", { _transfer_id: transfer.id }).catch(() => undefined);
-    console.error("[aurum-transfer-download]", error);
-    return json({ error: "No se pudo preparar la descarga. El enlace sigue disponible para volver a intentarlo." }, 500);
+    sources.push({ name: file.name, url: data.signedUrl });
   }
+
+  // ZIP en streaming (sin cargar 500 MB en memoria).
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let failed = false;
+      const zip = new Zip((err, chunk, final) => {
+        if (err) { failed = true; controller.error(err); return; }
+        controller.enqueue(chunk);
+        if (final) controller.close();
+      });
+      try {
+        const used = new Set<string>();
+        for (const src of sources) {
+          let name = src.name;
+          for (let i = 1; used.has(name); i++) name = `${i}-${src.name}`;
+          used.add(name);
+          const entry = new ZipPassThrough(name);
+          zip.add(entry);
+          const res = await fetch(src.url);
+          if (!res.ok || !res.body) throw new Error(`No se pudo recuperar ${src.name}.`);
+          const reader = res.body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            entry.push(value);
+          }
+          entry.push(new Uint8Array(0), true);
+        }
+        zip.end();
+        if (failed) throw new Error("zip");
+        await supabase.storage.from(BUCKET).remove(files.map((f) => f.path));
+        await supabase.from("aurum_transfers").update({
+          status: "consumed",
+          consumed_at: new Date().toISOString(),
+        }).eq("id", transfer.id).eq("status", "processing");
+      } catch (error) {
+        console.error("[aurum-transfer-download]", error);
+        await supabase.rpc("release_aurum_transfer", { _transfer_id: transfer.id });
+        try { controller.error(error); } catch { /* ya cerrado */ }
+      }
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="AURUM-Transfer.zip"',
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+    },
+  });
 });
