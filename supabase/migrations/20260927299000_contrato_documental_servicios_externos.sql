@@ -455,46 +455,13 @@ $$;
 revoke all on function public.obtener_ficha_servicio_externo(uuid) from public, anon;
 grant execute on function public.obtener_ficha_servicio_externo(uuid) to authenticated;
 
--- Cualquier vía que convierta un trabajo en externo pasa por el mismo contrato.
--- Esto protege también la preparación automática por capacidad.
-create or replace function public.validar_asignacion_documental_servicio_externo()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $
-declare
-  v_validacion jsonb;
-begin
-  if new.tipo = 'externo'
-     and (
-       old.tipo is distinct from new.tipo
-       or old.participante_id is distinct from new.participante_id
-     ) then
-    select public.validar_requisitos_servicio_externo(new.id, 'enviar')
-      into v_validacion;
-
-    if coalesce((v_validacion->>'listo')::boolean, false) = false then
-      raise exception '%', coalesce(v_validacion->>'mensaje', 'El servicio externo no cumple sus requisitos documentales');
-    end if;
-  end if;
-
-  return new;
-end;
-$;
-
-drop trigger if exists trg_validar_asignacion_documental_servicio_externo on public.trabajos;
-create trigger trg_validar_asignacion_documental_servicio_externo
-before update of tipo, participante_id on public.trabajos
-for each row
-execute function public.validar_asignacion_documental_servicio_externo();
-
+-- Vincula automáticamente los archivos de entrada cuando el servicio ya fue asignado.
 create or replace function public.vincular_archivos_entrada_servicio_externo()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 begin
   if new.tipo = 'externo' and new.participante_id is not null then
     insert into public.trabajo_archivos (trabajo_id, pedido_archivo_id)
@@ -514,10 +481,9 @@ begin
       )
     on conflict (trabajo_id, pedido_archivo_id) do nothing;
   end if;
-
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists trg_vincular_archivos_entrada_servicio_externo on public.trabajos;
 create trigger trg_vincular_archivos_entrada_servicio_externo
@@ -525,117 +491,43 @@ after update of tipo, participante_id on public.trabajos
 for each row
 execute function public.vincular_archivos_entrada_servicio_externo();
 
-create or replace function public.registrar_entrega_servicio_externo(
-  _trabajo_id uuid,
-  _nombre text,
-  _url text,
-  _tipo text
-)
-returns jsonb
+-- Si el archivo llega después de asignar el servicio, se vincula al trabajo existente.
+create or replace function public.vincular_archivo_nuevo_a_servicios_externos()
+returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
-declare
-  v_uid uuid := (select auth.uid());
-  v_trabajo public.trabajos;
-  v_archivo public.pedido_archivos;
-  v_version integer;
+as $$
 begin
-  select t.* into v_trabajo
-  from public.trabajos t
-  where t.id = _trabajo_id
-    and t.tipo = 'externo'
-    and lower(trim(t.area)) = 'diseño 3d';
-
-  if v_trabajo.id is null then
-    raise exception 'Solo se puede registrar una entrega 3DM de un servicio Diseño 3D';
-  end if;
-
-  if not exists (
-    select 1
-    from public.participante_cuentas pc
-    where pc.user_id = v_uid
-      and pc.participante_id = v_trabajo.participante_id
-      and pc.estado = 'activo'
-  ) then
-    raise exception 'No tienes acceso a este servicio externo';
-  end if;
-
-  if lower(regexp_replace(_nombre, '^.*\\.', '')) <> '3dm'
-     or lower(regexp_replace(_url, '^.*\\.', '')) <> '3dm' then
-    raise exception 'La entrega de Diseño 3D debe ser un archivo 3DM';
-  end if;
-
-  if _url <> format('%s/servicios/%s/%s', v_trabajo.pedido_id, v_trabajo.id, regexp_replace(_url, '^.*/', '')) then
-    raise exception 'La ruta del archivo no corresponde al servicio';
-  end if;
-
-  update public.pedido_archivos
-  set es_vigente_fabricacion = false
-  where pedido_id = v_trabajo.pedido_id
-    and grupo = 'Diseño 3D'
-    and es_vigente_fabricacion = true;
-
-  select coalesce(max(pa.version), 0) + 1
-    into v_version
-  from public.pedido_archivos pa
-  where pa.pedido_id = v_trabajo.pedido_id
-    and pa.grupo = 'Diseño 3D';
-
-  insert into public.pedido_archivos (
-    pedido_id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion
-  )
-  values (
-    v_trabajo.pedido_id,
-    _nombre,
-    coalesce(nullif(_tipo, ''), 'model/3dm'),
-    _url,
-    false,
-    'Diseño 3D',
-    v_version,
-    true
-  )
-  returning * into v_archivo;
-
-  insert into public.trabajo_archivos (trabajo_id, pedido_archivo_id)
-  values (v_trabajo.id, v_archivo.id)
-  on conflict (trabajo_id, pedido_archivo_id) do nothing;
-
-  return jsonb_build_object(
-    'trabajo_id', v_trabajo.id,
-    'pedido_archivo_id', v_archivo.id,
-    'nombre', v_archivo.nombre,
-    'version', v_archivo.version
-  );
-end;
-$;
-
-revoke all on function public.registrar_entrega_servicio_externo(uuid, text, text, text) from public, anon;
-grant execute on function public.registrar_entrega_servicio_externo(uuid, text, text, text) to authenticated;
-
--- El receptor también puede leer únicamente los archivos del servicio externo
--- que están bajo la carpeta específica de ese trabajo.
-drop policy if exists "pedidos archivos leer servicio externo" on storage.objects;
-create policy "pedidos archivos leer servicio externo"
-on storage.objects for select to authenticated
-using (
-  bucket_id = 'pedidos'
-  and (storage.foldername(name))[2] = 'servicios'
-  and storage.extension(name) = '3dm'
-  and exists (
-    select 1
+  if new.es_vigente_fabricacion = true then
+    insert into public.trabajo_archivos (trabajo_id, pedido_archivo_id)
+    select t.id, new.id
     from public.trabajos t
-    join public.participante_cuentas pc
-      on pc.participante_id = t.participante_id
-     and pc.user_id = (select auth.uid())
-     and pc.estado = 'activo'
-    where t.tipo = 'externo'
-      and t.area = 'Diseño 3D'
-      and t.id = (nullif((storage.foldername(name))[3], ''))::uuid
-      and t.pedido_id = (nullif((storage.foldername(name))[1], ''))::uuid
-  )
-);
+    where t.pedido_id = new.pedido_id
+      and t.tipo = 'externo'
+      and t.participante_id is not null
+      and (
+        (lower(trim(t.area)) = 'impresión 3d'
+          and lower(regexp_replace(new.nombre, '^.*\\.', '')) = 'stl')
+        or
+        (lower(trim(t.area)) = 'corte láser'
+          and lower(regexp_replace(new.nombre, '^.*\\.', '')) in ('dxf','svg','pdf'))
+        or
+        (lower(trim(t.area)) = 'diseño 3d'
+          and lower(new.grupo) = 'diseño 3d'
+          and lower(regexp_replace(new.nombre, '^.*\\.', '')) <> '3dm')
+      )
+    on conflict (trabajo_id, pedido_archivo_id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_vincular_archivo_nuevo_a_servicios_externos on public.pedido_archivos;
+create trigger trg_vincular_archivo_nuevo_a_servicios_externos
+after insert or update of es_vigente_fabricacion, grupo, nombre on public.pedido_archivos
+for each row
+execute function public.vincular_archivo_nuevo_a_servicios_externos();
 
 -- Permite al receptor subir únicamente el entregable 3DM de un servicio Diseño 3D.
 drop policy if exists "pedidos archivos subir autorizado" on storage.objects;
