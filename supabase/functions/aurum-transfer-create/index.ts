@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const MAX_TOTAL_BYTES = 500 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 2 * 1024 * 1024 * 1024;
 const MAX_FILES = 10;
 const BUCKET = "aurum-transfer";
 
@@ -50,7 +50,7 @@ function validate(files: unknown): InFile[] | string {
     if (!f || typeof f.name !== "string" || typeof f.size !== "number" || f.size < 0) return "Archivo inválido.";
     total += f.size;
   }
-  if (total > MAX_TOTAL_BYTES) return "La transferencia supera el límite de 500 MB.";
+  if (total > MAX_TOTAL_BYTES) return "La transferencia supera el límite de 2 GB.";
   return files as InFile[];
 }
 
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
 
-    // Paso 1: preparar URLs firmadas de subida directa (permite hasta 500 MB).
+    // Paso 1: preparar URLs firmadas de subida directa (permite hasta 2 GB).
     if (body.action === "prepare") {
       const files = validate(body.files);
       if (typeof files === "string") return json({ error: files }, 400);
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       }
       if (total > MAX_TOTAL_BYTES) {
         await supabase.storage.from(BUCKET).remove(metadata.map((m) => m.path));
-        return json({ error: "La transferencia supera el límite de 500 MB." }, 413);
+        return json({ error: "La transferencia supera el límite de 2 GB." }, 413);
       }
 
       const { error: insertError } = await supabase.from("aurum_transfers").insert({
