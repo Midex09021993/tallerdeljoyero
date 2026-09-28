@@ -525,7 +525,10 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
-        setAurumInclusionsVisible(modelo, measuredQualityId !== "low");
+        // LIVE MODE: procedural inclusions are intentionally hidden. They add
+        // dozens of transparent draw calls and are not required for the base
+        // product preview. CAPTURE enables them temporarily for the final image.
+        setAurumInclusionsVisible(modelo, false);
         renderer.shadowMap.needsUpdate = true;
         // SSR iJewel: only authored metal meshes participate in screen-space
         // reflection. Gemstones keep their own environment/refraction path.
@@ -659,6 +662,9 @@ export function AurumRender() {
             };
             renderQuality=captureQuality as any;
             measuredQualityId="ultra";
+            // CAPTURE MODE: restore procedural inclusions only for the final
+            // photographic pass; interactive LIVE mode keeps them hidden.
+            if (modelo) setAurumInclusionsVisible(modelo, true);
             renderer.setPixelRatio(1);
             composer?.setPixelRatio?.(1);
             composer?.setSize?.(target.width,target.height);
@@ -700,6 +706,7 @@ export function AurumRender() {
             return data;
           } finally {
             if(composer) composer.renderToScreen=previousRenderToScreen??true;
+            setAurumInclusionsVisible(modelo, false);
             aplicarCalidadRender(previousQuality);
             renderer.setPixelRatio(previousPixelRatio);
             composer?.setPixelRatio?.(previousPixelRatio);
