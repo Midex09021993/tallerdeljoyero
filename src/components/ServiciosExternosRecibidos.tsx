@@ -1,4 +1,4 @@
-import { ArrowUpRight, Building2, CheckCircle2, ChevronDown, Clock3, ExternalLink, FileArchive, PackageCheck } from "lucide-react";
+import { ArrowUpRight, Building2, CheckCircle2, ChevronDown, ExternalLink, FileArchive, PackageCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -147,6 +147,13 @@ function PedidoTecnicoRecibido({
 
   const archivosVisibles = archivosConUrl.data ?? archivos;
   const pedido = ficha?.pedido ?? {};
+  const materiales = (ficha?.materiales ?? []) as Array<Record<string, unknown>>;
+
+  const campo = (valor: unknown) => {
+    if (valor === null || valor === undefined || valor === "") return "—";
+    if (Array.isArray(valor)) return valor.join(", ");
+    return String(valor);
+  };
 
   return (
     <div className="p-4 sm:p-5">
@@ -172,18 +179,73 @@ function PedidoTecnicoRecibido({
       {abierto ? (
         <div className="mt-5 space-y-5">
           <div className="rounded-xl border border-border bg-surface-muted/20 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ficha técnica del pedido</p>
-                <p className="mt-1 text-sm font-semibold">{String(pedido.pieza ?? primero.pieza ?? "Pieza sin nombre")}</p>
-              </div>
-              <div className="text-right text-xs text-muted-foreground">
-                <p>Material: <span className="font-medium text-foreground">{String(pedido.material ?? primero.material ?? "—")}</span></p>
-                <p>Cantidad: <span className="font-medium text-foreground">{String(pedido.cantidad_piezas ?? primero.cantidad_piezas ?? "—")}</span></p>
-              </div>
+            <div className="mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ficha técnica completa</p>
+              <p className="mt-1 text-sm font-semibold">{campo(pedido.pieza ?? primero.pieza) || "Pieza sin nombre"}</p>
             </div>
-            {pedido.trabajo ? <p className="mt-3 text-xs text-muted-foreground">{String(pedido.trabajo)}</p> : null}
-            {pedido.notas ? <p className="mt-2 text-xs text-muted-foreground">{String(pedido.notas)}</p> : null}
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["Referencia", pedido.referencia],
+                ["Pieza", pedido.pieza],
+                ["Trabajo", pedido.trabajo],
+                ["Material", pedido.material],
+                ["Talla", pedido.talla],
+                ["Piedras", pedido.piedras],
+                ["Peso estimado", pedido.peso_estimado],
+                ["Cantidad", pedido.cantidad_piezas],
+                ["Fecha de ingreso", pedido.fecha_ingreso],
+                ["Fecha de entrega", pedido.fecha_entrega],
+                ["Origen", pedido.origen],
+                ["Área actual", pedido.area_actual],
+                ["Área desde", pedido.area_desde],
+              ].map(([etiqueta, valor]) => (
+                <div key={String(etiqueta)} className="rounded-lg border border-border bg-card p-3">
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
+                  <p className="mt-1 text-xs font-medium text-foreground">{campo(valor)}</p>
+                </div>
+              ))}
+            </div>
+
+            {pedido.ruta ? (
+              <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Ruta de fabricación</p>
+                <p className="mt-1 text-xs font-medium">{campo(pedido.ruta)}</p>
+              </div>
+            ) : null}
+
+            {(pedido.corte_texto || pedido.corte_tipografia || pedido.corte_ubicacion || pedido.corte_observaciones) ? (
+              <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Especificaciones de corte</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <p className="text-xs"><span className="text-muted-foreground">Texto:</span> {campo(pedido.corte_texto)}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Tipografía:</span> {campo(pedido.corte_tipografia)}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Ubicación:</span> {campo(pedido.corte_ubicacion)}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Observaciones:</span> {campo(pedido.corte_observaciones)}</p>
+                </div>
+              </div>
+            ) : null}
+
+            {pedido.notas ? (
+              <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Notas técnicas</p>
+                <p className="mt-1 whitespace-pre-wrap text-xs">{String(pedido.notas)}</p>
+              </div>
+            ) : null}
+
+            {materiales.length > 0 ? (
+              <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Materiales planificados</p>
+                <div className="mt-2 space-y-2">
+                  {materiales.map((material) => (
+                    <div key={String(material.id)} className="flex flex-wrap justify-between gap-2 text-xs">
+                      <span className="font-medium">{campo(material.material)}{material.codigo ? ` · ${String(material.codigo)}` : ""}</span>
+                      <span className="text-muted-foreground">{campo(material.cantidad_planificada)} {campo(material.unidad)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -217,6 +279,16 @@ function PedidoTecnicoRecibido({
                           </span>
                         ) : null}
                       </div>
+                      {disponibles.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {disponibles.map((archivo) => (
+                            <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] font-medium hover:border-gold/30">
+                              <FileArchive className="size-3.5" />
+                              {archivo.nombre}
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <Link to="/trabajos/$id" params={{ id: servicio.id }} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/30 hover:bg-gold/5">
                       Gestionar <ArrowUpRight className="size-3.5" />
