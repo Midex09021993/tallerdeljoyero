@@ -126,6 +126,7 @@ export function AurumRender() {
   const [captura, setCaptura] = useState<string | null>(null);
   const [captureMenuOpen, setCaptureMenuOpen] = useState(false);
   const [captureResolution, setCaptureResolution] = useState<"normal"|"hd"|"fullhd">("hd");
+  const captureInProgressRef = useRef(false);
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -603,6 +604,9 @@ export function AurumRender() {
         reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
         capturar:(resolution:"normal"|"hd"|"fullhd"="hd")=>{
+          if (captureInProgressRef.current) return null;
+          captureInProgressRef.current = true;
+          viewerLoop.pause?.();
           const previousQuality=measuredQualityId;
           const previousPixelRatio=renderer.getPixelRatio?.() ?? 1;
           const previousWidth=nodo.clientWidth||900;
@@ -617,7 +621,11 @@ export function AurumRender() {
           let data:string|null=null;
 
           try{
-            aplicarCalidadRender("ultra");
+            // CAPTURA = perfil fotográfico temporal. El visor queda pausado
+            // durante toda la operación: no hay render interactivo concurrente.
+            // La captura vive únicamente en los buffers del compositor y nunca
+            // utiliza el framebuffer persistente del canvas.
+            // El perfil interactivo y sus shadow maps se conservan al restaurar.
 
             // CAPTURA = perfil fotográfico temporal. El visor normal no conserva
             // el framebuffer: la imagen se obtiene del buffer final del composer.
@@ -692,6 +700,8 @@ export function AurumRender() {
             camara.updateProjectionMatrix();
             renderer.shadowMap.needsUpdate=true;
             invalidateRenderRef.current?.();
+            viewerLoop.resume?.();
+            captureInProgressRef.current = false;
             if(taaPass) taaPass.accumulateIndex=-1;
           }
         },
@@ -908,19 +918,9 @@ export function AurumRender() {
       setFormatoInterno("GLB");
       setCaptura(null);
 
-      // iJewel presents a still cover before handing control to the live viewer.
-      // AURUM creates that cover from the actual loaded model, so it is never
-      // a stale image from another project.
-      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      const cover = apiRef.current?.capturar?.("normal");
-      if (cover) {
-        setPresentationCover(cover);
-        setPresentationVisible(true);
-        presentationTimerRef.current = setTimeout(() => {
-          setPresentationVisible(false);
-          presentationTimerRef.current = null;
-        }, 1050);
-      }
+      // La presentación inicial no ejecuta una captura fotográfica.
+      // El motor de captura solo se activa cuando el usuario pulsa la cámara.
+      invalidateRenderRef.current?.();
     } catch(e) {
       setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
       setArchivo(null);
