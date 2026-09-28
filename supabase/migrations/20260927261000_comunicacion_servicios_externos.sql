@@ -231,6 +231,87 @@ begin
 end;
 $$;
 
+
+create or replace function public.listar_servicios_externos_recibidos()
+returns table (
+  id uuid,
+  pedido_id uuid,
+  area text,
+  titulo text,
+  descripcion text,
+  estado text,
+  prioridad text,
+  fecha_planificada date,
+  fecha_inicio timestamptz,
+  fecha_fin timestamptz,
+  notas text,
+  origen_participante_id uuid,
+  origen_participante_nombre text,
+  referencia_pedido text,
+  pieza text,
+  material text,
+  cantidad_piezas integer
+)
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null then
+    raise exception 'Sesión no válida';
+  end if;
+
+  if not (
+    public.has_role(v_uid, 'dueno')
+    or public.has_role(v_uid, 'gerente')
+    or public.has_role(v_uid, 'operario')
+  ) then
+    raise exception 'No tienes permiso para consultar servicios externos';
+  end if;
+
+  return query
+  select
+    t.id,
+    t.pedido_id,
+    t.area,
+    t.titulo,
+    t.descripcion,
+    t.estado,
+    t.prioridad,
+    t.fecha_planificada,
+    t.fecha_inicio,
+    t.fecha_fin,
+    t.notas,
+    ep_origen.id,
+    ep_origen.nombre,
+    p.referencia,
+    p.pieza,
+    p.material,
+    p.cantidad_piezas
+  from public.trabajos t
+  join public.pedidos p on p.id = t.pedido_id
+  join public.ecosistema_participantes ep_origen
+    on ep_origen.sede_id = t.sede_id
+   and ep_origen.estado = 'activo'
+  where t.tipo = 'externo'
+    and t.estado in ('pendiente', 'en_proceso', 'bloqueado')
+    and exists (
+      select 1
+      from public.participante_cuentas pc
+      where pc.user_id = v_uid
+        and pc.participante_id = t.participante_id
+        and pc.estado = 'activo'
+    )
+  order by t.fecha_planificada nulls first, t.created_at;
+end;
+$;
+
+revoke all on function public.listar_servicios_externos_recibidos() from public, anon;
+grant execute on function public.listar_servicios_externos_recibidos() to authenticated;
+notify pgrst, 'reload schema';
+
 revoke all on function public.listar_trabajos_operario() from public, anon;
 grant execute on function public.listar_trabajos_operario() to authenticated;
 revoke all on function public.tomar_trabajo(uuid) from public, anon;
