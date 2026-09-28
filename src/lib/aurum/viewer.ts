@@ -153,21 +153,74 @@ export function startAurumViewerLoop(
   viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
   render: () => void
 ) {
+  // AURUM is a product configurator, not a continuously animated game scene.
+  // Render only when the camera/scene actually changes. OrbitControls still
+  // receives per-frame updates while damping is active, but no RAF is kept
+  // alive once the image is stable.
   let frame = 0;
-  const resize = () => resizeAurumViewer(viewer);
+  let stopped = false;
+  let dirty = true;
+  let interactionActive = false;
+
+  const requestRender = () => {
+    dirty = true;
+    if (!frame && !stopped) frame = requestAnimationFrame(tick);
+  };
+
+  const resize = () => {
+    resizeAurumViewer(viewer);
+    requestRender();
+  };
+
   const observer = new ResizeObserver(resize);
   observer.observe(viewer.node);
-  resize();
-  const animate = () => {
-    frame = requestAnimationFrame(animate);
-    viewer.controls?.update?.();
-    render();
+
+  const onControlChange = () => {
+    interactionActive = true;
+    requestRender();
   };
-  animate();
+  const onControlEnd = () => {
+    interactionActive = false;
+    requestRender();
+  };
+
+  viewer.controls?.addEventListener?.("change", onControlChange);
+  viewer.controls?.addEventListener?.("end", onControlEnd);
+
+  const tick = () => {
+    frame = 0;
+    if (stopped) return;
+
+    const changedByControls = Boolean(viewer.controls?.update?.());
+    const shouldRender = dirty || changedByControls || interactionActive;
+
+    if (shouldRender) {
+      dirty = false;
+      render();
+    }
+
+    // Damping/autoRotate may continue changing the camera after the input event.
+    // Keep the loop alive only while that motion is actually active.
+    if (!stopped && (dirty || changedByControls || interactionActive)) {
+      frame = requestAnimationFrame(tick);
+    }
+  };
+
+  resize();
+  requestRender();
+
   return {
     observer,
     get frame() { return frame; },
-    stop: () => cancelAnimationFrame(frame),
+    invalidate: requestRender,
+    stop: () => {
+      stopped = true;
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      viewer.controls?.removeEventListener?.("change", onControlChange);
+      viewer.controls?.removeEventListener?.("end", onControlEnd);
+      observer.disconnect();
+    },
     resize,
   };
 }
