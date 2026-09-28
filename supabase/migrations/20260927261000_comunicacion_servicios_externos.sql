@@ -166,10 +166,8 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_trabajo public.trabajos;
-  v_resp uuid;
-  v_sede_id uuid;
 begin
-  select t.*, t.responsable_user_id
+  select t.*
   into v_trabajo
   from public.trabajos t
   where t.id = _trabajo_id
