@@ -289,6 +289,9 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // visible if the optional bake cannot be completed.
     setTimeout(()=>{
       try{
+        let root=part;
+        while(root?.parent) root=root.parent;
+        if(root?.userData?.aurumDisposed)return;
         const thicknessResolution=preset.familia==="Diamante" ? 512 : preset.familia==="Moissanita" ? 384 : 256;
         const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
         if(!result)return;
