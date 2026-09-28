@@ -207,9 +207,17 @@ function TrabajoOperativoPage() {
     },
   });
   const { data: pedidoTrabajo } = useQuery({
-    queryKey: ["pedido-trabajo", trabajo?.pedido_id],
+    queryKey: ["pedido-trabajo", trabajo?.pedido_id, trabajo?.tipo],
     enabled: Boolean(trabajo?.pedido_id),
     queryFn: async () => {
+      if (trabajo?.tipo === "externo") {
+        const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
+          _trabajo_id: trabajo.id,
+        });
+        if (error) throw error;
+        const ficha = data as { pedido?: Record<string, unknown> } | null;
+        return ficha?.pedido ? { ...ficha.pedido, sedes: null } : null;
+      }
       const { data, error } = await supabase
         .from("pedidos")
         .select("id, referencia, pieza, trabajo, material, talla, piedras, peso_estimado, cantidad_piezas, fecha_ingreso, fecha_entrega, origen, area_actual, area_desde, notas, ruta, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones, sede_id, sedes(nombre)")
@@ -221,9 +229,27 @@ function TrabajoOperativoPage() {
   });
 
   const { data: materialesPlanificados = [] } = useQuery({
-    queryKey: ["pedido-materiales-trabajo", trabajo?.pedido_id],
+    queryKey: ["pedido-materiales-trabajo", trabajo?.pedido_id, trabajo?.tipo],
     enabled: Boolean(trabajo?.pedido_id),
     queryFn: async () => {
+      if (trabajo?.tipo === "externo") {
+        const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
+          _trabajo_id: trabajo.id,
+        });
+        if (error) throw error;
+        const ficha = data as { materiales?: Array<Record<string, unknown>> } | null;
+        return (ficha?.materiales ?? []).map((item) => ({
+          id: String(item.id),
+          cantidad_planificada: item.cantidad_planificada as number,
+          unidad: item.unidad as string | null,
+          notas: item.notas as string | null,
+          inventario: {
+            material: item.material as string | null,
+            codigo: item.codigo as string | null,
+            unidad: item.inventario_unidad as string | null,
+          },
+        }));
+      }
       const { data, error } = await supabase
         .from("pedido_materiales")
         .select("id,cantidad_planificada,unidad,notas,inventario(material,codigo,unidad)")
@@ -235,16 +261,28 @@ function TrabajoOperativoPage() {
   });
 
   const { data: archivosPedido = [] } = useQuery({
-    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id],
+    queryKey: ["archivos-pedido-trabajo", trabajo?.pedido_id, trabajo?.tipo],
     enabled: Boolean(
-        trabajo?.pedido_id &&
-        (
-          sesion?.esAdmin ||
-          trabajo?.responsable_user_id === sesion?.user.id ||
-          (sesion?.rolPrincipal === "operario" && (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area)))
-        )
-      ),
+      trabajo?.pedido_id &&
+      (
+        trabajo?.tipo === "externo" ||
+        sesion?.esAdmin ||
+        trabajo?.responsable_user_id === sesion?.user.id ||
+        (sesion?.rolPrincipal === "operario" && (sesion.areas ?? []).some((area) => areaCoincide(area, trabajo.area)))
+      )
+    ),
     queryFn: async () => {
+      if (trabajo?.tipo === "externo") {
+        const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
+          _trabajo_id: trabajo.id,
+        });
+        if (error) throw error;
+        const ficha = data as { archivos?: Array<Record<string, unknown>> } | null;
+        return (ficha?.archivos ?? []) as Array<{
+          id: string; nombre: string; tipo: string; url: string; es_enlace: boolean;
+          grupo: string; version: number; es_vigente_fabricacion: boolean;
+        }>;
+      }
       const { data, error } = await supabase
         .from("pedido_archivos")
         .select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion")
