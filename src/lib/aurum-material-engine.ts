@@ -310,21 +310,26 @@ export const applyAurumIJEWELGemParameters=(material:any,source:AurumIJEWELGemPa
   if(!material)return material;
   const p={...source,boostFactors:{...source.boostFactors}};
   material.metalness=0;
-  // DiamondMaterial uses its own screen-space/refraction solver; the supplied
-  // iJewel references explicitly carry transmission=0. Disable Three's volume
-  // transmission path here to avoid rendering the source twice.
-  material.transmission=0;
+  // iJewel/WebGi DiamondMaterial stores its own renderer parameters, and its
+  // reference files use transmissionParameter=0. That value is NOT equivalent
+  // to Three.js MeshPhysicalMaterial.transmission. AURUM keeps the physical
+  // catalog transmission/IOR/dispersion as the source of truth and stores the
+  // iJewel values as calibration metadata. This prevents the reference layer
+  // from turning real gemstones into opaque glass-like surfaces.
+  const physicalTransmission=Math.max(0,Math.min(1,Number(material.transmission??1)));
+  const physicalIor=Math.max(1.01,Math.min(2.65,Number(material.ior??p.refractiveIndex)));
+  const physicalDispersion=Math.max(0,Number(material.dispersion??p.dispersion));
+  material.transmission=physicalTransmission;
+  material.ior=physicalIor;
+  material.dispersion=physicalDispersion;
   material.color?.setHex(p.color);
-  // iJewel's refractiveIndex is an active renderer parameter. Keep the source
-  // value instead of substituting a gemological constant.
-  material.ior=Math.max(1.01,Number(p.refractiveIndex));
-  material.dispersion=Math.max(0,Number(p.dispersion));
   material.envMapIntensity=Math.max(0,Number(p.environmentIntensity));
   if (material.envMapRotation?.set) material.envMapRotation.set(0,Number(p.environmentRotationOffset??0),0);
   material.userData={
     ...(material.userData??{}),
     aurumIJEWELParameters:p,
-    aurumIJEWELActive:true,
+    // Reference parameters remain available for calibration/diagnostics, but
+    // the expensive custom iJewel ray solver is disabled by default.    aurumIJEWELActive:false,
     aurumIJEWELSourceTransmission:Number(p.transmissionParameter),
     aurumIJEWELRayBounces:Math.max(1,Math.floor(Number(p.rayBounces))),
     aurumIJEWELOrientedEnvMap:Number(p.diamondOrientedEnvMap??0),
