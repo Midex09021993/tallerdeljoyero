@@ -162,9 +162,12 @@ begin
   loop
     if not exists (
       select 1
-      from public.sede_especialidades se
-      join public.especialidades e on e.id = se.especialidad_id
-      where se.sede_id = v_pedido.sede_id
+      from public.ecosistema_participantes ep_origen
+      join public.participante_especialidades pe_origen
+        on pe_origen.participante_id = ep_origen.id
+      join public.especialidades e on e.id = pe_origen.especialidad_id
+      where ep_origen.sede_id = v_pedido.sede_id
+        and ep_origen.estado = 'activo'
         and e.activa = true
         and lower(trim(e.nombre)) = lower(trim(v_area))
     ) then
@@ -270,9 +273,12 @@ begin
       and t.responsable_user_id is null
       and not exists (
         select 1
-        from public.sede_especialidades se
-        join public.especialidades e on e.id = se.especialidad_id
-        where se.sede_id = t.sede_id
+        from public.ecosistema_participantes ep_origen
+        join public.participante_especialidades pe_origen
+          on pe_origen.participante_id = ep_origen.id
+        join public.especialidades e on e.id = pe_origen.especialidad_id
+        where ep_origen.sede_id = t.sede_id
+          and ep_origen.estado = 'activo'
           and e.activa = true
           and lower(trim(e.nombre)) = lower(trim(t.area))
       )
