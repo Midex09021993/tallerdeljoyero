@@ -468,8 +468,7 @@ declare
 begin
   if new.tipo = 'externo'
      and (
-       tg_op = 'INSERT'
-       or old.tipo is distinct from new.tipo
+       old.tipo is distinct from new.tipo
        or old.participante_id is distinct from new.participante_id
      ) then
     select public.validar_requisitos_servicio_externo(new.id, 'enviar')
@@ -486,7 +485,7 @@ $;
 
 drop trigger if exists trg_validar_asignacion_documental_servicio_externo on public.trabajos;
 create trigger trg_validar_asignacion_documental_servicio_externo
-before insert or update of tipo, participante_id on public.trabajos
+before update of tipo, participante_id on public.trabajos
 for each row
 execute function public.validar_asignacion_documental_servicio_externo();
 
@@ -522,7 +521,7 @@ $;
 
 drop trigger if exists trg_vincular_archivos_entrada_servicio_externo on public.trabajos;
 create trigger trg_vincular_archivos_entrada_servicio_externo
-after insert or update of tipo, participante_id on public.trabajos
+after update of tipo, participante_id on public.trabajos
 for each row
 execute function public.vincular_archivos_entrada_servicio_externo();
 
