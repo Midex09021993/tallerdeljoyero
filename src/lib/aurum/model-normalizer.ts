@@ -183,18 +183,10 @@ export async function normalizeAurumModel(
   colorRhinoHex:(color:any)=>string|undefined,
   clasificarCapa:(capa:string,colorCapa?:string)=> "metal"|"gema"|"otro"
 ) {
-  const metadataCapas = extension === "3dm"
-    ? getAurumModelParts(object,colorRhinoHex,clasificarCapa)
-        .filter(p=>p.tipo==="malla")
-        .map(p=>({
-          nombre:p.nombre,
-          capa:p.capa,
-          colorCapa:p.colorCapa,
-          categoria:p.categoria,
-          matrixSlot:p.matrixSlot,
-          layerIndex:p.layerIndex,
-        }))
-    : [];
+  // Do not traverse the Rhino scene just to build fallback metadata on every load.
+  // The internal GLB is authoritative and carries Rhino layer extras. We only
+  // reconstruct legacy metadata if the exported GLB actually lacks that data.
+  let metadataCapas:any[] = [];
 
   // 3DM es la entrada oficial. Su representación de ejecución es el GLB
   // generado internamente. El Object3D Rhino se usa para preparar/exportar,
@@ -209,9 +201,19 @@ export async function normalizeAurumModel(
     hydrateRhinoLayerMetadata(interno,clasificarCapa);
 
     // Fallback only for legacy 3DM exports that did not preserve Rhino extras.
-    if (metadataCapas.length) {
-      const unresolved:any[]=[];
-      interno.traverse((x:any)=>{ if(x.isMesh && !x.userData?.aurumRhino?.capa) unresolved.push(x); });
+    const unresolved:any[]=[];
+    interno.traverse((x:any)=>{ if(x.isMesh && !x.userData?.aurumRhino?.capa) unresolved.push(x); });
+    if (unresolved.length) {
+      metadataCapas = getAurumModelParts(object,colorRhinoHex,clasificarCapa)
+        .filter(p=>p.tipo==="malla")
+        .map(p=>({
+          nombre:p.nombre,
+          capa:p.capa,
+          colorCapa:p.colorCapa,
+          categoria:p.categoria,
+          matrixSlot:p.matrixSlot,
+          layerIndex:p.layerIndex,
+        }));
       metadataCapas.forEach((meta:any,index:number)=>{
         const x=unresolved[index];
         if(!x) return;
