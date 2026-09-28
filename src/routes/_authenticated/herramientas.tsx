@@ -80,7 +80,26 @@ function HerramientasPage() {
               </div>
             </Link>
 
-            <Link\n              to="/transfer"\n              className="group block overflow-hidden rounded-2xl border border-gold/25 bg-ink text-ink-foreground shadow-card transition hover:border-gold/60 hover:shadow-lg"\n            >\n              <div className="relative flex min-h-[180px] items-end overflow-hidden bg-[radial-gradient(circle_at_65%_35%,rgba(215,173,72,.18),transparent_32%),radial-gradient(circle_at_30%_70%,rgba(255,255,255,.06),transparent_28%),#090b0e] p-6">\n                <div className="absolute right-8 top-8 grid size-24 place-items-center rounded-full border border-gold/20 bg-gold/10 text-gold transition group-hover:scale-105">\n                  <Send className="size-9" />\n                </div>\n                <div className="relative z-10">\n                  <div className="mb-2 text-[10px] uppercase tracking-[.25em] text-gold/70">Compartir archivos</div>\n                  <h2 className="font-display text-3xl italic text-gold">AURUM TRANSFER</h2>\n                  <p className="mt-1 max-w-xs text-sm text-ink-foreground/55">Envía 3DM, STL, DXF y archivos de fabricación con un enlace privado de un solo uso.</p>\n                  <span className="mt-5 inline-flex items-center rounded-xl border border-gold/30 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold transition group-hover:bg-gold group-hover:text-black">\n                    Transferir archivos →\n                  </span>\n                </div>\n              </div>\n            </Link>\n\n            <CalculadoraYeso />
+            <Link
+              to="/transfer"
+              className="group block overflow-hidden rounded-2xl border border-gold/25 bg-ink text-ink-foreground shadow-card transition hover:border-gold/60 hover:shadow-lg"
+            >
+              <div className="relative flex min-h-[180px] items-end overflow-hidden bg-[radial-gradient(circle_at_65%_35%,rgba(215,173,72,.18),transparent_32%),radial-gradient(circle_at_30%_70%,rgba(255,255,255,.06),transparent_28%),#090b0e] p-6">
+                <div className="absolute right-8 top-8 grid size-24 place-items-center rounded-full border border-gold/20 bg-gold/10 text-gold transition group-hover:scale-105">
+                  <Send className="size-9" />
+                </div>
+                <div className="relative z-10">
+                  <div className="mb-2 text-[10px] uppercase tracking-[.25em] text-gold/70">Compartir archivos</div>
+                  <h2 className="font-display text-3xl italic text-gold">AURUM TRANSFER</h2>
+                  <p className="mt-1 max-w-xs text-sm text-ink-foreground/55">Envía 3DM, STL, DXF y archivos de fabricación con un enlace privado de un solo uso.</p>
+                  <span className="mt-5 inline-flex items-center rounded-xl border border-gold/30 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold transition group-hover:bg-gold group-hover:text-black">
+                    Transferir archivos →
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            <CalculadoraYeso />
             <CalculadoraAleacionOro />
             <VisorPesoJoyeria />
             <CalculadoraPesoGemas />
