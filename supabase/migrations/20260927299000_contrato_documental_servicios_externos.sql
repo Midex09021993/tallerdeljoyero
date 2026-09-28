@@ -452,6 +452,95 @@ $$;
 revoke all on function public.obtener_ficha_servicio_externo(uuid) from public, anon;
 grant execute on function public.obtener_ficha_servicio_externo(uuid) to authenticated;
 
+create or replace function public.registrar_entrega_servicio_externo(
+  _trabajo_id uuid,
+  _nombre text,
+  _url text,
+  _tipo text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_uid uuid := (select auth.uid());
+  v_trabajo public.trabajos;
+  v_archivo public.pedido_archivos;
+  v_version integer;
+begin
+  select t.* into v_trabajo
+  from public.trabajos t
+  where t.id = _trabajo_id
+    and t.tipo = 'externo'
+    and lower(trim(t.area)) = 'diseño 3d';
+
+  if v_trabajo.id is null then
+    raise exception 'Solo se puede registrar una entrega 3DM de un servicio Diseño 3D';
+  end if;
+
+  if not exists (
+    select 1
+    from public.participante_cuentas pc
+    where pc.user_id = v_uid
+      and pc.participante_id = v_trabajo.participante_id
+      and pc.estado = 'activo'
+  ) then
+    raise exception 'No tienes acceso a este servicio externo';
+  end if;
+
+  if lower(regexp_replace(_nombre, '^.*\\.', '')) <> '3dm'
+     or lower(regexp_replace(_url, '^.*\\.', '')) <> '3dm' then
+    raise exception 'La entrega de Diseño 3D debe ser un archivo 3DM';
+  end if;
+
+  if _url <> format('%s/servicios/%s/%s', v_trabajo.pedido_id, v_trabajo.id, regexp_replace(_url, '^.*/', '')) then
+    raise exception 'La ruta del archivo no corresponde al servicio';
+  end if;
+
+  update public.pedido_archivos
+  set es_vigente_fabricacion = false
+  where pedido_id = v_trabajo.pedido_id
+    and grupo = 'Diseño 3D'
+    and es_vigente_fabricacion = true;
+
+  select coalesce(max(pa.version), 0) + 1
+    into v_version
+  from public.pedido_archivos pa
+  where pa.pedido_id = v_trabajo.pedido_id
+    and pa.grupo = 'Diseño 3D';
+
+  insert into public.pedido_archivos (
+    pedido_id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion
+  )
+  values (
+    v_trabajo.pedido_id,
+    _nombre,
+    coalesce(nullif(_tipo, ''), 'model/3dm'),
+    _url,
+    false,
+    'Diseño 3D',
+    v_version,
+    true
+  )
+  returning * into v_archivo;
+
+  insert into public.trabajo_archivos (trabajo_id, pedido_archivo_id)
+  values (v_trabajo.id, v_archivo.id)
+  on conflict (trabajo_id, pedido_archivo_id) do nothing;
+
+  return jsonb_build_object(
+    'trabajo_id', v_trabajo.id,
+    'pedido_archivo_id', v_archivo.id,
+    'nombre', v_archivo.nombre,
+    'version', v_archivo.version
+  );
+end;
+$;
+
+revoke all on function public.registrar_entrega_servicio_externo(uuid, text, text, text) from public, anon;
+grant execute on function public.registrar_entrega_servicio_externo(uuid, text, text, text) to authenticated;
+
 -- Permite al receptor subir únicamente el entregable 3DM de un servicio Diseño 3D.
 drop policy if exists "pedidos archivos subir autorizado" on storage.objects;
 create policy "pedidos archivos subir autorizado"
