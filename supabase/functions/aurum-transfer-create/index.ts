@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
         file_count: metadata.length,
         total_bytes: total,
         status: "available",
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
       if (usageError) {
         // El historial es administrativo y no debe bloquear una transferencia válida.
