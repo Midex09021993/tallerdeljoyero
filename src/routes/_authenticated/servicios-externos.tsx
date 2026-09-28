@@ -3,7 +3,7 @@ import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ServiciosExternosRecibidos } from "@/components/ServiciosExternosRecibidos";
 import { ServiciosExternosEnviadosAdmin } from "@/components/ServiciosExternosEnviadosAdmin";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { SelectorSedeDueno, TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/servicios-externos")({
@@ -33,7 +33,7 @@ function ServiciosExternosPage() {
   );
 
   const sedeEnviados =
-    esDueno && sedeFiltro !== "TODAS_LAS_SEDES" ? sedeFiltro : sesion?.sede?.id ?? null;
+    esDueno && sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : sesion?.sede?.id ?? null;
 
   return (
     <AppShell
