@@ -49,6 +49,7 @@ type CellGrid={
 const cellKey=(x:number,y:number,z:number,nx:number,ny:number)=>x+y*nx+z*nx*ny;
 
 const AURUM_THICKNESS_CACHE=new Map<string,ThicknessMapResult>();
+const AURUM_THICKNESS_CACHE_LIMIT=8;
 const geometryCacheIdentity=(target:any)=>String(target?.uuid??target?.geometry?.uuid??"anonymous");
 
 const buildGrid=(positions:THREE.Vector3[],triangles:Tri[]):CellGrid=>{
@@ -204,5 +205,12 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):Thickn
   texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearFilter;texture.generateMipmaps=false;texture.needsUpdate=true;
   const result={texture,baseThickness:Math.max(.015,maxDepth*1.05*Math.max(.5,Math.min(1.5,Number(thicknessScale??1)))),hitRatio,minDepth,maxDepth,method:"uv-ray-depth-grid-v3" as const,cacheKey,normalMapRes:size};
   AURUM_THICKNESS_CACHE.set(cacheKey,result);
+  while(AURUM_THICKNESS_CACHE.size>AURUM_THICKNESS_CACHE_LIMIT){
+    const oldest=AURUM_THICKNESS_CACHE.keys().next().value as string|undefined;
+    if(!oldest)break;
+    const stale=AURUM_THICKNESS_CACHE.get(oldest);
+    AURUM_THICKNESS_CACHE.delete(oldest);
+    stale?.texture?.dispose?.();
+  }
   return result;
 };
