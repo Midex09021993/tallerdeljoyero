@@ -1,3 +1,4 @@
+import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight, Check, Copy, FileUp, Link2, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
@@ -226,9 +227,7 @@ function TransferPage() {
               </button>
             </div>
             <p className="mt-5 text-xs text-white/35">Comparte el enlace por WhatsApp, correo o mensajería.</p>
-            <a href="/aurum-render-public" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3 text-sm font-bold text-black">
-              Ahora prueba AURUM Render <ArrowRight className="size-4" />
-            </a>
+            <SolicitudAcceso />
           </section>
         )}
       </div>
