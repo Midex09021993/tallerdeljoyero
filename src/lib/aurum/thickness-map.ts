@@ -49,8 +49,18 @@ type CellGrid={
 const cellKey=(x:number,y:number,z:number,nx:number,ny:number)=>x+y*nx+z*nx*ny;
 
 const AURUM_THICKNESS_CACHE=new Map<string,ThicknessMapResult>();
-const AURUM_THICKNESS_CACHE_LIMIT=8;
+const AURUM_THICKNESS_CACHE_LIMIT=16;
 const geometryCacheIdentity=(target:any)=>String(target?.uuid??target?.geometry?.uuid??"anonymous");
+
+export const disposeAurumThicknessCacheForTarget=(target:any)=>{
+  const prefix=`${geometryCacheIdentity(target)}:`;
+  for(const [key,result] of AURUM_THICKNESS_CACHE){
+    if(key.startsWith(prefix)){
+      result.texture?.dispose?.();
+      AURUM_THICKNESS_CACHE.delete(key);
+    }
+  }
+};
 
 const buildGrid=(positions:THREE.Vector3[],triangles:Tri[]):CellGrid=>{
   const box=new THREE.Box3().setFromPoints(positions);
@@ -208,9 +218,9 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):Thickn
   while(AURUM_THICKNESS_CACHE.size>AURUM_THICKNESS_CACHE_LIMIT){
     const oldest=AURUM_THICKNESS_CACHE.keys().next().value as string|undefined;
     if(!oldest)break;
-    const stale=AURUM_THICKNESS_CACHE.get(oldest);
+    // Do not dispose an evicted texture here: an active material may still
+    // reference it. Active-model cleanup releases these textures explicitly.
     AURUM_THICKNESS_CACHE.delete(oldest);
-    stale?.texture?.dispose?.();
   }
   return result;
 };
