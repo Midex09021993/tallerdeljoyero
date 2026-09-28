@@ -459,12 +459,11 @@ export function AurumRender() {
           renderer.shadowMap.enabled=!live && renderQuality.shadows;
           return;
         }
-        aplicarPerfilMaterialLive(modelo,live);
-        // LIVE uses the lean native gemstone shader; CAPTURE restores the full
-        // photographic shader. This avoids paying the custom optical layer on
-        // every interactive fragment while preserving the beauty pipeline.
+        // Swap the actual material pipeline first. Profile tuning must then
+        // operate on the material that will really be rendered in this mode.
         setAurumGemRenderQuality(modelo,live ? "live" : "beauty");
         setAurumLiveMaterialQuality(modelo,live ? "live" : "beauty");
+        aplicarPerfilMaterialLive(modelo,live);
         if (live) {
           renderer.shadowMap.enabled=false;
           renderer.shadowMap.needsUpdate=false;
