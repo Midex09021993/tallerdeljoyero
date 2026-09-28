@@ -158,7 +158,7 @@ function LoginPage() {
                 ["Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
                 ["Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
                 ["Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
-                ["Visualizador y Peso 3D", "Visualiza y calcula el peso de tus diseños 3D."],
+                ["AURUM Transfer", "Envía modelos y archivos de fabricación con un enlace privado de un solo uso."],
                 ["AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
               ].map(([titulo, descripcion], i) => (
                 <div key={titulo} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3">
