@@ -217,7 +217,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   if(selectedCategory!=="gema"&&selectedCategory!=="otro")return false;
@@ -301,6 +301,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         });
         part.userData={...part.userData,aurumOpticalThickness:result.baseThickness,aurumOpticalThicknessMode:"uv-ray-depth-v3",aurumGemThicknessMapDiagnostics:{hitRatio:Number(result.hitRatio.toFixed(3)),minDepth:Number(result.minDepth.toFixed(4)),maxDepth:Number(result.maxDepth.toFixed(4)),resolution:result.normalMapRes,cacheKey:result.cacheKey,method:result.method}};
         console.warn("[AURUM][GEM THICKNESS]", { mesh:part.name||part.uuid, geometry:part.userData.aurumGemGeometryDiagnostics, thickness:part.userData.aurumOpticalThickness, map:part.userData.aurumGemThicknessMapDiagnostics });
+        requestRender?.();
       }catch(error){
         console.warn("[AURUM][GEM THICKNESS] spatial bake skipped", {mesh:part.name||part.uuid,error});
       }
