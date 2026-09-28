@@ -1179,6 +1179,35 @@ export function AurumRender() {
             <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-white/35">Render profesional para joyería · AURUM LIVE 2026-09-17</div>
           </div>
         </div>
+        {capturePanelOpen&&<div className="absolute right-5 top-[62px] z-[110] w-[300px] rounded-2xl border border-[#d4af37]/35 bg-[#111416]/97 p-4 text-white shadow-2xl backdrop-blur-xl">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#e5c77a]">Captura fotográfica</div>
+              <div className="mt-1 text-[11px] text-white/40">Modo independiente de AURUM LIVE</div>
+            </div>
+            <button type="button" onClick={()=>setCapturePanelOpen(false)} className="text-white/40 hover:text-white"><X className="size-4"/></button>
+          </div>
+          <div className="mt-4 text-[9px] font-semibold uppercase tracking-[.16em] text-white/35">Resolución de salida</div>
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
+            {[
+              ["normal","854×480"],
+              ["hd","1280×720"],
+              ["fullhd","1920×1080"],
+            ].map(([id,label])=><button key={id} type="button" disabled={capturing}
+              onClick={()=>setCaptureResolution(id as "normal"|"hd"|"fullhd")}
+              className={"rounded-lg border px-2 py-2 text-[10px] transition "+(captureResolution===id?"border-[#d4af37]/70 bg-[#d4af37]/12 text-[#e5c77a]":"border-white/10 bg-white/[.03] text-white/60 hover:bg-white/[.07]")}>
+              {label}
+            </button>)}
+          </div>
+          <div className="mt-3 rounded-lg border border-white/8 bg-white/[.025] px-3 py-2 text-[9px] leading-4 text-white/40">
+            Normal prioriza velocidad · HD equilibrio · Full HD activa el perfil fotográfico completo.
+          </div>
+          <button type="button" disabled={capturing} onClick={()=>capturarImagen(captureResolution)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-[10px] font-bold uppercase tracking-[.14em] text-black disabled:opacity-50">
+            <Download className="size-3.5"/>
+            {capturing?"Generando fotografía…":"Generar fotografía"}
+          </button>
+        </div>}
         <div className="flex items-center gap-2">
           <div className="relative flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.055] p-1">
             <button
