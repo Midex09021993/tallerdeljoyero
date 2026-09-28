@@ -65,10 +65,12 @@ export function applyAurumInitialModelMaterials(
   const categoryDiagnostic=getAurumCategoryDiagnostic();
   model?.traverse?.((x:any)=>{
     if(!x.isMesh) return;
-    x.castShadow=true;
-    x.receiveShadow=true;
     const meta=x.userData?.aurumRhino;
     const category=meta?.categoria ?? "otro";
+    // Gem transmission already performs an expensive optical pass. Gems do not
+    // need to cast a second shadow pass in the live viewer.
+    x.castShadow=category !== "gema";
+    x.receiveShadow=true;
 
     // Diagnostic-only mode: isolate the classification stage. No HDR,
     // lighting, camera, geometry, normals or production materials are changed.
