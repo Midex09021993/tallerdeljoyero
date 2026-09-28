@@ -16,7 +16,7 @@ import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { clearAurumInclusions, renderAurumInclusions, setAurumInclusionsVisible } from "../lib/aurum/gems";
-import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
+import { setAurumGemRenderQuality } from "../lib/aurum/live-gem-material";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
@@ -463,7 +463,7 @@ export function AurumRender() {
         // LIVE uses the lean native gemstone shader; CAPTURE restores the full
         // photographic shader. This avoids paying the custom optical layer on
         // every interactive fragment while preserving the beauty pipeline.
-        setAurumGemShaderQuality(modelo,live ? "live" : "beauty");
+        setAurumGemRenderQuality(modelo,live ? "live" : "beauty");
         if (live) {
           renderer.shadowMap.enabled=false;
           renderer.shadowMap.needsUpdate=false;
