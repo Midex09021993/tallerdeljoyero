@@ -58,3 +58,35 @@ export const setAurumGemRenderQuality=(target:any,quality:"live"|"beauty")=>{
   };
   if(target?.isMesh)apply(target); else target?.traverse?.((o:any)=>apply(o));
 };
+
+export const setAurumLiveMaterialQuality=(target:any,quality:"live"|"beauty")=>{
+  const apply=(mesh:any)=>{
+    if(!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
+    const category=String(mesh.userData?.aurumRhino?.categoria??"").toLowerCase();
+    if(category!=="metal" && category!=="otro") return;
+    const current=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+    if(quality==="live"){
+      mesh.material=current.map((m:any)=>{
+        if(m?.userData?.aurumLiveMetalMaterial)return m;
+        const cached=m?.userData?.aurumLiveMaterial;
+        if(cached)return cached;
+        const live=new THREE.MeshStandardMaterial({
+          color:m?.color?.clone?.()??new THREE.Color(0xffffff),
+          metalness:Math.max(0,Math.min(1,Number(m?.metalness??1))),
+          roughness:Math.max(.08,Math.min(.7,Number(m?.roughness??.25))),
+          envMap:m?.envMap??null,
+          envMapIntensity:Math.max(.45,Math.min(2,Number(m?.envMapIntensity??1))),
+          side:m?.side??THREE.FrontSide,
+          flatShading:Boolean(m?.flatShading),
+        });
+        live.userData={...(m?.userData??{}),aurumLiveMetalMaterial:true,aurumBeautyMaterial:m};
+        m.userData={...(m.userData??{}),aurumLiveMaterial:live};
+        return live;
+      });
+    }else{
+      mesh.material=current.map((m:any)=>m?.userData?.aurumBeautyMaterial??m);
+    }
+    if(Array.isArray(mesh.material)&&mesh.material.length===1)mesh.material=mesh.material[0];
+  };
+  if(target?.isMesh)apply(target); else target?.traverse?.((o:any)=>apply(o));
+};
