@@ -6,6 +6,7 @@ import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-d
 import { useBorrarPedido, usePedidos, esEstadoFinalPedido, pedidoPendienteAutorizacionProduccion, estadoClases } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 import { useSesion } from "@/lib/auth";
+import { ServiciosExternosRecibidos } from "@/components/ServiciosExternosRecibidos";
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({ meta: [{ title: "Pedidos — Taller del Joyero" }, { name: "description", content: "Centro operativo de pedidos, producción y entrega del taller." }] }),
@@ -58,6 +59,12 @@ function PedidosPage() {
         <Metric icon={Factory} label="En producción" value={produccion.length} onClick={() => setVista("produccion")} active={vista === "produccion"} />
         <Metric icon={PackageCheck} label="Por entregar" value={entrega.length} tone="positive" onClick={() => setVista("entrega")} active={vista === "entrega"} />
       </div>
+
+      {(sesion?.roles.includes("gerente") || sesion?.roles.includes("dueno")) ? (
+        <div className="mt-6">
+          <ServiciosExternosRecibidos />
+        </div>
+      ) : null}
 
       <section className="mt-6 overflow-hidden rounded-[24px] border border-border bg-card shadow-card">
         <div className="border-b border-border p-4 sm:p-5">
