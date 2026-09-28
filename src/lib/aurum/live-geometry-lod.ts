@@ -56,7 +56,11 @@ export async function prepareAurumLiveGeometry(
 
     try{
       let base=source;
-      if(!base.getIndex?.()) base=mergeVertices(base.clone(),1e-4);
+      let ownsBase=false;
+      if(!base.getIndex?.()){
+        base=mergeVertices(base.clone(),1e-4);
+        ownsBase=true;
+      }
       const vertices=Number(base.getAttribute?.("position")?.count??0);
       if(vertices<3000) continue;
 
@@ -64,6 +68,7 @@ export async function prepareAurumLiveGeometry(
       if(remove<100) continue;
 
       const simplified=await modifier.modify(base,remove);
+      if(ownsBase) base.dispose?.();
       simplified.computeBoundingSphere?.();
       simplified.computeBoundingBox?.();
 
@@ -77,7 +82,7 @@ export async function prepareAurumLiveGeometry(
       // A single problematic CAD mesh must not invalidate the whole viewer.
       object.userData={
         ...(object.userData??{}),
-        aurumLiveGeometryError:String(error?.message??error),
+        aurumLiveGeometryError:String((error as any)?.message??error),
       };
     }
   }
