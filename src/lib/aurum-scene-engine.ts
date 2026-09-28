@@ -105,7 +105,7 @@ export const AURUM_RENDER_QUALITY:Record<AurumRenderQualityId,AurumRenderQuality
   low:{pixelRatio:1.0,shadows:true,shadowMapSize:512,transmissionScale:.40},
   // Interactive production preview: preserve facet readability while avoiding
   // an unnecessary full-screen transmission buffer at high DPR.
-  high:{pixelRatio:1.25,shadows:true,shadowMapSize:1024,transmissionScale:.50},
+  high:{pixelRatio:1.10,shadows:true,shadowMapSize:768,transmissionScale:.42},
   ultra:{pixelRatio:1.50,shadows:true,shadowMapSize:1536,transmissionScale:.62},
 };
 export const getAurumRenderQuality=(quality:AurumRenderQualityId="high")=>AURUM_RENDER_QUALITY[quality];
