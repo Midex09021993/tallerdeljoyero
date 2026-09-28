@@ -6,7 +6,7 @@ import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } fro
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
-import { ArrowRight, Boxes, Calculator, Droplets, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, Ruler, Scale, Send, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Droplets, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, Ruler, Send, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
