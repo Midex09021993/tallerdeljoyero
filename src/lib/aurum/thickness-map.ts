@@ -157,7 +157,10 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):Thickn
   const triangles:Tri[]=geometry.index
     ? Array.from({length:Math.floor(geometry.index.count/3)},(_,i)=>[geometry.index.getX(i*3),geometry.index.getX(i*3+1),geometry.index.getX(i*3+2)])
     : Array.from({length:Math.floor(position.count/3)},(_,i)=>[i*3,i*3+1,i*3+2]);
-  if(triangles.length>250000)return null;
+  // Spatial thickness baking is intentionally skipped for very dense gems.
+  // The scalar local-bounds thickness remains active, so a large CAD stone never
+  // blocks the UI with an O(vertices + triangles) CPU bake.
+  if(triangles.length>180000 || position.count>220000)return null;
 
   const center=positions.reduce((c,p)=>c.add(p),new THREE.Vector3()).multiplyScalar(1/positions.length);
   const grid=buildGrid(positions,triangles);
