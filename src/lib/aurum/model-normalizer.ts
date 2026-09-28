@@ -109,7 +109,7 @@ function resolveRhinoLayerIndex(x:any): number {
 
 export async function normalizeAurumModel(
   object:any,
-  glb:ArrayBuffer,
+  glb:ArrayBuffer | null,
   extension:string,
   colorRhinoHex:(color:any)=>string|undefined,
   clasificarCapa:(capa:string,colorCapa?:string)=> "metal"|"gema"|"otro"
