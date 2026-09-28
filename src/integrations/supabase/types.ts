@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      aurum_transfers: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          file_count: number
+          files: Json
+          id: string
+          status: string
+          token_hash: string
+          total_bytes: number
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          file_count?: number
+          files?: Json
+          id?: string
+          status?: string
+          token_hash: string
+          total_bytes?: number
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          file_count?: number
+          files?: Json
+          id?: string
+          status?: string
+          token_hash?: string
+          total_bytes?: number
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           ciudad: string | null
@@ -2750,6 +2786,7 @@ export type Database = {
           area: string
           created_at: string
           descripcion: string
+          especialidad_id: string | null
           estado: string
           fecha_fin: string | null
           fecha_inicio: string | null
@@ -2772,6 +2809,7 @@ export type Database = {
           area?: string
           created_at?: string
           descripcion?: string
+          especialidad_id?: string | null
           estado?: string
           fecha_fin?: string | null
           fecha_inicio?: string | null
@@ -2794,6 +2832,7 @@ export type Database = {
           area?: string
           created_at?: string
           descripcion?: string
+          especialidad_id?: string | null
           estado?: string
           fecha_fin?: string | null
           fecha_inicio?: string | null
@@ -2813,6 +2852,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "trabajos_especialidad_id_fkey"
+            columns: ["especialidad_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trabajos_orden_produccion_id_fkey"
             columns: ["orden_produccion_id"]
@@ -2868,6 +2914,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          participante_id: string | null
           role: Database["public"]["Enums"]["app_role"]
           sede_id: string | null
           user_id: string
@@ -2875,6 +2922,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          participante_id?: string | null
           role: Database["public"]["Enums"]["app_role"]
           sede_id?: string | null
           user_id: string
@@ -2882,6 +2930,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          participante_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           sede_id?: string | null
           user_id?: string
@@ -2907,10 +2956,6 @@ export type Database = {
       }
       asignar_responsable_trabajo: {
         Args: { _responsable_user_id: string; _trabajo_id: string }
-        Returns: Json
-      }
-      registrar_entrega_servicio_externo: {
-        Args: { _nombre: string; _tipo: string; _trabajo_id: string; _url: string }
         Returns: Json
       }
       cambiar_estado_cotizacion: {
@@ -2943,6 +2988,26 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "ordenes_produccion"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_aurum_transfer: {
+        Args: { _token_hash: string }
+        Returns: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          file_count: number
+          files: Json
+          id: string
+          status: string
+          token_hash: string
+          total_bytes: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "aurum_transfers"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -3032,6 +3097,28 @@ export type Database = {
           id: string
         }[]
       }
+      listar_servicios_externos_recibidos: {
+        Args: never
+        Returns: {
+          area: string
+          cantidad_piezas: number
+          descripcion: string
+          estado: string
+          fecha_fin: string
+          fecha_inicio: string
+          fecha_planificada: string
+          id: string
+          material: string
+          notas: string
+          origen_participante_id: string
+          origen_participante_nombre: string
+          pedido_id: string
+          pieza: string
+          prioridad: string
+          referencia_pedido: string
+          titulo: string
+        }[]
+      }
       listar_trabajos_operario: {
         Args: never
         Returns: {
@@ -3051,36 +3138,6 @@ export type Database = {
           ubicacion: string
         }[]
       }
-      obtener_ficha_servicio_externo: {
-        Args: { _trabajo_id: string }
-        Returns: Json
-      }
-      validar_requisitos_servicio_externo: {
-        Args: { _momento?: string; _trabajo_id: string }
-        Returns: Json
-      }
-      listar_servicios_externos_recibidos: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          area: string
-          cantidad_piezas: number
-          descripcion: string
-          estado: string
-          fecha_fin: string
-          fecha_inicio: string
-          fecha_planificada: string
-          id: string
-          notas: string
-          origen_participante_id: string
-          origen_participante_nombre: string
-          pedido_id: string
-          pieza: string
-          prioridad: string
-          referencia_pedido: string
-          titulo: string
-          material: string
-        }[]
-      }
       mi_sede: { Args: { _user_id: string }; Returns: string }
       mover_pedido_a_area: {
         Args: { _destino: string; _motivo?: string; _pedido_id: string }
@@ -3092,12 +3149,48 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      obtener_trabajo_operativo: {
+        Args: { _trabajo_id: string }
+        Returns: {
+          area: string
+          created_at: string
+          descripcion: string
+          especialidad_id: string | null
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          fecha_planificada: string | null
+          id: string
+          notas: string
+          orden_produccion_id: string | null
+          participante_id: string | null
+          pedido_id: string
+          prioridad: string
+          responsable_user_id: string | null
+          secuencia: number
+          sede_id: string | null
+          tipo: string
+          titulo: string
+          ubicacion: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "trabajos"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       preparar_produccion_pedido: {
         Args: { _pedido_id: string }
         Returns: Json
       }
       recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
+      reconciliar_servicios_externos_pendientes: {
+        Args: { _orden_produccion_id: string }
+        Returns: Json
+      }
       registrar_entrega_material_produccion: {
         Args: {
           _area_destino: string
@@ -3186,6 +3279,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      release_aurum_transfer: {
+        Args: { _transfer_id: string }
+        Returns: undefined
+      }
+      reparar_servicios_externos_op: {
+        Args: { _orden_produccion_id: string }
+        Returns: Json
       }
       responder_cotizacion_cliente: {
         Args: { _accion: string; _codigo: string; _comentario?: string }
