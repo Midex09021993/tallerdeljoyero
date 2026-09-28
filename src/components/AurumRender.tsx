@@ -377,7 +377,7 @@ export function AurumRender() {
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {        if (modelo) { escena.remove(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
+      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
         glbInterno = null;
       };
