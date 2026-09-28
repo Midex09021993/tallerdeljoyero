@@ -30,6 +30,16 @@ export const createAurumLiveGemMaterial=(beauty:any)=>{
       float aurumLiveF0=pow((aurumLiveIOR-1.0)/(aurumLiveIOR+1.0),2.0);
       float aurumLiveF=aurumLiveF0+(1.0-aurumLiveF0)*pow(1.0-aurumLiveNdotV,5.0);
       gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*aurumLiveTint,0.16);
+      #ifdef USE_ENVMAP
+      #ifdef ENVMAP_TYPE_CUBE_UV
+      vec3 aurumLiveView=normalize(-vViewPosition);
+      vec3 aurumLiveN=normalize(normal);
+      vec3 aurumLiveRefracted=refract(aurumLiveView,aurumLiveN,1.0/max(aurumLiveIOR,1.0001));
+      vec3 aurumLiveWorldDir=inverseTransformDirection(normalize(aurumLiveRefracted),viewMatrix);
+      vec3 aurumLiveEnv=textureCubeUV(envMap,envMapRotation*aurumLiveWorldDir,0.0).rgb;
+      gl_FragColor.rgb=mix(gl_FragColor.rgb,aurumLiveEnv,0.20+aurumLiveF*0.38);
+      #endif
+      #endif
       gl_FragColor.rgb*=1.0+aurumLiveF*0.32;
       #include <dithering_fragment>
     `);
