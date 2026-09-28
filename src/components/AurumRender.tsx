@@ -906,7 +906,7 @@ export function AurumRender() {
       // AURUM creates that cover from the actual loaded model, so it is never
       // a stale image from another project.
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      const cover = apiRef.current?.capturar?.();
+      const cover = apiRef.current?.capturar?.("normal");
       if (cover) {
         setPresentationCover(cover);
         setPresentationVisible(true);
@@ -973,7 +973,17 @@ export function AurumRender() {
         </div>
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-1 rounded-xl border border-white/10 bg-white/[.055] p-1 md:flex">
-            <button type="button" title="Capturar" onClick={capturarImagen} className="grid size-9 place-items-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white"><Camera className="size-[18px]"/></button>
+            <div className="relative">
+              <button type="button" title="Capturar" onClick={()=>setCaptureMenuOpen(v=>!v)} className="grid size-9 place-items-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white"><Camera className="size-[18px]"/></button>
+              {captureMenuOpen&&<div className="absolute right-0 top-11 z-50 w-48 rounded-xl border border-white/10 bg-[#121619]/98 p-2 shadow-2xl backdrop-blur-xl">
+                <div className="px-2 pb-2 pt-1 text-[9px] font-semibold uppercase tracking-[.18em] text-white/40">Descargar captura</div>
+                {[
+                  ["normal","Normal · 854 × 480"],
+                  ["hd","HD · 1280 × 720"],
+                  ["fullhd","Full HD · 1920 × 1080"],
+                ].map(([id,label])=><button key={id} type="button" onClick={()=>{setCaptureResolution(id as "normal"|"hd"|"fullhd");capturarImagen(id as "normal"|"hd"|"fullhd")}} className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[11px] text-white/75 hover:bg-white/10 hover:text-white"><span>{label}</span><Download className="size-3.5 text-[#d4af37]"/></button>)}
+              </div>}
+            </div>
             <button type="button" title="Restablecer vista" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white"><RotateCcw className="size-[18px]"/></button>
             <button type="button" title="Zoom" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white"><Maximize2 className="size-[18px]"/></button>
             <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white"><Expand className="size-[18px]"/></button>
