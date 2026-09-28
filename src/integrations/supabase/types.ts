@@ -2909,6 +2909,10 @@ export type Database = {
         Args: { _responsable_user_id: string; _trabajo_id: string }
         Returns: Json
       }
+      registrar_entrega_servicio_externo: {
+        Args: { _nombre: string; _tipo: string; _trabajo_id: string; _url: string }
+        Returns: Json
+      }
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
         Returns: undefined
@@ -3049,6 +3053,10 @@ export type Database = {
       }
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }
+        Returns: Json
+      }
+      validar_requisitos_servicio_externo: {
+        Args: { _momento?: string; _trabajo_id: string }
         Returns: Json
       }
       listar_servicios_externos_recibidos: {
