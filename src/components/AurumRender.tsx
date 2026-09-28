@@ -367,7 +367,6 @@ export function AurumRender() {
       lightingController.applyPreset(photoInicial.lighting);
       applyPostQuality?.(renderQuality);
 
-      let glbInterno:Blob|null = null;
       let parteActiva:any = null;
       let resaltado:any = null;
       const material = new THREE.MeshPhysicalMaterial({
@@ -488,18 +487,30 @@ export function AurumRender() {
         }
         informar("Procesando archivo...");
         const objeto = await parseAurumInput(file,ext,material);
-        // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
+        // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js
+        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
         // la orientación "de pie" con la que el modelo fue diseñado en Rhino.
         if (ext==="3dm") {
           objeto.rotation.x = -Math.PI / 2;
           objeto.updateMatrixWorld(true);
         }
-        informar("Convirtiendo a GLB...");
-        const glb = await convertAurumToGlb(objeto);
-        informar("Preparando visualización...");
-        const interno = await normalizeAurumModel(
-          objeto, glb, ext, colorRhinoHex, clasificarCapa
-        );
+
+        // GLB ya es una representación render-ready: conserva índices, normales
+        // y materiales authored. Evitamos el round-trip GLB -> THREE -> GLB ->
+        // THREE, que clonaba geometría, recalculaba/creaseaba normales y consumía
+        // CPU/RAM antes de que el modelo llegara al visor.
+        informar(ext==="glb" ? "Preparando visualización..." : "Convirtiendo a GLB...");
+        let interno:any;
+        if (ext==="glb") {
+          interno = await normalizeAurumModel(
+            objeto, null, ext, colorRhinoHex, clasificarCapa
+          );
+        } else {
+          const glb = await convertAurumToGlb(objeto);
+          interno = await normalizeAurumModel(
+            objeto, glb, ext, colorRhinoHex, clasificarCapa
+          );
+        }
         quitar();
         applyAurumInitialModelMaterials(interno,{
           gems:GEMAS,
@@ -572,7 +583,6 @@ export function AurumRender() {
         setParteSeleccionadaNombre(null); setParteSeleccionadaCapa(null); setParteSeleccionadaCategoria("otro");
         parteActiva=null;
         limpiarResaltado();
-        glbInterno=new Blob([glb],{type:"model/gltf-binary"});
         escena.add(modelo);
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: encuadrar siempre después de añadir el modelo.
