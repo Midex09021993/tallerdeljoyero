@@ -13,11 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
-import { Route as TransferRouteImport } from './routes/transfer'
-import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
@@ -36,11 +35,13 @@ import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedServiciosExternosRouteImport } from './routes/_authenticated/servicios-externos'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
+import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedCotizacionesIndexRouteImport } from './routes/_authenticated/cotizaciones.index'
 import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
@@ -73,16 +74,6 @@ const AurumRenderPublicRoute = AurumRenderPublicRouteImport.update({
   path: '/aurum-render-public',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TransferRoute = TransferRouteImport.update({
-  id: '/transfer',
-  path: '/transfer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TransferTokenRoute = TransferTokenRouteImport.update({
-  id: '/transfer/$token',
-  path: '/$token',
-  getParentRoute: () => TransferRoute,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -96,6 +87,11 @@ const CatalogoPublicoRoute = CatalogoPublicoRouteImport.update({
 const ClienteRoute = ClienteRouteImport.update({
   id: '/cliente',
   path: '/cliente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransferRoute = TransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAurumRenderRoute =
@@ -192,6 +188,12 @@ const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedServiciosExternosRoute =
+  AuthenticatedServiciosExternosRouteImport.update({
+    id: '/servicios-externos',
+    path: '/servicios-externos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
   id: '/taller',
   path: '/taller',
@@ -217,6 +219,11 @@ const JoyaTokenRoute = JoyaTokenRouteImport.update({
   id: '/joya/$token',
   path: '/joya/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TransferTokenRoute = TransferTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => TransferRoute,
 } as any)
 const AuthenticatedContratosIdRoute =
   AuthenticatedContratosIdRouteImport.update({
@@ -289,11 +296,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/transfer': typeof TransferRouteWithChildren
-  '/transfer/$token': typeof TransferTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/transfer': typeof TransferRouteWithChildren
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -312,11 +318,13 @@ export interface FileRoutesByFullPath {
   '/operario': typeof AuthenticatedOperarioRoute
   '/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
+  '/transfer/$token': typeof TransferTokenRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -334,11 +342,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/transfer': typeof TransferRouteWithChildren
-  '/transfer/$token': typeof TransferTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/transfer': typeof TransferRouteWithChildren
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -355,11 +362,13 @@ export interface FileRoutesByTo {
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/taller': typeof AuthenticatedTallerRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
+  '/transfer/$token': typeof TransferTokenRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -382,6 +391,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/transfer': typeof TransferRouteWithChildren
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
@@ -400,11 +410,13 @@ export interface FileRoutesById {
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRouteWithChildren
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/joya/$token': typeof JoyaTokenRoute
+  '/transfer/$token': typeof TransferTokenRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
@@ -424,11 +436,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/aurum-render-public'
-    | '/transfer'
-    | '/transfer/$token'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/transfer'
     | '/aurum-render'
     | '/casting'
     | '/catalogo'
@@ -447,11 +458,13 @@ export interface FileRouteTypes {
     | '/operario'
     | '/pedidos'
     | '/perfil'
+    | '/servicios-externos'
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
     | '/joya/$token'
+    | '/transfer/$token'
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
@@ -469,10 +482,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/aurum-render-public'
-    | '/transfer'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/transfer'
     | '/aurum-render'
     | '/casting'
     | '/catalogo'
@@ -489,11 +502,13 @@ export interface FileRouteTypes {
     | '/monitor'
     | '/operario'
     | '/perfil'
+    | '/servicios-externos'
     | '/taller'
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
     | '/joya/$token'
+    | '/transfer/$token'
     | '/contratos/$id'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
@@ -512,11 +527,10 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$slug'
     | '/aurum-render-public'
-    | '/transfer'
-    | '/transfer/$token'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/transfer'
     | '/_authenticated/aurum-render'
     | '/_authenticated/casting'
     | '/_authenticated/catalogo'
@@ -535,11 +549,13 @@ export interface FileRouteTypes {
     | '/_authenticated/operario'
     | '/_authenticated/pedidos'
     | '/_authenticated/perfil'
+    | '/_authenticated/servicios-externos'
     | '/_authenticated/taller'
     | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
     | '/c/$codigo'
     | '/joya/$token'
+    | '/transfer/$token'
     | '/_authenticated/contratos/$id'
     | '/_authenticated/cotizaciones/$id'
     | '/_authenticated/pedidos/$id'
@@ -554,25 +570,15 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
-interface TransferRouteChildren {
-  TransferTokenRoute: typeof TransferTokenRoute
-}
-
-const TransferRouteChildren: TransferRouteChildren = {
-  TransferTokenRoute: TransferTokenRoute,
-}
-
-const TransferRouteWithChildren = TransferRoute._addFileChildren(TransferRouteChildren)
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRoute
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
-  TransferRoute: typeof TransferRouteWithChildren
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
+  TransferRoute: typeof TransferRouteWithChildren
   CCodigoRoute: typeof CCodigoRouteWithChildren
   JoyaTokenRoute: typeof JoyaTokenRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -610,20 +616,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AurumRenderPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/transfer': {
-      id: '/transfer'
-      path: '/transfer'
-      fullPath: '/transfer'
-      preLoaderRoute: typeof TransferRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/transfer/$token': {
-      id: '/transfer/$token'
-      path: '/$token'
-      fullPath: '/transfer/$token'
-      preLoaderRoute: typeof TransferTokenRouteImport
-      parentRoute: typeof TransferRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -643,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/cliente'
       fullPath: '/cliente'
       preLoaderRoute: typeof ClienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfer': {
+      id: '/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof TransferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/aurum-render': {
@@ -771,6 +770,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/servicios-externos': {
+      id: '/_authenticated/servicios-externos'
+      path: '/servicios-externos'
+      fullPath: '/servicios-externos'
+      preLoaderRoute: typeof AuthenticatedServiciosExternosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/taller': {
       id: '/_authenticated/taller'
       path: '/taller'
@@ -805,6 +811,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/joya/$token'
       preLoaderRoute: typeof JoyaTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/transfer/$token': {
+      id: '/transfer/$token'
+      path: '/$token'
+      fullPath: '/transfer/$token'
+      preLoaderRoute: typeof TransferTokenRouteImport
+      parentRoute: typeof TransferRoute
     }
     '/_authenticated/contratos/$id': {
       id: '/_authenticated/contratos/$id'
@@ -954,6 +967,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRouteWithChildren
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedServiciosExternosRoute: typeof AuthenticatedServiciosExternosRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRouteWithChildren
@@ -980,6 +994,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRouteWithChildren,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedServiciosExternosRoute: AuthenticatedServiciosExternosRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRouteWithChildren,
@@ -989,6 +1004,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface TransferRouteChildren {
+  TransferTokenRoute: typeof TransferTokenRoute
+}
+
+const TransferRouteChildren: TransferRouteChildren = {
+  TransferTokenRoute: TransferTokenRoute,
+}
+
+const TransferRouteWithChildren = TransferRoute._addFileChildren(
+  TransferRouteChildren,
+)
 
 interface CCodigoRouteChildren {
   CCodigoPdfRoute: typeof CCodigoPdfRoute
@@ -1006,10 +1033,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRoute,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
-  TransferRoute: TransferRouteWithChildren,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
+  TransferRoute: TransferRouteWithChildren,
   CCodigoRoute: CCodigoRouteWithChildren,
   JoyaTokenRoute: JoyaTokenRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
