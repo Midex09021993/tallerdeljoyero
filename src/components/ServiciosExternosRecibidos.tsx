@@ -15,12 +15,19 @@ export function ServiciosExternosRecibidos() {
 
   const pedidos = useMemo(() => {
     const grupos = new Map<string, typeof servicios>();
+    const ordenFabricacion = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
     for (const servicio of servicios) {
       const actual = grupos.get(servicio.pedido_id) ?? [];
       actual.push(servicio);
       grupos.set(servicio.pedido_id, actual);
     }
-    return Array.from(grupos.values());
+    return Array.from(grupos.values()).map((grupo) =>
+      [...grupo].sort((a, b) => {
+        const ia = ordenFabricacion.indexOf(a.area);
+        const ib = ordenFabricacion.indexOf(b.area);
+        return (ia === -1 ? Number.MAX_SAFE_INTEGER : ia) - (ib === -1 ? Number.MAX_SAFE_INTEGER : ib);
+      }),
+    );
   }, [servicios]);
 
   if (isLoading) {
