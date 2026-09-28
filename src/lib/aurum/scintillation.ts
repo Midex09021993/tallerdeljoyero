@@ -81,7 +81,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
                 : new THREE.Color(0xd7799b);
 
   const ijewel=material.userData?.aurumIJEWELParameters;
-  const ijewelEnabled=!!ijewel;
+  // iJewel source parameters are retained for calibration, but the custom
+  // multi-bounce shader is opt-in. Physical MeshPhysicalMaterial transmission
+  // remains the default path for every gemstone.
+  const ijewelEnabled=Boolean(material.userData?.aurumIJEWELActive) && family==="Diamante";
   material.userData={
     ...(material.userData??{}),
     aurumDynamicScintillation:{
