@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     .rpc("claim_aurum_transfer", { _token_hash: tokenHash })
     .maybeSingle();
 
-  if (claimError || !transfer) {
+  if (claimError || !transfer?.id) {
     return json({ error: "Esta transferencia ya fue descargada, expiró o dejó de estar disponible." }, 410);
   }
 
