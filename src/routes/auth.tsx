@@ -47,6 +47,7 @@ function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad">("ecosistema");
+  const [herramientaSeleccionada, setHerramientaSeleccionada] = useState<string | null>(null);
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
   useEffect(() => {
@@ -155,20 +156,59 @@ function LoginPage() {
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 [@media(max-height:800px)]:mt-3">
               {[
-                ["Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
-                ["Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
-                ["Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
-                ["AURUM Transfer", "Envía modelos y archivos de fabricación con un enlace privado de un solo uso."],
-                ["AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
-              ].map(([titulo, descripcion], i) => (
-                <div key={titulo} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3">
+                ["yeso", "Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
+                ["oro", "Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
+                ["tallas", "Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
+                ["transfer", "AURUM Transfer", "Envía modelos y archivos de fabricación con un enlace privado de un solo uso."],
+                ["render", "AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
+              ].map(([id, titulo, descripcion]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-expanded={herramientaSeleccionada === id}
+                  onClick={() => setHerramientaSeleccionada((actual) => actual === id ? null : id)}
+                  className={`rounded-xl border p-4 text-left transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3 ${herramientaSeleccionada === id ? "border-gold/60 bg-gold/10" : "border-white/10 bg-white/[0.025]"}`}
+                >
                   <Gem className="size-6 text-gold" />
                   <p className="mt-4 text-sm font-semibold text-white">{titulo}</p>
                   <p className="mt-2 text-[11px] leading-relaxed text-white/50">{descripcion}</p>
-                  {i === 4 ? <span className="mt-3 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
-                </div>
+                  {id === "render" ? <span className="mt-3 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
+                </button>
               ))}
             </div>
+
+            {herramientaSeleccionada ? (
+              <div className="mt-3 rounded-xl border border-gold/25 bg-gold/[0.05] p-4">
+                {herramientaSeleccionada === "yeso" ? (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">Yeso / Agua</p>
+                    <p className="mt-1 text-sm text-white/65">Calculadora para definir proporciones de mezcla para trabajos de joyería.</p>
+                  </>
+                ) : herramientaSeleccionada === "oro" ? (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">Aleación de Oro</p>
+                    <p className="mt-1 text-sm text-white/65">Calculadora para obtener la cantidad de metal de liga necesaria según la ley deseada.</p>
+                  </>
+                ) : herramientaSeleccionada === "tallas" ? (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">Conversor de Tallas</p>
+                    <p className="mt-1 text-sm text-white/65">Consulta equivalencias de tallas de anillo entre diferentes sistemas.</p>
+                  </>
+                ) : herramientaSeleccionada === "transfer" ? (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">AURUM Transfer</p>
+                    <p className="mt-1 text-sm text-white/65">Envía modelos y archivos de fabricación mediante un enlace privado de un solo uso.</p>
+                    <a href="/transfer" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-xs font-semibold uppercase tracking-wider text-ink hover:opacity-90">Abrir AURUM Transfer <ArrowRight className="size-4" /></a>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gold">AURUM Render · Beta</p>
+                    <p className="mt-1 text-sm text-white/65">Visualiza tus diseños 3D con materiales, gemas, iluminación y escenas.</p>
+                    <a href="/aurum-render-public" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-xs font-semibold uppercase tracking-wider text-ink hover:opacity-90">Probar AURUM Render <ArrowRight className="size-4" /></a>
+                  </>
+                )}
+              </div>
+            ) : null}
 
             <div className="mt-5 flex flex-wrap gap-3">
               <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
