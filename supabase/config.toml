@@ -7,3 +7,9 @@ verify_jwt = true
 
 [functions.ver-cotizacion-pdf]
 verify_jwt = false
+
+[functions.aurum-transfer-create]
+verify_jwt = false
+
+[functions.aurum-transfer-download]
+verify_jwt = false
