@@ -52,7 +52,7 @@ export function ComunidadAurumLab({ configuracion = false }: { configuracion?: b
 
   async function guardar() {
     setGuardando(true);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("configuracion_web")
       .update({
         calculos_realizados: datos.calculos_realizados,
