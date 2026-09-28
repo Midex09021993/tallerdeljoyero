@@ -15,7 +15,7 @@ import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
-import { clearAurumInclusions, renderAurumInclusions } from "../lib/aurum/gems";
+import { clearAurumInclusions, renderAurumInclusions, setAurumInclusionsVisible } from "../lib/aurum/gems";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
@@ -295,6 +295,7 @@ export function AurumRender() {
         });
         lightingController.create();
         renderer.shadowMap.needsUpdate = true;
+        if (modelo) setAurumInclusionsVisible(modelo, id !== "low");
         invalidateRenderRef.current?.();
         setRenderQualityId(id);
       };
