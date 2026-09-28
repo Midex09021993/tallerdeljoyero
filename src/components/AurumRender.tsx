@@ -26,6 +26,7 @@ import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
 import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
+import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { Camera, ChevronDown, Download, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
@@ -273,6 +274,7 @@ export function AurumRender() {
       // El escenario inicial selecciona su propio Environment HDRI.
 
       let modelo:any = null;
+      let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
 
@@ -286,12 +288,14 @@ export function AurumRender() {
         measuredQualityId = id;
         // Quality is an intentional render scale. Do not clamp it to devicePixelRatio:
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
-        const dpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+        const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+        const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+        const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
-        applyPostQuality?.(renderQuality);
-        liveTransmissionScaleRef.current=renderQuality.transmissionScale;
-        (renderer as any).transmissionResolutionScale=renderQuality.transmissionScale;
+        applyPostQuality?.({...renderQuality, pixelRatio:dpr});
+        liveTransmissionScaleRef.current=transmissionScale;
+        (renderer as any).transmissionResolutionScale=transmissionScale;
         renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
         // Existing shadow maps must be rebuilt at the selected precision.
         // create() is intentionally called only after disposing the previous maps;
@@ -444,7 +448,7 @@ export function AurumRender() {
           renderer.shadowMap.enabled=renderQuality.shadows;
           renderer.shadowMap.needsUpdate=true;
         }
-        liveTransmissionScaleRef.current=renderQuality.transmissionScale;
+        liveTransmissionScaleRef.current=Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
@@ -591,6 +595,18 @@ export function AurumRender() {
             objeto, glb, ext, colorRhinoHex, clasificarCapa
           );
         }
+        // Runtime budget is derived from the actual renderable geometry, not the
+        // source file size. This keeps CAD-heavy jewelry responsive without
+        // changing geometry, layer identity, materials, or capture quality.
+        runtimeBudget = getAurumRuntimeBudget(countAurumTriangles(interno));
+        if (perfEnabled) {
+          console.warn("[AURUM][RUNTIME BUDGET]", runtimeBudget);
+        }
+        // Re-apply the selected quality after the model is known so the GPU cap
+        // is active before the first steady frame.
+        const selectedQuality = renderQualityId;
+        aplicarCalidadRender(selectedQuality);
+
         quitar();
         applyAurumInitialModelMaterials(interno,{
           gems:GEMAS,
@@ -965,7 +981,7 @@ export function AurumRender() {
               // During drag, lower only the transmission buffer resolution. It is
               // restored after interaction so the idle frame keeps its calibrated
               // iJewel quality.
-              (renderer as any).transmissionResolutionScale=.24;
+              (renderer as any).transmissionResolutionScale=runtimeBudget.interactionTransmissionScale;
             }
           },
           onEnd: () => {
