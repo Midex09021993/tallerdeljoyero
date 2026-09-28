@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Boxes, ChevronRight, Hammer, LayoutGrid, UserRound, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { ServiciosExternosRecibidos } from "@/components/ServiciosExternosRecibidos";
 import { areaCoincide, areaRuta, normalizarArea, useSesion } from "@/lib/auth";
 import { usePedidosSelector, type PedidoSelector } from "@/lib/taller-db";
 import { useTrabajosDelOperario } from "@/hooks/use-pedidos-area";
@@ -114,6 +115,8 @@ function OperarioPage() {
       subtitulo="Tus trabajos asignados"
       atrasMovil={false}
     >
+      <ServiciosExternosRecibidos />
+
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-card">
