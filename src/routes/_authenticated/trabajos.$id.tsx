@@ -180,14 +180,12 @@ function TrabajoOperativoPage() {
   const { data: trabajo, isLoading } = useQuery({
     queryKey: ["trabajo-operativo", id],
     queryFn: async () => {
-      // Usamos la misma bandeja segura que alimenta /operario.
-      // Esto evita que una operación disponible para el área quede oculta
-      // por una política RLS que solo permita leer directamente trabajos asignados.
-      const { data, error } = await supabase.rpc("listar_trabajos_operario");
+      const { data, error } = await supabase.rpc("obtener_trabajo_operativo", {
+        _trabajo_id: id,
+      });
       if (error) throw error;
-      const encontrado = (data ?? []).find((item: Trabajo) => item.id === id);
-      if (!encontrado) throw new Error("Este trabajo no existe, ya no está activo o no está disponible para tu área.");
-      return encontrado as Trabajo;
+      if (!data) throw new Error("Este trabajo no está disponible para tu usuario.");
+      return data as Trabajo;
     },
   });
 
