@@ -178,7 +178,7 @@ function LoginPage() {
           <ComunidadAurumLab />
         </section>
 
-        <section id="login" className="mx-auto w-full max-w-[430px] max-[767px]:max-w-[430px]">
+        <section id="login" className="mx-auto w-full max-w-[430px] -translate-y-20 max-[767px]:max-w-[430px] max-[767px]:translate-y-0 [@media(max-height:800px)]:-translate-y-12">
           <div className="mb-7 text-center md:hidden">
             <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
           </div>
