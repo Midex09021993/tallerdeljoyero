@@ -153,7 +153,8 @@ export function createAurumWebGLViewer(
 
 export function startAurumViewerLoop(
   viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
-  render: () => void
+  render: () => void,
+  interaction?: { onStart?: () => void; onEnd?: () => void }
 ) {
   // AURUM is a product configurator, not a continuously animated game scene.
   // Render only when the camera/scene actually changes. OrbitControls still
@@ -179,11 +180,17 @@ export function startAurumViewerLoop(
   observer.observe(viewer.node);
 
   const onControlChange = () => {
-    interactionActive = true;
+    if (!interactionActive) {
+      interactionActive = true;
+      interaction?.onStart?.();
+    }
     requestRender();
   };
   const onControlEnd = () => {
-    interactionActive = false;
+    if (interactionActive) {
+      interactionActive = false;
+      interaction?.onEnd?.();
+    }
     requestRender();
   };
 
