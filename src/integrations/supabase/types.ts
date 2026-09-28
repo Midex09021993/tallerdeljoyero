@@ -3047,6 +3047,10 @@ export type Database = {
           ubicacion: string
         }[]
       }
+      obtener_ficha_servicio_externo: {
+        Args: { _trabajo_id: string }
+        Returns: Json
+      }
       listar_servicios_externos_recibidos: {
         Args: Record<PropertyKey, never>
         Returns: {
