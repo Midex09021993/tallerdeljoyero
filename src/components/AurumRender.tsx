@@ -194,7 +194,7 @@ export function AurumRender() {
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, taaPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -267,6 +267,8 @@ export function AurumRender() {
       // Render Quality changes the actual GPU workload, not just a label:
       // drawing-buffer resolution, shadow-map precision and gem transmission
       // resolution are updated together. EffectComposer receives the same DPR.
+      composerRef.current = composer;
+
       const aplicarCalidadRender = (id:AurumRenderQualityId) => {
         renderQuality = getAurumRenderQuality(id);
         measuredQualityId = id;
@@ -572,7 +574,39 @@ export function AurumRender() {
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; },
-        capturar:()=>{composerRef.current?.render();return renderer.domElement.toDataURL("image/png")},
+        capturar:()=>{
+          const previousQuality=measuredQualityId;
+          const previousRenderQuality={...renderQuality};
+          const captureQuality={
+            ...getAurumRenderQuality("ultra"),
+            pixelRatio:1.75,
+            transmissionScale:.82,
+            shadows:true,
+            shadowMapSize:2048,
+          };
+          renderQuality=captureQuality as any;
+          measuredQualityId="ultra";
+          renderer.setPixelRatio(1.75);
+          composer?.setPixelRatio?.(1.75);
+          applyPostQuality?.(captureQuality,{capture:true});
+          (renderer as any).transmissionResolutionScale=.82;
+          renderer.shadowMap.enabled=true;
+          taaPass?.accumulate=true;
+          if(taaPass) taaPass.accumulateIndex=-1;
+          for(let i=0;i<32;i++) composer?.render();
+          const data=renderer.domElement.toDataURL("image/png");
+
+          renderQuality=previousRenderQuality;
+          measuredQualityId=previousQuality;
+          const restoredDpr=Math.max(1,Math.min(2,Number(previousRenderQuality.pixelRatio??1)));
+          renderer.setPixelRatio(restoredDpr);
+          composer?.setPixelRatio?.(restoredDpr);
+          applyPostQuality?.(previousRenderQuality);
+          (renderer as any).transmissionResolutionScale=previousRenderQuality.transmissionScale;
+          renderer.shadowMap.enabled=previousRenderQuality.shadows;
+          if(taaPass) taaPass.accumulateIndex=-1;
+          return data;
+        },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
         seleccionarParte:(id:string)=>{
