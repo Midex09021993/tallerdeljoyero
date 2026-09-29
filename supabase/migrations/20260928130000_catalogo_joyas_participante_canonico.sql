@@ -194,13 +194,61 @@ alter table public.catalogo_productos enable row level security;
 alter table public.catalogo_productos_colecciones enable row level security;
 
 create policy "catalogo_configuracion_select_interno" on public.catalogo_configuracion for select to authenticated using(public.tiene_participante((select auth.uid()),participante_id));
-create policy "catalogo_configuracion_admin_write" on public.catalogo_configuracion for all to authenticated using(public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),participante_id)) with check(public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),participante_id));
+create policy "catalogo_configuracion_admin_write" on public.catalogo_configuracion for all to authenticated using((
+    public.has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      public.has_role((select auth.uid()), 'gerente'::app_role)
+      and public.tiene_participante((select auth.uid()),participante_id)
+    )
+  )) with check((
+    public.has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      public.has_role((select auth.uid()), 'gerente'::app_role)
+      and public.tiene_participante((select auth.uid()),participante_id)
+    )
+  ));
 create policy "catalogo_colecciones_select_interno" on public.catalogo_colecciones for select to authenticated using(public.tiene_participante((select auth.uid()),participante_id));
-create policy "catalogo_colecciones_admin_write" on public.catalogo_colecciones for all to authenticated using(public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),participante_id)) with check(public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),participante_id));
+create policy "catalogo_colecciones_admin_write" on public.catalogo_colecciones for all to authenticated using((
+    public.has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      public.has_role((select auth.uid()), 'gerente'::app_role)
+      and public.tiene_participante((select auth.uid()),participante_id)
+    )
+  )) with check((
+    public.has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      public.has_role((select auth.uid()), 'gerente'::app_role)
+      and public.tiene_participante((select auth.uid()),participante_id)
+    )
+  ));
 create policy "catalogo_productos_select_interno" on public.catalogo_productos for select to authenticated using(public.tiene_participante((select auth.uid()),participante_id));
-create policy "catalogo_productos_admin_write" on public.catalogo_productos for all to authenticated using(public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),participante_id)) with check(public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),participante_id));
+create policy "catalogo_productos_admin_write" on public.catalogo_productos for all to authenticated using((
+    public.has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      public.has_role((select auth.uid()), 'gerente'::app_role)
+      and public.tiene_participante((select auth.uid()),participante_id)
+    )
+  )) with check((
+    public.has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      public.has_role((select auth.uid()), 'gerente'::app_role)
+      and public.tiene_participante((select auth.uid()),participante_id)
+    )
+  ));
 create policy "catalogo_relaciones_select_interno" on public.catalogo_productos_colecciones for select to authenticated using(exists(select 1 from public.catalogo_productos p where p.id=producto_id and public.tiene_participante((select auth.uid()),p.participante_id)));
-create policy "catalogo_relaciones_admin_write" on public.catalogo_productos_colecciones for all to authenticated using(exists(select 1 from public.catalogo_productos p where p.id=producto_id and public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),p.participante_id))) with check(exists(select 1 from public.catalogo_productos p where p.id=producto_id and public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()),p.participante_id)));
+create policy "catalogo_relaciones_admin_write" on public.catalogo_productos_colecciones for all to authenticated using(exists(select 1 from public.catalogo_productos p where p.id=producto_id and (
+        public.has_role((select auth.uid()), 'dueno'::app_role)
+        or (
+          public.has_role((select auth.uid()), 'gerente'::app_role)
+          and public.tiene_participante((select auth.uid()),p.participante_id)
+        )
+      ))) with check(exists(select 1 from public.catalogo_productos p where p.id=producto_id and (
+        public.has_role((select auth.uid()), 'dueno'::app_role)
+        or (
+          public.has_role((select auth.uid()), 'gerente'::app_role)
+          and public.tiene_participante((select auth.uid()),p.participante_id)
+        )
+      )));
 
 revoke all on public.catalogo_configuracion,public.catalogo_colecciones,public.catalogo_productos,public.catalogo_productos_colecciones from anon;
 grant select,insert,update,delete on public.catalogo_configuracion,public.catalogo_colecciones,public.catalogo_productos,public.catalogo_productos_colecciones to authenticated;
