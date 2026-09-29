@@ -25,7 +25,7 @@ type CatalogoRow = {
   codigo: string | null;
   nombre: string | null;
   categoria: string | null;
-  descripcion: string | null;
+  descripcion_producto: string | null;
   imagen_principal_url: string | null;
   galeria: unknown;
   video_url: string | null;
