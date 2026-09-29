@@ -669,7 +669,7 @@ export function AurumRender() {
         if (typeof window !== "undefined" && "requestIdleCallback" in window) {
           (window as any).requestIdleCallback(scheduleShaderPrecompile,{timeout:1500});
         } else {
-          window.setTimeout(scheduleShaderPrecompile,250);
+          globalThis.setTimeout(scheduleShaderPrecompile,250);
         }
         // SSR iJewel: only authored metal meshes participate in screen-space
         // reflection. Gemstones keep their own environment/refraction path.
@@ -1369,7 +1369,7 @@ export function AurumRender() {
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><RotateCcw className="size-[18px]"/></button>
                 <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><Expand className="size-[18px]"/></button>
                 <div className="my-0.5 h-px w-6 bg-black/10"/>
-                <button type="button" title="Capturar imagen" onClick={capturarImagen} className="grid size-10 place-items-center rounded-xl text-[#d4af37] hover:bg-[#d4af37]/10"><Camera className="size-[18px]"/></button>
+                <button type="button" title="Capturar imagen" onClick={() => capturarImagen()} className="grid size-10 place-items-center rounded-xl text-[#d4af37] hover:bg-[#d4af37]/10"><Camera className="size-[18px]"/></button>
               </div>
             </div>
 

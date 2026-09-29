@@ -244,6 +244,6 @@ export async function normalizeAurumModel(
   }
 
   const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-  const interno = (await new GLTFLoader().parseAsync(glb,"")).scene;
+  const interno = (await new GLTFLoader().parseAsync(glb as ArrayBuffer,"")).scene;
   return interno;
 }
