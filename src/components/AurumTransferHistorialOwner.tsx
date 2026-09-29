@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Files, HardDrive, Send, Clock3, CheckCircle2, CircleDashed, TimerReset, Search, Filter } from "lucide-react";
+import { Files, HardDrive, Send, Clock3, CheckCircle2, CircleDashed, TimerReset, Search, Filter, BarChart3 } from "lucide-react";
 import { Panel, StatCard } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,7 +15,18 @@ type TransferUsage = {
   expires_at: string | null;
 };
 
+type TransferMetrics = {
+  transfer_count: number;
+  downloaded_count: number;
+  total_bytes: number;
+  available_count: number;
+  expired_count: number;
+  file_count: number;
+  last_activity: string | null;
+};
+
 function formatBytes(bytes: number) {
+  if (!bytes) return "0 KB";
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
@@ -23,13 +34,15 @@ function formatBytes(bytes: number) {
 
 function estadoTransferencia(item: TransferUsage) {
   if (item.status === "consumed") return { label: "Descargada", tone: "text-emerald-600", dot: "bg-emerald-500" };
-  if (item.expires_at && new Date(item.expires_at) <= new Date()) return { label: "Expirada", tone: "text-muted-foreground", dot: "bg-muted-foreground" };
+  if (item.status === "expired" || (item.expires_at && new Date(item.expires_at) <= new Date())) {
+    return { label: "Expirada", tone: "text-muted-foreground", dot: "bg-muted-foreground" };
+  }
   return { label: "Disponible", tone: "text-primary", dot: "bg-primary" };
 }
 
 function relativeTime(value: string) {
-  const diff = Date.now() - new Date(value).getTime();
-  const minutes = Math.max(0, Math.round(diff / 60000));
+  const diff = Math.max(0, Date.now() - new Date(value).getTime());
+  const minutes = Math.round(diff / 60000);
   if (minutes < 60) return `Hace ${Math.max(1, minutes)} min`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `Hace ${hours} h`;
@@ -40,7 +53,25 @@ export function AurumTransferHistorialOwner() {
   const [filtro, setFiltro] = useState<"todas" | "disponibles" | "descargadas" | "expiradas">("todas");
   const [busqueda, setBusqueda] = useState("");
 
-  const { data = [], isLoading, error } = useQuery({
+  const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery({
+    queryKey: ["aurum-transfer-usage-metrics"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_aurum_transfer_usage_metrics");
+      if (error) throw error;
+      return (data?.[0] ?? {
+        transfer_count: 0,
+        downloaded_count: 0,
+        total_bytes: 0,
+        available_count: 0,
+        expired_count: 0,
+        file_count: 0,
+        last_activity: null,
+      }) as TransferMetrics;
+    },
+    staleTime: 30_000,
+  });
+
+  const { data = [], isLoading: activityLoading, error: activityError } = useQuery({
     queryKey: ["aurum-transfer-usage-owner"],
     queryFn: async () => {
       const { data, error } = await supabase.from("aurum_transfer_usage")
@@ -52,51 +83,56 @@ export function AurumTransferHistorialOwner() {
     staleTime: 30_000,
   });
 
-  const ahora = new Date();
-  const normalizadas = useMemo(() => data.map((item) => ({
-    ...item,
-    expirada: item.status !== "consumed" && !!item.expires_at && new Date(item.expires_at) <= ahora,
-  })), [data]);
-
-  const stats = useMemo(() => ({
-    total: data.length,
-    descargadas: data.filter((x) => x.status === "consumed").length,
-    pendientes: normalizadas.filter((x) => x.status === "available" && !x.expirada).length,
-    expiradas: normalizadas.filter((x) => x.expirada).length,
-    bytes: data.reduce((sum, x) => sum + Number(x.total_bytes || 0), 0),
-  }), [data, normalizadas]);
-
-  const actividad = useMemo(() => normalizadas.filter((item) => {
+  const actividad = useMemo(() => data.filter((item) => {
+    const expirada = item.status === "expired" || (item.status === "available" && !!item.expires_at && new Date(item.expires_at) <= new Date());
     const matchesFilter =
       filtro === "todas" ||
-      (filtro === "disponibles" && item.status === "available" && !item.expirada) ||
+      (filtro === "disponibles" && item.status === "available" && !expirada) ||
       (filtro === "descargadas" && item.status === "consumed") ||
-      (filtro === "expiradas" && item.expirada);
+      (filtro === "expiradas" && expirada);
     const matchesSearch = !busqueda.trim() || item.transfer_id.toLowerCase().includes(busqueda.trim().toLowerCase());
     return matchesFilter && matchesSearch;
-  }), [normalizadas, filtro, busqueda]);
+  }), [data, filtro, busqueda]);
+
+  const m = metrics ?? {
+    transfer_count: 0,
+    downloaded_count: 0,
+    total_bytes: 0,
+    available_count: 0,
+    expired_count: 0,
+    file_count: 0,
+    last_activity: null,
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-primary">AURUM Transfers</p>
-          <h2 className="mt-1 text-2xl font-semibold">Actividad de transferencias</h2>
+          <h2 className="mt-1 text-2xl font-semibold">Historial de uso</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Vista administrativa del uso de AURUM Transfers. Solo mostramos metadatos operativos; nunca el contenido de los archivos.
+            Métricas globales de la herramienta pública. Solo registra uso y metadatos operativos; no guarda ni muestra el contenido de los archivos.
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card px-4 py-3 text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Datos enviados</p>
-          <p className="mt-1 text-lg font-semibold">{formatBytes(stats.bytes)}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Uso acumulado</p>
+          <p className="mt-1 text-lg font-semibold">{formatBytes(Number(m.total_bytes))}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{Number(m.file_count)} archivos transferidos</p>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard etiqueta="Transferencias creadas" valor={String(stats.total)} />
-        <StatCard etiqueta="Descargadas" valor={String(stats.descargadas)} tono="positivo" />
-        <StatCard etiqueta="Pendientes" valor={String(stats.pendientes)} />
-        <StatCard etiqueta="Expiradas" valor={String(stats.expiradas)} />
+      {metricsError ? (
+        <div className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
+          No se pudieron cargar las métricas globales.
+        </div>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <StatCard etiqueta="Transferencias" valor={metricsLoading ? "…" : String(Number(m.transfer_count))} />
+        <StatCard etiqueta="Descargadas" valor={metricsLoading ? "…" : String(Number(m.downloaded_count))} tono="positivo" />
+        <StatCard etiqueta="Datos transferidos" valor={metricsLoading ? "…" : formatBytes(Number(m.total_bytes))} />
+        <StatCard etiqueta="Disponibles" valor={metricsLoading ? "…" : String(Number(m.available_count))} />
+        <StatCard etiqueta="Expiradas" valor={metricsLoading ? "…" : String(Number(m.expired_count))} />
       </div>
 
       <Panel titulo="Actividad reciente">
@@ -121,8 +157,8 @@ export function AurumTransferHistorialOwner() {
           </div>
         </div>
 
-        {isLoading ? <p className="px-6 py-10 text-sm text-muted-foreground">Cargando actividad…</p>
-        : error ? <p className="px-6 py-10 text-sm text-danger">No se pudo cargar la actividad.</p>
+        {activityLoading ? <p className="px-6 py-10 text-sm text-muted-foreground">Cargando actividad…</p>
+        : activityError ? <p className="px-6 py-10 text-sm text-danger">No se pudo cargar la actividad.</p>
         : actividad.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
             <Send className="mb-3 h-8 w-8 text-muted-foreground/50" />
@@ -133,11 +169,11 @@ export function AurumTransferHistorialOwner() {
           <div className="divide-y divide-border">
             {actividad.map((item) => {
               const estado = estadoTransferencia(item);
-              const Icon = item.status === "consumed" ? CheckCircle2 : item.expirada ? TimerReset : CircleDashed;
+              const Icon = item.status === "consumed" ? CheckCircle2 : estado.label === "Expirada" ? TimerReset : CircleDashed;
               return (
                 <div key={item.id} className="flex flex-col gap-4 px-4 py-4 transition hover:bg-surface-muted/30 sm:px-6 lg:flex-row lg:items-center">
                   <div className="flex min-w-0 flex-1 items-start gap-3">
-                    <div className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted ${item.status === "consumed" ? "text-emerald-600" : item.expirada ? "text-muted-foreground" : "text-primary"}`}>
+                    <div className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted ${item.status === "consumed" ? "text-emerald-600" : estado.label === "Expirada" ? "text-muted-foreground" : "text-primary"}`}>
                       <Icon className="size-4" />
                     </div>
                     <div className="min-w-0">
@@ -167,6 +203,11 @@ export function AurumTransferHistorialOwner() {
           </div>
         )}
       </Panel>
+
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><BarChart3 className="size-3.5" />Métricas acumuladas desde el inicio del registro.</span>
+        {m.last_activity ? <span>Última actividad: {new Date(m.last_activity).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}</span> : null}
+      </div>
     </div>
   );
 }
