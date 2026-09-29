@@ -1,7 +1,7 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, Instagram, MessageCircle, Search, Share2, Sparkles, X, Play, ExternalLink } from "lucide-react";
+import { ArrowRight, BookOpen, Box, MessageCircle, Search, Share2, Sparkles, X, Play, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,14 +16,11 @@ export const Route = createFileRoute("/$slug")({
 });
 
 type CatalogoRow = {
-  sede_id: string;
   slug: string;
   nombre_publico: string;
   descripcion_publica: string | null;
   logo_url: string | null;
-  portada_url: string | null;
   whatsapp: string | null;
-  instagram_url: string | null;
   producto_id: string | null;
   codigo: string | null;
   nombre: string | null;
@@ -87,7 +84,7 @@ function CatalogoPublicoPage() {
       codigo: row.codigo!,
       nombre: row.nombre!,
       categoria: row.categoria!,
-      descripcion: row.descripcion ?? "",
+      descripcion: row.descripcion_producto ?? "",
       imagen: row.imagen_principal_url,
       videoUrl: row.video_url,
       aurumRenderUrl: row.aurum_render_url,
