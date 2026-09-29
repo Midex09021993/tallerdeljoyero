@@ -222,7 +222,7 @@ function CatalogoPage() {
                 <Settings className="size-4" /> Configurar catálogo público
               </button>
             </>
-          )}
+          ) : null}
           {puedeGestionar ? (
             <button type="button" onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground">
               <Plus className="size-4" /> Nuevo modelo
