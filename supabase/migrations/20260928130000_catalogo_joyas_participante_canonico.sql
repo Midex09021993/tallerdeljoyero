@@ -152,11 +152,41 @@ drop trigger if exists trg_catalogo_configuracion_participante_canonico on publi
 
 DO $$
 BEGIN
-  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='catalogo_configuracion' and column_name='sede_id') then alter table public.catalogo_configuracion drop column sede_id cascade; end if;
-  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='catalogo_colecciones' and column_name='sede_id') then alter table public.catalogo_colecciones drop column sede_id cascade; end if;
-  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='catalogo_productos' and column_name='sede_id') then alter table public.catalogo_productos drop column sede_id cascade; end if;
-END $$;
+  -- Compatibilidad segura: solo eliminamos sede_id cuando no quedan dependencias.
+  -- La pertenencia canónica del catálogo es participante_id.
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='catalogo_configuracion' and column_name='sede_id'
+  ) then
+    begin
+      alter table public.catalogo_configuracion drop column sede_id;
+    exception when dependent_objects_still_exist then
+      raise exception 'CATALOGO_INCONSISTENTE: catalogo_configuracion.sede_id tiene dependencias; no se elimina de forma destructiva';
+    end;
+  end if;
 
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='catalogo_colecciones' and column_name='sede_id'
+  ) then
+    begin
+      alter table public.catalogo_colecciones drop column sede_id;
+    exception when dependent_objects_still_exist then
+      raise exception 'CATALOGO_INCONSISTENTE: catalogo_colecciones.sede_id tiene dependencias; no se elimina de forma destructiva';
+    end;
+  end if;
+
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='catalogo_productos' and column_name='sede_id'
+  ) then
+    begin
+      alter table public.catalogo_productos drop column sede_id;
+    exception when dependent_objects_still_exist then
+      raise exception 'CATALOGO_INCONSISTENTE: catalogo_productos.sede_id tiene dependencias; no se elimina de forma destructiva';
+    end;
+  end if;
+END $$;
 alter table public.catalogo_configuracion alter column participante_id set not null;
 alter table public.catalogo_colecciones alter column participante_id set not null;
 alter table public.catalogo_productos alter column participante_id set not null;
