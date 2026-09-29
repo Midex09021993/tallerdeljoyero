@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ArrowUpRight, Building2, CheckCircle2, ChevronDown, ExternalLink, FileArchive } from "lucide-react";
+import { ArrowUpRight, Building2, CheckCircle2, ChevronDown, ExternalLink, FileArchive, PackageCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -61,15 +61,15 @@ export function ServiciosExternosRecibidos() {
         <div>
           <div className="flex items-center gap-2">
             <ExternalLink className="size-5 text-gold-deep" />
-            <h2 className="text-lg font-semibold">Servicios externos</h2>
+            <h2 className="text-lg font-semibold">Pedidos recibidos</h2>
             {pedidos.length > 0 ? <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-bold text-gold-deep">{pedidos.length}</span> : null}
           </div>
-          
+          <p className="mt-1 text-xs text-muted-foreground">Un pedido, una ficha técnica. Cada área ejecuta únicamente la operación que le corresponde.</p>
         </div>
       </div>
 
       {pedidos.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground">No hay servicios externos pendientes.</div>
+        <div className="p-6 text-sm text-muted-foreground">No hay pedidos externos pendientes.</div>
       ) : (
         <div className="divide-y divide-border">
           {pedidos.map((grupo) => {
@@ -87,6 +87,11 @@ export function ServiciosExternosRecibidos() {
           })}
         </div>
       )}
+
+      <div className="flex items-center gap-2 border-t border-border p-4 text-[11px] text-muted-foreground">
+        <PackageCheck className="size-4 text-gold-deep" />
+        La ficha técnica comparte información operativa y archivos necesarios. Los costos y datos comerciales internos del taller de origen no se comparten.
+      </div>
     </section>
   );
 }
