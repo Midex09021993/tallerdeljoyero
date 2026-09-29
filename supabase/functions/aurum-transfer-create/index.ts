@@ -125,8 +125,11 @@ Deno.serve(async (req) => {
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
       if (usageError) {
-        // El historial es administrativo y no debe bloquear una transferencia válida.
-        console.error("[aurum-transfer-create] usage history", usageError);
+        // El registro de métricas es parte de la integridad de la transferencia.
+        // Si falla, no dejamos una transferencia válida sin trazabilidad.
+        await supabase.from("aurum_transfers").delete().eq("id", transfer.id);
+        await supabase.storage.from(BUCKET).remove(metadata.map((m) => m.path));
+        throw usageError;
       }
 
       return json({ token, file_count: metadata.length, total_bytes: total, expires_in_hours: 24 });
