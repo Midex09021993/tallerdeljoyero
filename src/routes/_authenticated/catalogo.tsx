@@ -38,6 +38,26 @@ function formatPrice(value: number | null, moneda: string | null) {
   }).format(value);
 }
 
+function normalizarSlugCatalogo(value: string) {
+  const limpio = value.trim();
+  if (!limpio) return "";
+  try {
+    const url = limpio.match(/^[a-z][a-z0-9+.-]*:\/\//i) ? new URL(limpio) : null;
+    const path = url ? url.pathname : limpio.replace(/^www\.[^/]+\//i, "/");
+    return path
+      .replace(/^\/+|\/+$/g, "")
+      .split("/")
+      .filter(Boolean)
+      .join("-")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80);
+  } catch {
+    return limpio.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  }
+}
+
 function CatalogoPage() {
   const { data: sesion } = useSesion();
   const queryClient = useQueryClient();
@@ -47,25 +67,6 @@ function CatalogoPage() {
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
 
-  const normalizarSlugCatalogo = (value: string) => {
-    const limpio = value.trim();
-    if (!limpio) return "";
-    try {
-      const url = limpio.match(/^[a-z][a-z0-9+.-]*:\/\//i) ? new URL(limpio) : null;
-      const path = url ? url.pathname : limpio.replace(/^www\.[^/]+\//i, "/");
-      return path
-        .replace(/^\/+|\/+$/g, "")
-        .split("/")
-        .filter(Boolean)
-        .join("-")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 80);
-    } catch {
-      return limpio.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
-    }
-  };
   const abrirNuevo = () => { setModeloEditando(null); setEditorAbierto(true); };
   const abrirEdicion = (producto: Producto) => {
     const row = productoRows.find((item) => item.id === producto.id);
