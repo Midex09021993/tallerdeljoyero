@@ -209,14 +209,17 @@ function CatalogoPage() {
       subtitulo="Portafolio de modelos · gestión interna y publicación externa"
       acciones={
         <div className="flex flex-wrap gap-2">
-          {catalogoConfig?.slug ? (
-            <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
-              <ExternalLink className="size-4" /> Ver catálogo público
-            </a>
-          ) : (
-            puedeGestionar ? (
-              <button type="button" onClick={() => setConfigAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40"><Settings className="size-4" /> Configurar catálogo público</button>
-            ) : null
+          {puedeGestionar ? (
+            <>
+              {catalogoConfig?.slug ? (
+                <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+                  <ExternalLink className="size-4" /> Ver catálogo público
+                </a>
+              ) : null}
+              <button type="button" onClick={() => setConfigAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+                <Settings className="size-4" /> Configurar catálogo público
+              </button>
+            </>
           )}
           {puedeGestionar ? (
             <button type="button" onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground">
