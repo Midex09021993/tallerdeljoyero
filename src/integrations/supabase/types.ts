@@ -91,6 +91,222 @@ export type Database = {
         }
         Relationships: []
       }
+      catalogo_colecciones: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          orden: number
+          participante_id: string
+          publicado: boolean
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          orden?: number
+          participante_id: string
+          publicado?: boolean
+          slug?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          orden?: number
+          participante_id?: string
+          publicado?: boolean
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_colecciones_participante_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_colecciones_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalogo_configuracion: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          logo_url: string | null
+          nombre_publico: string
+          participante_id: string
+          slug: string
+          updated_at: string
+          visible: boolean
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre_publico: string
+          participante_id: string
+          slug?: string
+          updated_at?: string
+          visible?: boolean
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre_publico?: string
+          participante_id?: string
+          slug?: string
+          updated_at?: string
+          visible?: boolean
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_configuracion_participante_fkey"
+            columns: ["participante_id"]
+            isOneToOne: true
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_configuracion_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: true
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalogo_productos: {
+        Row: {
+          aurum_render_url: string | null
+          categoria: string
+          codigo: string
+          created_at: string
+          descripcion: string | null
+          destacado: boolean
+          galeria: Json
+          id: string
+          imagen_principal_url: string | null
+          moneda: string
+          nombre: string
+          orden: number
+          participante_id: string
+          precio_desde: number | null
+          publicado: boolean
+          slug: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          aurum_render_url?: string | null
+          categoria?: string
+          codigo: string
+          created_at?: string
+          descripcion?: string | null
+          destacado?: boolean
+          galeria?: Json
+          id?: string
+          imagen_principal_url?: string | null
+          moneda?: string
+          nombre: string
+          orden?: number
+          participante_id: string
+          precio_desde?: number | null
+          publicado?: boolean
+          slug?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          aurum_render_url?: string | null
+          categoria?: string
+          codigo?: string
+          created_at?: string
+          descripcion?: string | null
+          destacado?: boolean
+          galeria?: Json
+          id?: string
+          imagen_principal_url?: string | null
+          moneda?: string
+          nombre?: string
+          orden?: number
+          participante_id?: string
+          precio_desde?: number | null
+          publicado?: boolean
+          slug?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_productos_participante_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_productos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalogo_productos_colecciones: {
+        Row: {
+          coleccion_id: string
+          created_at: string
+          producto_id: string
+        }
+        Insert: {
+          coleccion_id: string
+          created_at?: string
+          producto_id: string
+        }
+        Update: {
+          coleccion_id?: string
+          created_at?: string
+          producto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_productos_colecciones_coleccion_id_fkey"
+            columns: ["coleccion_id"]
+            isOneToOne: false
+            referencedRelation: "catalogo_colecciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_productos_colecciones_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "catalogo_productos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           ciudad: string | null
@@ -3007,6 +3223,7 @@ export type Database = {
         Args: { _nuevo_estado: string; _trabajo_id: string }
         Returns: undefined
       }
+      catalogo_normalizar_slug: { Args: { _value: string }; Returns: string }
       cerrar_orden_produccion: {
         Args: { _observaciones?: string; _orden_id: string }
         Returns: {
@@ -3203,6 +3420,28 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      obtener_catalogo_publico: {
+        Args: { _slug: string }
+        Returns: {
+          aurum_render_url: string
+          categoria: string
+          codigo: string
+          descripcion_producto: string
+          descripcion_publica: string
+          destacado: boolean
+          galeria: Json
+          imagen_principal_url: string
+          logo_url: string
+          moneda: string
+          nombre: string
+          nombre_publico: string
+          precio_desde: number
+          producto_id: string
+          slug: string
+          video_url: string
+          whatsapp: string
+        }[]
+      }
       obtener_trabajo_operativo: {
         Args: { _trabajo_id: string }
         Returns: {
