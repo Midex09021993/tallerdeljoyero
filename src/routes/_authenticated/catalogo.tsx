@@ -1,7 +1,7 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles, Settings, X } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { CatalogoModeloDialog, type CatalogoProductoEditor } from "@/components/CatalogoModeloDialog";
