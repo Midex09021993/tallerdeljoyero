@@ -1,8 +1,8 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles } from "lucide-react";
+import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles, Settings, X } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { CatalogoModeloDialog, type CatalogoProductoEditor } from "@/components/CatalogoModeloDialog";
 import { useSesion } from "@/lib/auth";
@@ -42,6 +42,7 @@ function CatalogoPage() {
   const { data: sesion } = useSesion();
   const queryClient = useQueryClient();
   const [editorAbierto, setEditorAbierto] = useState(false);
+  const [configAbierta, setConfigAbierta] = useState(false);
   const [modeloEditando, setModeloEditando] = useState<CatalogoProductoEditor | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
@@ -166,9 +167,7 @@ function CatalogoPage() {
               <ExternalLink className="size-4" /> Ver catálogo público
             </a>
           ) : (
-            <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-muted px-3.5 py-2.5 text-xs font-semibold text-muted-foreground">
-              <ExternalLink className="size-4" /> Configurar catálogo público
-            </span>
+            <button type="button" onClick={() => setConfigAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40"><Settings className="size-4" /> Configurar catálogo público</button>
           )}
           {puedeGestionar ? (
             <button type="button" onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground">
@@ -241,6 +240,7 @@ function CatalogoPage() {
       </section>
 
       <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
+      <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
         <div className="grid gap-3 md:grid-cols-3">
@@ -250,6 +250,71 @@ function CatalogoPage() {
         </div>
       </Panel>
     </AppShell>
+  );
+}
+
+function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, onSaved }: any) {
+  const [nombre, setNombre] = useState("");
+  const [slug, setSlug] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setNombre(initial?.nombre_publico ?? "");
+    setSlug(initial?.slug ?? "");
+    setVisible(Boolean(initial?.visible));
+    setError(null);
+    supabase.from("catalogo_configuracion").select("whatsapp, descripcion").eq("participante_id", participanteId).maybeSingle()
+      .then(({ data }) => { setWhatsapp(data?.whatsapp ?? ""); setDescripcion(data?.descripcion ?? ""); });
+  }, [open, initial, participanteId]);
+
+  if (!open) return null;
+
+  async function guardar(event: any) {
+    event.preventDefault();
+    if (!participanteId || !nombre.trim()) return setError("El nombre público es obligatorio.");
+    setGuardando(true); setError(null);
+    try {
+      const { error } = await supabase.from("catalogo_configuracion").upsert({
+        participante_id: participanteId,
+        nombre_publico: nombre.trim(),
+        slug: slug.trim(),
+        descripcion: descripcion.trim() || null,
+        whatsapp: whatsapp.trim() || null,
+        visible
+      }, { onConflict: "participante_id" });
+      if (error) throw error;
+      onSaved();
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo guardar la configuración.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-5">
+          <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Catálogo público</p><h2 className="mt-1 text-xl font-semibold">Configurar catálogo</h2></div>
+          <button type="button" onClick={onClose} className="rounded-xl p-2 text-muted-foreground hover:bg-surface-muted"><X className="size-5" /></button>
+        </div>
+        <form onSubmit={guardar} className="grid gap-4 p-6 sm:grid-cols-2">
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => setNombre(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[11px] font-normal text-muted-foreground">URL: /{slug || "tu-taller"}</span></label>
+          <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+          <label className="flex items-center gap-3 rounded-xl border border-border p-4 sm:col-span-2"><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} /><span><b className="block text-xs">Publicar catálogo</b><span className="text-[11px] text-muted-foreground">Hace visible el enlace público.</span></span></label>
+          {error ? <p className="sm:col-span-2 text-xs text-destructive">{error}</p> : null}
+          <div className="flex justify-end gap-2 sm:col-span-2"><button type="button" onClick={onClose} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold">{guardando ? "Guardando…" : "Guardar configuración"}</button></div>
+        </form>
+      </div>
+    </div>
   );
 }
 
