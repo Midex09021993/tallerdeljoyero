@@ -125,13 +125,10 @@ Deno.serve(async (req) => {
     .eq("status", "processing");
   if (consumeError) {
     console.error("[aurum-transfer-download] consume", consumeError);
-  } else {
-    const { error: usageError } = await supabase
-      .from("aurum_transfer_usage")
-      .update({ status: "consumed", consumed_at: new Date().toISOString() })
-      .eq("transfer_id", t.id);
-    if (usageError) console.error("[aurum-transfer-download] usage history", usageError);
   }
+
+  // El historial se sincroniza mediante trigger sobre aurum_transfers.
+  // Así una descarga nunca puede quedar fuera de las métricas por un fallo secundario.
 
   return json({ files: out, expires_in_seconds: DOWNLOAD_WINDOW_SECONDS });
 });
