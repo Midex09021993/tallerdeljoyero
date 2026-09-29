@@ -10,6 +10,9 @@ export type CatalogoProductoEditor = {
   categoria: string;
   descripcion: string | null;
   imagen_principal_url: string | null;
+  galeria: unknown;
+  video_url: string | null;
+  aurum_render_url: string | null;
   precio_desde: number | null;
   moneda: string;
 };
@@ -27,7 +30,11 @@ function slugify(value: string) {
 }
 
 export function CatalogoModeloDialog({ open, producto, participanteId, onClose, onSaved }: Props) {
-  const [form, setForm] = useState({ codigo: "", nombre: "", slug: "", categoria: "Sin categoría", descripcion: "", imagen_principal_url: "", precio_desde: "", moneda: "PEN" });
+  const [form, setForm] = useState({
+    codigo: "", nombre: "", slug: "", categoria: "Sin categoría", descripcion: "",
+    imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
+    precio_desde: "", moneda: "PEN"
+  });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +47,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
       categoria: producto?.categoria ?? "Sin categoría",
       descripcion: producto?.descripcion ?? "",
       imagen_principal_url: producto?.imagen_principal_url ?? "",
+      galeria: Array.isArray(producto?.galeria) ? producto.galeria.join("\n") : "",
+      video_url: producto?.video_url ?? "",
+      aurum_render_url: producto?.aurum_render_url ?? "",
       precio_desde: producto?.precio_desde == null ? "" : String(producto.precio_desde),
       moneda: producto?.moneda || "PEN",
     });
@@ -68,6 +78,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
         categoria: form.categoria.trim() || "Sin categoría",
         descripcion: form.descripcion.trim() || null,
         imagen_principal_url: form.imagen_principal_url.trim() || null,
+        galeria: form.galeria.split(/\\n|,/).map((value) => value.trim()).filter(Boolean),
+        video_url: form.video_url.trim() || null,
+        aurum_render_url: form.aurum_render_url.trim() || null,
         precio_desde: precio,
         moneda: form.moneda.trim().toUpperCase() || "PEN",
       };
@@ -99,6 +112,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
           <label className="grid gap-1.5 text-xs font-semibold">Precio desde<input type="number" min="0" step="0.01" value={form.precio_desde} onChange={(e) => setForm(v => ({ ...v, precio_desde: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Moneda<input maxLength={3} value={form.moneda} onChange={(e) => setForm(v => ({ ...v, moneda: e.target.value.toUpperCase() }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Imagen principal (URL)<input type="url" value={form.imagen_principal_url} onChange={(e) => setForm(v => ({ ...v, imagen_principal_url: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Galería (una URL por línea)<textarea rows={3} value={form.galeria} onChange={(e) => setForm(v => ({ ...v, galeria: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="https://.../foto-1.jpg&#10;https://.../foto-2.jpg" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold">Video (URL)<input type="url" value={form.video_url} onChange={(e) => setForm(v => ({ ...v, video_url: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="https://..." /></label>
+          <label className="grid gap-1.5 text-xs font-semibold">AURUM Render (URL)<input type="url" value={form.aurum_render_url} onChange={(e) => setForm(v => ({ ...v, aurum_render_url: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="https://..." /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción<textarea rows={4} value={form.descripcion} onChange={(e) => setForm(v => ({ ...v, descripcion: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
           {error ? <p className="sm:col-span-2 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">{error}</p> : null}
           <div className="flex justify-end gap-2 sm:col-span-2"><button type="button" onClick={onClose} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:opacity-50">{guardando ? "Guardando…" : producto ? "Guardar cambios" : "Crear modelo"}</button></div>
