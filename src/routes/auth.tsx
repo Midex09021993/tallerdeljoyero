@@ -165,7 +165,7 @@ function LoginPage() {
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setHerramientaSeleccionada(id)}
+                  onClick={() => setHerramientaSeleccionada(id ?? null)}
                   className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-left transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3"
                 >
                   <Gem className="size-6 text-gold" />
