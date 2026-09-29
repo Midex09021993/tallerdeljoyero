@@ -25,7 +25,7 @@ type Producto = {
 };
 type ProductoRow = {
   id: string; codigo: string; nombre: string; categoria: string; descripcion: string | null;
-  imagen_principal_url: string | null; precio_desde: number | null; moneda: string;
+  imagen_principal_url: string | null; galeria: unknown; video_url: string | null; aurum_render_url: string | null; precio_desde: number | null; moneda: string;
   publicado: boolean; destacado: boolean; orden: number;
 };
 type ColeccionRow = {
@@ -91,7 +91,7 @@ function CatalogoPage() {
     enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
       const { data, error } = await supabase.from("catalogo_productos")
-        .select("id, codigo, nombre, categoria, descripcion, imagen_principal_url, precio_desde, moneda, publicado, destacado, orden")
+        .select("id, codigo, nombre, categoria, descripcion, imagen_principal_url, galeria, video_url, aurum_render_url, precio_desde, moneda, publicado, destacado, orden")
         .eq("participante_id", sesion!.participante!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
       if (error) throw error;
       return (data ?? []) as ProductoRow[];
