@@ -62,6 +62,33 @@ function CatalogoPage() {
     } catch (error) { window.alert(error instanceof Error ? error.message : "No se pudo actualizar el modelo."); }
     finally { setGuardandoAccion(null); }
   };
+  const eliminarProducto = async (producto: Producto) => {
+    if (!puedeGestionar || guardandoAccion) return;
+    const confirmado = window.confirm(
+      `¿Eliminar el modelo "${producto.nombre}"? Esta acción elimina el registro del catálogo y no se puede deshacer.`,
+    );
+    if (!confirmado) return;
+
+    setGuardandoAccion("eliminar:" + producto.id);
+    try {
+      const { error } = await supabase
+        .from("catalogo_productos")
+        .delete()
+        .eq("id", producto.id)
+        .eq("participante_id", sesion!.participante!.id);
+      if (error) throw error;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion?.participante?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["catalogo-producto-colecciones", sesion?.participante?.id] }),
+      ]);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "No se pudo eliminar el modelo.");
+    } finally {
+      setGuardandoAccion(null);
+    }
+  };
+
   const compartir = async (producto: Producto) => {
     if (!catalogoConfig?.slug) return;
     const url = window.location.origin + "/" + catalogoConfig.slug;
@@ -227,7 +254,7 @@ function CatalogoPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
-                  {puedeGestionar ? <><button type="button" onClick={() => void cambiarFlag(p.id, "publicado", p.estado !== "Publicado")} disabled={guardandoAccion === "publicado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.estado === "Publicado" ? "Retirar" : "Publicar"}</button><button type="button" onClick={() => void cambiarFlag(p.id, "destacado", !p.destacado)} disabled={guardandoAccion === "destacado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.destacado ? "Quitar destacado" : "Destacar"}</button></> : null}<button type="button" onClick={() => abrirEdicion(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button><button type="button" onClick={() => void compartir(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
+                  {puedeGestionar ? <><button type="button" onClick={() => void cambiarFlag(p.id, "publicado", p.estado !== "Publicado")} disabled={guardandoAccion === "publicado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.estado === "Publicado" ? "Retirar" : "Publicar"}</button><button type="button" onClick={() => void cambiarFlag(p.id, "destacado", !p.destacado)} disabled={guardandoAccion === "destacado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.destacado ? "Quitar destacado" : "Destacar"}</button></> : null}<button type="button" onClick={() => abrirEdicion(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button><button type="button" onClick={() => void compartir(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>{puedeGestionar ? <button type="button" onClick={() => void eliminarProducto(p)} disabled={guardandoAccion === "eliminar:" + p.id} className="inline-flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive disabled:opacity-50">{guardandoAccion === "eliminar:" + p.id ? "Eliminando…" : "Eliminar"}</button> : null}
                 </div>
               </div>
             </article>
