@@ -3053,6 +3053,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_aurum_transfer_usage_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          transfer_count: number
+          downloaded_count: number
+          total_bytes: number
+          available_count: number
+          expired_count: number
+          file_count: number
+          last_activity: string | null
+        }[]
+      }
       codigo_taller_cotizacion: { Args: { _sede_id: string }; Returns: string }
       consultar_joya_publica: {
         Args: { _token: string }
