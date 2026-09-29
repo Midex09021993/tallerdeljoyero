@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 export type CatalogoProductoEditor = {
   id: string;
@@ -36,6 +37,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
     precio_desde: "", moneda: "PEN"
   });
   const [guardando, setGuardando] = useState(false);
+  const [subiendo, setSubiendo] = useState(false);
+  const [progresoSubida, setProgresoSubida] = useState(0);
+  const [carpetaSubida, setCarpetaSubida] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,10 +57,48 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
       precio_desde: producto?.precio_desde == null ? "" : String(producto.precio_desde),
       moneda: producto?.moneda || "PEN",
     });
+    setCarpetaSubida(producto?.id ?? "");
+    setProgresoSubida(0);
     setError(null);
   }, [open, producto]);
 
   if (!open) return null;
+
+  async function subirImagen(file: File, tipo: "principal" | "galeria") {
+    if (!participanteId || !file.type.startsWith("image/")) {
+      setError("Selecciona una imagen válida.");
+      return;
+    }
+
+    const carpeta = carpetaSubida || crypto.randomUUID();
+    setCarpetaSubida(carpeta);
+    const ruta = `${participanteId}/${carpeta}/${tipo}-${Date.now()}-${nombreSeguro(file.name)}`;
+
+    setSubiendo(true);
+    setProgresoSubida(0);
+    setError(null);
+    try {
+      await subirConProgreso({
+        bucket: "catalogo-joyas",
+        ruta,
+        file,
+        onProgreso: setProgresoSubida,
+      });
+      const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
+      if (!data.publicUrl) throw new Error("No se pudo obtener la URL pública de la imagen.");
+
+      setForm((actual) => ({
+        ...actual,
+        ...(tipo === "principal"
+          ? { imagen_principal_url: data.publicUrl }
+          : { galeria: actual.galeria ? `${actual.galeria}\n${data.publicUrl}` : data.publicUrl }),
+      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo subir la imagen.");
+    } finally {
+      setSubiendo(false);
+    }
+  }
 
   async function guardar(event: FormEvent) {
     event.preventDefault();
@@ -111,8 +153,17 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
           <label className="grid gap-1.5 text-xs font-semibold">Categoría<input value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Precio desde<input type="number" min="0" step="0.01" value={form.precio_desde} onChange={(e) => setForm(v => ({ ...v, precio_desde: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Moneda<input maxLength={3} value={form.moneda} onChange={(e) => setForm(v => ({ ...v, moneda: e.target.value.toUpperCase() }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
-          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Imagen principal (URL)<input type="url" value={form.imagen_principal_url} onChange={(e) => setForm(v => ({ ...v, imagen_principal_url: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
-          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Galería (una URL por línea)<textarea rows={3} value={form.galeria} onChange={(e) => setForm(v => ({ ...v, galeria: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="https://.../foto-1.jpg&#10;https://.../foto-2.jpg" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Imagen principal
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.target.files?.[0]; e.currentTarget.value = ""; if (file) void subirImagen(file, "principal"); }} className="h-11 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-normal" />
+              <input type="url" value={form.imagen_principal_url} onChange={(e) => setForm(v => ({ ...v, imagen_principal_url: e.target.value }))} className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="O pega una URL externa" />
+            </div>
+          </label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Galería
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.target.files ?? []); e.currentTarget.value = ""; void Promise.all(files.map((file) => subirImagen(file, "galeria"))); }} className="h-11 rounded-xl border border-border bg-background px-3 py-2 text-sm font-normal" />
+            <textarea rows={3} value={form.galeria} onChange={(e) => setForm(v => ({ ...v, galeria: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="También puedes pegar URLs externas, una por línea." />
+            {subiendo ? <span className="text-[11px] text-muted-foreground">Subiendo imágenes… {progresoSubida}%</span> : null}
+          </label>
           <label className="grid gap-1.5 text-xs font-semibold">Video (URL)<input type="url" value={form.video_url} onChange={(e) => setForm(v => ({ ...v, video_url: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="https://..." /></label>
           <label className="grid gap-1.5 text-xs font-semibold">AURUM Render (URL)<input type="url" value={form.aurum_render_url} onChange={(e) => setForm(v => ({ ...v, aurum_render_url: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="https://..." /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción<textarea rows={4} value={form.descripcion} onChange={(e) => setForm(v => ({ ...v, descripcion: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
