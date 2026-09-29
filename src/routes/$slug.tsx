@@ -168,7 +168,26 @@ function CatalogoPublicoPage() {
               <a href="#coleccion" className="rounded-full bg-[#1f1b18] px-5 py-3 text-xs font-semibold text-white">
                 Explorar colección <ArrowRight className="ml-1 inline size-3.5" />
               </a>
-  
+            </div>
+          </div>
+
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-[#e9e3da] shadow-2xl">
+            {destacado?.imagen ? (
+              <img src={destacado.imagen} alt={destacado.nombre} className="size-full object-cover" />
+            ) : (
+              <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_35%,rgba(180,145,75,.28),transparent_55%)]">
+                <Sparkles className="size-12 text-[#8a6b36]" />
+              </div>
+            )}
+            {destacado ? (
+              <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/90 p-4 backdrop-blur">
+                <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{destacado.codigo} · destacado</p>
+                <div className="mt-1 flex items-end justify-between gap-3">
+                  <h2 className="text-lg font-semibold">{destacado.nombre}</h2>
+                  <span className="text-sm font-semibold">{formatPrice(destacado.precioDesde, destacado.moneda)}</span>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
