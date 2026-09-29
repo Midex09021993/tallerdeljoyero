@@ -39,23 +39,24 @@ function formatPrice(value: number | null, moneda: string | null) {
 }
 
 function normalizarSlugCatalogo(value: string) {
-  const limpio = value.trim();
+  let limpio = value.trim();
   if (!limpio) return "";
-  try {
-    const url = limpio.match(/^[a-z][a-z0-9+.-]*:\/\//i) ? new URL(limpio) : null;
-    const path = url ? url.pathname : limpio.replace(/^www\.[^/]+\//i, "/");
-    return path
-      .replace(/^\/+|\/+$/g, "")
-      .split("/")
-      .filter(Boolean)
-      .join("-")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 80);
-  } catch {
-    return limpio.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
-  }
+
+  // Acepta slug o URL completa y conserva solo la ruta pública.
+  limpio = limpio
+    .replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]+\/?/i, "")
+    .replace(/^www\.[^/]+\/?/i, "")
+    .replace(/[?#].*$/, "")
+    .replace(/^\/+|\/+$/g, "");
+
+  return limpio
+    .split("/")
+    .filter(Boolean)
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function CatalogoPage() {
