@@ -1,7 +1,7 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, Instagram, MessageCircle, Search, Share2, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Box, Instagram, MessageCircle, Search, Share2, Sparkles, X, Play, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -47,6 +47,7 @@ type Producto = {
   imagen: string | null;
   videoUrl: string | null;
   aurumRenderUrl: string | null;
+  galeria: unknown;
   precioDesde: number | null;
   moneda: string;
   destacado: boolean;
@@ -64,6 +65,7 @@ function CatalogoPublicoPage() {
   const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
+  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
@@ -89,6 +91,7 @@ function CatalogoPublicoPage() {
       imagen: row.imagen_principal_url,
       videoUrl: row.video_url,
       aurumRenderUrl: row.aurum_render_url,
+      galeria: Array.isArray(row.galeria) ? row.galeria.filter((item): item is string => typeof item === "string") : [],
       precioDesde: row.precio_desde,
       moneda: row.moneda ?? "PEN",
       destacado: Boolean(row.destacado),
@@ -217,7 +220,7 @@ function CatalogoPublicoPage() {
         {productosFiltrados.length ? (
           <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {productosFiltrados.map((producto) => (
-              <article key={producto.id} className="group">
+              <article key={producto.id} className="group cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] bg-[#e9e3da]">
                   {producto.imagen ? (
                     <img src={producto.imagen} alt={producto.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.035]" />
@@ -237,6 +240,7 @@ function CatalogoPublicoPage() {
                         href={`${whatsappHref}?text=${encodeURIComponent(`Hola, quisiera información sobre ${producto.nombre} (${producto.codigo}).`)}`}
                         target="_blank"
                         rel="noreferrer"
+                        onClick={(event) => event.stopPropagation()}
                         className="text-xs font-semibold underline underline-offset-4"
                       >
                         Solicitar cotización
@@ -256,6 +260,36 @@ function CatalogoPublicoPage() {
           </div>
         )}
       </section>
+
+      {productoSeleccionado ? (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#1f1b18]/70 p-4 backdrop-blur-sm" onClick={() => setProductoSeleccionado(null)}>
+          <div className="mx-auto my-8 max-w-5xl overflow-hidden rounded-[28px] bg-[#f7f4ef] shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#1f1b1815] px-5 py-4 sm:px-7">
+              <div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Ficha de joya</p><h2 className="mt-1 text-xl font-semibold">{productoSeleccionado.nombre}</h2></div>
+              <button type="button" onClick={() => setProductoSeleccionado(null)} className="rounded-full p-2 hover:bg-white" aria-label="Cerrar"><X className="size-5" /></button>
+            </div>
+            <div className="grid gap-0 lg:grid-cols-[1.1fr_.9fr]">
+              <div className="bg-[#e9e3da] p-4 sm:p-6">
+                <div className="aspect-square overflow-hidden rounded-[22px] bg-white">
+                  {productoSeleccionado.imagen ? <img src={productoSeleccionado.imagen} alt={productoSeleccionado.nombre} className="size-full object-cover" /> : <div className="grid size-full place-items-center"><Box className="size-12 text-[#8a6b36]" /></div>}
+                </div>
+                {productoSeleccionado.galeria.length ? <div className="mt-3 grid grid-cols-4 gap-2">{productoSeleccionado.galeria.slice(0,8).map((url,index)=><img key={url+index} src={url} alt={productoSeleccionado.nombre+" "+(index+1)} className="aspect-square rounded-xl object-cover" />)}</div> : null}
+              </div>
+              <div className="p-6 sm:p-8">
+                <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{productoSeleccionado.codigo} · {productoSeleccionado.categoria}</p>
+                <h3 className="mt-2 font-display text-4xl tracking-tight">{productoSeleccionado.nombre}</h3>
+                <p className="mt-4 text-sm leading-7 text-[#625b54]">{productoSeleccionado.descripcion || "Consulta al taller para conocer los detalles de esta pieza."}</p>
+                <p className="mt-6 text-xl font-semibold">{formatPrice(productoSeleccionado.precioDesde, productoSeleccionado.moneda)}</p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {productoSeleccionado.aurumRenderUrl ? <a href={productoSeleccionado.aurumRenderUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-xs font-semibold text-white"><ExternalLink className="size-3.5" /> Ver AURUM Render</a> : null}
+                  {productoSeleccionado.videoUrl ? <a href={productoSeleccionado.videoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><Play className="size-3.5" /> Ver video</a> : null}
+                  {whatsappHref ? <a href={`${whatsappHref}?text=${encodeURIComponent(`Hola, quisiera información sobre ${productoSeleccionado.nombre} (${productoSeleccionado.codigo}).`)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><MessageCircle className="size-3.5" /> Solicitar cotización</a> : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="border-y border-[#1f1b1815] bg-white/60">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 md:grid-cols-3">
