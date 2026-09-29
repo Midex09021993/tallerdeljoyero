@@ -3191,6 +3191,7 @@ export type Database = {
           ubicacion: string
         }[]
       }
+      mi_participante: { Args: { _user_id: string }; Returns: string }
       mi_sede: { Args: { _user_id: string }; Returns: string }
       mover_pedido_a_area: {
         Args: { _destino: string; _motivo?: string; _pedido_id: string }
@@ -3419,6 +3420,10 @@ export type Database = {
       siguiente_numero_cotizacion: {
         Args: { _anio: number; _sede_id: string }
         Returns: string
+      }
+      tiene_participante: {
+        Args: { _participante_id: string; _user_id: string }
+        Returns: boolean
       }
       transicionar_entrega_pedido: {
         Args: { _accion: string; _datos?: Json; _pedido_id: string }
