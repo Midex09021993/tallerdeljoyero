@@ -46,6 +46,26 @@ function CatalogoPage() {
   const [modeloEditando, setModeloEditando] = useState<CatalogoProductoEditor | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
+
+  const normalizarSlugCatalogo = (value: string) => {
+    const limpio = value.trim();
+    if (!limpio) return "";
+    try {
+      const url = limpio.match(/^[a-z][a-z0-9+.-]*:\/\//i) ? new URL(limpio) : null;
+      const path = url ? url.pathname : limpio.replace(/^www\.[^/]+\//i, "/");
+      return path
+        .replace(/^\/+|\/+$/g, "")
+        .split("/")
+        .filter(Boolean)
+        .join("-")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80);
+    } catch {
+      return limpio.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+    }
+  };
   const abrirNuevo = () => { setModeloEditando(null); setEditorAbierto(true); };
   const abrirEdicion = (producto: Producto) => {
     const row = productoRows.find((item) => item.id === producto.id);
@@ -308,10 +328,12 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     if (!participanteId || !nombre.trim()) return setError("El nombre público es obligatorio.");
     setGuardando(true); setError(null);
     try {
+      const slugNormalizado = normalizarSlugCatalogo(slug || nombre);
+      if (!slugNormalizado) throw new Error("El slug público no puede quedar vacío.");
       const { error } = await supabase.from("catalogo_configuracion").upsert({
         participante_id: participanteId,
         nombre_publico: nombre.trim(),
-        slug: slug.trim(),
+        slug: slugNormalizado,
         descripcion: descripcion.trim() || null,
         whatsapp: whatsapp.trim() || null,
         visible
@@ -335,7 +357,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         </div>
         <form onSubmit={guardar} className="grid gap-4 p-6 sm:grid-cols-2">
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => setNombre(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-          <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[11px] font-normal text-muted-foreground">URL: /{slug || "tu-taller"}</span></label>
+          <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(e.target.value)} placeholder="fadilab" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[11px] font-normal text-muted-foreground">Escribe solo el identificador. Si pegas una URL completa, el sistema extraerá automáticamente la ruta.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
           <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
           <label className="flex items-center gap-3 rounded-xl border border-border p-4 sm:col-span-2"><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} /><span><b className="block text-xs">Publicar catálogo</b><span className="text-[11px] text-muted-foreground">Hace visible el enlace público.</span></span></label>
