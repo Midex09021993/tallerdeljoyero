@@ -3550,6 +3550,7 @@ export type Database = {
           piedras: string | null
           precio_desde: number | null
           producto_id: string | null
+          producto_slug: string | null
           slug: string
           talla: string | null
           tecnica: string | null
