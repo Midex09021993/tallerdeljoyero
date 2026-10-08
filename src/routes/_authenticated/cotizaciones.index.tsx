@@ -21,7 +21,6 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/")({
 });
 
 type Cliente = { id: string; nombre: string; telefono: string | null; email: string | null };
-type Proyecto = { id: string; codigo: string; nombre: string; cliente_id: string | null };
 type TipoPartida = "modelo" | "metal" | "piedras" | "fundicion" | "ajustes" | "acabado" | "mano_obra" | "render" | "otro";
 type ConceptoCotizacion = { id: string; tipo: TipoPartida; descripcion: string; cantidad: number; costo: number; precio: number; };
 
@@ -40,7 +39,7 @@ const tiposPartida: Array<{ value: TipoPartida; label: string }> = [
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
-  impuestos: number; total: number; cliente_id: string | null; proyecto_joya_id: string | null; sede_id: string | null; participante_id?: string | null;
+  impuestos: number; total: number; cliente_id: string | null; sede_id: string | null; participante_id?: string | null;
   cliente?: { nombre: string } | null;
 };
 
@@ -79,7 +78,6 @@ function CotizacionesPage() {
     Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [buscandoClientes, setBuscandoClientes] = useState(false);
-  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [sedes, setSedes] = useState<Sede[]>([]);
   const [identidad, setIdentidad] = useState<IdentidadComercial | null>(null);
@@ -94,18 +92,16 @@ function CotizacionesPage() {
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
   const [impuestoActivo, setImpuestoActivo] = useState(true);
-  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), fecha_entrega_solicitada: "", proyecto_joya_id: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
-    const [{ data: p }, { data: q }, { data: s }, { data: identidadData }] = await Promise.all([
-      supabase.from("proyectos_joya").select("id,codigo,nombre,cliente_id").order("created_at", { ascending: false }),
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
+    const [{ data: q }, { data: s }, { data: identidadData }] = await Promise.all([
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
       sesion?.participante?.sede_id
         ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.participante.sede_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
-    if (p) setProyectos(p);
     if (q) setCotizaciones(q);
     if (s) setSedes(s);
     const identidadActiva = (identidadData ?? null) as IdentidadComercial | null;
@@ -282,7 +278,7 @@ function CotizacionesPage() {
         _cliente_nombre: form.cliente_id ? null : busquedaCliente.trim(),
         _cliente_telefono: form.cliente_id ? null : nuevoCliente.telefono.trim() || null,
         _cliente_email: form.cliente_id ? null : nuevoCliente.email.trim() || null,
-        _proyecto_joya_id: form.proyecto_joya_id || null,
+        _proyecto_joya_id: null,
         _sede_id: sesion?.participante?.sede_id ?? null,
         _moneda: form.moneda,
         _cantidad: primero.cantidad,
@@ -311,7 +307,7 @@ function CotizacionesPage() {
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
-      setForm({ cliente_id: "", proyecto_joya_id: "", fecha_entrega_solicitada: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
+      setForm({ cliente_id: "", fecha_entrega_solicitada: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
@@ -332,7 +328,7 @@ function CotizacionesPage() {
   return (
     <AppShell
       titulo="Cotizaciones"
-      subtitulo="Presupuestos comerciales conectados con clientes y proyectos de joyería."
+      subtitulo="Presupuestos comerciales conectados con clientes y conceptos de venta."
       acciones={
         <>
           <FichaDorada indicador="Directorio" titulo="Cotizaciones" valor={cotizacionesVigentes.length} descripcion="Cotizaciones vigentes" onClick={() => { setBusca(""); irALista(); }} icono={<FileText className="size-5" strokeWidth={1.7} />} />
@@ -356,7 +352,7 @@ function CotizacionesPage() {
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">Gestión comercial</p>
               <h2 className="mt-1 text-lg font-semibold">Cotizaciones del taller</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Presupuestos vinculados a clientes y proyectos de joyería.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Presupuestos vinculados a clientes y conceptos comerciales.</p>
               {errorEliminacion ? <p className="mt-2 text-xs text-danger">{errorEliminacion}</p> : null}
             </div>
             <div className="hidden items-center gap-2 rounded-xl border border-gold/15 bg-gold/[0.025] px-3 py-2 text-[10px] text-muted-foreground sm:flex"><Clock3 className="size-3.5 text-gold/65" /> Seguimiento comercial</div>
@@ -370,18 +366,16 @@ function CotizacionesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead><tr className="border-y border-border bg-surface-muted/45 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {["Cotización","Cliente","Proyecto","Taller","Estado","Emisión","Total",...(sesion?.esDueno ? ["Acciones"] : [])].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
+                {["Cotización","Cliente","Taller","Estado","Emisión","Total",...(sesion?.esDueno ? ["Acciones"] : [])].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
               </tr></thead>
               <tbody className="divide-y divide-border">
                 {filtradas.map(q => {
                   const cliente = q.cliente;
-                  const proyecto = proyectos.find(p => p.id === q.proyecto_joya_id);
                   return <tr key={q.id} className="group transition-colors hover:bg-gold/[0.06]">
                     <td className="p-0 font-medium">
                       <Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.numero} <span className="text-xs text-muted-foreground">v{q.version}</span></Link>
                     </td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className="font-medium">{cliente?.nombre ?? "—"}</span></Link></td>
-                    <td className="p-0 text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{proyecto ? `${proyecto.codigo} · ${proyecto.nombre}` : "Sin proyecto"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 text-muted-foreground focus:bg-gold/[0.08] focus:outline-none">{sedes.find(s => s.id === q.sede_id)?.nombre ?? "Taller no asignado"}</Link></td>
                     <td className="p-0"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none"><span className={"rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider " + (q.estado === "requiere_revision" ? "border-gold/30 bg-gold/10 text-gold" : "border-gold/15 bg-gold/[0.035] text-muted-foreground")}>{etiquetaEstadoCotizacion(q.estado)}</span></Link></td>
                     <td className="p-0 text-xs text-muted-foreground"><Link to="/cotizaciones/$id" params={{ id: q.id }} className="block px-5 py-4 focus:bg-gold/[0.08] focus:outline-none">{q.fecha_emision}</Link></td>
@@ -480,14 +474,7 @@ function CotizacionesPage() {
                   </label>
                 </div>
               ) : null}
-              <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-                <label className="text-xs text-muted-foreground">Proyecto
-                  <select value={form.proyecto_joya_id} onChange={e => setForm({...form,proyecto_joya_id:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm">
-                    <option value="">Sin proyecto</option>
-                    {proyectos.filter(p => !form.cliente_id || !p.cliente_id || p.cliente_id === form.cliente_id).map(p => <option key={p.id} value={p.id}>{p.codigo} · {p.nombre}</option>)}
-                  </select>
-                  <span className="mt-1 block text-[10px] text-muted-foreground">Opcional. Si existe, la cotización queda vinculada al proyecto.</span>
-                </label>
+              <div className="grid gap-3 sm:col-span-2">
                 <label className="text-xs text-muted-foreground">Entrega solicitada
                   <input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} min={new Date().toISOString().slice(0, 10)} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
                   <span className="mt-1 block text-[10px] text-muted-foreground">Fecha comprometida o solicitada por el cliente.</span>
