@@ -159,7 +159,7 @@ function Inicio() {
 
   const pasosBienvenida = useMemo(() => {
     const pasos = [
-      { titulo: "Conoce tu taller", texto: "Configura las capacidades y modalidades que realmente tiene tu taller. Así Aurum Lab sólo mostrará lo que puedes operar.", icono: Settings2, accion: "Configurar taller", destino: "/gestion" },
+      { titulo: "Conoce tu taller", texto: "Configura las capacidades y modalidades que realmente tiene tu taller. Así Aurum Lab sólo mostrará lo que puedes operar.", icono: Settings2, accion: "Configurar taller", destino: "/gestion?modulo=capacidades" },
       { titulo: "Ordena tu operación", texto: "Define qué entra en producción, qué se deriva a servicios externos y prepara el flujo de trabajo de tu sede.", icono: Building2, accion: "Ir a Gestión", destino: "/gestion" },
       { titulo: "Prepara el área comercial", texto: "Revisa identidad comercial, documentos, clientes y las herramientas que utilizarás para atender pedidos.", icono: Gem, accion: "Ver Comercial", destino: "/clientes" },
       { titulo: "Empieza a trabajar", texto: "Cuando tu configuración esté lista, crea un pedido y lleva cada trabajo por el flujo real de tu taller.", icono: Wrench, accion: "Ver pedidos", destino: "/pedidos" },
@@ -251,7 +251,7 @@ function Inicio() {
                 <p className="text-sm font-semibold">Selecciona una sede para revisar su preparación</p>
                 <p className="mt-1 text-xs text-muted-foreground">La vista global sigue disponible en los indicadores inferiores. La preparación se evalúa por taller para no mezclar configuraciones.</p>
               </div>
-              <Link to="/gestion" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground hover:bg-ink/90">
+              <Link to="/gestion" className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground hover:shadow-raised">
                 Administrar sedes <ChevronRight className="size-4" />
               </Link>
             </div>
@@ -355,16 +355,16 @@ function Inicio() {
       </div>
 
       {mostrarBienvenida && pasosBienvenida.length > 0 ? (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-ink/75 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-background/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-raised">
-            <div className="border-b border-border bg-ink px-6 py-7 text-ink-foreground sm:px-8">
+            <div className="border-b border-border bg-card px-6 py-7 sm:px-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-gold"><Sparkles className="size-3.5" /> Guía de Aurum Lab</div>
                   <h2 className="font-display text-3xl">Bienvenido a Aurum Lab</h2>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-ink-foreground/60">{sesion?.participante?.nombre ? "Hemos preparado tu espacio para " + sesion.participante.nombre + ". " : "Hemos preparado tu espacio de trabajo. "}Antes de empezar, te mostramos lo esencial.</p>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{sesion?.participante?.nombre ? "Hemos preparado tu espacio para " + sesion.participante.nombre + ". " : "Hemos preparado tu espacio de trabajo. "}Antes de empezar, te mostramos lo esencial.</p>
                 </div>
-                <span className="shrink-0 text-xs font-semibold text-ink-foreground/40">{pasoBienvenida + 1}/{pasosBienvenida.length}</span>
+                <span className="shrink-0 text-xs font-semibold text-muted-foreground">{pasoBienvenida + 1}/{pasosBienvenida.length}</span>
               </div>
             </div>
             <div className="p-6 sm:p-8">
@@ -483,15 +483,15 @@ function InicioPreparacion({
         ))}
       </div>
 
-      <div className="min-w-[260px] rounded-2xl border border-gold/20 bg-ink p-5 text-ink-foreground shadow-card">
+      <div className="min-w-[260px] rounded-2xl border border-gold/20 bg-card p-5 shadow-card">
         <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Siguiente paso</p>
         <h3 className="mt-2 text-lg font-semibold">{pendientes.length ? siguiente.titulo : "Todo listo"}</h3>
-        <p className="mt-2 text-xs leading-5 text-ink-foreground/60">
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
           {pendientes.length
             ? siguiente.texto
             : "La configuración base está completa. Ya puedes trabajar con pedidos reales."}
         </p>
-        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-ink-foreground/40">
+        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {completados}/{pasos.length} completados
         </p>
         <Link
@@ -508,7 +508,7 @@ function InicioPreparacion({
 function MetricHero({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-2xl border border-gold/20 bg-card/80 px-4 py-3 shadow-card">
-      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
       <p className="mt-1 font-display text-2xl text-foreground">{value}</p>
     </div>
   );
