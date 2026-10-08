@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
+import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -66,6 +67,11 @@ const SlugRoute = SlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SlugProductoRoute = SlugProductoRouteImport.update({
+  id: '/$slug/$producto',
+  path: '/$producto',
+  getParentRoute: () => SlugRoute,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -308,7 +314,8 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
+  '/$slug': typeof SlugRouteWithChildren
+  '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -403,6 +410,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
@@ -455,6 +463,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$slug'
+    | '/$slug/$producto'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -599,7 +608,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  SlugRoute: typeof SlugRoute
+  SlugRoute: typeof SlugRouteWithChildren
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
@@ -628,6 +637,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$slug'
       preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/$slug/$producto': {
+      id: '/$slug/$producto'
+      path: '/$producto'
+      fullPath: '/$slug/$producto'
+      preLoaderRoute: typeof SlugProductoRouteImport
+      parentRoute: typeof SlugRouteImport
     }
     '/_authenticated': {
       id: '/_authenticated'
@@ -1061,10 +1077,18 @@ const CCodigoRouteChildren: CCodigoRouteChildren = {
 const CCodigoRouteWithChildren =
   CCodigoRoute._addFileChildren(CCodigoRouteChildren)
 
+interface SlugRouteChildren {
+  SlugProductoRoute: typeof SlugProductoRoute
+}
+const SlugRouteChildren: SlugRouteChildren = {
+  SlugProductoRoute: SlugProductoRoute,
+}
+const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  SlugRoute: SlugRoute,
+  SlugRoute: SlugRouteWithChildren,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
