@@ -29,6 +29,7 @@ type Seccion = {
     | "/inicio"
     | "/pedidos"
     | "/cotizaciones"
+    | "/contratos"
     | "/diseno-3d"
     | "/impresion-3d"
     | "/casting"
@@ -61,6 +62,7 @@ const secciones: Seccion[] = [
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
+  { to: "/contratos", label: "Contratos", icono: FileText, grupo: "comercial" },
   { to: "/clientes", label: "Clientes", icono: Users, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
   { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem, grupo: "aurum" },
@@ -187,6 +189,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/clientes": 5,
   "/catalogo": 35,
   "/cotizaciones": 10,
+  "/contratos": 15,
   "/pedidos": 20,
   "/ventas": 30,
   "/inventario": 40,
