@@ -3347,6 +3347,10 @@ export type Database = {
           taller: string
         }[]
       }
+      convertir_cotizacion_a_pedido: {
+        Args: { _cotizacion_id: string }
+        Returns: Json
+      }
       convertir_cotizacion_a_pedido_contrato: {
         Args: { _cotizacion_id: string }
         Returns: Json
