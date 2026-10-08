@@ -38,7 +38,7 @@ function NuevoContratoPage() {
         notas: form.notas,
       });
       toast.success(`Contrato ${contrato.numero} creado.`);
-      await navigate({ to: "/contratos/$id", params: { id: contrato.id } });
+      await navigate({ to: "/contratos/$id", params: { id: contrato.id }, search: { nuevoPedido: false } });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo crear el contrato.");
     }
