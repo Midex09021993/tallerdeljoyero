@@ -53,6 +53,14 @@ export function CapacidadesSedeAdmin({
   const qc = useQueryClient();
   const [seleccionadas, setSeleccionadas] = useState<string[] | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [modalidades, setModalidades] = useState<{
+    produccion_activa: boolean;
+    servicios_externos_activos: boolean;
+  } | null>(null);
+  const [modalidadesIniciales, setModalidadesIniciales] = useState<{
+    produccion_activa: boolean;
+    servicios_externos_activos: boolean;
+  } | null>(null);
 
   const { data: especialidades = [], isLoading: loadingEspecialidades } = useQuery({
     queryKey: ["capacidades-catalogo"],
@@ -82,6 +90,35 @@ export function CapacidadesSedeAdmin({
     enabled: Boolean(sedeId),
   });
 
+  const { data: modalidadesActuales, isLoading: loadingModalidades } = useQuery({
+    queryKey: ["sede-modalidades", sedeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sede_modalidades")
+        .select("produccion_activa,servicios_externos_activos")
+        .eq("sede_id", sedeId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? {
+        produccion_activa: false,
+        servicios_externos_activos: false,
+      }) as {
+        produccion_activa: boolean;
+        servicios_externos_activos: boolean;
+      };
+    },
+    enabled: Boolean(sedeId),
+  });
+
+  if (modalidadesActuales && !modalidadesIniciales) {
+    setModalidadesIniciales(modalidadesActuales);
+    setModalidades(modalidadesActuales);
+  }
+
+  const estadoModalidades = modalidades ?? modalidadesActuales ?? {
+    produccion_activa: false,
+    servicios_externos_activos: false,
+  };
   const idsActuales = actuales.map((r) => r.especialidad_id);
   const ids = seleccionadas ?? idsActuales;
 
@@ -162,17 +199,33 @@ export function CapacidadesSedeAdmin({
         if (error) throw error;
       }
 
-      toast.success("Capacidades de la sede actualizadas");
+      const { error: modalidadesError } = await supabase
+        .from("sede_modalidades")
+        .upsert({
+          sede_id: sedeId,
+          produccion_activa: estadoModalidades.produccion_activa,
+          servicios_externos_activos: estadoModalidades.servicios_externos_activos,
+        }, { onConflict: "sede_id" });
+
+      if (modalidadesError) throw modalidadesError;
+
+      toast.success("Configuración del taller actualizada");
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["sede-especialidades", sedeId] }),
+        qc.invalidateQueries({ queryKey: ["sede-modalidades", sedeId] }),
         qc.invalidateQueries({ queryKey: ["menu-capacidades"] }),
         qc.invalidateQueries({ queryKey: ["pedidos-capacidades-sede", sedeId] }),
         qc.invalidateQueries({ queryKey: ["preparacion-participantes"] }),
       ]);
 
-      await qc.refetchQueries({ queryKey: ["sede-especialidades", sedeId], type: "active" });
+      await Promise.all([
+        qc.refetchQueries({ queryKey: ["sede-especialidades", sedeId], type: "active" }),
+        qc.refetchQueries({ queryKey: ["sede-modalidades", sedeId], type: "active" }),
+      ]);
       setSeleccionadas(null);
+      setModalidadesIniciales(estadoModalidades);
+      setModalidades(estadoModalidades);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudieron guardar las capacidades");
     } finally {
@@ -190,7 +243,11 @@ export function CapacidadesSedeAdmin({
     );
   }
 
-  const hayCambios = seleccionadas !== null;
+  const hayCambios =
+    seleccionadas !== null ||
+    !modalidadesIniciales ||
+    modalidadesIniciales.produccion_activa !== estadoModalidades.produccion_activa ||
+    modalidadesIniciales.servicios_externos_activos !== estadoModalidades.servicios_externos_activos;
 
   return (
     <Panel titulo="Capacidades del taller">
@@ -217,7 +274,61 @@ export function CapacidadesSedeAdmin({
         </div>
       </div>
 
-      <div className="grid gap-3 p-5 sm:grid-cols-2">
+      <div className="border-b border-border p-5">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Modalidades de trabajo
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-4">
+            <input
+              type="checkbox"
+              checked={estadoModalidades.produccion_activa}
+              disabled={guardando || loadingModalidades}
+              onChange={(e) =>
+                setModalidades({
+                  ...estadoModalidades,
+                  produccion_activa: e.target.checked,
+                })
+              }
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Producción</span>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Activa las áreas productivas del taller. Las capacidades seleccionadas debajo
+                determinan qué procesos son internos.
+              </span>
+            </span>
+            <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase text-muted-foreground">
+              {estadoModalidades.produccion_activa ? "Activa" : "Inactiva"}
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-4">
+            <input
+              type="checkbox"
+              checked={estadoModalidades.servicios_externos_activos}
+              disabled={guardando || loadingModalidades}
+              onChange={(e) =>
+                setModalidades({
+                  ...estadoModalidades,
+                  servicios_externos_activos: e.target.checked,
+                })
+              }
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Servicios externos</span>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Permite enviar o recibir operaciones que el taller no realiza internamente.
+              </span>
+            </span>
+            <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase text-muted-foreground">
+              {estadoModalidades.servicios_externos_activos ? "Activa" : "Inactiva"}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div className="grid gap-3 p-5">
         {porCategoria.map(([categoria, items]) => (
           <div key={categoria} className="rounded-xl border border-border p-4">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
