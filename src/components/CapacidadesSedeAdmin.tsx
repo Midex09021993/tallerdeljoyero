@@ -268,10 +268,10 @@ export function CapacidadesSedeAdmin({
         </div>
 
         <div className="mt-4 rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">Producción:</span>{" "}
-          una capacidad habilitada aquí se considera <span className="font-semibold">interna</span>{" "}
-          para esta sede. Si se deshabilita, Producción podrá requerir un servicio externo
-          con esa misma capacidad.
+          <span className="font-semibold text-foreground">Capacidades:</span>{" "}
+          una capacidad seleccionada se considera <span className="font-semibold">interna</span>{" "}
+          para esta sede. Si Servicios externos está activo, una capacidad no seleccionada
+          puede derivarse a un proveedor externo; si está apagado, esa operación queda bloqueada.
         </div>
       </div>
 
@@ -369,7 +369,11 @@ export function CapacidadesSedeAdmin({
                             : "ml-auto text-[10px] font-semibold uppercase text-muted-foreground"
                         }
                       >
-                        {activo ? "Interna" : "Externa"}
+                        {activo
+                          ? "Interna"
+                          : estadoModalidades.servicios_externos_activos
+                            ? "Externa"
+                            : "No disponible"}
                       </span>
                     ) : null}
                   </label>
