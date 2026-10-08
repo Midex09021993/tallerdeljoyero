@@ -90,8 +90,8 @@ export function CatalogoProductoPublicoPage() {
 
       <section className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:py-14">
         <div>
-          <div className="aspect-square overflow-hidden rounded-[28px] bg-[#e9e3da]">
-            {item.imagen_principal_url ? <img src={item.imagen_principal_url} alt={item.nombre} className="size-full object-cover" /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
+          <div className="group relative aspect-square overflow-hidden rounded-[32px] bg-[#e9e3da] shadow-[0_30px_80px_-50px_rgba(31,27,24,.5)] ring-1 ring-[#1f1b1815]">
+            {item.imagen_principal_url ? <img src={item.imagen_principal_url} alt={item.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.025]" /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
           </div>
           {imagenes.length ? <div className="mt-3 grid grid-cols-4 gap-2">{imagenes.slice(0, 8).map((url, index) => <img key={url + index} src={url} alt={item.nombre + " " + (index + 1)} className="aspect-square rounded-xl object-cover" />)}</div> : null}
         </div>
@@ -100,7 +100,7 @@ export function CatalogoProductoPublicoPage() {
           <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">{item.codigo} · {item.categoria}</p>
           <h1 className="mt-2 font-display text-5xl tracking-tight">{item.nombre}</h1>
           <p className="mt-5 text-sm leading-7 text-[#625b54]">{item.descripcion_producto || "Consulta al taller para conocer los detalles de esta pieza."}</p>
-          <p className="mt-6 text-xl font-semibold">{precio}</p>
+          <div className="mt-6 flex items-end gap-3"><p className="text-2xl font-semibold tracking-tight">{precio}</p><span className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">Pieza de colección</span></div>
 
           {item.mostrar_ficha_tecnica ? (
             <div className="mt-7 grid grid-cols-2 gap-3 rounded-2xl border border-[#1f1b1820] bg-white/70 p-4 text-xs">
@@ -120,13 +120,42 @@ export function CatalogoProductoPublicoPage() {
             </div>
           ) : null}
 
-          <div className="mt-7 flex flex-wrap gap-2">
-            {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, quisiera información sobre " + item.nombre + " (" + item.codigo + ").")} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-xs font-semibold text-white"><MessageCircle className="size-3.5" /> Solicitar cotización</a> : null}
-            <button type="button" onClick={() => setSolicitudAbierta(true)} className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><MessageCircle className="size-3.5" /> Solicitar desde el catálogo</button>
-            {item.aurum_render_url ? <a href={item.aurum_render_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><ExternalLink className="size-3.5" /> AURUM Render</a> : null}
-            {item.video_url ? <a href={item.video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><Play className="size-3.5" /> Ver video</a> : null}
-            {item.ficha_tecnica_url ? <a href={item.ficha_tecnica_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold">Ficha técnica</a> : null}
+          <div className="mt-8 rounded-[24px] border border-[#1f1b1818] bg-white/75 p-3 shadow-[0_20px_60px_-45px_rgba(31,27,24,.45)] backdrop-blur">
+            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="group flex w-full items-center justify-between rounded-[18px] bg-[#1f1b18] px-5 py-4 text-left text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(31,27,24,.55)]">
+              <span><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#d7b56d]">Atención personalizada</span><span className="mt-1 block text-sm font-semibold">Solicitar cotización</span></span>
+              <MessageCircle className="size-4 text-[#d7b56d]" />
+            </button>
+            <div className="mt-2 flex flex-wrap gap-2 px-1 pb-1 pt-1">
+              {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, quisiera información sobre " + item.nombre + " (" + item.codigo + ").")} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">WhatsApp</a> : null}
+              {item.aurum_render_url ? <a href={item.aurum_render_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">AURUM Render</a> : null}
+              {item.video_url ? <a href={item.video_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ver video</a> : null}
+              {item.ficha_tecnica_url ? <a href={item.ficha_tecnica_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ficha técnica</a> : null}
+            </div>
           </div>
+          {solicitudAbierta ? (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-[#1f1b18]/55 p-5 backdrop-blur-sm">
+              <div className="w-full max-w-lg rounded-[28px] bg-[#f7f4ef] p-6 shadow-2xl">
+                <div className="flex items-start justify-between gap-4"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Solicitud privada</p><h2 className="mt-1 font-display text-3xl">Hablemos de tu pieza</h2><p className="mt-2 text-xs text-[#746b62]">{item.codigo} · {item.nombre}</p></div><button type="button" onClick={() => setSolicitudAbierta(false)} className="rounded-full border border-[#1f1b1820] px-3 py-2 text-xs">Cerrar</button></div>
+                {enviada ? <div className="mt-6 rounded-2xl border border-[#8a6b36]/20 bg-white p-5"><p className="font-semibold">Solicitud enviada</p><p className="mt-2 text-sm leading-6 text-[#625b54]">El taller recibió tus datos y la pieza consultada.</p></div> : (
+                  <form onSubmit={async (event) => {
+                    event.preventDefault(); setEnviando(true); setErrorSolicitud("");
+                    try {
+                      const { error: rpcError } = await supabase.rpc("registrar_solicitud_catalogo", { _catalogo_slug: slug, _producto_slug: productoSlug, _nombre: formSolicitud.nombre, _telefono: formSolicitud.telefono || null, _email: formSolicitud.email || null, _cantidad: formSolicitud.cantidad, _mensaje: formSolicitud.mensaje || null });
+                      if (rpcError) throw rpcError;
+                      setEnviada(true);
+                    } catch (error) { setErrorSolicitud(error instanceof Error ? error.message : "No se pudo enviar la solicitud."); }
+                    finally { setEnviando(false); }
+                  }} className="mt-6 grid gap-3">
+                    <input required value={formSolicitud.nombre} onChange={(e) => setFormSolicitud({ ...formSolicitud, nombre: e.target.value })} placeholder="Nombre" className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm outline-none focus:border-[#8a6b36]" />
+                    <div className="grid gap-3 sm:grid-cols-2"><input value={formSolicitud.telefono} onChange={(e) => setFormSolicitud({ ...formSolicitud, telefono: e.target.value })} placeholder="WhatsApp / teléfono" className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /><input type="email" value={formSolicitud.email} onChange={(e) => setFormSolicitud({ ...formSolicitud, email: e.target.value })} placeholder="Correo electrónico" className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /></div>
+                    <div className="grid gap-3 sm:grid-cols-[100px_1fr]"><input type="number" min="1" value={formSolicitud.cantidad} onChange={(e) => setFormSolicitud({ ...formSolicitud, cantidad: Number(e.target.value) || 1 })} className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /><textarea value={formSolicitud.mensaje} onChange={(e) => setFormSolicitud({ ...formSolicitud, mensaje: e.target.value })} placeholder="Talla, acabado o personalización" rows={3} className="rounded-xl border border-[#1f1b1820] bg-white px-3 py-2 text-sm" /></div>
+                    {errorSolicitud ? <p className="text-xs text-red-600">{errorSolicitud}</p> : null}
+                    <button disabled={enviando} className="mt-2 rounded-xl bg-[#1f1b18] px-4 py-3 text-xs font-semibold text-white disabled:opacity-50">{enviando ? "Enviando…" : "Enviar solicitud"}</button>
+                  </form>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
