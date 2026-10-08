@@ -199,62 +199,101 @@ export type Database = {
       catalogo_productos: {
         Row: {
           aurum_render_url: string | null
+          acabado: string | null
           categoria: string
           codigo: string
           created_at: string
           descripcion: string | null
           destacado: boolean
+          disponibilidad: string
+          ficha_tecnica_url: string | null
           galeria: Json
           id: string
           imagen_principal_url: string | null
+          metal_principal: string | null
           moneda: string
+          mostrar_ficha_tecnica: boolean
+          mostrar_precio: boolean
           nombre: string
+          notas_internas: string | null
           orden: number
           participante_id: string
+          peso_gramos: number | null
+          piedras: string | null
           precio_desde: number | null
           publicado: boolean
           slug: string
+          talla: string | null
+          tecnica: string | null
+          tiempo_fabricacion_dias: number | null
           updated_at: string
+          medidas: string | null
           video_url: string | null
         }
         Insert: {
           aurum_render_url?: string | null
-          categoria?: string
-          codigo: string
-          created_at?: string
-          descripcion?: string | null
-          destacado?: boolean
-          galeria?: Json
-          id?: string
-          imagen_principal_url?: string | null
-          moneda?: string
-          nombre: string
-          orden?: number
-          participante_id: string
-          precio_desde?: number | null
-          publicado?: boolean
-          slug?: string
-          updated_at?: string
-          video_url?: string | null
-        }
-        Update: {
-          aurum_render_url?: string | null
+          acabado?: string | null
           categoria?: string
           codigo?: string
           created_at?: string
           descripcion?: string | null
           destacado?: boolean
+          disponibilidad?: string
+          ficha_tecnica_url?: string | null
           galeria?: Json
           id?: string
           imagen_principal_url?: string | null
+          metal_principal?: string | null
           moneda?: string
-          nombre?: string
+          mostrar_ficha_tecnica?: boolean
+          mostrar_precio?: boolean
+          nombre: string
+          notas_internas?: string | null
           orden?: number
-          participante_id?: string
+          participante_id: string
+          peso_gramos?: number | null
+          piedras?: string | null
           precio_desde?: number | null
           publicado?: boolean
           slug?: string
+          talla?: string | null
+          tecnica?: string | null
+          tiempo_fabricacion_dias?: number | null
           updated_at?: string
+          medidas?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          aurum_render_url?: string | null
+          acabado?: string | null
+          categoria?: string
+          codigo?: string
+          created_at?: string
+          descripcion?: string | null
+          destacado?: boolean
+          disponibilidad?: string
+          ficha_tecnica_url?: string | null
+          galeria?: Json
+          id?: string
+          imagen_principal_url?: string | null
+          metal_principal?: string | null
+          moneda?: string
+          mostrar_ficha_tecnica?: boolean
+          mostrar_precio?: boolean
+          nombre?: string
+          notas_internas?: string | null
+          orden?: number
+          participante_id?: string
+          peso_gramos?: number | null
+          piedras?: string | null
+          precio_desde?: number | null
+          publicado?: boolean
+          slug?: string
+          talla?: string | null
+          tecnica?: string | null
+          tiempo_fabricacion_dias?: number | null
+          updated_at?: string
+          medidas?: string | null
           video_url?: string | null
         }
         Relationships: [
