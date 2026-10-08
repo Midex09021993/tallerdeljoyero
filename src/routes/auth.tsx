@@ -323,7 +323,7 @@ function LoginPage() {
             ) : null}
           </form>
 
-          <div className="mt-5 flex justify-center md:hidden max-[767px]:flex"><RegistroTaller /></div>
+
 
           {mostrarAyudaPassword ? (
             <div
