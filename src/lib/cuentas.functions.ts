@@ -162,7 +162,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
 
     if (!nombre || nombre.length > 120) throw new Error("Ingresa tu nombre.");
     if (!taller || taller.length > 160) throw new Error("Ingresa el nombre de tu taller.");
-    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new Error("Ingresa un correo válido.");
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Ingresa un correo válido.");
     if (telefono.length > 30) throw new Error("El teléfono es demasiado largo.");
     if (ciudad.length > 80) throw new Error("La ciudad es demasiado larga.");
     if (!data.password || data.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
