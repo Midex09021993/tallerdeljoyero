@@ -185,30 +185,15 @@ export function CapacidadesSedeAdmin({
 
     setGuardando(true);
     try {
-      const del = await supabase
-        .from("sede_especialidades")
-        .delete()
-        .eq("sede_id", sedeId);
+      const { data, error } = await supabase.rpc("guardar_configuracion_taller", {
+        _sede_id: sedeId,
+        _especialidad_ids: ids,
+        _produccion_activa: estadoModalidades.produccion_activa,
+        _servicios_externos_activos: estadoModalidades.servicios_externos_activos,
+      });
 
-      if (del.error) throw del.error;
-
-      if (ids.length) {
-        const { error } = await supabase
-          .from("sede_especialidades")
-          .insert(ids.map((especialidad_id) => ({ sede_id: sedeId, especialidad_id })));
-
-        if (error) throw error;
-      }
-
-      const { error: modalidadesError } = await supabase
-        .from("sede_modalidades")
-        .upsert({
-          sede_id: sedeId,
-          produccion_activa: estadoModalidades.produccion_activa,
-          servicios_externos_activos: estadoModalidades.servicios_externos_activos,
-        }, { onConflict: "sede_id" });
-
-      if (modalidadesError) throw modalidadesError;
+      if (error) throw error;
+      if (!data?.ok) throw new Error("No se pudo confirmar el guardado de la configuración");
 
       toast.success("Configuración del taller actualizada");
 
