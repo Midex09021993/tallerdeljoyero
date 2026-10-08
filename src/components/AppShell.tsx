@@ -116,8 +116,21 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
   return useQuery({
     queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
-    enabled: Boolean(sesion?.esAdmin),
+    enabled: Boolean(sesion?.esAdmin || sesion?.sede?.id),
     queryFn: async () => {
+      if (!sesion?.esAdmin) {
+        const { data: modalidades, error } = await supabase
+          .from("sede_modalidades")
+          .select("sede_id,produccion_activa,servicios_externos_activos")
+          .eq("sede_id", sesion?.sede?.id ?? "");
+        if (error) throw error;
+        return {
+          capacidades: [],
+          produccionActiva: Boolean(modalidades?.some((fila) => fila.produccion_activa)),
+          serviciosExternosActivos: Boolean(modalidades?.some((fila) => fila.servicios_externos_activos)),
+        };
+      }
+
       const [{ data: capacidades, error: capacidadesError }, { data: modalidades, error: modalidadesError }] =
         await Promise.all([
           supabase.from("sede_especialidades").select("sede_id, especialidades!inner(nombre)"),
@@ -200,7 +213,11 @@ function seccionesVisibles(
   // Las áreas se consultan dentro de cada trabajo; no deben convertirse en
   // navegación adicional. Herramientas y Perfil quedan como acciones secundarias
   // dentro de su experiencia de trabajo.
-  const inicio = secciones.filter((s) => s.to === "/operario" || s.to === "/servicios-externos");
+  const inicio = secciones.filter(
+    (s) =>
+      s.to === "/operario" ||
+      (s.to === "/servicios-externos" && Boolean(menuConfig?.serviciosExternosActivos)),
+  );
   const perfil = secciones.filter((s) => s.to === "/perfil");
   return [...inicio, ...perfil];
 }
