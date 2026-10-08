@@ -4,6 +4,7 @@ export type AurumAnalyticsEvent =
   | "page_view"
   | "tool_opened"
   | "render_opened"
+  | "platform_opened"
   | "catalog_opened"
   | "product_viewed"
   | "whatsapp_clicked"
