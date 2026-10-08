@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         ? admin.from("ecosistema_participantes").select("nombre").eq("id", quote.participante_id).maybeSingle()
         : Promise.resolve({ data: null }),
       quote.identidad_comercial_id
-        ? admin.from("identidades_comerciales").select("nombre_comercial,razon_social,ruc,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label").eq("id", quote.identidad_comercial_id).maybeSingle()
+        ? admin.from("identidades_comerciales").select("nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label,metadata").eq("id", quote.identidad_comercial_id).maybeSingle()
         : Promise.resolve({ data: null }),
       admin.from("cotizacion_detalles").select("orden,tipo,descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", quote.id).order("orden"),
     ]);
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
       : identidadActual;
 
     const identidadConfig = (quote.identidad_comercial && typeof quote.identidad_comercial === "object" ? quote.identidad_comercial : identidad) as any;
-    const docConfig = identidadConfig?.metadata?.cotizacion ?? {};
+    const docConfig = identidadConfig?.metadata?.cotizacion ?? {};\n    const atendidoPor = clean(docConfig.atendido_por) || clean(docConfig.responsable_nombre);\n    const atendidoCargo = clean(docConfig.responsable_cargo);
     const terminos = Array.isArray(docConfig.terminos) ? docConfig.terminos.filter((x: unknown) => clean(x)) : [];
     const cuentas = Array.isArray(docConfig.cuentas_bancarias) ? docConfig.cuentas_bancarias.filter((x: CuentaBancaria) => x?.activa !== false && (x.banco || x.cuenta || x.cci)) : [];
 
@@ -275,7 +275,7 @@ Deno.serve(async (req) => {
       page.drawText("DATOS DE LA COTIZACIÓN", { x: rx, y, size: 7.5, font: bold, color: muted });
       page.drawText(`Fecha de cotización: ${formatDate(quote.fecha_emision)}`, { x: rx, y: y - 13, size: 7.7, font });
       page.drawText(`Vencimiento: ${formatDate(quote.fecha_vencimiento)}`, { x: rx, y: y - 26, size: 7.7, font });
-      page.drawText(`Atendido por: ${clean(docConfig.firma_nombre) || "—"}`, { x: rx, y: y - 39, size: 7.7, font });
+      page.drawText(`Atendido por: ${atendidoPor || "—"}`, { x: rx, y: y - 39, size: 7.7, font });
       if (clean(quote.fecha_entrega_solicitada)) page.drawText(`Entrega: ${formatDate(quote.fecha_entrega_solicitada)}`, { x: rx, y: y - 52, size: 7.7, font });
       y -= 70;
     };
@@ -284,9 +284,9 @@ Deno.serve(async (req) => {
       page.drawRectangle({ x: margin, y: y - 17, width: width - margin * 2, height: 20, color: soft });
       const cols = { desc: margin + 7, qty: 340, unit: 382, tax: 448, total: 505 };
       page.drawText("DESCRIPCIÓN", { x: cols.desc, y: y - 10, size: 7.1, font: bold, color: ink });
-      page.drawText("CANT.", { x: cols.qty, y: y - 10, size: 7.1, font: bold, color: ink });
+      page.drawText("CANTIDAD", { x: cols.qty, y: y - 10, size: 6.7, font: bold, color: ink });
       page.drawText("PRECIO", { x: cols.unit, y: y - 10, size: 7.1, font: bold, color: ink });
-      page.drawText("IMP.", { x: cols.tax, y: y - 10, size: 7.1, font: bold, color: ink });
+      page.drawText("IMPUESTOS", { x: cols.tax, y: y - 10, size: 6.5, font: bold, color: ink });
       page.drawText("IMPORTE", { x: cols.total, y: y - 10, size: 7.1, font: bold, color: ink });
       y -= 25;
     };
@@ -328,7 +328,7 @@ Deno.serve(async (req) => {
     y -= 7;
     const totalsX = 365;
     const totals = [
-      ["Importe sin impuestos", Number(quote.subtotal ?? 0)],
+      ["Subtotal", Number(quote.subtotal ?? 0)],
       ["Descuento", -Number(quote.descuento ?? 0)],
       ["IGV / Impuestos", Number(quote.impuestos ?? 0)],
       ["TOTAL", Number(quote.total ?? 0)],
