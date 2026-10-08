@@ -205,7 +205,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
       },
     });
     if (authError || !creado.user) {
-      throw new Error(/already been registered/i.test(authError?.message ?? "") ? "Ese correo ya tiene una cuenta." : (authError?.message ?? "No se pudo crear la cuenta."));
+      throw new Error(/already been registered/i.test(authError?.message ?? "") ? "Ese correo ya tiene una cuenta." : /weak|easy to guess/i.test(authError?.message ?? "") ? "La contraseña es demasiado fácil de adivinar. Usa una contraseña más segura, con letras, números y símbolos." : (authError?.message ?? "No se pudo crear la cuenta."));
     }
 
     const userId = creado.user.id;
