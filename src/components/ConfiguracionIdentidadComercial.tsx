@@ -44,9 +44,9 @@ const CAMPOS = [
   "impuesto_activo","impuesto_nombre","impuesto_tasa","impuesto_incluido","identificador_fiscal_label","zona_horaria",
 ].join(",");
 
-function nuevo(participanteId: string): Omit<Identidad, "id"> {
+function nuevo(participante: Participante): Omit<Identidad, "id"> {
   return {
-    sede_id: null, participante_id: participanteId, nombre_comercial: "Taller del Joyero", razon_social: "", ruc: "", rnp_bienes: "", rpp_servicios: "", logo_url: "", email: "",
+    sede_id: participante.sede_id, participante_id: participante.id, nombre_comercial: participante.nombre, razon_social: "", ruc: "", rnp_bienes: "", rpp_servicios: "", logo_url: "", email: "",
     telefono: "", whatsapp: "", direccion: "", ciudad: "", sitio_web: "", color_principal: "#B58A3A", pie_documento: "",
     pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true,
     impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima", metadata: { cotizacion: DEFAULT_COTIZACION },
@@ -68,35 +68,57 @@ export function ConfiguracionIdentidadComercial() {
   async function cargar() {
     if (!puedeEditar) return;
     setCargando(true);
-    const { data: participantesData, error: participantesError } = await supabase
-      .from("ecosistema_participantes")
-      .select("id,nombre,ciudad,sede_id")
-      .eq("estado", "activo")
-      .order("nombre");
-    if (participantesError) { toast.error(participantesError.message); setCargando(false); return; }
-    const participantesDisponibles = sesion?.esDueno
-      ? ((participantesData ?? []) as Participante[])
-      : ((participantesData ?? []) as Participante[]).filter((x) => sesion?.participantes.some((p) => p.id === x.id));
-    setParticipantes(participantesDisponibles);
-    if (!participanteNuevo && participantesDisponibles[0]) setParticipanteNuevo(participantesDisponibles[0].id);
+    let participantesDisponibles: Participante[] = [];
 
-    const { data, error } = await supabase.from("identidades_comerciales").select(CAMPOS).eq("activa", true).order("nombre_comercial");
-    if (error) { toast.error(error.message); setCargando(false); return; }
-    const filas = (data ?? []) as unknown as Identidad[];
-
-    // Las identidades legadas se resuelven por su sede. El usuario no debe
-    // tener que escoger manualmente el taller propietario desde esta pantalla.
     if (sesion?.esDueno) {
-      for (const identidad of filas) {
-        if (identidad.participante_id || !identidad.sede_id) continue;
-        const participante = participantesDisponibles.find((p) => p.sede_id === identidad.sede_id);
-        if (participante) identidad.participante_id = participante.id;
-      }
+      const { data, error } = await supabase
+        .from("ecosistema_participantes")
+        .select("id,nombre,ciudad,sede_id")
+        .eq("estado", "activo")
+        .order("nombre");
+      if (error) { toast.error(error.message); setCargando(false); return; }
+      participantesDisponibles = (data ?? []) as Participante[];
+    } else if (sesion?.participante?.id) {
+      const { data, error } = await supabase
+        .from("ecosistema_participantes")
+        .select("id,nombre,ciudad,sede_id")
+        .eq("id", sesion.participante.id)
+        .eq("estado", "activo")
+        .maybeSingle();
+      if (error) { toast.error(error.message); setCargando(false); return; }
+      if (data) participantesDisponibles = [data as Participante];
     }
 
-    const propias = sesion?.esDueno ? filas : filas.filter((x) => x.participante_id === sesion?.participante?.id);
+    setParticipantes(participantesDisponibles);
+
+    const participanteObjetivo = sesion?.esDueno
+      ? participanteNuevo
+      : sesion?.participante?.id ?? "";
+
+    if (!participanteNuevo && participanteObjetivo) {
+      setParticipanteNuevo(participanteObjetivo);
+    }
+
+    let identidadQuery = supabase
+      .from("identidades_comerciales")
+      .select(CAMPOS)
+      .eq("activa", true);
+
+    if (!sesion?.esDueno) {
+      identidadQuery = identidadQuery.eq("participante_id", sesion?.participante?.id ?? "");
+    }
+
+    const { data, error } = await identidadQuery.order("nombre_comercial");
+    if (error) { toast.error(error.message); setCargando(false); return; }
+
+    const propias = (data ?? []) as unknown as Identidad[];
     setIdentidades(propias);
+
+    if (identidadId && !propias.some((x) => x.id === identidadId)) {
+      setIdentidadId("");
+    }
     if (!identidadId && propias[0]) setIdentidadId(propias[0].id);
+
     setCargando(false);
   }
 
@@ -207,9 +229,19 @@ export function ConfiguracionIdentidadComercial() {
   }
 
   async function crearIdentidad() {
-    if (!participanteNuevo) return toast.error("Selecciona un taller del Ecosistema.");
+    const participanteObjetivo = participantes.find((p) => p.id === participanteNuevo);
+    if (!participanteObjetivo) return toast.error("No se pudo resolver el taller propietario.");
+    if (!sesion?.esDueno && participanteObjetivo.id !== sesion?.participante?.id) {
+      return toast.error("No puedes crear una identidad para otro taller.");
+    }
+
     setCreando(true);
-    const { data, error } = await supabase.from("identidades_comerciales").insert(nuevo(participanteNuevo)).select(CAMPOS).single();
+
+    const { data, error } = await supabase
+      .from("identidades_comerciales")
+      .insert(nuevo(participanteObjetivo))
+      .select(CAMPOS)
+      .single();
     if (error) toast.error(error.message);
     else {
       toast.success("Identidad comercial creada.");
@@ -262,7 +294,11 @@ export function ConfiguracionIdentidadComercial() {
                   <option value="">Seleccionar taller</option>
                   {participantes.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                 </select>
-              ) : null}
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Se creará para <span className="font-semibold text-foreground">{participantes[0]?.nombre ?? "tu taller"}</span>.
+                </p>
+              )}
               <button type="button" onClick={()=>void crearIdentidad()} disabled={creando || !participanteNuevo} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
                 <Plus className="size-4" />{creando ? "Creando…" : "Crear identidad"}
               </button>
