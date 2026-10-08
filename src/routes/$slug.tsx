@@ -268,14 +268,15 @@ function CatalogoPublicoPage() {
           <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {productosFiltrados.map((producto) => (
               <article key={producto.id} className="group">
-                <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} aria-label={`Ver ficha de ${producto.nombre}`} className="relative block aspect-[4/5] overflow-hidden rounded-[22px] bg-[#e9e3da]">
+                <a href={`/${slugNormalizado}/${producto.slug}`} aria-label={`Ver ficha de ${producto.nombre}`} className="group/card relative block aspect-[4/5] overflow-hidden rounded-[22px] bg-[#e9e3da] ring-1 ring-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(0,0,0,.35)]">
                   {producto.imagen ? (
                     <img src={producto.imagen} alt={producto.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.035]" />
                   ) : (
                     <div className="grid size-full place-items-center"><Box className="size-10 text-[#8a6b36]" /></div>
                   )}
-                  {producto.destacado ? <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider">Destacado</span> : null}
-                </Link>
+                  {producto.destacado ? <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider shadow-sm">Destacado</span> : null}
+                  <span className="absolute inset-x-4 bottom-4 flex items-center justify-between rounded-full bg-[#1f1b18]/90 px-4 py-2.5 text-[10px] font-semibold tracking-wide text-white opacity-0 backdrop-blur transition-all duration-300 group-hover/card:opacity-100"><span>Ver pieza</span><ArrowRight className="size-3.5" /></span>
+                </a>
                 <div className="px-1 pt-4">
                   <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{producto.codigo} · {producto.categoria}</p>
                   <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="mt-1 block text-lg font-semibold hover:text-[#8a6b36]">{producto.nombre}</Link>
