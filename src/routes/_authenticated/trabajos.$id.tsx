@@ -328,6 +328,16 @@ function TrabajoOperativoPage() {
   const cambiarEstado = useMutation({
     mutationFn: async (estado: "en_proceso" | "completado" | "bloqueado") => {
       setErrorAccion(null);
+
+      if (sesionActiva && (estado === "completado" || estado === "bloqueado")) {
+        const segundos = Math.max(0, Math.floor((Date.now() - new Date(sesionActiva.inicio).getTime()) / 1000));
+        const { error: errorReloj } = await supabase
+          .from("trabajo_tiempos")
+          .update({ fin: new Date().toISOString(), segundos_acumulados: segundos })
+          .eq("id", sesionActiva.id);
+        if (errorReloj) throw errorReloj;
+      }
+
       const { error } = await supabase.rpc("cambiar_estado_trabajo", {
         _trabajo_id: id,
         _nuevo_estado: estado,
@@ -336,6 +346,7 @@ function TrabajoOperativoPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["trabajo-operativo", id] });
+      qc.invalidateQueries({ queryKey: ["trabajo-tiempos", id] });
       qc.invalidateQueries({ queryKey: ["mis-trabajos-operario"] });
       qc.invalidateQueries({ queryKey: ["trabajos-pedido", trabajo?.pedido_id] });
     },
@@ -415,14 +426,15 @@ function TrabajoOperativoPage() {
             <div className="min-w-0"><h1 className="text-2xl font-semibold">{nombrePieza}</h1><p className="mt-1 text-sm text-muted-foreground">{pedidoTrabajo?.referencia ?? "Pedido"} · {trabajo.area}</p></div>
             <span className="rounded-full border border-gold/20 bg-gold/[0.06] px-3 py-1.5 text-xs font-bold text-gold-deep">{estadoLabel[trabajo.estado]}</span>
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span className="rounded-full bg-surface-muted px-2.5 py-1">Taller: {sedeNombre || "—"}</span><span className="rounded-full bg-surface-muted px-2.5 py-1">Área: {trabajo.area}</span></div>
           <div className="mt-4 flex flex-wrap gap-2">
             {puedeTomar ? <button type="button" onClick={() => void tomarTrabajo()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground">Tomar este trabajo</button> : null}
             {trabajo.estado === "pendiente" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
           </div>
         </section>
 
-        <details open className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
-          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">1</span><span className="text-sm font-bold">Identificación completa</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+        <details className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">1</span><span className="text-sm font-bold">Identificación del trabajo</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-border p-5"><dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {[
               ["Trabajo / pieza", nombrePieza], ["Referencia", pedidoTrabajo?.referencia || "—"], ["Área actual", pedidoTrabajo?.area_actual || trabajo.area],
@@ -457,7 +469,7 @@ function TrabajoOperativoPage() {
         ) : null}
 
 <details open className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
-          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">3</span><span className="text-sm font-bold">Especificaciones de la pieza</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">2</span><span className="text-sm font-bold">Qué fabricar</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-border p-5">
             <div className="grid gap-2 sm:grid-cols-2">
               {[
@@ -474,7 +486,7 @@ function TrabajoOperativoPage() {
         </details>
 
         <details open className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
-          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">3</span><span className="text-sm font-bold">Instrucciones de fabricación</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">3</span><span className="text-sm font-bold">Cómo hacerlo</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-border p-5">
             <div className="rounded-2xl border border-gold/20 bg-gold/[0.03] p-4"><p className="whitespace-pre-wrap text-sm leading-6">{trabajo.descripcion || "No hay instrucciones adicionales registradas."}</p></div>
             {trabajo.notas ? <div className="mt-3 rounded-2xl border border-gold/10 bg-gold/[0.018] p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Notas de la operación</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{trabajo.notas}</p></div> : null}
@@ -501,7 +513,7 @@ function TrabajoOperativoPage() {
   </section>
 ) : null}
 
-<details className="group overflow-hidden rounded-2xl border border-success/20 bg-card shadow-raised">
+<details open className="group overflow-hidden rounded-2xl border border-success/20 bg-card shadow-raised">
           <summary className="flex cursor-pointer list-none items-center justify-between bg-success/[0.04] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-success/10 text-xs font-bold text-success">4</span><span className="text-sm font-bold">Archivos del servicio <span className="ml-1 text-xs text-muted-foreground">({archivosPedido.length})</span></span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-success/20 p-5">
             <div className="rounded-2xl border border-success/20 bg-success/[0.03] p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-wider text-success">Archivo vigente para fabricación</p><p className="mt-1 text-sm font-semibold">Diseño aprobado</p></div><span className="rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-bold text-success">{archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}</span></div>
