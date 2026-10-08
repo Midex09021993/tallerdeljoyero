@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useQuery } from "@tanstack/react-query";
 import { Building2, CheckCircle2, Clock3, ExternalLink, PackageCheck, TriangleAlert } from "lucide-react";
 import { Link } from "@tanstack/react-router";
