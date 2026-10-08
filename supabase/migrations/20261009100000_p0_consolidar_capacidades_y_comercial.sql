@@ -115,6 +115,7 @@ to authenticated;
 -- Idempotente por cotizacion.
 -- ============================================================
 
+drop function if exists public.convertir_cotizacion_a_pedido_contrato(uuid);
 drop function if exists public.convertir_cotizacion_a_pedido(uuid);
 
 create function public.convertir_cotizacion_a_pedido(_cotizacion_id uuid)
