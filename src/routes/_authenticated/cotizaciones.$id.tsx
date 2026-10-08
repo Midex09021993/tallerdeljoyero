@@ -780,7 +780,7 @@ function CotizacionDetallePage() {
                     </button>
                   )
                 ) : (
-                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el pedido sin volver a ingresar los datos. El contrato se genera automáticamente cuando corresponde.</p>
+                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el pedido sin volver a ingresar los datos. El contrato es opcional y puede crearse por separado cuando corresponda.</p>
                 )}
                 <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
               </div>
