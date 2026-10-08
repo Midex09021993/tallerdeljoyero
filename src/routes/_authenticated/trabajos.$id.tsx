@@ -1,4 +1,3 @@
-// @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
