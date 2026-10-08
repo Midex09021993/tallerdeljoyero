@@ -382,7 +382,9 @@ function LoginPage() {
               <button type="button" onClick={() => setMostrarPlataforma(false)} aria-label="Cerrar" className="rounded-full border border-white/10 p-2 text-white/60 hover:text-gold"><EyeOff className="size-4" /></button>
             </div>
 
-            <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 px-4 pt-3 sm:px-7">
+            <div className="border-b border-white/10 px-4 pt-3 sm:px-7">
+              <p className="mb-2 text-[10px] text-white/35">Explora la plataforma por área</p>
+              <div className="flex gap-1 overflow-x-auto">
               {([
                 ["ecosistema","El ecosistema",Gem],
                 ["participantes","Quién puede participar",UsersRound],
@@ -394,17 +396,21 @@ function LoginPage() {
                   <Icon className="size-3.5" /> {String(label)}
                 </button>
               ))}
+              </div>
             </div>
 
             <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
               {seccionPlataforma === "ecosistema" ? (
                 <>
-                  <div className="max-w-3xl">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Lo que ya puedes usar</p>
-                    <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Una plataforma para organizar el trabajo real de tu taller.</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/60">
-                      Desde un taller pequeño hasta una organización con varias áreas y sedes, Aurum Lab conecta la gestión comercial, los pedidos, la producción, el inventario y las herramientas técnicas en un mismo entorno.
+                  <div className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5 sm:p-7">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Aurum Lab · infraestructura digital</p>
+                    <h3 className="mt-2 max-w-4xl font-display text-2xl italic text-white sm:text-4xl">Todo el recorrido de una joya, conectado.</h3>
+                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
+                      Aurum Lab une la relación con el cliente, la gestión comercial y la operación del taller para que la información acompañe a la pieza desde el proyecto hasta la entrega.
                     </p>
+                    <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider">
+                      {["Cliente","Proyecto","Cotización","Pedido","Producción","Calidad","Entrega"].map((item,i) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}{i < 6 ? " →" : ""}</span>)}
+                    </div>
                   </div>
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
