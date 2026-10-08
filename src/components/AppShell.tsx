@@ -146,7 +146,6 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
 function seccionesVisibles(
   roles: Rol[] | undefined,
-  areas: string[] | undefined,
   esAdmin: boolean | undefined,
   capacidades: string[] | undefined,
 ): Seccion[] {
@@ -225,7 +224,6 @@ export function AppShell({
   const { data: capacidadesMenu, isSuccess: capacidadesCargadas } = useCapacidadesMenu(sesion);
   const visibles = seccionesVisibles(
     sesion?.roles,
-    sesion?.areas,
     sesion?.esAdmin,
     capacidadesCargadas ? capacidadesMenu : undefined,
   );
