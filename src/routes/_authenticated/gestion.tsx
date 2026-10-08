@@ -61,6 +61,7 @@ import { CapacidadesSedeAdmin } from "@/components/CapacidadesSedeAdmin";
 import { ConfiguracionComercial } from "@/components/ConfiguracionComercial";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { AurumTransferHistorialOwner } from "@/components/AurumTransferHistorialOwner";
+import { AnaliticaAurumLab } from "@/components/AnaliticaAurumLab";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -104,7 +105,8 @@ type Modulo =
   | "capacidades"
   | "comercial"
   | "web"
-  | "aurumTransfer";
+  | "aurumTransfer"
+  | "analitica";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -146,6 +148,7 @@ function GestionPage() {
     { id: "comercial", label: "Comercial · identidad y contratos", visible: puedeUsuarios },
     { id: "web", label: "Configuración Web", visible: esDueno },
     { id: "aurumTransfer", label: "AURUM Transfer", visible: esDueno },
+    { id: "analitica", label: "Analítica Aurum Lab", visible: esDueno },
     { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
     { id: "aurumRender", label: "AURUM Render", visible: esDueno },
     { id: "solicitudesAcceso", label: "Solicitudes de acceso", visible: esDueno },
@@ -214,6 +217,7 @@ function GestionPage() {
       {modulo === "comercial" && puedeUsuarios ? <ConfiguracionComercial /> : null}
       {modulo === "web" && esDueno ? <ComunidadAurumLab configuracion /> : null}
       {modulo === "aurumTransfer" && esDueno ? <AurumTransferHistorialOwner /> : null}
+      {modulo === "analitica" && esDueno ? <AnaliticaAurumLab /> : null}
       {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sedes.find((s) => s.id === sedeActiva)?.nombre ?? sesion?.sede?.nombre ?? undefined} esDueno={esDueno} /> : null}
     </AppShell>
   );
