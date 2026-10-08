@@ -131,30 +131,40 @@ function GestionPage() {
   const [modulo, setModulo] = useState<Modulo>("resumen");
 
   const esDueno = Boolean(sesion?.esDueno);
-  const puedeUsuarios = Boolean(esDueno || sesion?.roles.includes("gerente"));
+  const esGerente = Boolean(sesion?.roles.includes("gerente"));
+  const puedeGestionSede = esDueno || esGerente;
   const pedidosGestion = useMemo(() => filtrarPedidos(pedidos), [filtrarPedidos, pedidos]);
   const sedeActiva =
     esDueno && sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : (sesion?.perfil.sede_id ?? null);
 
-  const modulos: { id: Modulo; label: string; visible: boolean }[] = [
-    { id: "resumen", label: "Resumen", visible: true },
-    { id: "flujo", label: "Flujo", visible: true },
-    { id: "entregados", label: "Pedidos Entregados", visible: puedeUsuarios },
-    { id: "finanzas", label: "Finanzas", visible: Boolean(esDueno || sesion?.roles.includes("gerente")) },
-    { id: "respaldo", label: "Respaldo", visible: puedeUsuarios },
-    { id: "automatizacion", label: "Automatización", visible: puedeUsuarios },
-    { id: "usuarios", label: "Usuarios", visible: puedeUsuarios },
-    { id: "capacidades", label: "Capacidades del taller", visible: puedeUsuarios },
-    { id: "comercial", label: "Comercial · identidad y contratos", visible: puedeUsuarios },
-    { id: "web", label: "Configuración Web", visible: esDueno },
-    { id: "aurumTransfer", label: "AURUM Transfer", visible: esDueno },
-    { id: "analitica", label: "Analítica Aurum Lab", visible: esDueno },
-    { id: "calculadoras", label: "Configuración de Calculadoras", visible: esDueno },
-    { id: "aurumRender", label: "AURUM Render", visible: esDueno },
-    { id: "solicitudesAcceso", label: "Solicitudes de acceso", visible: esDueno },
-    { id: "ecosistema", label: "Ecosistema", visible: esDueno },
-    { id: "especialidades", label: "Especialidades", visible: esDueno },
+  const nombreSede = esDueno
+    ? etiquetaSede
+    : (sesion?.sede?.nombre ?? "tu sede");
+
+  const modulosSede: { id: Modulo; label: string; descripcion: string }[] = [
+    { id: "resumen", label: "Resumen", descripcion: "Indicadores y alertas de la sede" },
+    { id: "flujo", label: "Operación", descripcion: "Carga y tiempos por área" },
+    { id: "finanzas", label: "Finanzas", descripcion: "Ingresos, gastos y margen" },
+    { id: "comercial", label: "Comercial", descripcion: "Identidad y documentos comerciales" },
+    { id: "usuarios", label: "Equipo", descripcion: "Usuarios, roles y accesos" },
+    { id: "capacidades", label: "Taller", descripcion: "Capacidades y modalidades de trabajo" },
+    { id: "automatizacion", label: "Alertas", descripcion: "Objetivos de tiempo y alertas internas" },
   ];
+
+  const modulosPlataforma: { id: Modulo; label: string; descripcion: string }[] = [
+    { id: "ecosistema", label: "Ecosistema", descripcion: "Participantes y sedes de Aurum Lab" },
+    { id: "solicitudesAcceso", label: "Accesos", descripcion: "Solicitudes de acceso a la plataforma" },
+    { id: "web", label: "Web & Comunidad", descripcion: "Contenido público y comunidad Aurum Lab" },
+    { id: "analitica", label: "Analítica", descripcion: "Métricas globales de la plataforma" },
+    { id: "aurumTransfer", label: "AURUM Transfer", descripcion: "Gestión de transferencias de archivos" },
+    { id: "calculadoras", label: "Calculadoras", descripcion: "Herramientas y configuraciones públicas" },
+    { id: "aurumRender", label: "AURUM Render", descripcion: "Configuración del servicio de render" },
+    { id: "especialidades", label: "Especialidades", descripcion: "Catálogo global de especialidades" },
+  ];
+
+  const moduloActivo = [...modulosSede, ...(esDueno ? modulosPlataforma : [])].find(
+    (m) => m.id === modulo,
+  );
 
   return (
     <AppShell
@@ -162,7 +172,9 @@ function GestionPage() {
       subtitulo={
         isLoading
           ? "Cargando…"
-          : `Zona administrativa · ${esDueno ? etiquetaSede : (sesion?.sede?.nombre ?? "tu sede")}`
+          : esDueno
+            ? `Administración de sede · ${nombreSede}`
+            : `Administración de ${nombreSede}`
       }
       acciones={
         <SelectorSedeDueno
@@ -173,53 +185,152 @@ function GestionPage() {
         />
       }
     >
-      <div className="flex flex-wrap gap-2">
-        {modulos
-          .filter((m) => m.visible)
-          .map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setModulo(m.id)}
-              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                modulo === m.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-surface-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-      </div>
+      <div className="space-y-6">
+        <header className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                {esDueno ? "Dueño · Administración" : "Gerente de sede"}
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                {esDueno ? "Gestión de sede" : "Centro de gestión"}
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                {esDueno
+                  ? "Administra una sede concreta sin mezclarla con las funciones globales de Aurum Lab."
+                  : "Controla la operación, el equipo, las finanzas y la configuración de tu taller desde un solo lugar."}
+              </p>
+            </div>
+            {esDueno ? (
+              <div className="rounded-xl bg-surface-muted px-4 py-3 text-right">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Sede en contexto</p>
+                <p className="mt-1 text-sm font-semibold">{nombreSede}</p>
+              </div>
+            ) : null}
+          </div>
+        </header>
 
-      {modulo === "resumen" ? (
-        <ModuloResumen pedidos={pedidosGestion} sedeActiva={sedeActiva} />
-      ) : null}
-      {modulo === "flujo" ? <ModuloFlujo pedidos={pedidosGestion} /> : null}
-      {modulo === "entregados" ? <ModuloEntregados pedidos={pedidosGestion} /> : null}
-      {modulo === "finanzas" && (esDueno || sesion?.roles.includes("gerente")) ? (
-        <ModuloFinanzas pedidos={pedidosGestion} sedePropia={sedeActiva} />
-      ) : null}
-      {modulo === "respaldo" && puedeUsuarios ? (
-        <ModuloRespaldo esDueno={esDueno} sedePropia={sedeActiva} />
-      ) : null}
-      {modulo === "automatizacion" && puedeUsuarios ? (
-        <ModuloAutomatizacion pedidos={pedidosGestion} sedePropia={sedeActiva} />
-      ) : null}
-      {modulo === "usuarios" && puedeUsuarios ? (
-        <ModuloUsuarios esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
-      ) : null}
-       {modulo === "calculadoras" && esDueno ? <ConfiguracionCalculadoras /> : null}
-      {modulo === "aurumRender" && esDueno ? <AurumRenderConfig /> : null}
-      {modulo === "solicitudesAcceso" && esDueno ? <SolicitudesAccesoOwner /> : null}
-      {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
-      {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
-      {modulo === "comercial" && puedeUsuarios ? <ConfiguracionComercial /> : null}
-      {modulo === "web" && esDueno ? <ComunidadAurumLab configuracion /> : null}
-      {modulo === "aurumTransfer" && esDueno ? <AurumTransferHistorialOwner /> : null}
-      {modulo === "analitica" && esDueno ? <AnaliticaAurumLab /> : null}
-      {modulo === "capacidades" && puedeUsuarios ? <CapacidadesSedeAdmin sedeId={sedeActiva} sedeNombre={sedes.find((s) => s.id === sedeActiva)?.nombre ?? sesion?.sede?.nombre ?? undefined} esDueno={esDueno} /> : null}
+        <section>
+          <div className="mb-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
+              Gestión de sede
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Funciones que pertenecen al funcionamiento diario de un taller.
+            </p>
+          </div>
+          <GestionNav
+            items={modulosSede}
+            active={modulo}
+            onChange={setModulo}
+          />
+        </section>
+
+        {esDueno ? (
+          <section className="border-t border-border pt-6">
+            <div className="mb-3">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
+                Administración Aurum Lab
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Funciones globales del producto. No pertenecen a la operación de una sede.
+              </p>
+            </div>
+            <GestionNav
+              items={modulosPlataforma}
+              active={modulo}
+              onChange={setModulo}
+              plataforma
+            />
+          </section>
+        ) : null}
+
+        {moduloActivo ? (
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted/50 px-4 py-3">
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            <div>
+              <p className="text-sm font-semibold">{moduloActivo.label}</p>
+              <p className="text-xs text-muted-foreground">{moduloActivo.descripcion}</p>
+            </div>
+          </div>
+        ) : null}
+
+        {modulo === "resumen" ? (
+          <ModuloResumen pedidos={pedidosGestion} sedeActiva={sedeActiva} />
+        ) : null}
+        {modulo === "flujo" ? <ModuloFlujo pedidos={pedidosGestion} /> : null}
+        {modulo === "finanzas" && puedeGestionSede ? (
+          <ModuloFinanzas pedidos={pedidosGestion} sedePropia={sedeActiva} />
+        ) : null}
+        {modulo === "automatizacion" && puedeGestionSede ? (
+          <ModuloAutomatizacion pedidos={pedidosGestion} sedePropia={sedeActiva} />
+        ) : null}
+        {modulo === "usuarios" && puedeGestionSede ? (
+          <ModuloUsuarios esDueno={esDueno} sedePropia={sesion?.perfil.sede_id ?? null} />
+        ) : null}
+        {modulo === "calculadoras" && esDueno ? <ConfiguracionCalculadoras /> : null}
+        {modulo === "aurumRender" && esDueno ? <AurumRenderConfig /> : null}
+        {modulo === "solicitudesAcceso" && esDueno ? <SolicitudesAccesoOwner /> : null}
+        {modulo === "ecosistema" && esDueno ? <EcosistemaParticipantesOwner /> : null}
+        {modulo === "especialidades" && esDueno ? <EspecialidadesOwner /> : null}
+        {modulo === "comercial" && puedeGestionSede ? <ConfiguracionComercial /> : null}
+        {modulo === "web" && esDueno ? <ComunidadAurumLab configuracion /> : null}
+        {modulo === "aurumTransfer" && esDueno ? <AurumTransferHistorialOwner /> : null}
+        {modulo === "analitica" && esDueno ? <AnaliticaAurumLab /> : null}
+        {modulo === "capacidades" && puedeGestionSede ? (
+          <CapacidadesSedeAdmin
+            sedeId={sedeActiva}
+            sedeNombre={sedes.find((s) => s.id === sedeActiva)?.nombre ?? sesion?.sede?.nombre ?? undefined}
+            esDueno={esDueno}
+          />
+        ) : null}
+      </div>
     </AppShell>
+  );
+}
+
+function GestionNav({
+  items,
+  active,
+  onChange,
+  plataforma = false,
+}: {
+  items: { id: Modulo; label: string; descripcion: string }[];
+  active: Modulo;
+  onChange: (id: Modulo) => void;
+  plataforma?: boolean;
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((item) => {
+        const seleccionado = active === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onChange(item.id)}
+            className={`group rounded-xl border p-4 text-left transition-all ${
+              seleccionado
+                ? plataforma
+                  ? "border-primary bg-primary/10 shadow-sm"
+                  : "border-primary bg-card shadow-sm"
+                : "border-border bg-card hover:border-primary/40 hover:bg-surface-muted"
+            }`}
+            aria-pressed={seleccionado}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-sm font-semibold">{item.label}</span>
+              <span
+                className={`mt-0.5 h-2 w-2 rounded-full transition-opacity ${
+                  seleccionado ? "bg-primary opacity-100" : "bg-muted-foreground opacity-30 group-hover:opacity-70"
+                }`}
+              />
+            </div>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.descripcion}</p>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
