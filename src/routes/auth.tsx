@@ -241,17 +241,6 @@ function LoginPage() {
               </button>
             </div>
 
-            <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.025] p-4 max-[767px]:hidden">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-white">¿Quieres llevar esto a tu operación?</p>
-                  <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-white/45">
-                    Las herramientas son el primer paso. Crea tu taller para empezar a organizar clientes, cotizaciones, pedidos y producción en Aurum Lab.
-                  </p>
-                </div>
-                <RegistroTaller />
-              </div>
-            </div>
           </section>
 
         </section>
