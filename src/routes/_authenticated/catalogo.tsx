@@ -18,12 +18,12 @@ export const Route = createFileRoute("/_authenticated/catalogo")({
 });
 
 type Producto = {
-  id: string; codigo: string; nombre: string; categoria: string; descripcion: string;
+  id: string; codigo: string; nombre: string; slug: string; categoria: string; descripcion: string;
   imagen: string | null; coleccion: string; destacado: boolean;
   precioDesde: string | null; estado: "Publicado" | "Borrador";
 };
 type ProductoRow = {
-  id: string; codigo: string; nombre: string; categoria: string; descripcion: string | null;
+  id: string; codigo: string; nombre: string; slug: string; categoria: string; descripcion: string | null;
   imagen_principal_url: string | null; galeria: unknown; video_url: string | null; aurum_render_url: string | null; precio_desde: number | null; moneda: string;
   publicado: boolean; destacado: boolean; orden: number;
   metal_principal: string | null; peso_gramos: number | null; piedras: string | null; medidas: string | null; talla: string | null;
@@ -115,7 +115,8 @@ function CatalogoPage() {
 
   const compartir = async (producto: Producto) => {
     if (!catalogoConfig?.slug) return;
-    const url = window.location.origin + "/" + catalogoConfig.slug;
+    const row = productoRows.find((item) => item.id === producto.id);
+    const url = window.location.origin + "/" + catalogoConfig.slug + "/" + (row?.slug ?? producto.id);
     try {
       if (navigator.share) await navigator.share({ title: producto.nombre, text: producto.nombre + " · " + (catalogoConfig.nombre_publico ?? "Catálogo"), url });
       else await navigator.clipboard.writeText(url);
@@ -173,7 +174,7 @@ function CatalogoPage() {
 
   const todosLosProductos = useMemo<Producto[]>(
     () => productoRows.map((p) => ({
-      id: p.id, codigo: p.codigo, nombre: p.nombre, categoria: p.categoria,
+      id: p.id, codigo: p.codigo, nombre: p.nombre, slug: p.slug, categoria: p.categoria,
       descripcion: p.descripcion ?? "", imagen: p.imagen_principal_url,
       coleccion: coleccionesPorProducto.get(p.id) ?? "Sin colección",
       destacado: p.destacado, precioDesde: formatPrice(p.precio_desde, p.moneda),
@@ -280,7 +281,7 @@ function CatalogoPage() {
                   {p.precioDesde ? <p className="mt-3 text-sm font-semibold">{p.precioDesde}</p> : null}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
+                  {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}/${p.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/40"><ExternalLink className="size-3.5" /> Público</a> : null}
                   {puedeGestionar ? <><button type="button" onClick={() => void cambiarFlag(p.id, "publicado", p.estado !== "Publicado")} disabled={guardandoAccion === "publicado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.estado === "Publicado" ? "Retirar" : "Publicar"}</button><button type="button" onClick={() => void cambiarFlag(p.id, "destacado", !p.destacado)} disabled={guardandoAccion === "destacado:" + p.id} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold disabled:opacity-50">{p.destacado ? "Quitar destacado" : "Destacar"}</button></> : null}<button type="button" onClick={() => abrirEdicion(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><ImageIcon className="size-3.5" /> Ficha</button><button type="button" onClick={() => void compartir(p)} className="inline-flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>{puedeGestionar ? <button type="button" onClick={() => void eliminarProducto(p)} disabled={guardandoAccion === "eliminar:" + p.id} className="inline-flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive disabled:opacity-50">{guardandoAccion === "eliminar:" + p.id ? "Eliminando…" : "Eliminar"}</button> : null}
                 </div>
               </div>
