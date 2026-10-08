@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, MessageCircle, Search, Share2, Sparkles, X, Play, ExternalLink } from "lucide-react";
+import { ArrowRight, BookOpen, Box, MessageCircle, Search, Share2, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -87,7 +87,6 @@ function CatalogoPublicoPage() {
   const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
-  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
@@ -250,7 +249,7 @@ function CatalogoPublicoPage() {
         {productosFiltrados.length ? (
           <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {productosFiltrados.map((producto) => (
-              <Link key={producto.id} to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="group block">
+              <article key={producto.id} className="group">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] bg-[#e9e3da]">
                   {producto.imagen ? (
                     <img src={producto.imagen} alt={producto.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.035]" />
@@ -261,7 +260,7 @@ function CatalogoPublicoPage() {
                 </div>
                 <div className="px-1 pt-4">
                   <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{producto.codigo} · {producto.categoria}</p>
-                  <h3 className="mt-1 text-lg font-semibold">{producto.nombre}</h3>
+                  <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="mt-1 block text-lg font-semibold hover:text-[#8a6b36]">{producto.nombre}</Link>
                   <p className="mt-1 text-xs leading-5 text-[#746b62]">{producto.descripcion}</p>
                   <div className="mt-3 flex items-center justify-between gap-3">
                     {producto.mostrarPrecio ? <span className="text-sm font-semibold">{formatPrice(producto.precioDesde, producto.moneda)}</span> : <span className="text-xs text-[#746b62]">Consultar</span>}
@@ -280,7 +279,7 @@ function CatalogoPublicoPage() {
                     )}
                   </div>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         ) : (
@@ -290,53 +289,6 @@ function CatalogoPublicoPage() {
           </div>
         )}
       </section>
-
-      {productoSeleccionado ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#1f1b18]/70 p-4 backdrop-blur-sm" onClick={() => setProductoSeleccionado(null)}>
-          <div className="mx-auto my-8 max-w-5xl overflow-hidden rounded-[28px] bg-[#f7f4ef] shadow-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#1f1b1815] px-5 py-4 sm:px-7">
-              <div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Ficha de joya</p><h2 className="mt-1 text-xl font-semibold">{productoSeleccionado.nombre}</h2></div>
-              <button type="button" onClick={() => setProductoSeleccionado(null)} className="rounded-full p-2 hover:bg-white" aria-label="Cerrar"><X className="size-5" /></button>
-            </div>
-            <div className="grid gap-0 lg:grid-cols-[1.1fr_.9fr]">
-              <div className="bg-[#e9e3da] p-4 sm:p-6">
-                <div className="aspect-square overflow-hidden rounded-[22px] bg-white">
-                  {productoSeleccionado.imagen ? <img src={productoSeleccionado.imagen} alt={productoSeleccionado.nombre} className="size-full object-cover" /> : <div className="grid size-full place-items-center"><Box className="size-12 text-[#8a6b36]" /></div>}
-                </div>
-                {productoSeleccionado.galeria.length ? <div className="mt-3 grid grid-cols-4 gap-2">{productoSeleccionado.galeria.slice(0,8).map((url,index)=><img key={url+index} src={url} alt={productoSeleccionado.nombre+" "+(index+1)} className="aspect-square rounded-xl object-cover" />)}</div> : null}
-              </div>
-              <div className="p-6 sm:p-8">
-                <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{productoSeleccionado.codigo} · {productoSeleccionado.categoria}</p>
-                <h3 className="mt-2 font-display text-4xl tracking-tight">{productoSeleccionado.nombre}</h3>
-                <p className="mt-4 text-sm leading-7 text-[#625b54]">{productoSeleccionado.descripcion || "Consulta al taller para conocer los detalles de esta pieza."}</p>
-                {productoSeleccionado.mostrarPrecio ? <p className="mt-6 text-xl font-semibold">{formatPrice(productoSeleccionado.precioDesde, productoSeleccionado.moneda)}</p> : <p className="mt-6 text-sm font-medium text-[#746b62]">Precio a consultar</p>}
-                {productoSeleccionado.mostrarFichaTecnica ? (
-                  <div className="mt-7 grid grid-cols-2 gap-3 rounded-2xl border border-[#1f1b1820] bg-white/70 p-4 text-xs">
-                    {[
-                      ["Metal", productoSeleccionado.metalPrincipal],
-                      ["Peso", productoSeleccionado.pesoGramos ? `${productoSeleccionado.pesoGramos} g` : null],
-                      ["Piedras", productoSeleccionado.piedras],
-                      ["Medidas", productoSeleccionado.medidas],
-                      ["Talla", productoSeleccionado.talla],
-                      ["Técnica", productoSeleccionado.tecnica],
-                      ["Acabado", productoSeleccionado.acabado],
-                      ["Disponibilidad", productoSeleccionado.disponibilidad],
-                      ["Fabricación", productoSeleccionado.tiempoFabricacionDias ? `${productoSeleccionado.tiempoFabricacionDias} días` : null],
-                    ].filter((item): item is [string, string] => Boolean(item[1])).map(([label, value]) => (
-                      <div key={label}><p className="text-[9px] font-bold uppercase tracking-wider text-[#8a6b36]">{label}</p><p className="mt-1">{value}</p></div>
-                    ))}
-                  </div>
-                ) : null}
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {productoSeleccionado.aurumRenderUrl ? <a href={productoSeleccionado.aurumRenderUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-xs font-semibold text-white"><ExternalLink className="size-3.5" /> Ver AURUM Render</a> : null}
-                  {productoSeleccionado.videoUrl ? <a href={productoSeleccionado.videoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><Play className="size-3.5" /> Ver video</a> : null}
-                  {whatsappHref ? <a href={`${whatsappHref}?text=${encodeURIComponent(`Hola, quisiera información sobre ${productoSeleccionado.nombre} (${productoSeleccionado.codigo}).`)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><MessageCircle className="size-3.5" /> Solicitar cotización</a> : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <section className="border-y border-[#1f1b1815] bg-white/60">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 md:grid-cols-3">
