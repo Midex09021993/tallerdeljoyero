@@ -42,7 +42,9 @@ import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
+import { Route as AuthenticatedContratosIndexRouteImport } from './routes/_authenticated/contratos.index'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
+import { Route as AuthenticatedContratosNuevoRouteImport } from './routes/_authenticated/contratos.nuevo'
 import { Route as AuthenticatedCotizacionesIndexRouteImport } from './routes/_authenticated/cotizaciones.index'
 import { Route as AuthenticatedCotizacionesIdRouteImport } from './routes/_authenticated/cotizaciones.$id'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
@@ -225,10 +227,22 @@ const TransferTokenRoute = TransferTokenRouteImport.update({
   path: '/transfer/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedContratosIndexRoute =
+  AuthenticatedContratosIndexRouteImport.update({
+    id: '/contratos/',
+    path: '/contratos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedContratosIdRoute =
   AuthenticatedContratosIdRouteImport.update({
     id: '/contratos/$id',
     path: '/contratos/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedContratosNuevoRoute =
+  AuthenticatedContratosNuevoRouteImport.update({
+    id: '/contratos/nuevo',
+    path: '/contratos/nuevo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCotizacionesIndexRoute =
@@ -326,12 +340,14 @@ export interface FileRoutesByFullPath {
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer/': typeof TransferIndexRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
+  '/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
+  '/contratos/': typeof AuthenticatedContratosIndexRoute
   '/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -370,12 +386,14 @@ export interface FileRoutesByTo {
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer': typeof TransferIndexRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
+  '/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
+  '/contratos': typeof AuthenticatedContratosIndexRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -418,12 +436,14 @@ export interface FileRoutesById {
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer/': typeof TransferIndexRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
+  '/_authenticated/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/_authenticated/pedidos/nuevo': typeof AuthenticatedPedidosNuevoRoute
   '/_authenticated/trabajos/$id': typeof AuthenticatedTrabajosIdRoute
   '/_authenticated/ventas/$id': typeof AuthenticatedVentasIdRoute
   '/c/$codigo/pdf': typeof CCodigoPdfRoute
+  '/_authenticated/contratos/': typeof AuthenticatedContratosIndexRoute
   '/_authenticated/cotizaciones/': typeof AuthenticatedCotizacionesIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -466,12 +486,14 @@ export interface FileRouteTypes {
     | '/transfer/$token'
     | '/transfer/'
     | '/contratos/$id'
+    | '/contratos/nuevo'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
     | '/pedidos/nuevo'
     | '/trabajos/$id'
     | '/ventas/$id'
     | '/c/$codigo/pdf'
+    | '/contratos/'
     | '/cotizaciones/'
     | '/pedidos/'
     | '/lovable/email/auth/preview'
@@ -510,12 +532,14 @@ export interface FileRouteTypes {
     | '/transfer/$token'
     | '/transfer'
     | '/contratos/$id'
+    | '/contratos/nuevo'
     | '/cotizaciones/$id'
     | '/pedidos/$id'
     | '/pedidos/nuevo'
     | '/trabajos/$id'
     | '/ventas/$id'
     | '/c/$codigo/pdf'
+    | '/contratos'
     | '/cotizaciones'
     | '/pedidos'
     | '/lovable/email/auth/preview'
@@ -557,12 +581,14 @@ export interface FileRouteTypes {
     | '/transfer/$token'
     | '/transfer/'
     | '/_authenticated/contratos/$id'
+    | '/_authenticated/contratos/nuevo'
     | '/_authenticated/cotizaciones/$id'
     | '/_authenticated/pedidos/$id'
     | '/_authenticated/pedidos/nuevo'
     | '/_authenticated/trabajos/$id'
     | '/_authenticated/ventas/$id'
     | '/c/$codigo/pdf'
+    | '/_authenticated/contratos/'
     | '/_authenticated/cotizaciones/'
     | '/_authenticated/pedidos/'
     | '/lovable/email/auth/preview'
@@ -820,11 +846,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransferTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/contratos/': {
+      id: '/_authenticated/contratos/'
+      path: '/contratos'
+      fullPath: '/contratos/'
+      preLoaderRoute: typeof AuthenticatedContratosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/contratos/$id': {
       id: '/_authenticated/contratos/$id'
       path: '/contratos/$id'
       fullPath: '/contratos/$id'
       preLoaderRoute: typeof AuthenticatedContratosIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contratos/nuevo': {
+      id: '/_authenticated/contratos/nuevo'
+      path: '/contratos/nuevo'
+      fullPath: '/contratos/nuevo'
+      preLoaderRoute: typeof AuthenticatedContratosNuevoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cotizaciones/': {
@@ -973,7 +1013,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRouteWithChildren
   AuthenticatedContratosIdRoute: typeof AuthenticatedContratosIdRoute
+  AuthenticatedContratosNuevoRoute: typeof AuthenticatedContratosNuevoRoute
   AuthenticatedTrabajosIdRoute: typeof AuthenticatedTrabajosIdRoute
+  AuthenticatedContratosIndexRoute: typeof AuthenticatedContratosIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1000,7 +1042,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRouteWithChildren,
   AuthenticatedContratosIdRoute: AuthenticatedContratosIdRoute,
+  AuthenticatedContratosNuevoRoute: AuthenticatedContratosNuevoRoute,
   AuthenticatedTrabajosIdRoute: AuthenticatedTrabajosIdRoute,
+  AuthenticatedContratosIndexRoute: AuthenticatedContratosIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
