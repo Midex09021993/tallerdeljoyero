@@ -128,11 +128,16 @@ export function ConfiguracionContratos() {
   async function cargarIdentidades() {
     setCargando(true);
     setErrorTabla(false);
-    const { data, error } = await supabase
+    let query = supabase
       .from("identidades_comerciales")
-      .select("id,sede_id,nombre_comercial,razon_social,ruc")
-      .eq("activa", true)
-      .order("nombre_comercial");
+      .select("id,sede_id,nombre_comercial,razon_social,ruc,participante_id")
+      .eq("activa", true);
+
+    if (!sesion?.esDueno) {
+      query = query.eq("participante_id", sesion?.participante?.id ?? "");
+    }
+
+    const { data, error } = await query.order("nombre_comercial");
     if (error) {
       toast.error(error.message);
       setCargando(false);
