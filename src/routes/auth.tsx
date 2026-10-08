@@ -313,7 +313,7 @@ function LoginPage() {
             {!modoAlta ? (
               <button
                 type="button"
-                onClick={() => setMostrarAyudaPassword(true)}
+                onClick={() => { window.location.href = "/recuperar-contrasena"; }}
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-white/45 transition hover:text-gold"
               >
                 <HelpCircle className="size-3.5" />
