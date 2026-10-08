@@ -63,6 +63,7 @@ export function RegistroTaller({ className = "" }: Props) {
         onClick={() => {
           setAbierto(true);
           setCreado(false);
+          setCorreoEnviado(false);
           setError("");
         }}
         className={className || "inline-flex items-center gap-2 rounded-lg border border-gold/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/10"}
