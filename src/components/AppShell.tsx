@@ -15,6 +15,7 @@ import {
   Users,
   Gem,
   FileSpreadsheet,
+  FileText,
   Wrench,
   BookOpen,
 } from "lucide-react";
