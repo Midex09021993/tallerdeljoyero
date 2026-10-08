@@ -26,6 +26,9 @@ type ProductoRow = {
   id: string; codigo: string; nombre: string; categoria: string; descripcion: string | null;
   imagen_principal_url: string | null; galeria: unknown; video_url: string | null; aurum_render_url: string | null; precio_desde: number | null; moneda: string;
   publicado: boolean; destacado: boolean; orden: number;
+  metal_principal: string | null; peso_gramos: number | null; piedras: string | null; medidas: string | null; talla: string | null;
+  tecnica: string | null; acabado: string | null; disponibilidad: string; tiempo_fabricacion_dias: number | null; ficha_tecnica_url: string | null;
+  mostrar_precio: boolean; mostrar_ficha_tecnica: boolean; notas_internas: string | null;
 };
 type ColeccionRow = {
   producto_id: string; coleccion_id: string; coleccion: { nombre: string } | null;
@@ -140,7 +143,7 @@ function CatalogoPage() {
     enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
       const { data, error } = await supabase.from("catalogo_productos")
-        .select("id, codigo, nombre, categoria, descripcion, imagen_principal_url, galeria, video_url, aurum_render_url, precio_desde, moneda, publicado, destacado, orden")
+        .select("id, codigo, nombre, categoria, descripcion, imagen_principal_url, galeria, video_url, aurum_render_url, precio_desde, moneda, publicado, destacado, orden, metal_principal, peso_gramos, piedras, medidas, talla, tecnica, acabado, disponibilidad, tiempo_fabricacion_dias, ficha_tecnica_url, mostrar_precio, mostrar_ficha_tecnica, notas_internas")
         .eq("participante_id", sesion!.participante!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
       if (error) throw error;
       return (data ?? []) as ProductoRow[];
