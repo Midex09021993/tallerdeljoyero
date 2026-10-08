@@ -235,12 +235,6 @@ function LoginPage() {
               ))}
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90">
-                Conocer la plataforma <ArrowRight className="size-4" />
-              </button>
-            </div>
-
           </section>
 
         </section>
