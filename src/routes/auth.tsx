@@ -62,6 +62,17 @@ function LoginPage() {
   }, []);
 
   useEffect(() => {
+    if (!mostrarAyudaPassword && !mostrarPlataforma) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (mostrarAyudaPassword) setMostrarAyudaPassword(false);
+      if (mostrarPlataforma) setMostrarPlataforma(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mostrarAyudaPassword, mostrarPlataforma]);
+
+  useEffect(() => {
     if (sesion) navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
   }, [sesion, navigate]);
 
@@ -211,7 +222,7 @@ function LoginPage() {
 
         </section>
 
-        <section id="login" className="mx-auto w-full max-w-[430px] translate-y-0 max-[767px]:max-w-[430px]">
+        <section id="login" className="mx-auto w-full max-w-[430px] translate-y-0 lg:-translate-y-10 [@media(max-height:800px)]:lg:-translate-y-5 max-[767px]:max-w-[430px]">
           <div className="mb-7 text-center md:hidden">
             <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
           </div>
@@ -228,7 +239,7 @@ function LoginPage() {
               Usuario
               <span className="relative mt-2 block">
                 <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                <input required autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
               </span>
             </label>
 
@@ -236,7 +247,7 @@ function LoginPage() {
               Contraseña
               <span className="relative mt-2 block">
                 <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                <input required type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-gold" />
+                <input required name="password" minLength={6} maxLength={256} type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-gold" />
                 <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-gold" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
                   {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -247,20 +258,20 @@ function LoginPage() {
               <>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   Nombre
-                  <input required value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required name="given-name" maxLength={80} autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
                 </label>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   Apellidos
-                  <input required value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required name="family-name" maxLength={120} autoComplete="family-name" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
                 </label>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   DNI
-                  <input required value={dni} onChange={(e) => setDni(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required name="dni" maxLength={30} autoComplete="off" value={dni} onChange={(e) => setDni(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
                 </label>
               </>
             ) : null}
 
-            {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
+            {error ? <p id="auth-error" role="alert" aria-live="polite" className="mb-4 text-xs text-danger">{error}</p> : null}
 
             <button type="submit" disabled={cargando} className="w-full rounded-lg bg-gold py-3.5 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90 disabled:opacity-50">
               {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
