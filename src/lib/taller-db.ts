@@ -1480,33 +1480,26 @@ export function useActualizarPedido() {
     mutationFn: async ({ id, ...cambios }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
       const { pedido: cambiosPedido, comercial, tieneComerciales } = separarDatosComerciales(cambios);
       let payload = cambiosPedido as PedidoUpdate;
-      let contratoVinculado: { id: string | null; numero: string } | null = null;
 
+      // Contrato Aurum y referencia externa son conceptos distintos:
+      // - contrato_id: vínculo con un contrato nativo de Aurum.
+      // - contrato: referencia/número externo informado por el taller.
+      // Editar una referencia externa nunca crea automáticamente un contrato nativo.
       if (Object.prototype.hasOwnProperty.call(cambios, "contrato")) {
-        const numero = String(cambios.contrato ?? "").trim();
-        if (numero) {
-          const [{ data: pedidoActual, error: errorPedido }, { data: comercialActual, error: errorComercial }] = await Promise.all([
-            supabase.from("pedidos").select("cliente, origen, sede_id").eq("id", id).maybeSingle(),
-            supabase.from("pedido_comercial").select("telefono, importe").eq("pedido_id", id).maybeSingle(),
-          ]);
-          if (errorPedido) throw errorPedido;
-          if (errorComercial && !esErrorCampoFaltante(errorComercial)) throw errorComercial;
-          const base = (pedidoActual ?? {}) as Record<string, unknown>;
-          const baseComercial = (comercialActual ?? {}) as Record<string, unknown>;
-          const contrato = await asegurarContratoComercial({
-            numero,
-            cliente: String(cambios.cliente ?? base["cliente"] ?? ""),
-            telefono: String(cambios.telefono ?? baseComercial["telefono"] ?? ""),
-            origen: String(cambios.origen ?? base["origen"] ?? ""),
-            importe: Number(cambios.importe ?? baseComercial["importe"] ?? 0) || 0,
-            sede_id: typeof (cambios.sede_id ?? base["sede_id"]) === "string" ? String(cambios.sede_id ?? base["sede_id"]) : null,
-            notas: "Documento comercial creado o vinculado desde ficha técnica.",
-          });
-          payload = { ...payload, contrato: contrato.numero, contrato_id: contrato.id } as PedidoUpdate;
-          contratoVinculado = { id: contrato.id, numero: contrato.numero };
-        } else {
-          payload = { ...payload, contrato: "", contrato_id: null } as PedidoUpdate;
-        }
+        payload = {
+          ...payload,
+          contrato: String(cambios.contrato ?? "").trim(),
+        } as PedidoUpdate;
+      }
+
+      // La creación/vinculación de un contrato nativo se realiza mediante
+      // useCrearContratoDesdePedido, de forma explícita.
+      if (Object.prototype.hasOwnProperty.call(cambios, "contrato_id")) {
+        const contratoId = cambios.contrato_id;
+        payload = {
+          ...payload,
+          contrato_id: typeof contratoId === "string" && contratoId.trim() ? contratoId : null,
+        } as PedidoUpdate;
       }
 
       if (Object.keys(payload).length > 0) {
@@ -1516,10 +1509,6 @@ export function useActualizarPedido() {
       if (tieneComerciales) {
         const { error } = await supabase.from("pedido_comercial").update(comercial).eq("pedido_id", id);
         if (error) throw error;
-      }
-      if (contratoVinculado?.id) {
-        await vincularPedidosPorNumeroContrato(contratoVinculado.numero, contratoVinculado.id);
-        await recalcularTotalContrato(contratoVinculado.numero, contratoVinculado.id);
       }
     },
     onSuccess: () => {
