@@ -196,6 +196,47 @@ export type Database = {
           },
         ]
       }
+      catalogo_categorias: {
+        Row: {
+          id: string
+          participante_id: string
+          nombre: string
+          slug: string
+          orden: number
+          activo: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          participante_id: string
+          nombre: string
+          slug?: string
+          orden?: number
+          activo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          participante_id?: string
+          nombre?: string
+          slug?: string
+          orden?: number
+          activo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_categorias_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalogo_productos: {
         Row: {
           aurum_render_url: string | null
