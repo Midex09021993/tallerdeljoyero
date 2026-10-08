@@ -388,7 +388,9 @@ function ModuloResumen({ pedidos, sedeActiva }: { pedidos: Pedido[]; sedeActiva:
           valor={String(stockBajo.length)}
           tono={stockBajo.length ? "negativo" : "neutro"}
         />
-        <StatCard etiqueta="Sedes activas" valor={String(sedes.filter((s) => s.activa).length)} />
+        {sesion?.roles.includes("dueno") ? (
+          <StatCard etiqueta="Sedes activas" valor={String(sedes.filter((s) => s.activa).length)} />
+        ) : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
