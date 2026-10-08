@@ -135,10 +135,19 @@ function CatalogoPublicoPage() {
     () => ["Todos", ...new Set(productos.map((producto) => producto.categoria))],
     [productos],
   );
+  const colecciones = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      if (row.coleccion_slug && row.coleccion_nombre) map.set(row.coleccion_slug, row.coleccion_nombre);
+    }
+    return Array.from(map.entries());
+  }, [rows]);
 
   const productosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    return productos.filter((producto) =>
+    const unique = new Map<string, Producto>();
+    for (const producto of productos) if (!unique.has(producto.id)) unique.set(producto.id, producto);
+    return Array.from(unique.values()).filter((producto) =>
       (!q || [producto.nombre, producto.codigo, producto.categoria, producto.descripcion].join(" ").toLowerCase().includes(q))
       && (categoria === "Todos" || producto.categoria === categoria),
     );
@@ -230,6 +239,15 @@ function CatalogoPublicoPage() {
       </section>
 
       <section id="coleccion" className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+        {colecciones.length ? (
+          <div className="mb-5 flex flex-wrap gap-2">
+            {colecciones.map(([collectionSlug, collectionName]) => (
+              <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="rounded-full border border-[#1f1b1820] bg-white px-4 py-2 text-xs font-semibold hover:border-[#8a6b36]">
+                {collectionName}
+              </Link>
+            ))}
+          </div>
+        ) : null}
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[#8a6b36]">Catálogo</p>
