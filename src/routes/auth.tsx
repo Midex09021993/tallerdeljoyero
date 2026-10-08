@@ -178,8 +178,7 @@ function LoginPage() {
               Herramientas, comercial, producción, visualización y ecosistema en un mismo entorno, adaptado a la forma real de trabajar de cada taller.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-2.5 [@media(max-height:800px)]:mt-3">
-              <RegistroTaller className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink shadow-lg shadow-gold/10 transition hover:-translate-y-0.5 hover:opacity-90" />
-              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg border border-gold/45 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gold transition hover:bg-gold/10">
+              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:-translate-y-0.5 hover:opacity-90">
                 Probar herramientas <ArrowRight className="size-3.5" />
               </button>
               <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white/75 transition hover:border-gold/40 hover:text-gold">
@@ -236,6 +235,14 @@ function LoginPage() {
             </div>
 
           </section>
+
+          <div className="mt-5 flex flex-col gap-3 rounded-xl border border-gold/25 bg-gold/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-white">¿Listo para llevar tu taller al siguiente nivel?</p>
+              <p className="mt-1 text-xs leading-relaxed text-white/55">Crea tu taller y empieza a organizar tu operación en Aurum Lab.</p>
+            </div>
+            <RegistroTaller className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gold px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:-translate-y-0.5 hover:opacity-90" />
+          </div>
 
         </section>
 
