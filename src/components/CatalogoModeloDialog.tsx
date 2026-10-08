@@ -48,7 +48,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
     precio_desde: "", moneda: "PEN",
     metal_principal: "", peso_gramos: "", piedras: "", medidas: "", talla: "",
     tecnica: "", acabado: "", disponibilidad: "Consultar", tiempo_fabricacion_dias: "",
-    ficha_tecnica_url: "", mostrar_precio: true, mostrar_ficha_tecnica: true,
+    ficha_tecnica_url: "", notas_internas: "", mostrar_precio: true, mostrar_ficha_tecnica: true,
   });
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
@@ -80,6 +80,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
       disponibilidad: producto?.disponibilidad ?? "Consultar",
       tiempo_fabricacion_dias: producto?.tiempo_fabricacion_dias == null ? "" : String(producto.tiempo_fabricacion_dias),
       ficha_tecnica_url: producto?.ficha_tecnica_url ?? "",
+      notas_internas: producto?.notas_internas ?? "",
       mostrar_precio: producto?.mostrar_precio ?? true,
       mostrar_ficha_tecnica: producto?.mostrar_ficha_tecnica ?? true,
     });
@@ -156,6 +157,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
         disponibilidad: form.disponibilidad.trim() || "Consultar",
         tiempo_fabricacion_dias: tiempo,
         ficha_tecnica_url: form.ficha_tecnica_url.trim() || null,
+        notas_internas: form.notas_internas.trim() || null,
         mostrar_precio: form.mostrar_precio,
         mostrar_ficha_tecnica: form.mostrar_ficha_tecnica,
       };
@@ -238,7 +240,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
             <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Descripción y publicación</p></div>
             <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={4} value={form.descripcion} onChange={e => setForm(v => ({ ...v, descripcion: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
             <label className="flex items-center gap-3 rounded-xl border border-border p-3 text-xs sm:col-span-2"><input type="checkbox" checked={form.mostrar_ficha_tecnica} onChange={e => setForm(v => ({ ...v, mostrar_ficha_tecnica: e.target.checked }))} /> Mostrar ficha técnica pública</label>
-            <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Notas internas<textarea rows={3} value={""} readOnly className="rounded-xl border border-border bg-surface-muted px-3 py-3 text-sm text-muted-foreground" placeholder="Reservado para una próxima sección interna de gestión." /></label>
+            <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Notas internas<textarea rows={3} value={form.notas_internas} onChange={e => setForm(v => ({ ...v, notas_internas: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="Información interna que nunca se publica." /></label>
           </section>
 
           {error ? <p className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">{error}</p> : null}
