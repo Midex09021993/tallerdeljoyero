@@ -20,6 +20,7 @@ const CAPACIDADES_PRODUCCION = [
 const CAPACIDADES_COMERCIALES = [
   "Pedidos",
   "Cotizaciones",
+  "Contratos",
   "Clientes",
   "Ventas",
   "Catálogo",
