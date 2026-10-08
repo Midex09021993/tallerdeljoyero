@@ -128,6 +128,7 @@ export function ConfiguracionIdentidadComercial() {
     if (!/^[A-Z]{3}$/.test(form.moneda_codigo.trim().toUpperCase())) return toast.error("La moneda debe usar un código de 3 letras.");
     setGuardando(true);
     const payload = {
+      participante_id: form.participante_id || null,
       nombre_comercial: form.nombre_comercial.trim(), razon_social: form.razon_social?.trim() || null, ruc: form.ruc?.trim() || null,
       logo_url: form.logo_url?.trim() || null, email: form.email?.trim() || null, telefono: form.telefono?.trim() || null,
       whatsapp: form.whatsapp?.trim() || null, direccion: form.direccion?.trim() || null, ciudad: form.ciudad?.trim() || null,
@@ -173,7 +174,14 @@ export function ConfiguracionIdentidadComercial() {
           accion={<button type="button" onClick={() => void guardar()} disabled={guardando} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"><Save className="size-4" />{guardando ? "Guardando…" : "Guardar cambios"}</button>}
         >
           <div className="space-y-6 p-5">
-            {identidades.length > 1 ? <label className="block text-xs font-semibold text-muted-foreground">Identidad activa<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={identidadId} onChange={e=>setIdentidadId(e.target.value)}>{identidades.map(x=><option key={x.id} value={x.id}>{x.nombre_comercial} · {participantes.find(p=>p.id===x.participante_id)?.nombre ?? "taller"}</option>)}</select></label> : null}
+            {identidades.length > 1 ? <label className="block text-xs font-semibold text-muted-foreground">Identidad activa<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={identidadId} onChange={e=>setIdentidadId(e.target.value)}>{identidades.map(x=><option key={x.id} value={x.id}>{x.nombre_comercial} · {participantes.find(p=>p.id===x.participante_id)?.nombre ?? "sin taller asignado"}</option>)}</select></label> : null}
+            {sesion?.esDueno && !form.participante_id ? (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                <p className="text-xs font-semibold">Esta identidad todavía no está vinculada a un taller del Ecosistema.</p>
+                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">Es un registro legado. Antes de guardar datos fiscales, asígnale el taller al que pertenece. No la vinculamos automáticamente para evitar asignar RNP/RPP a la empresa equivocada.</p>
+                <label className="mt-3 block text-xs font-semibold text-muted-foreground">Taller propietario<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.participante_id ?? ""} onChange={e=>campo("participante_id",e.target.value || null)}><option value="">Seleccionar taller</option>{participantes.map(p=><option key={p.id} value={p.id}>{p.nombre} · {p.ciudad ?? ""}</option>)}</select></label>
+              </div>
+            ) : null}
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">Nombre comercial<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.nombre_comercial} onChange={e=>campo("nombre_comercial",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">Razón social<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.razon_social ?? ""} onChange={e=>campo("razon_social",e.target.value)} /></label>
