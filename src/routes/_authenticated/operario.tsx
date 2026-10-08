@@ -167,12 +167,12 @@ function OperarioPage() {
               return (
                 <article
                   key={trabajo.id}
-                  className={`rounded-2xl border bg-card p-4 shadow-card transition ${urgente ? "border-danger/30" : "border-border"}`}
+                  className={`min-w-0 max-w-full overflow-hidden rounded-2xl border bg-card p-4 shadow-card transition ${urgente ? "border-danger/30" : "border-border"}`}
                 >
                   <button
                     type="button"
                     onClick={() => void navigate({ to: "/trabajos/$id", params: { id: trabajo.id } })}
-                    className="w-full text-left focus-visible:outline-none"
+                    className="min-w-0 w-full text-left focus-visible:outline-none"
                     aria-label={`Abrir ficha técnica de ${trabajo.titulo || "trabajo sin título"}`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -205,7 +205,7 @@ function OperarioPage() {
                       ) : null}
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="mt-3 grid min-w-0 grid-cols-2 gap-2">
                       {[
                         ["Material", material],
                         ["Piedras", piedras],
@@ -214,7 +214,7 @@ function OperarioPage() {
                         ["Cantidad", cantidad],
                         ["Responsable", asignado ? "Tú" : "Tu área"],
                       ].map(([etiqueta, valor]) => (
-                        <div key={String(etiqueta)} className="rounded-xl bg-surface-muted/50 p-2.5">
+                        <div key={String(etiqueta)} className="min-w-0 overflow-hidden rounded-xl bg-surface-muted/50 p-2.5">
                           <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
                           <p className="mt-1 truncate text-xs font-medium">{String(valor)}</p>
                         </div>
