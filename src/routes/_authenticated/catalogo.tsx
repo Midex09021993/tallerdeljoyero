@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Pencil, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { CatalogoCategoriasDialog } from "@/components/CatalogoCategoriasDialog";
+import { CatalogoColeccionesDialog } from "@/components/CatalogoColeccionesDialog";
 import { CatalogoModeloDialog, type CatalogoProductoEditor } from "@/components/CatalogoModeloDialog";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,7 @@ function CatalogoPage() {
   const [editorAbierto, setEditorAbierto] = useState(false);
   const [configAbierta, setConfigAbierta] = useState(false);
   const [categoriasAbierta, setCategoriasAbierta] = useState(false);
+  const [coleccionesAbierta, setColeccionesAbierta] = useState(false);
   const [modeloEditando, setModeloEditando] = useState<CatalogoProductoEditor | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
@@ -247,6 +249,9 @@ function CatalogoPage() {
               <button type="button" onClick={() => setCategoriasAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
                 <Tags className="size-4" /> Categorías
               </button>
+              <button type="button" onClick={() => setColeccionesAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+                <Sparkles className="size-4" /> Colecciones
+              </button>
             </>
           ) : null}
           {puedeGestionar ? (
@@ -322,6 +327,7 @@ function CatalogoPage() {
       <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
       <CatalogoCategoriasDialog open={categoriasAbierta} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
+      <CatalogoColeccionesDialog open={coleccionesAbierta} participanteId={sesion?.participante?.id ?? ""} productos={productoRows.map((p) => ({ id: p.id, nombre: p.nombre, codigo: p.codigo }))} onClose={() => setColeccionesAbierta(false)} onChanged={() => { if (sesion?.participante?.id) { void queryClient.invalidateQueries({ queryKey: ["catalogo-producto-colecciones", sesion.participante.id] }); void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); } }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
         <div className="grid gap-3 md:grid-cols-3">
