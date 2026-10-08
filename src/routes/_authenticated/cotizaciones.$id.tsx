@@ -272,7 +272,7 @@ function CotizacionDetallePage() {
       _cotizacion_id: cotizacion.id,
     });
     if (conversionError || !data) {
-      setError(conversionError?.message ?? "No se pudo crear el contrato y pedido.");
+      setError(conversionError?.message ?? "No se pudo crear el pedido.");
       setConvirtiendoPedido(false);
       return;
     }
@@ -776,11 +776,11 @@ function CotizacionDetallePage() {
                     </div>
                   ) : (
                     <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedidoYContrato()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
-                      {convirtiendoPedido ? "Creando contrato y pedido…" : "Crear contrato + pedido"}
+                      {convirtiendoPedido ? "Creando pedido…" : "Crear pedido"}
                     </button>
                   )
                 ) : (
-                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el contrato y pedido sin volver a ingresar los datos.</p>
+                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el pedido sin volver a ingresar los datos. El contrato se genera automáticamente cuando corresponde.</p>
                 )}
                 <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
               </div>
