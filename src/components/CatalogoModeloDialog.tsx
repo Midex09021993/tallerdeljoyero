@@ -101,11 +101,10 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
 
   async function guardar(event: FormEvent) {
     event.preventDefault();
-    const codigo = form.codigo.trim();
     const nombre = form.nombre.trim();
     const slug = slugify(form.slug || nombre);
     const precio = form.precio_desde.trim() === "" ? null : Number(form.precio_desde);
-    if (!codigo || !nombre || !slug) return setError("Código, nombre y slug son obligatorios.");
+    if (!nombre || !slug) return setError("Nombre y slug son obligatorios.");
     if (precio !== null && (!Number.isFinite(precio) || precio < 0)) return setError("El precio debe ser un número mayor o igual a 0.");
 
     setGuardando(true);
@@ -113,7 +112,6 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
     try {
       const payload = {
         participante_id: participanteId,
-        codigo,
         nombre,
         slug,
         categoria: form.categoria.trim() || "Sin categoría",
@@ -146,7 +144,10 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-muted-foreground hover:bg-surface-muted" aria-label="Cerrar"><X className="size-5" /></button>
         </div>
         <form onSubmit={guardar} className="grid gap-4 p-6 sm:grid-cols-2">
-          <label className="grid gap-1.5 text-xs font-semibold">Código<input required value={form.codigo} onChange={(e) => setForm(v => ({ ...v, codigo: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="TDJ-A024" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold">Código
+            <input value={form.codigo} readOnly className="h-11 rounded-xl border border-border bg-surface-muted px-3 text-sm font-mono font-semibold text-muted-foreground outline-none" placeholder="Se genera automáticamente" />
+            <span className="text-[10px] font-normal text-muted-foreground">{producto ? "Código permanente del modelo." : "Se asignará automáticamente al crear el modelo."}</span>
+          </label>
           <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: v.slug || slugify(e.target.value) }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="Anillo Aura" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Slug<input required value={form.slug} onChange={(e) => setForm(v => ({ ...v, slug: slugify(e.target.value) }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Categoría<input value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
