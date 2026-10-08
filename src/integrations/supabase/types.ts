@@ -3527,23 +3527,35 @@ export type Database = {
       obtener_catalogo_publico: {
         Args: { _slug: string }
         Returns: {
-          aurum_render_url: string
-          categoria: string
-          codigo: string
-          descripcion_producto: string
-          descripcion_publica: string
-          destacado: boolean
+          acabado: string | null
+          aurum_render_url: string | null
+          categoria: string | null
+          codigo: string | null
+          descripcion_producto: string | null
+          descripcion_publica: string | null
+          destacado: boolean | null
+          disponibilidad: string | null
+          ficha_tecnica_url: string | null
           galeria: Json
-          imagen_principal_url: string
-          logo_url: string
-          moneda: string
-          nombre: string
+          imagen_principal_url: string | null
+          logo_url: string | null
+          metal_principal: string | null
+          medidas: string | null
+          moneda: string | null
+          mostrar_ficha_tecnica: boolean
+          mostrar_precio: boolean
+          nombre: string | null
           nombre_publico: string
-          precio_desde: number
-          producto_id: string
+          peso_gramos: number | null
+          piedras: string | null
+          precio_desde: number | null
+          producto_id: string | null
           slug: string
-          video_url: string
-          whatsapp: string
+          talla: string | null
+          tecnica: string | null
+          tiempo_fabricacion_dias: number | null
+          video_url: string | null
+          whatsapp: string | null
         }[]
       }
       obtener_trabajo_operativo: {
