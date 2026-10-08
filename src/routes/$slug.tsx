@@ -32,6 +32,18 @@ type CatalogoRow = {
   precio_desde: number | null;
   moneda: string | null;
   destacado: boolean | null;
+  metal_principal: string | null;
+  peso_gramos: number | null;
+  piedras: string | null;
+  medidas: string | null;
+  talla: string | null;
+  tecnica: string | null;
+  acabado: string | null;
+  disponibilidad: string | null;
+  tiempo_fabricacion_dias: number | null;
+  ficha_tecnica_url: string | null;
+  mostrar_precio: boolean;
+  mostrar_ficha_tecnica: boolean;
 };
 
 type Producto = {
@@ -47,6 +59,18 @@ type Producto = {
   precioDesde: number | null;
   moneda: string;
   destacado: boolean;
+  metalPrincipal: string | null;
+  pesoGramos: number | null;
+  piedras: string | null;
+  medidas: string | null;
+  talla: string | null;
+  tecnica: string | null;
+  acabado: string | null;
+  disponibilidad: string | null;
+  tiempoFabricacionDias: number | null;
+  fichaTecnicaUrl: string | null;
+  mostrarPrecio: boolean;
+  mostrarFichaTecnica: boolean;
 };
 
 const RESERVED_SLUGS = new Set([
@@ -91,6 +115,18 @@ function CatalogoPublicoPage() {
       precioDesde: row.precio_desde,
       moneda: row.moneda ?? "PEN",
       destacado: Boolean(row.destacado),
+      metalPrincipal: row.metal_principal,
+      pesoGramos: row.peso_gramos,
+      piedras: row.piedras,
+      medidas: row.medidas,
+      talla: row.talla,
+      tecnica: row.tecnica,
+      acabado: row.acabado,
+      disponibilidad: row.disponibilidad,
+      tiempoFabricacionDias: row.tiempo_fabricacion_dias,
+      fichaTecnicaUrl: row.ficha_tecnica_url,
+      mostrarPrecio: row.mostrar_precio,
+      mostrarFichaTecnica: row.mostrar_ficha_tecnica,
     })), [rows]);
 
   const categorias = useMemo(
@@ -225,7 +261,7 @@ function CatalogoPublicoPage() {
                   <h3 className="mt-1 text-lg font-semibold">{producto.nombre}</h3>
                   <p className="mt-1 text-xs leading-5 text-[#746b62]">{producto.descripcion}</p>
                   <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold">{formatPrice(producto.precioDesde, producto.moneda)}</span>
+                    {producto.mostrarPrecio ? <span className="text-sm font-semibold">{formatPrice(producto.precioDesde, producto.moneda)}</span> : <span className="text-xs text-[#746b62]">Consultar</span>}
                     {whatsappHref ? (
                       <a
                         href={`${whatsappHref}?text=${encodeURIComponent(`Hola, quisiera información sobre ${producto.nombre} (${producto.codigo}).`)}`}
@@ -270,7 +306,24 @@ function CatalogoPublicoPage() {
                 <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{productoSeleccionado.codigo} · {productoSeleccionado.categoria}</p>
                 <h3 className="mt-2 font-display text-4xl tracking-tight">{productoSeleccionado.nombre}</h3>
                 <p className="mt-4 text-sm leading-7 text-[#625b54]">{productoSeleccionado.descripcion || "Consulta al taller para conocer los detalles de esta pieza."}</p>
-                <p className="mt-6 text-xl font-semibold">{formatPrice(productoSeleccionado.precioDesde, productoSeleccionado.moneda)}</p>
+                {productoSeleccionado.mostrarPrecio ? <p className="mt-6 text-xl font-semibold">{formatPrice(productoSeleccionado.precioDesde, productoSeleccionado.moneda)}</p> : <p className="mt-6 text-sm font-medium text-[#746b62]">Precio a consultar</p>}
+                {productoSeleccionado.mostrarFichaTecnica ? (
+                  <div className="mt-7 grid grid-cols-2 gap-3 rounded-2xl border border-[#1f1b1820] bg-white/70 p-4 text-xs">
+                    {[
+                      ["Metal", productoSeleccionado.metalPrincipal],
+                      ["Peso", productoSeleccionado.pesoGramos ? `${productoSeleccionado.pesoGramos} g` : null],
+                      ["Piedras", productoSeleccionado.piedras],
+                      ["Medidas", productoSeleccionado.medidas],
+                      ["Talla", productoSeleccionado.talla],
+                      ["Técnica", productoSeleccionado.tecnica],
+                      ["Acabado", productoSeleccionado.acabado],
+                      ["Disponibilidad", productoSeleccionado.disponibilidad],
+                      ["Fabricación", productoSeleccionado.tiempoFabricacionDias ? `${productoSeleccionado.tiempoFabricacionDias} días` : null],
+                    ].filter((item): item is [string, string] => Boolean(item[1])).map(([label, value]) => (
+                      <div key={label}><p className="text-[9px] font-bold uppercase tracking-wider text-[#8a6b36]">{label}</p><p className="mt-1">{value}</p></div>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="mt-6 flex flex-wrap gap-2">
                   {productoSeleccionado.aurumRenderUrl ? <a href={productoSeleccionado.aurumRenderUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-xs font-semibold text-white"><ExternalLink className="size-3.5" /> Ver AURUM Render</a> : null}
                   {productoSeleccionado.videoUrl ? <a href={productoSeleccionado.videoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><Play className="size-3.5" /> Ver video</a> : null}
