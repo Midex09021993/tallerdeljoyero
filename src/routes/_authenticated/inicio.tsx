@@ -8,9 +8,15 @@ import {
   LayoutGrid,
   PackageCheck,
   Scissors,
+  Sparkles,
+  Building2,
+  Settings2,
+  Wrench,
+  Rocket,
 } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell, Panel, StatCard, useCapacidadesMenu } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
 import {
   rolEtiqueta,
   useSesion,
@@ -41,6 +47,15 @@ function Inicio() {
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const capacidadesSet = useMemo(() => new Set(capacidades), [capacidades]);
   const navigate = useNavigate();
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(false);
+  const [pasoBienvenida, setPasoBienvenida] = useState(0);
+  const [guardandoBienvenida, setGuardandoBienvenida] = useState(false);
+
+  useEffect(() => {
+    if (!sesion?.esAdmin || !sesion.user) return;
+    const completada = sesion.user.user_metadata?.aurum_onboarding_completed_at;
+    setMostrarBienvenida(!completada);
+  }, [sesion]);
 
   useEffect(() => {
     if (isLoading || !sesion) return;
@@ -91,6 +106,35 @@ function Inicio() {
   // Los operarios usan exclusivamente /operario como bandeja única.
 
 
+
+  const pasosBienvenida = useMemo(() => {
+    const pasos = [
+      { titulo: "Conoce tu taller", texto: "Configura las capacidades y modalidades que realmente tiene tu taller. Así Aurum Lab sólo mostrará lo que puedes operar.", icono: Settings2, accion: "Configurar taller", destino: "/gestion" },
+      { titulo: "Ordena tu operación", texto: "Define qué entra en producción, qué se deriva a servicios externos y prepara el flujo de trabajo de tu sede.", icono: Building2, accion: "Ir a Gestión", destino: "/gestion" },
+      { titulo: "Prepara el área comercial", texto: "Revisa identidad comercial, documentos, clientes y las herramientas que utilizarás para atender pedidos.", icono: Gem, accion: "Ver Comercial", destino: "/clientes" },
+      { titulo: "Empieza a trabajar", texto: "Cuando tu configuración esté lista, crea un pedido y lleva cada trabajo por el flujo real de tu taller.", icono: Wrench, accion: "Ver pedidos", destino: "/pedidos" },
+      { titulo: "Explora Aurum Lab", texto: "Tienes herramientas y servicios que puedes descubrir cuando los necesites. El sistema crecerá contigo.", icono: Rocket, accion: "Ver herramientas", destino: "/herramientas" },
+    ];
+    return sesion?.esDueno ? [{ titulo: "Administra tu ecosistema", texto: "Como dueño de Aurum Lab puedes administrar participantes y sedes desde Gestión, sin mezclar esa administración con la operación de cada taller.", icono: Building2, accion: "Abrir Gestión", destino: "/gestion" }, ...pasos] : pasos;
+  }, [sesion?.esDueno]);
+
+  const cerrarBienvenida = async () => {
+    if (!sesion?.user || guardandoBienvenida) return;
+    setGuardandoBienvenida(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { aurum_onboarding_completed_at: new Date().toISOString() } });
+      if (error) throw error;
+      setMostrarBienvenida(false);
+    } catch (error) {
+      console.error("[onboarding] No se pudo guardar el estado:", error);
+      setMostrarBienvenida(false);
+    } finally { setGuardandoBienvenida(false); }
+  };
+
+  const irDesdeBienvenida = (destino: string) => {
+    void cerrarBienvenida();
+    void navigate({ to: destino as never });
+  };
 
   return (
     <AppShell
@@ -192,6 +236,43 @@ function Inicio() {
           </div>
         </Panel>
       </div>
+
+      {mostrarBienvenida && pasosBienvenida.length > 0 ? (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-ink/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-raised">
+            <div className="border-b border-border bg-ink px-6 py-7 text-ink-foreground sm:px-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-gold"><Sparkles className="size-3.5" /> Primer acceso</div>
+                  <h2 className="font-display text-3xl">Bienvenido a Aurum Lab</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-ink-foreground/60">{sesion?.participante?.nombre ? "Hemos preparado tu espacio para " + sesion.participante.nombre + ". " : "Hemos preparado tu espacio de trabajo. "}Antes de empezar, te mostramos lo esencial.</p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-ink-foreground/40">{pasoBienvenida + 1}/{pasosBienvenida.length}</span>
+              </div>
+            </div>
+            <div className="p-6 sm:p-8">
+              <div className="mb-7 grid gap-2 sm:grid-cols-5">
+                {pasosBienvenida.map((paso, index) => <div key={paso.titulo} className="space-y-2"><div className={index <= pasoBienvenida ? "h-1.5 rounded-full bg-gold" : "h-1.5 rounded-full bg-muted"} /><p className={index === pasoBienvenida ? "text-[10px] font-bold text-foreground" : "text-[10px] text-muted-foreground"}>{index + 1}. {paso.titulo}</p></div>)}
+              </div>
+              {(() => { const paso = pasosBienvenida[pasoBienvenida]; const Icono = paso.icono; return (
+                <div className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
+                  <div className="grid size-12 place-items-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep"><Icono className="size-6" /></div>
+                  <h3 className="mt-5 text-xl font-semibold">{paso.titulo}</h3>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{paso.texto}</p>
+                  <button type="button" onClick={() => irDesdeBienvenida(paso.destino)} disabled={guardandoBienvenida} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground shadow-card transition hover:shadow-raised disabled:opacity-50">{paso.accion} <ChevronRight className="size-4" /></button>
+                </div>
+              ); })()}
+              <div className="mt-6 flex flex-col-reverse justify-between gap-3 sm:flex-row sm:items-center">
+                <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="text-xs font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-50">Saltar guía</button>
+                <div className="flex items-center justify-end gap-2">
+                  {pasoBienvenida > 0 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual - 1)} className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground">Atrás</button> : null}
+                  {pasoBienvenida < pasosBienvenida.length - 1 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual + 1)} className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep hover:bg-gold/5">Siguiente</button> : <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground hover:bg-ink/90 disabled:opacity-50">{guardandoBienvenida ? "Guardando..." : "Entrar al sistema"}</button>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   );
 }
