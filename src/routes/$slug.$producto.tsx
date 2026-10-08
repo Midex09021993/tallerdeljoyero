@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$slug/$producto")({
@@ -61,6 +62,11 @@ export function CatalogoProductoPublicoPage() {
 
   const config = rows[0] ?? null;
   const item = rows.find((row) => row.producto_id && row.producto_slug === productoSlug.toLowerCase());
+  const [solicitudAbierta, setSolicitudAbierta] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [enviada, setEnviada] = useState(false);
+  const [errorSolicitud, setErrorSolicitud] = useState("");
+  const [formSolicitud, setFormSolicitud] = useState({ nombre: "", telefono: "", email: "", cantidad: 1, mensaje: "" });
 
   if (isLoading) return <Estado titulo="Cargando ficha…" texto="Estamos preparando la información de la pieza." />;
   if (error || !config || !item?.producto_id || !item.nombre || !item.codigo) {
@@ -116,6 +122,7 @@ export function CatalogoProductoPublicoPage() {
 
           <div className="mt-7 flex flex-wrap gap-2">
             {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, quisiera información sobre " + item.nombre + " (" + item.codigo + ").")} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-xs font-semibold text-white"><MessageCircle className="size-3.5" /> Solicitar cotización</a> : null}
+            <button type="button" onClick={() => setSolicitudAbierta(true)} className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><MessageCircle className="size-3.5" /> Solicitar desde el catálogo</button>
             {item.aurum_render_url ? <a href={item.aurum_render_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><ExternalLink className="size-3.5" /> AURUM Render</a> : null}
             {item.video_url ? <a href={item.video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold"><Play className="size-3.5" /> Ver video</a> : null}
             {item.ficha_tecnica_url ? <a href={item.ficha_tecnica_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1830] bg-white px-4 py-2.5 text-xs font-semibold">Ficha técnica</a> : null}
