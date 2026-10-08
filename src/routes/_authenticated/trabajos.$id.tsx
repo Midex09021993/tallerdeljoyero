@@ -414,7 +414,7 @@ function TrabajoOperativoPage() {
     >
       <div className="mx-auto max-w-3xl space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <Link to="/operario" hash="fichas" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
+          <Link to="/operario" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-4" /> Mi trabajo
           </Link>
           <span className="rounded-full border border-gold/20 bg-gold/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase text-gold-deep">{trabajo.area}</span>
