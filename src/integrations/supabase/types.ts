@@ -2779,6 +2779,38 @@ export type Database = {
         }
         Relationships: []
       }
+      sede_modalidades: {
+        Row: {
+          sede_id: string;
+          produccion_activa: boolean;
+          servicios_externos_activos: boolean;
+          created_at: string;
+          updated_at: string;
+        }
+        Insert: {
+          sede_id: string;
+          produccion_activa?: boolean;
+          servicios_externos_activos?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Update: {
+          sede_id?: string;
+          produccion_activa?: boolean;
+          servicios_externos_activos?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sede_modalidades_sede_id_fkey";
+            columns: ["sede_id"];
+            isOneToOne: true;
+            referencedRelation: "sedes";
+            referencedColumns: ["id"];
+          },
+        ]
+      }
       sede_especialidades: {
         Row: {
           created_at: string
