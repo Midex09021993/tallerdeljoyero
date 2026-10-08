@@ -25,10 +25,10 @@ const valoresIniciales: ComunidadConfig = {
   contratos_registrados: 0,
 };
 
-const metricas = [
-  { key: "calculos_realizados", icon: Calculator, label: "Cálculos Realizados", texto: "Utilizando las herramientas gratuitas de Aurum Lab." },
-  { key: "talleres_registrados", icon: Building2, label: "Talleres Registrados", texto: "Participando en la plataforma y etapa de pruebas." },
-  { key: "herramientas_disponibles", icon: Wrench, label: "Herramientas Disponibles", texto: "Diseñadas para la comunidad joyera." },
+const pilares = [
+  { icon: Calculator, label: "Herramientas gratuitas", texto: "Utilidades técnicas para resolver necesidades concretas del trabajo joyero." },
+  { icon: Building2, label: "Talleres y profesionales", texto: "Un entorno pensado para distintas formas de trabajar, desde independientes hasta equipos y organizaciones." },
+  { icon: Wrench, label: "Operación conectada", texto: "Comercial, producción, visualización y herramientas especializadas dentro del mismo ecosistema." },
 ] as const;
 
 export function ComunidadAurumLab({ configuracion = false }: { configuracion?: boolean }) {
@@ -99,23 +99,20 @@ export function ComunidadAurumLab({ configuracion = false }: { configuracion?: b
           </div>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          {metricas.map(({ key, icon: Icon, label, texto }) => (
-            <article key={key} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35 hover:bg-white/[0.045]">
+          {pilares.map(({ icon: Icon, label, texto }) => (
+            <article key={label} className="rounded-xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35 hover:bg-white/[0.045]">
               <Icon className="size-5 text-gold" />
               <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-white/50">{label}</p>
-              <p className="mt-1 font-display text-3xl text-white tabular-nums">
-                +{cargando ? "…" : datos[key]}
-              </p>
               <p className="mt-2 text-[11px] leading-relaxed text-white/45">{texto}</p>
             </article>
           ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[9px] uppercase tracking-wider text-white/40">
-            <UsersRound className="size-3.5" /> Comunidad en crecimiento
+            <UsersRound className="size-3.5" /> Ecosistema especializado
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 px-3 py-1.5 text-[9px] uppercase tracking-wider text-gold/70">
-            Herramientas especializadas para joyería
+            Datos públicos verificados en preparación
           </span>
         </div>
       </div>
