@@ -51,7 +51,7 @@ function Inicio() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const capacidadesSet = useMemo(() => new Set(capacidades), [capacidades]);
-  const { esDueno, sedeFiltro, setSedeFiltro, sedes, sedeSeleccionada } = useSedeFiltroDueno();
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes } = useSedeFiltroDueno();
   const sedeContextoId = esDueno
     ? (sedeFiltro === TODAS_LAS_SEDES ? null : sedeFiltro)
     : (sesion?.sede?.id ?? null);
@@ -114,7 +114,7 @@ function Inicio() {
   }, [isLoading, navigate, sesion]);
 
   const resumen = useMemo(() => {
-    const activos = pedidos.filter((p) => !esEstadoFinalPedido(p.estado));
+    const activos = pedidosSede.filter((p) => !esEstadoFinalPedido(p.estado));
     const produccion = activos.filter((p) => p.estado === "En Producción");
     const recepcion = activos.filter((p) => pedidoEnRecepcion(p.estado));
     const vencidos = activos.filter((p) => {
@@ -134,7 +134,7 @@ function Inicio() {
         return da - db;
       });
     return { activos, produccion, recepcion, vencidos, hoy, urgentes, atencion };
-  }, [pedidos]);
+  }, [pedidosSede]);
 
   const cargaAreas = useMemo(() => {
     const todas = [
@@ -305,7 +305,7 @@ function Inicio() {
         <Panel titulo="Carga operativa por área">
           <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
             {cargaAreas.map(([area, Icono]) => {
-              const cantidad = pedidos.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
+              const cantidad = pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
               const destinos: Record<string, string> = {
                 "Diseño 3D": "/diseno-3d",
                 "Impresión 3D": "/impresion-3d",
@@ -429,7 +429,7 @@ function InicioPreparacion({
   ];
 
   const pendientes = pasos.filter((paso) => !paso.listo);
-  const siguiente = pendientes[0] ?? pasos[pasos.length - 1];
+  const siguiente = pendientes[0] ?? pasos[pasos.length - 1]!;
   const completados = pasos.filter((paso) => paso.listo).length;
 
   if (cargando) {
