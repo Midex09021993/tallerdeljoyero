@@ -122,10 +122,35 @@ export function ConfiguracionIdentidadComercial() {
     if (file.size > 5 * 1024 * 1024) return toast.error("El logo no puede superar 5 MB.");
 
     setGuardando(true);
-    const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    let archivo = file;
+    let extension = file.type === "image/png" ? "png" : "jpg";
+    let contentType = file.type === "image/webp" ? "image/png" : file.type;
+
+    if (file.type === "image/webp") {
+      try {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("No se pudo preparar el logo.");
+        context.drawImage(bitmap, 0, 0);
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+        bitmap.close();
+        if (!blob) throw new Error("No se pudo convertir el logo WebP.");
+        archivo = new File([blob], file.name.replace(/\.webp$/i, ".png"), { type: "image/png" });
+        extension = "png";
+        contentType = "image/png";
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "No se pudo convertir el logo WebP.");
+        setGuardando(false);
+        return;
+      }
+    }
+
     const path = form.participante_id + "/" + form.id + "/logo." + extension;
-    const { error: uploadError } = await supabase.storage.from("identidades-comerciales").upload(path, file, {
-      upsert: true, contentType: file.type, cacheControl: "3600"
+    const { error: uploadError } = await supabase.storage.from("identidades-comerciales").upload(path, archivo, {
+      upsert: true, contentType, cacheControl: "3600"
     });
     if (uploadError) {
       toast.error(uploadError.message);
