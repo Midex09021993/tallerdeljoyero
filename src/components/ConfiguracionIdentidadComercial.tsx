@@ -39,7 +39,7 @@ const PRESETS: Record<string, Partial<Identidad>> = {
 };
 
 const CAMPOS = [
-  "id","sede_id","nombre_comercial","razon_social","ruc","rnp_bienes","rpp_servicios","logo_url","email","telefono","whatsapp","direccion","ciudad",
+  "id","sede_id","participante_id","nombre_comercial","razon_social","ruc","rnp_bienes","rpp_servicios","logo_url","email","telefono","whatsapp","direccion","ciudad",
   "sitio_web","color_principal","pie_documento","pais_codigo","pais_nombre","moneda_codigo","moneda_simbolo",
   "impuesto_activo","impuesto_nombre","impuesto_tasa","impuesto_incluido","identificador_fiscal_label","zona_horaria",
 ].join(",");
