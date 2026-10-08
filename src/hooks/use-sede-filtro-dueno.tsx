@@ -5,6 +5,7 @@ import { useSedes, type Pedido, type Sede } from "@/lib/taller-db";
 export const TODAS_LAS_SEDES = "__todas_las_sedes__";
 
 const STORAGE_KEY = "aurum.sedeFiltroDueno";
+const SEDE_FILTRO_EVENT = "aurum:sede-filtro-dueno";
 
 export function useSedeFiltroDueno() {
   const { data: sesion } = useSesion();
@@ -13,14 +14,22 @@ export function useSedeFiltroDueno() {
 
   useEffect(() => {
     if (!sesion?.esDueno || typeof window === "undefined") return;
-    const guardada = window.localStorage.getItem(STORAGE_KEY);
-    if (guardada) setSedeFiltroState(guardada);
+
+    const cargarGuardada = () => {
+      const guardada = window.localStorage.getItem(STORAGE_KEY);
+      if (guardada) setSedeFiltroState(guardada);
+    };
+
+    cargarGuardada();
+    window.addEventListener(SEDE_FILTRO_EVENT, cargarGuardada);
+    return () => window.removeEventListener(SEDE_FILTRO_EVENT, cargarGuardada);
   }, [sesion?.esDueno]);
 
   const setSedeFiltro = useCallback((valor: string) => {
     setSedeFiltroState(valor);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, valor);
+      window.dispatchEvent(new Event(SEDE_FILTRO_EVENT));
     }
   }, []);
 
