@@ -33,6 +33,7 @@ type Props = {
   open: boolean;
   producto: CatalogoProductoEditor | null;
   participanteId: string;
+  categorias: string[];
   onClose: () => void;
   onSaved: () => void;
 };
@@ -41,9 +42,9 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-export function CatalogoModeloDialog({ open, producto, participanteId, onClose, onSaved }: Props) {
+export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved }: Props) {
   const [form, setForm] = useState({
-    codigo: "", nombre: "", slug: "", categoria: "Sin categoría", descripcion: "",
+    codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? "Otros", descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
     precio_desde: "", moneda: "PEN",
     metal_principal: "", peso_gramos: "", piedras: "", medidas: "", talla: "",
@@ -62,7 +63,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
       codigo: producto?.codigo ?? "",
       nombre: producto?.nombre ?? "",
       slug: producto ? slugify(producto.nombre) : "",
-      categoria: producto?.categoria ?? "Sin categoría",
+      categoria: producto?.categoria ?? categorias[0] ?? "Otros",
       descripcion: producto?.descripcion ?? "",
       imagen_principal_url: producto?.imagen_principal_url ?? "",
       galeria: Array.isArray(producto?.galeria) ? producto.galeria.join("\n") : "",
@@ -198,7 +199,12 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
             </label>
             <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: v.slug || slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Slug público<input required value={form.slug} onChange={(e) => setForm(v => ({ ...v, slug: slugify(e.target.value) }))} className={input} /><span className="text-[10px] font-normal text-muted-foreground">Será la identificación pública de la pieza.</span></label>
-            <label className="grid gap-1.5 text-xs font-semibold">Categoría<input value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input} /></label>
+            <label className="grid gap-1.5 text-xs font-semibold">Categoría
+              <select value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input}>
+                {categorias.map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
+              </select>
+              <span className="text-[10px] font-normal text-muted-foreground">Selecciona una categoría administrada por tu taller.</span>
+            </label>
           </section>
 
           <section className="grid gap-4 rounded-2xl border border-border bg-surface-muted/30 p-4 sm:grid-cols-2">
