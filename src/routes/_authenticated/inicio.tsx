@@ -172,15 +172,57 @@ function Inicio() {
 
 
   const pasosBienvenida = useMemo(() => {
-    const pasos = [
-      { titulo: "Conoce tu taller", texto: "Configura las capacidades y modalidades que realmente tiene tu taller. Así Aurum Lab sólo mostrará lo que puedes operar.", icono: Settings2, accion: "Configurar taller", destino: "/gestion?modulo=capacidades" },
-      { titulo: "Ordena tu operación", texto: "Define qué entra en producción, qué se deriva a servicios externos y prepara el flujo de trabajo de tu sede.", icono: Building2, accion: "Ir a Gestión", destino: "/gestion" },
-      { titulo: "Prepara el área comercial", texto: "Revisa identidad comercial, documentos, clientes y las herramientas que utilizarás para atender pedidos.", icono: Gem, accion: "Ver Comercial", destino: "/clientes" },
-      { titulo: "Empieza a trabajar", texto: "Cuando tu configuración esté lista, crea un pedido y lleva cada trabajo por el flujo real de tu taller.", icono: Wrench, accion: "Ver pedidos", destino: "/pedidos" },
-      { titulo: "Explora Aurum Lab", texto: "Tienes herramientas y servicios que puedes descubrir cuando los necesites. El sistema crecerá contigo.", icono: Rocket, accion: "Ver herramientas", destino: "/herramientas" },
+    return [
+      {
+        titulo: "Taller vinculado",
+        texto: "La sede seleccionada pertenece a un taller activo del ecosistema.",
+        listo: Boolean(preparacion?.tallerVinculado),
+        destino: esDueno ? "/gestion?modulo=ecosistema" : "/gestion",
+        accion: "Revisar taller",
+        icono: Building2,
+      },
+      {
+        titulo: "Capacidades definidas",
+        texto: "Aurum Lab reconoce las capacidades internas guardadas para esta sede.",
+        listo: Boolean(preparacion?.capacidadesConfiguradas),
+        destino: "/gestion?modulo=capacidades",
+        accion: "Configurar capacidades",
+        icono: Hammer,
+      },
+      {
+        titulo: "Modalidad de trabajo",
+        texto: "La sede tiene Producción o Servicios externos activos.",
+        listo: Boolean(preparacion?.produccionActiva || preparacion?.serviciosExternosActivos),
+        destino: "/gestion?modulo=capacidades",
+        accion: "Configurar modalidad",
+        icono: Settings2,
+      },
+      {
+        titulo: "Identidad comercial",
+        texto: "Existe una identidad comercial activa perteneciente al taller seleccionado.",
+        listo: Boolean(preparacion?.identidadConfigurada),
+        destino: "/gestion?modulo=comercial",
+        accion: "Configurar identidad",
+        icono: Gem,
+      },
+      {
+        titulo: "Primer pedido",
+        texto: "Ya existe al menos un pedido asociado a esta sede.",
+        listo: pedidosSede.length > 0,
+        destino: "/pedidos/nuevo",
+        accion: "Crear primer pedido",
+        icono: Wrench,
+      },
     ];
-    return sesion?.esDueno ? [{ titulo: "Administra tu ecosistema", texto: "Como dueño de Aurum Lab puedes administrar participantes y sedes desde Gestión, sin mezclar esa administración con la operación de cada taller.", icono: Building2, accion: "Abrir Gestión", destino: "/gestion" }, ...pasos] : pasos;
-  }, [sesion?.esDueno]);
+  }, [
+    esDueno,
+    pedidosSede.length,
+    preparacion?.capacidadesConfiguradas,
+    preparacion?.identidadConfigurada,
+    preparacion?.produccionActiva,
+    preparacion?.serviciosExternosActivos,
+    preparacion?.tallerVinculado,
+  ]);
 
   const cerrarBienvenida = async () => {
     if (!sesion?.user || guardandoBienvenida) return;
@@ -393,10 +435,18 @@ function Inicio() {
               </div>
               {(() => { const paso = pasosBienvenida[pasoBienvenida]; const Icono = paso.icono; return (
                 <div className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
-                  <div className="grid size-12 place-items-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep"><Icono className="size-6" /></div>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="grid size-12 place-items-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep"><Icono className="size-6" /></div>
+                    <span className={paso.listo ? "rounded-full border border-success/30 bg-success/10 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-success" : "rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-warning"}>
+                      {paso.listo ? "Completado" : "Pendiente"}
+                    </span>
+                  </div>
                   <h3 className="mt-5 text-xl font-semibold">{paso.titulo}</h3>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{paso.texto}</p>
-                  <button type="button" onClick={() => irDesdeBienvenida(paso.destino)} disabled={guardandoBienvenida} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground shadow-card transition hover:shadow-raised disabled:opacity-50">{paso.accion} <ChevronRight className="size-4" /></button>
+                  <button type="button" onClick={() => irDesdeBienvenida(paso.destino)} disabled={guardandoBienvenida} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground shadow-card transition hover:shadow-raised disabled:opacity-50">
+                    {paso.listo ? "Revisar configuración" : paso.accion}
+                    <ChevronRight className="size-4" />
+                  </button>
                 </div>
               ); })()}
               <div className="mt-6 flex flex-col-reverse justify-between gap-3 sm:flex-row sm:items-center">
