@@ -153,7 +153,9 @@ Deno.serve(async (req) => {
       : identidadActual;
 
     const identidadConfig = (quote.identidad_comercial && typeof quote.identidad_comercial === "object" ? quote.identidad_comercial : identidad) as any;
-    const docConfig = identidadConfig?.metadata?.cotizacion ?? {};\n    const atendidoPor = clean(docConfig.atendido_por) || clean(docConfig.responsable_nombre);\n    const atendidoCargo = clean(docConfig.responsable_cargo);
+    const docConfig = identidadConfig?.metadata?.cotizacion ?? {};
+    const atendidoPor = clean(docConfig.atendido_por) || clean(docConfig.responsable_nombre);
+    const atendidoCargo = clean(docConfig.responsable_cargo);
     const terminos = Array.isArray(docConfig.terminos) ? docConfig.terminos.filter((x: unknown) => clean(x)) : [];
     const cuentas = Array.isArray(docConfig.cuentas_bancarias) ? docConfig.cuentas_bancarias.filter((x: CuentaBancaria) => x?.activa !== false && (x.banco || x.cuenta || x.cci)) : [];
 
