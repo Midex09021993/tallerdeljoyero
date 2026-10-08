@@ -240,7 +240,7 @@ function LoginPage() {
               </button>
             </div>
 
-            <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+            <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.025] p-4 max-[767px]:hidden">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold text-white">¿Quieres llevar esto a tu operación?</p>
