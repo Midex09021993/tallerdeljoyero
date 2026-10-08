@@ -6,7 +6,7 @@ import { Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 
-type Participante = { id: string; nombre: string; ciudad: string | null };
+type Participante = { id: string; nombre: string; ciudad: string | null; sede_id: string | null };
 type Identidad = {
   id: string; sede_id: string | null; participante_id: string | null; nombre_comercial: string; razon_social: string | null; ruc: string | null;
   logo_url: string | null; email: string | null; telefono: string | null; whatsapp: string | null;
@@ -70,7 +70,7 @@ export function ConfiguracionIdentidadComercial() {
     setCargando(true);
     const { data: participantesData, error: participantesError } = await supabase
       .from("ecosistema_participantes")
-      .select("id,nombre,ciudad")
+      .select("id,nombre,ciudad,sede_id")
       .eq("estado", "activo")
       .order("nombre");
     if (participantesError) { toast.error(participantesError.message); setCargando(false); return; }
@@ -83,6 +83,17 @@ export function ConfiguracionIdentidadComercial() {
     const { data, error } = await supabase.from("identidades_comerciales").select(CAMPOS).eq("activa", true).order("nombre_comercial");
     if (error) { toast.error(error.message); setCargando(false); return; }
     const filas = (data ?? []) as unknown as Identidad[];
+
+    // Las identidades legadas se resuelven por su sede. El usuario no debe
+    // tener que escoger manualmente el taller propietario desde esta pantalla.
+    if (sesion?.esDueno) {
+      for (const identidad of filas) {
+        if (identidad.participante_id || !identidad.sede_id) continue;
+        const participante = participantesDisponibles.find((p) => p.sede_id === identidad.sede_id);
+        if (participante) identidad.participante_id = participante.id;
+      }
+    }
+
     const propias = sesion?.esDueno ? filas : filas.filter((x) => x.participante_id === sesion?.participante?.id);
     setIdentidades(propias);
     if (!identidadId && propias[0]) setIdentidadId(propias[0].id);
@@ -122,7 +133,7 @@ export function ConfiguracionIdentidadComercial() {
   async function guardar() {
     if (!form) return;
     if (!form.nombre_comercial.trim()) return toast.error("El nombre comercial es obligatorio.");
-    if (!form.participante_id) return toast.error("La identidad debe pertenecer a un taller del Ecosistema.");
+    if (!form.participante_id) return toast.error("No se pudo resolver automáticamente el taller propietario de esta identidad.");
     const tasa = Number(form.impuesto_tasa);
     if (!Number.isFinite(tasa) || tasa < 0 || tasa > 100) return toast.error("La tasa de impuesto debe estar entre 0 y 100.");
     if (!/^[A-Z]{3}$/.test(form.moneda_codigo.trim().toUpperCase())) return toast.error("La moneda debe usar un código de 3 letras.");
@@ -175,13 +186,6 @@ export function ConfiguracionIdentidadComercial() {
         >
           <div className="space-y-6 p-5">
             {identidades.length > 1 ? <label className="block text-xs font-semibold text-muted-foreground">Identidad activa<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={identidadId} onChange={e=>setIdentidadId(e.target.value)}>{identidades.map(x=><option key={x.id} value={x.id}>{x.nombre_comercial} · {participantes.find(p=>p.id===x.participante_id)?.nombre ?? "sin taller asignado"}</option>)}</select></label> : null}
-            {sesion?.esDueno && !form.participante_id ? (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-                <p className="text-xs font-semibold">Esta identidad todavía no está vinculada a un taller del Ecosistema.</p>
-                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">Es un registro legado. Antes de guardar datos fiscales, asígnale el taller al que pertenece. No la vinculamos automáticamente para evitar asignar RNP/RPP a la empresa equivocada.</p>
-                <label className="mt-3 block text-xs font-semibold text-muted-foreground">Taller propietario<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.participante_id ?? ""} onChange={e=>campo("participante_id",e.target.value || null)}><option value="">Seleccionar taller</option>{participantes.map(p=><option key={p.id} value={p.id}>{p.nombre} · {p.ciudad ?? ""}</option>)}</select></label>
-              </div>
-            ) : null}
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">Nombre comercial<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.nombre_comercial} onChange={e=>campo("nombre_comercial",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">Razón social<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.razon_social ?? ""} onChange={e=>campo("razon_social",e.target.value)} /></label>
