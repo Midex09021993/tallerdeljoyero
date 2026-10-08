@@ -33,6 +33,17 @@ begin
         participante_id is distinct from v_participante_id
         or sede_id is distinct from v_sede_id
       );
+  else
+    -- Si todavía no existe el participante FADILAB, la identidad legal
+    -- queda sin propietario operativo y nunca se hereda a otro taller.
+    update public.identidades_comerciales
+    set
+      participante_id = null,
+      sede_id = null,
+      updated_at = now()
+    where nombre_comercial = 'FADILAB'
+      and razon_social = 'FADILAB E.I.R.L.'
+      and ruc = '20612717789';
   end if;
 end;
 $$;
