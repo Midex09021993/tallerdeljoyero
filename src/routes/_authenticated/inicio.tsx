@@ -453,7 +453,17 @@ function Inicio() {
                 <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="text-xs font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-50">Saltar guía</button>
                 <div className="flex items-center justify-end gap-2">
                   {pasoBienvenida > 0 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual - 1)} className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground">Atrás</button> : null}
-                  {pasoBienvenida < pasosBienvenida.length - 1 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual + 1)} className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep hover:bg-gold/5">Siguiente</button> : <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground hover:bg-ink/90 disabled:opacity-50">{guardandoBienvenida ? "Guardando..." : "Entrar al sistema"}</button>}
+                  {pasoBienvenida < pasosBienvenida.length - 1 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual + 1)} className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep hover:bg-gold/5">Siguiente</button> : (
+                    pasosBienvenida.every((paso) => paso.listo) ? (
+                      <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground hover:shadow-raised disabled:opacity-50">
+                        {guardandoBienvenida ? "Guardando..." : "Entrar al sistema"}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => setPasoBienvenida(0)} className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep hover:bg-gold/5">
+                        Revisar pendientes
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             </div>
