@@ -1,5 +1,5 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
@@ -110,10 +110,11 @@ export function CapacidadesSedeAdmin({
     enabled: Boolean(sedeId),
   });
 
-  if (modalidadesActuales && !modalidadesIniciales) {
-    setModalidadesIniciales(modalidadesActuales);
-    setModalidades(modalidadesActuales);
-  }
+  useEffect(() => {
+    if (!modalidadesActuales) return;
+    setModalidadesIniciales((prev) => prev ?? modalidadesActuales);
+    setModalidades((prev) => prev ?? modalidadesActuales);
+  }, [modalidadesActuales]);
 
   const estadoModalidades = modalidades ?? modalidadesActuales ?? {
     produccion_activa: false,
