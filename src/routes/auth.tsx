@@ -177,8 +177,9 @@ function LoginPage() {
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-2">
               Herramientas, comercial, producción, visualización y ecosistema en un mismo entorno, adaptado a la forma real de trabajar de cada taller.
             </p>
-            <div className="mt-6 flex flex-wrap gap-2.5 [@media(max-height:800px)]:mt-3">
-              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:opacity-90">
+            <div className="mt-6 flex flex-wrap items-center gap-2.5 [@media(max-height:800px)]:mt-3">
+              <RegistroTaller className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink shadow-lg shadow-gold/10 transition hover:-translate-y-0.5 hover:opacity-90" />
+              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg border border-gold/45 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gold transition hover:bg-gold/10">
                 Probar herramientas <ArrowRight className="size-3.5" />
               </button>
               <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white/75 transition hover:border-gold/40 hover:text-gold">
@@ -245,7 +246,7 @@ function LoginPage() {
                 <div>
                   <p className="text-xs font-semibold text-white">¿Quieres llevar esto a tu operación?</p>
                   <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-white/45">
-                    Las herramientas son el primer paso. Cuando necesites organizar clientes, cotizaciones, pedidos y producción, puedes solicitar acceso a Aurum Lab.
+                    Las herramientas son el primer paso. Crea tu taller para empezar a organizar clientes, cotizaciones, pedidos y producción en Aurum Lab.
                   </p>
                 </div>
                 <RegistroTaller />
