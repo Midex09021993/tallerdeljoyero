@@ -10,6 +10,7 @@ type Props = {
 export function RegistroTaller({ className = "" }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [creado, setCreado] = useState(false);
+  const [correoEnviado, setCorreoEnviado] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
@@ -26,6 +27,7 @@ export function RegistroTaller({ className = "" }: Props) {
     if (cargando) return;
     setAbierto(false);
     setCreado(false);
+    setCorreoEnviado(false);
     setError("");
   }
 
@@ -36,6 +38,7 @@ export function RegistroTaller({ className = "" }: Props) {
 
     try {
       const resultado = await registrarTaller({ data: form });
+      setCorreoEnviado(resultado.correoEnviado === true);
       const { error: loginError } = await supabase.auth.signInWithPassword({
         email: resultado.email,
         password: form.password,
@@ -88,7 +91,9 @@ export function RegistroTaller({ className = "" }: Props) {
                 <Building2 className="mx-auto size-8 text-gold" />
                 <p className="mt-3 text-lg font-semibold text-gold">Tu taller está listo</p>
                 <p className="mt-2 text-sm leading-relaxed text-white/60">
-                  Estamos preparando tu espacio de trabajo. Entrando a Aurum Lab…
+                  {correoEnviado
+                    ? "Tu cuenta y tu taller fueron creados. También enviamos a tu correo el acceso y el enlace para entrar."
+                    : "Tu cuenta y tu taller fueron creados. Puedes entrar ahora; el correo de bienvenida quedó pendiente de configuración de envío."}
                 </p>
               </div>
             ) : (
