@@ -56,7 +56,7 @@ export function ServiciosExternosRecibidos() {
   }
 
   return (
-    <section className="rounded-2xl border border-gold/25 bg-card shadow-card">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-gold/25 bg-card shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
         <div>
           <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ function PedidoTecnicoRecibido({
   };
 
   return (
-    <div className="p-4 sm:p-5">
+    <div className="min-w-0 max-w-full p-4 sm:p-5">
       <button type="button" onClick={onToggle} className="w-full text-left">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -178,14 +178,14 @@ function PedidoTecnicoRecibido({
       </button>
 
       {abierto ? (
-        <div className="mt-5 space-y-5">
+        <div className="min-w-0 max-w-full mt-5 space-y-5">
           <div className="rounded-xl border border-border bg-surface-muted/20 p-4">
             <div className="mb-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ficha técnica completa</p>
               <p className="mt-1 text-sm font-semibold">{campo(pedido.pieza ?? primero.pieza) || "Pieza sin nombre"}</p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 ["Referencia", pedido.referencia],
                 ["Pieza", pedido.pieza],
@@ -201,9 +201,9 @@ function PedidoTecnicoRecibido({
                 ["Área actual", pedido.area_actual],
                 ["Área desde", pedido.area_desde],
               ].map(([etiqueta, valor]) => (
-                <div key={String(etiqueta)} className="rounded-lg border border-border bg-card p-3">
+                <div key={String(etiqueta)} className="min-w-0 rounded-lg border border-border bg-card p-3">
                   <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
-                  <p className="mt-1 text-xs font-medium text-foreground">{campo(valor)}</p>
+                  <p className="mt-1 break-words text-xs font-medium text-foreground">{campo(valor)}</p>
                 </div>
               ))}
             </div>
@@ -263,10 +263,10 @@ function PedidoTecnicoRecibido({
                 const cumpleArchivo = requisitos.length === 0 || disponibles.length > 0;
 
                 return (
-                  <div key={servicio.id} className="flex flex-wrap items-center justify-between gap-4 border-b border-border p-4 last:border-b-0">
-                    <div className="min-w-0">
+                  <div key={servicio.id} className="min-w-0 flex flex-wrap items-center justify-between gap-4 overflow-hidden border-b border-border p-4 last:border-b-0">
+                    <div className="min-w-0 max-w-full flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold">{servicio.area}</p>
+                        <p className="break-words text-sm font-semibold">{servicio.area}</p>
                         <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold-deep">{etiquetaEstado(servicio.estado)}</span>
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -285,13 +285,13 @@ function PedidoTecnicoRecibido({
                           {disponibles.map((archivo) => (
                             <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] font-medium hover:border-gold/30">
                               <FileArchive className="size-3.5" />
-                              {archivo.nombre}
+                              <span className="min-w-0 break-all">{archivo.nombre}</span>
                             </a>
                           ))}
                         </div>
                       ) : null}
                     </div>
-                    <Link to="/trabajos/$id" params={{ id: servicio.id }} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/30 hover:bg-gold/5">
+                    <Link className="shrink-0" to="/trabajos/$id" params={{ id: servicio.id }} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/30 hover:bg-gold/5">
                       Gestionar <ArrowUpRight className="size-3.5" />
                     </Link>
                   </div>
