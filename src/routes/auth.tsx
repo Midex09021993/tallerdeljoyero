@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
+import { RegistroTaller } from "@/components/RegistroTaller";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
@@ -247,7 +248,7 @@ function LoginPage() {
                     Las herramientas son el primer paso. Cuando necesites organizar clientes, cotizaciones, pedidos y producción, puedes solicitar acceso a Aurum Lab.
                   </p>
                 </div>
-                <SolicitudAcceso />
+                <RegistroTaller />
               </div>
             </div>
           </section>
@@ -321,7 +322,7 @@ function LoginPage() {
             ) : null}
           </form>
 
-          <div className="mt-5 flex justify-center md:hidden max-[767px]:flex"><SolicitudAcceso /></div>
+          <div className="mt-5 flex justify-center md:hidden max-[767px]:flex"><RegistroTaller /></div>
 
           {mostrarAyudaPassword ? (
             <div
