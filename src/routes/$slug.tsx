@@ -21,6 +21,7 @@ type CatalogoRow = {
   logo_url: string | null;
   whatsapp: string | null;
   producto_id: string | null;
+  producto_slug: string | null;
   codigo: string | null;
   nombre: string | null;
   categoria: string | null;
@@ -48,6 +49,7 @@ type CatalogoRow = {
 
 type Producto = {
   id: string;
+  slug: string;
   codigo: string;
   nombre: string;
   categoria: string;
@@ -104,6 +106,7 @@ function CatalogoPublicoPage() {
     .filter((row) => row.producto_id && row.codigo && row.nombre && row.categoria)
     .map((row) => ({
       id: row.producto_id!,
+      slug: row.producto_slug ?? row.producto_id!,
       codigo: row.codigo!,
       nombre: row.nombre!,
       categoria: row.categoria!,
@@ -247,7 +250,7 @@ function CatalogoPublicoPage() {
         {productosFiltrados.length ? (
           <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {productosFiltrados.map((producto) => (
-              <article key={producto.id} className="group cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+              <Link key={producto.id} to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="group block">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] bg-[#e9e3da]">
                   {producto.imagen ? (
                     <img src={producto.imagen} alt={producto.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.035]" />
@@ -277,7 +280,7 @@ function CatalogoPublicoPage() {
                     )}
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         ) : (
