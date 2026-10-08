@@ -145,7 +145,7 @@ export type Database = {
           },
         ]
       }
-      catalogo_configuracion: {
+      catalogo_solicitudes_cotizacion: {\n        Row: { id: string; participante_id: string; producto_id: string; nombre_cliente: string; telefono: string | null; email: string | null; cantidad: number; mensaje: string | null; estado: string; cliente_id: string | null; cotizacion_id: string | null; created_at: string; updated_at: string }\n        Insert: { id?: string; participante_id: string; producto_id: string; nombre_cliente: string; telefono?: string | null; email?: string | null; cantidad?: number; mensaje?: string | null; estado?: string; cliente_id?: string | null; cotizacion_id?: string | null; created_at?: string; updated_at?: string }\n        Update: { id?: string; participante_id?: string; producto_id?: string; nombre_cliente?: string; telefono?: string | null; email?: string | null; cantidad?: number; mensaje?: string | null; estado?: string; cliente_id?: string | null; cotizacion_id?: string | null; created_at?: string; updated_at?: string }\n        Relationships: []\n      }\n      catalogo_configuracion: {
         Row: {
           created_at: string
           descripcion: string | null
@@ -3641,7 +3641,7 @@ export type Database = {
         Args: { _pedido_id: string }
         Returns: Json
       }
-      recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
+      registrar_solicitud_catalogo: {\n        Args: { _catalogo_slug: string; _producto_slug: string; _nombre: string; _telefono?: string | null; _email?: string | null; _cantidad?: number; _mensaje?: string | null }\n        Returns: string\n      }\n      recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
       reconciliar_servicios_externos_pendientes: {
         Args: { _orden_produccion_id: string }
