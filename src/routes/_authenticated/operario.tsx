@@ -240,19 +240,19 @@ function OperarioPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card shadow-card">
-          <div className="flex items-center justify-between gap-3 p-4">
+        <details className="rounded-2xl border border-border bg-card shadow-card">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Segundo nivel</p>
               <h2 className="mt-1 text-base font-semibold">Servicios externos</h2>
               <p className="mt-1 text-xs text-muted-foreground">Pedidos recibidos de otros talleres o áreas.</p>
             </div>
-            <ExternalLink className="size-5 text-gold-deep" aria-hidden="true" />
-          </div>
+            <ExternalLink className="size-5 shrink-0 text-gold-deep" aria-hidden="true" />
+          </summary>
           <div className="border-t border-border p-2">
             <ServiciosExternosRecibidos />
           </div>
-        </section>
+        </details>
 
         <section className="grid gap-2 sm:grid-cols-2">
           {puedeHerramientas ? (
