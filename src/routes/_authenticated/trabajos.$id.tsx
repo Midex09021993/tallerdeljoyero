@@ -429,8 +429,12 @@ function TrabajoOperativoPage() {
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span className="rounded-full bg-surface-muted px-2.5 py-1">Taller: {sedeNombre || "—"}</span><span className="rounded-full bg-surface-muted px-2.5 py-1">Área: {trabajo.area}</span></div>
           <div className="mt-4 flex flex-wrap gap-2">
             {puedeTomar ? <button type="button" onClick={() => void tomarTrabajo()} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground">Tomar este trabajo</button> : null}
-            {trabajo.estado === "pendiente" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
+            {trabajo.estado === "pendiente" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
+            {trabajo.estado === "en_proceso" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("completado")} className="inline-flex items-center gap-2 rounded-xl bg-success px-4 py-2.5 text-xs font-semibold text-success-foreground disabled:opacity-50"><Check className="size-4" /> Completar</button> : null}
+            {trabajo.estado === "bloqueado" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:opacity-50">Reanudar</button> : null}
+            {activo && trabajo.estado !== "bloqueado" && puedeGestionar ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("bloqueado")} className="inline-flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs font-semibold text-warning disabled:opacity-50"><CircleAlert className="size-4" /> Bloquear</button> : null}
           </div>
+          {errorAccion ? <p className="mt-3 text-xs text-danger">{errorAccion}</p> : null}
         </section>
 
         <details className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
@@ -557,17 +561,6 @@ function TrabajoOperativoPage() {
             {activo ? <div className="mt-4 rounded-2xl border border-warning/20 bg-warning-soft/40 p-4"><p className="text-xs font-semibold">¿Hay algo que impida continuar?</p><div className="mt-3 grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_auto]"><select value={incidencia.tipo} onChange={(e) => setIncidencia((v) => ({ ...v, tipo: e.target.value }))} className="min-h-10 rounded-xl border border-gold/10 bg-gold/[0.018] px-3 text-sm"><option value="general">General</option><option value="material">Material</option><option value="diseño">Diseño</option><option value="máquina">Máquina</option><option value="cliente">Cliente</option></select><input value={incidencia.descripcion} onChange={(e) => setIncidencia((v) => ({ ...v, descripcion: e.target.value }))} placeholder="Describe brevemente el problema…" className="min-h-10 rounded-xl border border-gold/10 bg-gold/[0.018] px-3 text-sm" /><button type="button" disabled={!incidencia.descripcion.trim() || reportandoIncidencia} onClick={() => void reportarIncidencia()} className="rounded-xl bg-warning px-4 py-2.5 text-xs font-semibold text-warning-foreground disabled:opacity-50">{reportandoIncidencia ? "Enviando…" : "Reportar"}</button></div></div> : null}
           </div>
         </details>
-
-        <section className="rounded-2xl border border-gold/10 bg-card p-5 shadow-raised">
-          <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Acciones</p><h2 className="mt-1 text-lg font-semibold">Ejecutar trabajo</h2></div><span className="rounded-full bg-gold/[0.06] px-2.5 py-1 text-[10px] font-semibold">{estadoLabel[trabajo.estado]}</span></div>
-          {activo && puedeGestionar ? <div className="mt-4 flex flex-wrap gap-2">
-            {trabajo.estado === "pendiente" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-3 text-xs font-semibold text-ink-foreground disabled:opacity-50"><Play className="size-4" /> Iniciar trabajo</button> : null}
-            {trabajo.estado === "en_proceso" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("completado")} className="inline-flex items-center gap-2 rounded-xl bg-success px-4 py-3 text-xs font-semibold text-success-foreground disabled:opacity-50"><Check className="size-4" /> Completar trabajo</button> : null}
-            {trabajo.estado !== "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("bloqueado")} className="inline-flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-xs font-semibold text-warning disabled:opacity-50"><CircleAlert className="size-4" /> Bloquear</button> : null}
-            {trabajo.estado === "bloqueado" ? <button type="button" disabled={cambiarEstado.isPending} onClick={() => cambiarEstado.mutate("en_proceso")} className="rounded-xl bg-gold px-4 py-3 text-xs font-semibold text-gold-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50">Reanudar</button> : null}
-          </div> : null}
-          {errorAccion ? <p className="mt-3 text-xs text-danger">{errorAccion}</p> : null}
-        </section>
 
         <p className="text-xs text-muted-foreground">El acceso a este trabajo está limitado por las reglas de seguridad de producción.</p>
       </div>
