@@ -82,7 +82,21 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
   }
 
   async function eliminar(item: Categoria) {
-    if (!window.confirm(`¿Eliminar la categoría "${item.nombre}"? Los modelos existentes no se eliminarán.`)) return;
+    setError(null);
+    const { count, error: countError } = await supabase
+      .from("catalogo_productos")
+      .select("id", { count: "exact", head: true })
+      .eq("participante_id", participanteId)
+      .eq("categoria", item.nombre);
+    if (countError) {
+      setError(countError.message);
+      return;
+    }
+    if ((count ?? 0) > 0) {
+      setError(`No puedes eliminar "${item.nombre}" porque tiene ${count} modelo(s) asociado(s). Ocúltala para conservar el historial.`);
+      return;
+    }
+    if (!window.confirm(`¿Eliminar la categoría "${item.nombre}"?`)) return;
     const { error: deleteError } = await supabase
       .from("catalogo_categorias")
       .delete()
