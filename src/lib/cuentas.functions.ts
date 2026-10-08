@@ -137,6 +137,155 @@ export const sistemaSinDuenos = createServerFn({ method: "GET" }).handler(async 
   }
 });
 
+type RegistroTaller = {
+  nombre: string;
+  taller: string;
+  email: string;
+  telefono?: string;
+  ciudad?: string;
+  password: string;
+};
+
+/**
+ * Alta pública simple de un taller.
+ * Una sola operación crea Auth + perfil + sede + participante + rol + cuenta principal.
+ * El rol es gerente del propio taller; el dueño general de Aurum Lab permanece separado.
+ */
+export const registrarTaller = createServerFn({ method: "POST" })
+  .inputValidator((input: RegistroTaller) => input)
+  .handler(async ({ data }) => {
+    const nombre = data.nombre?.trim();
+    const taller = data.taller?.trim();
+    const email = data.email?.trim().toLowerCase();
+    const telefono = data.telefono?.trim() ?? "";
+    const ciudad = data.ciudad?.trim() ?? "";
+
+    if (!nombre || nombre.length > 120) throw new Error("Ingresa tu nombre.");
+    if (!taller || taller.length > 160) throw new Error("Ingresa el nombre de tu taller.");
+    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new Error("Ingresa un correo válido.");
+    if (telefono.length > 30) throw new Error("El teléfono es demasiado largo.");
+    if (ciudad.length > 80) throw new Error("La ciudad es demasiado larga.");
+    if (!data.password || data.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
+    if (data.password.length > 128) throw new Error("La contraseña es demasiado larga.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (authUsersError) throw new Error("No se pudo comprobar el correo.");
+    if ((authUsers.users ?? []).some((u) => (u.email ?? "").toLowerCase() === email)) {
+      throw new Error("Ese correo ya tiene una cuenta. Puedes entrar con él desde el acceso principal.");
+    }
+
+    const { data: tallerExistente } = await supabaseAdmin
+      .from("ecosistema_participantes")
+      .select("id")
+      .eq("tipo_participante", "organizacion")
+      .ilike("nombre", taller)
+      .eq("estado", "activo")
+      .limit(1)
+      .maybeSingle();
+    if (tallerExistente) throw new Error("Ya existe un taller con ese nombre en Aurum Lab.");
+
+    const { data: sedeExistente } = await supabaseAdmin
+      .from("sedes")
+      .select("id")
+      .ilike("nombre", taller)
+      .maybeSingle();
+    if (sedeExistente) throw new Error("Ese nombre de taller ya está registrado. Usa otro nombre.");
+
+    const { data: creado, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        usuario: email,
+        nombre,
+        apellidos: "",
+        telefono,
+      },
+    });
+    if (authError || !creado.user) {
+      throw new Error(/already been registered/i.test(authError?.message ?? "") ? "Ese correo ya tiene una cuenta." : (authError?.message ?? "No se pudo crear la cuenta."));
+    }
+
+    const userId = creado.user.id;
+    let sedeId: string | null = null;
+    let participanteId: string | null = null;
+
+    const rollback = async () => {
+      if (participanteId) await supabaseAdmin.from("ecosistema_participantes").delete().eq("id", participanteId);
+      if (sedeId) await supabaseAdmin.from("sedes").delete().eq("id", sedeId);
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+    };
+
+    const { data: sede, error: sedeError } = await supabaseAdmin
+      .from("sedes")
+      .insert({ nombre: taller, ciudad, modo: "completo", activa: true })
+      .select("id")
+      .single();
+    if (sedeError || !sede) {
+      await rollback();
+      throw new Error("No se pudo crear el espacio de trabajo del taller.");
+    }
+    sedeId = sede.id;
+
+    const { data: participante, error: participanteError } = await supabaseAdmin
+      .from("ecosistema_participantes")
+      .insert({
+        tipo_participante: "organizacion",
+        nombre: taller,
+        email,
+        telefono: telefono || null,
+        ciudad: ciudad || null,
+        estado: "activo",
+        sede_id: sedeId,
+        metadata: { origen: "registro_publico" },
+      })
+      .select("id")
+      .single();
+    if (participanteError || !participante) {
+      await rollback();
+      throw new Error("No se pudo crear el taller en el ecosistema.");
+    }
+    participanteId = participante.id;
+
+    const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
+      id: userId,
+      usuario: email,
+      nombre,
+      apellidos: "",
+      dni: "",
+      telefono,
+      sede_id: sedeId,
+      participante_id: participanteId,
+      activo: true,
+    });
+    if (perfilError) {
+      await rollback();
+      throw new Error("No se pudo preparar el perfil del responsable.");
+    }
+
+    const { error: rolError } = await supabaseAdmin.from("user_roles").insert({
+      user_id: userId,
+      role: "gerente",
+      sede_id: sedeId,
+      participante_id: participanteId,
+    });
+    if (rolError) {
+      await rollback();
+      throw new Error("No se pudo asignar el acceso del taller.");
+    }
+
+    try {
+      await asegurarCuentaParticipantePrincipal(supabaseAdmin, userId, participanteId);
+    } catch (error) {
+      await rollback();
+      throw error;
+    }
+
+    return { ok: true, email, participanteId, sedeId };
+  });
+
 /** Alta del primer dueño general. Sólo funciona mientras Auth y roles estén vacíos. */
 export const registrarPrimerDueno = createServerFn({ method: "POST" })
   .inputValidator(validar)
