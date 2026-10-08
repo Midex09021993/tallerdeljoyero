@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Boxes,
@@ -118,12 +118,15 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
     queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
     enabled: Boolean(sesion?.esAdmin),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sede_especialidades")
-        .select("sede_id, especialidades!inner(nombre)");
-      if (error) throw error;
+      const [{ data: capacidades, error: capacidadesError }, { data: modalidades, error: modalidadesError }] =
+        await Promise.all([
+          supabase.from("sede_especialidades").select("sede_id, especialidades!inner(nombre)"),
+          supabase.from("sede_modalidades").select("sede_id,produccion_activa,servicios_externos_activos"),
+        ]);
+      if (capacidadesError) throw capacidadesError;
+      if (modalidadesError) throw modalidadesError;
 
-      const filas = (data ?? []) as Array<{
+      const filas = (capacidades ?? []) as Array<{
         sede_id: string;
         especialidades: { nombre: string } | { nombre: string }[] | null;
       }>;
@@ -134,16 +137,23 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
           ? sesion?.sede?.id ?? null
           : null;
 
-      const nombres = filas
-        .filter((fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo)
-        .flatMap((fila) => {
-          if (!fila.especialidades) return [];
-          return Array.isArray(fila.especialidades)
-            ? fila.especialidades.map((e) => e.nombre)
-            : [fila.especialidades.nombre];
-        });
+      const filasCapacidades = filas.filter((fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo);
+      const nombres = filasCapacidades.flatMap((fila) => {
+        if (!fila.especialidades) return [];
+        return Array.isArray(fila.especialidades)
+          ? fila.especialidades.map((e) => e.nombre)
+          : [fila.especialidades.nombre];
+      });
 
-      return [...new Set(nombres)];
+      const modalidadesFiltradas = (modalidades ?? []).filter(
+        (fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo,
+      );
+
+      return {
+        capacidades: [...new Set(nombres)],
+        produccionActiva: modalidadesFiltradas.some((fila) => fila.produccion_activa),
+        serviciosExternosActivos: modalidadesFiltradas.some((fila) => fila.servicios_externos_activos),
+      };
     },
   });
 }
@@ -151,8 +161,15 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 function seccionesVisibles(
   roles: Rol[] | undefined,
   esAdmin: boolean | undefined,
-  capacidades: string[] | undefined,
+  menuConfig:
+    | {
+        capacidades: string[];
+        produccionActiva: boolean;
+        serviciosExternosActivos: boolean;
+      }
+    | undefined,
 ): Seccion[] {
+  const capacidades = menuConfig?.capacidades;
   if (!roles) return [];
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
@@ -161,6 +178,10 @@ function seccionesVisibles(
     const habilitadas = new Set(capacidades);
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
+      if (s.to === "/servicios-externos") return Boolean(menuConfig?.serviciosExternosActivos);
+      if (s.grupo === "produccion" || s.to === "/aurum-render") {
+        if (!menuConfig?.produccionActiva) return false;
+      }
       // Catálogo es una capacidad comercial configurable de la sede.
       // Si está desactivado en Gestión, no aparece en el menú.
       const capacidadComercial = CAPACIDADES_COMERCIALES_MENU[s.to];
@@ -250,7 +271,20 @@ export function AppShell({
     "Usuario";
   const tallerVisible = sesion?.participante?.nombre?.trim() || sesion?.sede?.nombre?.trim() || "";
   const inicial = nombreVisible.charAt(0).toUpperCase();
-  const mostrarAtrasMovil = atrasMovil !== false;
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const esRutaProduccion = [
+    "/diseno-3d",
+    "/impresion-3d",
+    "/casting",
+    "/corte-laser",
+    "/taller",
+    "/aurum-render",
+  ].includes(pathname);
+  const esRutaServiciosExternos = pathname === "/servicios-externos";
+  const modalidadBloqueada =
+    (esRutaProduccion && !capacidadesMenu?.produccionActiva) ||
+    (esRutaServiciosExternos && !capacidadesMenu?.serviciosExternosActivos);
+
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -424,7 +458,24 @@ export function AppShell({
           </nav>
         ) : null}
 
-        {children}
+        {modalidadBloqueada ? (
+          <Panel titulo="Modalidad desactivada">
+            <div className="p-6">
+              <p className="text-sm text-muted-foreground">
+                Esta modalidad no está activa para este taller.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                El dueño o gerente puede activarla desde Gestión → Capacidades del taller.
+              </p>
+              <Link
+                to="/gestion"
+                className="mt-4 inline-flex rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black"
+              >
+                Ir a Gestión
+              </Link>
+            </div>
+          </Panel>
+        ) : children}
       </main>
     </div>
   );
