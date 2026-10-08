@@ -96,6 +96,7 @@ export type Database = {
           created_at: string
           descripcion: string | null
           id: string
+          imagen_url: string | null
           nombre: string
           orden: number
           participante_id: string
@@ -107,6 +108,7 @@ export type Database = {
           created_at?: string
           descripcion?: string | null
           id?: string
+          imagen_url?: string | null
           nombre: string
           orden?: number
           participante_id: string
@@ -118,6 +120,7 @@ export type Database = {
           created_at?: string
           descripcion?: string | null
           id?: string
+          imagen_url?: string | null
           nombre?: string
           orden?: number
           participante_id?: string
@@ -3598,6 +3601,8 @@ export type Database = {
           tiempo_fabricacion_dias: number | null
           video_url: string | null
           whatsapp: string | null
+          coleccion_slug: string | null
+          coleccion_nombre: string | null
         }[]
       }
       obtener_trabajo_operativo: {
