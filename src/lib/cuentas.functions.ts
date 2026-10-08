@@ -289,7 +289,26 @@ export const registrarTaller = createServerFn({ method: "POST" })
       throw error;
     }
 
-    return { ok: true, email, participanteId, sedeId };
+    let correoEnviado = false;
+    try {
+      const origin = process.env.AURUM_SITE_URL || "https://www.tallerdeljoyero.com";
+      const { data: emailResult, error: emailError } = await supabaseAdmin.functions.invoke("aurum-welcome-email", {
+        body: {
+          nombre,
+          taller,
+          email,
+          loginUrl: `${origin}/auth`,
+        },
+      });
+      correoEnviado = !emailError && emailResult?.ok === true;
+      if (emailError || !correoEnviado) {
+        console.error("[registrarTaller] No se pudo enviar el correo de bienvenida:", emailError ?? emailResult);
+      }
+    } catch (emailError) {
+      console.error("[registrarTaller] Error enviando correo de bienvenida:", emailError);
+    }
+
+    return { ok: true, email, participanteId, sedeId, correoEnviado };
   });
 
 /** Alta del primer dueño general. Sólo funciona mientras Auth y roles estén vacíos. */
