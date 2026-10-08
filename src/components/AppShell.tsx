@@ -172,16 +172,13 @@ function seccionesVisibles(
       return habilitadas.has(CAPACIDADES_MENU.find((area) => areaCoincide(area, s.area)) ?? "");
     });
   }
-  // El operario usa una única bandeja: /operario. Las áreas se seleccionan
-  // dentro de esa pantalla para evitar duplicar interfaces (/taller, /casting, etc.).
-  // Herramientas y Perfil permanecen como destinos independientes.
-  const asignadas = areas ?? [];
+  // El operario usa una única bandeja: /operario.
+  // Las áreas se consultan dentro de cada trabajo; no deben convertirse en
+  // navegación adicional. Herramientas y Perfil quedan como acciones secundarias
+  // dentro de su experiencia de trabajo.
   const inicio = secciones.filter((s) => s.to === "/operario" || s.to === "/servicios-externos");
-  const herramientas = secciones.filter(
-    (s) => s.to === "/herramientas" && asignadas.some((area) => areaCoincide(area, "Taller")),
-  );
   const perfil = secciones.filter((s) => s.to === "/perfil");
-  return [...inicio, ...herramientas, ...perfil];
+  return [...inicio, ...perfil];
 }
 
 // Orden visual del menú. Solo cambia la presentación; no cambia rutas, permisos ni lógica.
@@ -233,6 +230,7 @@ export function AppShell({
     capacidadesCargadas ? capacidadesMenu : undefined,
   );
   const visiblesOrdenadas = ordenarMenu(visibles);
+  const esOperario = sesion?.rolPrincipal === "operario";
   const nombrePersonal = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
     .map((valor) => valor?.trim())
     .filter(Boolean)
@@ -362,7 +360,7 @@ export function AppShell({
           ) : null}
         </header>
 
-        {!ocultarNavegacion && !sesion?.esAdmin ? (
+        {!ocultarNavegacion && !sesion?.esAdmin && !esOperario ? (
           <nav
             className={`sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden ${
               encabezadoMovilCompacto ? "max-lg:hidden" : ""
