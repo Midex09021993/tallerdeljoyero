@@ -1,5 +1,5 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -129,6 +129,11 @@ function GestionPage() {
   const { data: pedidos = [], isLoading } = usePedidos();
   const { sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const [modulo, setModulo] = useState<Modulo>("resumen");
+
+  useEffect(() => {
+    const moduloInicial = new URLSearchParams(window.location.search).get("modulo");
+    if (moduloInicial === "capacidades") setModulo("capacidades");
+  }, []);
 
   const esDueno = Boolean(sesion?.esDueno);
   const esGerente = Boolean(sesion?.roles.includes("gerente"));
