@@ -13,8 +13,25 @@ type Identidad = {
   direccion: string | null; ciudad: string | null; sitio_web: string | null; color_principal: string | null;
   pie_documento: string | null; pais_codigo: string; pais_nombre: string; moneda_codigo: string; moneda_simbolo: string;
   impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean;
-  identificador_fiscal_label: string; zona_horaria: string;
+  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, any> | null;
 };
+
+type CuentaBancaria = { banco: string; tipo: string; moneda: string; cuenta: string; cci: string; titular: string; activa: boolean };
+
+type ConfigCotizacion = { introduccion: string; terminos: string[]; firma_nombre: string; firma_cargo: string; mostrar_bancos: boolean; cuentas_bancarias: CuentaBancaria[] };
+
+const DEFAULT_COTIZACION: ConfigCotizacion = { introduccion: "Es grato dirigirnos a usted, con la finalidad de remitir la siguiente cotización.", terminos: ["Precios y condiciones sujetos a la vigencia indicada en la cotización.", "La fecha de entrega será coordinada según disponibilidad y alcance del servicio.", "La forma de pago y cualquier condición especial se detallan en la propuesta comercial."], firma_nombre: "", firma_cargo: "", mostrar_bancos: true, cuentas_bancarias: [] };
+
+function obtenerConfigCotizacion(metadata: Record<string, any> | null | undefined): ConfigCotizacion {
+  const raw = metadata?.cotizacion;
+  return {
+    ...DEFAULT_COTIZACION,
+    ...(raw && typeof raw === "object" ? raw : {}),
+    terminos: Array.isArray(raw?.terminos) ? raw.terminos : DEFAULT_COTIZACION.terminos,
+    cuentas_bancarias: Array.isArray(raw?.cuentas_bancarias) ? raw.cuentas_bancarias : [],
+  };
+}
+
 
 const PRESETS: Record<string, Partial<Identidad>> = {
   PE: { pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true, impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima" },
@@ -22,17 +39,17 @@ const PRESETS: Record<string, Partial<Identidad>> = {
 };
 
 const CAMPOS = [
-  "id","sede_id","nombre_comercial","razon_social","ruc","logo_url","email","telefono","whatsapp","direccion","ciudad",
+  "id","sede_id","nombre_comercial","razon_social","ruc","rnp_bienes","rpp_servicios","logo_url","email","telefono","whatsapp","direccion","ciudad",
   "sitio_web","color_principal","pie_documento","pais_codigo","pais_nombre","moneda_codigo","moneda_simbolo",
   "impuesto_activo","impuesto_nombre","impuesto_tasa","impuesto_incluido","identificador_fiscal_label","zona_horaria",
 ].join(",");
 
 function nuevo(participanteId: string): Omit<Identidad, "id"> {
   return {
-    sede_id: null, participante_id: participanteId, nombre_comercial: "Taller del Joyero", razon_social: "", ruc: "", logo_url: "", email: "",
+    sede_id: null, participante_id: participanteId, nombre_comercial: "Taller del Joyero", razon_social: "", ruc: "", rnp_bienes: "", rpp_servicios: "", logo_url: "", email: "",
     telefono: "", whatsapp: "", direccion: "", ciudad: "", sitio_web: "", color_principal: "#B58A3A", pie_documento: "",
     pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true,
-    impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima",
+    impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima", metadata: { cotizacion: DEFAULT_COTIZACION },
   };
 }
 
@@ -119,6 +136,7 @@ export function ConfiguracionIdentidadComercial() {
       moneda_simbolo: form.moneda_simbolo.trim(), impuesto_activo: Boolean(form.impuesto_activo), impuesto_nombre: form.impuesto_nombre.trim(),
       impuesto_tasa: tasa, impuesto_incluido: Boolean(form.impuesto_incluido), identificador_fiscal_label: form.identificador_fiscal_label.trim(),
       zona_horaria: form.zona_horaria.trim(),
+      metadata: { ...(form.metadata ?? {}), cotizacion: obtenerConfigCotizacion(form.metadata) },
     };
     const { error } = await supabase.from("identidades_comerciales").update(payload).eq("id", form.id);
     if (error) toast.error(error.message);
@@ -161,6 +179,10 @@ export function ConfiguracionIdentidadComercial() {
               <label className="text-xs font-semibold text-muted-foreground">Razón social<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.razon_social ?? ""} onChange={e=>campo("razon_social",e.target.value)} /></label>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
+              <label className="text-xs font-semibold text-muted-foreground">RNP Bienes<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.rnp_bienes ?? ""} onChange={e=>campo("rnp_bienes",e.target.value)} placeholder="Opcional" /></label>
+              <label className="text-xs font-semibold text-muted-foreground">RPP Servicios<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.rpp_servicios ?? ""} onChange={e=>campo("rpp_servicios",e.target.value)} placeholder="Opcional" /></label>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">{form.identificador_fiscal_label || "RUC / NIT"}<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.ruc ?? ""} onChange={e=>campo("ruc",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}><option value="PE">Perú</option><option value="CO">Colombia</option><option value="OTHER">Otro</option></select></label>
             </div>
@@ -190,6 +212,7 @@ export function ConfiguracionIdentidadComercial() {
               <label className="text-xs font-semibold text-muted-foreground">Zona horaria<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.zona_horaria} onChange={e=>campo("zona_horaria",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">Pie de documento<textarea className="mt-1 min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.pie_documento ?? ""} onChange={e=>campo("pie_documento",e.target.value)} /></label>
             </div>
+            <CotizacionConfigEditor form={form} campo={campo} />
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-5 text-muted-foreground"><b>Regla documental:</b> estos datos son predeterminados para nuevos documentos. Las cotizaciones y contratos guardan su propia identidad histórica.</div>
           </div>
         </Panel>
@@ -197,3 +220,29 @@ export function ConfiguracionIdentidadComercial() {
     </div>
   );
 }
+
+
+function CotizacionConfigEditor({ form, campo }: { form: Identidad; campo: <K extends keyof Identidad>(key: K, value: Identidad[K]) => void }) {
+  const config = obtenerConfigCotizacion(form.metadata);
+  const actualizar = (cambios: Partial<ConfigCotizacion>) => campo("metadata", { ...(form.metadata ?? {}), cotizacion: { ...config, ...cambios } });
+  const actualizarTermino = (index: number, value: string) => actualizar({ terminos: config.terminos.map((x, i) => i === index ? value : x) });
+  const actualizarCuenta = (index: number, cambios: Partial<CuentaBancaria>) => actualizar({ cuentas_bancarias: config.cuentas_bancarias.map((x, i) => i === index ? { ...x, ...cambios } : x) });
+  return <Panel titulo="Configuración de cotizaciones">
+    <div className="space-y-5 p-5">
+      <p className="text-xs text-muted-foreground">Estos datos se congelarán en nuevas cotizaciones y alimentarán su PDF. Las cotizaciones antiguas no se modifican al cambiar esta configuración.</p>
+      <label className="block text-xs font-semibold text-muted-foreground">Introducción comercial<textarea className="mt-1 min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={config.introduccion} onChange={e=>actualizar({introduccion:e.target.value})}/></label>
+      <div>
+        <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold">Términos y condiciones</p><p className="text-[11px] text-muted-foreground">Se muestran como lista numerada al final del PDF.</p></div><button type="button" onClick={()=>actualizar({terminos:[...config.terminos,"Nueva condición comercial."]})} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">+ Agregar</button></div>
+        <div className="mt-3 space-y-2">{config.terminos.map((termino,index)=><div key={index} className="flex gap-2"><span className="pt-3 text-xs font-semibold text-muted-foreground">{index+1}.</span><textarea value={termino} onChange={e=>actualizarTermino(index,e.target.value)} rows={2} className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"/><button type="button" onClick={()=>actualizar({terminos:config.terminos.filter((_,i)=>i!==index)})} className="pt-2 text-xs text-destructive">Quitar</button></div>)}</div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2"><label className="text-xs font-semibold text-muted-foreground">Nombre de firma<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={config.firma_nombre} onChange={e=>actualizar({firma_nombre:e.target.value})} placeholder="Ej. Miguel A." /></label><label className="text-xs font-semibold text-muted-foreground">Cargo<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={config.firma_cargo} onChange={e=>actualizar({firma_cargo:e.target.value})} placeholder="Ej. Gerente General" /></label></div>
+      <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-3 text-xs"><input type="checkbox" checked={config.mostrar_bancos} onChange={e=>actualizar({mostrar_bancos:e.target.checked})}/> Mostrar cuentas bancarias en el PDF</label>
+      <div>
+        <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold">Cuentas bancarias</p><p className="text-[11px] text-muted-foreground">Puedes registrar varias cuentas y elegir moneda.</p></div><button type="button" onClick={()=>actualizar({cuentas_bancarias:[...config.cuentas_bancarias,{banco:"",tipo:"Cuenta Corriente",moneda:form.moneda_codigo,cuenta:"",cci:"",titular:form.razon_social || form.nombre_comercial,activa:true}]})} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">+ Cuenta</button></div>
+        <div className="mt-3 space-y-3">{config.cuentas_bancarias.map((cuenta,index)=><div key={index} className="rounded-xl border border-border p-4"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"><CampoMini label="Banco" value={cuenta.banco} onChange={v=>actualizarCuenta(index,{banco:v})}/><CampoMini label="Tipo" value={cuenta.tipo} onChange={v=>actualizarCuenta(index,{tipo:v})}/><CampoMini label="Moneda" value={cuenta.moneda} onChange={v=>actualizarCuenta(index,{moneda:v})}/><CampoMini label="N° cuenta" value={cuenta.cuenta} onChange={v=>actualizarCuenta(index,{cuenta:v})}/><CampoMini label="CCI" value={cuenta.cci} onChange={v=>actualizarCuenta(index,{cci:v})}/><CampoMini label="Titular" value={cuenta.titular} onChange={v=>actualizarCuenta(index,{titular:v})}/></div><div className="mt-3 flex justify-end"><button type="button" onClick={()=>actualizar({cuentas_bancarias:config.cuentas_bancarias.filter((_,i)=>i!==index)})} className="text-xs text-destructive">Quitar cuenta</button></div></div>)}</div>
+      </div>
+    </div>
+  </Panel>;
+}
+
+function CampoMini({ label, value, onChange }: { label:string; value:string; onChange:(value:string)=>void }) { return <label className="text-[11px] font-semibold text-muted-foreground">{label}<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={value} onChange={e=>onChange(e.target.value)}/></label>; }
