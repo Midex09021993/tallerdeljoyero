@@ -264,11 +264,11 @@ function CotizacionDetallePage() {
     setCreandoVersion(false);
   }
 
-  async function convertirAPedidoYContrato() {
+  async function convertirAPedido() {
     if (!cotizacion || cotizacion.estado !== "aprobada" || !sesion?.esAdmin) return;
     setConvirtiendoPedido(true);
     setError("");
-    const { data, error: conversionError } = await supabase.rpc("convertir_cotizacion_a_pedido_contrato", {
+    const { data, error: conversionError } = await supabase.rpc("convertir_cotizacion_a_pedido", {
       _cotizacion_id: cotizacion.id,
     });
     if (conversionError || !data) {
@@ -276,10 +276,10 @@ function CotizacionDetallePage() {
       setConvirtiendoPedido(false);
       return;
     }
-    const resultado = data as { pedido_id?: string; contrato_id?: string; contrato_numero?: string };
+    const resultado = data as { pedido_id?: string };
     setPedidoId(resultado.pedido_id ?? null);
-    setContratoId(resultado.contrato_id ?? null);
-    setContratoNumero(resultado.contrato_numero ?? null);
+    setContratoId(null);
+    setContratoNumero(null);
     setConvirtiendoPedido(false);
   }
 
@@ -775,7 +775,7 @@ function CotizacionDetallePage() {
                       <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
                     </div>
                   ) : (
-                    <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedidoYContrato()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                    <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedido()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
                       {convirtiendoPedido ? "Creando pedido…" : "Crear pedido"}
                     </button>
                   )
