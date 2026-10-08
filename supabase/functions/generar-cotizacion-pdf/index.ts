@@ -175,6 +175,24 @@ Deno.serve(async (req) => {
     let pageNumber = 1;
 
     const identity = identidadConfig ?? {};
+
+    // El logo se carga una sola vez antes de dibujar el encabezado.
+    // Así el render del PDF permanece síncrono y seguro al crear páginas nuevas.
+    let embeddedLogo: any = null;
+    if (clean(identity.logo_url)) {
+      try {
+        const response = await fetch(clean(identity.logo_url));
+        if (response.ok) {
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          const type = response.headers.get("content-type") ?? "";
+          embeddedLogo = type.includes("png")
+            ? await pdf.embedPng(bytes)
+            : type.includes("jpeg") || type.includes("jpg")
+              ? await pdf.embedJpg(bytes)
+              : null;
+        }
+      } catch {}
+    }
     const contact = identidadActual ?? {};
     const businessName = clean(identity.nombre_comercial) || clean(identity.razon_social) || clean(sede?.nombre) || "AURUM LAB";
     const legalName = clean(identity.razon_social);
@@ -217,25 +235,10 @@ Deno.serve(async (req) => {
     const wrapPdf = (text: string, maxChars: number) => wrap(clean(text), maxChars);
 
     function drawHeader() {
-      let logoIncluded = false;
-      if (clean(identity.logo_url)) {
-        try {
-          const response = await fetch(clean(identity.logo_url));
-          if (response.ok) {
-            const bytes = new Uint8Array(await response.arrayBuffer());
-            const type = response.headers.get("content-type") ?? "";
-            const image = type.includes("png")
-              ? await pdf.embedPng(bytes)
-              : type.includes("jpeg") || type.includes("jpg")
-                ? await pdf.embedJpg(bytes)
-                : null;
-            if (image) {
-              const scale = Math.min(82 / image.width, 52 / image.height);
-              page.drawImage(image, { x: margin, y: y - 45, width: image.width * scale, height: image.height * scale });
-              logoIncluded = true;
-            }
-          }
-        } catch {}
+      const logoIncluded = Boolean(embeddedLogo);
+      if (embeddedLogo) {
+        const scale = Math.min(82 / embeddedLogo.width, 52 / embeddedLogo.height);
+        page.drawImage(embeddedLogo, { x: margin, y: y - 45, width: embeddedLogo.width * scale, height: embeddedLogo.height * scale });
       }
 
       const x = logoIncluded ? 140 : margin;
