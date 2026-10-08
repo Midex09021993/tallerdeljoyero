@@ -296,6 +296,7 @@ export function AppShell({
     "Usuario";
   const tallerVisible = sesion?.participante?.nombre?.trim() || sesion?.sede?.nombre?.trim() || "";
   const inicial = nombreVisible.charAt(0).toUpperCase();
+  const mostrarAtrasMovil = atrasMovil !== false;
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const esRutaProduccion = [
     "/diseno-3d",
