@@ -46,6 +46,7 @@ function ContratosPage() {
                 key={contrato.id}
                 to="/contratos/$id"
                 params={{ id: contrato.id }}
+                search={{ nuevoPedido: false }}
                 className="block px-4 py-4 transition-colors hover:bg-surface-muted/60 lg:px-6"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">

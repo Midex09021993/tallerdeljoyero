@@ -47,8 +47,8 @@ export function registrarEvento(
   };
 
   void supabase
-    .from("aurum_analytics_events")
-    .insert(payload)
+    .from("aurum_analytics_events" as never)
+    .insert(payload as never)
     .then(({ error }) => {
       if (error && import.meta.env.DEV) {
         console.debug("[Aurum Analytics]", error.message);

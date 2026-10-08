@@ -52,11 +52,11 @@ export function AnaliticaAurumLab() {
   });
 
   const eventos = data?.eventos ?? {};
-  const visitas = eventos.page_view ?? 0;
-  const solicitudes = eventos.access_request_submitted ?? 0;
-  const logins = eventos.login_completed ?? 0;
-  const whatsapp = eventos.whatsapp_clicked ?? 0;
-  const herramientas = eventos.tool_opened ?? 0;
+  const visitas = eventos["page_view"] ?? 0;
+  const solicitudes = eventos["access_request_submitted"] ?? 0;
+  const logins = eventos["login_completed"] ?? 0;
+  const whatsapp = eventos["whatsapp_clicked"] ?? 0;
+  const herramientas = eventos["tool_opened"] ?? 0;
   const conversionSolicitud = visitas ? ((solicitudes / visitas) * 100).toFixed(1) : "0.0";
   const conversionLogin = visitas ? ((logins / visitas) * 100).toFixed(1) : "0.0";
 
