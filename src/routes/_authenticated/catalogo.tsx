@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles, Settings, X } from "lucide-react";
+import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
+import { CatalogoCategoriasDialog } from "@/components/CatalogoCategoriasDialog";
 import { CatalogoModeloDialog, type CatalogoProductoEditor } from "@/components/CatalogoModeloDialog";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +67,7 @@ function CatalogoPage() {
   const queryClient = useQueryClient();
   const [editorAbierto, setEditorAbierto] = useState(false);
   const [configAbierta, setConfigAbierta] = useState(false);
+  const [categoriasAbierta, setCategoriasAbierta] = useState(false);
   const [modeloEditando, setModeloEditando] = useState<CatalogoProductoEditor | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
@@ -138,6 +140,24 @@ function CatalogoPage() {
   const [vista, setVista] = useState<"grid" | "lista">("grid");
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todos");
+
+  const { data: categoriasRows = [] } = useQuery({
+    queryKey: ["catalogo-categorias", sesion?.participante?.id],
+    enabled: Boolean(sesion?.participante?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("catalogo_categorias")
+        .select("id, nombre, slug, orden, activo")
+        .eq("participante_id", sesion!.participante!.id)
+        .eq("activo", true)
+        .order("orden", { ascending: true })
+        .order("nombre", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+  const categoriasDisponibles = useMemo(() => categoriasRows.map((item) => item.nombre), [categoriasRows]);
 
   const { data: productoRows = [], isLoading: productosLoading, error: productosError } = useQuery({
     queryKey: ["catalogo-productos", sesion?.participante?.id],
@@ -224,6 +244,9 @@ function CatalogoPage() {
               <button type="button" onClick={() => setConfigAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
                 <Settings className="size-4" /> Configurar catálogo público
               </button>
+              <button type="button" onClick={() => setCategoriasAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+                <Tags className="size-4" /> Categorías
+              </button>
             </>
           ) : null}
           {puedeGestionar ? (
@@ -296,8 +319,9 @@ function CatalogoPage() {
         )}
       </section>
 
-      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} onClose={() => setEditorAbierto(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
+      <CatalogoCategoriasDialog open={categoriasAbierta} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
         <div className="grid gap-3 md:grid-cols-3">
