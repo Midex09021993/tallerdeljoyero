@@ -244,8 +244,14 @@ export const registrarTaller = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (participanteError || !participante) {
+      console.error("[registrarTaller] Error al crear participante:", participanteError);
       await rollback();
-      throw new Error("No se pudo crear el taller en el ecosistema.");
+      const detalle = participanteError
+        ? [participanteError.message, participanteError.code, participanteError.details, participanteError.hint]
+            .filter(Boolean)
+            .join(" | ")
+        : "La inserción no devolvió ningún participante.";
+      throw new Error(`No se pudo crear el taller en el ecosistema: ${detalle}`);
     }
     participanteId = participante.id;
 
