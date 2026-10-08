@@ -27,6 +27,8 @@ type Quote = {
   identidad_comercial_id: string | null;
 };
 
+type CuentaBancaria = { banco?: string; tipo?: string; moneda?: string; cuenta?: string; cci?: string; titular?: string; activa?: boolean };
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -150,125 +152,122 @@ Deno.serve(async (req) => {
       ? { ...(identidadActual ?? {}), ...(quote.identidad_comercial as Record<string, unknown>) }
       : identidadActual;
 
+    const identidadConfig = (quote.identidad_comercial && typeof quote.identidad_comercial === "object" ? quote.identidad_comercial : identidad) as any;
+    const docConfig = identidadConfig?.metadata?.cotizacion ?? {};
+    const terminos = Array.isArray(docConfig.terminos) ? docConfig.terminos.filter((x: unknown) => clean(x)) : [];
+    const cuentas = Array.isArray(docConfig.cuentas_bancarias) ? docConfig.cuentas_bancarias.filter((x: CuentaBancaria) => x?.activa !== false && (x.banco || x.cuenta || x.cci)) : [];
+
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-    let page = pdf.addPage([595.28, 841.89]);
-    const { width, height } = page.getSize();
-    let y = height - 54;
+    const pageSize: [number, number] = [595.28, 841.89];
+    const margin = 42;
+    const bottom = 55;
+    let page = pdf.addPage(pageSize);
+    let { width, height } = page.getSize();
+    let y = height - 42;
 
-    page.drawText(clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO", { x: 42, y, size: 20, font: bold, color: rgb(0.12, 0.12, 0.14) });
-    page.drawText("COTIZACIÓN COMERCIAL", { x: 42, y: y - 24, size: 10, font: bold, color: rgb(0.42, 0.32, 0.16) });
-    page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: 375, y, size: 11, font: bold });
-    page.drawText(`Emitida: ${quote.fecha_emision ?? "—"}`, { x: 375, y: y - 16, size: 9, font });
-    y -= 62;
+    const drawFooter = (p: any) => {
+      p.drawLine({ start: { x: margin, y: 42 }, end: { x: width - margin, y: 42 }, thickness: 0.6, color: rgb(0.82,0.82,0.84) });
+      p.drawText(clean(identidadConfig?.pie_documento) || clean(identidadConfig?.email) || "Documento comercial generado por Aurum Lab", { x: margin, y: 27, size: 7, font, color: rgb(0.48,0.48,0.5) });
+      p.drawText(`Página ${pdf.getPageCount()}`, { x: width - 85, y: 27, size: 7, font, color: rgb(0.48,0.48,0.5) });
+    };
+    const nuevaPagina = () => {
+      drawFooter(page);
+      page = pdf.addPage(pageSize);
+      width = page.getSize().width; height = page.getSize().height; y = height - 42;
+    };
+    const asegurarEspacio = (alto: number) => { if (y - alto < bottom) nuevaPagina(); };
+    const drawWrapped = (text: string, x: number, maxChars: number, size = 9, gap = 12) => {
+      for (const line of wrap(text, maxChars)) { asegurarEspacio(gap); page.drawText(line, { x, y, size, font }); y -= gap; }
+    };
 
-    page.drawLine({ start: { x: 42, y }, end: { x: width - 42, y }, thickness: 1, color: rgb(0.84, 0.84, 0.86) });
-    y -= 28;
-
-    drawLabelValue(page, font, "CLIENTE", clean(cliente?.nombre), 42, y);
-    drawLabelValue(page, font, "TALLER / JOYERÍA", clean(identidad?.nombre_comercial) || clean(sede?.nombre), 235, y);
-    drawLabelValue(page, font, "ESTADO", clean(quote.estado), 420, y);
-    y -= 50;
-
-    if (quote.fecha_vencimiento || quote.fecha_entrega_solicitada) {
-      drawLabelValue(page, font, "VÁLIDA HASTA", clean(quote.fecha_vencimiento), 42, y);
-      drawLabelValue(page, font, "ENTREGA SOLICITADA", clean(quote.fecha_entrega_solicitada), 235, y);
-      y -= 50;
+    let logoIncluido = false;
+    if (clean(identidadConfig?.logo_url)) {
+      try {
+        const response = await fetch(clean(identidadConfig.logo_url));
+        if (response.ok) {
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          const contentType = response.headers.get("content-type") ?? "";
+          const image = contentType.includes("png") ? await pdf.embedPng(bytes) : contentType.includes("jpeg") || contentType.includes("jpg") ? await pdf.embedJpg(bytes) : null;
+          if (image) { const scale = Math.min(105 / image.width, 58 / image.height); page.drawImage(image, { x: margin, y: y - 48, width: image.width * scale, height: image.height * scale }); logoIncluido = true; }
+        }
+      } catch {}
     }
+    const xTexto = logoIncluido ? 165 : margin;
+    page.drawText(clean(identidadConfig?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO", { x: xTexto, y, size: 18, font: bold, color: rgb(0.12,0.12,0.14) });
+    page.drawText(clean(identidadConfig?.razon_social) || "", { x: xTexto, y: y - 19, size: 9, font });
+    const fiscales = [
+      identidadConfig?.ruc ? `${clean(identidadConfig.identificador_fiscal_label) || "RUC"} ${clean(identidadConfig.ruc)}` : "",
+      identidadConfig?.rnp_bienes ? `RNP Bienes ${clean(identidadConfig.rnp_bienes)}` : "",
+      identidadConfig?.rpp_servicios ? `RPP Servicios ${clean(identidadConfig.rpp_servicios)}` : "",
+    ].filter(Boolean).join(" · ");
+    if (fiscales) page.drawText(fiscales, { x: xTexto, y: y - 33, size: 7.5, font, color: rgb(0.35,0.35,0.38) });
+    page.drawText("COTIZACIÓN", { x: width - 165, y, size: 12, font: bold, color: rgb(0.42,0.32,0.16) });
+    page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: width - 165, y: y - 18, size: 9, font: bold });
+    page.drawText(`Fecha: ${quote.fecha_emision ?? "—"}`, { x: width - 165, y: y - 33, size: 8, font });
+    y -= 70;
+    page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 1, color: rgb(0.78,0.78,0.8) });
+    y -= 24;
+
+    drawLabelValue(page, font, "CLIENTE", clean(cliente?.nombre), margin, y);
+    drawLabelValue(page, font, "TELÉFONO", clean(cliente?.telefono), 235, y);
+    drawLabelValue(page, font, "EMAIL", clean(cliente?.email), 390, y);
+    y -= 46;
+    drawLabelValue(page, font, "VÁLIDA HASTA", clean(quote.fecha_vencimiento), margin, y);
+    drawLabelValue(page, font, "ENTREGA SOLICITADA", clean(quote.fecha_entrega_solicitada), 235, y);
+    drawLabelValue(page, font, "MONEDA", clean(quote.moneda), 390, y);
+    y -= 42;
+
+    if (clean(docConfig.introduccion)) { page.drawText(clean(docConfig.introduccion), { x: margin, y, size: 9, font }); y -= 25; }
 
     if (proyecto) {
-      page.drawText("DETALLE DE LA JOYA", { x: 42, y, size: 11, font: bold });
-      y -= 18;
-      const specs = [
-        ["Proyecto", clean(proyecto.nombre)],
-        ["Código", clean(proyecto.codigo)],
-        ["Metal", clean(proyecto.metal)],
-        ["Ley", clean(proyecto.ley)],
-        ["Talla", clean(proyecto.talla)],
-        ["Piedras", clean(proyecto.piedras)],
-        ["Peso estimado", proyecto.peso_estimado != null ? `${proyecto.peso_estimado} g` : ""],
-        ["Cantidad", proyecto.cantidad_piezas != null ? String(proyecto.cantidad_piezas) : ""],
-      ];
-      let col = 0;
-      for (const [label, value] of specs) {
-        const x = col === 0 ? 42 : 315;
-        drawLabelValue(page, font, label.toUpperCase(), value, x, y);
-        col++;
-        if (col === 2) { col = 0; y -= 43; }
-      }
-      if (col !== 0) y -= 43;
-      if (clean(proyecto.descripcion)) {
-        page.drawText("Descripción", { x: 42, y, size: 8, font, color: rgb(0.42, 0.42, 0.45) });
-        y -= 13;
-        for (const line of wrap(clean(proyecto.descripcion), 95)) {
-          page.drawText(line, { x: 42, y, size: 9, font });
-          y -= 12;
-        }
-        y -= 10;
-      }
+      asegurarEspacio(115);
+      page.drawText("DETALLE DE LA JOYA", { x: margin, y, size: 10, font: bold }); y -= 17;
+      const specs = [["Proyecto",clean(proyecto.nombre)],["Código",clean(proyecto.codigo)],["Metal",clean(proyecto.metal)],["Ley",clean(proyecto.ley)],["Talla",clean(proyecto.talla)],["Piedras",clean(proyecto.piedras)],["Peso",proyecto.peso_estimado != null ? `${proyecto.peso_estimado} g` : ""],["Cantidad",proyecto.cantidad_piezas != null ? String(proyecto.cantidad_piezas) : ""]];
+      for (let i=0;i<specs.length;i+=2) { drawLabelValue(page,font,specs[i][0].toUpperCase(),specs[i][1],margin,y); if(specs[i+1]) drawLabelValue(page,font,specs[i+1][0].toUpperCase(),specs[i+1][1],310,y); y-=34; }
+      if (clean(proyecto.descripcion)) { page.drawText("Descripción", { x: margin, y, size: 8, font, color: rgb(0.42,0.42,0.45) }); y-=13; drawWrapped(clean(proyecto.descripcion),margin,96,8.5,11); y-=6; }
     }
 
-    page.drawText("PARTIDAS", { x: 42, y, size: 11, font: bold });
-    y -= 20;
-    page.drawText("Descripción", { x: 42, y, size: 8, font: bold });
-    page.drawText("Cant.", { x: 370, y, size: 8, font: bold });
-    page.drawText("Total", { x: 475, y, size: 8, font: bold });
-    y -= 10;
-    page.drawLine({ start: { x: 42, y }, end: { x: width - 42, y }, thickness: 0.7, color: rgb(0.86, 0.86, 0.88) });
-    y -= 16;
+    asegurarEspacio(125);
+    page.drawText("DETALLE DE LA COTIZACIÓN", { x: margin, y, size: 10, font: bold }); y -= 19;
+    const cols = { desc: margin, qty: 335, unit: 380, tax: 450, total: 505 };
+    page.drawText("DESCRIPCIÓN", { x: cols.desc, y, size: 7.5, font: bold });
+    page.drawText("CANT.", { x: cols.qty, y, size: 7.5, font: bold });
+    page.drawText("PRECIO", { x: cols.unit, y, size: 7.5, font: bold });
+    page.drawText("IMP.", { x: cols.tax, y, size: 7.5, font: bold });
+    page.drawText("IMPORTE", { x: cols.total, y, size: 7.5, font: bold });
+    y -= 9; page.drawLine({ start:{x:margin,y},end:{x:width-margin,y},thickness:0.8,color:rgb(0.72,0.72,0.74)}); y-=15;
 
+    const lineBaseTotal = (detalles ?? []).reduce((sum: number, item: any) => sum + Math.max(0, Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0)), 0);
     for (const item of detalles ?? []) {
-      const descriptionLines = wrap(clean(item.descripcion), 55);
-      const rowHeight = Math.max(18, descriptionLines.length * 12);
-      if (y - rowHeight < 150) {
-        page = pdf.addPage([595.28, 841.89]);
-        y = height - 55;
-      }
-      descriptionLines.forEach((line, index) => {
-        page.drawText(line, { x: 42, y: y - index * 12, size: 9, font });
-      });
-      page.drawText(String(item.cantidad ?? 0), { x: 370, y, size: 9, font });
-      page.drawText(money(Number(item.total_precio ?? 0), quote.moneda), { x: 445, y, size: 9, font });
-      y -= rowHeight + 8;
+      const base = Math.max(0, Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0));
+      const impuestoLinea = lineBaseTotal > 0 ? Number(quote.impuestos ?? 0) * base / lineBaseTotal : 0;
+      const importe = base;
+      const lines = wrap(clean(item.descripcion), 48);
+      const rowHeight = Math.max(18, lines.length * 11);
+      asegurarEspacio(rowHeight + 10);
+      lines.forEach((line, index) => page.drawText(line, { x: cols.desc, y:index === 0 ? y : y-index*11, size: 8.2, font }));
+      page.drawText(String(item.cantidad ?? 0), { x: cols.qty, y, size: 8.2, font });
+      page.drawText(money(Number(item.precio_unitario ?? 0), quote.moneda), { x: cols.unit, y, size: 7.7, font });
+      page.drawText(money(impuestoLinea, quote.moneda), { x: cols.tax, y, size: 7.7, font });
+      page.drawText(money(importe, quote.moneda), { x: cols.total, y, size: 7.7, font });
+      y -= rowHeight + 7; page.drawLine({ start:{x:margin,y:y+3},end:{x:width-margin,y:y+3},thickness:0.35,color:rgb(0.88,0.88,0.89)});
     }
 
-    if (y < 220) {
-      page = pdf.addPage([595.28, 841.89]);
-      y = height - 55;
-    }
-    page.drawLine({ start: { x: 335, y }, end: { x: width - 42, y }, thickness: 0.8, color: rgb(0.82, 0.82, 0.84) });
-    y -= 22;
-    const totals = [
-      ["Subtotal", quote.subtotal],
-      ["Descuento", -Number(quote.descuento ?? 0)],
-      ["Impuestos", quote.impuestos],
-      ["TOTAL", quote.total],
-    ];
-    for (const [label, value] of totals) {
-      const isTotal = label === "TOTAL";
-      page.drawText(String(label), { x: 350, y, size: isTotal ? 11 : 9, font: isTotal ? bold : font });
-      page.drawText(money(Number(value), quote.moneda), { x: 445, y, size: isTotal ? 12 : 9, font: isTotal ? bold : font });
-      y -= isTotal ? 22 : 16;
-    }
+    asegurarEspacio(100); y -= 6;
+    const totalsX = 360;
+    const totals = [["Subtotal", Number(quote.subtotal ?? 0)],["Descuento", -Number(quote.descuento ?? 0)],["Impuestos", Number(quote.impuestos ?? 0)],["TOTAL", Number(quote.total ?? 0)]];
+    for (const [label,value] of totals) { const isTotal = label === "TOTAL"; page.drawText(String(label), {x:totalsX,y,size:isTotal?10:8.5,font:isTotal?bold:font}); page.drawText(money(Number(value),quote.moneda), {x:450,y,size:isTotal?11:8.5,font:isTotal?bold:font}); y -= isTotal?21:15; }
 
-    if (clean(quote.notas_cliente)) {
-      y -= 12;
-      page.drawText("OBSERVACIONES", { x: 42, y, size: 10, font: bold });
-      y -= 15;
-      for (const line of wrap(clean(quote.notas_cliente), 96)) {
-        page.drawText(line, { x: 42, y, size: 9, font });
-        y -= 12;
-      }
-    }
+    if (clean(quote.notas_cliente)) { y -= 8; asegurarEspacio(45); page.drawText("OBSERVACIONES", {x:margin,y,size:9.5,font:bold}); y-=14; drawWrapped(clean(quote.notas_cliente),margin,96,8.5,11); }
 
-    page.drawText("Documento comercial generado por www.tallerdeljoyero.com - Aurum LAB", {
-      x: 42,
-      y: 28,
-      size: 7.5,
-      font,
-      color: rgb(0.48, 0.48, 0.5),
-    });
+    if (terminos.length) { y -= 10; asegurarEspacio(60); page.drawText("TÉRMINOS Y CONDICIONES", {x:margin,y,size:9.5,font:bold}); y-=15; for(let i=0;i<terminos.length;i++){ asegurarEspacio(28); const texto=clean(terminos[i]); page.drawText(`${i+1}.`,{x:margin,y,size:8.2,font:bold}); const lines=wrap(texto,92); for(let j=0;j<lines.length;j++){ if(j>0){asegurarEspacio(12);y-=11;} page.drawText(lines[j],{x:margin+15,y,size:8.2,font}); y-=11; } y-=3; } }
+
+    if (docConfig.mostrar_bancos && cuentas.length) { y -= 8; asegurarEspacio(80); page.drawText("DATOS BANCARIOS", {x:margin,y,size:9.5,font:bold}); y-=15; for(const cuenta of cuentas){ asegurarEspacio(38); page.drawText(`${clean(cuenta.banco)} · ${clean(cuenta.tipo)} · ${clean(cuenta.moneda)}`,{x:margin,y,size:8.2,font:bold}); y-=11; if(clean(cuenta.cuenta)) { page.drawText(`Cuenta: ${clean(cuenta.cuenta)}`,{x:margin,y,size:8,font}); y-=10; } if(clean(cuenta.cci)) { page.drawText(`CCI: ${clean(cuenta.cci)}`,{x:200,y:y+10,size:8,font}); } if(clean(cuenta.titular)) { page.drawText(`Titular: ${clean(cuenta.titular)}`,{x:margin,y,size:8,font}); y-=10; } y-=5; } }
+
+    asegurarEspacio(65); y -= 8; page.drawText("ATENTAMENTE", {x:margin,y,size:8,font}); y-=18; if(clean(docConfig.firma_nombre)) page.drawText(clean(docConfig.firma_nombre),{x:margin,y,size:9,font:bold}); if(clean(docConfig.firma_cargo)){ y-=12; page.drawText(clean(docConfig.firma_cargo),{x:margin,y,size:8,font}); }
+    drawFooter(page);
 
     const pdfBytes = await pdf.save();
     const path = `${quote.id}/v${quote.version}-${crypto.randomUUID()}.pdf`;
