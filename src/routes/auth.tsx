@@ -239,6 +239,18 @@ function LoginPage() {
               </button>
               <SolicitudAcceso />
             </div>
+
+            <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-white">¿Quieres llevar esto a tu operación?</p>
+                  <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-white/45">
+                    Las herramientas son el primer paso. Cuando necesites organizar clientes, cotizaciones, pedidos y producción, puedes solicitar acceso a Aurum Lab.
+                  </p>
+                </div>
+                <SolicitudAcceso />
+              </div>
+            </div>
           </section>
 
         </section>
