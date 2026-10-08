@@ -88,7 +88,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setCarpetaSubida(producto?.id ?? "");
     setProgresoSubida(0);
     setError(null);
-  }, [open, producto]);
+  }, [open, producto, categorias]);
 
   if (!open) return null;
 
