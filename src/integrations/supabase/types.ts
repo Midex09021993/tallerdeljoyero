@@ -902,12 +902,14 @@ export type Database = {
           fecha_entrega_solicitada: string | null
           fecha_vencimiento: string | null
           id: string
+          identidad_comercial: Json
           identidad_comercial_id: string | null
           impuestos: number
           moneda: string
           notas_cliente: string
           notas_internas: string
           numero: string
+          participante_id: string | null
           proyecto_joya_id: string | null
           reemplaza_id: string | null
           sede_id: string | null
@@ -930,12 +932,14 @@ export type Database = {
           fecha_entrega_solicitada?: string | null
           fecha_vencimiento?: string | null
           id?: string
+          identidad_comercial?: Json
           identidad_comercial_id?: string | null
           impuestos?: number
           moneda?: string
           notas_cliente?: string
           notas_internas?: string
           numero?: string
+          participante_id?: string | null
           proyecto_joya_id?: string | null
           reemplaza_id?: string | null
           sede_id?: string | null
@@ -958,12 +962,14 @@ export type Database = {
           fecha_entrega_solicitada?: string | null
           fecha_vencimiento?: string | null
           id?: string
+          identidad_comercial?: Json
           identidad_comercial_id?: string | null
           impuestos?: number
           moneda?: string
           notas_cliente?: string
           notas_internas?: string
           numero?: string
+          participante_id?: string | null
           proyecto_joya_id?: string | null
           reemplaza_id?: string | null
           sede_id?: string | null
@@ -988,6 +994,13 @@ export type Database = {
             columns: ["identidad_comercial_id"]
             isOneToOne: false
             referencedRelation: "identidades_comerciales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
             referencedColumns: ["id"]
           },
           {
@@ -1161,8 +1174,11 @@ export type Database = {
           nombre_comercial: string
           pais_codigo: string | null
           pais_nombre: string | null
+          participante_id: string | null
           pie_documento: string | null
           razon_social: string | null
+          rnp_bienes: string | null
+          rpp_servicios: string | null
           ruc: string | null
           sede_id: string | null
           sitio_web: string | null
@@ -1191,8 +1207,11 @@ export type Database = {
           nombre_comercial: string
           pais_codigo?: string | null
           pais_nombre?: string | null
+          participante_id?: string | null
           pie_documento?: string | null
           razon_social?: string | null
+          rnp_bienes?: string | null
+          rpp_servicios?: string | null
           ruc?: string | null
           sede_id?: string | null
           sitio_web?: string | null
@@ -1221,8 +1240,11 @@ export type Database = {
           nombre_comercial?: string
           pais_codigo?: string | null
           pais_nombre?: string | null
+          participante_id?: string | null
           pie_documento?: string | null
           razon_social?: string | null
+          rnp_bienes?: string | null
+          rpp_servicios?: string | null
           ruc?: string | null
           sede_id?: string | null
           sitio_web?: string | null
@@ -1232,6 +1254,13 @@ export type Database = {
           zona_horaria?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "identidades_comerciales_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "identidades_comerciales_sede_id_fkey"
             columns: ["sede_id"]
