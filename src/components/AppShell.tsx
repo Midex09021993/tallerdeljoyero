@@ -116,30 +116,14 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
   return useQuery({
     queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
-    enabled: Boolean(sesion?.esAdmin || sesion?.sede?.id),
+    enabled: Boolean(sesion?.esAdmin),
     queryFn: async () => {
-      if (!sesion?.esAdmin) {
-        const { data: modalidades, error } = await supabase
-          .from("sede_modalidades")
-          .select("sede_id,produccion_activa,servicios_externos_activos")
-          .eq("sede_id", sesion?.sede?.id ?? "");
-        if (error) throw error;
-        return {
-          capacidades: [],
-          produccionActiva: Boolean(modalidades?.some((fila) => fila.produccion_activa)),
-          serviciosExternosActivos: Boolean(modalidades?.some((fila) => fila.servicios_externos_activos)),
-        };
-      }
+      const { data, error } = await supabase
+        .from("sede_especialidades")
+        .select("sede_id, especialidades!inner(nombre)");
+      if (error) throw error;
 
-      const [{ data: capacidades, error: capacidadesError }, { data: modalidades, error: modalidadesError }] =
-        await Promise.all([
-          supabase.from("sede_especialidades").select("sede_id, especialidades!inner(nombre)"),
-          supabase.from("sede_modalidades").select("sede_id,produccion_activa,servicios_externos_activos"),
-        ]);
-      if (capacidadesError) throw capacidadesError;
-      if (modalidadesError) throw modalidadesError;
-
-      const filas = (capacidades ?? []) as Array<{
+      const filas = (data ?? []) as Array<{
         sede_id: string;
         especialidades: { nombre: string } | { nombre: string }[] | null;
       }>;
@@ -150,22 +134,45 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
           ? sesion?.sede?.id ?? null
           : null;
 
-      const filasCapacidades = filas.filter((fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo);
-      const nombres = filasCapacidades.flatMap((fila) => {
-        if (!fila.especialidades) return [];
-        return Array.isArray(fila.especialidades)
-          ? fila.especialidades.map((e) => e.nombre)
-          : [fila.especialidades.nombre];
-      });
+      const nombres = filas
+        .filter((fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo)
+        .flatMap((fila) => {
+          if (!fila.especialidades) return [];
+          return Array.isArray(fila.especialidades)
+            ? fila.especialidades.map((e) => e.nombre)
+            : [fila.especialidades.nombre];
+        });
 
-      const modalidadesFiltradas = (modalidades ?? []).filter(
+      return [...new Set(nombres)];
+    },
+  });
+}
+
+export function useModalidadesMenu(sesion: ReturnType<typeof useSesion>["data"]) {
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
+
+  return useQuery({
+    queryKey: ["menu-modalidades", esDueno, sedeFiltro, sesion?.sede?.id],
+    enabled: Boolean(sesion?.esAdmin || sesion?.sede?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sede_modalidades")
+        .select("sede_id,produccion_activa,servicios_externos_activos");
+      if (error) throw error;
+
+      const sedeObjetivo = esDueno && sedeFiltro !== TODAS_LAS_SEDES
+        ? sedeFiltro
+        : !esDueno
+          ? sesion?.sede?.id ?? null
+          : null;
+
+      const filas = (data ?? []).filter(
         (fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo,
       );
 
       return {
-        capacidades: [...new Set(nombres)],
-        produccionActiva: modalidadesFiltradas.some((fila) => fila.produccion_activa),
-        serviciosExternosActivos: modalidadesFiltradas.some((fila) => fila.servicios_externos_activos),
+        produccionActiva: filas.some((fila) => fila.produccion_activa),
+        serviciosExternosActivos: filas.some((fila) => fila.servicios_externos_activos),
       };
     },
   });
@@ -174,15 +181,14 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 function seccionesVisibles(
   roles: Rol[] | undefined,
   esAdmin: boolean | undefined,
-  menuConfig:
+  capacidades: string[] | undefined,
+  modalidades:
     | {
-        capacidades: string[];
         produccionActiva: boolean;
         serviciosExternosActivos: boolean;
       }
     | undefined,
 ): Seccion[] {
-  const capacidades = menuConfig?.capacidades;
   if (!roles) return [];
   if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
@@ -191,9 +197,9 @@ function seccionesVisibles(
     const habilitadas = new Set(capacidades);
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
-      if (s.to === "/servicios-externos") return Boolean(menuConfig?.serviciosExternosActivos);
+      if (s.to === "/servicios-externos") return Boolean(modalidades?.serviciosExternosActivos);
       if (s.grupo === "produccion" || s.to === "/aurum-render") {
-        if (!menuConfig?.produccionActiva) return false;
+        if (!modalidades?.produccionActiva) return false;
       }
       // Catálogo es una capacidad comercial configurable de la sede.
       // Si está desactivado en Gestión, no aparece en el menú.
@@ -216,7 +222,7 @@ function seccionesVisibles(
   const inicio = secciones.filter(
     (s) =>
       s.to === "/operario" ||
-      (s.to === "/servicios-externos" && Boolean(menuConfig?.serviciosExternosActivos)),
+      (s.to === "/servicios-externos" && Boolean(modalidades?.serviciosExternosActivos)),
   );
   const perfil = secciones.filter((s) => s.to === "/perfil");
   return [...inicio, ...perfil];
@@ -265,10 +271,12 @@ export function AppShell({
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
   const { data: capacidadesMenu, isSuccess: capacidadesCargadas } = useCapacidadesMenu(sesion);
+  const { data: modalidadesMenu, isSuccess: modalidadesCargadas } = useModalidadesMenu(sesion);
   const visibles = seccionesVisibles(
     sesion?.roles,
     sesion?.esAdmin,
     capacidadesCargadas ? capacidadesMenu : undefined,
+    modalidadesCargadas ? modalidadesMenu : undefined,
   );
   const visiblesOrdenadas = ordenarMenu(visibles);
   const esOperario = sesion?.rolPrincipal === "operario";
@@ -299,8 +307,8 @@ export function AppShell({
   ].includes(pathname);
   const esRutaServiciosExternos = pathname === "/servicios-externos";
   const modalidadBloqueada =
-    (esRutaProduccion && !capacidadesMenu?.produccionActiva) ||
-    (esRutaServiciosExternos && !capacidadesMenu?.serviciosExternosActivos);
+    (esRutaProduccion && !modalidadesMenu?.produccionActiva) ||
+    (esRutaServiciosExternos && !modalidadesMenu?.serviciosExternosActivos);
 
 
   return (
