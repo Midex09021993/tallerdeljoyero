@@ -272,7 +272,14 @@ function CotizacionDetallePage() {
       _cotizacion_id: cotizacion.id,
     });
     if (conversionError || !data) {
-      setError(conversionError?.message ?? "No se pudo crear el pedido.");
+      const detalle = [
+        conversionError?.message,
+        conversionError?.details,
+        conversionError?.hint,
+        conversionError?.code,
+      ].filter(Boolean).join(" · ");
+      console.error("convertir_cotizacion_a_pedido", conversionError);
+      setError(detalle || "No se pudo crear el pedido.");
       setConvirtiendoPedido(false);
       return;
     }
