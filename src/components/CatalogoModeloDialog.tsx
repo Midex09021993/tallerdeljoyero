@@ -124,13 +124,31 @@ export function CatalogoModeloDialog({ open, producto, participanteId, onClose, 
         moneda: form.moneda.trim().toUpperCase() || "PEN",
       };
       const result = producto
-        ? await supabase.from("catalogo_productos").update(payload).eq("id", producto.id).eq("participante_id", participanteId)
-        : await supabase.from("catalogo_productos").insert(payload);
-      if (result.error) throw result.error;
+        ? await supabase
+            .from("catalogo_productos")
+            .update(payload)
+            .eq("id", producto.id)
+            .eq("participante_id", participanteId)
+        : await supabase
+            .from("catalogo_productos")
+            .insert(payload)
+            .select("id, codigo, nombre, participante_id")
+            .single();
+
+      if (result.error) {
+        const detalle = [
+          result.error.message,
+          result.error.details,
+          result.error.hint,
+          result.error.code ? `Código: ${result.error.code}` : "",
+        ].filter(Boolean).join(" · ");
+        throw new Error(detalle || "Supabase rechazó el guardado del modelo.");
+      }
+
       onSaved();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar el modelo.");
+      setError(e instanceof Error ? e.message : "No se pudo guardar el modelo. Revisa la consola para ver el error real.");
     } finally {
       setGuardando(false);
     }
