@@ -396,7 +396,7 @@ function CotizacionesPage() {
                     ) : null}
                   </tr>;
                 })}
-                {filtradas.length === 0 && <tr><td colSpan={sesion?.esDueno ? 8 : 7} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
+                {filtradas.length === 0 && <tr><td colSpan={sesion?.esDueno ? 7 : 6} className="px-5 py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.025] text-gold/70"><FileText className="size-6" /></span><p className="mt-3 text-sm font-medium">Todavía no hay cotizaciones</p><p className="mt-1 text-xs text-muted-foreground">Crea la primera para iniciar el seguimiento comercial.</p></td></tr>}
               </tbody>
             </table>
           </div>
