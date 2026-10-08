@@ -13,9 +13,14 @@ import {
   Settings2,
   Wrench,
   Rocket,
+  CheckCircle2,
+  CircleAlert,
+  ListChecks,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell, Panel, StatCard, useCapacidadesMenu } from "@/components/AppShell";
+import { TODAS_LAS_SEDES, SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { supabase } from "@/integrations/supabase/client";
 import {
   rolEtiqueta,
@@ -46,6 +51,46 @@ function Inicio() {
   const { data: pedidos = [], isLoading: cargandoPedidos } = usePedidosSelector();
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const capacidadesSet = useMemo(() => new Set(capacidades), [capacidades]);
+  const { esDueno, sedeFiltro, setSedeFiltro, sedes, sedeSeleccionada } = useSedeFiltroDueno();
+  const sedeContextoId = esDueno
+    ? (sedeFiltro === TODAS_LAS_SEDES ? null : sedeFiltro)
+    : (sesion?.sede?.id ?? null);
+
+  const { data: preparacion, isLoading: cargandoPreparacion } = useQuery({
+    queryKey: ["inicio-preparacion", esDueno, sedeContextoId, sesion?.participante?.id],
+    enabled: Boolean(sesion?.esAdmin && sedeContextoId),
+    queryFn: async () => {
+      if (!sedeContextoId) return null;
+
+      const identidadQuery = supabase
+        .from("identidades_comerciales")
+        .select("id, participante_id, sede_id, nombre_comercial")
+        .eq("activa", true)
+        .eq("sede_id", sedeContextoId);
+
+      const [{ data: identidades, error: identidadError }, { data: capacidadesSede, error: capacidadesError }, { data: modalidades, error: modalidadesError }] = await Promise.all([
+        identidadQuery,
+        supabase.from("sede_especialidades").select("id").eq("sede_id", sedeContextoId),
+        supabase.from("sede_modalidades").select("produccion_activa, servicios_externos_activos").eq("sede_id", sedeContextoId).maybeSingle(),
+      ]);
+
+      if (identidadError) throw identidadError;
+      if (capacidadesError) throw capacidadesError;
+      if (modalidadesError) throw modalidadesError;
+
+      return {
+        identidadConfigurada: (identidades ?? []).length > 0,
+        capacidadesConfiguradas: (capacidadesSede ?? []).length > 0,
+        produccionActiva: Boolean(modalidades?.produccion_activa),
+        serviciosExternosActivos: Boolean(modalidades?.servicios_externos_activos),
+      };
+    },
+  });
+
+  const pedidosSede = useMemo(
+    () => (sedeContextoId ? pedidos.filter((pedido) => pedido.sede_id === sedeContextoId) : pedidos),
+    [pedidos, sedeContextoId],
+  );
   const navigate = useNavigate();
   const [mostrarBienvenida, setMostrarBienvenida] = useState(false);
   const [pasoBienvenida, setPasoBienvenida] = useState(0);
@@ -149,6 +194,54 @@ function Inicio() {
       }
     >
       <div className="space-y-6">
+        <section className="rounded-3xl border border-gold/20 bg-card shadow-card">
+          <div className="flex flex-col gap-4 border-b border-border p-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="grid size-9 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold-deep">
+                  <ListChecks className="size-4" />
+                </span>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Estado de preparación</p>
+                  <h2 className="mt-0.5 text-lg font-semibold">Tu taller está listo para trabajar</h2>
+                </div>
+              </div>
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
+                Aurum Lab revisa la configuración real de esta sede y te indica qué falta antes de llevar tu primer pedido a producción.
+              </p>
+            </div>
+            {esDueno ? (
+              <SelectorSedeDueno
+                esDueno={esDueno}
+                sedes={sedes}
+                value={sedeFiltro}
+                onChange={setSedeFiltro}
+                className="w-full sm:w-auto"
+              />
+            ) : null}
+          </div>
+
+          {esDueno && sedeFiltro === TODAS_LAS_SEDES ? (
+            <div className="flex flex-col items-start gap-4 p-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+              <div>
+                <p className="text-sm font-semibold">Selecciona una sede para revisar su preparación</p>
+                <p className="mt-1 text-xs text-muted-foreground">La vista global sigue disponible en los indicadores inferiores. La preparación se evalúa por taller para no mezclar configuraciones.</p>
+              </div>
+              <Link to="/gestion" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-ink-foreground hover:bg-ink/90">
+                Administrar sedes <ChevronRight className="size-4" />
+              </Link>
+            </div>
+          ) : (
+            <InicioPreparacion
+              preparacion={preparacion}
+              cargando={cargandoPreparacion}
+              tienePedido={pedidosSede.length > 0}
+              destinoGestion="/gestion"
+              destinoPedidos="/pedidos/nuevo"
+            />
+          )}
+        </section>
+
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatCard etiqueta="Pedidos activos" valor={String(resumen.activos.length)} />
           <StatCard etiqueta="En producción" valor={String(resumen.produccion.length)} />
@@ -274,6 +367,117 @@ function Inicio() {
         </div>
       ) : null}
     </AppShell>
+  );
+}
+
+type PreparacionInicio = {
+  identidadConfigurada: boolean;
+  capacidadesConfiguradas: boolean;
+  produccionActiva: boolean;
+  serviciosExternosActivos: boolean;
+};
+
+function InicioPreparacion({
+  preparacion,
+  cargando,
+  tienePedido,
+  destinoGestion,
+  destinoPedidos,
+}: {
+  preparacion: PreparacionInicio | undefined;
+  cargando: boolean;
+  tienePedido: boolean;
+  destinoGestion: string;
+  destinoPedidos: string;
+}) {
+  const pasos = [
+    {
+      titulo: "Taller vinculado",
+      texto: "La cuenta tiene una sede activa asociada.",
+      listo: true,
+      destino: destinoGestion,
+      accion: "Ver Gestión",
+    },
+    {
+      titulo: "Capacidades definidas",
+      texto: "Define qué procesos realiza internamente tu taller.",
+      listo: Boolean(preparacion?.capacidadesConfiguradas),
+      destino: destinoGestion,
+      accion: "Configurar capacidades",
+    },
+    {
+      titulo: "Modalidad de trabajo",
+      texto: "Activa Producción o Servicios externos según cómo trabaja la sede.",
+      listo: Boolean(preparacion?.produccionActiva || preparacion?.serviciosExternosActivos),
+      destino: destinoGestion,
+      accion: "Definir modalidad",
+    },
+    {
+      titulo: "Identidad comercial",
+      texto: "Configura los datos que aparecerán en tus documentos comerciales.",
+      listo: Boolean(preparacion?.identidadConfigurada),
+      destino: destinoGestion,
+      accion: "Configurar identidad",
+    },
+    {
+      titulo: "Primer pedido",
+      texto: "Cuando la base esté lista, crea el primer pedido del taller.",
+      listo: tienePedido,
+      destino: destinoPedidos,
+      accion: "Crear pedido",
+    },
+  ];
+
+  const pendientes = pasos.filter((paso) => !paso.listo);
+  const siguiente = pendientes[0] ?? pasos[pasos.length - 1];
+  const completados = pasos.filter((paso) => paso.listo).length;
+
+  if (cargando) {
+    return <div className="p-5 text-sm text-muted-foreground">Revisando la preparación de la sede…</div>;
+  }
+
+  return (
+    <div className="grid gap-5 p-5 lg:grid-cols-[1fr_auto] lg:p-6">
+      <div className="space-y-2">
+        {pasos.map((paso) => (
+          <div key={paso.titulo} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
+            {paso.listo ? (
+              <CheckCircle2 className="size-5 shrink-0 text-success" />
+            ) : (
+              <CircleAlert className="size-5 shrink-0 text-warning" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">{paso.titulo}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{paso.texto}</p>
+            </div>
+            {!paso.listo ? (
+              <Link to={paso.destino as never} className="hidden shrink-0 text-[11px] font-bold text-gold-deep hover:underline sm:block">
+                Configurar
+              </Link>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      <div className="min-w-[260px] rounded-2xl border border-gold/20 bg-ink p-5 text-ink-foreground shadow-card">
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Siguiente paso</p>
+        <h3 className="mt-2 text-lg font-semibold">{pendientes.length ? siguiente.titulo : "Todo listo"}</h3>
+        <p className="mt-2 text-xs leading-5 text-ink-foreground/60">
+          {pendientes.length
+            ? siguiente.texto
+            : "La configuración base está completa. Ya puedes trabajar con pedidos reales."}
+        </p>
+        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-ink-foreground/40">
+          {completados}/{pasos.length} completados
+        </p>
+        <Link
+          to={siguiente.destino as never}
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground hover:shadow-raised"
+        >
+          {pendientes.length ? siguiente.accion : "Crear pedido"} <ChevronRight className="size-4" />
+        </Link>
+      </div>
+    </div>
   );
 }
 
