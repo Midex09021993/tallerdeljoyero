@@ -33,6 +33,8 @@ import {
   type PedidoSelector,
 } from "@/lib/taller-db";
 
+const AURUM_INDUCCION_VERSION = 1;
+
 export const Route = createFileRoute("/_authenticated/inicio")({
   head: () => ({
     meta: [
@@ -98,8 +100,11 @@ function Inicio() {
 
   useEffect(() => {
     if (!sesion?.esAdmin || !sesion.user) return;
-    const completada = sesion.user.user_metadata?.aurum_onboarding_completed_at;
-    setMostrarBienvenida(!completada);
+    const metadata = sesion.user.user_metadata ?? {};
+    const version = Number(metadata.aurum_onboarding_version ?? 0);
+    const requiereInduccion = version < AURUM_INDUCCION_VERSION;
+    setPasoBienvenida(0);
+    setMostrarBienvenida(requiereInduccion);
   }, [sesion]);
 
   useEffect(() => {
@@ -167,13 +172,23 @@ function Inicio() {
     if (!sesion?.user || guardandoBienvenida) return;
     setGuardandoBienvenida(true);
     try {
-      const { error } = await supabase.auth.updateUser({ data: { aurum_onboarding_completed_at: new Date().toISOString() } });
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          aurum_onboarding_completed_at: new Date().toISOString(),
+          aurum_onboarding_version: AURUM_INDUCCION_VERSION,
+        },
+      });
       if (error) throw error;
       setMostrarBienvenida(false);
     } catch (error) {
       console.error("[onboarding] No se pudo guardar el estado:", error);
       setMostrarBienvenida(false);
     } finally { setGuardandoBienvenida(false); }
+  };
+
+  const abrirBienvenida = () => {
+    setPasoBienvenida(0);
+    setMostrarBienvenida(true);
   };
 
   const irDesdeBienvenida = (destino: string) => {
@@ -187,6 +202,15 @@ function Inicio() {
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       acciones={
         <>
+          {sesion?.esAdmin ? (
+            <button
+              type="button"
+              onClick={abrirBienvenida}
+              className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised"
+            >
+              Ver inducción
+            </button>
+          ) : null}
           <Link to="/pedidos" className="rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised">Ver pedidos</Link>
           <Link to="/pedidos/nuevo" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nuevo pedido</Link>
           {capacidadesSet.has("Cotizaciones") ? <Link to="/cotizaciones" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nueva cotización</Link> : null}
@@ -336,7 +360,7 @@ function Inicio() {
             <div className="border-b border-border bg-ink px-6 py-7 text-ink-foreground sm:px-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-gold"><Sparkles className="size-3.5" /> Primer acceso</div>
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-gold"><Sparkles className="size-3.5" /> Guía de Aurum Lab</div>
                   <h2 className="font-display text-3xl">Bienvenido a Aurum Lab</h2>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-ink-foreground/60">{sesion?.participante?.nombre ? "Hemos preparado tu espacio para " + sesion.participante.nombre + ". " : "Hemos preparado tu espacio de trabajo. "}Antes de empezar, te mostramos lo esencial.</p>
                 </div>
