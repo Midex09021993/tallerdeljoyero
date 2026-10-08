@@ -13,3 +13,6 @@ verify_jwt = false
 
 [functions.aurum-transfer-download]
 verify_jwt = false
+
+[functions.aurum-welcome-email]
+verify_jwt = true
