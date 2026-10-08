@@ -64,15 +64,22 @@ function Inicio() {
     queryFn: async () => {
       if (!sedeContextoId) return null;
 
-      const identidadQuery = supabase
-        .from("identidades_comerciales")
-        .select("id, participante_id, sede_id, nombre_comercial")
-        .eq("activa", true)
-        .eq("sede_id", sedeContextoId);
+      const { data: participante, error: participanteError } = await supabase
+        .from("ecosistema_participantes")
+        .select("id")
+        .eq("sede_id", sedeContextoId)
+        .eq("estado", "activo")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (participanteError) throw participanteError;
 
       const [{ data: identidades, error: identidadError }, { data: capacidadesSede, error: capacidadesError }, { data: modalidades, error: modalidadesError }] = await Promise.all([
-        identidadQuery,
-        supabase.from("sede_especialidades").select("id").eq("sede_id", sedeContextoId),
+        participante
+          ? supabase.from("identidades_comerciales").select("id, participante_id, nombre_comercial").eq("activa", true).eq("participante_id", participante.id)
+          : Promise.resolve({ data: [], error: null }),
+        supabase.from("sede_especialidades").select("especialidad_id").eq("sede_id", sedeContextoId),
         supabase.from("sede_modalidades").select("produccion_activa, servicios_externos_activos").eq("sede_id", sedeContextoId).maybeSingle(),
       ]);
 
@@ -80,11 +87,18 @@ function Inicio() {
       if (capacidadesError) throw capacidadesError;
       if (modalidadesError) throw modalidadesError;
 
+      const produccionActiva = Boolean(modalidades?.produccion_activa);
+      const serviciosExternosActivos = Boolean(modalidades?.servicios_externos_activos);
+
       return {
+        tallerVinculado: Boolean(participante?.id),
+        participanteId: participante?.id ?? null,
         identidadConfigurada: (identidades ?? []).length > 0,
-        capacidadesConfiguradas: (capacidadesSede ?? []).length > 0,
-        produccionActiva: Boolean(modalidades?.produccion_activa),
-        serviciosExternosActivos: Boolean(modalidades?.servicios_externos_activos),
+        // Un taller puede trabajar sólo con servicios externos: en ese caso
+        // no necesita capacidades internas, pero sí una modalidad activa.
+        capacidadesConfiguradas: (capacidadesSede ?? []).length > 0 || serviciosExternosActivos,
+        produccionActiva,
+        serviciosExternosActivos,
       };
     },
   });
@@ -192,7 +206,8 @@ function Inicio() {
   };
 
   const irDesdeBienvenida = (destino: string) => {
-    void cerrarBienvenida();
+    // Ir a una configuración no completa NO marca la inducción como terminada.
+    // Al volver a Inicio, la guía seguirá disponible hasta completar o saltar la guía.
     void navigate({ to: destino as never });
   };
 
@@ -368,8 +383,13 @@ function Inicio() {
               </div>
             </div>
             <div className="p-6 sm:p-8">
-              <div className="mb-7 grid gap-2 sm:grid-cols-5">
-                {pasosBienvenida.map((paso, index) => <div key={paso.titulo} className="space-y-2"><div className={index <= pasoBienvenida ? "h-1.5 rounded-full bg-gold" : "h-1.5 rounded-full bg-muted"} /><p className={index === pasoBienvenida ? "text-[10px] font-bold text-foreground" : "text-[10px] text-muted-foreground"}>{index + 1}. {paso.titulo}</p></div>)}
+              <div className="mb-7 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+                {pasosBienvenida.map((paso, index) => (
+                  <div key={paso.titulo} className="space-y-2">
+                    <div className={index <= pasoBienvenida ? "h-1.5 rounded-full bg-gold" : "h-1.5 rounded-full bg-muted"} />
+                    <p className={index === pasoBienvenida ? "text-[10px] font-bold text-foreground" : "text-[10px] text-muted-foreground"}>{index + 1}. {paso.titulo}</p>
+                  </div>
+                ))}
               </div>
               {(() => { const paso = pasosBienvenida[pasoBienvenida]; const Icono = paso.icono; return (
                 <div className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
@@ -395,6 +415,8 @@ function Inicio() {
 }
 
 type PreparacionInicio = {
+  tallerVinculado: boolean;
+  participanteId: string | null;
   identidadConfigurada: boolean;
   capacidadesConfiguradas: boolean;
   produccionActiva: boolean;
@@ -417,38 +439,38 @@ function InicioPreparacion({
   const pasos = [
     {
       titulo: "Taller vinculado",
-      texto: "La cuenta tiene una sede activa asociada.",
-      listo: true,
+      texto: "La sede seleccionada pertenece a un taller activo del ecosistema.",
+      listo: Boolean(preparacion?.tallerVinculado),
       destino: destinoGestion,
-      accion: "Ver Gestión",
+      accion: "Revisar taller",
     },
     {
       titulo: "Capacidades definidas",
-      texto: "Define qué procesos realiza internamente tu taller.",
+      texto: "Aurum Lab reconoce las capacidades internas guardadas para esta sede.",
       listo: Boolean(preparacion?.capacidadesConfiguradas),
-      destino: destinoGestion,
+      destino: "/gestion?modulo=capacidades",
       accion: "Configurar capacidades",
     },
     {
       titulo: "Modalidad de trabajo",
-      texto: "Activa Producción o Servicios externos según cómo trabaja la sede.",
+      texto: "La sede tiene Producción o Servicios externos activos.",
       listo: Boolean(preparacion?.produccionActiva || preparacion?.serviciosExternosActivos),
-      destino: destinoGestion,
-      accion: "Definir modalidad",
+      destino: "/gestion?modulo=capacidades",
+      accion: "Configurar modalidad",
     },
     {
       titulo: "Identidad comercial",
-      texto: "Configura los datos que aparecerán en tus documentos comerciales.",
+      texto: "Existe una identidad comercial activa perteneciente al taller seleccionado.",
       listo: Boolean(preparacion?.identidadConfigurada),
-      destino: destinoGestion,
+      destino: "/gestion?modulo=comercial",
       accion: "Configurar identidad",
     },
     {
       titulo: "Primer pedido",
-      texto: "Cuando la base esté lista, crea el primer pedido del taller.",
+      texto: "Ya existe al menos un pedido asociado a esta sede.",
       listo: tienePedido,
       destino: destinoPedidos,
-      accion: "Crear pedido",
+      accion: "Crear primer pedido",
     },
   ];
 
