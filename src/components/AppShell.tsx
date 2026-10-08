@@ -185,7 +185,7 @@ const ORDEN_MENU: Record<string, number> = {
   // El orden visual no implica dependencia: Pedidos puede operar sin Cotizaciones.
   "/inicio": 0,
   "/clientes": 5,
-  "/catalogo": 7,
+  "/catalogo": 35,
   "/cotizaciones": 10,
   "/pedidos": 20,
   "/ventas": 30,
