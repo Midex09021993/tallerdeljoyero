@@ -1,4 +1,3 @@
-// @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
