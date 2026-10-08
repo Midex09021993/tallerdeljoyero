@@ -169,15 +169,36 @@ function LoginPage() {
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
         <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
-            <p className="max-w-3xl font-display text-2xl italic leading-tight text-white/90 sm:text-3xl lg:text-4xl [@media(max-height:800px)]:lg:text-[1.7rem]">
-              Tus clientes. Tus trabajos. Tu crecimiento. Tus herramientas.
+            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-gold">Infraestructura digital para el ecosistema joyero</p>
+            <h1 className="mt-3 max-w-4xl font-display text-3xl italic leading-tight text-white sm:text-4xl lg:text-5xl [@media(max-height:800px)]:lg:text-[2.1rem]">
+              Digitaliza tu taller. Conecta tu trabajo. Hazlo crecer.
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-2">
+              Herramientas, comercial, producción, visualización y ecosistema en un mismo entorno, adaptado a la forma real de trabajar de cada taller.
             </p>
-            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-3">
-              Todo conectado en un solo lugar. Acceso seguro según tu rol.
-            </p>
+            <div className="mt-6 flex flex-wrap gap-2.5 [@media(max-height:800px)]:mt-3">
+              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:opacity-90">
+                Probar herramientas <ArrowRight className="size-3.5" />
+              </button>
+              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white/75 transition hover:border-gold/40 hover:text-gold">
+                Conocer la plataforma
+              </button>
+            </div>
           </div>
 
-          <section id="herramientas" className="mt-10 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-2.5">
+          <section className="mt-8 grid max-w-5xl gap-2 sm:grid-cols-2 lg:grid-cols-4 [@media(max-height:800px)]:mt-3">
+            {[
+              [Boxes, "Comercial", "Clientes, proyectos, cotizaciones y pedidos conectados."],
+              [PackageCheck, "Producción", "Órdenes, trabajos, piezas, responsables y calidad."],
+              [Eye, "Visualización", "AURUM Render para explorar y presentar tus diseños 3D."],
+              [Network, "Ecosistema", "Conecta talleres, profesionales, proveedores y servicios."],
+            ].map(([Icon, title, text]) => {
+              const FeatureIcon = Icon as LucideIcon;
+              return <article key={String(title)} className="rounded-xl border border-white/10 bg-black/25 p-3.5"><FeatureIcon className="size-5 text-gold" /><h2 className="mt-2 text-xs font-semibold uppercase tracking-wider text-white">{String(title)}</h2><p className="mt-1 text-[10px] leading-relaxed text-white/45">{String(text)}</p></article>;
+            })}
+          </section>
+
+          <section id="herramientas" className="mt-8 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-2.5">
             <div className="flex items-center gap-3">
               <Gem className="size-7 text-gold" />
               <div>
