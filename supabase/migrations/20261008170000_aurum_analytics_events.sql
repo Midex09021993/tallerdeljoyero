@@ -8,6 +8,7 @@ create table if not exists public.aurum_analytics_events (
       'page_view',
       'tool_opened',
       'render_opened',
+      'platform_opened',
       'catalog_opened',
       'product_viewed',
       'whatsapp_clicked',
