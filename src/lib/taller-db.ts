@@ -911,6 +911,44 @@ async function asegurarContratoComercial({
   return { id: data.id, numero: numeroLimpio, creado: true };
 }
 
+export function useCrearContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (datos: {
+      numero: string;
+      cliente: string;
+      telefono?: string;
+      origen?: string;
+      total?: number;
+      sede_id?: string | null;
+      notas?: string;
+    }) => {
+      const numero = datos.numero.trim();
+      if (!numero) throw new Error("El número de contrato es obligatorio.");
+      if (!datos.cliente.trim()) throw new Error("El cliente es obligatorio.");
+
+      const contrato = await asegurarContratoComercial({
+        numero,
+        cliente: datos.cliente.trim(),
+        telefono: datos.telefono?.trim() ?? "",
+        origen: datos.origen?.trim() ?? "Contrato Aurum",
+        importe: Number(datos.total) || 0,
+        sede_id: datos.sede_id ?? null,
+        notas: datos.notas?.trim() ?? "",
+      });
+
+      if (!contrato.id) {
+        throw new Error("No se pudo crear el contrato.");
+      }
+
+      return contrato;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+    },
+  });
+}
+
 export function useContratos(incluirFinanzas = true) {
   return useQuery({
     queryKey: ["contratos", incluirFinanzas],
