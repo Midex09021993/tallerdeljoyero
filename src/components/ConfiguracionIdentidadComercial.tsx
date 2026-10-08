@@ -1,4 +1,3 @@
-// @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useEffect, useState } from "react";
 import { Palette, Plus, Save, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
