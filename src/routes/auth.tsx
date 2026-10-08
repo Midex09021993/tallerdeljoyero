@@ -168,7 +168,7 @@ function LoginPage() {
       </header>
 
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
-        <section className="min-w-0 pb-8 lg:pb-16 [@media(max-height:800px)]:pb-1">
+        <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
             <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-gold">Infraestructura digital para el ecosistema joyero</p>
             <h1 className="mt-3 max-w-4xl font-display text-3xl italic leading-tight text-white sm:text-4xl lg:text-5xl [@media(max-height:800px)]:lg:text-[2.1rem]">
@@ -255,7 +255,7 @@ function LoginPage() {
 
         </section>
 
-        <section id="login" className="mx-auto w-full max-w-[430px] translate-y-0 lg:-translate-y-10 [@media(max-height:800px)]:lg:-translate-y-5 max-[767px]:max-w-[430px]">
+        <section id="login" className="order-1 mx-auto w-full max-w-[430px] translate-y-0 lg:order-none lg:-translate-y-10 [@media(max-height:800px)]:lg:-translate-y-5 max-[767px]:max-w-[430px]">
           <div className="mb-7 text-center md:hidden">
             <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
           </div>
