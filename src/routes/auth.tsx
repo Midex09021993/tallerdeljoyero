@@ -6,7 +6,7 @@ import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } fro
 import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
-import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
@@ -14,14 +14,17 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Acceso al sistema — Aurum Lab" },
+      { title: "Aurum Lab — Plataforma digital para talleres de joyería" },
       {
         name: "description",
         content:
-          "Ingreso al sistema del taller de joyería con usuario y contraseña. Cada perfil accede a su propia vista.",
+          "Aurum Lab conecta clientes, cotizaciones, pedidos, producción, inventario y herramientas digitales especializadas para el sector joyero.",
       },
-      { property: "og:title", content: "Acceso al sistema — Aurum Lab" },
-      { property: "og:description", content: "Ingreso interno del taller de joyería." },
+      { property: "og:title", content: "Aurum Lab — Plataforma digital para talleres de joyería" },
+      {
+        property: "og:description",
+        content: "Gestiona el trabajo de tu taller y conecta herramientas, producción y comercial en un solo entorno.",
+      },
     ],
   }),
   component: LoginPage,
@@ -45,6 +48,7 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad">("ecosistema");
   const [herramientaSeleccionada, setHerramientaSeleccionada] = useState<string | null>(null);
@@ -261,9 +265,67 @@ function LoginPage() {
             <button type="submit" disabled={cargando} className="w-full rounded-lg bg-gold py-3.5 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90 disabled:opacity-50">
               {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
             </button>
+
+            {!modoAlta ? (
+              <button
+                type="button"
+                onClick={() => setMostrarAyudaPassword(true)}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-white/45 transition hover:text-gold"
+              >
+                <HelpCircle className="size-3.5" />
+                ¿Olvidaste tu contraseña?
+              </button>
+            ) : null}
           </form>
 
           <div className="mt-5 flex justify-center md:hidden max-[767px]:flex"><SolicitudAcceso /></div>
+
+          {mostrarAyudaPassword ? (
+            <div
+              className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ayuda-password-title"
+            >
+              <div className="w-full max-w-md rounded-2xl border border-gold/25 bg-[#111315] p-6 shadow-2xl sm:p-7">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl border border-gold/25 bg-gold/10 p-2">
+                    <HelpCircle className="size-5 text-gold" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Acceso a Aurum Lab</p>
+                    <h2 id="ayuda-password-title" className="mt-1 text-lg font-semibold text-white">Recuperar contraseña</h2>
+                  </div>
+                </div>
+
+                <p className="mt-5 text-sm leading-relaxed text-white/60">
+                  Las cuentas internas utilizan un usuario técnico para iniciar sesión. Por seguridad, esta pantalla no envía contraseñas ni datos de acceso por correo.
+                </p>
+
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+                  <p className="text-xs font-semibold text-white">Si perteneces a un taller</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-white/50">
+                    Solicita al dueño o gerente de tu taller que restablezca tu contraseña desde <span className="text-gold">Usuarios</span>. No compartas tu contraseña actual.
+                  </p>
+                </div>
+
+                <div className="mt-3 rounded-xl border border-gold/15 bg-gold/[0.04] p-4">
+                  <p className="text-xs font-semibold text-white">Si eres el dueño general</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-white/50">
+                    Si no tienes otra cuenta administrativa disponible, contacta al equipo de Aurum Lab para recuperar el acceso.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMostrarAyudaPassword(false)}
+                  className="mt-6 w-full rounded-lg bg-gold py-3 text-xs font-semibold uppercase tracking-wider text-ink"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           <p className="mt-5 hidden text-center text-xs text-white/55 md:block max-[767px]:block">
             ¿Eres cliente?{" "}
