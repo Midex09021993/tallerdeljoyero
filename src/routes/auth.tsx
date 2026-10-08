@@ -309,13 +309,6 @@ function LoginPage() {
                   </p>
                 </div>
 
-                <div className="mt-3 rounded-xl border border-gold/15 bg-gold/[0.04] p-4">
-                  <p className="text-xs font-semibold text-white">Si eres el dueño general</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-white/50">
-                    Si no tienes otra cuenta administrativa disponible, contacta al equipo de Aurum Lab para recuperar el acceso.
-                  </p>
-                </div>
-
                 <button
                   type="button"
                   onClick={() => setMostrarAyudaPassword(false)}
