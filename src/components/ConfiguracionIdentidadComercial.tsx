@@ -1,6 +1,6 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useEffect, useState } from "react";
-import { Palette, Plus, Save } from "lucide-react";
+import { Palette, Plus, Save, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,6 +116,71 @@ export function ConfiguracionIdentidadComercial() {
     setForm((x) => x ? { ...x, ...(preset ?? {}), pais_codigo: pais, pais_nombre: pais === "PE" ? "Perú" : pais === "CO" ? "Colombia" : x.pais_nombre } : x);
   }
 
+  async function subirLogo(file: File) {
+    if (!form?.participante_id) return toast.error("No se pudo resolver el taller propietario.");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return toast.error("El logo debe ser JPG, PNG o WebP.");
+    if (file.size > 5 * 1024 * 1024) return toast.error("El logo no puede superar 5 MB.");
+
+    setGuardando(true);
+    const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    const path = form.participante_id + "/" + form.id + "/logo." + extension;
+    const { error: uploadError } = await supabase.storage.from("identidades-comerciales").upload(path, file, {
+      upsert: true, contentType: file.type, cacheControl: "3600"
+    });
+    if (uploadError) {
+      toast.error(uploadError.message);
+      setGuardando(false);
+      return;
+    }
+
+    const { data: publicData } = supabase.storage.from("identidades-comerciales").getPublicUrl(path);
+    const publicUrl = publicData.publicUrl;
+    const { error: updateError } = await supabase.from("identidades_comerciales").update({ logo_url: publicUrl }).eq("id", form.id);
+    if (updateError) {
+      await supabase.storage.from("identidades-comerciales").remove([path]);
+      toast.error(updateError.message);
+      setGuardando(false);
+      return;
+    }
+
+    if (form.logo_url && form.logo_url !== publicUrl) {
+      try {
+        const marker = "/storage/v1/object/public/identidades-comerciales/";
+        const index = form.logo_url.indexOf(marker);
+        if (index >= 0) {
+          const oldPath = decodeURIComponent(form.logo_url.slice(index + marker.length));
+          if (oldPath && oldPath !== path) await supabase.storage.from("identidades-comerciales").remove([oldPath]);
+        }
+      } catch {}
+    }
+
+    setForm((x) => x ? { ...x, logo_url: publicUrl } : x);
+    toast.success("Logo almacenado en Aurum.");
+    setGuardando(false);
+  }
+
+  async function quitarLogo() {
+    if (!form) return;
+    setGuardando(true);
+    if (form.logo_url) {
+      try {
+        const marker = "/storage/v1/object/public/identidades-comerciales/";
+        const index = form.logo_url.indexOf(marker);
+        if (index >= 0) {
+          const oldPath = decodeURIComponent(form.logo_url.slice(index + marker.length));
+          if (oldPath) await supabase.storage.from("identidades-comerciales").remove([oldPath]);
+        }
+      } catch {}
+    }
+    const { error } = await supabase.from("identidades_comerciales").update({ logo_url: null }).eq("id", form.id);
+    if (error) toast.error(error.message);
+    else {
+      setForm((x) => x ? { ...x, logo_url: null } : x);
+      toast.success("Logo eliminado.");
+    }
+    setGuardando(false);
+  }
+
   async function crearIdentidad() {
     if (!participanteNuevo) return toast.error("Selecciona un taller del Ecosistema.");
     setCreando(true);
@@ -217,8 +282,23 @@ export function ConfiguracionIdentidadComercial() {
               <label className="text-xs font-semibold text-muted-foreground">Sitio web<input type="url" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.sitio_web ?? ""} onChange={e=>campo("sitio_web",e.target.value)} /></label>
             </div>
             <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
-              <label className="text-xs font-semibold text-muted-foreground">Logo (URL)<input type="url" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" placeholder="https://..." value={form.logo_url ?? ""} onChange={e=>campo("logo_url",e.target.value)} /><span className="mt-1 block text-[10px] text-muted-foreground">Se mantiene el campo logo_url existente; no creamos un bucket paralelo sin auditar primero el almacenamiento.</span></label>
-              <div className="rounded-xl border border-border p-4"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Apariencia</p><div className="mt-2 flex items-center gap-3"><input type="color" value={form.color_principal || "#B58A3A"} onChange={e=>campo("color_principal",e.target.value)} className="h-10 w-14 cursor-pointer rounded border border-border bg-background" /><span className="font-mono text-xs">{form.color_principal || "#B58A3A"}</span></div>{form.logo_url ? <img src={form.logo_url} alt="Logo del taller" className="mt-4 max-h-16 max-w-full object-contain" /> : <div className="mt-4 flex h-16 items-center justify-center text-xs text-muted-foreground"><Palette className="mr-2 size-4" />Sin logo configurado</div>}</div>
+              <div className="rounded-xl border border-border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground">Logo del taller</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Se almacena en el espacio propio de Aurum. JPG, PNG o WebP · máximo 5 MB.</p>
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted/50">
+                    <Upload className="size-4" /> Cambiar logo
+                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e=>{ const file=e.target.files?.[0]; if(file) void subirLogo(file); e.currentTarget.value=""; }} />
+                  </label>
+                </div>
+                <div className="mt-4 flex min-h-20 items-center justify-center rounded-lg bg-muted/30 p-3">
+                  {form.logo_url ? <img src={form.logo_url} alt="Logo del taller" className="max-h-20 max-w-full object-contain" /> : <div className="text-xs text-muted-foreground"><Palette className="mr-2 inline size-4" />Sin logo configurado</div>}
+                </div>
+                {form.logo_url ? <button type="button" onClick={()=>void quitarLogo()} className="mt-3 inline-flex items-center gap-2 text-xs text-destructive"><Trash2 className="size-3.5" />Eliminar logo</button> : null}
+              </div>
+              <div className="rounded-xl border border-border p-4"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Apariencia</p><div className="mt-2 flex items-center gap-3"><input type="color" value={form.color_principal || "#B58A3A"} onChange={e=>campo("color_principal",e.target.value)} className="h-10 w-14 cursor-pointer rounded border border-border bg-background" /><span className="font-mono text-xs">{form.color_principal || "#B58A3A"}</span></div></div>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">Zona horaria<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.zona_horaria} onChange={e=>campo("zona_horaria",e.target.value)} /></label>
