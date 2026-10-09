@@ -100,7 +100,7 @@ alter table public.print_profile_feedback enable row level security;
 -- Taller: acceso por cuenta activa + participante activo. Dueño global: FADILAB.
 -- Los perfiles públicos solo se muestran si el autor los publicó explícitamente.
 drop policy if exists print_devices_select on public.print_devices;
-create policy print_devices_select on public.print_devices for select to authenticated using (
+create policy print_devices_select on public.print_devices for select to anon, authenticated using (
  public.has_role((select auth.uid()), 'dueno'::app_role)
  or exists (
   select 1 from public.participante_cuentas pc join public.ecosistema_participantes ep on ep.id=pc.participante_id
@@ -119,7 +119,7 @@ with check (public.has_role((select auth.uid()), 'dueno'::app_role) or
  where pc.user_id=(select auth.uid()) and pc.participante_id=print_devices.participante_id and pc.estado='activo' and ep.estado='activo' and public.es_admin((select auth.uid()))));
 
 drop policy if exists print_resins_select on public.print_resins;
-create policy print_resins_select on public.print_resins for select to authenticated using (
+create policy print_resins_select on public.print_resins for select to anon, authenticated using (
  public.has_role((select auth.uid()), 'dueno'::app_role)
  or exists (select 1 from public.participante_cuentas pc join public.ecosistema_participantes ep on ep.id=pc.participante_id
  where pc.user_id=(select auth.uid()) and pc.participante_id=print_resins.participante_id and pc.estado='activo' and ep.estado='activo' and public.es_admin((select auth.uid())))
@@ -193,7 +193,7 @@ with check (public.has_role((select auth.uid()), 'dueno'::app_role) or exists (s
  where pc.user_id=(select auth.uid()) and pc.participante_id=print_profile_feedback.participante_id and pc.estado='activo' and ep.estado='activo' and public.es_admin((select auth.uid()))));
 
 grant select, insert, update, delete on public.print_devices, public.print_resins, public.print_profiles, public.print_profile_revisions, public.print_calibration_runs, public.print_profile_feedback to authenticated;
-grant select on public.print_profiles, public.print_profile_revisions, public.print_profile_feedback to anon;
+grant select on public.print_devices, public.print_resins, public.print_profiles, public.print_profile_revisions, public.print_profile_feedback to anon;
 
 -- Bucket privado y separado. La ruta comienza por participante_id; no usar aurum-transfer.
 insert into storage.buckets (id, name, public, file_size_limit)
