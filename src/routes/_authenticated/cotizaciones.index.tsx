@@ -65,9 +65,16 @@ function etiquetaEstadoCotizacion(estado: string) {
 }
 
 function fechaVencimientoPorDefecto() {
-  const fecha = new Date();
-  fecha.setDate(fecha.getDate() + 7);
-  return fecha.toISOString().slice(0, 10);
+  // La fecha del formulario es un día calendario de Perú, no un instante UTC.
+  // Evita que toISOString() desplace el día al convertir medianoche local.
+  const ahoraPeru = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Lima" }),
+  );
+  ahoraPeru.setDate(ahoraPeru.getDate() + 7);
+  const year = ahoraPeru.getFullYear();
+  const month = String(ahoraPeru.getMonth() + 1).padStart(2, "0");
+  const day = String(ahoraPeru.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function CotizacionesPage() {
