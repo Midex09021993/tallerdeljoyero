@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
 
       // Domicilio comercial alineado a la derecha, como en el documento de referencia.
       const rightX = width - margin - 4;
-      const rightLines = [legalName && legalName !== businessName ? "" : businessName, address, city]
+      const rightLines = [legalName || businessName, address, city]
         .filter(Boolean).slice(0, 3);
       let ry = y - 2;
       for (const text of rightLines) {
