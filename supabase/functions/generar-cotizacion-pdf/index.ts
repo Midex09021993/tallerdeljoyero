@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (quoteError || !quote) return json({ error: "Cotización no encontrada." }, 404);
+    const quoteData = quote;
 
     const [{ data: roles }, { data: areas }, { data: cuenta }] = await Promise.all([
       admin.from("user_roles").select("role").eq("user_id", user.id),
@@ -295,10 +296,10 @@ Deno.serve(async (req) => {
       page.drawText("COTIZACIÓN", {
         x: width - margin - 155, y: y - 43, size: 9, font: bold, color: accent,
       });
-      page.drawText(`${quote.numero} · Versión ${quote.version}`, {
+      page.drawText(`${quoteData.numero} · Versión ${quoteData.version}`, {
         x: width - margin - 155, y: y - 55, size: 7.6, font: bold, color: ink,
       });
-      page.drawText(`Emitida: ${formatDate(quote.fecha_emision)}`, {
+      page.drawText(`Emitida: ${formatDate(quoteData.fecha_emision)}`, {
         x: width - margin - 155, y: y - 66, size: 7.2, font, color: muted,
       });
 
@@ -316,7 +317,7 @@ Deno.serve(async (req) => {
       }
       const rx = 330;
       page.drawText("DATOS DE LA COTIZACIÓN", { x: rx, y, size: 7.5, font: bold, color: muted });
-      page.drawText(`Fecha de cotización: ${formatDate(quote.fecha_emision)}`, { x: rx, y: y - 13, size: 7.7, font });
+      page.drawText(`Fecha de cotización: ${formatDate(quoteData.fecha_emision)}`, { x: rx, y: y - 13, size: 7.7, font });
       page.drawText(`Vencimiento: ${formatDate(quote.fecha_vencimiento)}`, { x: rx, y: y - 26, size: 7.7, font });
       page.drawText(`Atendido por: ${atendidoPor || "—"}`, { x: rx, y: y - 39, size: 7.7, font });
       if (clean(quote.fecha_entrega_solicitada)) page.drawText(`Entrega: ${formatDate(quote.fecha_entrega_solicitada)}`, { x: rx, y: y - 52, size: 7.7, font });

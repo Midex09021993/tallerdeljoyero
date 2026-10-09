@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
     let embeddedLogo: any = null;
     if (clean(identidad?.logo_url)) {
       try {
-        const response = await fetch(clean(identidad.logo_url));
+        const response = await fetch(clean(identidad?.logo_url));
         if (response.ok) {
           const bytes = new Uint8Array(await response.arrayBuffer());
           const type = response.headers.get("content-type") ?? "";
@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
       if (legal && legal !== company) {
         page.drawText(legal, { x: textX, y: y - 14, size: 8, font: bold, color: rgb(0.58, 0.58, 0.58) });
       }
-      const fiscal = clean(identidad?.ruc) ? `RUC ${clean(identidad.ruc)}` : "";
+      const fiscal = clean(identidad?.ruc) ? `RUC ${clean(identidad?.ruc)}` : "";
       const address = [clean(identidad?.direccion), clean(identidad?.ciudad)].filter(Boolean);
       let ly = y - (legal && legal !== company ? 27 : 16);
       if (fiscal) {
@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
         });
         ry -= 10;
       }
-      page.drawText(clean(contrato.numero), {
+      page.drawText(clean(contrato?.numero), {
         x: pageWidth - margin - 145, y: y - 48, size: 9, font: bold, color: rgb(0.1, 0.1, 0.1),
       });
       page.drawText(`Versión ${version}`, {
@@ -441,7 +441,7 @@ Deno.serve(async (req) => {
     });
 
     const pdfBytes = await pdf.save();
-    const digest = await crypto.subtle.digest("SHA-256", pdfBytes);
+    const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(pdfBytes).buffer as ArrayBuffer);
     const sha256 = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
     const path = `contratos/${contrato.id}/v${version}-${crypto.randomUUID()}.pdf`;

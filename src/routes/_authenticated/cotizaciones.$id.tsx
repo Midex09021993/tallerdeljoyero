@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-r
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -87,6 +88,8 @@ function CotizacionDetallePage() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
+  const [identidadFicha, setIdentidadFicha] = useState<FichaCotizacionIdentidad | null>(null);
+  const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -127,12 +130,28 @@ function CotizacionDetallePage() {
       supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
     setCotizacion(q);
-    const { data: versionesRelacionadas } = await supabase
+    let identidadActual: FichaCotizacionIdentidad | null = null;
+    const camposIdentidad = "nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
+    if (q.participante_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("participante_id", q.participante_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    } else if (q.sede_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("sede_id", q.sede_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    }
+    setIdentidadFicha(identidadActual);
+    let versionesRelacionadasQuery = supabase
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("numero", q.numero)
-      .eq("participante_id", q.participante_id)
       .order("version", { ascending: false });
+    if (q.participante_id) versionesRelacionadasQuery = versionesRelacionadasQuery.eq("participante_id", q.participante_id);
+    else if (q.sede_id) versionesRelacionadasQuery = versionesRelacionadasQuery.eq("sede_id", q.sede_id);
+    const { data: versionesRelacionadas } = await versionesRelacionadasQuery;
     setVersiones(versionesRelacionadas ?? [q]);
 
     // Si esta versión nació de otra, mostramos la respuesta del cliente
@@ -671,6 +690,10 @@ function CotizacionDetallePage() {
             </Panel>
             <Panel titulo="Documento para el cliente">
               <div className="space-y-3 p-4">
+                <p className="text-xs text-muted-foreground">Vista previa de la ficha comercial en formato A4, con los datos de esta cotización y la identidad del taller activo.</p>
+                <button type="button" onClick={() => setMostrarFichaA4(true)} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
+                  Ver ficha A4
+                </button>
                 <p className="text-xs text-muted-foreground">Genera una copia PDF de la propuesta con información comercial. Los costos internos y notas internas nunca se incluyen.</p>
                 <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
                   {generandoPdf ? "Generando PDF…" : enlacePdf ? "Regenerar PDF" : "Generar PDF"}
@@ -794,6 +817,34 @@ function CotizacionDetallePage() {
           </aside>
         </div>
       </div>
+
+    {mostrarFichaA4 ? (
+      <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/75 p-2 sm:p-6" role="dialog" aria-modal="true" aria-label="Vista previa de ficha A4">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-xl bg-white shadow-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
+            <div><p className="text-sm font-semibold text-slate-900">Ficha de cotización · A4</p><p className="text-xs text-slate-500">Vista de revisión; no genera ni modifica ningún PDF.</p></div>
+            <button type="button" onClick={() => setMostrarFichaA4(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Cerrar ficha</button>
+          </div>
+          <FichaCotizacionA4 data={{
+            numero: cotizacion.numero,
+            version: cotizacion.version,
+            fecha: cotizacion.fecha_emision,
+            vencimiento: cotizacion.fecha_vencimiento,
+            entrega: cotizacion.fecha_entrega_solicitada,
+            moneda: cotizacion.moneda,
+            cliente: { nombre: cliente?.nombre ?? "—", telefono: cliente?.telefono ?? cliente?.whatsapp ?? null, email: cliente?.email ?? null },
+            tallerNombre: sedeNombre,
+            identidad: identidadFicha,
+            detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad), unidad: item.unidad, precio_unitario: Number(item.precio_unitario), total_precio: Number(item.total_precio) })),
+            subtotal: Number(cotizacion.subtotal),
+            descuento: Number(cotizacion.descuento),
+            impuestos: Number(cotizacion.impuestos),
+            total: Number(cotizacion.total),
+            notas: cotizacion.notas_cliente ?? "",
+          }} />
+        </div>
+      </div>
+    ) : null}
     </AppShell>
       </div>
 
