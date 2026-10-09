@@ -111,13 +111,40 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
         <section>
           <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: brand }}>Detalle de la cotización</h4>
           <table className="w-full table-fixed border-collapse text-left text-[9px]">
-            <thead><tr style={{ color: brand }} className="border-y border-slate-400">
-              <th className="w-[12%] px-2 py-2">TIPO</th><th className="w-[38%] px-2 py-2">DESCRIPCIÓN</th><th className="w-[12%] px-2 py-2 text-right">CANT.</th><th className="w-[18%] px-2 py-2 text-right">PRECIO UNIT.</th><th className="w-[20%] px-2 py-2 text-right">IMPORTE</th>
-            </tr></thead>
-            <tbody>{data.detalles.map((item, index) => <tr key={index} className="border-b border-slate-200 align-top">
-              <td className="px-2 py-2">{item.tipo.replaceAll("_", " ").toUpperCase()}</td><td className="whitespace-pre-wrap px-2 py-2">{item.descripcion}</td><td className="px-2 py-2 text-right">{item.cantidad} {item.unidad}</td><td className="px-2 py-2 text-right">{dinero(item.precio_unitario, data.moneda)}</td><td className="px-2 py-2 text-right font-semibold">{dinero(item.total_precio, data.moneda)}</td>
-            </tr>)}
-            {data.detalles.length === 0 ? <tr><td colSpan={5} className="px-2 py-5 text-center text-slate-400">Sin partidas registradas</td></tr> : null}</tbody>
+            <colgroup>
+              <col style={{ width: "56%" }} /><col style={{ width: "9%" }} /><col style={{ width: "12%" }} /><col style={{ width: "11%" }} /><col style={{ width: "12%" }} />
+            </colgroup>
+            <thead>
+              <tr className="border border-slate-700 bg-slate-50" style={{ color: brand }}>
+                <th className="border border-slate-700 px-2 py-1.5">DESCRIPCIÓN</th>
+                <th className="border border-slate-700 px-1 py-1.5 text-center">CANTIDAD</th>
+                <th className="border border-slate-700 px-2 py-1.5 text-right">PRECIO</th>
+                <th className="border border-slate-700 px-2 py-1.5 text-right">IMPUESTOS</th>
+                <th className="border border-slate-700 px-2 py-1.5 text-right">IMPORTE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.detalles.map((item, index) => {
+                const bases = data.detalles.map((detail) => Math.max(0, Number(detail.total_precio ?? (detail.cantidad * detail.precio_unitario)) || 0));
+                const sumaBases = bases.reduce((sum, value) => sum + value, 0);
+                const base = bases[index] ?? 0;
+                const proporcion = sumaBases > 0 ? base / sumaBases : 0;
+                const descuentoLinea = data.descuento * proporcion;
+                const baseNeta = Math.max(0, base - descuentoLinea);
+                const impuestoLinea = data.impuestos * proporcion;
+                const importeLinea = baseNeta + impuestoLinea;
+                return (
+                  <tr key={index} className="align-top">
+                    <td className="whitespace-pre-wrap break-words border border-slate-700 px-2 py-1.5">{item.descripcion || item.tipo.replaceAll("_", " ").toUpperCase()}</td>
+                    <td className="border border-slate-700 px-1 py-1.5 text-center">{item.cantidad} {item.unidad}</td>
+                    <td className="border border-slate-700 px-2 py-1.5 text-right">{dinero(item.precio_unitario, data.moneda)}</td>
+                    <td className="border border-slate-700 px-2 py-1.5 text-right">{dinero(impuestoLinea, data.moneda)}</td>
+                    <td className="border border-slate-700 px-2 py-1.5 text-right font-semibold">{dinero(importeLinea, data.moneda)}</td>
+                  </tr>
+                );
+              })}
+              {data.detalles.length === 0 ? <tr><td colSpan={5} className="border border-slate-700 px-2 py-5 text-center text-slate-400">Sin partidas registradas</td></tr> : null}
+            </tbody>
           </table>
         </section>
 
