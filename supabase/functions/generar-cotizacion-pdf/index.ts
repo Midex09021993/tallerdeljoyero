@@ -165,11 +165,13 @@ Deno.serve(async (req) => {
     const pageSize: [number, number] = [595.28, 841.89];
     const margin = 42;
     const bottom = 58;
-    const accent = rgb(0.43, 0.31, 0.12);
-    const ink = rgb(0.10, 0.10, 0.12);
-    const muted = rgb(0.40, 0.40, 0.43);
-    const line = rgb(0.82, 0.82, 0.84);
-    const soft = rgb(0.96, 0.95, 0.93);
+    // Paleta fiel al formato corporativo FADILAB: verde, azul claro y tabla negra.
+    const accent = rgb(0.30, 0.59, 0.25);
+    const ink = rgb(0.10, 0.10, 0.10);
+    const muted = rgb(0.58, 0.58, 0.58);
+    const line = rgb(0.10, 0.10, 0.10);
+    const soft = rgb(0.84, 0.91, 0.97);
+    const totalBlue = rgb(0.03, 0.40, 0.55);
 
     let page = pdf.addPage(pageSize);
     let { width, height } = page.getSize();
@@ -239,30 +241,50 @@ Deno.serve(async (req) => {
     function drawHeader() {
       const logoIncluded = Boolean(embeddedLogo);
       if (embeddedLogo) {
-        const scale = Math.min(82 / embeddedLogo.width, 52 / embeddedLogo.height);
-        page.drawImage(embeddedLogo, { x: margin, y: y - 45, width: embeddedLogo.width * scale, height: embeddedLogo.height * scale });
+        const scale = Math.min(78 / embeddedLogo.width, 58 / embeddedLogo.height);
+        page.drawImage(embeddedLogo, { x: margin + 8, y: y - 61, width: embeddedLogo.width * scale, height: embeddedLogo.height * scale });
       }
 
-      const x = logoIncluded ? 140 : margin;
-      page.drawText(businessName, { x, y, size: 16, font: bold, color: ink });
-      if (legalName && legalName !== businessName) page.drawText(legalName, { x, y: y - 17, size: 8.5, font, color: muted });
+      // Bloque corporativo izquierdo: logotipo + razón social + datos registrales.
+      const leftX = logoIncluded ? margin + 105 : margin + 4;
+      page.drawText(businessName, { x: leftX, y: y - 2, size: 12, font: bold, color: accent });
+      if (legalName && legalName !== businessName) {
+        page.drawText(legalName, { x: leftX, y: y - 15, size: 8.2, font: bold, color: muted });
+      }
       const fiscalLines = [
         fiscal ? `${fiscalLabel} ${fiscal}` : "",
         identity.rnp_bienes ? `RNP Bienes ${clean(identity.rnp_bienes)}` : "",
         identity.rpp_servicios ? `RPP Servicios ${clean(identity.rpp_servicios)}` : "",
       ].filter(Boolean);
-      fiscalLines.forEach((t: string, i: number) => page.drawText(t, { x, y: y - 31 - i * 10, size: 7.3, font, color: muted }));
+      fiscalLines.forEach((t: string, i: number) => page.drawText(t, {
+        x: leftX, y: y - 27 - i * 10, size: 7.1, font, color: muted,
+      }));
 
-      const rightX = width - 190;
-      page.drawText("COTIZACIÓN", { x: rightX, y, size: 11.5, font: bold, color: accent });
-      page.drawText(`${quote.numero} · Versión ${quote.version}`, { x: rightX, y: y - 17, size: 8.8, font: bold, color: ink });
-      page.drawText(`Emitida: ${formatDate(quote.fecha_emision)}`, { x: rightX, y: y - 31, size: 7.7, font, color: muted });
+      // Domicilio comercial alineado a la derecha, como en el documento de referencia.
+      const rightX = width - margin - 4;
+      const rightLines = [legalName && legalName !== businessName ? "" : businessName, address, city]
+        .filter(Boolean).slice(0, 3);
+      let ry = y - 2;
+      for (const text of rightLines) {
+        const size = 7.7;
+        const tw = font.widthOfTextAtSize(text, size);
+        page.drawText(text, { x: Math.max(width - margin - 210, rightX - tw), y: ry, size, font: bold, color: ink });
+        ry -= 11;
+      }
 
-      const contactLines = [address, city, phone, email, website].filter(Boolean);
-      let cy = y - 55;
-      contactLines.slice(0, 4).forEach((t: string) => { page.drawText(t, { x: rightX, y: cy, size: 6.8, font, color: muted }); cy -= 9; });
-      y -= Math.max(76, 78 + Math.min(2, fiscalLines.length) * 5);
-      page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 1, color: accent });
+      // Referencia documental compacta, debajo de la dirección.
+      page.drawText("COTIZACIÓN", {
+        x: width - margin - 155, y: y - 43, size: 9, font: bold, color: accent,
+      });
+      page.drawText(`${quote.numero} · Versión ${quote.version}`, {
+        x: width - margin - 155, y: y - 55, size: 7.6, font: bold, color: ink,
+      });
+      page.drawText(`Emitida: ${formatDate(quote.fecha_emision)}`, {
+        x: width - margin - 155, y: y - 66, size: 7.2, font, color: muted,
+      });
+
+      y -= 88;
+      page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.8, color: rgb(0.70, 0.70, 0.70) });
       y -= 18;
     }
 
@@ -282,14 +304,26 @@ Deno.serve(async (req) => {
       y -= 70;
     };
 
-    const cols = { desc: margin + 7, qty: 330, unit: 400, total: 485 };
+    const tableX = [margin, 342, 386, 432, 478, width - margin];
+    const cols = { desc: tableX[0] + 4, qty: tableX[1] + 4, unit: tableX[2] + 4, tax: tableX[3] + 4, total: tableX[4] + 4 };
     const drawTableHeader = () => {
-      page.drawRectangle({ x: margin, y: y - 17, width: width - margin * 2, height: 20, color: soft });
-      page.drawText("DESCRIPCIÓN", { x: cols.desc, y: y - 10, size: 7.1, font: bold, color: ink });
-      page.drawText("CANTIDAD", { x: cols.qty, y: y - 10, size: 7.1, font: bold, color: ink });
-      page.drawText("PRECIO UNIT.", { x: cols.unit, y: y - 10, size: 7.1, font: bold, color: ink });
-      page.drawText("IMPORTE", { x: cols.total, y: y - 10, size: 7.1, font: bold, color: ink });
-      y -= 25;
+      const top = y;
+      const h = 18;
+      page.drawRectangle({ x: margin, y: top - h, width: width - margin * 2, height: h, borderColor: ink, borderWidth: 0.8 });
+      for (const x of tableX.slice(1, -1)) {
+        page.drawLine({ start: { x, y: top }, end: { x, y: top - h }, thickness: 0.8, color: ink });
+      }
+      const headers = [
+        ["DESCRIPCIÓN", tableX[0] + 3],
+        ["CANTIDAD", tableX[1] + 2],
+        ["PRECIO", tableX[2] + 3],
+        ["IMPUESTOS", tableX[3] + 2],
+        ["IMPORTE", tableX[4] + 3],
+      ];
+      headers.forEach(([label, x]) => page.drawText(String(label), {
+        x: Number(x), y: top - 12, size: 6.6, font: bold, color: accent,
+      }));
+      y -= h;
     };
 
     drawHeader();
@@ -340,35 +374,78 @@ Deno.serve(async (req) => {
     y -= 15;
     drawTableHeader();
 
-    // Importes por línea sin impuesto; el impuesto se muestra una sola vez en los totales.
-    for (const item of detalles ?? []) {
-      const base = Math.max(0, Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0));
-      const lines = wrapPdf(clean(item.descripcion), 52);
-      const rowHeight = Math.max(20, lines.length * 11 + 4);
-      if (y - rowHeight - 8 < bottom) { newPage(); drawTableHeader(); }
-      lines.forEach((t: string, i: number) => page.drawText(t, { x: cols.desc, y: y - i * 11, size: 7.7, font, color: ink }));
-      page.drawText(`${item.cantidad ?? 0} ${clean(item.unidad)}`.trim(), { x: cols.qty, y, size: 7.7, font });
-      page.drawText(money(Number(item.precio_unitario ?? 0), quote.moneda), { x: cols.unit, y, size: 7.4, font });
-      page.drawText(money(base, quote.moneda), { x: cols.total, y, size: 7.4, font: bold });
-      y -= rowHeight;
-      page.drawLine({ start: { x: margin, y: y + 4 }, end: { x: width - margin, y: y + 4 }, thickness: 0.3, color: line });
+    // Presentación por línea al estilo de referencia. Los impuestos y descuentos
+    // se distribuyen proporcionalmente solo para mostrar el desglose, sin alterar los totales guardados.
+    const items = detalles ?? [];
+    const bases = items.map((item: any) => Math.max(0, Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0)));
+    const sumaBases = bases.reduce((sum: number, value: number) => sum + value, 0);
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      const base = bases[idx];
+      const proporcion = sumaBases > 0 ? base / sumaBases : 0;
+      const descuentoLinea = Number(quote.descuento ?? 0) * proporcion;
+      const baseNeta = Math.max(0, base - descuentoLinea);
+      const impuestoLinea = Number(quote.impuestos ?? 0) * proporcion;
+      const importeLinea = baseNeta + impuestoLinea;
+      const lines = wrapPdf(clean(item.descripcion), 55);
+      const rowHeight = Math.max(19, lines.length * 10 + 5);
+      if (y - rowHeight < bottom + 20) { newPage(); drawTableHeader(); }
+      const top = y + 4;
+      const rowBottom = y - rowHeight + 2;
+      page.drawRectangle({
+        x: margin, y: rowBottom, width: width - margin * 2, height: rowHeight + 2,
+        borderColor: ink, borderWidth: 0.65,
+      });
+      for (const x of tableX.slice(1, -1)) {
+        page.drawLine({ start: { x, y: top }, end: { x, y: rowBottom }, thickness: 0.65, color: ink });
+      }
+      lines.forEach((t: string, i: number) => page.drawText(t, {
+        x: cols.desc, y: y - i * 10, size: 7.2, font, color: ink,
+      }));
+      const qtyText = `${item.cantidad ?? 0} ${clean(item.unidad)}`.trim();
+      page.drawText(qtyText.slice(0, 15), { x: cols.qty, y, size: 7.0, font, color: ink });
+      page.drawText(money(Number(item.precio_unitario ?? 0), quote.moneda), {
+        x: cols.unit, y, size: 6.4, font, color: ink,
+      });
+      page.drawText(money(impuestoLinea, quote.moneda), {
+        x: cols.tax, y, size: 6.4, font, color: ink,
+      });
+      page.drawText(money(importeLinea, quote.moneda), {
+        x: cols.total, y, size: 6.4, font: bold, color: ink,
+      });
+      y = rowBottom - 2;
     }
 
-    ensure(100);
-    y -= 7;
-    const totalsX = 365;
+    ensure(105);
+    y -= 9;
+    const totalsX = 350;
+    const totalsW = width - margin - totalsX;
     const totals = [
-      ["Subtotal", Number(quote.subtotal ?? 0)],
+      ["Importe sin impuestos", Number(quote.subtotal ?? 0)],
       ["Descuento", -Number(quote.descuento ?? 0)],
-      ["IGV / Impuestos", Number(quote.impuestos ?? 0)],
+      ["IGV", Number(quote.impuestos ?? 0)],
       ["TOTAL", Number(quote.total ?? 0)],
     ];
     for (const [label, value] of totals) {
       const isTotal = label === "TOTAL";
-      if (isTotal) page.drawLine({ start: { x: totalsX, y: y + 13 }, end: { x: width - margin, y: y + 13 }, thickness: 0.8, color: accent });
-      page.drawText(label, { x: totalsX, y, size: isTotal ? 9.5 : 8, font: isTotal ? bold : font, color: ink });
-      page.drawText(money(Number(value), quote.moneda), { x: 472, y, size: isTotal ? 10.5 : 8, font: isTotal ? bold : font, color: isTotal ? accent : ink });
-      y -= isTotal ? 20 : 15;
+      const rowH = isTotal ? 17 : 14;
+      if (isTotal) {
+        page.drawRectangle({ x: totalsX, y: y - rowH + 3, width: totalsW, height: rowH, color: totalBlue, borderColor: ink, borderWidth: 0.6 });
+      } else {
+        page.drawRectangle({ x: totalsX, y: y - rowH + 3, width: totalsW, height: rowH, color: soft, borderColor: ink, borderWidth: 0.55 });
+      }
+      page.drawText(String(label), {
+        x: totalsX + 5, y: y - rowH + 7, size: isTotal ? 8.1 : 7.4,
+        font: isTotal ? bold : font, color: isTotal ? rgb(1, 1, 1) : ink,
+      });
+      const amount = money(Number(value), quote.moneda);
+      const amountWidth = (isTotal ? bold : font).widthOfTextAtSize(amount, isTotal ? 8 : 7.2);
+      page.drawText(amount, {
+        x: totalsX + totalsW - amountWidth - 5, y: y - rowH + 7,
+        size: isTotal ? 8 : 7.2, font: isTotal ? bold : font,
+        color: isTotal ? rgb(1, 1, 1) : ink,
+      });
+      y -= rowH;
     }
 
     if (clean(quote.notas_cliente)) {
