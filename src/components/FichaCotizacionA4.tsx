@@ -68,8 +68,7 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
   const accounts = Array.isArray(config["cuentas_bancarias"]) ? config["cuentas_bancarias"].filter((item) => item && typeof item === "object" && (item as Record<string, unknown>)["activa"] !== false) as Record<string, unknown>[] : [];
 
   return (
-    <div className="bg-slate-100 p-3 sm:p-6">
-      <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-7 py-8 text-slate-800 shadow-2xl sm:px-12 sm:py-11" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
+    <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-7 py-8 text-slate-800 shadow-2xl sm:px-12 sm:py-11" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
         <header className="grid grid-cols-2 gap-5 border-b border-slate-300 pb-5">
           <div className="flex min-w-0 items-stretch gap-3">
             <div className="flex w-24 shrink-0 items-center justify-center pr-2">
@@ -164,7 +163,6 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
           <div className="text-center">{identity.email ? `Correo: ${identity.email}` : ""}</div>
           <div className="text-right">{identity.ruc ? `RUC: ${identity.ruc}` : ""}</div>
         </footer>
-      </article>
-    </div>
+    </article>
   );
 }
