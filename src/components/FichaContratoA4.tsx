@@ -8,6 +8,7 @@ type ContratoVista = {
   sede_nombre?: string | null; notas?: string | null; created_at?: string | null;
 };
 type Identidad = {
+  id?: string;
   nombre_comercial?: string | null; razon_social?: string | null; ruc?: string | null;
   logo_url?: string | null; direccion?: string | null; ciudad?: string | null;
   telefono?: string | null; email?: string | null; color_principal?: string | null;
@@ -31,12 +32,14 @@ export function FichaContratoA4({ contrato }: { contrato: ContratoVista }) {
     void (async () => {
       if (contrato.sede_id) {
         const { data } = await supabase.from("identidades_comerciales")
-          .select("nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,telefono,email,color_principal")
+          .select("id,nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,telefono,email,color_principal")
           .eq("sede_id", contrato.sede_id).eq("activa", true).limit(1).maybeSingle();
         if (vigente && data) setIdentidad(data as Identidad);
       }
-      const { data: plantilla } = await supabase.from("plantillas_contrato")
-        .select("contenido").limit(1).maybeSingle();
+      const { data: plantilla } = identidad.id
+        ? await supabase.from("plantillas_contrato")
+            .select("contenido").eq("identidad_comercial_id", identidad.id).maybeSingle()
+        : { data: null };
       if (vigente && plantilla?.contenido && typeof plantilla.contenido === "object") {
         setContenido(plantilla.contenido as typeof contenido);
       }
