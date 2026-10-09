@@ -4,6 +4,8 @@ export type FichaCotizacionIdentidad = {
   nombre_comercial?: string | null;
   razon_social?: string | null;
   ruc?: string | null;
+  rnp_bienes?: string | null;
+  rpp_servicios?: string | null;
   logo_url?: string | null;
   direccion?: string | null;
   ciudad?: string | null;
@@ -69,7 +71,9 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
             <div className="min-w-0">
               <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: brand }}>{businessName}</h2>
               {identity.razon_social && identity.razon_social !== businessName ? <p className="mt-1 text-[10px] text-slate-600">{identity.razon_social}</p> : null}
-              {identity.ruc ? <p className="mt-1 text-[10px] text-slate-600">RUC: {identity.ruc}</p> : null}
+              {identity.ruc ? <p className="mt-1 text-[10px] text-slate-600">RUC {identity.ruc}</p> : null}
+              {identity.rnp_bienes ? <p className="mt-1 text-[10px] text-slate-500">RNP Bienes {identity.rnp_bienes}</p> : null}
+              {identity.rpp_servicios ? <p className="mt-1 text-[10px] text-slate-500">RPP Servicios {identity.rpp_servicios}</p> : null}
               <p className="mt-1 whitespace-pre-line text-[10px] text-slate-500">{[identity.direccion, identity.ciudad].filter(Boolean).join("\n")}</p>
             </div>
           </div>
