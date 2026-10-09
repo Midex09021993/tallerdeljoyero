@@ -131,7 +131,7 @@ function CotizacionDetallePage() {
     ]);
     setCotizacion(q);
     let identidadActual: FichaCotizacionIdentidad | null = null;
-    const camposIdentidad = "nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
+    const camposIdentidad = "nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
     if (q.participante_id) {
       const { data: identidad } = await supabase.from("identidades_comerciales")
         .select(camposIdentidad).eq("participante_id", q.participante_id).eq("activa", true)
