@@ -78,11 +78,10 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
               {identity.rpp_servicios ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RPP Servicios {identity.rpp_servicios}</p> : null}
             </div>
           </div>
-          <div className="text-right text-[10px] text-slate-600">
-            <p className="font-bold text-slate-800">{identity.razon_social || businessName}</p>
-            <p>{identity.telefono || identity.whatsapp || ""}</p>
-            <p>{identity.email || ""}</p>
-            <p>{identity.sitio_web || ""}</p>
+          <div className="text-right text-[10px] leading-4 text-slate-800">
+            <p className="font-bold uppercase">{identity.razon_social || businessName}</p>
+            {identity.direccion ? <p className="font-semibold uppercase">{identity.direccion}</p> : null}
+            {identity.ciudad ? <p className="font-semibold uppercase">{identity.ciudad}</p> : null}
             <p className="mt-3 text-sm font-bold tracking-wider" style={{ color: brand }}>COTIZACIÓN</p>
             <p className="font-semibold">{data.numero} · Versión {data.version}</p>
           </div>
