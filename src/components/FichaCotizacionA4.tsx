@@ -161,9 +161,6 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
 
         {accounts.length ? <section className="mt-5"><h4 className="mb-2 text-[9px] font-bold uppercase tracking-wider" style={{ color: brand }}>Datos bancarios</h4><div className="grid grid-cols-2 gap-3">{accounts.map((account, index) => <div key={index} className="border border-slate-200 p-2 text-[9px]"><p className="font-bold">{String(account["banco"] ?? "")}</p><p>Cuenta: {String(account["cuenta"] ?? "—")}</p><p>CCI: {String(account["cci"] ?? "—")}</p><p>Titular: {String(account["titular"] ?? "—")}</p></div>)}</div></section> : null}
 
-        <section className="mt-8 grid grid-cols-2 gap-8 pt-5 text-center text-[9px] text-slate-500">
-          <div className="border-t border-slate-400 pt-2">Firma del cliente</div><div className="border-t border-slate-400 pt-2">Firma y sello del taller</div>
-        </section>
         <footer className="mt-8 border-t border-slate-200 pt-3 text-center text-[8px] text-slate-500">{identity.pie_documento || [identity.telefono || identity.whatsapp, identity.email, identity.ruc ? "RUC " + identity.ruc : ""].filter(Boolean).join(" · ") || businessName}</footer>
       </article>
     </div>
