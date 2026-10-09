@@ -41,6 +41,11 @@ const fechaCorta = (value?: string | null) => {
   const date = new Date(value.length === 10 ? value + "T12:00:00" : value);
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 };
+const fechaLarga = (value?: string | null) => {
+  if (!value) return "—";
+  const date = new Date(value.length === 10 ? value + "T12:00:00" : value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "long", year: "numeric" }).format(date);
+};
 const dinero = (value: number, currency: string) => {
   try {
     return new Intl.NumberFormat("es-PE", { style: "currency", currency: /^[A-Z]{3}$/.test(currency) ? currency : "PEN" }).format(Number(value) || 0);
@@ -87,7 +92,7 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
           </div>
         </header>
 
-        <div className="my-5 text-right text-[10px] text-slate-500">{identity.ciudad || data.tallerNombre || ""}, {fechaCorta(data.fecha)}</div>
+        <div className="my-5 text-right text-[10px] text-slate-500">{identity.ciudad || data.tallerNombre || ""}, {fechaLarga(data.fecha)}</div>
         <section className="space-y-2">
           <p className="text-[10px] text-slate-500">Sr(a).</p>
           <h3 className="text-sm font-bold uppercase" style={{ color: brand }}>{data.cliente.nombre}</h3>
