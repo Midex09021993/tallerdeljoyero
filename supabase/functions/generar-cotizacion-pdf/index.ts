@@ -222,9 +222,22 @@ Deno.serve(async (req) => {
 
     const drawFooter = (p: any, n: number) => {
       p.drawLine({ start: { x: margin, y: 42 }, end: { x: width - margin, y: 42 }, thickness: 0.55, color: line });
-      const footer = clean(identity.pie_documento) || [phone && `Tel: ${phone}`, email && `Correo: ${email}`, fiscal && `${fiscalLabel}: ${fiscal}`].filter(Boolean).join("    ") || "Documento comercial generado por Aurum Lab";
-      p.drawText(footer, { x: margin, y: 27, size: 6.8, font, color: muted });
-      p.drawText(`Página ${n}`, { x: width - 78, y: 27, size: 6.8, font, color: muted });
+      const leftText = phone ? `Tel: ${phone}` : "";
+      const centerText = email ? `Correo: ${email}` : "";
+      const rightText = fiscal ? `${fiscalLabel}: ${fiscal}` : "";
+      const footerY = 27;
+      const footerSize = 6.8;
+      if (leftText) p.drawText(leftText, { x: margin, y: footerY, size: footerSize, font, color: muted });
+      if (centerText) {
+        const centerWidth = font.widthOfTextAtSize(centerText, footerSize);
+        p.drawText(centerText, { x: (width - centerWidth) / 2, y: footerY, size: footerSize, font, color: muted });
+      }
+      if (rightText) {
+        const rightWidth = font.widthOfTextAtSize(rightText, footerSize);
+        p.drawText(rightText, { x: width - margin - rightWidth, y: footerY, size: footerSize, font, color: muted });
+      }
+      const pageText = `Página ${n}`;
+      p.drawText(pageText, { x: width - margin - font.widthOfTextAtSize(pageText, 6.2), y: 15, size: 6.2, font, color: muted });
     };
 
     const newPage = () => {
