@@ -51,7 +51,7 @@ export function FichaContratoA4({ contrato }: { contrato: ContratoVista }) {
   const clausulas = (contenido.clausulas ?? []).filter(c => c.activa !== false && (c.titulo || c.contenido));
   const nombreTaller = identidad.razon_social || identidad.nombre_comercial || contrato.sede_nombre || "Taller";
   return <>
-    <button type="button" onClick={() => setAbierta(true)} className="inline-flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-gold-deep hover:bg-gold/20">
+    <button type="button" onClick={() => setAbierta(true)} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm hover:bg-surface-muted">
       Vista previa A4
     </button>
     {abierta ? <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/70 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label="Vista previa A4 del contrato">
