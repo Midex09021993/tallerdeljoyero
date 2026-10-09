@@ -3,7 +3,6 @@ import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-r
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
-import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -88,7 +87,6 @@ function CotizacionDetallePage() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
-  const [identidadFicha, setIdentidadFicha] = useState<FichaCotizacionIdentidad | null>(null);
   const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [editando, setEditando] = useState(false);
@@ -130,20 +128,6 @@ function CotizacionDetallePage() {
       supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
     setCotizacion(q);
-    let identidadActual: FichaCotizacionIdentidad | null = null;
-    const camposIdentidad = "nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
-    if (q.participante_id) {
-      const { data: identidad } = await supabase.from("identidades_comerciales")
-        .select(camposIdentidad).eq("participante_id", q.participante_id).eq("activa", true)
-        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
-      identidadActual = identidad as FichaCotizacionIdentidad | null;
-    } else if (q.sede_id) {
-      const { data: identidad } = await supabase.from("identidades_comerciales")
-        .select(camposIdentidad).eq("sede_id", q.sede_id).eq("activa", true)
-        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
-      identidadActual = identidad as FichaCotizacionIdentidad | null;
-    }
-    setIdentidadFicha(identidadActual);
     let versionesRelacionadasQuery = supabase
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
@@ -318,20 +302,23 @@ function CotizacionDetallePage() {
     }
   }
 
-  async function generarPdfCotizacion() {
-    if (!cotizacion || generandoPdf) return;
+  async function generarPdfCotizacion(): Promise<string | null> {
+    if (!cotizacion || generandoPdf) return null;
     setGenerandoPdf(true);
     setError("");
-    const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
-      body: { cotizacion_id: cotizacion.id },
-    });
-    if (pdfError || !data?.url) {
-      setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
+    try {
+      const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
+        body: { cotizacion_id: cotizacion.id },
+      });
+      if (pdfError || !data?.url) {
+        setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
+        return null;
+      }
+      setEnlacePdf(data.url);
+      return data.url as string;
+    } finally {
       setGenerandoPdf(false);
-      return;
     }
-    setEnlacePdf(data.url);
-    setGenerandoPdf(false);
   }
 
   function enlacePdfCliente() {
@@ -691,8 +678,11 @@ function CotizacionDetallePage() {
             <Panel titulo="Documento para el cliente">
               <div className="space-y-3 p-4">
                 <p className="text-xs text-muted-foreground">Vista previa de la ficha comercial en formato A4, con los datos de esta cotización y la identidad del taller activo.</p>
-                <button type="button" onClick={() => setMostrarFichaA4(true)} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
-                  Ver ficha A4
+                <button type="button" disabled={generandoPdf} onClick={async () => {
+                  const url = await generarPdfCotizacion();
+                  if (url) setMostrarFichaA4(true);
+                }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
+                  {generandoPdf ? "Preparando vista previa…" : "Vista previa A4 (PDF real)"}
                 </button>
                 <p className="text-xs text-muted-foreground">Genera una copia PDF de la propuesta con información comercial. Los costos internos y notas internas nunca se incluyen.</p>
                 <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
@@ -818,32 +808,16 @@ function CotizacionDetallePage() {
         </div>
       </div>
 
-    {mostrarFichaA4 ? (
-      <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/70 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label="Vista previa A4 de la cotización">
-        <div className="mx-auto mb-3 flex max-w-[210mm] justify-end">
-          <button type="button" onClick={() => setMostrarFichaA4(false)} className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">
-            <span aria-hidden="true">×</span> Cerrar vista previa
+    {mostrarFichaA4 && enlacePdf ? (
+      <div className="fixed inset-0 z-[100] flex flex-col bg-slate-900/90 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Vista previa A4 del PDF de cotización">
+        <div className="mx-auto mb-3 flex w-full max-w-[210mm] items-center justify-end gap-2">
+          <a href={enlacePdf} target="_blank" rel="noreferrer" className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Abrir PDF</a>
+          <button type="button" onClick={() => setMostrarFichaA4(false)} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">
+            Cerrar vista previa
           </button>
         </div>
-        <FichaCotizacionA4 data={{
-          numero: cotizacion.numero,
-          version: cotizacion.version,
-          fecha: cotizacion.fecha_emision,
-          vencimiento: cotizacion.fecha_vencimiento,
-          entrega: cotizacion.fecha_entrega_solicitada,
-          moneda: cotizacion.moneda,
-          cliente: { nombre: cliente?.nombre ?? "—", telefono: cliente?.telefono ?? cliente?.whatsapp ?? null, email: cliente?.email ?? null },
-          tallerNombre: sedeNombre,
-          identidad: identidadFicha,
-          detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad), unidad: item.unidad, precio_unitario: Number(item.precio_unitario), total_precio: Number(item.total_precio) })),
-          subtotal: Number(cotizacion.subtotal),
-          descuento: Number(cotizacion.descuento),
-          impuestos: Number(cotizacion.impuestos),
-          total: Number(cotizacion.total),
-          notas: cotizacion.notas_cliente ?? "",
-        }} />
+        <iframe title="Vista previa del PDF de cotización" src={enlacePdf} className="mx-auto min-h-0 w-full max-w-[210mm] flex-1 rounded bg-white shadow-2xl" />
       </div>
-    ) : null}
     </AppShell>
       </div>
 
