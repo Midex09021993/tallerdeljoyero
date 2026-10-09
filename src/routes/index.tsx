@@ -105,7 +105,7 @@ function LandingPublica() {
             Herramientas digitales, gestión comercial, producción y catálogo de joyas en un mismo ecosistema. Empieza con utilidades gratuitas y crece a tu ritmo.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link to="/herramientas-gratuitas" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-5 py-3.5 text-sm font-bold text-[#101010] transition hover:-translate-y-0.5 hover:bg-[#e7c75f]">
+            <Link to="/auth#herramientas" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-5 py-3.5 text-sm font-bold text-[#101010] transition hover:-translate-y-0.5 hover:bg-[#e7c75f]">
               Explorar herramientas gratuitas <ArrowRight className="size-4" />
             </Link>
             <Link to="/auth" className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-5 py-3.5 text-sm font-semibold text-white/85 transition hover:border-[#d4af37]/50 hover:text-[#e4c66a]">
@@ -198,7 +198,7 @@ function LandingPublica() {
             <div><h2 className="text-xl font-semibold">Tu próximo paso empieza aquí.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">Explora las herramientas o crea el espacio digital de tu taller cuando estés listo.</p></div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link to="/herramientas-gratuitas" className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-5 py-3 text-sm font-semibold hover:border-[#d4af37]/50">Probar herramientas</Link>
+            <Link to="/auth#herramientas" className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-5 py-3 text-sm font-semibold hover:border-[#d4af37]/50">Probar herramientas</Link>
             <Link to="/auth" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-5 py-3 text-sm font-bold text-[#101010] hover:bg-[#e7c75f]">Solicitar acceso <ArrowRight className="size-4" /></Link>
           </div>
         </div>
