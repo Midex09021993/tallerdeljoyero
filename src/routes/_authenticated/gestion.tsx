@@ -62,6 +62,7 @@ import { ConfiguracionComercial } from "@/components/ConfiguracionComercial";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { AurumTransferHistorialOwner } from "@/components/AurumTransferHistorialOwner";
 import { AnaliticaAurumLab } from "@/components/AnaliticaAurumLab";
+import { ConfiguracionMensajesCumpleanos } from "@/components/ConfiguracionMensajesCumpleanos";
 
 export const Route = createFileRoute("/_authenticated/gestion")({
   head: () => ({
@@ -106,7 +107,8 @@ type Modulo =
   | "comercial"
   | "web"
   | "aurumTransfer"
-  | "analitica";
+  | "analitica"
+  | "mensajes";
 
 function esEntregado(p: Pedido) {
   return p.estado === "Entregado";
@@ -153,6 +155,7 @@ function GestionPage() {
     { id: "comercial", label: "Comercial", descripcion: "Identidad y documentos comerciales" },
     { id: "usuarios", label: "Equipo", descripcion: "Usuarios, roles y accesos" },
     { id: "capacidades", label: "Taller", descripcion: "Capacidades y modalidades de trabajo" },
+    { id: "mensajes", label: "Mensajes Automáticos", descripcion: "Personaliza los saludos de cumpleaños" },
     { id: "automatizacion", label: "Alertas", descripcion: "Objetivos de tiempo y alertas internas" },
   ];
 
@@ -282,6 +285,7 @@ function GestionPage() {
         {modulo === "web" && esDueno ? <ComunidadAurumLab configuracion /> : null}
         {modulo === "aurumTransfer" && esDueno ? <AurumTransferHistorialOwner /> : null}
         {modulo === "analitica" && esDueno ? <AnaliticaAurumLab /> : null}
+        {modulo === "mensajes" && puedeGestionSede ? <ConfiguracionMensajesCumpleanos participanteId={sesion?.participante?.id ?? null} sedeId={sedeActiva} /> : null}
         {modulo === "capacidades" && puedeGestionSede ? (
           <CapacidadesSedeAdmin
             sedeId={sedeActiva}

@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   CircleAlert,
   ListChecks,
+  Gift,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -57,6 +58,12 @@ function Inicio() {
   const sedeContextoId = esDueno
     ? (sedeFiltro === TODAS_LAS_SEDES ? null : sedeFiltro)
     : (sesion?.sede?.id ?? null);
+  const {data: cumpleanos=[]}=useQuery({queryKey:["inicio-cumpleanos",sesion?.participante?.id,sedeContextoId,esDueno],enabled:Boolean(sesion?.participante?.id),queryFn:async()=>{
+    const q=supabase.from("clientes").select("id,nombre,fecha_nacimiento,sede_id,participante_id").not("fecha_nacimiento","is",null);
+    const {data,error}=esDueno?await q:await q.eq("participante_id",sesion!.participante!.id);if(error)throw error;
+    const t=new Date();t.setHours(0,0,0,0);const leap=(y:number)=>y%4===0&&(y%100!==0||y%400===0);
+    return (data??[]).filter(c=>!sedeContextoId||c.sede_id===sedeContextoId).map(c=>{const [y,m,d]=String(c.fecha_nacimiento).slice(0,10).split("-").map(Number);let day=d;if(m===2&&d===29&&!leap(t.getFullYear()))day=28;let f=new Date(t.getFullYear(),m-1,day);if(f<t){const year=t.getFullYear()+1;day=m===2&&d===29&&!leap(year)?28:d;f=new Date(year,m-1,day)}return{id:c.id,nombre:c.nombre,fecha:f,dias:Math.round((f.getTime()-t.getTime())/86400000)}}).filter(c=>c.dias<=30).sort((a,b)=>a.dias-b.dias).slice(0,5)
+  }});
 
   const { data: preparacion, isLoading: cargandoPreparacion } = useQuery({
     queryKey: ["inicio-preparacion", esDueno, sedeContextoId, sesion?.participante?.id],
@@ -323,6 +330,7 @@ function Inicio() {
           )}
         </section>
 
+        <section className="rounded-2xl border border-gold/20 bg-card"><header className="flex items-center justify-between border-b p-4"><h2 className="font-semibold">🎂 Próximos cumpleaños</h2><Link to="/clientes" className="text-xs font-semibold text-gold">Ver clientes <ChevronRight className="inline size-3"/></Link></header>{cumpleanos.length?cumpleanos.map(c=><div key={c.id} className="flex items-center gap-3 border-b p-3"><Gift className="size-4 text-gold"/><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.fecha.toLocaleDateString("es-PE",{day:"2-digit",month:"short"})}</span></span><span className="text-xs font-semibold text-gold">{c.dias===0?"Hoy":`En ${c.dias} días`}</span></div>):<p className="p-4 text-sm text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>}</section>
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatCard etiqueta="Pedidos activos" valor={String(resumen.activos.length)} />
           <StatCard etiqueta="En producción" valor={String(resumen.produccion.length)} />

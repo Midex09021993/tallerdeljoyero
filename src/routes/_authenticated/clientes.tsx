@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, useCapacidadesMenu } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
-import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2 } from "lucide-react";
+import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2, Cake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
+import { CumpleanosClientes } from "@/components/CumpleanosClientes";
 
 type Cliente = {
   id: string;
@@ -13,6 +14,8 @@ type Cliente = {
   email: string | null;
   estado: string;
   created_at: string;
+  fecha_nacimiento: string | null;
+  notas: string | null;
   sede_id: string | null;
   participante_id: string | null;
   sede_nombre: string;
@@ -50,14 +53,15 @@ function ClientesPage() {
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [confirmarEliminacion, setConfirmarEliminacion] = useState(false);
-  const [form, setForm] = useState({ nombre: "", telefono: "", email: "" });
+  const [form, setForm] = useState({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
+  const [vista, setVista] = useState<"clientes" | "cumpleanos">("clientes");
 
   const cargar = async () => {
     if (!sesion?.participante?.id) return;
     const esDueno = Boolean(sesion.esDueno);
     const clientesQuery = supabase
       .from("clientes")
-      .select("id,nombre,telefono,email,estado,created_at,sede_id,participante_id")
+      .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
       .order("nombre");
     const { data: clientesData, error: clientesError } = esDueno
       ? await clientesQuery
@@ -106,13 +110,13 @@ function ClientesPage() {
   const activos = clientes.filter((c) => c.estado === "activo").length;
 
   function nuevoCliente() {
-    setForm({ nombre: "", telefono: "", email: "" });
+    setForm({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
     setModal(true);
   }
 
   function editarCliente() {
     if (!seleccionado) return;
-    setForm({ nombre: seleccionado.nombre, telefono: seleccionado.telefono ?? "", email: seleccionado.email ?? "" });
+    setForm({ nombre: seleccionado.nombre, telefono: seleccionado.telefono ?? "", email: seleccionado.email ?? "", fecha_nacimiento: seleccionado.fecha_nacimiento ?? "", notas: seleccionado.notas ?? "" });
     setModal(true);
   }
 
@@ -122,7 +126,7 @@ function ClientesPage() {
     setGuardando(true);
     try {
       if (!sesion?.participante?.id) throw new Error("No hay un taller activo del Ecosistema para guardar el cliente.");
-      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, participante_id: sesion.participante.id };
+      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "", participante_id: sesion.participante.id };
       const result = seleccionado
         ? await supabase.from("clientes").update(payload).eq("id", seleccionado.id)
         : await supabase.from("clientes").insert(payload);
@@ -132,7 +136,7 @@ function ClientesPage() {
       if (!seleccionado) {
         const { data } = await supabase
           .from("clientes")
-          .select("id,nombre,telefono,email,estado,created_at,sede_id,participante_id")
+          .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
           .eq("participante_id", sesion.participante.id)
           .eq("nombre", payload.nombre)
           .order("created_at", { ascending: false })
@@ -212,7 +216,8 @@ function ClientesPage() {
         </>
       }
     >
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
+      <div className="mb-5 flex gap-2 rounded-2xl border border-border bg-card p-2"><button type="button" onClick={()=>setVista("clientes")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="clientes"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}>Clientes</button><button type="button" onClick={()=>setVista("cumpleanos")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="cumpleanos"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}><Cake className="mr-2 inline size-4"/>Cumpleaños</button></div>
+      <div className={vista==="clientes"?"grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]":"hidden"}>
         <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,0.35)]">
           <div className="border-b border-border p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -231,7 +236,7 @@ function ClientesPage() {
               <button key={cliente.id} type="button" onClick={() => setSeleccionado(cliente)} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-muted sm:px-5 ${seleccionado?.id === cliente.id ? "bg-gold/5" : ""}`}>
                 <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/10 text-sm font-semibold text-gold">{cliente.nombre.charAt(0).toUpperCase()}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{cliente.nombre}</span>
+                  <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-semibold">{cliente.nombre}</span>{cliente.fecha_nacimiento&&cliente.fecha_nacimiento.slice(5)===`${String(new Date().getMonth()+1).padStart(2,"0")}-${String(new Date().getDate()).padStart(2,"0")}`?<Cake className="size-3.5 shrink-0 text-gold" aria-label="Cumpleaños hoy"/>:null}{cliente.fecha_nacimiento&&Number(cliente.fecha_nacimiento.slice(5,7))===new Date().getMonth()+1?<span className="shrink-0 rounded-full bg-gold/10 px-1.5 py-0.5 text-[9px] text-gold">Cumple este mes</span>:null}</span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">{cliente.sede_nombre} · {cliente.telefono || cliente.email || "Sin contacto registrado"}</span>
                 </span>
                 <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${cliente.estado === "activo" ? "bg-success-soft text-success" : "bg-surface-muted text-muted-foreground"}`}>{cliente.estado}</span>
@@ -257,8 +262,8 @@ function ClientesPage() {
               <div className="p-5">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="group rounded-2xl border border-border bg-surface-muted/45 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/25 hover:shadow-[0_12px_28px_-20px_hsl(var(--gold)/0.5)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Teléfono</span><Phone className="size-4 text-gold/60" strokeWidth={1.6} /></div><p className="mt-2 truncate text-sm font-medium">{seleccionado.telefono || "No registrado"}</p></div>
-                  <div className="group rounded-2xl border border-border bg-surface-muted/45 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/25 hover:shadow-[0_12px_28px_-20px_hsl(var(--gold)/0.5)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Correo electrónico</span><Mail className="size-4 text-gold/60" strokeWidth={1.6} /></div><p className="mt-2 truncate text-sm font-medium">{seleccionado.email || "No registrado"}</p></div>
-                </div>
+                  <div className="group rounded-2xl border border-border bg-surface-muted/45 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/25 hover:shadow-[0_12px_28px_-20px_hsl(var(--gold)/0.5)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Correo electrónico</span><Mail className="size-4 text-gold/60" strokeWidth={1.6} /></div><p className="mt-2 truncate text-sm font-medium">{seleccionado.email || "No registrado"}</p></div><div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase text-muted-foreground">Fecha de nacimiento</span><p className="mt-2 text-sm">{seleccionado.fecha_nacimiento?new Date(`${seleccionado.fecha_nacimiento}T12:00:00`).toLocaleDateString("es-PE",{day:"2-digit",month:"long",year:"numeric"}):"No registrada"}</p></div>
+                </div>{seleccionado.notas?<p className="mt-3 whitespace-pre-wrap rounded-xl border border-border p-3 text-xs text-muted-foreground">{seleccionado.notas}</p>:null}
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <Link to="/pedidos" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pedidos</span><ShoppingBag className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{pedidos.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Pedidos registrados</span></Link>
                   {cotizacionesHabilitadas ? <Link to="/cotizaciones" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Ver cotizaciones</span></Link> : null}
@@ -289,6 +294,7 @@ function ClientesPage() {
           )}
         </section>
       </div>
+      {vista==="cumpleanos"?<CumpleanosClientes clientes={clientes} alSeleccionar={id=>{const c=clientes.find(x=>x.id===id);if(c){setSeleccionado(c);setVista("clientes");}}}/>:null}
 
       {confirmarEliminacion && seleccionado ? <div className="fixed inset-0 z-[60] grid place-items-center bg-foreground/35 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="confirmar-eliminacion-titulo">
         <div className="w-full max-w-md rounded-2xl border border-danger/20 bg-card p-6 shadow-raised">
@@ -316,6 +322,7 @@ function ClientesPage() {
             <Field label="Nombre completo" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
             <Field label="Teléfono" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
             <Field label="Correo electrónico" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+            <Field label="Fecha de nacimiento (opcional)" type="date" value={form.fecha_nacimiento} onChange={v=>setForm({...form,fecha_nacimiento:v})}/><label className="block text-xs font-medium">Observaciones<textarea value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} rows={3} className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm"/></label>
           </div>
           <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setModal(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando..." : "Guardar cliente"}</button></div>
         </form>
