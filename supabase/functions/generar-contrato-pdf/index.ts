@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
         ry -= 10;
       }
       page.drawText(clean(contrato.numero), {
-        x: pageWidth - margin - 145, y: y - 48, size: 9, font: bold, color: ink,
+        x: pageWidth - margin - 145, y: y - 48, size: 9, font: bold, color: rgb(0.1, 0.1, 0.1),
       });
       page.drawText(`Versión ${version}`, {
         x: pageWidth - margin - 145, y: y - 60, size: 7.5, font, color: rgb(0.58, 0.58, 0.58),
