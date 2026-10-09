@@ -476,6 +476,7 @@ export type Database = {
           documento: string | null
           email: string | null
           estado: string
+          fecha_nacimiento: string | null
           id: string
           metadata: Json
           nombre: string
@@ -494,6 +495,7 @@ export type Database = {
           documento?: string | null
           email?: string | null
           estado?: string
+          fecha_nacimiento?: string | null
           id?: string
           metadata?: Json
           nombre: string
@@ -512,6 +514,7 @@ export type Database = {
           documento?: string | null
           email?: string | null
           estado?: string
+          fecha_nacimiento?: string | null
           id?: string
           metadata?: Json
           nombre?: string
