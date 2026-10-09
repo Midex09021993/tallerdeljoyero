@@ -144,12 +144,14 @@ function CotizacionDetallePage() {
       identidadActual = identidad as FichaCotizacionIdentidad | null;
     }
     setIdentidadFicha(identidadActual);
-    const { data: versionesRelacionadas } = await supabase
+    let versionesRelacionadasQuery = supabase
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("numero", q.numero)
-      .eq("participante_id", q.participante_id)
       .order("version", { ascending: false });
+    if (q.participante_id) versionesRelacionadasQuery = versionesRelacionadasQuery.eq("participante_id", q.participante_id);
+    else if (q.sede_id) versionesRelacionadasQuery = versionesRelacionadasQuery.eq("sede_id", q.sede_id);
+    const { data: versionesRelacionadas } = await versionesRelacionadasQuery;
     setVersiones(versionesRelacionadas ?? [q]);
 
     // Si esta versión nació de otra, mostramos la respuesta del cliente
