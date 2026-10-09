@@ -818,6 +818,7 @@ function CotizacionDetallePage() {
         </div>
         <iframe title="Vista previa del PDF de cotización" src={enlacePdf} className="mx-auto min-h-0 w-full max-w-[210mm] flex-1 rounded bg-white shadow-2xl" />
       </div>
+    ) : null}
     </AppShell>
       </div>
 
