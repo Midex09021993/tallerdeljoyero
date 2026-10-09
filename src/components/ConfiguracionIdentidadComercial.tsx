@@ -174,7 +174,7 @@ export function ConfiguracionIdentidadComercial() {
       upsert: true, contentType, cacheControl: "3600"
     });
     if (uploadError) {
-      toast.error(uploadError.message);
+      toast.error(`Falló la subida del archivo al almacenamiento: ${uploadError.message}`);
       setGuardando(false);
       return;
     }
@@ -184,7 +184,7 @@ export function ConfiguracionIdentidadComercial() {
     const { error: updateError } = await supabase.from("identidades_comerciales").update({ logo_url: publicUrl }).eq("id", form.id);
     if (updateError) {
       await supabase.storage.from("identidades-comerciales").remove([path]);
-      toast.error(updateError.message);
+      toast.error(`La imagen se subió, pero no se pudo guardar su URL en la identidad: ${updateError.message}`);
       setGuardando(false);
       return;
     }
