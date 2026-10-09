@@ -49,13 +49,6 @@ function money(value: number, currency: string) {
   }).format(Number(value ?? 0));
 }
 
-function colorHex(value: unknown) {
-  const raw = clean(value).replace("#", "");
-  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return rgb(0.12, 0.12, 0.14);
-  const n = Number.parseInt(raw, 16);
-  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
-}
-
 function boolField(content: Record<string, unknown>, key: string, fallback = true) {
   return typeof content[key] === "boolean" ? Boolean(content[key]) : fallback;
 }
@@ -206,6 +199,23 @@ Deno.serve(async (req) => {
     const accent = rgb(0.30, 0.59, 0.25);
     const totalBlue = rgb(0.03, 0.40, 0.55);
     const softBlue = rgb(0.84, 0.91, 0.97);
+    let embeddedLogo: any = null;
+    if (clean(identidad?.logo_url)) {
+      try {
+        const response = await fetch(clean(identidad.logo_url));
+        if (response.ok) {
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          const type = response.headers.get("content-type") ?? "";
+          embeddedLogo = type.includes("png")
+            ? await pdf.embedPng(bytes)
+            : type.includes("jpeg") || type.includes("jpg")
+              ? await pdf.embedJpg(bytes)
+              : null;
+        }
+      } catch {
+        // El logo es opcional; no debe impedir la generación del contrato.
+      }
+    }
 
     function newPage() {
       page = pdf.addPage([595.28, 841.89]);
@@ -236,20 +246,27 @@ Deno.serve(async (req) => {
       const pageWidth = page.getWidth();
       const company = clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO";
       const legal = clean(identidad?.razon_social);
-      const logoUrl = clean(identidad?.logo_url);
-      // La imagen del logo se descarga y embebe de forma segura para mantenerlo en el PDF.
-      // Si no está disponible, el encabezado continúa con la razón social.
+      // El encabezado mantiene el logotipo a la izquierda, como en la referencia.
+      const logoX = margin + 3;
+      const textX = embeddedLogo ? margin + 92 : margin;
+      if (embeddedLogo) {
+        const scale = Math.min(68 / embeddedLogo.width, 52 / embeddedLogo.height);
+        page.drawImage(embeddedLogo, {
+          x: logoX, y: y - 51,
+          width: embeddedLogo.width * scale, height: embeddedLogo.height * scale,
+        });
+      }
       page.drawText(company, {
-        x: margin, y, size: 14, font: bold, color: accent,
+        x: textX, y, size: 12, font: bold, color: accent,
       });
       if (legal && legal !== company) {
-        page.drawText(legal, { x: margin, y: y - 14, size: 8, font: bold, color: rgb(0.58, 0.58, 0.58) });
+        page.drawText(legal, { x: textX, y: y - 14, size: 8, font: bold, color: rgb(0.58, 0.58, 0.58) });
       }
       const fiscal = clean(identidad?.ruc) ? `RUC ${clean(identidad.ruc)}` : "";
       const address = [clean(identidad?.direccion), clean(identidad?.ciudad)].filter(Boolean);
       let ly = y - (legal && legal !== company ? 27 : 16);
       if (fiscal) {
-        page.drawText(fiscal, { x: margin, y: ly, size: 7.4, font, color: rgb(0.58, 0.58, 0.58) });
+        page.drawText(fiscal, { x: textX, y: ly, size: 7.4, font, color: rgb(0.58, 0.58, 0.58) });
         ly -= 10;
       }
       const rightLines = [...address, clean(identidad?.telefono), clean(identidad?.email)].filter(Boolean).slice(0, 4);
