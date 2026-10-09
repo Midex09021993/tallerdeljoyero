@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 export type DocumentoA4Identidad = {
   nombre_comercial?: string | null;
   razon_social?: string | null;
@@ -99,7 +97,7 @@ function htmlDocumento(data: DocumentoA4Props) {
 }
 
 export function abrirDocumentoA4(data: DocumentoA4Props) {
-  const popup = window.open("", "_blank", "noopener,noreferrer");
+  const popup = window.open("", "_blank");
   if (!popup) {
     window.alert("El navegador bloqueó la vista previa. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
     return false;
