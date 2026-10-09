@@ -2,41 +2,55 @@
 
 Fecha: 2026-10-09
 Repositorio: Midex09021993/tallerdeljoyero
-Base revisada: main, commit 5894f64074b526711d3a661dfafbd1740049a897
+Base revisada: `main`, commit `5894f64074b526711d3a661dfafbd1740049a897`
 
 ## Hallazgos confirmados
 
-1. La búsqueda del repositorio no encontró módulo implementado de perfiles de impresión, resinas o calibración; no implica que se haya inspeccionado la base productiva.
-2. La identidad canónica del proyecto es participante_id enlazada mediante participante_cuentas y ecosistema_participantes. Print Lab no debe crear otro login ni usar sede_id como propietario.
-3. Aurum Transfer es para enlaces temporales de un solo uso y tiene bucket privado propio. Print Lab requiere almacenamiento persistente privado separado.
-4. La app usa TanStack Router. src/routeTree.gen.ts es generado y no debe editarse manualmente.
-5. CHITUBOX distingue perfiles/configuraciones, proyectos y archivos laminados. Tango dispone de perfiles de impresora/resina e importación/exportación de scripts, pero no se debe prometer conversión entre slicers sin muestras reales.
-6. Las migraciones del catálogo muestran historial de políticas reescritas por diferencias sede_id/participante_id. Print Lab parte de participante_id y debe probar aislamiento entre talleres.
+1. La búsqueda del repositorio no encontró módulo implementado de perfiles de impresión, resinas o calibración; esto no implica inspección de la base productiva.
+2. La identidad canónica es `participante_id`, enlazada mediante `participante_cuentas` y `ecosistema_participantes`. Print Lab no crea otro login ni usa `sede_id` como propietario.
+3. Aurum Transfer sirve para enlaces temporales de un solo uso. Print Lab necesita almacenamiento privado persistente y separado.
+4. La app usa TanStack Router. `src/routeTree.gen.ts` es generado y no debe editarse manualmente.
+5. No se debe prometer conversión entre CHITUBOX, Lychee y Tango sin muestras reales por versión.
+6. El historial de migraciones del catálogo muestra riesgos por mezclar `sede_id` y `participante_id`; Print Lab usa `participante_id` como identidad canónica.
+7. La función existente `public.es_admin` considera roles globales `dueno/gerente`; no sirve como condición de pertenencia a un taller. La política inicial de Print Lab mezclaba ambas cosas y podía bloquear a miembros normales. Se corrigió para comprobar cuenta activa y participante activo por separado.
 
-## Propuesta en esta rama
+## Propuesta actual en esta rama
 
-- supabase/migrations/20261009170000_aurum_print_lab_base.sql
-- docs/auditoria/aurum-print-lab-auditoria-tecnica-20261009.md
+- `supabase/migrations/20261009170000_aurum_print_lab_base.sql`
+- `docs/auditoria/aurum-print-lab-auditoria-tecnica-20261009.md`
 
-El esquema propone seis tablas: impresoras, resinas, perfiles, revisiones, pruebas de calibración y feedback. Las relaciones compuestas impiden vincular un perfil a una impresora o resina de otro participante. Los perfiles son privados por defecto y la comunidad solo puede leer perfiles publicados explícitamente.
+El esquema propone seis tablas: impresoras, resinas, perfiles, revisiones, pruebas de calibración y feedback. Las claves foráneas compuestas mantienen impresora y resina en el mismo participante que el perfil. El feedback identifica al taller que prueba el perfil, que puede ser distinto del taller propietario del perfil.
 
-El bucket aurum-print-lab es privado y no reutiliza aurum-transfer. El límite inicial de 50 MiB por archivo es una propuesta conservadora, no un límite validado con archivos reales.
+La migración incorpora:
+- Perfiles privados por defecto y publicación comunitaria explícita.
+- Funciones auxiliares `SECURITY DEFINER` para comprobar acceso sin conceder lectura anónima a tablas internas de cuentas.
+- Privilegios de lectura pública limitados por columnas; feedback, pruebas de calibración y archivos privados no se exponen a visitantes anónimos.
+- Triggers de `updated_at`.
+- Bucket privado `aurum-print-lab`, separado de Aurum Transfer, con ruta `<participante_id>/<archivo>`.
 
-## Bloqueos antes de producción
+El límite de 50 MiB por archivo es provisional y debe confirmarse contra archivos reales.
 
-- No se consultó la base de datos productiva ni se ejecutó la migración.
-- Validar en staging las funciones/roles `has_role`, `es_admin`, el tipo `app_role` y los permisos reales.
-- Ejecutar pruebas de RLS con dos talleres, dueño global y visitante anónimo.
-- Regenerar src/integrations/supabase/types.ts tras validar/aplicar el esquema.
-- Añadir UI solo después de confirmar el contrato SQL y generar tipos; no editar routeTree.gen.ts manualmente.
-- Probar archivos reales de CHITUBOX, Lychee y Tango por versión antes de crear importadores.
-- Las columnas updated_at requieren trigger o actualización desde la aplicación; no se afirma que sean automáticas.
+## Estado de verificación
+
+**Verificado en el repositorio**
+- La migración y esta auditoría están en la rama `feat/aurum-print-lab-base`, dentro del PR borrador #24.
+- El PR sigue abierto como borrador contra `main`.
+- No se aplicó SQL, no se modificó `main` y no se tocó la base de datos de producción.
+- La migración tiene un único bloque transaccional `begin/commit`, crea los helpers antes de las políticas y no conserva el bloque de políticas duplicadas de la versión anterior.
+
+**Pendiente — no afirmar como probado**
+- No se ejecutó un parser PostgreSQL ni la migración en staging; por tanto, la sintaxis y el comportamiento real aún no están validados por el motor.
+- Confirmar funciones/roles y grants efectivos en el entorno de prueba administrado por Lovable Cloud.
+- Probar aislamiento con dos talleres, propietario global, miembro, contacto, visitante anónimo y rutas de almacenamiento manipuladas.
+- Regenerar `src/integrations/supabase/types.ts` después de validar el esquema.
+- Implementar UI solo tras validar el contrato SQL; luego correr typecheck/build.
+- Importar muestras reales de CHITUBOX, Lychee y Tango por versión antes de implementar adaptadores.
 
 ## Siguiente fase
 
-1. Revisar esta propuesta.
-2. Aplicar en entorno de prueba administrado por Lovable Cloud y validar SQL/RLS.
-3. Implementar ruta y componentes de Print Lab, regenerar tipos y correr typecheck/build.
-4. Probar privacidad entre talleres y acceso público antes de publicar.
+1. Validar la migración en staging administrado por Lovable Cloud.
+2. Ejecutar pruebas de aislamiento y acceso público.
+3. Corregir cualquier fallo antes de integrar el PR.
+4. Después de aprobar el contrato de base de datos, implementar la UI, generar tipos y verificar compilación.
 
-Estado: propuesta aislada en rama; main y la base de datos de producción no se modificaron.
+Estado: propuesta aislada en rama; no lista para fusionar ni aplicar en producción.
