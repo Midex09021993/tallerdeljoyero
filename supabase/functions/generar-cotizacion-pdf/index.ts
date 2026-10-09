@@ -240,6 +240,23 @@ Deno.serve(async (req) => {
 
     const wrapPdf = (text: string, maxChars: number) => wrap(clean(text), maxChars);
 
+    // Los textos variables se dibujan línea por línea para que nunca invadan
+    // el pie de página cuando una observación o condición es extensa.
+    const drawWrappedParagraph = (
+      text: string,
+      maxChars: number,
+      size: number,
+      leading: number,
+      color = ink,
+      x = margin,
+    ) => {
+      for (const line of wrapPdf(text, maxChars)) {
+        ensure(leading + 2);
+        page.drawText(line, { x, y, size, font, color });
+        y -= leading;
+      }
+    };
+
     function drawHeader() {
       const logoIncluded = Boolean(embeddedLogo);
       if (embeddedLogo) {
@@ -335,7 +352,7 @@ Deno.serve(async (req) => {
       ensure(55);
       page.drawText("DE NUESTRA CONSIDERACIÓN", { x: margin, y, size: 8.5, font: bold, color: accent });
       y -= 15;
-      for (const l of wrapPdf(clean(docConfig.introduccion), 98)) { page.drawText(l, { x: margin, y, size: 8.5, font, color: ink }); y -= 11; }
+      drawWrappedParagraph(clean(docConfig.introduccion), 98, 8.5, 11);
       y -= 7;
     }
 
@@ -460,7 +477,7 @@ Deno.serve(async (req) => {
       ensure(55);
       y -= 6;
       page.drawText("OBSERVACIONES", { x: margin, y, size: 8.8, font: bold, color: accent }); y -= 14;
-      for (const l of wrapPdf(clean(quote.notas_cliente), 98)) { page.drawText(l, { x: margin, y, size: 8.2, font }); y -= 11; }
+      drawWrappedParagraph(clean(quote.notas_cliente), 98, 8.2, 11);
     }
 
     if (terminos.length) {
@@ -471,8 +488,12 @@ Deno.serve(async (req) => {
         const lines = wrapPdf(clean(terminos[i]), 94);
         ensure(18 + lines.length * 10);
         page.drawText(`${i + 1}.`, { x: margin, y, size: 7.8, font: bold });
-        lines.forEach((t: string, j: number) => page.drawText(t, { x: margin + 15, y: y - j * 10, size: 7.8, font }));
-        y -= lines.length * 10 + 7;
+        lines.forEach((t: string) => {
+          ensure(12);
+          page.drawText(t, { x: margin + 15, y, size: 7.8, font });
+          y -= 10;
+        });
+        y -= 7;
       }
     }
 
@@ -483,13 +504,13 @@ Deno.serve(async (req) => {
       for (const cuenta of cuentas) {
         const bankLine = [clean(cuenta.banco), clean(cuenta.tipo), clean(cuenta.moneda)].filter(Boolean).join(" · ");
         ensure(34);
-        if (bankLine) { page.drawText(bankLine, { x: margin, y, size: 7.8, font: bold }); y -= 11; }
+        if (bankLine) { ensure(13); page.drawText(bankLine, { x: margin, y, size: 7.8, font: bold }); y -= 11; }
         const dataLine = [
           cuenta.cuenta ? `Cuenta: ${clean(cuenta.cuenta)}` : "",
           cuenta.cci ? `CCI: ${clean(cuenta.cci)}` : "",
         ].filter(Boolean).join("    ");
-        if (dataLine) { page.drawText(dataLine, { x: margin, y, size: 7.5, font }); y -= 10; }
-        if (cuenta.titular) { page.drawText(`Titular: ${clean(cuenta.titular)}`, { x: margin, y, size: 7.5, font }); y -= 10; }
+        if (dataLine) { ensure(12); page.drawText(dataLine, { x: margin, y, size: 7.5, font }); y -= 10; }
+        if (cuenta.titular) { ensure(12); page.drawText(`Titular: ${clean(cuenta.titular)}`, { x: margin, y, size: 7.5, font }); y -= 10; }
         y -= 4;
       }
     }

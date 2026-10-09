@@ -418,6 +418,9 @@ Deno.serve(async (req) => {
       page.drawText("ACEPTACIÓN Y FIRMAS", { x: margin, y, size: 10.5, font: bold, color: accent });
       y -= 18;
       paragraph(textField(contenido, "textoAceptacion", "Las partes declaran haber revisado el contenido del presente contrato y aceptar las condiciones indicadas."), 8.8, 13);
+      // La aceptación puede ocupar varias líneas y provocar un salto de página.
+      // Reservar de nuevo el espacio evita que las firmas queden fuera del papel.
+      ensure(72);
       y -= 14;
       page.drawLine({ start: { x: margin, y }, end: { x: 250, y }, thickness: 0.8, color: rgb(0.25, 0.25, 0.27) });
       page.drawLine({ start: { x: 315, y }, end: { x: 553, y }, thickness: 0.8, color: rgb(0.25, 0.25, 0.27) });
