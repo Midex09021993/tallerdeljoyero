@@ -47,9 +47,10 @@ export type DocumentoA4Props = {
   contenidoContrato?: string | null;
 };
 
-const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+const HTML_ENTITIES: Record<string, string> = {
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-}[char] ?? char));
+};
+const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => HTML_ENTITIES[char] ?? char);
 
 const moneda = (value: number, currency = "PEN") => new Intl.NumberFormat("es-PE", {
   style: "currency", currency: /^[A-Z]{3}$/.test(currency) ? currency : "PEN", minimumFractionDigits: 2,
