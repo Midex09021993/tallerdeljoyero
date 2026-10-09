@@ -277,8 +277,8 @@ Deno.serve(async (req) => {
     page.drawText("PARTES", { x: margin, y, size: 10.5, font: bold, color: accent });
     y -= 17;
     const clienteNombre = clean(cliente?.nombre) || clean(contrato.cliente) || "Cliente";
-    const clienteDoc = clean(cliente?.dni);
-    const parteCliente = [clienteNombre, clienteDoc ? `DNI ${clienteDoc}` : "", clean(cliente?.telefono || contrato.telefono)].filter(Boolean).join(" · ");
+    const clienteDoc = clean(cliente?.documento);
+    const parteCliente = [clienteNombre, clienteDoc ? `Doc. ${clienteDoc}` : "", clean(cliente?.telefono || contrato.telefono)].filter(Boolean).join(" · ");
     paragraph(`${textField(contenido, "etiquetaCliente", "CLIENTE")}: ${parteCliente}`, 9, 13);
     paragraph(`${textField(contenido, "etiquetaRepresentante", "TALLER / JOYERÍA")}: ${clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO"}`, 9, 13);
 
@@ -313,20 +313,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (boolField(contenido, "mostrarResumenEconomico") && cotizacion) {
-      ensure(100);
+    if (boolField(contenido, "mostrarResumenEconomico")) {
+      ensure(110);
       page.drawText("CONDICIONES ECONÓMICAS", { x: margin, y, size: 10.5, font: bold, color: accent });
       y -= 18;
-      const totals = [
-        ["Subtotal", Number(cotizacion.subtotal ?? 0)],
-        ["Descuento", -Number(cotizacion.descuento ?? 0)],
-        ["Impuestos", Number(cotizacion.impuestos ?? 0)],
-        ["TOTAL", Number(cotizacion.total ?? contrato.total ?? 0)],
-        ["ANTICIPO", Number(contrato.abonado ?? 0)],
-        ["SALDO", Math.max(Number(contrato.total ?? cotizacion.total ?? 0) - Number(contrato.abonado ?? 0), 0)],
-      ];
+      const totals: Array<[string, number]> = cotizacion
+        ? [
+            ["Subtotal", Number(cotizacion.subtotal ?? 0)],
+            ["Descuento", -Number(cotizacion.descuento ?? 0)],
+            ["Impuestos", Number(cotizacion.impuestos ?? 0)],
+          ]
+        : [];
+      totals.push(["TOTAL", totalContrato], ["ANTICIPO / ABONADO", abonadoContrato], ["SALDO PENDIENTE", saldoContrato]);
       for (const [label, value] of totals) {
-        line(`${label}: ${money(value, cotizacion.moneda ?? "PEN")}`, label === "TOTAL" ? 10 : 8.8, label === "TOTAL" ? bold : font);
+        const fuerte = label === "TOTAL" || label === "SALDO PENDIENTE";
+        line(`${label}: ${money(value, monedaContrato)}`, fuerte ? 10 : 8.8, fuerte ? bold : font);
       }
     }
 
