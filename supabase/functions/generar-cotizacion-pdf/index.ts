@@ -365,7 +365,7 @@ Deno.serve(async (req) => {
     ];
     for (const [label, value] of totals) {
       const isTotal = label === "TOTAL";
-      if (isTotal) page.drawLine({ start: { x: totalsX, y: y + 7 }, end: { x: width - margin, y: y + 7 }, thickness: 0.8, color: accent });
+      if (isTotal) page.drawLine({ start: { x: totalsX, y: y + 13 }, end: { x: width - margin, y: y + 13 }, thickness: 0.8, color: accent });
       page.drawText(label, { x: totalsX, y, size: isTotal ? 9.5 : 8, font: isTotal ? bold : font, color: ink });
       page.drawText(money(Number(value), quote.moneda), { x: 472, y, size: isTotal ? 10.5 : 8, font: isTotal ? bold : font, color: isTotal ? accent : ink });
       y -= isTotal ? 20 : 15;
