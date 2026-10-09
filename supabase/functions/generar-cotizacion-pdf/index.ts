@@ -382,7 +382,7 @@ Deno.serve(async (req) => {
     // Prioriza el importe de línea persistido; solo calcula cantidad × precio
     // cuando la fila antigua no tenga total_precio.
     const bases = items.map((item: any) => {
-      const totalGuardado = Number(item.total_precio);
+      const totalGuardado = item.total_precio == null ? Number.NaN : Number(item.total_precio);
       const calculado = Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0);
       return Math.max(0, Number.isFinite(totalGuardado) ? totalGuardado : calculado);
     });
