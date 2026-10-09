@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
 
     if (quoteError) return json({ error: "Cotización no encontrada." }, 404);
     if (!quote) return json({ error: "Cotización no encontrada." }, 404);
+    const cotizacion = quote;
 
     const [{ data: roles }, { data: areas }, { data: cuenta }] = await Promise.all([
       admin.from("user_roles").select("role").eq("user_id", user.id),
@@ -296,10 +297,10 @@ Deno.serve(async (req) => {
       page.drawText("COTIZACIÓN", {
         x: width - margin - 155, y: y - 43, size: 9, font: bold, color: accent,
       });
-      page.drawText(`${quote.numero} · Versión ${quote.version}`, {
+      page.drawText(`${cotizacion.numero} · Versión ${cotizacion.version}`, {
         x: width - margin - 155, y: y - 55, size: 7.6, font: bold, color: ink,
       });
-      page.drawText(`Emitida: ${formatDate(quote.fecha_emision)}`, {
+      page.drawText(`Emitida: ${formatDate(cotizacion.fecha_emision)}`, {
         x: width - margin - 155, y: y - 66, size: 7.2, font, color: muted,
       });
 
