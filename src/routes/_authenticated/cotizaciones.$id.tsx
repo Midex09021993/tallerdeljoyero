@@ -819,30 +819,29 @@ function CotizacionDetallePage() {
       </div>
 
     {mostrarFichaA4 ? (
-      <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/75 p-2 sm:p-6" role="dialog" aria-modal="true" aria-label="Vista previa de ficha A4">
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-xl bg-white shadow-2xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
-            <div><p className="text-sm font-semibold text-slate-900">Ficha de cotización · A4</p><p className="text-xs text-slate-500">Vista de revisión; no genera ni modifica ningún PDF.</p></div>
-            <button type="button" onClick={() => setMostrarFichaA4(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Cerrar ficha</button>
-          </div>
-          <FichaCotizacionA4 data={{
-            numero: cotizacion.numero,
-            version: cotizacion.version,
-            fecha: cotizacion.fecha_emision,
-            vencimiento: cotizacion.fecha_vencimiento,
-            entrega: cotizacion.fecha_entrega_solicitada,
-            moneda: cotizacion.moneda,
-            cliente: { nombre: cliente?.nombre ?? "—", telefono: cliente?.telefono ?? cliente?.whatsapp ?? null, email: cliente?.email ?? null },
-            tallerNombre: sedeNombre,
-            identidad: identidadFicha,
-            detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad), unidad: item.unidad, precio_unitario: Number(item.precio_unitario), total_precio: Number(item.total_precio) })),
-            subtotal: Number(cotizacion.subtotal),
-            descuento: Number(cotizacion.descuento),
-            impuestos: Number(cotizacion.impuestos),
-            total: Number(cotizacion.total),
-            notas: cotizacion.notas_cliente ?? "",
-          }} />
+      <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/70 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label="Vista previa A4 de la cotización">
+        <div className="mx-auto mb-3 flex max-w-[210mm] justify-end">
+          <button type="button" onClick={() => setMostrarFichaA4(false)} className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">
+            <span aria-hidden="true">×</span> Cerrar vista previa
+          </button>
         </div>
+        <FichaCotizacionA4 data={{
+          numero: cotizacion.numero,
+          version: cotizacion.version,
+          fecha: cotizacion.fecha_emision,
+          vencimiento: cotizacion.fecha_vencimiento,
+          entrega: cotizacion.fecha_entrega_solicitada,
+          moneda: cotizacion.moneda,
+          cliente: { nombre: cliente?.nombre ?? "—", telefono: cliente?.telefono ?? cliente?.whatsapp ?? null, email: cliente?.email ?? null },
+          tallerNombre: sedeNombre,
+          identidad: identidadFicha,
+          detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad), unidad: item.unidad, precio_unitario: Number(item.precio_unitario), total_precio: Number(item.total_precio) })),
+          subtotal: Number(cotizacion.subtotal),
+          descuento: Number(cotizacion.descuento),
+          impuestos: Number(cotizacion.impuestos),
+          total: Number(cotizacion.total),
+          notas: cotizacion.notas_cliente ?? "",
+        }} />
       </div>
     ) : null}
     </AppShell>
