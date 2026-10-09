@@ -18,6 +18,7 @@ import {
 } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -79,7 +80,8 @@ function ContratoPage() {
   const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
   const [generandoPdf, setGenerandoPdf] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [abriendoPdf, setAbriendoPdf] = useState(false);
+  const [pdfDisponible, setPdfDisponible] = useState(false);
   const [pdfHash, setPdfHash] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,6 +90,43 @@ function ContratoPage() {
       setRuta([]);
     }
   }, [contrato, modalAbierto]);
+
+  // Recupera el estado del documento ya generado (ruta + hash, sin enlace persistente).
+  const contratoId = contrato?.id;
+  useEffect(() => {
+    if (!contratoId) return;
+    let activo = true;
+    void supabase
+      .from("contratos")
+      .select("pdf_storage_path, pdf_sha256")
+      .eq("id", contratoId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!activo || !data) return;
+        setPdfDisponible(Boolean(data.pdf_storage_path));
+        setPdfHash(data.pdf_sha256 ?? null);
+      });
+    return () => {
+      activo = false;
+    };
+  }, [contratoId]);
+
+  async function abrirPdf() {
+    if (!contrato) return;
+    setAbriendoPdf(true);
+    const ventana = window.open("", "_blank");
+    const { data, error } = await supabase.functions.invoke("generar-contrato-pdf", {
+      body: { contrato_id: contrato.id, accion: "ver" },
+    });
+    setAbriendoPdf(false);
+    if (error || !data?.url) {
+      ventana?.close();
+      toast.error(data?.error || error?.message || "No se pudo abrir el contrato.");
+      return;
+    }
+    if (ventana) ventana.location.href = data.url;
+    else window.location.href = data.url;
+  }
 
   const resumen = useMemo(() => {
     return resumenFinancieroContrato(contrato, pagos);
@@ -139,35 +178,32 @@ function ContratoPage() {
             titulo={`Contrato ${contrato.numero}`}
             accion={
               <div className="flex flex-wrap items-center gap-2">
-                {pdfUrl ? (
-                  <a
-                    href={pdfUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-muted"
+                {pdfDisponible ? (
+                  <button
+                    type="button"
+                    disabled={abriendoPdf}
+                    onClick={() => void abrirPdf()}
+                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-muted disabled:opacity-50"
                   >
                     <ExternalLink className="size-3.5" />
-                    Ver PDF
-                  </a>
+                    {abriendoPdf ? "Abriendo…" : "Ver PDF"}
+                  </button>
                 ) : null}
                 <button
                   type="button"
                   disabled={generandoPdf}
                   onClick={async () => {
                     setGenerandoPdf(true);
-                    setPdfUrl(null);
-                    setPdfHash(null);
                     const { data, error } = await supabase.functions.invoke("generar-contrato-pdf", {
                       body: { contrato_id: contrato.id },
                     });
-                    if (error) {
-                      toast.error(error.message || "No se pudo generar el contrato.");
-                    } else if (data?.url) {
-                      setPdfUrl(data.url);
-                      setPdfHash(data.sha256 ?? null);
-                      toast.success("Contrato PDF generado.");
+                    if (error || !data?.sha256) {
+                      toast.error(data?.error || error?.message || "No se pudo generar el contrato.");
                     } else {
-                      toast.error(data?.error || "No se pudo generar el contrato.");
+                      setPdfDisponible(true);
+                      setPdfHash(data.sha256);
+                      toast.success("Contrato PDF generado.");
+                      if (data.url) window.open(data.url, "_blank", "noopener");
                     }
                     setGenerandoPdf(false);
                   }}

@@ -71,10 +71,11 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
     const authorization = req.headers.get("Authorization") ?? "";
     const token = authorization.replace(/^Bearer\s+/i, "");
 
-    if (!supabaseUrl || !serviceRoleKey || !token) {
+    if (!supabaseUrl || !serviceRoleKey || !anonKey || !token) {
       return json({ error: "Sesión no válida." }, 401);
     }
 
@@ -86,49 +87,51 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (userError || !user) return json({ error: "Sesión no válida." }, 401);
 
+    // Cliente con la sesión del usuario: el RLS de contratos (interno + misma sede)
+    // decide si el usuario puede ver el contrato. No se amplían permisos.
+    const userClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+
     const body = await req.json().catch(() => ({}));
     const contratoId = clean(body?.contrato_id);
+    const accion = clean(body?.accion) || "generar";
     if (!contratoId) return json({ error: "Falta contrato_id." }, 400);
 
-    const { data: contrato, error: contratoError } = await admin
+    const { data: contrato, error: contratoError } = await userClient
       .from("contratos")
-      .select("id,numero,version,cliente,telefono,origen,total,abonado,saldo,sede_id,participante_id,notas,cotizacion_id,identidad_comercial_id,plantilla_contrato_id,plantilla_version,estado_firma")
+      .select("id,numero,cliente,telefono,origen,total,abonado,sede_id,notas,cotizacion_id,pdf_storage_path,pdf_sha256,pdf_generado_at")
       .eq("id", contratoId)
       .maybeSingle();
 
-    if (contratoError || !contrato) return json({ error: "Contrato no encontrado." }, 404);
+    if (contratoError || !contrato) return json({ error: "Contrato no encontrado o sin acceso." }, 404);
 
-    const [{ data: roles }, { data: cuenta }] = await Promise.all([
-      admin.from("user_roles").select("role").eq("user_id", user.id),
-      admin
-        .from("participante_cuentas")
-        .select("participante_id, ecosistema_participantes!inner(id,sede_id,estado)")
-        .eq("user_id", user.id)
-        .eq("estado", "activo")
-        .eq("ecosistema_participantes.estado", "activo")
-        .limit(1)
-        .maybeSingle(),
-    ]);
-
-    const esDueno = (roles ?? []).some((r: any) => r.role === "dueno");
-    const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
-    const participante = (cuenta as any)?.ecosistema_participantes;
-    const mismoParticipante = !!contrato.participante_id && !!participante?.participante_id && contrato.participante_id === participante.participante_id;
-    if (!esDueno && (!esGerente || !mismoParticipante)) {
-      return json({ error: "No tienes acceso a este contrato." }, 403);
+    if (accion === "ver") {
+      if (!contrato.pdf_storage_path) return json({ error: "El contrato aún no tiene PDF generado." }, 404);
+      const { data: signed, error: signedError } = await admin.storage
+        .from("cotizaciones-publicas")
+        .createSignedUrl(contrato.pdf_storage_path, 60 * 10);
+      if (signedError || !signed?.signedUrl) return json({ error: "No se pudo abrir el documento." }, 500);
+      return json({ ok: true, url: signed.signedUrl, sha256: contrato.pdf_sha256, generado_at: contrato.pdf_generado_at });
     }
+
+    // Generar exige poder actualizar el contrato (administrador de la misma sede).
+    const { data: esAdmin } = await userClient.rpc("es_admin", { _user_id: user.id });
+    if (!esAdmin) return json({ error: "No tienes permiso para generar este contrato." }, 403);
 
     let cotizacion: any = null;
     if (contrato.cotizacion_id) {
       const { data } = await admin
         .from("cotizaciones")
-        .select("id,numero,version,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,participante_id,identidad_comercial_id,identidad_comercial,notas_cliente")
+        .select("id,numero,version,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,proyecto_joya_id,identidad_comercial_id,identidad_comercial,notas_cliente,sede_id")
         .eq("id", contrato.cotizacion_id)
         .maybeSingle();
-      cotizacion = data;
+      // La cotización vinculada debe pertenecer al mismo taller.
+      if (data && (!data.sede_id || data.sede_id === contrato.sede_id)) cotizacion = data;
     }
 
-    const identidadId = contrato.identidad_comercial_id ?? cotizacion?.identidad_comercial_id ?? null;
+    const identidadId = cotizacion?.identidad_comercial_id ?? null;
 
     const [
       { data: cliente },
@@ -136,36 +139,34 @@ Deno.serve(async (req) => {
       { data: identidadActual },
       { data: sede },
       { data: detalles },
-      { data: plantilla },
     ] = await Promise.all([
       cotizacion?.cliente_id
-        ? admin.from("clientes").select("nombre,telefono,email,dni").eq("id", cotizacion.cliente_id).maybeSingle()
+        ? admin.from("clientes").select("nombre,telefono,email,documento").eq("id", cotizacion.cliente_id).maybeSingle()
         : Promise.resolve({ data: null }),
       cotizacion?.proyecto_joya_id
         ? admin.from("proyectos_joya").select("codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras,cantidad_piezas").eq("id", cotizacion.proyecto_joya_id).maybeSingle()
         : Promise.resolve({ data: null }),
       identidadId
         ? admin.from("identidades_comerciales").select("id,nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,email,telefono,color_principal,pie_documento").eq("id", identidadId).maybeSingle()
-        : Promise.resolve({ data: null }),
-      contrato.participante_id
-        ? admin.from("ecosistema_participantes").select("nombre").eq("id", contrato.participante_id).maybeSingle()
+        : contrato.sede_id
+          ? admin.from("identidades_comerciales").select("id,nombre_comercial,razon_social,ruc,logo_url,direccion,ciudad,email,telefono,color_principal,pie_documento").eq("sede_id", contrato.sede_id).eq("activa", true).limit(1).maybeSingle()
+          : Promise.resolve({ data: null }),
+      contrato.sede_id
+        ? admin.from("sedes").select("nombre").eq("id", contrato.sede_id).maybeSingle()
         : Promise.resolve({ data: null }),
       cotizacion?.id
         ? admin.from("cotizacion_detalles").select("orden,tipo,descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", cotizacion.id).order("orden")
         : Promise.resolve({ data: [] }),
-      identidadId
-        ? admin.from("plantillas_contrato").select("id,version,contenido").eq("identidad_comercial_id", identidadId).eq("activa", true).maybeSingle()
-        : Promise.resolve({ data: null }),
     ]);
 
     const identidad = cotizacion?.identidad_comercial && typeof cotizacion.identidad_comercial === "object" && Object.keys(cotizacion.identidad_comercial).length > 0
       ? { ...(identidadActual ?? {}), ...(cotizacion.identidad_comercial as Record<string, unknown>) }
       : identidadActual;
 
-    const defaultContent = {
+    const contenido: Record<string, unknown> = {
       titulo: "CONTRATO DE FABRICACIÓN DE JOYERÍA",
       subtitulo: "Documento comercial y de fabricación",
-      introduccion: "El presente contrato regula la fabricación de la pieza de joyería descrita en la cotización vinculada y establece las condiciones comerciales y de producción acordadas entre las partes.",
+      introduccion: "El presente contrato regula la fabricación de la pieza de joyería descrita y establece las condiciones comerciales y de producción acordadas entre las partes.",
       mostrarIdentidad: true,
       mostrarCotizacion: true,
       mostrarResumenEconomico: true,
@@ -174,28 +175,23 @@ Deno.serve(async (req) => {
       etiquetaCliente: "CLIENTE",
       etiquetaRepresentante: "TALLER / JOYERÍA",
       textoAceptacion: "Las partes declaran haber revisado el contenido del presente contrato y aceptar las condiciones indicadas.",
-      pie: "Documento contractual generado por el sistema.",
-      clausulas: [],
+      pie: "Documento contractual generado por AURUM LAB.",
+      clausulas: [
+        { titulo: "PRIMERA · OBJETO", contenido: "El taller se compromete a fabricar la pieza descrita en este documento conforme a las especificaciones acordadas con el cliente." },
+        { titulo: "SEGUNDA · PRECIO Y FORMA DE PAGO", contenido: "El cliente abona un anticipo al firmar el presente contrato. El saldo pendiente deberá cancelarse en su totalidad antes o al momento de la entrega de la pieza." },
+        { titulo: "TERCERA · PLAZO DE ENTREGA", contenido: "El plazo de fabricación se computa desde la aprobación del diseño y el pago del anticipo. Cambios solicitados por el cliente pueden ampliar dicho plazo." },
+        { titulo: "CUARTA · MODIFICACIONES", contenido: "Toda modificación posterior a la aprobación del diseño podrá generar costos adicionales, que serán informados al cliente antes de su ejecución." },
+        { titulo: "QUINTA · TOLERANCIAS", contenido: "El peso final del metal puede variar ligeramente respecto al estimado por la naturaleza artesanal del proceso; dicha variación se ajustará en la liquidación final." },
+        { titulo: "SEXTA · CANCELACIÓN", contenido: "Si el cliente cancela el trabajo una vez iniciada la producción, el anticipo se destinará a cubrir los materiales y la mano de obra empleados." },
+      ],
     };
 
-    const contenido = {
-      ...defaultContent,
-      ...((plantilla?.contenido ?? {}) as Record<string, unknown>),
-    } as Record<string, unknown>;
-
-    const clausulas = Array.isArray(contenido.clausulas)
-      ? (contenido.clausulas as Array<Record<string, unknown>>).filter((c) => c.activa !== false)
-      : [];
-
-    const version = Number(contrato.version ?? cotizacion?.version ?? 1) || 1;
-    const plantillaVersion = Number(plantilla?.version ?? contrato.plantilla_version ?? 1) || 1;
-    const contratoVersionado = {
-      ...contrato,
-      version,
-      identidad_comercial_id: identidadId,
-      plantilla_contrato_id: plantilla?.id ?? contrato.plantilla_contrato_id ?? null,
-      plantilla_version: plantillaVersion,
-    };
+    const clausulas = (contenido.clausulas as Array<Record<string, unknown>>);
+    const version = Number(cotizacion?.version ?? 1) || 1;
+    const totalContrato = Number(contrato.total ?? 0) > 0 ? Number(contrato.total) : Number(cotizacion?.total ?? 0);
+    const abonadoContrato = Number(contrato.abonado ?? 0);
+    const saldoContrato = Math.max(totalContrato - abonadoContrato, 0);
+    const monedaContrato = cotizacion?.moneda ?? "PEN";
 
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -272,7 +268,7 @@ Deno.serve(async (req) => {
       paragraph(identidadLine || "Identidad comercial registrada en el sistema.", 8.5, 11);
     }
 
-    line(`Fecha de emisión: ${clean(cotizacion?.fecha_emision) || new Date().toISOString().slice(0, 10)}`, 8.5, font, margin, rgb(0.42, 0.42, 0.45));
+    line(`Fecha de emisión: ${(clean(cotizacion?.fecha_emision) || new Date().toISOString()).slice(0, 10).split("-").reverse().join("/")}`, 8.5, font, margin, rgb(0.42, 0.42, 0.45));
     if (boolField(contenido, "mostrarCotizacion") && cotizacion) {
       line(`Cotización: ${clean(cotizacion.numero)} · Versión ${cotizacion.version ?? "1"}`, 8.5, font, margin, rgb(0.42, 0.42, 0.45));
     }
@@ -281,8 +277,8 @@ Deno.serve(async (req) => {
     page.drawText("PARTES", { x: margin, y, size: 10.5, font: bold, color: accent });
     y -= 17;
     const clienteNombre = clean(cliente?.nombre) || clean(contrato.cliente) || "Cliente";
-    const clienteDoc = clean(cliente?.dni);
-    const parteCliente = [clienteNombre, clienteDoc ? `DNI ${clienteDoc}` : "", clean(cliente?.telefono || contrato.telefono)].filter(Boolean).join(" · ");
+    const clienteDoc = clean(cliente?.documento);
+    const parteCliente = [clienteNombre, clienteDoc ? `Doc. ${clienteDoc}` : "", clean(cliente?.telefono || contrato.telefono)].filter(Boolean).join(" · ");
     paragraph(`${textField(contenido, "etiquetaCliente", "CLIENTE")}: ${parteCliente}`, 9, 13);
     paragraph(`${textField(contenido, "etiquetaRepresentante", "TALLER / JOYERÍA")}: ${clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO"}`, 9, 13);
 
@@ -317,20 +313,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (boolField(contenido, "mostrarResumenEconomico") && cotizacion) {
-      ensure(100);
+    if (boolField(contenido, "mostrarResumenEconomico")) {
+      ensure(110);
       page.drawText("CONDICIONES ECONÓMICAS", { x: margin, y, size: 10.5, font: bold, color: accent });
       y -= 18;
-      const totals = [
-        ["Subtotal", Number(cotizacion.subtotal ?? 0)],
-        ["Descuento", -Number(cotizacion.descuento ?? 0)],
-        ["Impuestos", Number(cotizacion.impuestos ?? 0)],
-        ["TOTAL", Number(cotizacion.total ?? contrato.total ?? 0)],
-        ["ANTICIPO", Number(contrato.abonado ?? 0)],
-        ["SALDO", Math.max(Number(contrato.total ?? cotizacion.total ?? 0) - Number(contrato.abonado ?? 0), 0)],
-      ];
+      const totals: Array<[string, number]> = cotizacion
+        ? [
+            ["Subtotal", Number(cotizacion.subtotal ?? 0)],
+            ["Descuento", -Number(cotizacion.descuento ?? 0)],
+            ["Impuestos", Number(cotizacion.impuestos ?? 0)],
+          ]
+        : [];
+      totals.push(["TOTAL", totalContrato], ["ANTICIPO / ABONADO", abonadoContrato], ["SALDO PENDIENTE", saldoContrato]);
       for (const [label, value] of totals) {
-        line(`${label}: ${money(value, cotizacion.moneda ?? "PEN")}`, label === "TOTAL" ? 10 : 8.8, label === "TOTAL" ? bold : font);
+        const fuerte = label === "TOTAL" || label === "SALDO PENDIENTE";
+        line(`${label}: ${money(value, monedaContrato)}`, fuerte ? 10 : 8.8, fuerte ? bold : font);
       }
     }
 
@@ -371,66 +368,53 @@ Deno.serve(async (req) => {
       page.drawText("Firma / representante", { x: 315, y, size: 7.5, font: italic, color: rgb(0.45, 0.45, 0.47) });
     }
 
-    const pie = clean(contenido.pie) || clean(identidad?.pie_documento);
-    page.drawText(pie || "Documento contractual generado por el sistema.", {
-      x: margin, y: 32, size: 7.2, font, color: rgb(0.45, 0.45, 0.47),
-      maxWidth: page.getWidth() - margin * 2,
+    const pie = clean(identidad?.pie_documento) || clean(contenido.pie) || "Documento contractual generado por AURUM LAB.";
+    const paginas = pdf.getPages();
+    paginas.forEach((p, i) => {
+      p.drawLine({ start: { x: margin, y: 44 }, end: { x: p.getWidth() - margin, y: 44 }, thickness: 0.5, color: rgb(0.82, 0.82, 0.84) });
+      p.drawText(pie.slice(0, 110), { x: margin, y: 30, size: 7.2, font, color: rgb(0.45, 0.45, 0.47) });
+      p.drawText(`Página ${i + 1} de ${paginas.length}`, { x: p.getWidth() - margin - 62, y: 30, size: 7.2, font, color: rgb(0.45, 0.45, 0.47) });
     });
 
     const pdfBytes = await pdf.save();
     const digest = await crypto.subtle.digest("SHA-256", pdfBytes);
     const sha256 = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
-    const path = `contratos/${contrato.id}/v${version}-original-${crypto.randomUUID()}.pdf`;
+    const path = `contratos/${contrato.id}/v${version}-${crypto.randomUUID()}.pdf`;
     const { error: uploadError } = await admin.storage
       .from("cotizaciones-publicas")
       .upload(path, pdfBytes, { contentType: "application/pdf", upsert: false });
 
     if (uploadError) return json({ error: "No se pudo guardar el PDF del contrato." }, 500);
 
-    const { data: signed, error: signedError } = await admin.storage
-      .from("cotizaciones-publicas")
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    const generadoAt = new Date().toISOString();
+    const { error: updateError } = await userClient
+      .from("contratos")
+      .update({ pdf_storage_path: path, pdf_sha256: sha256, pdf_generado_at: generadoAt })
+      .eq("id", contrato.id);
 
-    if (signedError || !signed?.signedUrl) {
-      await admin.storage.from("cotizaciones-publicas").remove([path]);
-      return json({ error: "No se pudo generar el enlace del contrato." }, 500);
-    }
-
-    const { error: documentError } = await admin.from("contrato_documentos").upsert({
-      contrato_id: contrato.id,
-      version,
-      tipo: "original",
-      storage_path: path,
-      sha256,
-      plantilla_version: plantillaVersion,
-      plantilla_contenido: contenido,
-      creado_por: user.id,
-    }, { onConflict: "contrato_id,version,tipo" });
-
-    if (documentError) {
+    if (updateError) {
       await admin.storage.from("cotizaciones-publicas").remove([path]);
       return json({ error: "No se pudo registrar el documento contractual." }, 500);
     }
 
-    const { error: contractUpdateError } = await admin.from("contratos").update({
-      identidad_comercial_id: identidadId,
-      plantilla_contrato_id: contratoVersionado.plantilla_contrato_id,
-      plantilla_version: plantillaVersion,
-    }).eq("id", contrato.id);
-
-    if (contractUpdateError) {
-      console.error("No se pudo guardar el vínculo de plantilla", contractUpdateError);
+    if (contrato.pdf_storage_path && contrato.pdf_storage_path !== path) {
+      await admin.storage.from("cotizaciones-publicas").remove([contrato.pdf_storage_path]);
     }
+
+    // Enlace de corta duración solo para abrirlo ahora; no se persiste.
+    const { data: signed } = await admin.storage
+      .from("cotizaciones-publicas")
+      .createSignedUrl(path, 60 * 10);
 
     return json({
       ok: true,
       contrato_id: contrato.id,
       numero: contrato.numero,
-      version,
-      plantilla_version: plantillaVersion,
+      paginas: paginas.length,
       sha256,
-      url: signed.signedUrl,
+      generado_at: generadoAt,
+      url: signed?.signedUrl ?? null,
     });
   } catch (error) {
     console.error("generar-contrato-pdf", error);

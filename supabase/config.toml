@@ -16,3 +16,6 @@ verify_jwt = false
 
 [functions.aurum-welcome-email]
 verify_jwt = true
+
+[functions.generar-contrato-pdf]
+verify_jwt = true

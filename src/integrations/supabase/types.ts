@@ -778,6 +778,9 @@ export type Database = {
           notas: string
           numero: string
           origen: string
+          pdf_generado_at: string | null
+          pdf_sha256: string | null
+          pdf_storage_path: string | null
           sede_id: string | null
           telefono: string
           total: number
@@ -792,6 +795,9 @@ export type Database = {
           notas?: string
           numero: string
           origen?: string
+          pdf_generado_at?: string | null
+          pdf_sha256?: string | null
+          pdf_storage_path?: string | null
           sede_id?: string | null
           telefono?: string
           total?: number
@@ -806,6 +812,9 @@ export type Database = {
           notas?: string
           numero?: string
           origen?: string
+          pdf_generado_at?: string | null
+          pdf_sha256?: string | null
+          pdf_storage_path?: string | null
           sede_id?: string | null
           telefono?: string
           total?: number
