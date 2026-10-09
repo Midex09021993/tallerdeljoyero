@@ -359,38 +359,6 @@ Deno.serve(async (req) => {
       y -= 7;
     }
 
-    // Se omite la ficha técnica independiente para mantener el mismo orden de la ficha comercial A4.
-    if (false && proyecto) {
-      const specs: Array<[string, string]> = ([
-        ["Proyecto", clean(proyecto.nombre)],
-        ["Código", clean(proyecto.codigo)],
-        ["Metal", clean(proyecto.metal)],
-        ["Ley", clean(proyecto.ley)],
-        ["Peso estimado", proyecto.peso_estimado != null ? `${proyecto.peso_estimado} g` : ""],
-        ["Talla", clean(proyecto.talla)],
-        ["Piedras", clean(proyecto.piedras)],
-        ["Piezas", proyecto.cantidad_piezas != null ? String(proyecto.cantidad_piezas) : ""],
-      ] as Array<[string, string]>).filter(([, v]) => v);
-      const descLines = clean(proyecto.descripcion) ? wrapPdf(clean(proyecto.descripcion), 100) : [];
-      const filas = Math.ceil(specs.length / 2);
-      const boxH = 26 + filas * 24 + (descLines.length ? descLines.length * 10 + 8 : 0);
-      ensure(boxH + 12);
-      page.drawRectangle({ x: margin, y: y - boxH, width: width - margin * 2, height: boxH, borderColor: accent, borderWidth: 0.7, color: soft });
-      page.drawText("FICHA TÉCNICA DE LA JOYA", { x: margin + 10, y: y - 15, size: 8.8, font: bold, color: accent });
-      let fy = y - 34;
-      specs.forEach(([label, value], i) => {
-        const x = i % 2 === 0 ? margin + 10 : margin + (width - margin * 2) / 2 + 5;
-        if (i > 0 && i % 2 === 0) fy -= 24;
-        page.drawText(label.toUpperCase(), { x, y: fy, size: 6.6, font, color: muted });
-        page.drawText(value.slice(0, 48), { x, y: fy - 11, size: 8.6, font: bold, color: ink });
-      });
-      if (descLines.length) {
-        fy -= 26;
-        for (const l of descLines) { page.drawText(l, { x: margin + 10, y: fy, size: 7.6, font, color: ink }); fy -= 10; }
-      }
-      y -= boxH + 16;
-    }
-
     ensure(60);
     page.drawText("DETALLE DE LA COTIZACIÓN", { x: margin, y, size: 9.5, font: bold, color: accent });
     y -= 15;
