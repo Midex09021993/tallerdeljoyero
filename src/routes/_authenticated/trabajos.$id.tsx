@@ -207,7 +207,8 @@ function TrabajoOperativoPage() {
       return data ?? [];
     },
   });
-  const { data: pedidoTrabajo } = useQuery({
+  type PedidoTrabajoVista = { corte_texto?: string | null; corte_tipografia?: string | null; corte_ubicacion?: string | null; corte_observaciones?: string | null; sedes?: { nombre: string } | null; [key: string]: unknown } | null;
+  const { data: pedidoTrabajo } = useQuery<PedidoTrabajoVista>({
     queryKey: ["pedido-trabajo", trabajo?.pedido_id, trabajo?.tipo],
     enabled: Boolean(trabajo?.pedido_id),
     queryFn: async () => {
@@ -217,7 +218,7 @@ function TrabajoOperativoPage() {
         });
         if (error) throw error;
         const ficha = data as { pedido?: Record<string, unknown> } | null;
-        return ficha?.pedido ? { ...ficha.pedido, sedes: null } : null;
+        return ficha?.pedido ? { ...ficha.pedido, sedes: null } as PedidoTrabajoVista : null;
       }
       const { data, error } = await supabase
         .from("pedidos")
@@ -225,7 +226,7 @@ function TrabajoOperativoPage() {
         .eq("id", trabajo!.pedido_id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as PedidoTrabajoVista;
     },
   });
 
