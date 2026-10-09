@@ -69,26 +69,26 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
 
   return (
     <div className="bg-slate-100 p-3 sm:p-6">
-      <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-6 py-7 text-slate-800 shadow-xl sm:px-10 sm:py-10" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-7 py-8 text-slate-800 shadow-2xl sm:px-12 sm:py-11" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
         <header className="grid grid-cols-2 gap-5 border-b border-slate-300 pb-5">
           <div className="flex min-w-0 items-stretch gap-3">
-            <div className="flex w-28 shrink-0 items-center justify-center pr-3">
-              {identity.logo_url ? <img src={identity.logo_url} alt="Logo del taller" className="max-h-20 max-w-full object-contain" /> : null}
+            <div className="flex w-24 shrink-0 items-center justify-center pr-2">
+              {identity.logo_url ? <img src={identity.logo_url} alt="Logo del taller" className="max-h-20 max-w-full object-contain" /> : <span className="text-xs font-bold text-slate-400">{identity.nombre_comercial || "AURUM LAB"}</span>}
             </div>
-            <div className="w-px shrink-0 self-stretch bg-slate-300" aria-hidden="true" />
+            <div className="w-px shrink-0 bg-slate-300" aria-hidden="true" />
             <div className="min-w-0 py-1">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">{identity.razon_social || businessName}</h2>
-              {identity.ruc ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RUC {identity.ruc}</p> : null}
+              <h2 className="text-sm font-bold uppercase text-slate-500">{identity.razon_social || businessName}</h2>
+              {identity.ruc ? <p className="mt-1 text-[10px] text-slate-500">RUC {identity.ruc}</p> : null}
               {identity.rnp_bienes ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RNP Bienes {identity.rnp_bienes}</p> : null}
               {identity.rpp_servicios ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RPP Servicios {identity.rpp_servicios}</p> : null}
             </div>
           </div>
-          <div className="text-right text-[10px] leading-4 text-slate-800">
+          <div className="text-right text-[10px] leading-4">
             <p className="text-sm font-bold tracking-wider" style={{ color: brand }}>COTIZACIÓN</p>
             <p className="mb-2 font-semibold">{data.numero} · Versión {data.version}</p>
             <p className="font-bold uppercase">{identity.razon_social || businessName}</p>
-            {identity.direccion ? <p className="font-semibold uppercase">{identity.direccion}</p> : null}
-            {identity.ciudad ? <p className="font-semibold uppercase">{identity.ciudad}</p> : null}
+            {identity.direccion ? <p className="uppercase">{identity.direccion}</p> : null}
+            {identity.ciudad ? <p className="uppercase">{identity.ciudad}</p> : null}
           </div>
         </header>
 
