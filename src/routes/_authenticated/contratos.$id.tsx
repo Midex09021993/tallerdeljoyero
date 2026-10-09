@@ -19,6 +19,7 @@ import {
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { FichaContratoA4 } from "@/components/FichaContratoA4";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -178,6 +179,7 @@ function ContratoPage() {
             titulo={`Contrato ${contrato.numero}`}
             accion={
               <div className="flex flex-wrap items-center gap-2">
+                <FichaContratoA4 contrato={contrato} />
                 {pdfDisponible ? (
                   <button
                     type="button"
