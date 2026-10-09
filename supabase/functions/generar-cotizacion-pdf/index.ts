@@ -265,9 +265,15 @@ Deno.serve(async (req) => {
       if (embeddedLogo) {
         const scale = Math.min(78 / embeddedLogo.width, 58 / embeddedLogo.height);
         page.drawImage(embeddedLogo, { x: margin + 8, y: y - 61, width: embeddedLogo.width * scale, height: embeddedLogo.height * scale });
+        page.drawLine({
+          start: { x: margin + 94, y: y + 7 },
+          end: { x: margin + 94, y: y - 64 },
+          thickness: 0.7,
+          color: line,
+        });
       }
 
-      // Bloque corporativo izquierdo: logotipo + razón social + datos registrales.
+      // Bloque corporativo izquierdo: logo, divisor vertical y datos registrales.
       const leftX = logoIncluded ? margin + 105 : margin + 4;
       page.drawText(businessName, { x: leftX, y: y - 2, size: 12, font: bold, color: accent });
       if (legalName && legalName !== businessName) {
