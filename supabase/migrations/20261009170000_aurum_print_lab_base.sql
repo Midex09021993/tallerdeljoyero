@@ -101,7 +101,7 @@ create table if not exists public.print_profile_feedback (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (participante_id, profile_id),
-  foreign key (profile_id, participante_id) references public.print_profiles(id, participante_id) on delete cascade
+  foreign key (profile_id) references public.print_profiles(id) on delete cascade
 );
 
 create index if not exists print_devices_participante_idx on public.print_devices(participante_id);
@@ -618,7 +618,14 @@ create policy print_feedback_select on public.print_profile_feedback for select 
 drop policy if exists print_feedback_write on public.print_profile_feedback;
 create policy print_feedback_write on public.print_profile_feedback for all to authenticated
 using (public.print_lab_can_access_participant(participante_id, true))
-with check (public.print_lab_can_access_participant(participante_id, true));
+with check (
+  public.print_lab_can_access_participant(participante_id, true)
+  and exists (
+    select 1 from public.print_profiles p
+    where p.id = print_profile_feedback.profile_id
+      and p.estado = 'published' and p.visibilidad = 'community'
+  )
+);
 
 drop policy if exists print_lab_storage_read_owner on storage.objects;
 create policy print_lab_storage_read_owner on storage.objects for select to authenticated using (
