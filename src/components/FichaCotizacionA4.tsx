@@ -84,11 +84,11 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
             </div>
           </div>
           <div className="text-right text-[10px] leading-4 text-slate-800">
+            <p className="text-sm font-bold tracking-wider" style={{ color: brand }}>COTIZACIÓN</p>
+            <p className="mb-2 font-semibold">{data.numero} · Versión {data.version}</p>
             <p className="font-bold uppercase">{identity.razon_social || businessName}</p>
             {identity.direccion ? <p className="font-semibold uppercase">{identity.direccion}</p> : null}
             {identity.ciudad ? <p className="font-semibold uppercase">{identity.ciudad}</p> : null}
-            <p className="mt-3 text-sm font-bold tracking-wider" style={{ color: brand }}>COTIZACIÓN</p>
-            <p className="font-semibold">{data.numero} · Versión {data.version}</p>
           </div>
         </header>
 
