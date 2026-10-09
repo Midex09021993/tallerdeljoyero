@@ -45,6 +45,8 @@ type CatalogoRow = {
   ficha_tecnica_url: string | null;
   mostrar_precio: boolean;
   mostrar_ficha_tecnica: boolean;
+  coleccion_slug: string | null;
+  coleccion_nombre: string | null;
 };
 
 type Producto = {
