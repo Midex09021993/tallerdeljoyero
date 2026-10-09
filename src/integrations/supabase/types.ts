@@ -91,6 +91,47 @@ export type Database = {
         }
         Relationships: []
       }
+      catalogo_categorias: {
+        Row: {
+          activo: boolean
+          created_at: string
+          id: string
+          nombre: string
+          orden: number
+          participante_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          id?: string
+          nombre: string
+          orden?: number
+          participante_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          id?: string
+          nombre?: string
+          orden?: number
+          participante_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_categorias_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalogo_colecciones: {
         Row: {
           created_at: string
@@ -145,7 +186,7 @@ export type Database = {
           },
         ]
       }
-      catalogo_solicitudes_cotizacion: {\n        Row: { id: string; participante_id: string; producto_id: string; nombre_cliente: string; telefono: string | null; email: string | null; cantidad: number; mensaje: string | null; estado: string; cliente_id: string | null; cotizacion_id: string | null; created_at: string; updated_at: string }\n        Insert: { id?: string; participante_id: string; producto_id: string; nombre_cliente: string; telefono?: string | null; email?: string | null; cantidad?: number; mensaje?: string | null; estado?: string; cliente_id?: string | null; cotizacion_id?: string | null; created_at?: string; updated_at?: string }\n        Update: { id?: string; participante_id?: string; producto_id?: string; nombre_cliente?: string; telefono?: string | null; email?: string | null; cantidad?: number; mensaje?: string | null; estado?: string; cliente_id?: string | null; cotizacion_id?: string | null; created_at?: string; updated_at?: string }\n        Relationships: []\n      }\n      catalogo_configuracion: {
+      catalogo_configuracion: {
         Row: {
           created_at: string
           descripcion: string | null
@@ -199,51 +240,10 @@ export type Database = {
           },
         ]
       }
-      catalogo_categorias: {
-        Row: {
-          id: string
-          participante_id: string
-          nombre: string
-          slug: string
-          orden: number
-          activo: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          participante_id: string
-          nombre: string
-          slug?: string
-          orden?: number
-          activo?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          participante_id?: string
-          nombre?: string
-          slug?: string
-          orden?: number
-          activo?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "catalogo_categorias_participante_id_fkey"
-            columns: ["participante_id"]
-            isOneToOne: false
-            referencedRelation: "ecosistema_participantes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       catalogo_productos: {
         Row: {
-          aurum_render_url: string | null
           acabado: string | null
+          aurum_render_url: string | null
           categoria: string
           codigo: string
           created_at: string
@@ -254,6 +254,7 @@ export type Database = {
           galeria: Json
           id: string
           imagen_principal_url: string | null
+          medidas: string | null
           metal_principal: string | null
           moneda: string
           mostrar_ficha_tecnica: boolean
@@ -271,14 +272,13 @@ export type Database = {
           tecnica: string | null
           tiempo_fabricacion_dias: number | null
           updated_at: string
-          medidas: string | null
           video_url: string | null
         }
         Insert: {
-          aurum_render_url?: string | null
           acabado?: string | null
+          aurum_render_url?: string | null
           categoria?: string
-          codigo?: string
+          codigo: string
           created_at?: string
           descripcion?: string | null
           destacado?: boolean
@@ -287,6 +287,7 @@ export type Database = {
           galeria?: Json
           id?: string
           imagen_principal_url?: string | null
+          medidas?: string | null
           metal_principal?: string | null
           moneda?: string
           mostrar_ficha_tecnica?: boolean
@@ -304,12 +305,11 @@ export type Database = {
           tecnica?: string | null
           tiempo_fabricacion_dias?: number | null
           updated_at?: string
-          medidas?: string | null
           video_url?: string | null
         }
         Update: {
-          aurum_render_url?: string | null
           acabado?: string | null
+          aurum_render_url?: string | null
           categoria?: string
           codigo?: string
           created_at?: string
@@ -320,6 +320,7 @@ export type Database = {
           galeria?: Json
           id?: string
           imagen_principal_url?: string | null
+          medidas?: string | null
           metal_principal?: string | null
           moneda?: string
           mostrar_ficha_tecnica?: boolean
@@ -337,7 +338,6 @@ export type Database = {
           tecnica?: string | null
           tiempo_fabricacion_dias?: number | null
           updated_at?: string
-          medidas?: string | null
           video_url?: string | null
         }
         Relationships: [
@@ -383,6 +383,83 @@ export type Database = {
           },
           {
             foreignKeyName: "catalogo_productos_colecciones_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "catalogo_productos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalogo_solicitudes_cotizacion: {
+        Row: {
+          cantidad: number
+          cliente_id: string | null
+          cotizacion_id: string | null
+          created_at: string
+          email: string | null
+          estado: string
+          id: string
+          mensaje: string | null
+          nombre_cliente: string
+          participante_id: string
+          producto_id: string
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          cliente_id?: string | null
+          cotizacion_id?: string | null
+          created_at?: string
+          email?: string | null
+          estado?: string
+          id?: string
+          mensaje?: string | null
+          nombre_cliente: string
+          participante_id: string
+          producto_id: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          cliente_id?: string | null
+          cotizacion_id?: string | null
+          created_at?: string
+          email?: string | null
+          estado?: string
+          id?: string
+          mensaje?: string | null
+          nombre_cliente?: string
+          participante_id?: string
+          producto_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_solicitudes_cotizacion_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_solicitudes_cotizacion_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_solicitudes_cotizacion_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_solicitudes_cotizacion_producto_id_fkey"
             columns: ["producto_id"]
             isOneToOne: false
             referencedRelation: "catalogo_productos"
@@ -1117,6 +1194,7 @@ export type Database = {
           email: string | null
           estado: string
           id: string
+          metadata: Json
           nombre: string
           notas_owner: string | null
           razon_social: string | null
@@ -1132,6 +1210,7 @@ export type Database = {
           email?: string | null
           estado?: string
           id?: string
+          metadata?: Json
           nombre: string
           notas_owner?: string | null
           razon_social?: string | null
@@ -1147,6 +1226,7 @@ export type Database = {
           email?: string | null
           estado?: string
           id?: string
+          metadata?: Json
           nombre?: string
           notas_owner?: string | null
           razon_social?: string | null
@@ -2862,38 +2942,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sede_modalidades: {
-        Row: {
-          sede_id: string;
-          produccion_activa: boolean;
-          servicios_externos_activos: boolean;
-          created_at: string;
-          updated_at: string;
-        }
-        Insert: {
-          sede_id: string;
-          produccion_activa?: boolean;
-          servicios_externos_activos?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        }
-        Update: {
-          sede_id?: string;
-          produccion_activa?: boolean;
-          servicios_externos_activos?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sede_modalidades_sede_id_fkey";
-            columns: ["sede_id"];
-            isOneToOne: true;
-            referencedRelation: "sedes";
-            referencedColumns: ["id"];
-          },
-        ]
-      }
       sede_especialidades: {
         Row: {
           created_at: string
@@ -2926,6 +2974,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sede_modalidades: {
+        Row: {
+          created_at: string
+          produccion_activa: boolean
+          sede_id: string
+          servicios_externos_activos: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          produccion_activa?: boolean
+          sede_id: string
+          servicios_externos_activos?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          produccion_activa?: boolean
+          sede_id?: string
+          servicios_externos_activos?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       sedes: {
         Row: {
@@ -3478,6 +3550,15 @@ export type Database = {
           transfer_count: number
         }[]
       }
+      guardar_configuracion_taller: {
+        Args: {
+          _especialidad_ids?: string[]
+          _produccion_activa?: boolean
+          _sede_id: string
+          _servicios_externos_activos?: boolean
+        }
+        Returns: Json
+      }
       guardar_detalles_cotizacion: {
         Args: { _cotizacion_id: string; _detalles: Json }
         Returns: undefined
@@ -3571,38 +3652,38 @@ export type Database = {
       obtener_catalogo_publico: {
         Args: { _slug: string }
         Returns: {
-          acabado: string | null
-          aurum_render_url: string | null
-          categoria: string | null
-          codigo: string | null
-          descripcion_producto: string | null
-          descripcion_publica: string | null
-          destacado: boolean | null
-          disponibilidad: string | null
-          ficha_tecnica_url: string | null
+          acabado: string
+          aurum_render_url: string
+          categoria: string
+          codigo: string
+          coleccion_nombre: string
+          coleccion_slug: string
+          descripcion_producto: string
+          descripcion_publica: string
+          destacado: boolean
+          disponibilidad: string
+          ficha_tecnica_url: string
           galeria: Json
-          imagen_principal_url: string | null
-          logo_url: string | null
-          metal_principal: string | null
-          medidas: string | null
-          moneda: string | null
+          imagen_principal_url: string
+          logo_url: string
+          medidas: string
+          metal_principal: string
+          moneda: string
           mostrar_ficha_tecnica: boolean
           mostrar_precio: boolean
-          nombre: string | null
+          nombre: string
           nombre_publico: string
-          peso_gramos: number | null
-          piedras: string | null
-          precio_desde: number | null
-          producto_id: string | null
-          producto_slug: string | null
+          peso_gramos: number
+          piedras: string
+          precio_desde: number
+          producto_id: string
+          producto_slug: string
           slug: string
-          talla: string | null
-          tecnica: string | null
-          tiempo_fabricacion_dias: number | null
-          video_url: string | null
-          whatsapp: string | null
-          coleccion_slug: string | null
-          coleccion_nombre: string | null
+          talla: string
+          tecnica: string
+          tiempo_fabricacion_dias: number
+          video_url: string
+          whatsapp: string
         }[]
       }
       obtener_trabajo_operativo: {
@@ -3641,7 +3722,7 @@ export type Database = {
         Args: { _pedido_id: string }
         Returns: Json
       }
-      registrar_solicitud_catalogo: {\n        Args: { _catalogo_slug: string; _producto_slug: string; _nombre: string; _telefono?: string | null; _email?: string | null; _cantidad?: number; _mensaje?: string | null }\n        Returns: string\n      }\n      recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
+      recalcular_costos_orden: { Args: { _orden_id: string }; Returns: Json }
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
       reconciliar_servicios_externos_pendientes: {
         Args: { _orden_produccion_id: string }
@@ -3735,6 +3816,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      registrar_solicitud_catalogo: {
+        Args: {
+          _cantidad?: number
+          _catalogo_slug: string
+          _email?: string
+          _mensaje?: string
+          _nombre: string
+          _producto_slug: string
+          _telefono?: string
+        }
+        Returns: string
       }
       release_aurum_transfer: {
         Args: { _transfer_id: string }
