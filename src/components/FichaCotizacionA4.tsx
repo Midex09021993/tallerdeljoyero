@@ -69,7 +69,7 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
 
   return (
     <div className="bg-slate-100 p-3 sm:p-6">
-      <article className="mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white px-6 py-7 text-slate-800 shadow-xl sm:px-10 sm:py-10" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-6 py-7 text-slate-800 shadow-xl sm:px-10 sm:py-10" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
         <header className="grid grid-cols-2 gap-5 border-b border-slate-300 pb-5">
           <div className="flex min-w-0 items-stretch gap-3">
             <div className="flex w-28 shrink-0 items-center justify-center pr-3">
@@ -161,7 +161,7 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
 
         {accounts.length ? <section className="mt-5"><h4 className="mb-2 text-[9px] font-bold uppercase tracking-wider" style={{ color: brand }}>Datos bancarios</h4><div className="grid grid-cols-2 gap-3">{accounts.map((account, index) => <div key={index} className="border border-slate-200 p-2 text-[9px]"><p className="font-bold">{String(account["banco"] ?? "")}</p><p>Cuenta: {String(account["cuenta"] ?? "—")}</p><p>CCI: {String(account["cci"] ?? "—")}</p><p>Titular: {String(account["titular"] ?? "—")}</p></div>)}</div></section> : null}
 
-        <footer className="mt-8 grid grid-cols-3 gap-3 border-t border-slate-300 pt-2 text-[8px] text-slate-400">
+        <footer className="mt-auto grid grid-cols-3 gap-3 border-t border-slate-300 pt-2 text-[8px] text-slate-400">
           <div className="text-left">{identity.telefono || identity.whatsapp ? `Tel: ${identity.telefono || identity.whatsapp}` : ""}</div>
           <div className="text-center">{identity.email ? `Correo: ${identity.email}` : ""}</div>
           <div className="text-right">{identity.ruc ? `RUC: ${identity.ruc}` : ""}</div>
