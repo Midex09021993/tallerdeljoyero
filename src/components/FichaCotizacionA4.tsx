@@ -96,7 +96,8 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
         <section className="space-y-2">
           <p className="text-[10px] text-slate-500">Sr(a).</p>
           <h3 className="text-sm font-bold uppercase" style={{ color: brand }}>{data.cliente.nombre}</h3>
-          <p className="pt-2 text-[11px] leading-5 text-slate-600">{introduction}</p>
+          <p className="pt-2 text-[11px] leading-5 text-slate-500">De nuestra consideración.</p>
+          <p className="text-[11px] leading-5 text-slate-600">{introduction}</p>
         </section>
 
         <section className="my-6 grid grid-cols-3 gap-4 rounded-sm border border-slate-200 p-3">
