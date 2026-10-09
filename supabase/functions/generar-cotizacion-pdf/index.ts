@@ -168,13 +168,15 @@ Deno.serve(async (req) => {
     const pageSize: [number, number] = [595.28, 841.89];
     const margin = 42;
     const bottom = 58;
-    // Paleta fiel al formato corporativo FADILAB: verde, azul claro y tabla negra.
-    const accent = rgb(0.30, 0.59, 0.25);
-    const ink = rgb(0.10, 0.10, 0.10);
-    const muted = rgb(0.58, 0.58, 0.58);
-    const line = rgb(0.10, 0.10, 0.10);
-    const soft = rgb(0.84, 0.91, 0.97);
-    const totalBlue = rgb(0.03, 0.40, 0.55);
+    // Paleta coherente con la ficha comercial A4 aprobada en la interfaz.
+    const brandHex = /^#[0-9a-f]{6}$/i.test(clean((identidadConfig as any)?.color_principal)) ? clean((identidadConfig as any).color_principal) : "#b99a5b";
+    const hex = brandHex.replace("#", "");
+    const accent = rgb(parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255);
+    const ink = rgb(0.12, 0.15, 0.19);
+    const muted = rgb(0.38, 0.42, 0.47);
+    const line = rgb(0.88, 0.89, 0.91);
+    const soft = rgb(0.96, 0.96, 0.96);
+    const totalBlue = accent;
 
     let page = pdf.addPage(pageSize);
     let { width, height } = page.getSize();
@@ -357,38 +359,6 @@ Deno.serve(async (req) => {
       y -= 7;
     }
 
-    // Ficha técnica de la joya (proyectos_joya). Sin costes ni notas internas.
-    if (proyecto) {
-      const specs: Array<[string, string]> = ([
-        ["Proyecto", clean(proyecto.nombre)],
-        ["Código", clean(proyecto.codigo)],
-        ["Metal", clean(proyecto.metal)],
-        ["Ley", clean(proyecto.ley)],
-        ["Peso estimado", proyecto.peso_estimado != null ? `${proyecto.peso_estimado} g` : ""],
-        ["Talla", clean(proyecto.talla)],
-        ["Piedras", clean(proyecto.piedras)],
-        ["Piezas", proyecto.cantidad_piezas != null ? String(proyecto.cantidad_piezas) : ""],
-      ] as Array<[string, string]>).filter(([, v]) => v);
-      const descLines = clean(proyecto.descripcion) ? wrapPdf(clean(proyecto.descripcion), 100) : [];
-      const filas = Math.ceil(specs.length / 2);
-      const boxH = 26 + filas * 24 + (descLines.length ? descLines.length * 10 + 8 : 0);
-      ensure(boxH + 12);
-      page.drawRectangle({ x: margin, y: y - boxH, width: width - margin * 2, height: boxH, borderColor: accent, borderWidth: 0.7, color: soft });
-      page.drawText("FICHA TÉCNICA DE LA JOYA", { x: margin + 10, y: y - 15, size: 8.8, font: bold, color: accent });
-      let fy = y - 34;
-      specs.forEach(([label, value], i) => {
-        const x = i % 2 === 0 ? margin + 10 : margin + (width - margin * 2) / 2 + 5;
-        if (i > 0 && i % 2 === 0) fy -= 24;
-        page.drawText(label.toUpperCase(), { x, y: fy, size: 6.6, font, color: muted });
-        page.drawText(value.slice(0, 48), { x, y: fy - 11, size: 8.6, font: bold, color: ink });
-      });
-      if (descLines.length) {
-        fy -= 26;
-        for (const l of descLines) { page.drawText(l, { x: margin + 10, y: fy, size: 7.6, font, color: ink }); fy -= 10; }
-      }
-      y -= boxH + 16;
-    }
-
     ensure(60);
     page.drawText("DETALLE DE LA COTIZACIÓN", { x: margin, y, size: 9.5, font: bold, color: accent });
     y -= 15;
@@ -545,13 +515,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (clean(docConfig.firma_nombre) || clean(docConfig.firma_cargo)) {
-      ensure(58);
-      y -= 8;
-      page.drawText("ATENTAMENTE", { x: margin, y, size: 8, font, color: muted }); y -= 22;
-      if (clean(docConfig.firma_nombre)) { page.drawText(clean(docConfig.firma_nombre), { x: margin, y, size: 9, font: bold }); y -= 12; }
-      if (clean(docConfig.firma_cargo)) { page.drawText(clean(docConfig.firma_cargo), { x: margin, y, size: 7.8, font, color: muted }); y -= 12; }
-    }
+    ensure(58);
+    y -= 8;
+    const signatureWidth = (width - margin * 2 - 60) / 2;
+    page.drawLine({ start: { x: margin, y }, end: { x: margin + signatureWidth, y }, thickness: 0.6, color: muted });
+    page.drawLine({ start: { x: margin + signatureWidth + 60, y }, end: { x: width - margin, y }, thickness: 0.6, color: muted });
+    page.drawText("Firma del cliente", { x: margin, y: y - 13, size: 7.5, font, color: muted });
+    page.drawText("Firma y sello del taller", { x: margin + signatureWidth + 60, y: y - 13, size: 7.5, font, color: muted });
 
     drawFooter(page, pageNumber);
     const pdfBytes = await pdf.save();
