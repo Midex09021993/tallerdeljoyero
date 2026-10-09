@@ -109,7 +109,8 @@ Deno.serve(async (req) => {
       .eq("id", cotizacionId)
       .maybeSingle();
 
-    if (quoteError || !quote) return json({ error: "Cotización no encontrada." }, 404);
+    if (quoteError) return json({ error: "Cotización no encontrada." }, 404);
+    if (!quote) return json({ error: "Cotización no encontrada." }, 404);
 
     const [{ data: roles }, { data: areas }, { data: cuenta }] = await Promise.all([
       admin.from("user_roles").select("role").eq("user_id", user.id),
