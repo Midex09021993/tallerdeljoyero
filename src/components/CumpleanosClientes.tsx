@@ -10,6 +10,46 @@ const nice=(s:string)=>dateOf(s).toLocaleDateString("es-PE",{day:"2-digit",month
 export function CumpleanosClientes({clientes,alSeleccionar}:{clientes:C[];alSeleccionar:(id:string)=>void}){
 const all=useMemo(()=>clientes.filter(c=>c.fecha_nacimiento),[clientes]),[month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[selected,setSelected]=useState(iso(new Date()));
 const [templates,setTemplates]=useState<Record<string,string>>({});
+const [copiedId,setCopiedId]=useState<string|null>(null);
+const [copyErrorId,setCopyErrorId]=useState<string|null>(null);
+
+const mensajePara = (c:C) => (templates[c.participante_id??""] || "🎉 Feliz cumpleaños {nombre_cliente}\\n\\nTodo el equipo de {nombre_taller} te desea un excelente día.\\n\\nGracias por confiar en nosotros.")
+  .replace(/\\\\n/g, "\\n")
+  .replaceAll("{nombre_cliente}", c.nombre)
+  .replaceAll("{nombre_taller}", c.sede_nombre);
+
+async function copiarSaludo(c:C) {
+  const mensaje = mensajePara(c);
+  try {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(mensaje);
+        setCopiedId(c.id);
+        setCopyErrorId(null);
+        return;
+      } catch {
+        // Intenta el método compatible con navegadores que bloquean Clipboard API.
+      }
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = mensaje;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copiado = document.execCommand("copy");
+    textarea.remove();
+    if (!copiado) throw new Error("El navegador no permitió copiar el saludo.");
+    setCopiedId(c.id);
+    setCopyErrorId(null);
+  } catch (error) {
+    console.error("[cumpleanos] no se pudo copiar el saludo", error);
+    setCopiedId(null);
+    setCopyErrorId(c.id);
+  }
+}
 useEffect(()=>{let live=true;const ids=[...new Set(all.map(c=>c.participante_id).filter((x):x is string=>Boolean(x)))];if(!ids.length){setTemplates({});return()=>{live=false}};void supabase.from("mensajes_automaticos_taller").select("participante_id,mensaje_cumpleanos").in("participante_id",ids).then(({data,error})=>{if(error){console.error("[cumpleanos] plantillas",error);return}if(live)setTemplates(Object.fromEntries((data??[]).map(x=>[x.participante_id,x.mensaje_cumpleanos]))) });return()=>{live=false}},[all]);
 const now=new Date(),today=all.filter(c=>days(c.fecha_nacimiento!)===0),week=all.filter(c=>days(c.fecha_nacimiento!)<=7),next=all.filter(c=>days(c.fecha_nacimiento!)<=30).sort((a,b)=>days(a.fecha_nacimiento!)-days(b.fecha_nacimiento!)),thisMonth=all.filter(c=>dateOf(c.fecha_nacimiento!).getMonth()===now.getMonth());
 const grid=useMemo(()=>{const first=new Date(month.getFullYear(),month.getMonth(),1),start=new Date(first);start.setDate(first.getDate()-(first.getDay()+6)%7);return Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return {d,key:iso(d),n:all.filter(c=>{const b=dateOf(c.fecha_nacimiento!);return b.getMonth()===d.getMonth()&&b.getDate()===d.getDate()}).length}})},[month,all]);
@@ -17,6 +57,6 @@ const picked=dateOf(selected),onDay=all.filter(c=>{const b=dateOf(c.fecha_nacimi
 return <div className="space-y-5"><header className="rounded-3xl border border-gold/20 bg-gradient-to-br from-card to-gold/10 p-5 sm:p-7"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Relación con clientes</p><h2 className="mt-1 text-2xl font-semibold">🎂 Cumpleaños</h2><p className="mt-1 text-sm text-muted-foreground">{all.length} clientes con fecha registrada</p></header>
 <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{[{t:"Hoy",n:today.length},{t:"Próximos 7 días",n:week.length},{t:"Próximos 30 días",n:next.length},{t:"Este mes",n:thisMonth.length}].map(x=><div key={x.t} className="rounded-2xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">{x.t}</p><p className="mt-2 text-3xl font-semibold">{x.n}</p></div>)}</div>
 <div className="grid gap-5 xl:grid-cols-[1.1fr_.9fr]"><section className="rounded-2xl border border-border bg-card"><header className="flex items-center justify-between p-4"><div><h3 className="font-semibold">Calendario mensual</h3><p className="text-xs text-muted-foreground">El número indica clientes por día</p></div><div className="flex gap-1"><button aria-label="Mes anterior" onClick={()=>setMonth(m=>new Date(m.getFullYear(),m.getMonth()-1,1))} className="rounded-lg border p-2"><ChevronLeft size={16}/></button><button aria-label="Mes siguiente" onClick={()=>setMonth(m=>new Date(m.getFullYear(),m.getMonth()+1,1))} className="rounded-lg border p-2"><ChevronRight size={16}/></button></div></header><p className="text-center text-sm font-semibold capitalize">{month.toLocaleDateString("es-PE",{month:"long",year:"numeric"})}</p><div className="grid grid-cols-7 gap-1 p-3">{["L","M","X","J","V","S","D"].map(d=><span key={d} className="py-2 text-center text-xs text-muted-foreground">{d}</span>)}{grid.map(x=><button key={x.key} onClick={()=>setSelected(x.key)} aria-pressed={selected===x.key} className={`flex min-h-12 flex-col items-center justify-center rounded-xl border text-xs ${x.d.getMonth()!==month.getMonth()?"border-transparent text-muted-foreground/40":"border-border"} ${selected===x.key?"border-gold bg-gold/10":"hover:border-gold/50"}`}>{x.d.getDate()}<span className={x.n?"rounded-full bg-gold/15 px-1.5 text-[9px] font-bold text-gold":"text-transparent"}>{x.n||"·"}</span></button>)}</div></section>
-<section className="overflow-hidden rounded-2xl border border-border bg-card"><header className="border-b p-4"><h3 className="font-semibold capitalize">{picked.toLocaleDateString("es-PE",{weekday:"long",day:"numeric",month:"long"})}</h3><p className="text-xs text-muted-foreground">{onDay.length} cumpleaños</p></header><div className="max-h-[520px] divide-y overflow-auto">{onDay.length?onDay.map(c=><article key={c.id} className="p-4"><div className="flex gap-3"><Cake className="mt-1 size-5 shrink-0 text-gold"/><div className="min-w-0"><button onClick={()=>alSeleccionar(c.id)} className="text-left text-sm font-semibold hover:text-gold">{c.nombre}</button><p className="mt-1 text-xs text-muted-foreground">{c.telefono||"Sin teléfono"} · {c.email||"Sin correo"}</p><p className="mt-1 text-xs text-muted-foreground">Nacimiento: {nice(c.fecha_nacimiento!)}</p><p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{c.notas||"Sin observaciones"}</p></div></div><div className="mt-3 flex gap-2">{c.telefono?<a target="_blank" rel="noreferrer" href={`https://wa.me/${c.telefono.replace(/\D/g,"")}?text=${encodeURIComponent((templates[c.participante_id??""]||"🎉 Feliz cumpleaños {nombre_cliente}\\n\\nTodo el equipo de {nombre_taller} te desea un excelente día.\\n\\nGracias por confiar en nosotros.").replaceAll("{nombre_cliente}",c.nombre).replaceAll("{nombre_taller}",c.sede_nombre))}`} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"><MessageCircle className="mr-1 inline size-3"/>WhatsApp</a>:null}<button onClick={()=>void navigator.clipboard?.writeText((templates[c.participante_id??""]||"🎉 Feliz cumpleaños {nombre_cliente}\\n\\nTodo el equipo de {nombre_taller} te desea un excelente día.\\n\\nGracias por confiar en nosotros.").replaceAll("{nombre_cliente}",c.nombre).replaceAll("{nombre_taller}",c.sede_nombre))} className="rounded-lg border px-3 py-2 text-xs">Copiar saludo</button></div></article>):<p className="p-8 text-center text-sm text-muted-foreground">No hay cumpleaños en esta fecha.</p>}</div></section></div>
+<section className="overflow-hidden rounded-2xl border border-border bg-card"><header className="border-b p-4"><h3 className="font-semibold capitalize">{picked.toLocaleDateString("es-PE",{weekday:"long",day:"numeric",month:"long"})}</h3><p className="text-xs text-muted-foreground">{onDay.length} cumpleaños</p></header><div className="max-h-[520px] divide-y overflow-auto">{onDay.length?onDay.map(c=><article key={c.id} className="p-4"><div className="flex gap-3"><Cake className="mt-1 size-5 shrink-0 text-gold"/><div className="min-w-0"><button onClick={()=>alSeleccionar(c.id)} className="text-left text-sm font-semibold hover:text-gold">{c.nombre}</button><p className="mt-1 text-xs text-muted-foreground">{c.telefono||"Sin teléfono"} · {c.email||"Sin correo"}</p><p className="mt-1 text-xs text-muted-foreground">Nacimiento: {nice(c.fecha_nacimiento!)}</p><p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{c.notas||"Sin observaciones"}</p></div></div><div className="mt-3 flex flex-wrap gap-2">{c.telefono?<a target="_blank" rel="noreferrer" href={`https://wa.me/${c.telefono.replace(/\D/g,"")}?text=${encodeURIComponent(mensajePara(c))}`} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"><MessageCircle className="mr-1 inline size-3"/>WhatsApp</a>:null}<button type="button" onClick={()=>void copiarSaludo(c)} className="rounded-lg border px-3 py-2 text-xs">{copiedId===c.id?"✓ Saludo copiado":"Copiar saludo"}</button>{copyErrorId===c.id?<p role="alert" className="basis-full text-xs text-destructive">No se pudo copiar automáticamente. Revisa los permisos del navegador e inténtalo de nuevo.</p>:copiedId===c.id?<p role="status" aria-live="polite" className="basis-full text-xs text-emerald-600">Saludo copiado al portapapeles.</p>:null}</div></article>):<p className="p-8 text-center text-sm text-muted-foreground">No hay cumpleaños en esta fecha.</p>}</div></section></div>
 <section className="rounded-2xl border border-border bg-card"><header className="border-b p-4"><h3 className="font-semibold">Próximos cumpleaños</h3></header>{next.slice(0,10).map(c=><div key={c.id} className="flex items-center gap-3 border-b p-4"><Gift className="size-4 text-gold"/><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{c.nombre}</p><p className="text-xs text-muted-foreground">{nice(c.fecha_nacimiento!)}</p></div><span className="text-xs font-semibold text-gold">{days(c.fecha_nacimiento!)===0?"Hoy":`En ${days(c.fecha_nacimiento!)} días`}</span></div>)}{!next.length?<p className="p-5 text-sm text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>:null}</section></div>
 }
