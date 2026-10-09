@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
 
     if (clean(docConfig.introduccion)) {
       ensure(55);
-      page.drawText("DE NUESTRA CONSIDERACIÓN", { x: margin, y, size: 8.5, font: bold, color: accent });
+      page.drawText("De nuestra consideración.", { x: margin, y, size: 8.5, font, color: muted });
       y -= 15;
       drawWrappedParagraph(clean(docConfig.introduccion), 98, 8.5, 11);
       y -= 7;
