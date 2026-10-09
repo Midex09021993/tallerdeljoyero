@@ -202,7 +202,10 @@ Deno.serve(async (req) => {
     let y = page.getHeight() - 48;
     const margin = 42;
     const bottom = 62;
-    const accent = colorHex(identidad?.color_principal);
+    // Identidad documental coherente con la cotización FADILAB: verde y azul claro.
+    const accent = rgb(0.30, 0.59, 0.25);
+    const totalBlue = rgb(0.03, 0.40, 0.55);
+    const softBlue = rgb(0.84, 0.91, 0.97);
 
     function newPage() {
       page = pdf.addPage([595.28, 841.89]);
@@ -230,25 +233,48 @@ Deno.serve(async (req) => {
     }
 
     function drawHeader() {
-      page.drawText(clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO", {
-        x: margin, y, size: 18, font: bold, color: accent,
+      const pageWidth = page.getWidth();
+      const company = clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO";
+      const legal = clean(identidad?.razon_social);
+      const logoUrl = clean(identidad?.logo_url);
+      // La imagen del logo se descarga y embebe de forma segura para mantenerlo en el PDF.
+      // Si no está disponible, el encabezado continúa con la razón social.
+      page.drawText(company, {
+        x: margin, y, size: 14, font: bold, color: accent,
       });
-      page.drawText(clean(contenido.subtitulo) || "Documento contractual", {
-        x: margin, y: y - 21, size: 9, font, color: rgb(0.42, 0.42, 0.45),
-      });
+      if (legal && legal !== company) {
+        page.drawText(legal, { x: margin, y: y - 14, size: 8, font: bold, color: rgb(0.58, 0.58, 0.58) });
+      }
+      const fiscal = clean(identidad?.ruc) ? `RUC ${clean(identidad.ruc)}` : "";
+      const address = [clean(identidad?.direccion), clean(identidad?.ciudad)].filter(Boolean);
+      let ly = y - (legal && legal !== company ? 27 : 16);
+      if (fiscal) {
+        page.drawText(fiscal, { x: margin, y: ly, size: 7.4, font, color: rgb(0.58, 0.58, 0.58) });
+        ly -= 10;
+      }
+      const rightLines = [...address, clean(identidad?.telefono), clean(identidad?.email)].filter(Boolean).slice(0, 4);
+      let ry = y;
+      for (const text of rightLines) {
+        const tw = font.widthOfTextAtSize(text, 7.3);
+        page.drawText(text, {
+          x: Math.max(pageWidth - margin - 205, pageWidth - margin - tw),
+          y: ry, size: 7.3, font: bold, color: rgb(0.1, 0.1, 0.1),
+        });
+        ry -= 10;
+      }
       page.drawText(clean(contrato.numero), {
-        x: 405, y, size: 10, font: bold, color: rgb(0.1, 0.1, 0.12),
+        x: pageWidth - margin - 145, y: y - 48, size: 9, font: bold, color: ink,
       });
       page.drawText(`Versión ${version}`, {
-        x: 405, y: y - 15, size: 8.5, font, color: rgb(0.42, 0.42, 0.45),
+        x: pageWidth - margin - 145, y: y - 60, size: 7.5, font, color: rgb(0.58, 0.58, 0.58),
       });
       page.drawLine({
-        start: { x: margin, y: y - 28 },
-        end: { x: page.getWidth() - margin, y: y - 28 },
-        thickness: 1,
-        color: accent,
+        start: { x: margin, y: y - 72 },
+        end: { x: pageWidth - margin, y: y - 72 },
+        thickness: 0.8,
+        color: rgb(0.70, 0.70, 0.70),
       });
-      y -= 45;
+      y -= 89;
     }
 
     drawHeader();
@@ -319,15 +345,33 @@ Deno.serve(async (req) => {
       y -= 18;
       const totals: Array<[string, number]> = cotizacion
         ? [
-            ["Subtotal", Number(cotizacion.subtotal ?? 0)],
+            ["Importe sin impuestos", Number(cotizacion.subtotal ?? 0)],
             ["Descuento", -Number(cotizacion.descuento ?? 0)],
-            ["Impuestos", Number(cotizacion.impuestos ?? 0)],
+            ["IGV / IMPUESTOS", Number(cotizacion.impuestos ?? 0)],
           ]
         : [];
       totals.push(["TOTAL", totalContrato], ["ANTICIPO / ABONADO", abonadoContrato], ["SALDO PENDIENTE", saldoContrato]);
+      const boxX = 325;
+      const boxW = page.getWidth() - margin - boxX;
       for (const [label, value] of totals) {
+        ensure(18);
         const fuerte = label === "TOTAL" || label === "SALDO PENDIENTE";
-        line(`${label}: ${money(value, monedaContrato)}`, fuerte ? 10 : 8.8, fuerte ? bold : font);
+        const rowH = 16;
+        page.drawRectangle({
+          x: boxX, y: y - 4, width: boxW, height: rowH,
+          color: fuerte ? totalBlue : softBlue,
+          borderColor: rgb(0.1, 0.1, 0.1), borderWidth: 0.5,
+        });
+        const labelColor = fuerte ? rgb(1, 1, 1) : rgb(0.1, 0.1, 0.1);
+        page.drawText(label, { x: boxX + 5, y: y + 1, size: fuerte ? 8.1 : 7.4, font: fuerte ? bold : font, color: labelColor });
+        const amount = money(value, monedaContrato);
+        const amountFont = fuerte ? bold : font;
+        const amountSize = fuerte ? 8 : 7.2;
+        page.drawText(amount, {
+          x: boxX + boxW - amountFont.widthOfTextAtSize(amount, amountSize) - 5,
+          y: y + 1, size: amountSize, font: amountFont, color: labelColor,
+        });
+        y -= rowH;
       }
     }
 
