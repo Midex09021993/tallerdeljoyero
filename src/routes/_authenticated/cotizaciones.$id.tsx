@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-r
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import { abrirDocumentoA4, type DocumentoA4Identidad } from "@/components/DocumentoComercialA4";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
 });
 
 type Cotizacion = {
-  id: string; numero: string; version: number; estado: string; seguimiento_codigo: string | null; sede_id: string | null; participante_id: string | null; reemplaza_id: string | null; fecha_emision: string;
+  id: string; numero: string; version: number; estado: string; seguimiento_codigo: string | null; sede_id: string | null; participante_id: string | null; reemplaza_id: string | null; identidad_comercial_id?: string | null; identidad_comercial?: Record<string, unknown> | null; fecha_emision: string;
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
@@ -87,6 +88,7 @@ function CotizacionDetallePage() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
+  const [identidadDocumento, setIdentidadDocumento] = useState<DocumentoA4Identidad | null>(null);
   const [cargando, setCargando] = useState(true);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -108,12 +110,29 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,identidad_comercial_id,identidad_comercial,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
       setCargando(false); return;
     }
+    let identidadActual: Record<string, unknown> | null = null;
+    if (q.identidad_comercial_id) {
+      const { data } = await supabase.from("identidades_comerciales")
+        .select("id,participante_id,sede_id,nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label,metadata,activa")
+        .eq("id", q.identidad_comercial_id).maybeSingle();
+      identidadActual = data as Record<string, unknown> | null;
+    }
+    if (!identidadActual && q.participante_id) {
+      const { data } = await supabase.from("identidades_comerciales")
+        .select("id,participante_id,sede_id,nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label,metadata,activa")
+        .eq("participante_id", q.participante_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = data as Record<string, unknown> | null;
+    }
+    const snapshot = q.identidad_comercial && typeof q.identidad_comercial === "object"
+      ? q.identidad_comercial as Record<string, unknown> : {};
+    setIdentidadDocumento({ ...(identidadActual ?? {}), ...snapshot } as DocumentoA4Identidad);
+
     const [{ data: d }, { data: c }, { data: p }, { data: respuestas, error: respuestasError }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
       supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
       q.cliente_id
@@ -129,7 +148,7 @@ function CotizacionDetallePage() {
     setCotizacion(q);
     const { data: versionesRelacionadas } = await supabase
       .from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,identidad_comercial_id,identidad_comercial,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("numero", q.numero)
       .eq("participante_id", q.participante_id)
       .order("version", { ascending: false });
@@ -669,7 +688,7 @@ function CotizacionDetallePage() {
                 <Fila label="Margen bruto" valor={money(margen, cotizacion.moneda)} />
               </div>
             </Panel>
-            <Panel titulo="Documento para el cliente">
+            <Panel titulo="Documento para el cliente" accion={<button type="button" onClick={() => { if (!cotizacion) return; abrirDocumentoA4({ tipo: "cotizacion", numero: cotizacion.numero, version: cotizacion.version, fecha: cotizacion.fecha_emision, vencimiento: cotizacion.fecha_vencimiento, entrega: cotizacion.fecha_entrega_solicitada, moneda: cotizacion.moneda, cliente: { nombre: cliente?.nombre ?? "—", telefono: cliente?.telefono, email: cliente?.email }, identidad: identidadDocumento, tallerNombre: sedeNombre, detalles: detalles.map((d) => { const base = Number(d.total_precio || 0); const bases = detalles.reduce((sum, item) => sum + Number(item.total_precio || 0), 0); const proporcion = bases > 0 ? base / bases : 0; const impuestoLinea = Number(cotizacion.impuestos || 0) * proporcion; const descuentoLinea = Number(cotizacion.descuento || 0) * proporcion; return { descripcion: d.descripcion, cantidad: d.cantidad, unidad: d.unidad, precio_unitario: Number(d.precio_unitario), impuestos: impuestoLinea, total_precio: Math.max(0, base - descuentoLinea) + impuestoLinea }; }), subtotal: Number(cotizacion.subtotal), descuento: Number(cotizacion.descuento), impuestos: Number(cotizacion.impuestos), total: Number(cotizacion.total), notas: cotizacion.notas_cliente }); }} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-surface-muted">Vista previa A4 · Imprimir / PDF</button>}>
               <div className="space-y-3 p-4">
                 <p className="text-xs text-muted-foreground">Genera una copia PDF de la propuesta con información comercial. Los costos internos y notas internas nunca se incluyen.</p>
                 <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">

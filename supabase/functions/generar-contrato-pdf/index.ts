@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (contratoError || !contrato) return json({ error: "Contrato no encontrado o sin acceso." }, 404);
+    const contratoDocumento = contrato;
 
     if (accion === "ver") {
       if (!contrato.pdf_storage_path) return json({ error: "El contrato aún no tiene PDF generado." }, 404);
@@ -156,6 +157,8 @@ Deno.serve(async (req) => {
       ? { ...(identidadActual ?? {}), ...(cotizacion.identidad_comercial as Record<string, unknown>) }
       : identidadActual;
 
+    const identidadDocumento = identidad ?? {};
+
     const contenido: Record<string, unknown> = {
       titulo: "CONTRATO DE FABRICACIÓN DE JOYERÍA",
       subtitulo: "Documento comercial y de fabricación",
@@ -200,9 +203,9 @@ Deno.serve(async (req) => {
     const totalBlue = rgb(0.03, 0.40, 0.55);
     const softBlue = rgb(0.84, 0.91, 0.97);
     let embeddedLogo: any = null;
-    if (clean(identidad?.logo_url)) {
+    if (clean(identidadDocumento.logo_url)) {
       try {
-        const response = await fetch(clean(identidad.logo_url));
+        const response = await fetch(clean(identidadDocumento.logo_url));
         if (response.ok) {
           const bytes = new Uint8Array(await response.arrayBuffer());
           const type = response.headers.get("content-type") ?? "";
@@ -262,7 +265,7 @@ Deno.serve(async (req) => {
       if (legal && legal !== company) {
         page.drawText(legal, { x: textX, y: y - 14, size: 8, font: bold, color: rgb(0.58, 0.58, 0.58) });
       }
-      const fiscal = clean(identidad?.ruc) ? `RUC ${clean(identidad.ruc)}` : "";
+      const fiscal = clean(identidadDocumento.ruc) ? `RUC ${clean(identidadDocumento.ruc)}` : "";
       const address = [clean(identidad?.direccion), clean(identidad?.ciudad)].filter(Boolean);
       let ly = y - (legal && legal !== company ? 27 : 16);
       if (fiscal) {
@@ -279,7 +282,7 @@ Deno.serve(async (req) => {
         });
         ry -= 10;
       }
-      page.drawText(clean(contrato.numero), {
+      page.drawText(clean(contratoDocumento.numero), {
         x: pageWidth - margin - 145, y: y - 48, size: 9, font: bold, color: rgb(0.1, 0.1, 0.1),
       });
       page.drawText(`Versión ${version}`, {
@@ -441,7 +444,7 @@ Deno.serve(async (req) => {
     });
 
     const pdfBytes = await pdf.save();
-    const digest = await crypto.subtle.digest("SHA-256", pdfBytes);
+    const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(pdfBytes).buffer);
     const sha256 = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
     const path = `contratos/${contrato.id}/v${version}-${crypto.randomUUID()}.pdf`;
