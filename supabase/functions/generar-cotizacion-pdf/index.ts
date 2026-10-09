@@ -412,33 +412,62 @@ Deno.serve(async (req) => {
       const baseNeta = Math.max(0, base - descuentoLinea);
       const impuestoLinea = Number(quote.impuestos ?? 0) * proporcion;
       const importeLinea = baseNeta + impuestoLinea;
-      const lines = wrapPdf(clean(item.descripcion), 55);
-      const rowHeight = Math.max(19, lines.length * 10 + 5);
-      if (y - rowHeight < bottom + 20) { newPage(); drawTableHeader(); }
-      const top = y + 4;
-      const rowBottom = y - rowHeight + 2;
-      page.drawRectangle({
-        x: margin, y: rowBottom, width: width - margin * 2, height: rowHeight + 2,
-        borderColor: ink, borderWidth: 0.65,
-      });
-      for (const x of tableX.slice(1, -1)) {
-        page.drawLine({ start: { x, y: top }, end: { x, y: rowBottom }, thickness: 0.65, color: ink });
+      const lines = wrapPdf(clean(item.descripcion) || "—", 55);
+      let offset = 0;
+      let firstSegment = true;
+
+      // Una descripción excepcionalmente larga se divide en filas continuadas.
+      // Así se conserva todo el texto sin dibujar contenido fuera de la página.
+      while (offset < lines.length) {
+        if (y - 19 < bottom + 20) {
+          newPage();
+          drawTableHeader();
+        }
+
+        const availableLines = Math.max(1, Math.floor((y - (bottom + 20) - 5) / 10));
+        const segmentLines = lines.slice(offset, offset + availableLines);
+        const rowHeight = Math.max(19, segmentLines.length * 10 + 5);
+        if (y - rowHeight < bottom + 20) {
+          newPage();
+          drawTableHeader();
+          continue;
+        }
+
+        const top = y + 4;
+        const rowBottom = y - rowHeight + 2;
+        page.drawRectangle({
+          x: margin, y: rowBottom, width: width - margin * 2, height: rowHeight + 2,
+          borderColor: ink, borderWidth: 0.65,
+        });
+        for (const x of tableX.slice(1, -1)) {
+          page.drawLine({ start: { x, y: top }, end: { x, y: rowBottom }, thickness: 0.65, color: ink });
+        }
+        segmentLines.forEach((line: string, lineIndex: number) => page.drawText(line, {
+          x: cols.desc, y: y - lineIndex * 10, size: 7.2, font, color: ink,
+        }));
+
+        if (firstSegment) {
+          const qtyText = `${item.cantidad ?? 0} ${clean(item.unidad)}`.trim();
+          page.drawText(qtyText.slice(0, 15), { x: cols.qty, y, size: 7.0, font, color: ink });
+          page.drawText(money(Number(item.precio_unitario ?? 0), quote.moneda), {
+            x: cols.unit, y, size: 6.4, font, color: ink,
+          });
+          page.drawText(money(impuestoLinea, quote.moneda), {
+            x: cols.tax, y, size: 6.4, font, color: ink,
+          });
+          page.drawText(money(importeLinea, quote.moneda), {
+            x: cols.total, y, size: 6.4, font: bold, color: ink,
+          });
+          firstSegment = false;
+        }
+
+        offset += segmentLines.length;
+        y = rowBottom - 2;
+        if (offset < lines.length) {
+          newPage();
+          drawTableHeader();
+        }
       }
-      lines.forEach((t: string, i: number) => page.drawText(t, {
-        x: cols.desc, y: y - i * 10, size: 7.2, font, color: ink,
-      }));
-      const qtyText = `${item.cantidad ?? 0} ${clean(item.unidad)}`.trim();
-      page.drawText(qtyText.slice(0, 15), { x: cols.qty, y, size: 7.0, font, color: ink });
-      page.drawText(money(Number(item.precio_unitario ?? 0), quote.moneda), {
-        x: cols.unit, y, size: 6.4, font, color: ink,
-      });
-      page.drawText(money(impuestoLinea, quote.moneda), {
-        x: cols.tax, y, size: 6.4, font, color: ink,
-      });
-      page.drawText(money(importeLinea, quote.moneda), {
-        x: cols.total, y, size: 6.4, font: bold, color: ink,
-      });
-      y = rowBottom - 2;
     }
 
     ensure(105);
