@@ -66,15 +66,16 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
     <div className="bg-slate-100 p-3 sm:p-6">
       <article className="mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white px-6 py-7 text-slate-800 shadow-xl sm:px-10 sm:py-10" style={{ borderTop: `5px solid ${brand}`, fontFamily: "Arial, Helvetica, sans-serif" }}>
         <header className="grid grid-cols-2 gap-5 border-b border-slate-300 pb-5">
-          <div className="flex items-start gap-3">
-            {identity.logo_url ? <img src={identity.logo_url} alt="Logo del taller" className="max-h-20 max-w-24 object-contain" /> : null}
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: brand }}>{businessName}</h2>
-              {identity.razon_social && identity.razon_social !== businessName ? <p className="mt-1 text-[10px] text-slate-600">{identity.razon_social}</p> : null}
-              {identity.ruc ? <p className="mt-1 text-[10px] text-slate-600">RUC {identity.ruc}</p> : null}
-              {identity.rnp_bienes ? <p className="mt-1 text-[10px] text-slate-500">RNP Bienes {identity.rnp_bienes}</p> : null}
-              {identity.rpp_servicios ? <p className="mt-1 text-[10px] text-slate-500">RPP Servicios {identity.rpp_servicios}</p> : null}
-              <p className="mt-1 whitespace-pre-line text-[10px] text-slate-500">{[identity.direccion, identity.ciudad].filter(Boolean).join("\n")}</p>
+          <div className="flex min-w-0 items-stretch gap-3">
+            <div className="flex w-28 shrink-0 items-center justify-center pr-3">
+              {identity.logo_url ? <img src={identity.logo_url} alt="Logo del taller" className="max-h-20 max-w-full object-contain" /> : null}
+            </div>
+            <div className="w-px shrink-0 self-stretch bg-slate-300" aria-hidden="true" />
+            <div className="min-w-0 py-1">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">{identity.razon_social || businessName}</h2>
+              {identity.ruc ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RUC {identity.ruc}</p> : null}
+              {identity.rnp_bienes ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RNP Bienes {identity.rnp_bienes}</p> : null}
+              {identity.rpp_servicios ? <p className="mt-1 text-[10px] font-semibold text-slate-400">RPP Servicios {identity.rpp_servicios}</p> : null}
             </div>
           </div>
           <div className="text-right text-[10px] text-slate-600">
