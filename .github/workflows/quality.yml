@@ -29,3 +29,20 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check quotation PDF generator
+        run: deno check supabase/functions/generar-cotizacion-pdf/index.ts
+
+      - name: Type-check contract PDF generator
+        run: deno check supabase/functions/generar-contrato-pdf/index.ts
