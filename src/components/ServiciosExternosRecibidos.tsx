@@ -290,7 +290,7 @@ function PedidoTecnicoRecibido({
                         </div>
                       ) : null}
                     </div>
-                    <Link className="shrink-0" to="/trabajos/$id" params={{ id: servicio.id }} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/30 hover:bg-gold/5">
+                    <Link to="/trabajos/$id" params={{ id: servicio.id }} className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/30 hover:bg-gold/5">
                       Gestionar <ArrowUpRight className="size-3.5" />
                     </Link>
                   </div>
