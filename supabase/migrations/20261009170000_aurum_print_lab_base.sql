@@ -502,5 +502,148 @@ create policy print_lab_storage_delete_owner on storage.objects for delete to au
   )
 );
 
+
+-- Helpers SECURITY DEFINER: las políticas públicas no deben exigir SELECT anon
+-- sobre tablas internas de cuentas/participantes para comprobar pertenencia.
+create or replace function public.print_lab_can_access_participant(
+  _participante_id uuid,
+  _write boolean default false
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select coalesce(public.has_role((select auth.uid()), 'dueno'::public.app_role), false)
+    or exists (
+      select 1
+      from public.participante_cuentas pc
+      join public.ecosistema_participantes ep on ep.id = pc.participante_id
+      where pc.user_id = (select auth.uid())
+        and pc.participante_id = _participante_id
+        and pc.estado = 'activo'
+        and ep.estado = 'activo'
+        and (not _write or pc.relacion in ('principal','miembro'))
+    );
+$;
+
+create or replace function public.print_lab_can_access_profile(
+  _profile_id uuid,
+  _write boolean default false
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1
+    from public.print_profiles p
+    where p.id = _profile_id
+      and (
+        (not _write and p.estado = 'published' and p.visibilidad = 'community')
+        or public.print_lab_can_access_participant(p.participante_id, _write)
+      )
+  );
+$;
+
+revoke all on function public.print_lab_can_access_participant(uuid, boolean) from public;
+revoke all on function public.print_lab_can_access_profile(uuid, boolean) from public;
+grant execute on function public.print_lab_can_access_participant(uuid, boolean) to anon, authenticated;
+grant execute on function public.print_lab_can_access_profile(uuid, boolean) to anon, authenticated;
+
+-- Sustituir políticas iniciales por versiones que no consultan tablas internas
+-- directamente como anon y que separan lectura pública de escritura del taller.
+drop policy if exists print_devices_select on public.print_devices;
+create policy print_devices_select on public.print_devices for select to anon, authenticated using (
+  public.print_lab_can_access_participant(participante_id, false)
+  or exists (
+    select 1 from public.print_profiles p
+    where p.device_id = print_devices.id
+      and p.estado = 'published' and p.visibilidad = 'community'
+  )
+);
+drop policy if exists print_devices_write on public.print_devices;
+create policy print_devices_write on public.print_devices for all to authenticated
+using (public.print_lab_can_access_participant(participante_id, true))
+with check (public.print_lab_can_access_participant(participante_id, true));
+
+drop policy if exists print_resins_select on public.print_resins;
+create policy print_resins_select on public.print_resins for select to anon, authenticated using (
+  public.print_lab_can_access_participant(participante_id, false)
+  or exists (
+    select 1 from public.print_profiles p
+    where p.resin_id = print_resins.id
+      and p.estado = 'published' and p.visibilidad = 'community'
+  )
+);
+drop policy if exists print_resins_write on public.print_resins;
+create policy print_resins_write on public.print_resins for all to authenticated
+using (public.print_lab_can_access_participant(participante_id, true))
+with check (public.print_lab_can_access_participant(participante_id, true));
+
+drop policy if exists print_profiles_select on public.print_profiles;
+create policy print_profiles_select on public.print_profiles for select to anon, authenticated using (
+  public.print_lab_can_access_profile(id, false)
+);
+drop policy if exists print_profiles_write on public.print_profiles;
+create policy print_profiles_write on public.print_profiles for all to authenticated
+using (public.print_lab_can_access_profile(id, true))
+with check (public.print_lab_can_access_participant(participante_id, true));
+
+drop policy if exists print_revisions_select on public.print_profile_revisions;
+create policy print_revisions_select on public.print_profile_revisions for select to anon, authenticated using (
+  public.print_lab_can_access_profile(profile_id, false)
+);
+drop policy if exists print_revisions_write on public.print_profile_revisions;
+create policy print_revisions_write on public.print_profile_revisions for all to authenticated
+using (public.print_lab_can_access_profile(profile_id, true))
+with check (public.print_lab_can_access_profile(profile_id, true));
+
+drop policy if exists print_runs_select on public.print_calibration_runs;
+create policy print_runs_select on public.print_calibration_runs for select to authenticated using (
+  public.print_lab_can_access_participant(participante_id, false)
+);
+drop policy if exists print_runs_write on public.print_calibration_runs;
+create policy print_runs_write on public.print_calibration_runs for all to authenticated
+using (public.print_lab_can_access_participant(participante_id, true))
+with check (public.print_lab_can_access_participant(participante_id, true));
+
+drop policy if exists print_feedback_select on public.print_profile_feedback;
+create policy print_feedback_select on public.print_profile_feedback for select to authenticated using (
+  public.print_lab_can_access_participant(participante_id, false)
+);
+drop policy if exists print_feedback_write on public.print_profile_feedback;
+create policy print_feedback_write on public.print_profile_feedback for all to authenticated
+using (public.print_lab_can_access_participant(participante_id, true))
+with check (public.print_lab_can_access_participant(participante_id, true));
+
+drop policy if exists print_lab_storage_read_owner on storage.objects;
+create policy print_lab_storage_read_owner on storage.objects for select to authenticated using (
+  bucket_id = 'aurum-print-lab'
+  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, false)
+);
+drop policy if exists print_lab_storage_insert_owner on storage.objects;
+create policy print_lab_storage_insert_owner on storage.objects for insert to authenticated with check (
+  bucket_id = 'aurum-print-lab'
+  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+);
+drop policy if exists print_lab_storage_update_owner on storage.objects;
+create policy print_lab_storage_update_owner on storage.objects for update to authenticated using (
+  bucket_id = 'aurum-print-lab'
+  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+) with check (
+  bucket_id = 'aurum-print-lab'
+  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+);
+drop policy if exists print_lab_storage_delete_owner on storage.objects;
+create policy print_lab_storage_delete_owner on storage.objects for delete to authenticated using (
+  bucket_id = 'aurum-print-lab'
+  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+);
+
+
 commit;
 notify pgrst, 'reload schema';
