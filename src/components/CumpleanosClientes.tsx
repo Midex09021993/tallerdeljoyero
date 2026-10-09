@@ -13,8 +13,16 @@ const [templates,setTemplates]=useState<Record<string,string>>({});
 const [copiedId,setCopiedId]=useState<string|null>(null);
 const [copyErrorId,setCopyErrorId]=useState<string|null>(null);
 
-const mensajePara = (c:C) => (templates[c.participante_id??""] || "🎉 Feliz cumpleaños {nombre_cliente}\\n\\nTodo el equipo de {nombre_taller} te desea un excelente día.\\n\\nGracias por confiar en nosotros.")
-  .replace(/\\\\n/g, "\\n")
+const plantillaPredeterminada = [
+  "🎉 Feliz cumpleaños {nombre_cliente}",
+  "",
+  "Todo el equipo de {nombre_taller} te desea un excelente día.",
+  "",
+  "Gracias por confiar en nosotros.",
+].join("\n");
+
+const mensajePara = (c:C) => (templates[c.participante_id??""] || plantillaPredeterminada)
+  .replace(/\\n/g, "\n")
   .replaceAll("{nombre_cliente}", c.nombre)
   .replaceAll("{nombre_taller}", c.sede_nombre);
 
