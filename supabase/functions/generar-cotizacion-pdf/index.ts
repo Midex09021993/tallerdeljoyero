@@ -127,7 +127,6 @@ Deno.serve(async (req) => {
     const esDueno = (roles ?? []).some((r: any) => r.role === "dueno");
     const esGerente = (roles ?? []).some((r: any) => r.role === "gerente");
     const esVentas = (areas ?? []).some((a: any) => clean(a.area).toLowerCase() === "área ventas");
-    const participante = (cuenta as any)?.ecosistema_participantes;
     const participanteIdUsuario = clean((cuenta as any)?.participante_id);
     const mismoParticipante = !!quote.participante_id && !!participanteIdUsuario && quote.participante_id === participanteIdUsuario;
 
@@ -153,7 +152,9 @@ Deno.serve(async (req) => {
       ? { ...(identidadActual ?? {}), ...(quote.identidad_comercial as Record<string, unknown>) }
       : identidadActual;
 
-    const identidadConfig = (quote.identidad_comercial && typeof quote.identidad_comercial === "object" ? quote.identidad_comercial : identidad) as any;
+    // Usa la instantánea comercial como fuente prioritaria y completa campos ausentes
+    // con la identidad actual vinculada a la cotización.
+    const identidadConfig = (identidad ?? {}) as any;
     const docConfig = identidadConfig?.metadata?.cotizacion ?? {};
     const atendidoPor = clean(docConfig.atendido_por) || clean(docConfig.responsable_nombre);
     const atendidoCargo = clean(docConfig.responsable_cargo);
