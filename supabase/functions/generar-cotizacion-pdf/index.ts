@@ -288,28 +288,28 @@ Deno.serve(async (req) => {
         x: leftX, y: y - 27 - i * 10, size: 7.1, font, color: muted,
       }));
 
-      // Domicilio comercial alineado a la derecha, como en el documento de referencia.
+      // Referencia documental arriba; domicilio comercial debajo, alineados a la derecha.
       const rightX = width - margin - 4;
+      page.drawText("COTIZACIÓN", {
+        x: rightX - font.widthOfTextAtSize("COTIZACIÓN", 9) * 1.0, y: y - 2, size: 9, font: bold, color: accent,
+      });
+      const quoteReference = `${quoteData.numero} · Versión ${quoteData.version}`;
+      page.drawText(quoteReference, {
+        x: rightX - font.widthOfTextAtSize(quoteReference, 7.6), y: y - 14, size: 7.6, font: bold, color: ink,
+      });
+      page.drawText(`Emitida: ${formatDate(quoteData.fecha_emision)}`, {
+        x: rightX - font.widthOfTextAtSize(`Emitida: ${formatDate(quoteData.fecha_emision)}`, 7.2), y: y - 25, size: 7.2, font, color: muted,
+      });
+
       const rightLines = [legalName || businessName, address, city]
         .filter(Boolean).slice(0, 3);
-      let ry = y - 2;
+      let ry = y - 40;
       for (const text of rightLines) {
         const size = 7.7;
         const tw = font.widthOfTextAtSize(text, size);
         page.drawText(text, { x: Math.max(width - margin - 210, rightX - tw), y: ry, size, font: bold, color: ink });
         ry -= 11;
       }
-
-      // Referencia documental compacta, debajo de la dirección.
-      page.drawText("COTIZACIÓN", {
-        x: width - margin - 155, y: y - 43, size: 9, font: bold, color: accent,
-      });
-      page.drawText(`${quoteData.numero} · Versión ${quoteData.version}`, {
-        x: width - margin - 155, y: y - 55, size: 7.6, font: bold, color: ink,
-      });
-      page.drawText(`Emitida: ${formatDate(quoteData.fecha_emision)}`, {
-        x: width - margin - 155, y: y - 66, size: 7.2, font, color: muted,
-      });
 
       y -= 88;
       page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.8, color: rgb(0.70, 0.70, 0.70) });
