@@ -49,13 +49,6 @@ function money(value: number, currency: string) {
   }).format(Number(value ?? 0));
 }
 
-function colorHex(value: unknown) {
-  const raw = clean(value).replace("#", "");
-  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return rgb(0.12, 0.12, 0.14);
-  const n = Number.parseInt(raw, 16);
-  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
-}
-
 function boolField(content: Record<string, unknown>, key: string, fallback = true) {
   return typeof content[key] === "boolean" ? Boolean(content[key]) : fallback;
 }
@@ -202,7 +195,27 @@ Deno.serve(async (req) => {
     let y = page.getHeight() - 48;
     const margin = 42;
     const bottom = 62;
-    const accent = colorHex(identidad?.color_principal);
+    // Identidad documental coherente con la cotización FADILAB: verde y azul claro.
+    const accent = rgb(0.30, 0.59, 0.25);
+    const totalBlue = rgb(0.03, 0.40, 0.55);
+    const softBlue = rgb(0.84, 0.91, 0.97);
+    let embeddedLogo: any = null;
+    if (clean(identidad?.logo_url)) {
+      try {
+        const response = await fetch(clean(identidad.logo_url));
+        if (response.ok) {
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          const type = response.headers.get("content-type") ?? "";
+          embeddedLogo = type.includes("png")
+            ? await pdf.embedPng(bytes)
+            : type.includes("jpeg") || type.includes("jpg")
+              ? await pdf.embedJpg(bytes)
+              : null;
+        }
+      } catch {
+        // El logo es opcional; no debe impedir la generación del contrato.
+      }
+    }
 
     function newPage() {
       page = pdf.addPage([595.28, 841.89]);
@@ -230,25 +243,55 @@ Deno.serve(async (req) => {
     }
 
     function drawHeader() {
-      page.drawText(clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO", {
-        x: margin, y, size: 18, font: bold, color: accent,
+      const pageWidth = page.getWidth();
+      const company = clean(identidad?.nombre_comercial) || clean(sede?.nombre) || "TALLER DEL JOYERO";
+      const legal = clean(identidad?.razon_social);
+      // El encabezado mantiene el logotipo a la izquierda, como en la referencia.
+      const logoX = margin + 3;
+      const textX = embeddedLogo ? margin + 92 : margin;
+      if (embeddedLogo) {
+        const scale = Math.min(68 / embeddedLogo.width, 52 / embeddedLogo.height);
+        page.drawImage(embeddedLogo, {
+          x: logoX, y: y - 51,
+          width: embeddedLogo.width * scale, height: embeddedLogo.height * scale,
+        });
+      }
+      page.drawText(company, {
+        x: textX, y, size: 12, font: bold, color: accent,
       });
-      page.drawText(clean(contenido.subtitulo) || "Documento contractual", {
-        x: margin, y: y - 21, size: 9, font, color: rgb(0.42, 0.42, 0.45),
-      });
+      if (legal && legal !== company) {
+        page.drawText(legal, { x: textX, y: y - 14, size: 8, font: bold, color: rgb(0.58, 0.58, 0.58) });
+      }
+      const fiscal = clean(identidad?.ruc) ? `RUC ${clean(identidad.ruc)}` : "";
+      const address = [clean(identidad?.direccion), clean(identidad?.ciudad)].filter(Boolean);
+      let ly = y - (legal && legal !== company ? 27 : 16);
+      if (fiscal) {
+        page.drawText(fiscal, { x: textX, y: ly, size: 7.4, font, color: rgb(0.58, 0.58, 0.58) });
+        ly -= 10;
+      }
+      const rightLines = [...address, clean(identidad?.telefono), clean(identidad?.email)].filter(Boolean).slice(0, 4);
+      let ry = y;
+      for (const text of rightLines) {
+        const tw = font.widthOfTextAtSize(text, 7.3);
+        page.drawText(text, {
+          x: Math.max(pageWidth - margin - 205, pageWidth - margin - tw),
+          y: ry, size: 7.3, font: bold, color: rgb(0.1, 0.1, 0.1),
+        });
+        ry -= 10;
+      }
       page.drawText(clean(contrato.numero), {
-        x: 405, y, size: 10, font: bold, color: rgb(0.1, 0.1, 0.12),
+        x: pageWidth - margin - 145, y: y - 48, size: 9, font: bold, color: rgb(0.1, 0.1, 0.1),
       });
       page.drawText(`Versión ${version}`, {
-        x: 405, y: y - 15, size: 8.5, font, color: rgb(0.42, 0.42, 0.45),
+        x: pageWidth - margin - 145, y: y - 60, size: 7.5, font, color: rgb(0.58, 0.58, 0.58),
       });
       page.drawLine({
-        start: { x: margin, y: y - 28 },
-        end: { x: page.getWidth() - margin, y: y - 28 },
-        thickness: 1,
-        color: accent,
+        start: { x: margin, y: y - 72 },
+        end: { x: pageWidth - margin, y: y - 72 },
+        thickness: 0.8,
+        color: rgb(0.70, 0.70, 0.70),
       });
-      y -= 45;
+      y -= 89;
     }
 
     drawHeader();
@@ -319,15 +362,33 @@ Deno.serve(async (req) => {
       y -= 18;
       const totals: Array<[string, number]> = cotizacion
         ? [
-            ["Subtotal", Number(cotizacion.subtotal ?? 0)],
+            ["Importe sin impuestos", Number(cotizacion.subtotal ?? 0)],
             ["Descuento", -Number(cotizacion.descuento ?? 0)],
-            ["Impuestos", Number(cotizacion.impuestos ?? 0)],
+            ["IGV / IMPUESTOS", Number(cotizacion.impuestos ?? 0)],
           ]
         : [];
       totals.push(["TOTAL", totalContrato], ["ANTICIPO / ABONADO", abonadoContrato], ["SALDO PENDIENTE", saldoContrato]);
+      const boxX = 325;
+      const boxW = page.getWidth() - margin - boxX;
       for (const [label, value] of totals) {
+        ensure(18);
         const fuerte = label === "TOTAL" || label === "SALDO PENDIENTE";
-        line(`${label}: ${money(value, monedaContrato)}`, fuerte ? 10 : 8.8, fuerte ? bold : font);
+        const rowH = 16;
+        page.drawRectangle({
+          x: boxX, y: y - 4, width: boxW, height: rowH,
+          color: fuerte ? totalBlue : softBlue,
+          borderColor: rgb(0.1, 0.1, 0.1), borderWidth: 0.5,
+        });
+        const labelColor = fuerte ? rgb(1, 1, 1) : rgb(0.1, 0.1, 0.1);
+        page.drawText(label, { x: boxX + 5, y: y + 1, size: fuerte ? 8.1 : 7.4, font: fuerte ? bold : font, color: labelColor });
+        const amount = money(value, monedaContrato);
+        const amountFont = fuerte ? bold : font;
+        const amountSize = fuerte ? 8 : 7.2;
+        page.drawText(amount, {
+          x: boxX + boxW - amountFont.widthOfTextAtSize(amount, amountSize) - 5,
+          y: y + 1, size: amountSize, font: amountFont, color: labelColor,
+        });
+        y -= rowH;
       }
     }
 
@@ -357,6 +418,9 @@ Deno.serve(async (req) => {
       page.drawText("ACEPTACIÓN Y FIRMAS", { x: margin, y, size: 10.5, font: bold, color: accent });
       y -= 18;
       paragraph(textField(contenido, "textoAceptacion", "Las partes declaran haber revisado el contenido del presente contrato y aceptar las condiciones indicadas."), 8.8, 13);
+      // La aceptación puede ocupar varias líneas y provocar un salto de página.
+      // Reservar de nuevo el espacio evita que las firmas queden fuera del papel.
+      ensure(72);
       y -= 14;
       page.drawLine({ start: { x: margin, y }, end: { x: 250, y }, thickness: 0.8, color: rgb(0.25, 0.25, 0.27) });
       page.drawLine({ start: { x: 315, y }, end: { x: 553, y }, thickness: 0.8, color: rgb(0.25, 0.25, 0.27) });
