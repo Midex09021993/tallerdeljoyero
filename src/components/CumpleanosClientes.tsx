@@ -22,7 +22,7 @@ const plantillaPredeterminada = [
 ].join("\n");
 
 const mensajePara = (c:C) => (templates[c.participante_id??""] || plantillaPredeterminada)
-  .replace(/\\n/g, "\n")
+  .replace(/\\+n/g, "\n").replace(/\r\n?/g, "\n")
   .replaceAll("{nombre_cliente}", c.nombre)
   .replaceAll("{nombre_taller}", c.sede_nombre);
 
