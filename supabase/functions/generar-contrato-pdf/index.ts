@@ -311,7 +311,10 @@ Deno.serve(async (req) => {
       paragraph(identidadLine || "Identidad comercial registrada en el sistema.", 8.5, 11);
     }
 
-    line(`Fecha de emisión: ${(clean(cotizacion?.fecha_emision) || new Date().toISOString()).slice(0, 10).split("-").reverse().join("/")}`, 8.5, font, margin, rgb(0.42, 0.42, 0.45));
+    const fechaEmisionContrato = clean(cotizacion?.fecha_emision) || new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    line(`Fecha de emisión: ${fechaEmisionContrato.split("-").reverse().join("/")}`, 8.5, font, margin, rgb(0.42, 0.42, 0.45));
     if (boolField(contenido, "mostrarCotizacion") && cotizacion) {
       line(`Cotización: ${clean(cotizacion.numero)} · Versión ${cotizacion.version ?? "1"}`, 8.5, font, margin, rgb(0.42, 0.42, 0.45));
     }
