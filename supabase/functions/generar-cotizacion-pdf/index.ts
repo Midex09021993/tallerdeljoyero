@@ -521,14 +521,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    ensure(58);
-    y -= 8;
-    const signatureWidth = (width - margin * 2 - 60) / 2;
-    page.drawLine({ start: { x: margin, y }, end: { x: margin + signatureWidth, y }, thickness: 0.6, color: muted });
-    page.drawLine({ start: { x: margin + signatureWidth + 60, y }, end: { x: width - margin, y }, thickness: 0.6, color: muted });
-    page.drawText("Firma del cliente", { x: margin, y: y - 13, size: 7.5, font, color: muted });
-    page.drawText("Firma y sello del taller", { x: margin + signatureWidth + 60, y: y - 13, size: 7.5, font, color: muted });
-
     drawFooter(page, pageNumber);
     const pdfBytes = await pdf.save();
     const path = `${quote.id}/v${quote.version}-${crypto.randomUUID()}.pdf`;
