@@ -170,6 +170,29 @@ as $
     );
 $;
 
+create or replace function public.print_lab_can_access_storage_path(
+  _object_name text,
+  _write boolean default false
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select coalesce(public.has_role((select auth.uid()), 'dueno'::public.app_role), false)
+    or exists (
+      select 1
+      from public.participante_cuentas pc
+      join public.ecosistema_participantes ep on ep.id = pc.participante_id
+      where pc.user_id = (select auth.uid())
+        and pc.participante_id::text = split_part(_object_name, '/', 1)
+        and pc.estado = 'activo'
+        and ep.estado = 'activo'
+        and (not _write or pc.relacion in ('principal','miembro'))
+    );
+$;
+
 create or replace function public.print_lab_can_access_profile(
   _profile_id uuid,
   _write boolean default false
@@ -192,8 +215,10 @@ as $
 $;
 
 revoke all on function public.print_lab_can_access_participant(uuid, boolean) from public;
+revoke all on function public.print_lab_can_access_storage_path(text, boolean) from public;
 revoke all on function public.print_lab_can_access_profile(uuid, boolean) from public;
 grant execute on function public.print_lab_can_access_participant(uuid, boolean) to anon, authenticated;
+grant execute on function public.print_lab_can_access_storage_path(text, boolean) to authenticated;
 grant execute on function public.print_lab_can_access_profile(uuid, boolean) to anon, authenticated;
 
 -- Sustituir políticas iniciales por versiones que no consultan tablas internas
@@ -272,25 +297,25 @@ with check (
 drop policy if exists print_lab_storage_read_owner on storage.objects;
 create policy print_lab_storage_read_owner on storage.objects for select to authenticated using (
   bucket_id = 'aurum-print-lab'
-  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, false)
+  and public.print_lab_can_access_storage_path(name, false)
 );
 drop policy if exists print_lab_storage_insert_owner on storage.objects;
 create policy print_lab_storage_insert_owner on storage.objects for insert to authenticated with check (
   bucket_id = 'aurum-print-lab'
-  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+  and public.print_lab_can_access_storage_path(name, true)
 );
 drop policy if exists print_lab_storage_update_owner on storage.objects;
 create policy print_lab_storage_update_owner on storage.objects for update to authenticated using (
   bucket_id = 'aurum-print-lab'
-  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+  and public.print_lab_can_access_storage_path(name, true)
 ) with check (
   bucket_id = 'aurum-print-lab'
-  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+  and public.print_lab_can_access_storage_path(name, true)
 );
 drop policy if exists print_lab_storage_delete_owner on storage.objects;
 create policy print_lab_storage_delete_owner on storage.objects for delete to authenticated using (
   bucket_id = 'aurum-print-lab'
-  and public.print_lab_can_access_participant(nullif(split_part(name, '/', 1), '')::uuid, true)
+  and public.print_lab_can_access_storage_path(name, true)
 );
 
 
