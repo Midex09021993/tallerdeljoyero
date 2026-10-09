@@ -96,16 +96,13 @@ export function FichaCotizacionA4({ data }: { data: FichaCotizacionProps }) {
         <section className="space-y-2">
           <p className="text-[10px] text-slate-500">Sr(a).</p>
           <h3 className="text-sm font-bold uppercase" style={{ color: brand }}>{data.cliente.nombre}</h3>
-          <div className="grid grid-cols-2 gap-3 text-[10px] text-slate-600">
-            <p>Teléfono: {data.cliente.telefono || "—"}</p><p>Correo: {data.cliente.email || "—"}</p>
-          </div>
           <p className="pt-2 text-[11px] leading-5 text-slate-600">{introduction}</p>
         </section>
 
         <section className="my-6 grid grid-cols-3 gap-4 rounded-sm border border-slate-200 p-3">
-          <Dato label="Emisión">{fechaCorta(data.fecha)}</Dato>
-          <Dato label="Válida hasta">{fechaCorta(data.vencimiento)}</Dato>
-          <Dato label="Entrega solicitada">{fechaCorta(data.entrega)}</Dato>
+          <Dato label="Fecha de cotización">{fechaCorta(data.fecha)}</Dato>
+          <Dato label="Vencimiento">{fechaCorta(data.vencimiento)}</Dato>
+          <Dato label="Atendido por">{typeof config["atendido_por"] === "string" && config["atendido_por"].trim() ? config["atendido_por"] : typeof config["responsable_nombre"] === "string" && config["responsable_nombre"].trim() ? config["responsable_nombre"] : "—"}</Dato>
         </section>
 
         <section>
