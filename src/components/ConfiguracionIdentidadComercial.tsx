@@ -262,6 +262,7 @@ export function ConfiguracionIdentidadComercial() {
     const payload = {
       participante_id: form.participante_id || null,
       nombre_comercial: form.nombre_comercial.trim(), razon_social: form.razon_social?.trim() || null, ruc: form.ruc?.trim() || null,
+      rnp_bienes: form.rnp_bienes?.trim() || null, rpp_servicios: form.rpp_servicios?.trim() || null,
       logo_url: form.logo_url?.trim() || null, email: form.email?.trim() || null, telefono: form.telefono?.trim() || null,
       whatsapp: form.whatsapp?.trim() || null, direccion: form.direccion?.trim() || null, ciudad: form.ciudad?.trim() || null,
       sitio_web: form.sitio_web?.trim() || null, color_principal: form.color_principal?.trim() || null, pie_documento: form.pie_documento?.trim() || null,
