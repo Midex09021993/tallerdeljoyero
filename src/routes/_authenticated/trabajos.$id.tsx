@@ -207,7 +207,7 @@ function TrabajoOperativoPage() {
       return data ?? [];
     },
   });
-  type PedidoTrabajoVista = { corte_texto?: string | null; corte_tipografia?: string | null; corte_ubicacion?: string | null; corte_observaciones?: string | null; sedes?: { nombre: string } | null; [key: string]: unknown } | null;
+  type PedidoTrabajoVista = { id?: string; referencia?: string | null; pieza?: string | null; trabajo?: string | null; material?: string | null; talla?: string | null; piedras?: string | null; peso_estimado?: number | null; cantidad_piezas?: number | null; fecha_ingreso?: string | null; fecha_entrega?: string | null; origen?: string | null; area_actual?: string | null; area_desde?: string | null; notas?: string | null; ruta?: string[] | null; corte_texto?: string | null; corte_tipografia?: string | null; corte_ubicacion?: string | null; corte_observaciones?: string | null; sedes?: { nombre: string } | null } | null;
   const { data: pedidoTrabajo } = useQuery<PedidoTrabajoVista>({
     queryKey: ["pedido-trabajo", trabajo?.pedido_id, trabajo?.tipo],
     enabled: Boolean(trabajo?.pedido_id),
@@ -217,7 +217,7 @@ function TrabajoOperativoPage() {
           _trabajo_id: trabajo.id,
         });
         if (error) throw error;
-        const ficha = data as { pedido?: Record<string, unknown> } | null;
+        const ficha = data as { pedido?: Omit<NonNullable<PedidoTrabajoVista>, "sedes"> } | null;
         return ficha?.pedido ? { ...ficha.pedido, sedes: null } as PedidoTrabajoVista : null;
       }
       const { data, error } = await supabase
