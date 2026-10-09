@@ -19,6 +19,7 @@ import {
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { abrirDocumentoA4, type DocumentoA4Identidad, type DocumentoA4Detalle } from "@/components/DocumentoComercialA4";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -83,6 +84,9 @@ function ContratoPage() {
   const [abriendoPdf, setAbriendoPdf] = useState(false);
   const [pdfDisponible, setPdfDisponible] = useState(false);
   const [pdfHash, setPdfHash] = useState<string | null>(null);
+  const [identidadDocumento, setIdentidadDocumento] = useState<DocumentoA4Identidad | null>(null);
+  const [detallesDocumento, setDetallesDocumento] = useState<DocumentoA4Detalle[]>([]);
+  const [datosCotizacion, setDatosCotizacion] = useState<{ numero: string; fecha: string; vencimiento: string | null; moneda: string; subtotal: number; descuento: number; impuestos: number; total: number; notas: string | null } | null>(null);
 
   useEffect(() => {
     if (contrato && modalAbierto) {
@@ -90,6 +94,52 @@ function ContratoPage() {
       setRuta([]);
     }
   }, [contrato, modalAbierto]);
+
+  // Reutiliza la identidad comercial y la cotización vinculada cuando existe.
+  useEffect(() => {
+    if (!contrato?.id) return;
+    let activo = true;
+    void (async () => {
+      const { data: registro } = await supabase.from("contratos").select("cotizacion_id,sede_id").eq("id", contrato.id).maybeSingle();
+      let identidad: Record<string, unknown> | null = null;
+      let cotizacion: any = null;
+      if (registro?.cotizacion_id) {
+        const { data } = await supabase.from("cotizaciones")
+          .select("id,numero,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,notas_cliente,identidad_comercial_id,identidad_comercial,participante_id")
+          .eq("id", registro.cotizacion_id).maybeSingle();
+        cotizacion = data;
+        if (cotizacion?.identidad_comercial_id) {
+          const { data: identity } = await supabase.from("identidades_comerciales")
+            .select("id,participante_id,sede_id,nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label,metadata,activa")
+            .eq("id", cotizacion.identidad_comercial_id).maybeSingle();
+          identidad = identity as Record<string, unknown> | null;
+        }
+        if (cotizacion?.id) {
+          const { data: rows } = await supabase.from("cotizacion_detalles")
+            .select("descripcion,cantidad,unidad,precio_unitario,total_precio").eq("cotizacion_id", cotizacion.id).order("orden");
+          if (activo) setDetallesDocumento((rows ?? []).map((d) => ({ descripcion: d.descripcion, cantidad: Number(d.cantidad), unidad: d.unidad, precio_unitario: Number(d.precio_unitario), total_precio: Number(d.total_precio) })));
+        }
+      }
+      if (!identidad && cotizacion?.participante_id) {
+        const { data } = await supabase.from("identidades_comerciales")
+          .select("id,participante_id,sede_id,nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label,metadata,activa")
+          .eq("participante_id", cotizacion.participante_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        identidad = data as Record<string, unknown> | null;
+      }
+      if (!identidad && registro?.sede_id) {
+        const { data } = await supabase.from("identidades_comerciales")
+          .select("id,participante_id,sede_id,nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,email,telefono,whatsapp,direccion,ciudad,sitio_web,color_principal,pie_documento,identificador_fiscal_label,metadata,activa")
+          .eq("sede_id", registro.sede_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        identidad = data as Record<string, unknown> | null;
+      }
+      const snapshot = cotizacion?.identidad_comercial && typeof cotizacion.identidad_comercial === "object" ? cotizacion.identidad_comercial : {};
+      if (activo) {
+        setIdentidadDocumento({ ...(identidad ?? {}), ...snapshot } as DocumentoA4Identidad);
+        if (cotizacion) setDatosCotizacion({ numero: cotizacion.numero, fecha: cotizacion.fecha_emision, vencimiento: cotizacion.fecha_vencimiento, moneda: cotizacion.moneda, subtotal: Number(cotizacion.subtotal), descuento: Number(cotizacion.descuento), impuestos: Number(cotizacion.impuestos), total: Number(cotizacion.total), notas: cotizacion.notas_cliente });
+      }
+    })();
+    return () => { activo = false; };
+  }, [contrato?.id]);
 
   // Recupera el estado del documento ya generado (ruta + hash, sin enlace persistente).
   const contratoId = contrato?.id;
@@ -178,6 +228,7 @@ function ContratoPage() {
             titulo={`Contrato ${contrato.numero}`}
             accion={
               <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => abrirDocumentoA4({ tipo: "contrato", numero: contrato.numero, fecha: contrato.created_at, moneda: datosCotizacion?.moneda ?? "PEN", cliente: { nombre: contrato.cliente, telefono: contrato.telefono }, identidad: identidadDocumento, tallerNombre: contrato.sede_nombre, detalles: detallesDocumento, subtotal: datosCotizacion?.subtotal ?? contrato.total, descuento: datosCotizacion?.descuento ?? 0, impuestos: datosCotizacion?.impuestos ?? 0, total: contrato.total, anticipo: contrato.abonado, saldo: contrato.saldo, notas: contrato.notas, contenidoContrato: datosCotizacion ? "Cotización vinculada: " + datosCotizacion.numero : contrato.origen })} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-surface-muted">Vista previa A4 · Imprimir / PDF</button>
                 {pdfDisponible ? (
                   <button
                     type="button"
