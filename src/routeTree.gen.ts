@@ -11,12 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
-import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
+import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
@@ -43,6 +44,7 @@ import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
+import { Route as SlugColeccionColeccionRouteImport } from './routes/$slug/coleccion/$coleccion'
 import { Route as AuthenticatedContratosIndexRouteImport } from './routes/_authenticated/contratos.index'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
 import { Route as AuthenticatedContratosNuevoRouteImport } from './routes/_authenticated/contratos.nuevo'
@@ -68,11 +70,6 @@ const SlugRoute = SlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SlugProductoRoute = SlugProductoRouteImport.update({
-  id: '/$slug/$producto',
-  path: '/$producto',
-  getParentRoute: () => SlugRoute,
-} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -96,6 +93,16 @@ const ClienteRoute = ClienteRouteImport.update({
   id: '/cliente',
   path: '/cliente',
   getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
+  id: '/recuperar-contrasena',
+  path: '/recuperar-contrasena',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugProductoRoute = SlugProductoRouteImport.update({
+  id: '/$producto',
+  path: '/$producto',
+  getParentRoute: () => SlugRoute,
 } as any)
 const AuthenticatedAurumRenderRoute =
   AuthenticatedAurumRenderRouteImport.update({
@@ -233,6 +240,11 @@ const TransferTokenRoute = TransferTokenRouteImport.update({
   path: '/transfer/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlugColeccionColeccionRoute = SlugColeccionColeccionRouteImport.update({
+  id: '/coleccion/$coleccion',
+  path: '/coleccion/$coleccion',
+  getParentRoute: () => SlugRoute,
+} as any)
 const AuthenticatedContratosIndexRoute =
   AuthenticatedContratosIndexRouteImport.update({
     id: '/contratos/',
@@ -315,11 +327,12 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRouteWithChildren
-  '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/recuperar-contrasena': typeof RecuperarContrasenaRoute
+  '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -346,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer/': typeof TransferIndexRoute
+  '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -363,11 +377,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/recuperar-contrasena': typeof RecuperarContrasenaRoute
+  '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
@@ -392,6 +408,7 @@ export interface FileRoutesByTo {
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer': typeof TransferIndexRoute
+  '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -410,13 +427,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/$slug': typeof SlugRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/recuperar-contrasena': typeof RecuperarContrasenaRoute
+  '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
@@ -443,6 +461,7 @@ export interface FileRoutesById {
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer/': typeof TransferIndexRoute
+  '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
   '/_authenticated/contratos/nuevo': typeof AuthenticatedContratosNuevoRoute
   '/_authenticated/cotizaciones/$id': typeof AuthenticatedCotizacionesIdRoute
@@ -463,11 +482,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$slug'
-    | '/$slug/$producto'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/recuperar-contrasena'
+    | '/$slug/$producto'
     | '/aurum-render'
     | '/casting'
     | '/catalogo'
@@ -494,6 +514,7 @@ export interface FileRouteTypes {
     | '/joya/$token'
     | '/transfer/$token'
     | '/transfer/'
+    | '/$slug/coleccion/$coleccion'
     | '/contratos/$id'
     | '/contratos/nuevo'
     | '/cotizaciones/$id'
@@ -516,6 +537,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/recuperar-contrasena'
+    | '/$slug/$producto'
     | '/aurum-render'
     | '/casting'
     | '/catalogo'
@@ -540,6 +563,7 @@ export interface FileRouteTypes {
     | '/joya/$token'
     | '/transfer/$token'
     | '/transfer'
+    | '/$slug/coleccion/$coleccion'
     | '/contratos/$id'
     | '/contratos/nuevo'
     | '/cotizaciones/$id'
@@ -563,6 +587,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/recuperar-contrasena'
+    | '/$slug/$producto'
     | '/_authenticated/aurum-render'
     | '/_authenticated/casting'
     | '/_authenticated/catalogo'
@@ -589,6 +615,7 @@ export interface FileRouteTypes {
     | '/joya/$token'
     | '/transfer/$token'
     | '/transfer/'
+    | '/$slug/coleccion/$coleccion'
     | '/_authenticated/contratos/$id'
     | '/_authenticated/contratos/nuevo'
     | '/_authenticated/cotizaciones/$id'
@@ -613,6 +640,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
+  RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
   JoyaTokenRoute: typeof JoyaTokenRoute
   TransferTokenRoute: typeof TransferTokenRoute
@@ -637,13 +665,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/$slug'
       preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/$slug/$producto': {
-      id: '/$slug/$producto'
-      path: '/$producto'
-      fullPath: '/$slug/$producto'
-      preLoaderRoute: typeof SlugProductoRouteImport
-      parentRoute: typeof SlugRouteImport
     }
     '/_authenticated': {
       id: '/_authenticated'
@@ -679,6 +700,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/cliente'
       preLoaderRoute: typeof ClienteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/recuperar-contrasena': {
+      id: '/recuperar-contrasena'
+      path: '/recuperar-contrasena'
+      fullPath: '/recuperar-contrasena'
+      preLoaderRoute: typeof RecuperarContrasenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug/$producto': {
+      id: '/$slug/$producto'
+      path: '/$producto'
+      fullPath: '/$slug/$producto'
+      preLoaderRoute: typeof SlugProductoRouteImport
+      parentRoute: typeof SlugRoute
     }
     '/_authenticated/aurum-render': {
       id: '/_authenticated/aurum-render'
@@ -861,6 +896,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/transfer/$token'
       preLoaderRoute: typeof TransferTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/$slug/coleccion/$coleccion': {
+      id: '/$slug/coleccion/$coleccion'
+      path: '/coleccion/$coleccion'
+      fullPath: '/$slug/coleccion/$coleccion'
+      preLoaderRoute: typeof SlugColeccionColeccionRouteImport
+      parentRoute: typeof SlugRoute
     }
     '/_authenticated/contratos/': {
       id: '/_authenticated/contratos/'
@@ -1066,6 +1108,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface SlugRouteChildren {
+  SlugProductoRoute: typeof SlugProductoRoute
+  SlugColeccionColeccionRoute: typeof SlugColeccionColeccionRoute
+}
+
+const SlugRouteChildren: SlugRouteChildren = {
+  SlugProductoRoute: SlugProductoRoute,
+  SlugColeccionColeccionRoute: SlugColeccionColeccionRoute,
+}
+
+const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
+
 interface CCodigoRouteChildren {
   CCodigoPdfRoute: typeof CCodigoPdfRoute
 }
@@ -1077,14 +1131,6 @@ const CCodigoRouteChildren: CCodigoRouteChildren = {
 const CCodigoRouteWithChildren =
   CCodigoRoute._addFileChildren(CCodigoRouteChildren)
 
-interface SlugRouteChildren {
-  SlugProductoRoute: typeof SlugProductoRoute
-}
-const SlugRouteChildren: SlugRouteChildren = {
-  SlugProductoRoute: SlugProductoRoute,
-}
-const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1093,6 +1139,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
+  RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
   JoyaTokenRoute: JoyaTokenRoute,
   TransferTokenRoute: TransferTokenRoute,
