@@ -379,7 +379,13 @@ Deno.serve(async (req) => {
     // Presentación por línea al estilo de referencia. Los impuestos y descuentos
     // se distribuyen proporcionalmente solo para mostrar el desglose, sin alterar los totales guardados.
     const items = detalles ?? [];
-    const bases = items.map((item: any) => Math.max(0, Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0)));
+    // Prioriza el importe de línea persistido; solo calcula cantidad × precio
+    // cuando la fila antigua no tenga total_precio.
+    const bases = items.map((item: any) => {
+      const totalGuardado = Number(item.total_precio);
+      const calculado = Number(item.cantidad ?? 0) * Number(item.precio_unitario ?? 0);
+      return Math.max(0, Number.isFinite(totalGuardado) ? totalGuardado : calculado);
+    });
     const sumaBases = bases.reduce((sum: number, value: number) => sum + value, 0);
     for (let idx = 0; idx < items.length; idx++) {
       const item = items[idx];
