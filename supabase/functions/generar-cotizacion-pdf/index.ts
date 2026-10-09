@@ -333,16 +333,16 @@ Deno.serve(async (req) => {
       ensure(72);
       page.drawText("Sr(a).", { x: margin, y, size: 7.5, font, color: muted });
       page.drawText(clean(cliente?.nombre) || "—", { x: margin, y: y - 13, size: 11, font: bold, color: ink });
-      if (clean(cliente?.telefono) || clean(cliente?.email)) {
-        page.drawText([clean(cliente?.telefono), clean(cliente?.email)].filter(Boolean).join(" · "), { x: margin, y: y - 27, size: 7.2, font, color: muted });
-      }
       const rx = 330;
-      page.drawText("DATOS DE LA COTIZACIÓN", { x: rx, y, size: 7.5, font: bold, color: muted });
-      page.drawText(`Fecha de cotización: ${formatDate(quoteData.fecha_emision)}`, { x: rx, y: y - 13, size: 7.7, font });
-      page.drawText(`Vencimiento: ${formatDate(quote.fecha_vencimiento)}`, { x: rx, y: y - 26, size: 7.7, font });
-      page.drawText(`Atendido por: ${atendidoPor || "—"}`, { x: rx, y: y - 39, size: 7.7, font });
-      if (clean(quote.fecha_entrega_solicitada)) page.drawText(`Entrega: ${formatDate(quote.fecha_entrega_solicitada)}`, { x: rx, y: y - 52, size: 7.7, font });
-      y -= 70;
+      const labelY = y - 27;
+      const valueY = y - 40;
+      page.drawText("FECHA DE COTIZACIÓN", { x: margin, y: labelY, size: 7, font: bold, color: muted });
+      page.drawText(formatDate(quoteData.fecha_emision), { x: margin, y: valueY, size: 8, font, color: ink });
+      page.drawText("VENCIMIENTO", { x: rx, y: labelY, size: 7, font: bold, color: muted });
+      page.drawText(formatDate(quote.fecha_vencimiento), { x: rx, y: valueY, size: 8, font, color: ink });
+      page.drawText("ATENDIDO POR", { x: 455, y: labelY, size: 7, font: bold, color: muted });
+      page.drawText(atendidoPor || "—", { x: 455, y: valueY, size: 8, font, color: ink });
+      y -= 58;
     };
 
     const tableX = [margin, 342, 386, 432, 478, width - margin];
