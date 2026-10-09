@@ -368,66 +368,53 @@ Deno.serve(async (req) => {
       page.drawText("Firma / representante", { x: 315, y, size: 7.5, font: italic, color: rgb(0.45, 0.45, 0.47) });
     }
 
-    const pie = clean(contenido.pie) || clean(identidad?.pie_documento);
-    page.drawText(pie || "Documento contractual generado por el sistema.", {
-      x: margin, y: 32, size: 7.2, font, color: rgb(0.45, 0.45, 0.47),
-      maxWidth: page.getWidth() - margin * 2,
+    const pie = clean(identidad?.pie_documento) || clean(contenido.pie) || "Documento contractual generado por AURUM LAB.";
+    const paginas = pdf.getPages();
+    paginas.forEach((p, i) => {
+      p.drawLine({ start: { x: margin, y: 44 }, end: { x: p.getWidth() - margin, y: 44 }, thickness: 0.5, color: rgb(0.82, 0.82, 0.84) });
+      p.drawText(pie.slice(0, 110), { x: margin, y: 30, size: 7.2, font, color: rgb(0.45, 0.45, 0.47) });
+      p.drawText(`Página ${i + 1} de ${paginas.length}`, { x: p.getWidth() - margin - 62, y: 30, size: 7.2, font, color: rgb(0.45, 0.45, 0.47) });
     });
 
     const pdfBytes = await pdf.save();
     const digest = await crypto.subtle.digest("SHA-256", pdfBytes);
     const sha256 = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
-    const path = `contratos/${contrato.id}/v${version}-original-${crypto.randomUUID()}.pdf`;
+    const path = `contratos/${contrato.id}/v${version}-${crypto.randomUUID()}.pdf`;
     const { error: uploadError } = await admin.storage
       .from("cotizaciones-publicas")
       .upload(path, pdfBytes, { contentType: "application/pdf", upsert: false });
 
     if (uploadError) return json({ error: "No se pudo guardar el PDF del contrato." }, 500);
 
-    const { data: signed, error: signedError } = await admin.storage
-      .from("cotizaciones-publicas")
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    const generadoAt = new Date().toISOString();
+    const { error: updateError } = await userClient
+      .from("contratos")
+      .update({ pdf_storage_path: path, pdf_sha256: sha256, pdf_generado_at: generadoAt })
+      .eq("id", contrato.id);
 
-    if (signedError || !signed?.signedUrl) {
-      await admin.storage.from("cotizaciones-publicas").remove([path]);
-      return json({ error: "No se pudo generar el enlace del contrato." }, 500);
-    }
-
-    const { error: documentError } = await admin.from("contrato_documentos").upsert({
-      contrato_id: contrato.id,
-      version,
-      tipo: "original",
-      storage_path: path,
-      sha256,
-      plantilla_version: plantillaVersion,
-      plantilla_contenido: contenido,
-      creado_por: user.id,
-    }, { onConflict: "contrato_id,version,tipo" });
-
-    if (documentError) {
+    if (updateError) {
       await admin.storage.from("cotizaciones-publicas").remove([path]);
       return json({ error: "No se pudo registrar el documento contractual." }, 500);
     }
 
-    const { error: contractUpdateError } = await admin.from("contratos").update({
-      identidad_comercial_id: identidadId,
-      plantilla_contrato_id: contratoVersionado.plantilla_contrato_id,
-      plantilla_version: plantillaVersion,
-    }).eq("id", contrato.id);
-
-    if (contractUpdateError) {
-      console.error("No se pudo guardar el vínculo de plantilla", contractUpdateError);
+    if (contrato.pdf_storage_path && contrato.pdf_storage_path !== path) {
+      await admin.storage.from("cotizaciones-publicas").remove([contrato.pdf_storage_path]);
     }
+
+    // Enlace de corta duración solo para abrirlo ahora; no se persiste.
+    const { data: signed } = await admin.storage
+      .from("cotizaciones-publicas")
+      .createSignedUrl(path, 60 * 10);
 
     return json({
       ok: true,
       contrato_id: contrato.id,
       numero: contrato.numero,
-      version,
-      plantilla_version: plantillaVersion,
+      paginas: paginas.length,
       sha256,
-      url: signed.signedUrl,
+      generado_at: generadoAt,
+      url: signed?.signedUrl ?? null,
     });
   } catch (error) {
     console.error("generar-contrato-pdf", error);
