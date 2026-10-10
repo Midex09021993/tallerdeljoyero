@@ -8,6 +8,7 @@ import { useContratos, usePagosContratos, usePedidos, resumenFinancieroContrato,
 import { fmtFecha } from "@/lib/utils";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { toast } from "sonner";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/ventas/$id")({
   head: () => ({ meta: [{ title: "Ficha comercial — Ventas" }, { name: "description", content: "Ficha comercial y de entrega del pedido." }] }),
@@ -19,11 +20,14 @@ function Venta2Detalle() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
-  const pedido = pedidos.find((p) => p.id === id);
+  const { filtrarPedidos } = useSedeFiltroDueno();
+  const pedidosSede = filtrarPedidos(pedidos);
+  const pedido = pedidosSede.find((p) => p.id === id);
   const puede = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
   const { data: contratos = [] } = useContratos(puede);
-  const { data: pagos = [] } = usePagosContratos(contratos, puede);
-  const contrato = pedido?.contrato_id ? contratos.find((c) => c.id === pedido.contrato_id) : pedido?.contrato ? contratos.find((c) => c.numero === pedido.contrato) : undefined;
+  const contratosSede = filtrarPedidos(contratos);
+  const { data: pagos = [] } = usePagosContratos(contratosSede, puede);
+  const contrato = pedido?.contrato_id ? contratosSede.find((c) => c.id === pedido.contrato_id) : pedido?.contrato ? contratosSede.find((c) => c.numero === pedido.contrato) : undefined;
   const pagosPedido = contrato ? pagos.filter((p) => p.contrato_id === contrato.id) : [];
   const resumen = resumenFinancieroContrato(contrato, pagosPedido);
   const [accion, setAccion] = useState<"pago" | "despachar" | "entregar" | null>(null);
