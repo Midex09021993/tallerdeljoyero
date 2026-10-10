@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight, CalendarClock, ClipboardList, Factory, PackageCheck, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useBorrarPedido, usePedidos, esEstadoFinalPedido, pedidoPendienteAutorizacionProduccion, estadoClases } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 import { useSesion } from "@/lib/auth";
@@ -26,7 +26,7 @@ function PedidosPage() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading, isError, error } = usePedidos();
-  const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const { filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const [vista, setVista] = useState<Vista>("todos");
   const [busqueda, setBusqueda] = useState("");
   const [porBorrar, setPorBorrar] = useState<{ id: string; referencia: string } | null>(null);
@@ -50,7 +50,7 @@ function PedidosPage() {
     <AppShell
       titulo="Pedidos"
       subtitulo={isLoading ? "Cargando operación…" : isError ? "No se pudo cargar la operación" : `${activos.length} pedidos activos · ${sesion?.esDueno ? etiquetaSede : sesion?.sede?.nombre ?? "Tu sede"}`}
-      acciones={<div className="flex flex-wrap items-center gap-2"><SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />{sesion?.esAdmin ? <button type="button" onClick={() => navigate({ to: "/pedidos/nuevo" })} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground shadow-card"><Plus className="size-4" /> Nuevo pedido</button> : null}</div>}
+      acciones={sesion?.esAdmin ? <button type="button" onClick={() => navigate({ to: "/pedidos/nuevo" })} className="inline-flex items-center gap-2 rounded-xl bg-gold px-3.5 py-2.5 text-xs font-semibold text-gold-foreground shadow-card"><Plus className="size-4" /> Nuevo pedido</button> : null}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={ClipboardList} label="Activos" value={activos.length} onClick={() => setVista("todos")} active={vista === "todos"} />
