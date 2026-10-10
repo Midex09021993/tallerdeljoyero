@@ -348,13 +348,15 @@ function CotizacionDetallePage() {
     setConvirtiendoPedido(false);
   }
 
-  async function copiarTexto(texto: string, tipo: "enlace" | "pdf") {
+  async function copiarTexto(texto: string, tipo: "enlace" | "pdf"): Promise<boolean> {
     try {
       await navigator.clipboard.writeText(texto);
       setCopiado(tipo);
       window.setTimeout(() => setCopiado(null), 1800);
+      return true;
     } catch {
       setError("No se pudo copiar el enlace. Puedes copiarlo manualmente.");
+      return false;
     }
   }
 
@@ -400,8 +402,8 @@ function CotizacionDetallePage() {
     const enlace = enlacePdfCliente();
     if (!enlace) return;
 
-    if (!(await marcarComoEnviada())) return;
-    await copiarTexto(enlace, "pdf");
+    const copiadoCorrectamente = await copiarTexto(enlace, "pdf");
+    if (copiadoCorrectamente) await marcarComoEnviada();
   }
 
   function numeroWhatsAppRegistrado() {
@@ -456,19 +458,6 @@ function CotizacionDetallePage() {
       return;
     }
 
-    if (cotizacion?.estado === "borrador") {
-      const { error: estadoError } = await supabase.rpc("cambiar_estado_cotizacion", {
-        _cotizacion_id: cotizacion.id,
-        _nuevo_estado: "enviada",
-      });
-      if (estadoError) {
-        ventana.close();
-        setError(estadoError.message);
-        return;
-      }
-      setCotizacion((actual) => actual ? { ...actual, estado: "enviada" } : actual);
-    }
-
     const enlaceCliente = `${window.location.origin}/c/${codigoSeguimiento}`;
     const mensaje = [
       "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
@@ -479,6 +468,7 @@ function CotizacionDetallePage() {
     ].join("\n");
     const destino = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
     ventana.location.href = destino;
+    await marcarComoEnviada();
   }
 
   async function descargarPdf(urlPdf: string) {
