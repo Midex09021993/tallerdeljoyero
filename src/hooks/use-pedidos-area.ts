@@ -49,10 +49,10 @@ export function pedidoEnAreaActual(pedido: Pick<PedidoOperativo, "area_actual">,
 
 export function usePedidosDeArea(area: string) {
   const { data: sesion } = useSesion();
-  const { filtrarPedidos } = useSedeFiltroDueno();
+  const { filtrarPedidos, sedeFiltro, esDueno } = useSedeFiltroDueno();
 
   const query = useQuery({
-    queryKey: ["pedidos-area-operativa", area, sesion?.user.id],
+    queryKey: ["pedidos-area-operativa", area, sesion?.user.id, esDueno ? sedeFiltro : sesion?.participante?.sede_id],
     queryFn: async (): Promise<PedidoOperativo[]> => {
       const { data, error } = await supabase
         .from("pedidos")
