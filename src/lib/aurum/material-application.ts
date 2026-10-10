@@ -256,6 +256,15 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // a generic family preset. This is what lets DAROS-grade source materials
     // survive the AURUM material application pipeline.
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
+    // Enable the native iJewel-inspired optical path only for diamonds. The
+    // LIVE quality controller swaps this beauty shader out during interaction.
+    if(preset.familia==="Diamante"){
+      next.userData={
+        ...(next.userData??{}),
+        aurumIJEWELActive:true,
+        aurumDiamondShaderMode:"native-ijewel-approx-v1",
+      };
+    }
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
