@@ -84,7 +84,6 @@ function ContratoPage() {
   const [pagoAbierto, setPagoAbierto] = useState(false);
   const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
-  const [generandoPdf, setGenerandoPdf] = useState(false);
 
   useEffect(() => {
     if (contrato && modalAbierto) {
@@ -152,27 +151,6 @@ function ContratoPage() {
             accion={
               <div className="flex flex-wrap items-center gap-2">
                 <FichaContratoA4 contrato={contrato} />
-                <button
-                  type="button"
-                  disabled={generandoPdf}
-                  onClick={async () => {
-                    setGenerandoPdf(true);
-                    const { data, error } = await supabase.functions.invoke("generar-contrato-pdf", {
-                      body: { contrato_id: contrato.id },
-                    });
-                    if (error || !data?.sha256) {
-                      toast.error(data?.error || error?.message || "No se pudo generar el contrato.");
-                    } else {
-                      toast.success("Contrato PDF generado.");
-                      if (data.url) window.open(data.url, "_blank", "noopener");
-                    }
-                    setGenerandoPdf(false);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-                >
-                  <FileText className="size-3.5" />
-                  {generandoPdf ? "Generando…" : "Generar contrato PDF"}
-                </button>
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/pedidos" })}
