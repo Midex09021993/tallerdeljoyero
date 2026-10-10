@@ -111,7 +111,7 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id,identidad_comercial")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -143,7 +143,10 @@ function CotizacionDetallePage() {
         .order("updated_at", { ascending: false }).limit(1).maybeSingle();
       identidadActual = identidad as FichaCotizacionIdentidad | null;
     }
-    setIdentidadFicha(identidadActual);
+    const identidadHistorica = q.identidad_comercial && typeof q.identidad_comercial === "object"
+      ? q.identidad_comercial as FichaCotizacionIdentidad
+      : null;
+    setIdentidadFicha(identidadHistorica ?? identidadActual);
     let versionesRelacionadasQuery = supabase
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
