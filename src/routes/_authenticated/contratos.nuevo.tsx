@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/contratos/nuevo")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    cotizacionId: typeof search.cotizacionId === "string" ? search.cotizacionId : undefined,
+  validateSearch: (search: Record<string, unknown>): { cotizacionId?: string | undefined } => ({
+    cotizacionId: typeof search["cotizacionId"] === "string" ? (search["cotizacionId"] as string) : undefined,
   }),
   head: () => ({ meta: [{ title: "Nuevo contrato — Aurum Lab" }] }),
   component: NuevoContratoPage,
