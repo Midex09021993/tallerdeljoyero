@@ -466,7 +466,9 @@ export function AurumRender() {
           renderer.shadowMap.enabled=renderQuality.shadows;
           renderer.shadowMap.needsUpdate=true;
         }
-        liveTransmissionScaleRef.current=Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        liveTransmissionScaleRef.current=live
+          ? runtimeBudget.interactionTransmissionScale
+          : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
@@ -890,6 +892,7 @@ export function AurumRender() {
             composer?.setPixelRatio?.(interactionDpr);
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
+            aplicarPerfilLive();
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
           },
@@ -907,7 +910,7 @@ export function AurumRender() {
             liveFastPathRef.current = false;
             renderer.shadowMap.enabled = renderQuality.shadows;
             renderer.shadowMap.needsUpdate = true;
-            invalidateRenderRef.current?.();
+            aplicarPerfilLive();
           },
         }
       );
