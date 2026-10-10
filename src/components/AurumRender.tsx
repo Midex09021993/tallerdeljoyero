@@ -15,7 +15,7 @@ import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
-import { clearAurumInclusions, renderAurumInclusions, setAurumInclusionsVisible } from "../lib/aurum/gems";
+import { setAurumInclusionsVisible } from "../lib/aurum/gems";
 import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
@@ -29,7 +29,7 @@ import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
-import { Camera, ChevronDown, Download, Expand, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
+import { ChevronDown, Expand, Gem, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
@@ -126,12 +126,6 @@ export function AurumRender() {
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
   categoriaProyectoRef.current = categoriaProyecto;
-  const [captura, setCaptura] = useState<string | null>(null);
-  const [captureMenuOpen, setCaptureMenuOpen] = useState(false);
-  const [captureResolution, setCaptureResolution] = useState<"normal"|"hd"|"fullhd">("hd");
-  const [capturePanelOpen, setCapturePanelOpen] = useState(false);
-  const [capturing, setCapturing] = useState(false);
-  const captureInProgressRef = useRef(false);
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
@@ -401,7 +395,6 @@ export function AurumRender() {
         applyAurumMetal(mat, metalPresetFromConfig(m));
       };
       const limpiarInclusiones = (target:any) => clearAurumGemFromTarget(target);
-      const crearInclusiones = (target:any, g:GemaConfig) => renderAurumInclusions(THREE,target,g,9173);
 
       // LIVE material profile: iJewel's interactive view is environment-driven.
       // Clearcoat is an additional physical layer and is not required for the
@@ -477,23 +470,6 @@ export function AurumRender() {
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
-      const prepararInclusionesCaptura = () => {
-        if (!modelo) return;
-        modelo.traverse((x:any) => {
-          if (!x.isMesh || String(x.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") return;
-          const gemId=String(x.userData?.aurumActiveGemId??"diamante_natural");
-          const gem=GEMAS.find((g:any)=>String(g.id)===gemId) ?? GEMAS.find((g:any)=>g.id==="diamante_natural");
-          if (gem) crearInclusiones(x,gem);
-        });
-      };
-
-      const limpiarInclusionesCaptura = () => {
-        if (!modelo) return;
-        modelo.traverse((x:any) => {
-          if (!x.isMesh || String(x.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") return;
-          clearAurumInclusions(x);
-        });
-      };
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva;
         applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.());
@@ -757,130 +733,6 @@ export function AurumRender() {
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
-        capturar:(resolution:"normal"|"hd"|"fullhd"="hd")=>{
-          if (captureInProgressRef.current) return null;
-          captureInProgressRef.current = true;
-          viewerLoop.pause?.();
-          const previousQuality=measuredQualityId;
-          const previousPixelRatio=renderer.getPixelRatio?.() ?? 1;
-          const previousWidth=nodo.clientWidth||900;
-          const previousHeight=nodo.clientHeight||600;
-          const sizes={
-            normal:{width:854,height:480},
-            hd:{width:1280,height:720},
-            fullhd:{width:1920,height:1080},
-          } as const;
-          const target=sizes[resolution]??sizes.hd;
-          const previousRenderToScreen=composer?.renderToScreen;
-          let data:string|null=null;
-
-          try{
-            // CAPTURA = modo fotográfico independiente. La resolución elegida
-            // controla el tamaño real del archivo y también el presupuesto de
-            // muestras/postprocesado. No tiene sentido gastar 16 renders completos
-            // para una imagen 854x480.
-            const captureProfiles:any={
-              normal:{
-                width:854,height:480,frames:4,ssr:false,ssao:false,
-                bloom:.12,transmission:.52
-              },
-              hd:{
-                width:1280,height:720,frames:8,ssr:false,ssao:true,
-                bloom:.16,transmission:.66
-              },
-              fullhd:{
-                width:1920,height:1080,frames:12,ssr:true,ssao:true,
-                bloom:.20,transmission:.82
-              },
-            };
-            const profile=captureProfiles[resolution]??captureProfiles.hd;
-            const captureQuality={
-              ...getAurumRenderQuality("ultra"),
-              pixelRatio:1,
-              transmissionScale:profile.transmission,
-              shadows:true,
-              taa:true,
-              progressiveFrameCount:profile.frames,
-              ssr:profile.ssr,
-              ssrIntensity:1,
-              ssrMaxDistance:1,
-              ssrThickness:.018,
-              ssao:profile.ssao,
-              ssaoIntensity:.12,
-              ssaoFalloff:1.3,
-              bloom:true,
-              bloomIntensity:profile.bloom,
-              bloomThreshold:1.35,
-              bloomRadius:.6,
-            };
-            renderQuality=captureQuality as any;
-            measuredQualityId="ultra";
-            // CAPTURE MODE: temporarily restore the full authored material
-            // profile, dynamic shadows and procedural inclusions. LIVE stays
-            // lightweight and never pays this cost.
-            liveFastPathRef.current=false;
-            aplicarPerfilMaterialLive(modelo,false);
-            prepararInclusionesCaptura();
-            if (modelo) setAurumInclusionsVisible(modelo, true);
-            renderer.setPixelRatio(1);
-            composer?.setPixelRatio?.(1);
-            composer?.setSize?.(target.width,target.height);
-            camara.aspect=target.width/target.height;
-            camara.updateProjectionMatrix();
-            applyPostQuality?.(captureQuality,{capture:true});
-            (renderer as any).transmissionResolutionScale=.82;
-            renderer.shadowMap.enabled=true;
-            renderer.shadowMap.needsUpdate=true;
-            if(taaPass) taaPass.accumulate=true;
-            if(taaPass) taaPass.accumulateIndex=-1;
-
-            // El composer mantiene el resultado final en readBuffer cuando
-            // renderToScreen es falso. Leemos ese buffer directamente y no el
-            // framebuffer interactivo.
-            if(composer) composer.renderToScreen=false;
-            for(let i=0;i<profile.frames;i++) composer?.render();
-            const buffer=composer?.readBuffer;
-            if(!buffer) throw new Error("No se pudo obtener el buffer de captura");
-
-            const pixels=new Uint8Array(target.width*target.height*4);
-            renderer.readRenderTargetPixels(buffer,0,0,target.width,target.height,pixels);
-
-            const canvas=document.createElement("canvas");
-            canvas.width=target.width;
-            canvas.height=target.height;
-            const ctx=canvas.getContext("2d");
-            if(!ctx) throw new Error("No se pudo preparar la imagen");
-
-            const imageData=ctx.createImageData(target.width,target.height);
-            const rowBytes=target.width*4;
-            for(let y=0;y<target.height;y++){
-              const src=y*rowBytes;
-              const dst=(target.height-1-y)*rowBytes;
-              imageData.data.set(pixels.subarray(src,src+rowBytes),dst);
-            }
-            ctx.putImageData(imageData,0,0);
-            data=canvas.toDataURL("image/png");
-            return data;
-          } finally {
-            if(composer) composer.renderToScreen=previousRenderToScreen??true;
-            limpiarInclusionesCaptura();
-            setAurumInclusionsVisible(modelo, false);
-            liveFastPathRef.current=true;
-            aplicarPerfilMaterialLive(modelo,true);
-            aplicarCalidadRender(previousQuality);
-            renderer.setPixelRatio(previousPixelRatio);
-            composer?.setPixelRatio?.(previousPixelRatio);
-            renderer.setSize(previousWidth,previousHeight,false);
-            composer?.setSize?.(previousWidth,previousHeight);
-            camara.aspect=previousWidth/previousHeight;
-            camara.updateProjectionMatrix();
-            renderer.shadowMap.needsUpdate=true;
-            invalidateRenderRef.current?.();
-            viewerLoop.resume?.();
-            captureInProgressRef.current = false;
-            if(taaPass) taaPass.accumulateIndex=-1;
-          }
-        },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
         seleccionarParte:(id:string)=>{
@@ -1024,8 +876,7 @@ export function AurumRender() {
           // iJewel LIVE is a direct WebGL path: one scene render, no Composer.
           // This preserves the calibrated renderer tone mapping while removing
           // the unused fullscreen post-processing chain from every interaction.
-          const directLive=liveFastPathRef.current && !captureInProgressRef.current;
-          if (directLive || measuredQualityId === "low") renderer.render(escena,camara);
+          if (liveFastPathRef.current || measuredQualityId === "low") renderer.render(escena,camara);
           else if (composer) composer.render();
           else renderer.render(escena,camara);
           perfTick();
@@ -1102,10 +953,7 @@ export function AurumRender() {
       invalidateRenderRef.current?.();
       setArchivo(file.name);
       setFormatoInterno("GLB");
-      setCaptura(null);
-
-      // La presentación inicial no ejecuta una captura fotográfica.
-      // El motor de captura solo se activa cuando el usuario pulsa la cámara.
+      // El visor permanece en modo LIVE después de cargar el modelo.
       invalidateRenderRef.current?.();
     } catch(e) {
       setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
@@ -1116,26 +964,7 @@ export function AurumRender() {
       setPaso(null);
     }
   },[]);
-  const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setCaptura(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
-  const capturarImagen=(resolution:"normal"|"hd"|"fullhd"=captureResolution)=>{
-    setCapturing(true);
-    try{
-      const d=apiRef.current?.capturar?.(resolution);
-      if(!d)return;
-      setCaptura(d);
-      const link=document.createElement("a");
-      link.href=d;
-      const safeName=normalizarTexto(nombreProyecto).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"aurum-render";
-      link.download=`${safeName}-${resolution}.png`;
-      link.click();
-      setCaptureMenuOpen(false);
-      setCapturePanelOpen(false);
-    }catch(e){
-      setError(e instanceof Error?e.message:"No se pudo generar la captura");
-    }finally{
-      setCapturing(false);
-    }
-  };
+  const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
     apiRef.current?.calidad(id);
     setQualityOpen(false);
@@ -1167,48 +996,8 @@ export function AurumRender() {
             <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-white/35">Render profesional para joyería · AURUM LIVE 2026-09-17</div>
           </div>
         </div>
-        {capturePanelOpen&&<div className="absolute right-5 top-[62px] z-[110] w-[300px] rounded-2xl border border-[#d4af37]/35 bg-[#111416]/97 p-4 text-white shadow-2xl backdrop-blur-xl">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#e5c77a]">Captura fotográfica</div>
-              <div className="mt-1 text-[11px] text-white/40">Modo independiente de AURUM LIVE</div>
-            </div>
-            <button type="button" onClick={()=>setCapturePanelOpen(false)} className="text-white/40 hover:text-white"><X className="size-4"/></button>
-          </div>
-          <div className="mt-4 text-[9px] font-semibold uppercase tracking-[.16em] text-white/35">Resolución de salida</div>
-          <div className="mt-2 grid grid-cols-3 gap-1.5">
-            {[
-              ["normal","854×480"],
-              ["hd","1280×720"],
-              ["fullhd","1920×1080"],
-            ].map(([id,label])=><button key={id} type="button" disabled={capturing}
-              onClick={()=>setCaptureResolution(id as "normal"|"hd"|"fullhd")}
-              className={"rounded-lg border px-2 py-2 text-[10px] transition "+(captureResolution===id?"border-[#d4af37]/70 bg-[#d4af37]/12 text-[#e5c77a]":"border-white/10 bg-white/[.03] text-white/60 hover:bg-white/[.07]")}>
-              {label}
-            </button>)}
-          </div>
-          <div className="mt-3 rounded-lg border border-white/8 bg-white/[.025] px-3 py-2 text-[9px] leading-4 text-white/40">
-            Normal prioriza velocidad · HD equilibrio · Full HD activa el perfil fotográfico completo.
-          </div>
-          <button type="button" disabled={capturing} onClick={()=>capturarImagen(captureResolution)}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-[10px] font-bold uppercase tracking-[.14em] text-black disabled:opacity-50">
-            <Download className="size-3.5"/>
-            {capturing?"Generando fotografía…":"Generar fotografía"}
-          </button>
-        </div>}
         <div className="flex items-center gap-2">
           <div className="relative flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.055] p-1">
-            <button
-              type="button"
-              title="Capturar imagen"
-              aria-label="Capturar imagen"
-              onClick={()=>setCaptureMenuOpen(v=>!v)}
-              className="flex h-9 items-center gap-2 rounded-lg bg-[#d4af37]/10 px-3 text-[#e5c77a] transition hover:bg-[#d4af37]/20"
-            >
-              <Camera className="size-[18px]"/>
-              <span className="hidden text-[10px] font-semibold uppercase tracking-[.12em] sm:inline">Capturar</span>
-            </button>
-
             <button type="button" title="Restablecer vista" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white md:flex"><RotateCcw className="size-[18px]"/></button>
             <button type="button" title="Zoom" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white md:flex"><Maximize2 className="size-[18px]"/></button>
             <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white md:flex"><Expand className="size-[18px]"/></button>
@@ -1347,7 +1136,6 @@ export function AurumRender() {
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><RotateCcw className="size-[18px]"/></button>
                 <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><Expand className="size-[18px]"/></button>
                 <div className="my-0.5 h-px w-6 bg-black/10"/>
-                <button type="button" title="Capturar imagen" onClick={() => capturarImagen()} className="grid size-10 place-items-center rounded-xl text-[#d4af37] hover:bg-[#d4af37]/10"><Camera className="size-[18px]"/></button>
               </div>
             </div>
 
