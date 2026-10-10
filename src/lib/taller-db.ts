@@ -789,7 +789,6 @@ async function crearContratoComercialAtomico({
     _sede_id: sede_id,
     _notas: notas,
     _cotizacion_id: cotizacion_id ?? null,
-    _numero: cotizacion_id ? null : (numero?.trim() || null),
   });
   if (error) throw error;
 
