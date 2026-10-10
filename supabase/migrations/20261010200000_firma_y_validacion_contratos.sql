@@ -121,7 +121,7 @@ with check (
   and exists (
     select 1 from public.contratos c
     where name like ('contratos/' || c.id::text || '/firmado-%')
-      and public.mi_sede(auth.uid()) = c.sede_id
+      and (public.has_role(auth.uid(), 'dueno'::public.app_role) or public.mi_sede(auth.uid()) = c.sede_id)
   )
 );
 
