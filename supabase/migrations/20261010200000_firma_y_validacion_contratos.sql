@@ -81,13 +81,18 @@ as $$
 declare
   v_contrato public.contratos%rowtype;
 begin
-  if new.contrato_id is null then
+  if new.contrato_id is not null then
+    select * into v_contrato
+    from public.contratos
+    where id = new.contrato_id;
+  elsif nullif(btrim(coalesce(new.contrato, '')), '') is not null then
+    select * into v_contrato
+    from public.contratos
+    where numero = new.contrato
+    limit 1;
+  else
     return new;
   end if;
-
-  select * into v_contrato
-  from public.contratos
-  where id = new.contrato_id;
 
   if not found or v_contrato.cotizacion_id is null then
     return new;
