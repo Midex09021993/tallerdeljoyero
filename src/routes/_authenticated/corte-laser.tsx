@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/corte-laser")({
@@ -37,12 +37,7 @@ function CorteLaserCompleto() {
       ocultarAccionesCelular
       acciones={
         <>
-          <SelectorSedeDueno
-            esDueno={esDueno}
-            sedes={sedes}
-            value={sedeFiltro}
-            onChange={setSedeFiltro}
-          />
+          
           <StatCard etiqueta="Asignados" valor={String(pedidos.length)} />
           <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
         </>
