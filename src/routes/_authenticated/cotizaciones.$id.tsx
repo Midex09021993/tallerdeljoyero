@@ -841,11 +841,15 @@ function CotizacionDetallePage() {
                       </div>
                       <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
                     </div>
+                  ) : contratoId ? (
+                    <p className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-muted-foreground">
+                      El contrato está vinculado. El pedido quedará habilitado cuando se complete la firma y validación del contrato.
+                    </p>
                   ) : (
                     <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedido()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
                       {convirtiendoPedido ? "Creando pedido…" : "Crear pedido"}
                     </button>
-                  )
+                  )}
                   </>
                 ) : (
                   <p className="text-sm text-muted-foreground">Cuando sea aprobada podrás crear un contrato opcional y vinculado a esta cotización, o continuar sin contrato cuando corresponda.</p>
