@@ -251,29 +251,56 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         vec3 ijView=normalize(-vViewPosition);
         vec3 ijNormal=normalize(normal);
         float ijEta=1.0/max(aurumIJEWELRefractiveIndex,1.0001);
-        vec3 ijDir=refract(-ijView,ijNormal,ijEta);
+        // Dispersion approximation based on diamond's wavelength-dependent IOR.
+        // Three channel rays share this fragment and sample the existing PMREM;
+        // no screen-sized transmission target or extra render pass is created.
+        float ijIor=max(aurumIJEWELRefractiveIndex,1.0001);
+        float ijEtaR=1.0/max(ijIor-0.010,1.0001);
+        float ijEtaG=1.0/ijIor;
+        float ijEtaB=1.0/min(ijIor+0.018,2.65);
+        vec3 ijDirR=refract(-ijView,ijNormal,ijEtaR);
+        vec3 ijDirG=refract(-ijView,ijNormal,ijEtaG);
+        vec3 ijDirB=refract(-ijView,ijNormal,ijEtaB);
         vec3 ijAccum=vec3(0.0);
-        float ijWeight=1.0;
-        float ijMaxBounces=clamp(aurumIJEWELRayBounces,1.0,8.0);
-        for(int ijB=0;ijB<8;ijB++){
-          if(float(ijB)>=ijMaxBounces) break;
-          vec3 ijWorldDir=inverseTransformDirection(normalize(ijDir),viewMatrix);
-          vec3 ijEnv=textureCubeUV(envMap,envMapRotation*ijWorldDir,0.0).rgb;
-          float ijDepth=exp(-float(ijB)*max(aurumIJEWELAbsorptionFactor,0.001)*.18);
-          ijAccum+=ijEnv*ijWeight*ijDepth;
-          ijWeight*=.62;
-          ijDir=reflect(ijDir,ijNormal);
-          ijDir=normalize(mix(ijDir,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.2)));
-        }
-        ijAccum/=max(1.0,ijMaxBounces*.35);
+        float ijWeight=0.58;
+        float ijDepth=1.0;
+        // First internal path: sample wavelength-separated rays in the HDRI.
+        vec3 ijWorldR=inverseTransformDirection(normalize(ijDirR),viewMatrix);
+        vec3 ijWorldG=inverseTransformDirection(normalize(ijDirG),viewMatrix);
+        vec3 ijWorldB=inverseTransformDirection(normalize(ijDirB),viewMatrix);
+        vec3 ijEnvR=textureCubeUV(envMap,envMapRotation*ijWorldR,0.0).rgb;
+        vec3 ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
+        vec3 ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
+        ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijWeight;
+        // One low-cost reflected internal path approximates a pavilion bounce.
+        // The source mesh's facet normals still control the primary PBR result;
+        // this is deliberately an approximation, not full geometric ray tracing.
+        ijDirR=reflect(ijDirR,ijNormal);
+        ijDirG=reflect(ijDirG,ijNormal);
+        ijDirB=reflect(ijDirB,ijNormal);
+        ijDirR=normalize(mix(ijDirR,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.08)));
+        ijDirG=normalize(mix(ijDirG,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.08)));
+        ijDirB=normalize(mix(ijDirB,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.08)));
+        ijWorldR=inverseTransformDirection(ijDirR,viewMatrix);
+        ijWorldG=inverseTransformDirection(ijDirG,viewMatrix);
+        ijWorldB=inverseTransformDirection(ijDirB,viewMatrix);
+        ijEnvR=textureCubeUV(envMap,envMapRotation*ijWorldR,0.0).rgb;
+        ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
+        ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
+        ijDepth=exp(-max(aurumIJEWELAbsorptionFactor,0.001)*.18);
+        ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*(.42*ijDepth);
         ijAccum*=aurumIJEWELBoostFactors;
         ijAccum=pow(max(ijAccum,vec3(0.0)),vec3(max(aurumIJEWELGammaFactor,.01)));
+        float ijCosTheta=clamp(abs(dot(ijNormal,ijView)),0.0,1.0);
+        float ijF0=pow((ijIor-1.0)/(ijIor+1.0),2.0);
+        float ijFresnel=ijF0+(1.0-ijF0)*pow(1.0-ijCosTheta,5.0);
         float ijFacet=clamp(.5+.5*dot(ijNormal,ijView),0.0,1.0);
         float ijGeometry=mix(1.0,ijFacet,clamp(aurumIJEWELGeometryFactor,0.0,1.0));
         float ijReflect=clamp(aurumIJEWELReflectivity,0.0,1.0);
-        // transmissionParameter remains in the original iJewel semantic space;
-        // it is not guessed as MeshPhysicalMaterial.transmission.
-        gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijAccum*ijReflect,ijGeometry);\n        ` : ``}
+        // Preserve the PBR base and blend only a restrained internal-light term.
+        // transmissionParameter remains in iJewel's own semantic space.
+        vec3 ijInternal=mix(ijAccum,ijAccum*1.12,ijFresnel);
+        gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijInternal*ijReflect,ijGeometry);\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
@@ -344,7 +371,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v8-${family}-${familyDispersionScale}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v9-${family}-${familyDispersionScale}-ijewel-${ijewelEnabled?1:0}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
 
   // Keep the complete photographic shader available for capture, but allow the
   // interactive viewer to switch to a lean native MeshPhysicalMaterial shader.
