@@ -109,7 +109,7 @@ $$;
 
 drop trigger if exists trg_exigir_firma_validada_para_pedido on public.pedidos;
 create trigger trg_exigir_firma_validada_para_pedido
-before insert or update of contrato_id on public.pedidos
+before insert or update of contrato_id, contrato on public.pedidos
 for each row execute function public.exigir_firma_validada_para_pedido();
 
 
