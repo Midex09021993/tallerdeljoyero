@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -20,7 +20,6 @@ type Cotizacion = {
   fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
   descuento: number; impuestos: number; total: number; anticipo: number;
   notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
-  identidad_comercial?: FichaCotizacionIdentidad | null;
 };
 type Detalle = {
   id: string; orden: number; tipo: string; descripcion: string; cantidad: number; unidad: string;
@@ -89,8 +88,8 @@ function CotizacionDetallePage() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
+  const [identidadFicha, setIdentidadFicha] = useState<FichaCotizacionIdentidad | null>(null);
   const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
-  const [imprimirFichaAlAbrir, setImprimirFichaAlAbrir] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -112,7 +111,7 @@ function CotizacionDetallePage() {
   const cargar = async () => {
     setCargando(true); setError("");
     const { data: q, error: qError } = await supabase.from("cotizaciones")
-      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id,identidad_comercial")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
       .eq("id", id).maybeSingle();
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
@@ -131,6 +130,20 @@ function CotizacionDetallePage() {
       supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
     setCotizacion(q);
+    let identidadActual: FichaCotizacionIdentidad | null = null;
+    const camposIdentidad = "nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
+    if (q.participante_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("participante_id", q.participante_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    } else if (q.sede_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("sede_id", q.sede_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    }
+    setIdentidadFicha(identidadActual);
     let versionesRelacionadasQuery = supabase
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
@@ -184,30 +197,6 @@ function CotizacionDetallePage() {
   }, [id, cargandoSesion, puedeGestionarCotizaciones]);
 
   const margen = useMemo(() => cotizacion ? Number(cotizacion.subtotal) - Number(cotizacion.subtotal_costo) : 0, [cotizacion]);
-
-  const fichaCotizacion = useMemo(() => {
-    if (!cotizacion) return null;
-    const identidad = cotizacion.identidad_comercial && typeof cotizacion.identidad_comercial === "object"
-      ? cotizacion.identidad_comercial as FichaCotizacionIdentidad
-      : null;
-    return {
-      numero: cotizacion.numero, version: cotizacion.version, fecha: cotizacion.fecha_emision,
-      vencimiento: cotizacion.fecha_vencimiento, entrega: cotizacion.fecha_entrega_solicitada,
-      moneda: cotizacion.moneda,
-      cliente: { nombre: cliente?.nombre ?? "Cliente", telefono: cliente?.telefono ?? cliente?.whatsapp, email: cliente?.email },
-      tallerNombre: sedeNombre, identidad,
-      detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad) || 0, unidad: item.unidad, precio_unitario: Number(item.precio_unitario) || 0, total_precio: Number(item.total_precio) || 0 })),
-      subtotal: Number(cotizacion.subtotal) || 0, descuento: Number(cotizacion.descuento) || 0,
-      impuestos: Number(cotizacion.impuestos) || 0, total: Number(cotizacion.total) || 0,
-      notas: cotizacion.notas_cliente || "",
-    };
-  }, [cotizacion, cliente, sedeNombre, detalles]);
-
-  useEffect(() => {
-    if (!mostrarFichaA4 || !imprimirFichaAlAbrir || !fichaCotizacion) return;
-    const timer = window.setTimeout(() => { window.print(); setImprimirFichaAlAbrir(false); }, 350);
-    return () => window.clearTimeout(timer);
-  }, [mostrarFichaA4, imprimirFichaAlAbrir, fichaCotizacion]);
 
   function abrirEditor() {
     if (!cotizacion || cotizacion.estado !== "borrador") return;
@@ -329,23 +318,20 @@ function CotizacionDetallePage() {
     }
   }
 
-  async function generarPdfCotizacion(): Promise<string | null> {
-    if (!cotizacion || generandoPdf) return null;
+  async function generarPdfCotizacion() {
+    if (!cotizacion || generandoPdf) return;
     setGenerandoPdf(true);
     setError("");
-    try {
-      const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
-        body: { cotizacion_id: cotizacion.id },
-      });
-      if (pdfError || !data?.url) {
-        setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
-        return null;
-      }
-      setEnlacePdf(data.url);
-      return data.url as string;
-    } finally {
+    const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
+      body: { cotizacion_id: cotizacion.id },
+    });
+    if (pdfError || !data?.url) {
+      setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
       setGenerandoPdf(false);
+      return;
     }
+    setEnlacePdf(data.url);
+    setGenerandoPdf(false);
   }
 
   function enlacePdfCliente() {
@@ -705,12 +691,12 @@ function CotizacionDetallePage() {
             <Panel titulo="Documento para el cliente">
               <div className="space-y-3 p-4">
                 <p className="text-xs text-muted-foreground">Vista previa de la ficha comercial en formato A4, con los datos de esta cotización y la identidad del taller activo.</p>
-                <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(false); setMostrarFichaA4(true); }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
+                <button type="button" onClick={() => setMostrarFichaA4(true)} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
                   Ver ficha A4
                 </button>
-                <p className="text-xs text-muted-foreground">Genera el PDF desde esta misma ficha A4. En el diálogo de impresión selecciona “Guardar como PDF”. Los costos internos y las notas internas quedan excluidos.</p>
-                <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(true); setMostrarFichaA4(true); }} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                  Generar PDF
+                <p className="text-xs text-muted-foreground">Genera una copia PDF de la propuesta con información comercial. Los costos internos y notas internas nunca se incluyen.</p>
+                <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {generandoPdf ? "Generando PDF…" : enlacePdf ? "Regenerar PDF" : "Generar PDF"}
                 </button>
                 {enlacePdf ? (
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -832,16 +818,30 @@ function CotizacionDetallePage() {
         </div>
       </div>
 
-    {mostrarFichaA4 && fichaCotizacion ? (
-      <div className="fixed inset-0 z-[100] flex flex-col overflow-auto bg-slate-900/90 p-3 sm:p-6 print-ficha-overlay" role="dialog" aria-modal="true" aria-label="Ficha A4 de cotización">
-        <style>{`@page { size: A4; margin: 0; } @media print { body * { visibility: hidden !important; } .print-ficha-overlay, .print-ficha-overlay * { visibility: visible !important; } .print-ficha-overlay { position: absolute !important; inset: 0 !important; display: block !important; overflow: visible !important; padding: 0 !important; background: white !important; } .print-ficha-toolbar { display: none !important; } .print-ficha-paper { width: 210mm !important; min-height: 297mm !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; } }`}</style>
-        <div className="print-ficha-toolbar mx-auto mb-3 flex w-full max-w-[210mm] items-center justify-end gap-2">
-          <button type="button" onClick={() => { setImprimirFichaAlAbrir(false); window.print(); }} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Imprimir / Guardar PDF</button>
-          <button type="button" onClick={() => setMostrarFichaA4(false)} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Cerrar ficha</button>
+    {mostrarFichaA4 ? (
+      <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/70 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label="Vista previa A4 de la cotización">
+        <div className="mx-auto mb-3 flex max-w-[210mm] justify-end">
+          <button type="button" onClick={() => setMostrarFichaA4(false)} className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">
+            <span aria-hidden="true">×</span> Cerrar vista previa
+          </button>
         </div>
-        <div className="print-ficha-paper mx-auto w-full max-w-[210mm]">
-          <FichaCotizacionA4 data={fichaCotizacion} />
-        </div>
+        <FichaCotizacionA4 data={{
+          numero: cotizacion.numero,
+          version: cotizacion.version,
+          fecha: cotizacion.fecha_emision,
+          vencimiento: cotizacion.fecha_vencimiento,
+          entrega: cotizacion.fecha_entrega_solicitada,
+          moneda: cotizacion.moneda,
+          cliente: { nombre: cliente?.nombre ?? "—", telefono: cliente?.telefono ?? cliente?.whatsapp ?? null, email: cliente?.email ?? null },
+          tallerNombre: sedeNombre,
+          identidad: identidadFicha,
+          detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad), unidad: item.unidad, precio_unitario: Number(item.precio_unitario), total_precio: Number(item.total_precio) })),
+          subtotal: Number(cotizacion.subtotal),
+          descuento: Number(cotizacion.descuento),
+          impuestos: Number(cotizacion.impuestos),
+          total: Number(cotizacion.total),
+          notas: cotizacion.notas_cliente ?? "",
+        }} />
       </div>
     ) : null}
     </AppShell>

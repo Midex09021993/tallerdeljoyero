@@ -215,14 +215,9 @@ Deno.serve(async (req) => {
 
     const formatDate = (value: string | null | undefined) => {
       if (!value) return "—";
-      // Las columnas date de PostgreSQL son días calendario, no instantes.
-      // Parsearlas en UTC evita que el huso horario del runtime cambie el día.
-      const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
-      const d = new Date(dateOnly ? `${value}T12:00:00.000Z` : value);
+      const d = new Date(value + (value.length === 10 ? "T00:00:00" : ""));
       if (Number.isNaN(d.getTime())) return value;
-      return new Intl.DateTimeFormat("es-PE", {
-        day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC",
-      }).format(d);
+      return new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
     };
 
     const drawFooter = (p: any, n: number) => {
