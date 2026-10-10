@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, Panel, useCapacidadesMenu } from "@/components/AppShell";
 import { FichaDorada } from "@/components/FichaDorada";
@@ -58,34 +58,75 @@ function ClientesPage() {
   const [confirmarEliminacion, setConfirmarEliminacion] = useState(false);
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
   const [vista, setVista] = useState<"clientes" | "cumpleanos">("clientes");
+  const cargaClientesRef = useRef(0);
 
   const cargar = async () => {
-    if (!sesion?.participante?.id) return;
+    const cargaId = ++cargaClientesRef.current;
+    if (!sesion?.participante?.id) {
+      setClientes([]);
+      setSeleccionado(null);
+      return;
+    }
+
+    // Con una sede concreta, solo aceptamos contactos cuyo sede_id Y participante_id
+    // correspondan a esa misma sede. Esto evita mostrar asociaciones cruzadas.
+    let participanteIdsPermitidos: string[] | null = null;
+    if (esDueno && sedeContextoId) {
+      const { data: participantesSede, error: participantesSedeError } = await supabase
+        .from("ecosistema_participantes")
+        .select("id")
+        .eq("sede_id", sedeContextoId)
+        .eq("estado", "activo");
+      if (participantesSedeError) throw participantesSedeError;
+      participanteIdsPermitidos = [...new Set((participantesSede ?? []).map((p) => p.id))];
+      if (participanteIdsPermitidos.length === 0) {
+        if (cargaId === cargaClientesRef.current) {
+          setClientes([]);
+          setSeleccionado(null);
+        }
+        return;
+      }
+    }
+
     let clientesQuery = supabase
       .from("clientes")
       .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
       .order("nombre");
-    const { data: clientesData, error: clientesError } = esDueno
-      ? await (sedeContextoId ? clientesQuery.eq("sede_id", sedeContextoId) : clientesQuery)
-      : await clientesQuery.eq("participante_id", sesion.participante.id);
+    if (esDueno) {
+      if (sedeContextoId) {
+        clientesQuery = clientesQuery.eq("sede_id", sedeContextoId).in("participante_id", participanteIdsPermitidos ?? []);
+      }
+    } else {
+      clientesQuery = clientesQuery.eq("participante_id", sesion.participante.id);
+    }
+    const { data: clientesData, error: clientesError } = await clientesQuery;
     if (clientesError) throw clientesError;
 
     const participanteIds = [...new Set((clientesData ?? []).map((cliente) => cliente.participante_id).filter((id): id is string => Boolean(id)))];
     const { data: participantesData, error: participantesError } = participanteIds.length
-      ? await supabase.from("ecosistema_participantes").select("id,nombre").in("id", participanteIds)
+      ? await supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
       : { data: [], error: null };
     if (participantesError) throw participantesError;
     const participanteNombrePorId = new Map((participantesData ?? []).map((p) => [p.id, p.nombre]));
-    const clientesConSede = (clientesData ?? []).map((cliente) => ({
-      ...cliente,
-      sede_nombre: participanteNombrePorId.get(cliente.participante_id ?? "") ?? "Taller no identificado",
-    })) as Cliente[];
+    const sedePorParticipante = new Map((participantesData ?? []).map((p) => [p.id, p.sede_id]));
+    const clientesConSede = (clientesData ?? [])
+      .filter((cliente) => !esDueno || !sedeContextoId || sedePorParticipante.get(cliente.participante_id ?? "") === sedeContextoId)
+      .map((cliente) => ({
+        ...cliente,
+        sede_nombre: participanteNombrePorId.get(cliente.participante_id ?? "") ?? "Taller no identificado",
+      })) as Cliente[];
 
+    // Una consulta anterior no puede sobrescribir la lista de la sede recién seleccionada.
+    if (cargaId !== cargaClientesRef.current) return;
     setClientes(clientesConSede);
-    if (seleccionado) setSeleccionado(clientesConSede.find((c) => c.id === seleccionado.id) ?? null);
+    setSeleccionado((actual) => actual ? clientesConSede.find((c) => c.id === actual.id) ?? null : null);
   };
 
-  useEffect(() => { if (puedeVer) void cargar(); }, [puedeVer, sesion?.participante?.id, esDueno, sedeContextoId]);
+  useEffect(() => {
+    if (puedeVer) void cargar().catch((error) => console.error("No se pudieron cargar los clientes de la sede seleccionada", error));
+    else { cargaClientesRef.current += 1; setClientes([]); setSeleccionado(null); }
+    return () => { cargaClientesRef.current += 1; };
+  }, [puedeVer, sesion?.participante?.id, esDueno, sedeContextoId]);
 
   useEffect(() => {
     if (!seleccionado) { setPedidos([]); setCotizaciones([]); return; }
