@@ -29,7 +29,7 @@ function NuevoContratoPage() {
     numero: "",
     cliente: "",
     telefono: "",
-    origen: "Contrato Aurum",
+    origen: "Cotización externa",
     total: "",
     notas: "",
   });
@@ -112,7 +112,7 @@ function NuevoContratoPage() {
   return (
     <AppShell
       titulo="Nuevo contrato"
-      subtitulo={cotizacionId ? "Contrato generado desde una cotización aprobada." : "Crea un contrato Aurum de forma independiente."}
+      subtitulo={cotizacionId ? "Contrato generado desde una cotización aprobada." : "Genera un contrato interno a partir de una cotización externa."}
       atrasMovil={{ to: "/contratos" }}
     >
       <div className="mx-auto max-w-3xl">
@@ -128,7 +128,7 @@ function NuevoContratoPage() {
             />
             <Campo label="Cliente" value={form.cliente} onChange={(v) => set("cliente", v)} required placeholder="Nombre del cliente" />
             <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Opcional" />
-            <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Contrato Aurum" />
+            <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Cotización externa" />
             <Campo label="Total" value={form.total} onChange={(v) => set("total", v)} type="number" placeholder="0.00" />
             <div className="rounded-xl border border-border bg-surface-muted/50 px-3 py-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sede de este contrato</span>
