@@ -16,7 +16,7 @@ function money(value: number) {
 
 function ContratosPage() {
   const { data: contratos = [], isLoading } = useContratos();
-  const { esDueno, sedeFiltro, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const { filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const contratosVisibles = filtrarPedidos(contratos);
 
   return (
