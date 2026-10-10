@@ -161,6 +161,7 @@ export function startAurumViewerLoop(
   // receives per-frame updates while damping is active, but no RAF is kept
   // alive once the image is stable.
   let frame = 0;
+  let ticking = false;
   let stopped = false;
   let paused = false;
   let dirty = true;
@@ -171,7 +172,7 @@ export function startAurumViewerLoop(
 
   const requestRender = () => {
     dirty = true;
-    if (!frame && !stopped && !paused) frame = requestAnimationFrame(tick);
+    if (!frame && !ticking && !stopped && !paused) frame = requestAnimationFrame(tick);
   };
 
   const resize = () => {
@@ -207,7 +208,8 @@ export function startAurumViewerLoop(
 
   const tick = () => {
     frame = 0;
-    if (stopped || paused) return;
+    ticking = true;
+    if (stopped || paused) { ticking = false; return; }
 
     const changedByControls = Boolean(viewer.controls?.update?.());
 
@@ -230,7 +232,8 @@ export function startAurumViewerLoop(
     }
 
     // During idle convergence, request a bounded number of frames, then stop.
-    if (!stopped && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0)) {
+    ticking = false;
+    if (!stopped && !paused && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0)) {
       frame = requestAnimationFrame(tick);
     }
   };
