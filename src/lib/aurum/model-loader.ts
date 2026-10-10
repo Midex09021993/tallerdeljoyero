@@ -127,7 +127,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
   for (let objectIndex = 0; objectIndex < queuedObjects.length; objectIndex++) {
     // Yield between small batches so large CAD assemblies do not monopolize
     // the main thread for the entire preprocessing pass.
-    if (objectIndex > 0 && objectIndex % 8 === 0) {
+    if (objectIndex > 0 && objectIndex % 32 === 0) {
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
     }
     const x = queuedObjects[objectIndex];
