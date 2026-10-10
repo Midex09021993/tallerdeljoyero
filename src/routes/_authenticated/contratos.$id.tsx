@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
-import { FileText, ExternalLink } from "lucide-react";
+import { FileText } from "lucide-react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
 import { PedidoFormCampos } from "@/components/PedidoFormCampos";
@@ -85,9 +85,6 @@ function ContratoPage() {
   const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
   const [generandoPdf, setGenerandoPdf] = useState(false);
-  const [abriendoPdf, setAbriendoPdf] = useState(false);
-  const [pdfDisponible, setPdfDisponible] = useState(false);
-  const [pdfHash, setPdfHash] = useState<string | null>(null);
 
   useEffect(() => {
     if (contrato && modalAbierto) {
@@ -95,45 +92,6 @@ function ContratoPage() {
       setRuta([]);
     }
   }, [contrato, modalAbierto]);
-
-  // Recupera el PDF solo para el contrato permitido por la sede activa.
-  const contratoId = contratoEnContexto?.id;
-  useEffect(() => {
-    setPdfDisponible(false);
-    setPdfHash(null);
-    if (!contratoId) return;
-    let activo = true;
-    void supabase
-      .from("contratos")
-      .select("pdf_storage_path, pdf_sha256")
-      .eq("id", contratoId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!activo || !data) return;
-        setPdfDisponible(Boolean(data.pdf_storage_path));
-        setPdfHash(data.pdf_sha256 ?? null);
-      });
-    return () => {
-      activo = false;
-    };
-  }, [contratoId]);
-
-  async function abrirPdf() {
-    if (!contrato) return;
-    setAbriendoPdf(true);
-    const ventana = window.open("", "_blank");
-    const { data, error } = await supabase.functions.invoke("generar-contrato-pdf", {
-      body: { contrato_id: contrato.id, accion: "ver" },
-    });
-    setAbriendoPdf(false);
-    if (error || !data?.url) {
-      ventana?.close();
-      toast.error(data?.error || error?.message || "No se pudo abrir el contrato.");
-      return;
-    }
-    if (ventana) ventana.location.href = data.url;
-    else window.location.href = data.url;
-  }
 
   const resumen = useMemo(() => {
     return resumenFinancieroContrato(contratoEnContexto, pagos);
@@ -194,17 +152,6 @@ function ContratoPage() {
             accion={
               <div className="flex flex-wrap items-center gap-2">
                 <FichaContratoA4 contrato={contrato} />
-                {pdfDisponible ? (
-                  <button
-                    type="button"
-                    disabled={abriendoPdf}
-                    onClick={() => void abrirPdf()}
-                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-muted disabled:opacity-50"
-                  >
-                    <ExternalLink className="size-3.5" />
-                    {abriendoPdf ? "Abriendo…" : "Ver PDF"}
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   disabled={generandoPdf}
@@ -216,8 +163,6 @@ function ContratoPage() {
                     if (error || !data?.sha256) {
                       toast.error(data?.error || error?.message || "No se pudo generar el contrato.");
                     } else {
-                      setPdfDisponible(true);
-                      setPdfHash(data.sha256);
                       toast.success("Contrato PDF generado.");
                       if (data.url) window.open(data.url, "_blank", "noopener");
                     }
@@ -238,12 +183,6 @@ function ContratoPage() {
               </div>
             }
           >
-            {pdfHash ? (
-              <div className="border-b border-border bg-surface-muted/50 px-4 py-3 text-[11px] text-muted-foreground lg:px-6">
-                <span className="font-semibold text-foreground">Documento original generado.</span>{" "}
-                SHA-256: <span className="font-mono">{pdfHash}</span>
-              </div>
-            ) : null}
             <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
               <Dato label="Cliente" valor={contrato.cliente} />
               <Dato label="Teléfono" valor={contrato.telefono || "—"} />
