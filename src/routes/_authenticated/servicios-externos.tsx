@@ -44,9 +44,6 @@ function ServiciosExternosPage() {
           ? `Operaciones compartidas · ${etiquetaSede}`
           : `Operaciones compartidas · ${sesion?.sede?.nombre ?? "tu taller"}`
       }
-      acciones={
-        
-      }
     >
       <div className="space-y-8">
         {puedeRecibir ? (

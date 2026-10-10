@@ -180,9 +180,6 @@ function GestionPage() {
             ? `Administración de sede · ${nombreSede}`
             : `Administración de ${nombreSede}`
       }
-      acciones={
-        
-      }
     >
       <div className="space-y-6">
         <header className="rounded-2xl border border-border bg-card p-5 shadow-sm">

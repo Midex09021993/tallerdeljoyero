@@ -76,9 +76,6 @@ function MonitorPage() {
             ? `Producción en vivo · ${etiquetaSede}`
             : (sesion?.sede?.nombre ?? "Producción en vivo")
       }
-      acciones={
-        
-      }
     >
       <div className="relative overflow-hidden rounded-[28px] border border-gold/20 bg-card px-6 py-7 text-foreground shadow-raised sm:px-8 lg:px-10">
         <div className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-gold/10 blur-3xl" />
