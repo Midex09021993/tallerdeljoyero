@@ -96,9 +96,11 @@ function ContratoPage() {
     }
   }, [contrato, modalAbierto]);
 
-  // Recupera el estado del documento ya generado (ruta + hash, sin enlace persistente).
-  const contratoId = contrato?.id;
+  // Recupera el PDF solo para el contrato permitido por la sede activa.
+  const contratoId = contratoEnContexto?.id;
   useEffect(() => {
+    setPdfDisponible(false);
+    setPdfHash(null);
     if (!contratoId) return;
     let activo = true;
     void supabase
