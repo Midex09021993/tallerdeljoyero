@@ -880,11 +880,34 @@ export function AurumRender() {
           perfTick();
         },
         {
+          progressiveFrames: 32,
           onStart: () => {
-            // El DPR y el buffer de transmisión permanecen estables durante la interacción.
+            // Interaction path: cap raster resolution and gem transmission cost.
+            // These changes happen only at interaction boundaries, never per frame.
+            liveFastPathRef.current = true;
+            const interactionDpr = Math.max(0.75, Math.min(1, runtimeBudget.interactionPixelRatio));
+            renderer.setPixelRatio(interactionDpr);
+            composer?.setPixelRatio?.(interactionDpr);
+            liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
+            (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
+            renderer.shadowMap.enabled = false;
+            invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // El visor recupera el render normal sin recrear buffers WebGL.
+            // Restore requested beauty resolution only after OrbitControls damping
+            // settles. The viewer loop then renders a bounded progressive sequence.
+            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+            const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            const idleTransmission = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+            renderer.setPixelRatio(idleDpr);
+            composer?.setPixelRatio?.(idleDpr);
+            applyPostQuality?.({...renderQuality, pixelRatio:idleDpr});
+            liveTransmissionScaleRef.current = idleTransmission;
+            (renderer as any).transmissionResolutionScale = idleTransmission;
+            liveFastPathRef.current = false;
+            renderer.shadowMap.enabled = renderQuality.shadows;
+            renderer.shadowMap.needsUpdate = true;
+            invalidateRenderRef.current?.();
           },
         }
       );
