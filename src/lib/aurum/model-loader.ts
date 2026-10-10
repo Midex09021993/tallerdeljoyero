@@ -116,13 +116,22 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
 }
 
-export function preprocessAurumModel(object: THREE.Object3D) {
+export async function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
   const experimentMode = getAurumNormalExperimentMode();
   let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRepaired = 0, windingFacesFlipped = 0, normalsRecomputedForTest = 0, creasedNormalsForTest = 0;
   let lineObjectsRemoved = 0, pointObjectsRemoved = 0, meshesWithoutNormals = 0, meshesWithSuspiciousNormals = 0, repeatedGeometryRefs = 0, meshesWithBoundaryEdges = 0, meshesWithNonManifoldEdges = 0, meshesWithDegenerateTriangles = 0;
   const geometryRefs = new Map<any, number>(), removeQueue: any[] = [];
-  object.traverse((x: any) => {
+  const queuedObjects: any[] = [];
+  object.traverse((x: any) => queuedObjects.push(x));
+  for (let objectIndex = 0; objectIndex < queuedObjects.length; objectIndex++) {
+    // Yield between small batches so large CAD assemblies do not monopolize
+    // the main thread for the entire preprocessing pass.
+    if (objectIndex > 0 && objectIndex % 8 === 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
+    const x = queuedObjects[objectIndex];
+
     if (x !== object && (x.isLine || x.isLineSegments || x.isPoints)) { removeQueue.push(x); if (x.isPoints) pointObjectsRemoved++; else lineObjectsRemoved++; return; }
     if (!x.isMesh || !x.geometry) return;
     meshes++; let geometry = x.geometry as THREE.BufferGeometry; geometryRefs.set(geometry, (geometryRefs.get(geometry) ?? 0) + 1);
@@ -174,7 +183,7 @@ export function preprocessAurumModel(object: THREE.Object3D) {
     x.castShadow = !gem;
     x.receiveShadow = true;
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
-  });
+  }
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
   object.userData = { ...object.userData, aurumPreprocess: { version: 9, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
   return object;
@@ -182,7 +191,7 @@ export function preprocessAurumModel(object: THREE.Object3D) {
 
 export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material) {
   const buffer = await file.arrayBuffer();
-  if (ext === "stl") { const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js"); const geo = new STLLoader().parse(buffer); geo.computeVertexNormals(); return new THREE.Mesh(geo, fallbackMaterial); }
+  if (ext === "stl") { const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js"); const geo = new STLLoader().parse(buffer); return new THREE.Mesh(geo, fallbackMaterial); }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
   if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
@@ -196,16 +205,15 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   throw new Error("Formato no compatible.");
 }
 
-export function convertAurumToGlb(object: THREE.Object3D) {
+export async function convertAurumToGlb(object: THREE.Object3D) {
+  enforceRhinoLayerVisibilityBeforeExport(object);
+  await preprocessAurumModel(object);
+  const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
   return new Promise<ArrayBuffer>((resolve, reject) => {
-    enforceRhinoLayerVisibilityBeforeExport(object);
-    preprocessAurumModel(object);
-    import("three/examples/jsm/exporters/GLTFExporter.js").then(({ GLTFExporter }) => {
-      const exporter = new GLTFExporter();
-      exporter.parse(object, (result: ArrayBuffer | { [key: string]: unknown }) => {
-        if (result instanceof ArrayBuffer) resolve(result);
-        else reject(new Error("No se pudo generar el GLB interno."));
-      }, (error: unknown) => reject(error), { binary: true, onlyVisible: true, trs: false });
-    }).catch(reject);
+    const exporter = new GLTFExporter();
+    exporter.parse(object, (result: ArrayBuffer | { [key: string]: unknown }) => {
+      if (result instanceof ArrayBuffer) resolve(result);
+      else reject(new Error("No se pudo generar el GLB interno."));
+    }, (error: unknown) => reject(error), { binary: true, onlyVisible: true, trs: false });
   });
 }
