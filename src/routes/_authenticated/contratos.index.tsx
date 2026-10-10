@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, FileText } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useContratos } from "@/lib/taller-db";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { fmtFecha } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/contratos/")({
@@ -15,11 +16,13 @@ function money(value: number) {
 
 function ContratosPage() {
   const { data: contratos = [], isLoading } = useContratos();
+  const { esDueno, sedeFiltro, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const contratosVisibles = filtrarPedidos(contratos);
 
   return (
     <AppShell
       titulo="Contratos"
-      subtitulo="Documentos comerciales propios de Aurum Lab. Son independientes de cotizaciones y pedidos."
+      subtitulo={`Documentos comerciales propios de Aurum Lab · ${etiquetaSede}` }
       atrasMovil={{ to: "/ventas" }}
       acciones={
         <Link
@@ -33,7 +36,7 @@ function ContratosPage() {
       <Panel titulo="Contratos registrados">
         {isLoading ? (
           <p className="p-6 text-sm text-muted-foreground">Cargando contratos…</p>
-        ) : contratos.length === 0 ? (
+        ) : contratosVisibles.length === 0 ? (
           <div className="p-8 text-center">
             <FileText className="mx-auto size-8 text-muted-foreground" />
             <p className="mt-3 text-sm font-semibold">Aún no hay contratos</p>
@@ -41,7 +44,7 @@ function ContratosPage() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {contratos.map((contrato) => (
+            {contratosVisibles.map((contrato) => (
               <Link
                 key={contrato.id}
                 to="/contratos/$id"
