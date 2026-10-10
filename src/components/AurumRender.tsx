@@ -528,7 +528,8 @@ export function AurumRender() {
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
-        liveFastPathRef.current = id === "ijewelReference";
+        // LIVE universal: ninguna escena ejecuta postprocesado pesado durante la interacción.
+        liveFastPathRef.current = true;
         const preset = sceneController.apply(id);
         const photo = getAurumPhotographicProfile(id);
         // Change the optical environment for gemstones together with the scene.
@@ -1031,33 +1032,10 @@ export function AurumRender() {
         },
         {
           onStart: () => {
-            if (liveFastPathRef.current && !captureInProgressRef.current) {
-              setAurumLiveGeometryQuality(modelo,"live");
-              // Interaction gets a temporary render-scale + transmission budget.
-              // The model itself never changes; only the number of pixels and the
-              // transmission buffer used while the camera is moving are reduced.
-              const interactionDpr=Math.min(
-                runtimeBudget.interactionPixelRatio,
-                renderQuality.pixelRatio,
-                runtimeBudget.pixelRatioCap
-              );
-              renderer.setPixelRatio(interactionDpr);
-              composer?.setPixelRatio?.(interactionDpr);
-              (renderer as any).transmissionResolutionScale=runtimeBudget.interactionTransmissionScale;
-            }
+            // El DPR y el buffer de transmisión permanecen estables durante la interacción.
           },
           onEnd: () => {
-            if (liveFastPathRef.current && !captureInProgressRef.current) {
-              setAurumLiveGeometryQuality(modelo,"beauty");
-              const idleDpr=Math.min(
-                renderQuality.pixelRatio,
-                runtimeBudget.pixelRatioCap
-              );
-              renderer.setPixelRatio(idleDpr);
-              composer?.setPixelRatio?.(idleDpr);
-              (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
-              invalidateRenderRef.current?.();
-            }
+            // El visor recupera el render normal sin recrear buffers WebGL.
           },
         }
       );
