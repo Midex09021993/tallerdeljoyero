@@ -154,7 +154,7 @@ export function createAurumWebGLViewer(
 export function startAurumViewerLoop(
   viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
   render: () => void,
-  interaction?: { onStart?: () => void; onEnd?: () => void }
+  interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
   // AURUM is a product configurator, not a continuously animated game scene.
   // Render only when the camera/scene actually changes. OrbitControls still
@@ -165,6 +165,9 @@ export function startAurumViewerLoop(
   let paused = false;
   let dirty = true;
   let interactionActive = false;
+  let interactionEnding = false;
+  let idleFramesRemaining = 0;
+  const progressiveFrames = Math.max(0, Math.min(32, Math.floor(interaction?.progressiveFrames ?? 32)));
 
   const requestRender = () => {
     dirty = true;
@@ -179,21 +182,26 @@ export function startAurumViewerLoop(
   const observer = new ResizeObserver(resize);
   observer.observe(viewer.node);
 
-  const onControlChange = () => {
+  const onControlStart = () => {
+    interactionEnding = false;
+    idleFramesRemaining = 0;
     if (!interactionActive) {
       interactionActive = true;
       interaction?.onStart?.();
     }
     requestRender();
   };
+  const onControlChange = () => {
+    // A change can be caused by damping after pointer-up; do not treat every
+    // change event as a new user interaction or the loop may never go idle.
+    requestRender();
+  };
   const onControlEnd = () => {
-    if (interactionActive) {
-      interactionActive = false;
-      interaction?.onEnd?.();
-    }
+    interactionEnding = true;
     requestRender();
   };
 
+  viewer.controls?.addEventListener?.("start", onControlStart);
   viewer.controls?.addEventListener?.("change", onControlChange);
   viewer.controls?.addEventListener?.("end", onControlEnd);
 
@@ -202,16 +210,27 @@ export function startAurumViewerLoop(
     if (stopped || paused) return;
 
     const changedByControls = Boolean(viewer.controls?.update?.());
-    const shouldRender = dirty || changedByControls || interactionActive;
 
+    // Wait until OrbitControls damping has actually settled before restoring
+    // the beauty path. This prevents a progressive image accumulating while
+    // the camera is still moving.
+    if (interactionEnding && !changedByControls) {
+      interactionEnding = false;
+      interactionActive = false;
+      interaction?.onEnd?.();
+      idleFramesRemaining = progressiveFrames;
+      dirty = true;
+    }
+
+    const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0;
     if (shouldRender) {
       dirty = false;
       render();
+      if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
     }
 
-    // Damping/autoRotate may continue changing the camera after the input event.
-    // Keep the loop alive only while that motion is actually active.
-    if (!stopped && (dirty || changedByControls || interactionActive)) {
+    // During idle convergence, request a bounded number of frames, then stop.
+    if (!stopped && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0)) {
       frame = requestAnimationFrame(tick);
     }
   };
@@ -237,6 +256,7 @@ export function startAurumViewerLoop(
       stopped = true;
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
+      viewer.controls?.removeEventListener?.("start", onControlStart);
       viewer.controls?.removeEventListener?.("change", onControlChange);
       viewer.controls?.removeEventListener?.("end", onControlEnd);
       observer.disconnect();
