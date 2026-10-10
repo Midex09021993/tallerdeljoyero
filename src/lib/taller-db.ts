@@ -840,6 +840,7 @@ async function asegurarContratoComercial({
   importe,
   sede_id,
   notas,
+  cotizacion_id,
 }: {
   numero: string;
   cliente: string;
@@ -848,6 +849,7 @@ async function asegurarContratoComercial({
   importe: number;
   sede_id: string | null;
   notas: string;
+  cotizacion_id?: string | null;
 }) {
   const numeroLimpio = numero.trim();
   if (!numeroLimpio) return { id: null, numero: "", creado: false };
@@ -861,11 +863,12 @@ async function asegurarContratoComercial({
     abonado: 0,
     sede_id,
     notas,
+    ...(cotizacion_id ? { cotizacion_id } : {}),
   };
 
   const existente = await supabase
     .from("contratos")
-    .select("id, cliente, telefono, origen, sede_id")
+    .select("id, cliente, telefono, origen, sede_id, cotizacion_id")
     .eq("numero", numeroLimpio)
     .maybeSingle();
 
@@ -876,6 +879,10 @@ async function asegurarContratoComercial({
   }
 
   if (existente.data?.id) {
+    const cotizacionExistente = (existente.data as Record<string, unknown>)["cotizacion_id"];
+    if (cotizacion_id && cotizacionExistente !== cotizacion_id) {
+      throw new Error("Ya existe un contrato con ese número o no está vinculado a esta cotización. Usa un número distinto.");
+    }
     const sedeExistente = (existente.data as Record<string, unknown>)["sede_id"];
     if (sede_id && typeof sedeExistente === "string" && sedeExistente !== sede_id) {
       throw new Error("Ya existe un contrato con ese número en otra sede. Usa un número distinto para evitar mezclar talleres.");
@@ -926,6 +933,7 @@ export function useCrearContrato() {
       total?: number;
       sede_id?: string | null;
       notas?: string;
+      cotizacion_id?: string | null;
     }) => {
       const numero = datos.numero.trim();
       if (!numero) throw new Error("El número de contrato es obligatorio.");
@@ -939,6 +947,7 @@ export function useCrearContrato() {
         importe: Number(datos.total) || 0,
         sede_id: datos.sede_id ?? null,
         notas: datos.notas?.trim() ?? "",
+        cotizacion_id: datos.cotizacion_id ?? null,
       });
 
       if (!contrato.id) {
