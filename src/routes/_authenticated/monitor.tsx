@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AREAS, areaCoincide } from "@/lib/auth";
 import { esEstadoFinalPedido, pedidoEnRecepcion, usePedidosSelector } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
@@ -76,12 +76,7 @@ function MonitorPage() {
             : (sesion?.sede?.nombre ?? "Producción en vivo")
       }
       acciones={
-        <SelectorSedeDueno
-          esDueno={esDueno}
-          sedes={sedes}
-          value={sedeFiltro}
-          onChange={setSedeFiltro}
-        />
+        
       }
     >
       <div className="relative overflow-hidden rounded-[28px] border border-gold/20 bg-card px-6 py-7 text-foreground shadow-raised sm:px-8 lg:px-10">
