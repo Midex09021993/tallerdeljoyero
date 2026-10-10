@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useInventario } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 
@@ -43,12 +43,7 @@ function Impresion3DCompleta() {
       ocultarAccionesCelular
       acciones={
         <>
-          <SelectorSedeDueno
-            esDueno={esDueno}
-            sedes={sedes}
-            value={sedeFiltro}
-            onChange={setSedeFiltro}
-          />
+          
           <StatCard
             etiqueta="Resina 3D"
             valor={resina ? `${resina.stock} ${resina.unidad}` : "-"}
