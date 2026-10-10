@@ -42,6 +42,10 @@ export function createAurumEnvironment(
   let current = fallback;
   let rotation = 0;
   let intensity = 1;
+  // Keep a small per-renderer PMREM cache so returning to a recent scene does
+  // not redownload/re-prefilter the same HDRI on every switch.
+  const cache = new Map<string, any>();
+  const MAX_CACHE = 3;
 
   return {
     fallback,
@@ -80,6 +84,14 @@ export function createAurumEnvironment(
         return;
       }
 
+      const cached = cache.get(url);
+      if (cached) {
+        current = cached;
+        scene.environment = cached;
+        if (isCurrent()) onLoaded(cached);
+        return;
+      }
+
       new RGBELoader().load(url, (hdrTexture: any) => {
         if (!isCurrent()) {
           hdrTexture.dispose?.();
@@ -92,10 +104,16 @@ export function createAurumEnvironment(
             next.dispose?.();
             return;
           }
-          const previous = current;
+          cache.set(url, next);
+          while (cache.size > MAX_CACHE) {
+            const oldest = cache.keys().next().value as string | undefined;
+            if (!oldest || oldest === url) break;
+            const oldTexture = cache.get(oldest);
+            cache.delete(oldest);
+            if (oldTexture && oldTexture !== current) oldTexture.dispose?.();
+          }
           current = next;
           scene.environment = next;
-          if (previous && previous !== fallback) previous.dispose?.();
           onLoaded(next);
         } catch {
           hdrTexture.dispose?.();
@@ -107,10 +125,12 @@ export function createAurumEnvironment(
       });
     },
     dispose(extraTexture?: any) {
-      if (extraTexture && extraTexture !== current && extraTexture !== fallback) {
+      if (extraTexture && extraTexture !== current && extraTexture !== fallback && !Array.from(cache.values()).includes(extraTexture)) {
         extraTexture.dispose?.();
       }
-      if (current && current !== fallback) current.dispose?.();
+      for (const cached of cache.values()) cached?.dispose?.();
+      cache.clear();
+      current = fallback;
       fallback?.dispose?.();
       pmrem.dispose?.();
     },
