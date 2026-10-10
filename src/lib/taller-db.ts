@@ -359,6 +359,10 @@ export type Contrato = {
   sede_nombre: string | null;
   notas: string;
   created_at: string;
+  cotizacion_id: string | null;
+  estado_firma: "pendiente" | "firmado_documento_subido" | "firmado_presencial" | "firmado_certificado";
+  firma_validada_at: string | null;
+  firma_observacion: string | null;
 };
 
 export type EstadoFinanciero = "Pendiente" | "Pago parcial" | "Pagado";
@@ -1222,7 +1226,7 @@ export function useContrato(id: string, habilitado = true) {
       const { data, error } = await supabase
         .from("contratos")
         .select(
-          "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)",
+          "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, cotizacion_id, estado_firma, firma_validada_at, firma_observacion, sedes(nombre)",
         )
         .eq(selector, id)
         .maybeSingle();
@@ -1247,6 +1251,10 @@ export function useContrato(id: string, habilitado = true) {
         sede_nombre: row.sedes?.nombre ?? null,
         notas: textoCampo(row, "notas"),
         created_at: textoCampo(row, "created_at"),
+        cotizacion_id: typeof row["cotizacion_id"] === "string" ? row["cotizacion_id"] : null,
+        estado_firma: textoCampo(row, "estado_firma", "pendiente") as Contrato["estado_firma"],
+        firma_validada_at: typeof row["firma_validada_at"] === "string" ? row["firma_validada_at"] : null,
+        firma_observacion: textoCampo(row, "firma_observacion"),
       };
     },
     enabled: habilitado && Boolean(id),
