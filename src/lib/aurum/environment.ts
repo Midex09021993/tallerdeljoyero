@@ -105,6 +105,8 @@ export function createAurumEnvironment(
             return;
           }
           cache.set(url, next);
+          current = next;
+          scene.environment = next;
           while (cache.size > MAX_CACHE) {
             const oldest = cache.keys().next().value as string | undefined;
             if (!oldest || oldest === url) break;
@@ -112,8 +114,6 @@ export function createAurumEnvironment(
             cache.delete(oldest);
             if (oldTexture && oldTexture !== current) oldTexture.dispose?.();
           }
-          current = next;
-          scene.environment = next;
           onLoaded(next);
         } catch {
           hdrTexture.dispose?.();
