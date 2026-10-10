@@ -35,7 +35,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
   const [inicial, setInicial] = useState("24");
   const [final, setFinal] = useState("18");
   const [leyPersonalizada, setLeyPersonalizada] = useState(false);
-  const [color, setColor] = useState<ColorAleacion>("rosa");
+  const [color, setColor] = useState<ColorAleacion>("amarillo");
 
   const masaNum = Number(masa);
   const kiNum = clampQuilataje(Number(inicial));
