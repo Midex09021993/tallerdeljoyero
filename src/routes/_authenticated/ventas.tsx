@@ -20,8 +20,9 @@ function Ventas2Page() {
   const puedeGestionar = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
   const { data: pedidos = [], isLoading: loadingPedidos } = usePedidos();
   const { data: contratos = [], isLoading: loadingContratos } = useContratos(puedeGestionar);
-  const { data: pagos = [] } = usePagosContratos(contratos, puedeGestionar);
-  const { esDueno, sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const { esDueno, sedeFiltro, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const contratosSede = filtrarPedidos(contratos);
+  const { data: pagos = [] } = usePagosContratos(contratosSede, puedeGestionar);
   const [vista, setVista] = useState<Vista>("cartera");
   const [busqueda, setBusqueda] = useState("");
 
@@ -32,7 +33,7 @@ function Ventas2Page() {
   const enCamino = pedidosVenta.filter((p) => p.estado === "En Camino" || p.ventas_estado === "En Camino");
   const entregados = pedidosVenta.filter((p) => p.estado === "Entregado" || p.ventas_estado === "Entregado");
 
-  const finanzas = useMemo(() => contratos.map((c) => ({ contratoId: c.id, ...resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id)) })), [contratos, pagos]);
+  const finanzas = useMemo(() => contratosSede.map((c) => ({ contratoId: c.id, ...resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id)) })), [contratosSede, pagos]);
   const finanzasPorContrato = useMemo(() => new Map(finanzas.map((f) => [f.contratoId, f])), [finanzas]);
   const saldoPedido = (p: Pedido) => {
     const financiero = p.contrato_id ? finanzasPorContrato.get(p.contrato_id) : undefined;
@@ -52,7 +53,7 @@ function Ventas2Page() {
   return (
     <AppShell
       titulo="Ventas"
-      subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : "Control comercial y cierre de pedidos"}
+      subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : `Control comercial y cierre de pedidos · ${etiquetaSede}`}
       acciones={}
     >
       <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
