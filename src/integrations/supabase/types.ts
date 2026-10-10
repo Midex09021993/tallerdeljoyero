@@ -2707,6 +2707,50 @@ export type Database = {
           },
         ]
       }
+      plantillas_contrato: {
+        Row: {
+          activa: boolean
+          contenido: Json
+          created_at: string
+          id: string
+          identidad_comercial_id: string
+          nombre: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          activa?: boolean
+          contenido?: Json
+          created_at?: string
+          id?: string
+          identidad_comercial_id: string
+          nombre?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          activa?: boolean
+          contenido?: Json
+          created_at?: string
+          id?: string
+          identidad_comercial_id?: string
+          nombre?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plantillas_contrato_identidad_comercial_id_fkey"
+            columns: ["identidad_comercial_id"]
+            isOneToOne: true
+            referencedRelation: "identidades_comerciales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       procesos: {
         Row: {
           cliente: string
