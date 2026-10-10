@@ -64,9 +64,17 @@ function etiquetaEstadoCotizacion(estado: string) {
   return etiquetas[estado] ?? estado;
 }
 
+function fechaHoyPeru() {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const valor = (tipo: string) => partes.find((parte) => parte.type === tipo)?.value ?? "";
+  return valor("year") + "-" + valor("month") + "-" + valor("day");
+}
+
 function fechaVencimientoPorDefecto() {
-  const fecha = new Date();
-  fecha.setDate(fecha.getDate() + 7);
+  const [anio, mes, dia] = fechaHoyPeru().split("-").map(Number);
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia + 7));
   return fecha.toISOString().slice(0, 10);
 }
 
@@ -476,7 +484,7 @@ function CotizacionesPage() {
               ) : null}
               <div className="grid gap-3 sm:col-span-2">
                 <label className="text-xs text-muted-foreground">Entrega solicitada
-                  <input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} min={new Date().toISOString().slice(0, 10)} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
+                  <input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} min={fechaHoyPeru()} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
                   <span className="mt-1 block text-[10px] text-muted-foreground">Fecha comprometida o solicitada por el cliente.</span>
                 </label>
               </div>
@@ -502,7 +510,7 @@ function CotizacionesPage() {
 <label className="text-xs text-muted-foreground">Moneda<select value={form.moneda} onChange={e => setForm({...form,moneda:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value={identidad?.moneda_codigo ?? "PEN"}>{identidad?.moneda_simbolo ? `${identidad.moneda_simbolo} ` : ""}{identidad?.moneda_codigo ?? "PEN"} · moneda del taller</option>{(identidad?.moneda_codigo ?? "PEN") !== "USD" ? <option value="USD">US$ USD · alternativa</option> : null}</select></label>
               <div className="hidden sm:block" />
               <div className="text-xs text-muted-foreground"><div className="mb-2 rounded-lg border border-border bg-surface-muted/40 px-3 py-2"><b className="text-foreground">{identidad?.nombre_comercial ?? "Taller"}</b><span className="ml-2">{identidad?.impuesto_nombre ?? "Impuesto"} configurado: {Number(identidad?.impuesto_tasa ?? 0)}%</span></div><div className="flex items-center justify-between gap-3"><span>Impuesto (%)</span><button type="button" onClick={() => setImpuestoActivo(v => !v)} aria-pressed={impuestoActivo} title={impuestoActivo ? "Desactivar impuesto" : "Activar impuesto"} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${impuestoActivo ? "border-gold/25 bg-gold/10 text-gold" : "border-border bg-background text-muted-foreground"}`}>{impuestoActivo ? <ToggleRight className="size-4" /> : <ToggleLeft className="size-4" />}{impuestoActivo ? "Activo" : "Desactivado"}</button></div><input type="number" min="0" max="100" step="0.01" value={form.tasaImpuesto} disabled={!impuestoActivo} onChange={e => setForm({...form,tasaImpuesto:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50" /><span className="mt-1 block text-[10px] text-muted-foreground">{impuestoActivo ? "Se aplicará sobre el subtotal después del descuento." : "El impuesto no se aplicará a esta cotización."}</span></div>
-              <label className="text-xs text-muted-foreground">Válida hasta<input type="date" min={new Date().toISOString().slice(0, 10)} value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">7 días por defecto. Puedes ajustarla según el acuerdo comercial.</span></label>
+              <label className="text-xs text-muted-foreground">Válida hasta<input type="date" min={fechaHoyPeru()} value={form.fecha_vencimiento} onChange={e => setForm({...form,fecha_vencimiento:e.target.value})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" /><span className="mt-1 block text-[10px] text-muted-foreground">7 días por defecto. Puedes ajustarla según el acuerdo comercial.</span></label>
               <label className="text-xs text-muted-foreground">Descuento
                 <input type="number" min="0" step="0.01" value={form.descuento} onChange={e => setForm({...form,descuento:Number(e.target.value) || 0})} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
                 <span className="mt-1 block text-[10px] text-muted-foreground">Se descuenta del subtotal antes del impuesto.</span>
