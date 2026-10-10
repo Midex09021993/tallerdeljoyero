@@ -133,7 +133,7 @@ function NuevoContratoPage() {
             />
             <Campo label="Cliente" value={form.cliente} onChange={(v) => set("cliente", v)} required placeholder="Nombre del cliente" />
             <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Opcional" />
-            <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} readOnly={!cotizacionId} placeholder="Contrato externo" />
+            <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Contrato externo / sistema anterior" />
             <Campo label="Total" value={form.total} onChange={(v) => set("total", v)} type="number" placeholder="0.00" />
             <div className="rounded-xl border border-border bg-surface-muted/50 px-3 py-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sede de este contrato</span>
