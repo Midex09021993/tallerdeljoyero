@@ -823,7 +823,17 @@ function CotizacionDetallePage() {
                   </div>
                 ) : null}
                 {cotizacion.estado === "aprobada" ? (
-                  pedidoId ? (
+                  <>
+                  {contratoId ? (
+                    <Link to="/contratos/$id" params={{ id: contratoId }} className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-semibold">
+                      Ver contrato {contratoNumero ? `· ${contratoNumero}` : ""}
+                    </Link>
+                  ) : (
+                    <button type="button" onClick={() => void navigate({ to: "/contratos/nuevo", search: { cotizacionId: cotizacion.id } })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold">
+                      Crear contrato (opcional)
+                    </button>
+                  )}
+                  {pedidoId ? (
                     <div className="space-y-2">
                       <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
                         <p className="font-medium">✓ Operación comercial creada</p>
@@ -836,8 +846,9 @@ function CotizacionDetallePage() {
                       {convirtiendoPedido ? "Creando pedido…" : "Crear pedido"}
                     </button>
                   )
+                  </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podremos crear el pedido sin volver a ingresar los datos. El contrato es opcional y puede crearse por separado cuando corresponda.</p>
+                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podrás crear un contrato opcional y vinculado a esta cotización, o continuar sin contrato cuando corresponda.</p>
                 )}
                 <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
               </div>
