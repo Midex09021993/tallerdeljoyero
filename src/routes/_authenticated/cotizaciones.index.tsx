@@ -9,6 +9,7 @@ import { FichaDorada } from "@/components/FichaDorada";
 import { BadgeDollarSign, CheckCircle2, FileText, Plus, Search, Clock3, Trash2, X, Send, ToggleLeft, ToggleRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/")({
   head: () => ({
@@ -80,6 +81,7 @@ function fechaVencimientoPorDefecto() {
 
 function CotizacionesPage() {
   const { data: sesion } = useSesion();
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
   const navigate = useNavigate();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
@@ -104,7 +106,7 @@ function CotizacionesPage() {
 
   const cargar = async () => {
     const [{ data: q }, { data: s }, { data: identidadData }] = await Promise.all([
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
       sesion?.participante?.sede_id
         ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.participante.sede_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
@@ -174,12 +176,12 @@ function CotizacionesPage() {
         mapa.set(clave, q);
       }
     }
-    return Array.from(mapa.values()).sort((a, b) => {
+    return Array.from(mapa.values()).filter((q) => !esDueno || sedeFiltro === TODAS_LAS_SEDES || q.sede_id === sedeFiltro).sort((a, b) => {
       const fechaA = new Date(a.fecha_emision).getTime();
       const fechaB = new Date(b.fecha_emision).getTime();
       return fechaB - fechaA || a.numero.localeCompare(b.numero);
     });
-  }, [cotizaciones]);
+  }, [cotizaciones, esDueno, sedeFiltro]);
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
@@ -276,6 +278,10 @@ function CotizacionesPage() {
   async function guardar(e: FormEvent) {
     e.preventDefault();
     if ((!form.cliente_id && !busquedaCliente.trim()) || conceptos.some((item) => !item.descripcion.trim() || item.cantidad <= 0 || item.precio <= 0)) return;
+    if (esDueno && (sedeFiltro === TODAS_LAS_SEDES || !sedeFiltro)) {
+      setErrorCliente("Selecciona una sede específica desde Inicio antes de crear una cotización.");
+      return;
+    }
     setGuardando(true);
     setErrorCliente("");
     try {
@@ -287,7 +293,7 @@ function CotizacionesPage() {
         _cliente_telefono: form.cliente_id ? null : nuevoCliente.telefono.trim() || null,
         _cliente_email: form.cliente_id ? null : nuevoCliente.email.trim() || null,
         _proyecto_joya_id: null,
-        _sede_id: sesion?.participante?.sede_id ?? null,
+        _sede_id: esDueno ? sedeFiltro : sesion?.participante?.sede_id ?? null,
         _moneda: form.moneda,
         _cantidad: primero.cantidad,
         _costo_unitario: primero.costo,
