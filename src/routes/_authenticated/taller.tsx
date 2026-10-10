@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 import { CLAVES_CALCULADORAS, leerConfigYeso } from "@/lib/calculadoras-config";
@@ -115,12 +115,7 @@ function TallerCompleto() {
       ocultarAccionesCelular
       acciones={
         <>
-          <SelectorSedeDueno
-            esDueno={esDueno}
-            sedes={sedes}
-            value={sedeFiltro}
-            onChange={setSedeFiltro}
-          />
+          
           <StatCard etiqueta="Asignados" valor={String(pedidos.length)} />
           <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
         </>
