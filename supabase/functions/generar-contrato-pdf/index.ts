@@ -163,20 +163,14 @@ Deno.serve(async (req) => {
       mostrarIdentidad: true,
       mostrarCotizacion: true,
       mostrarResumenEconomico: true,
-      mostrarEspecificaciones: true,
+      mostrarEspecificaciones: false,
       mostrarFirmas: true,
       etiquetaCliente: "CLIENTE",
       etiquetaRepresentante: "TALLER / JOYERÍA",
       textoAceptacion: "Las partes declaran haber revisado el contenido del presente contrato y aceptar las condiciones indicadas.",
       pie: "Documento contractual generado por AURUM LAB.",
-      clausulas: [
-        { titulo: "PRIMERA · OBJETO", contenido: "El taller se compromete a fabricar la pieza descrita en este documento conforme a las especificaciones acordadas con el cliente." },
-        { titulo: "SEGUNDA · PRECIO Y FORMA DE PAGO", contenido: "El cliente abona un anticipo al firmar el presente contrato. El saldo pendiente deberá cancelarse en su totalidad antes o al momento de la entrega de la pieza." },
-        { titulo: "TERCERA · PLAZO DE ENTREGA", contenido: "El plazo de fabricación se computa desde la aprobación del diseño y el pago del anticipo. Cambios solicitados por el cliente pueden ampliar dicho plazo." },
-        { titulo: "CUARTA · MODIFICACIONES", contenido: "Toda modificación posterior a la aprobación del diseño podrá generar costos adicionales, que serán informados al cliente antes de su ejecución." },
-        { titulo: "QUINTA · TOLERANCIAS", contenido: "El peso final del metal puede variar ligeramente respecto al estimado por la naturaleza artesanal del proceso; dicha variación se ajustará en la liquidación final." },
-        { titulo: "SEXTA · CANCELACIÓN", contenido: "Si el cliente cancela el trabajo una vez iniciada la producción, el anticipo se destinará a cubrir los materiales y la mano de obra empleados." },
-      ],
+      // La vista previa aprobada por el usuario es una ficha contractual A4 compacta de una página.
+      clausulas: [],
     };
 
     const clausulas = (contenido.clausulas as Array<Record<string, unknown>>);
@@ -196,9 +190,9 @@ Deno.serve(async (req) => {
     const margin = 42;
     const bottom = 62;
     // Identidad documental coherente con la cotización FADILAB: verde y azul claro.
-    const accent = rgb(0.30, 0.59, 0.25);
-    const totalBlue = rgb(0.03, 0.40, 0.55);
-    const softBlue = rgb(0.84, 0.91, 0.97);
+    const accent = rgb(0.72, 0.57, 0.12);
+    const totalBlue = rgb(0.72, 0.57, 0.12);
+    const softBlue = rgb(0.97, 0.95, 0.88);
     let embeddedLogo: any = null;
     if (clean(identidad?.logo_url)) {
       try {
