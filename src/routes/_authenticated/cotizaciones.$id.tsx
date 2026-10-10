@@ -380,7 +380,7 @@ function CotizacionDetallePage() {
   }
 
   async function registrarWhatsAppYEnviar() {
-    if (!cliente || !enlacePdf || guardandoWhatsapp) return;
+    if (!cliente || guardandoWhatsapp) return;
     const numero = numeroWhatsapp.replace(/\D/g, "");
     if (numero.length < 6) {
       setError("Ingresa un número de WhatsApp válido.");
@@ -409,7 +409,6 @@ function CotizacionDetallePage() {
   }
 
   async function abrirWhatsApp(numeroForzado?: string | null) {
-    if (!enlacePdf) return;
     const telefono = (numeroForzado || numeroWhatsAppRegistrado()).replace(/\D/g, "");
     if (!telefono) {
       setError("Este cliente no tiene un número registrado. Ingresa su número de WhatsApp para guardarlo y continuar.");
@@ -738,8 +737,8 @@ function CotizacionDetallePage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!enlacePdf) {
-                          setError("Primero genera el PDF en “Documento para el cliente”.");
+                        if (!cotizacion.seguimiento_codigo?.trim()) {
+                          setError("Esta cotización no tiene código de seguimiento. Verifica la configuración del portal público antes de enviarla.");
                           return;
                         }
                         if (!(await marcarComoEnviada())) return;
@@ -754,7 +753,7 @@ function CotizacionDetallePage() {
                 {mostrarOpcionesEnvio ? (
                       <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
                         <p className="text-xs text-muted-foreground">Comparte la cotización mediante una de estas opciones:</p>
-                        {enlacePdf ? (
+                        {cotizacion.seguimiento_codigo?.trim() ? (
                           <>
                             {numeroWhatsAppRegistrado() ? (
                               <button type="button" onClick={() => abrirWhatsApp()} className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
@@ -795,7 +794,7 @@ function CotizacionDetallePage() {
                             </button>
                           </>
                         ) : (
-                          <p className="text-xs text-muted-foreground">Primero genera el PDF en “Documento para el cliente” para poder compartirlo.</p>
+                          <p className="text-xs text-muted-foreground">No hay código de seguimiento para esta cotización. Verifica la configuración del portal público antes de compartirla.</p>
                         )}
                       </div>
                 ) : null}
