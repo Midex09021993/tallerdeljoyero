@@ -731,20 +731,9 @@ function CotizacionDetallePage() {
             </Panel>
             <Panel titulo="Documento para el cliente">
               <div className="space-y-3 p-4">
-                <p className="text-xs text-muted-foreground">Vista previa de la ficha comercial en formato A4, con los datos de esta cotización y la identidad del taller activo.</p>
+                <p className="text-xs text-muted-foreground">Consulta la ficha comercial en formato A4 e imprime o guarda el PDF desde su vista previa.</p>
                 <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(false); setMostrarFichaA4(true); }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
                   Ver ficha A4
-                </button>
-                <button
-                  type="button"
-                  disabled={!cotizacion || !fichaCotizacion}
-                  onClick={() => {
-                    setImprimirFichaAlAbrir(true);
-                    setMostrarFichaA4(true);
-                  }}
-                  className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                >
-                  Descargar PDF de cotización
                 </button>
               </div>
             </Panel>
