@@ -20,6 +20,7 @@ import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FichaContratoA4 } from "@/components/FichaContratoA4";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/contratos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -69,10 +70,12 @@ function ContratoPage() {
   const { id } = useParams({ from: "/_authenticated/contratos/$id" });
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
   const { nuevoPedido } = Route.useSearch();
   const { data: contrato, isLoading } = useContrato(id);
-  const { pedidos, isLoading: cargandoPedidos } = usePedidosContrato(contrato);
-  const { data: pagos = [] } = usePagosContrato(contrato);
+  const contratoEnContexto = contrato && (!esDueno || sedeFiltro === TODAS_LAS_SEDES || contrato.sede_id === sedeFiltro) ? contrato : null;
+  const { pedidos, isLoading: cargandoPedidos } = usePedidosContrato(contratoEnContexto);
+  const { data: pagos = [] } = usePagosContrato(contratoEnContexto);
   const crearTrabajo = useCrearTrabajoContrato();
   const crearContrato = useCrearContratoDesdePedido();
   const registrarPago = useRegistrarPagoContrato();
@@ -130,14 +133,14 @@ function ContratoPage() {
   }
 
   const resumen = useMemo(() => {
-    return resumenFinancieroContrato(contrato, pagos);
-  }, [contrato, pagos]);
+    return resumenFinancieroContrato(contratoEnContexto, pagos);
+  }, [contratoEnContexto, pagos]);
 
   const puedeCrearTrabajo = Boolean(sesion?.esAdmin);
   const contratoFinancieroReal = resumen.origen === "contrato";
 
   useEffect(() => {
-    if (!contrato || !puedeCrearTrabajo || !nuevoPedido) return;
+    if (!contratoEnContexto || !puedeCrearTrabajo || !nuevoPedido) return;
     setModalAbierto(true);
     setForm(formularioContratoVacio(contrato));
     setRuta([]);
@@ -147,7 +150,7 @@ function ContratoPage() {
       search: { nuevoPedido: false },
       replace: true,
     });
-  }, [contrato, puedeCrearTrabajo, nuevoPedido, navigate]);
+  }, [contratoEnContexto, puedeCrearTrabajo, nuevoPedido, navigate]);
 
   if (isLoading) {
     return (
@@ -163,6 +166,14 @@ function ContratoPage() {
         <p className="text-sm text-muted-foreground">
           Este contrato no existe o todavía no fue migrado desde pedidos.
         </p>
+      </AppShell>
+    );
+  }
+
+  if (!contratoEnContexto) {
+    return (
+      <AppShell titulo="Contrato de otra sede" atrasMovil={{ to: "/contratos" }}>
+        <p className="text-sm text-muted-foreground">Este contrato pertenece a otra sede. Cambia la sede desde Inicio para consultarlo.</p>
       </AppShell>
     );
   }
