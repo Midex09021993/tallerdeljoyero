@@ -3020,6 +3020,7 @@ export type Database = {
           modo: string
           nombre: string
           updated_at: string
+          zona_horaria: string
         }
         Insert: {
           activa?: boolean
@@ -3029,6 +3030,7 @@ export type Database = {
           modo?: string
           nombre: string
           updated_at?: string
+          zona_horaria?: string
         }
         Update: {
           activa?: boolean
@@ -3038,6 +3040,7 @@ export type Database = {
           modo?: string
           nombre?: string
           updated_at?: string
+          zona_horaria?: string
         }
         Relationships: []
       }
