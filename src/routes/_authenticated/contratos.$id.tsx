@@ -357,7 +357,7 @@ function ContratoPage() {
           </Panel>
         </div>
 
-        <aside className="space-y-4">
+        <aside className="rounded-xl border border-border bg-card p-5 shadow-card lg:rounded-2xl">
           {requiereFirma ? (
             <Panel titulo="Acciones">
               <div className="space-y-3 p-4">
@@ -406,7 +406,6 @@ function ContratoPage() {
               </div>
             </Panel>
           ) : null}
-        <aside className="rounded-xl border border-border bg-card p-5 shadow-card lg:rounded-2xl">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Resumen comercial
           </p>
