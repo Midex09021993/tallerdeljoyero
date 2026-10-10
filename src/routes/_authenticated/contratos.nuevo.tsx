@@ -69,7 +69,6 @@ function NuevoContratoPage() {
       }
       setForm((actual) => ({
         ...actual,
-        numero: `CT-${q.numero}-V${Number(q.version) || 1}`,
         origen: `Cotización ${q.numero}`,
         cliente: cliente?.nombre ?? actual.cliente,
         telefono: cliente?.telefono ?? cliente?.whatsapp ?? actual.telefono,
@@ -124,9 +123,8 @@ function NuevoContratoPage() {
               label="Número de contrato"
               value={form.numero}
               onChange={(v) => set("numero", v)}
-              required
-              readOnly={Boolean(cotizacionId)}
-              placeholder={cotizacionId ? "Se asignará desde la cotización" : "Escribe el número externo"}
+              readOnly
+              placeholder="Se asignará automáticamente al guardar"
             />
             <Campo label="Cliente" value={form.cliente} onChange={(v) => set("cliente", v)} required placeholder="Nombre del cliente" />
             <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Opcional" />
@@ -160,7 +158,7 @@ function Campo({ label, value, onChange, placeholder, type = "text", required = 
   return (
     <label className="block">
       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}{required ? " *" : ""}</span>
-      <input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" />
+      <input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} readOnly={readOnly} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" />
     </label>
   );
 }

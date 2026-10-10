@@ -267,10 +267,6 @@ function prefijoContrato(numero: string) {
   return limpio.slice(-2) || "YA";
 }
 
-function prefijoContratoAutomatico() {
-  return `CTR-${new Date().getFullYear()}-`;
-}
-
 function esUuid(valor: string | null | undefined) {
   return Boolean(
     valor?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
@@ -285,16 +281,6 @@ export function siguienteReferenciaContrato(numeroContrato: string, refs: string
     return m ? Math.max(acc, Number(m[1])) : acc;
   }, 0);
   return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
-}
-
-function siguienteNumeroContrato(numeros: string[]) {
-  const prefijo = prefijoContratoAutomatico();
-  const re = new RegExp(`^${prefijo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)$`, "i");
-  const max = numeros.reduce((acc, numero) => {
-    const m = re.exec((numero ?? "").trim());
-    return m ? Math.max(acc, Number(m[1])) : acc;
-  }, 0);
-  return `${prefijo}${String(max + 1).padStart(4, "0")}`;
 }
 
 export type Pedido = {
@@ -772,68 +758,67 @@ async function upsertPedidoComercial(pedidoId: string, cambios: Partial<PedidoNu
   if (error) throw error;
 }
 
-async function generarNumeroContratoAutomatico() {
-  const prefijo = prefijoContratoAutomatico();
-  const [contratos, pedidos] = await Promise.all([
-    supabase.from("contratos").select("numero").ilike("numero", `${prefijo}%`),
-    supabase.from("pedidos").select("contrato").ilike("contrato", `${prefijo}%`),
-  ]);
+async function crearContratoComercialAtomico({
+  cliente,
+  telefono,
+  origen,
+  importe,
+  sede_id,
+  notas,
+  cotizacion_id,
+}: {
+  numero?: string;
+  cliente: string;
+  telefono: string;
+  origen: string;
+  importe: number;
+  sede_id: string | null;
+  notas: string;
+  cotizacion_id?: string | null;
+}) {
+  const { data, error } = await supabase.rpc("crear_contrato_comercial", {
+    _cliente: cliente.trim(),
+    _telefono: telefono.trim(),
+    _origen: origen.trim(),
+    _total: Math.max(0, Number(importe) || 0),
+    _sede_id: sede_id,
+    _notas: notas,
+    _cotizacion_id: cotizacion_id ?? null,
+  });
+  if (error) throw error;
 
-  if (contratos.error && !esErrorCampoFaltante(contratos.error)) throw contratos.error;
-  if (pedidos.error && !esErrorCampoFaltante(pedidos.error)) throw pedidos.error;
-
-  return siguienteNumeroContrato([
-    ...((contratos.data ?? []) as Array<{ numero?: string }>).map((c) => c.numero ?? ""),
-    ...((pedidos.data ?? []) as Array<{ contrato?: string }>).map((p) => p.contrato ?? ""),
-  ]);
+  const resultado = data as { id?: string; numero?: string; creado?: boolean } | null;
+  if (!resultado?.id || !resultado.numero) {
+    throw new Error("La base de datos no devolvió el contrato creado.");
+  }
+  return { id: resultado.id, numero: resultado.numero, creado: Boolean(resultado.creado) };
 }
 
 async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
-  const numero = pedido.contrato.trim() || (await generarNumeroContratoAutomatico());
-  if (pedido.contrato_id) return { id: pedido.contrato_id, numero, creado: false };
+  if (pedido.contrato_id) {
+    return { id: pedido.contrato_id, numero: pedido.contrato.trim(), creado: false };
+  }
 
-  const base: ContratoInsert = {
-    numero,
+  if (pedido.contrato.trim()) {
+    let consulta = supabase.from("contratos").select("id, numero").eq("numero", pedido.contrato.trim());
+    consulta = pedido.sede_id ? consulta.eq("sede_id", pedido.sede_id) : consulta.is("sede_id", null);
+    const { data: existente, error } = await consulta.maybeSingle();
+    if (error && !esErrorCampoFaltante(error)) throw error;
+    if (existente?.id) return { id: existente.id, numero: existente.numero, creado: false };
+  }
+
+  return crearContratoComercialAtomico({
     cliente: pedido.cliente,
     telefono: pedido.telefono,
     origen: pedido.origen,
-    total: pedido.importe,
-    abonado: 0,
+    importe: pedido.importe,
     sede_id: pedido.sede_id,
     notas: "",
-  };
-
-  const existente = await supabase
-    .from("contratos")
-    .select("id")
-    .eq("numero", numero)
-    .maybeSingle();
-
-  if (existente.error) {
-    if (esErrorCampoFaltante(existente.error)) return { id: null, numero, creado: false };
-    throw existente.error;
-  }
-  if (existente.data?.id) return { id: existente.data.id, numero, creado: false };
-
-  const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
-  if (error) {
-    if (error.code === "23505") {
-      const relectura = await supabase
-        .from("contratos")
-        .select("id")
-        .eq("numero", numero)
-        .maybeSingle();
-      if (relectura.error) throw relectura.error;
-      if (relectura.data?.id) return { id: relectura.data.id, numero, creado: false };
-    }
-    if (esErrorCampoFaltante(error)) return { id: null, numero, creado: false };
-    throw error;
-  }
-  return { id: data.id, numero, creado: true };
+  });
 }
 
 async function asegurarContratoComercial({
-  numero,
+  numero: _numero,
   cliente,
   telefono,
   origen,
@@ -851,75 +836,15 @@ async function asegurarContratoComercial({
   notas: string;
   cotizacion_id?: string | null;
 }) {
-  const numeroLimpio = numero.trim();
-  if (!numeroLimpio) return { id: null, numero: "", creado: false };
-
-  const base: ContratoInsert = {
-    numero: numeroLimpio,
+  return crearContratoComercialAtomico({
     cliente,
     telefono,
     origen,
-    total: Math.max(0, importe),
-    abonado: 0,
+    importe,
     sede_id,
     notas,
-    ...(cotizacion_id ? { cotizacion_id } : {}),
-  };
-
-  const existente = await supabase
-    .from("contratos")
-    .select("id, cliente, telefono, origen, sede_id, cotizacion_id")
-    .eq("numero", numeroLimpio)
-    .maybeSingle();
-
-  if (existente.error) {
-    if (esErrorCampoFaltante(existente.error))
-      return { id: null, numero: numeroLimpio, creado: false };
-    throw existente.error;
-  }
-
-  if (existente.data?.id) {
-    const cotizacionExistente = (existente.data as Record<string, unknown>)["cotizacion_id"];
-    if (cotizacion_id && cotizacionExistente !== cotizacion_id) {
-      throw new Error("Ya existe un contrato con ese número o no está vinculado a esta cotización. Usa un número distinto.");
-    }
-    const sedeExistente = (existente.data as Record<string, unknown>)["sede_id"];
-    if (sede_id && typeof sedeExistente === "string" && sedeExistente !== sede_id) {
-      throw new Error("Ya existe un contrato con ese número en otra sede. Usa un número distinto para evitar mezclar talleres.");
-    }
-    const actualizacion: Partial<ContratoInsert> = {
-      cliente: textoCampo(existente.data as Record<string, unknown>, "cliente") || cliente,
-      telefono: textoCampo(existente.data as Record<string, unknown>, "telefono") || telefono,
-      origen: textoCampo(existente.data as Record<string, unknown>, "origen") || origen,
-      sede_id:
-        typeof (existente.data as Record<string, unknown>)["sede_id"] === "string"
-          ? ((existente.data as Record<string, unknown>)["sede_id"] as string)
-          : sede_id,
-    };
-    const { error } = await supabase
-      .from("contratos")
-      .update(actualizacion)
-      .eq("id", existente.data.id);
-    if (error && !esErrorCampoFaltante(error)) throw error;
-    return { id: existente.data.id, numero: numeroLimpio, creado: false };
-  }
-
-  const { data, error } = await supabase.from("contratos").insert(base).select("id").single();
-  if (error) {
-    if (error.code === "23505") {
-      const relectura = await supabase
-        .from("contratos")
-        .select("id")
-        .eq("numero", numeroLimpio)
-        .maybeSingle();
-      if (relectura.error) throw relectura.error;
-      if (relectura.data?.id) return { id: relectura.data.id, numero: numeroLimpio, creado: false };
-    }
-    if (esErrorCampoFaltante(error)) return { id: null, numero: numeroLimpio, creado: false };
-    throw error;
-  }
-
-  return { id: data.id, numero: numeroLimpio, creado: true };
+    cotizacion_id,
+  });
 }
 
 export function useCrearContrato() {
@@ -935,12 +860,10 @@ export function useCrearContrato() {
       notas?: string;
       cotizacion_id?: string | null;
     }) => {
-      const numero = datos.numero.trim();
-      if (!numero) throw new Error("El número de contrato es obligatorio.");
       if (!datos.cliente.trim()) throw new Error("El cliente es obligatorio.");
 
       const contrato = await asegurarContratoComercial({
-        numero,
+        numero: datos.numero.trim(),
         cliente: datos.cliente.trim(),
         telefono: datos.telefono?.trim() ?? "",
         origen: datos.origen?.trim() ?? "Contrato Aurum",
@@ -950,10 +873,7 @@ export function useCrearContrato() {
         cotizacion_id: datos.cotizacion_id ?? null,
       });
 
-      if (!contrato.id) {
-        throw new Error("No se pudo crear el contrato.");
-      }
-
+      if (!contrato.id) throw new Error("No se pudo crear el contrato.");
       return contrato;
     },
     onSuccess: () => {
