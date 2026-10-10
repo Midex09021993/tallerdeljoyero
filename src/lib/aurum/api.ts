@@ -9,7 +9,6 @@ export function createAurumApi(options:any){
     sceneStudio: options.sceneStudio,
     reset: options.reset,
     autoRotar: options.autoRotar,
-    capturar: options.capturar,
     limpiar: options.limpiar,
     partes: options.partes,
     seleccionarParte: options.seleccionarParte,
