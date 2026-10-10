@@ -4,6 +4,7 @@ import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-r
 import { AppShell, Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
   head: () => ({
@@ -78,6 +79,7 @@ function CotizacionDetallePage() {
   const { id } = useParams({ from: "/_authenticated/cotizaciones/$id" });
   const navigate = useNavigate();
   const { data: sesion, isPending: cargandoSesion } = useSesion();
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
   const puedeGestionarCotizaciones =
     Boolean(sesion?.esAdmin) ||
     Boolean(sesion?.areas.some((area) => area.trim().toLowerCase() === "área ventas"));
@@ -118,6 +120,12 @@ function CotizacionDetallePage() {
     if (qError || !q) {
       setError(qError?.message ?? "No se encontró la cotización.");
       setCargando(false); return;
+    }
+    if (esDueno && sedeFiltro !== TODAS_LAS_SEDES && q.sede_id !== sedeFiltro) {
+      setCotizacion(null);
+      setError("Esta cotización pertenece a otra sede. Cambia la sede desde Inicio para consultarla.");
+      setCargando(false);
+      return;
     }
     const [{ data: d }, { data: c }, { data: p }, { data: respuestas, error: respuestasError }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
       supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
@@ -200,7 +208,7 @@ function CotizacionDetallePage() {
       return;
     }
     void cargar();
-  }, [id, cargandoSesion, puedeGestionarCotizaciones]);
+  }, [id, cargandoSesion, puedeGestionarCotizaciones, esDueno, sedeFiltro]);
 
   const margen = useMemo(() => cotizacion ? Number(cotizacion.subtotal) - Number(cotizacion.subtotal_costo) : 0, [cotizacion]);
 
