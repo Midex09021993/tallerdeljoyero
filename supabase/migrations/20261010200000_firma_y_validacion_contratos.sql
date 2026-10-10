@@ -115,7 +115,7 @@ create policy "contratos firmas subir admin"
 on storage.objects for insert to authenticated
 with check (
   bucket_id = 'cotizaciones-publicas'
-  and name ~ '^contratos/[0-9a-fA-F-]+/firmado-v[0-9]+-[0-9a-fA-F-]+\\.(pdf|png|jpg|jpeg|webp)
+  and name like 'contratos/%/firmado-%'
 
   and public.es_admin(auth.uid())
   and exists (
@@ -135,7 +135,7 @@ using (
   and exists (
     select 1 from public.contratos c
     where name like ('contratos/' || c.id::text || '/firmado-%')
-      and public.mi_sede(auth.uid()) = c.sede_id
+      and (public.has_role(auth.uid(), 'dueno'::public.app_role) or public.mi_sede(auth.uid()) = c.sede_id)
   )
 );
 
@@ -147,7 +147,7 @@ with check (
   and exists (
     select 1 from public.contratos c
     where c.id = contrato_documentos.contrato_id
-      and c.sede_id = public.mi_sede(auth.uid())
+      and (public.has_role(auth.uid(), 'dueno'::public.app_role) or c.sede_id = public.mi_sede(auth.uid()))
   )
 );
 
