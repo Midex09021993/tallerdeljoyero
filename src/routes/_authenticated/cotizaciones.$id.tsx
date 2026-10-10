@@ -708,9 +708,9 @@ function CotizacionDetallePage() {
                 <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(false); setMostrarFichaA4(true); }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
                   Ver ficha A4
                 </button>
-                <p className="text-xs text-muted-foreground">Genera el PDF desde esta misma ficha A4. En el diálogo de impresión selecciona “Guardar como PDF”. Los costos internos y las notas internas quedan excluidos.</p>
-                <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(true); setMostrarFichaA4(true); }} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                  Generar PDF
+                <p className="text-xs text-muted-foreground">Genera y guarda el PDF comercial para descargarlo y compartirlo con el cliente. La vista previa A4 permite revisar el diseño antes de imprimir.</p>
+                <button type="button" disabled={!cotizacion || generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {generandoPdf ? "Generando PDF…" : "Generar PDF descargable"}
                 </button>
                 {enlacePdf ? (
                   <div className="grid gap-2 sm:grid-cols-2">
