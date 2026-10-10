@@ -169,7 +169,7 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
         </span>
       }
     >
-      <div className={`space-y-4 p-4 sm:space-y-5 sm:p-6 lg:p-8 ${compacto ? "" : "max-w-5xl mx-auto"}`}>
+      <div className={`space-y-4 p-3 sm:space-y-4 sm:p-4 lg:p-5 ${compacto ? "" : "mx-auto w-full max-w-6xl"}`}>
         <div className="mb-2 flex items-center gap-2">
           <span className="text-xs font-semibold">Proporción de mezcla</span>
           <span
@@ -180,7 +180,7 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
             i
           </span>
         </div>
-        <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
+        <section className="rounded-2xl border border-border bg-card/60 p-4 sm:p-4">
           <div className="mb-4 flex items-center gap-2.5">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
               <Calculator className="size-4" aria-hidden="true" />
@@ -276,8 +276,8 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
           </div>
         </section>
 
-        {esDueno ? (
-          <section className="rounded-3xl border border-gold/20 bg-gold/5 p-4 sm:p-5 shadow-[0_6px_24px_rgba(180,140,50,0.06)]">
+        {esDueno && medidasCompletas ? (
+          <section className="rounded-2xl border border-gold/20 bg-gold/5 p-4 shadow-[0_6px_24px_rgba(180,140,50,0.06)]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Vista técnica · Dueño</p>
@@ -292,7 +292,7 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
           </section>
         ) : null}
 
-        <section aria-live="polite" className="rounded-3xl border border-gold/25 bg-gradient-to-br from-card via-card to-gold/5 p-4 sm:p-5 shadow-[0_10px_30px_rgba(180,140,50,0.08)] sm:p-6">
+        <section aria-live="polite" className="rounded-2xl border border-gold/25 bg-gradient-to-br from-card via-card to-gold/5 p-4 shadow-[0_10px_30px_rgba(180,140,50,0.08)]">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Mezcla recomendada</p>
