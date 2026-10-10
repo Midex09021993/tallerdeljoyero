@@ -753,7 +753,6 @@ function CotizacionDetallePage() {
                           setError("Esta cotización no tiene código de seguimiento. Verifica la configuración del portal público antes de enviarla.");
                           return;
                         }
-                        if (!(await marcarComoEnviada())) return;
                         setMostrarOpcionesEnvio(true);
                       }}
                       className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
