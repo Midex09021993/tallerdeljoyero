@@ -16,11 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  SelectorSedeDueno,
-  TODAS_LAS_SEDES,
-  useSedeFiltroDueno,
-} from "@/hooks/use-sede-filtro-dueno";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
 import {
@@ -185,12 +181,7 @@ function GestionPage() {
             : `Administración de ${nombreSede}`
       }
       acciones={
-        <SelectorSedeDueno
-          esDueno={esDueno}
-          sedes={sedes}
-          value={sedeFiltro}
-          onChange={setSedeFiltro}
-        />
+        
       }
     >
       <div className="space-y-6">
