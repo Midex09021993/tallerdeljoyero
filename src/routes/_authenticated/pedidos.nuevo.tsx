@@ -6,6 +6,7 @@ import { AppShell, useCapacidadesMenu } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useCrearPedido, usePedidos, useSedes, type PedidoNuevo } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { toast } from "sonner";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
@@ -133,11 +134,15 @@ function Campo({ label, value, onChange, placeholder, type = "text", required = 
 function NuevoPedido() {
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const cotizacionesHabilitadas = capacidades.includes("Cotizaciones");
   const { data: pedidos = [] } = usePedidos();
   const { data: sedes = [] } = useSedes();
   const crear = useCrearPedido();
+  const sedeContextoId = esDueno
+    ? (sedeFiltro === TODAS_LAS_SEDES ? "" : sedeFiltro)
+    : (sesion?.participante?.sede_id ?? "");
   const [clienteBusqueda, setClienteBusqueda] = useState("");
   const [clienteBusquedaDebounced, setClienteBusquedaDebounced] = useState("");
   useEffect(() => {
@@ -146,9 +151,21 @@ function NuevoPedido() {
     return () => window.clearTimeout(timer);
   }, [clienteBusqueda]);
 
+  const [clienteId, setClienteId] = useState("");
+  const [cotizacionId, setCotizacionId] = useState("");
+  const [tipoOperacion, setTipoOperacion] = useState<"fabricacion" | "reparacion" | "venta_stock">("fabricacion");
+  const [sedeId, setSedeId] = useState("");
+  useEffect(() => {
+    setSedeId(sedeContextoId);
+    setClienteId("");
+    setCotizacionId("");
+    setClienteBusqueda("");
+    setForm((actual) => ({ ...actual, cliente: "", telefono: "" }));
+  }, [sedeContextoId]);
+
   const { data: clientes = [] } = useQuery({
-    queryKey: ["pedidos-nuevo-clientes", clienteBusquedaDebounced],
-    enabled: clienteBusquedaDebounced.length >= 2,
+    queryKey: ["pedidos-nuevo-clientes", clienteBusquedaDebounced, sedeId],
+    enabled: clienteBusquedaDebounced.length >= 2 && Boolean(sedeId),
     queryFn: async () => {
       const termino = clienteBusquedaDebounced.replace(/[%_,]/g, "");
       const patron = "%" + termino + "%";
@@ -156,6 +173,7 @@ function NuevoPedido() {
         .from("clientes")
         .select("id,nombre,telefono,ciudad")
         .eq("estado", "activo")
+        .eq("sede_id", sedeId)
         .or("nombre.ilike." + patron + ",telefono.ilike." + patron)
         .order("nombre")
         .limit(8);
@@ -163,11 +181,6 @@ function NuevoPedido() {
       return data ?? [];
     },
   });
-
-  const [clienteId, setClienteId] = useState("");
-  const [cotizacionId, setCotizacionId] = useState("");
-  const [tipoOperacion, setTipoOperacion] = useState<"fabricacion" | "reparacion" | "venta_stock">("fabricacion");
-  const [sedeId, setSedeId] = useState(sesion?.perfil.sede_id ?? sedes[0]?.id ?? "");
   const { data: cotizacionesCliente = [], isFetching: buscandoCotizaciones } = useQuery({
     queryKey: ["pedidos-nuevo-cotizaciones", clienteId, sedeId],
     enabled: Boolean(clienteId && sedeId && cotizacionesHabilitadas),
