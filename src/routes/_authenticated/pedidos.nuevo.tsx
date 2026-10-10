@@ -392,10 +392,21 @@ function NuevoPedido() {
           set("telefono", clienteExistente.telefono ?? telefonoCliente);
           set("origen", clienteExistente.ciudad ?? ciudadCliente);
         } else {
+          const { data: participante, error: participanteError } = await supabase
+            .from("ecosistema_participantes")
+            .select("id")
+            .eq("sede_id", sedeId)
+            .eq("estado", "activo")
+            .limit(1)
+            .maybeSingle();
+          if (participanteError) throw participanteError;
+          if (!participante?.id) throw new Error("No se encontró un participante activo para la sede del pedido.");
+
           const { data: clienteNuevo, error: errorCliente } = await supabase
             .from("clientes")
             .insert({
               sede_id: sedeId,
+              participante_id: participante.id,
               nombre: nombreCliente,
               telefono: telefonoCliente || null,
               ciudad: ciudadCliente || null,
