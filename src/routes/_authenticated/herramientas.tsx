@@ -74,7 +74,7 @@ function HerramientasPage() {
 
             <Link
               to="/transfer"
-              className="group block overflow-hidden rounded-2xl border border-gold/25 bg-ink text-ink-foreground shadow-card transition hover:border-gold/60 hover:shadow-lg"
+              className="group block overflow-hidden rounded-2xl border border-gold/25 bg-card text-foreground shadow-card transition hover:border-gold/60 hover:shadow-raised"
             >
               <div className="relative flex min-h-[180px] items-end overflow-hidden bg-[radial-gradient(circle_at_78%_25%,rgba(190,151,72,.12),transparent_30%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-6">
                 <div className="absolute right-8 top-8 grid size-24 place-items-center rounded-full border border-gold/20 bg-gold/10 text-gold transition group-hover:scale-105">
