@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
+import { FichaCotizacionA4 } from "@/components/FichaCotizacionA4";
 
 export const Route = createFileRoute("/cliente")({
   head: () => ({
@@ -164,6 +165,7 @@ function SeguimientoCliente() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfCargando, setPdfCargando] = useState(false);
   const [pdfError, setPdfError] = useState("");
+  const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
 
   const consulta = useMutation({
     mutationFn: async (
@@ -331,6 +333,35 @@ function SeguimientoCliente() {
           </p>
         ) : null}
 
+        {mostrarFichaA4 && cotizacion ? (
+          <div className="fixed inset-0 z-[100] flex flex-col overflow-auto bg-slate-900/90 p-3 sm:p-6 print-cliente-ficha-overlay" role="dialog" aria-modal="true" aria-label="Propuesta A4">
+            <style>{`@page { size: A4; margin: 0; } @media print { body * { visibility: hidden !important; } .print-cliente-ficha-overlay, .print-cliente-ficha-overlay * { visibility: visible !important; } .print-cliente-ficha-overlay { position: absolute !important; inset: 0 !important; display: block !important; overflow: visible !important; padding: 0 !important; background: white !important; } .print-cliente-ficha-toolbar { display: none !important; } .print-cliente-ficha-paper { width: 210mm !important; min-height: 297mm !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; } }`}</style>
+            <div className="print-cliente-ficha-toolbar mx-auto mb-3 flex w-full max-w-[210mm] justify-end gap-2">
+              <button type="button" onClick={() => window.print()} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Imprimir / Guardar PDF</button>
+              <button type="button" onClick={() => setMostrarFichaA4(false)} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Cerrar ficha</button>
+            </div>
+            <div className="print-cliente-ficha-paper mx-auto w-full max-w-[210mm]">
+              <FichaCotizacionA4 data={{
+                numero: cotizacion.numero,
+                version: cotizacion.version,
+                fecha: cotizacion.fecha_emision,
+                vencimiento: cotizacion.fecha_vencimiento,
+                entrega: cotizacion.fecha_entrega_solicitada,
+                moneda: cotizacion.moneda,
+                cliente: { nombre: cotizacion.cliente },
+                tallerNombre: nombreTaller || cotizacion.sede,
+                identidad: (cotizacion.identidad_comercial ?? null) as any,
+                detalles: cotizacion.detalles.map((detalle) => ({ tipo: detalle.tipo, descripcion: detalle.descripcion, cantidad: detalle.cantidad, unidad: detalle.unidad, precio_unitario: detalle.precio_unitario, total_precio: detalle.total_precio })),
+                subtotal: cotizacion.subtotal,
+                descuento: cotizacion.descuento,
+                impuestos: cotizacion.impuestos,
+                total: cotizacion.total,
+                notas: cotizacion.notas_cliente,
+              }} />
+            </div>
+          </div>
+        ) : null}
+
         {cotizacion ? (
           <article className="mt-8 overflow-hidden rounded-3xl border border-border bg-card shadow-card">
             <div className="border-b border-border bg-surface/70 p-6 sm:p-8">
@@ -380,34 +411,23 @@ function SeguimientoCliente() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-4">
                     <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold">
-                      <span className="text-xs font-bold tracking-tight">PDF</span>
+                      <span className="text-xs font-bold tracking-tight">A4</span>
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Propuesta oficial</p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        Descarga la propuesta completa, revísala con calma y luego responde desde esta misma página.
+                        Revisa la misma ficha comercial A4 del taller. Desde la vista previa puedes imprimirla o guardarla como PDF.
                       </p>
                     </div>
                   </div>
-
-                  {pdfUrl ? (
-                    <a
-                      href={`${pdfUrl}${pdfUrl.includes("?") ? "&" : "?"}download=${encodeURIComponent(cotizacion.numero + "-v" + cotizacion.version + ".pdf")}`}
-                      download={cotizacion.numero + "-v" + cotizacion.version + ".pdf"}
-                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-gold px-5 py-3 text-xs font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5"
-                    >
-                      Descargar PDF
-                    </a>
-                  ) : pdfCargando ? (
-                    <span className="text-xs font-medium text-muted-foreground">Preparando documento…</span>
-                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setMostrarFichaA4(true)}
+                    className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-gold px-5 py-3 text-xs font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5"
+                  >
+                    Ver propuesta A4
+                  </button>
                 </div>
-
-                {!pdfCargando && !pdfUrl ? (
-                  <div className="mt-4 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-xs text-danger">
-                    {pdfError || "El PDF todavía no está disponible para descarga. Genera o regenera el documento desde el ERP y vuelve a abrir este enlace."}
-                  </div>
-                ) : null}
               </div>
             </section>
             <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto]">
