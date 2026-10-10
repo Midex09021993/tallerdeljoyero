@@ -452,11 +452,10 @@ function CotizacionDetallePage() {
     ventana.location.href = destino;
   }
 
-  async function descargarPdf() {
-    if (!enlacePdf) return;
+  async function descargarPdf(urlPdf: string) {
     try {
       setError("");
-      const response = await fetch(enlacePdf);
+      const response = await fetch(urlPdf);
       if (!response.ok) throw new Error("No se pudo descargar el PDF.");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -707,22 +706,18 @@ function CotizacionDetallePage() {
                 <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(false); setMostrarFichaA4(true); }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
                   Ver ficha A4
                 </button>
-                <p className="text-xs text-muted-foreground">Genera y guarda el PDF comercial para descargarlo y compartirlo con el cliente. La vista previa A4 permite revisar el diseño antes de imprimir.</p>
-                <button type="button" disabled={!cotizacion || generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                  {generandoPdf ? "Generando PDF…" : "Generar PDF descargable"}
+                <p className="text-xs text-muted-foreground">Genera y descarga el PDF comercial en un solo paso. La ficha A4 permite revisar el diseño antes de imprimir. El documento no incluye costos ni notas internas.</p>
+                <button
+                  type="button"
+                  disabled={!cotizacion || generandoPdf}
+                  onClick={async () => {
+                    const urlPdf = await generarPdfCotizacion();
+                    if (urlPdf) await descargarPdf(urlPdf);
+                  }}
+                  className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                  {generandoPdf ? "Generando PDF…" : "Generar y descargar PDF"}
                 </button>
-                {enlacePdf ? (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <button type="button" onClick={() => void descargarPdf()} className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground hover:opacity-90">
-                      Descargar PDF
-                    </button>
-                  </div>
-                ) : null}
-                {enlacePdf ? (
-                  <a href={enlacePdfCliente() ?? enlacePdf ?? "#"} target="_blank" rel="noreferrer" className="block text-center text-xs font-medium text-primary hover:underline">
-                    Abrir PDF en una pestaña nueva
-                  </a>
-                ) : null}
               </div>
             </Panel>
             <Panel titulo="Acciones">
