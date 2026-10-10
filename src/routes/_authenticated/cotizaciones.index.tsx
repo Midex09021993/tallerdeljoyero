@@ -116,14 +116,12 @@ function CotizacionesPage() {
     if (s) setSedes(s);
     const identidadActiva = (identidadData ?? null) as IdentidadComercial | null;
     setIdentidad(identidadActiva);
-    if (identidadActiva) {
-      setImpuestoActivo(Boolean(identidadActiva.impuesto_activo));
-      setForm((actual) => ({
-        ...actual,
-        moneda: identidadActiva.moneda_codigo,
-        tasaImpuesto: Number(identidadActiva.impuesto_tasa) || 0,
-      }));
-    }
+    setImpuestoActivo(identidadActiva ? Boolean(identidadActiva.impuesto_activo) : true);
+    setForm((actual) => ({
+      ...actual,
+      moneda: identidadActiva?.moneda_codigo ?? "PEN",
+      tasaImpuesto: identidadActiva ? (Number(identidadActiva.impuesto_tasa) || 0) : 18,
+    }));
   };
 
   useEffect(() => {
