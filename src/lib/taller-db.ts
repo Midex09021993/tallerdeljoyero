@@ -763,6 +763,7 @@ async function upsertPedidoComercial(pedidoId: string, cambios: Partial<PedidoNu
 }
 
 async function crearContratoComercialAtomico({
+  numero,
   cliente,
   telefono,
   origen,
@@ -788,6 +789,7 @@ async function crearContratoComercialAtomico({
     _sede_id: sede_id,
     _notas: notas,
     _cotizacion_id: cotizacion_id ?? null,
+    _numero: cotizacion_id ? null : (numero?.trim() || null),
   });
   if (error) throw error;
 
@@ -841,6 +843,7 @@ async function asegurarContratoComercial({
   cotizacion_id?: string | null;
 }) {
   return crearContratoComercialAtomico({
+    numero: _numero,
     cliente,
     telefono,
     origen,
