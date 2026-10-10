@@ -318,8 +318,8 @@ function CotizacionDetallePage() {
     }
   }
 
-  async function generarPdfCotizacion() {
-    if (!cotizacion || generandoPdf) return;
+  async function generarPdfCotizacion(): Promise<string | null> {
+    if (!cotizacion || generandoPdf) return null;
     setGenerandoPdf(true);
     setError("");
     const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
@@ -328,10 +328,11 @@ function CotizacionDetallePage() {
     if (pdfError || !data?.url) {
       setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
       setGenerandoPdf(false);
-      return;
+      return null;
     }
     setEnlacePdf(data.url);
     setGenerandoPdf(false);
+    return data.url as string;
   }
 
   function enlacePdfCliente() {
@@ -366,7 +367,7 @@ function CotizacionDetallePage() {
   }
 
   async function registrarWhatsAppYEnviar() {
-    if (!cliente || !enlacePdf || guardandoWhatsapp) return;
+    if (!cliente || guardandoWhatsapp) return;
     const numero = numeroWhatsapp.replace(/\D/g, "");
     if (numero.length < 6) {
       setError("Ingresa un número de WhatsApp válido.");
@@ -395,7 +396,6 @@ function CotizacionDetallePage() {
   }
 
   async function abrirWhatsApp(numeroForzado?: string | null) {
-    if (!enlacePdf) return;
     const telefono = (numeroForzado || numeroWhatsAppRegistrado()).replace(/\D/g, "");
     if (!telefono) {
       setError("Este cliente no tiene un número registrado. Ingresa su número de WhatsApp para guardarlo y continuar.");
@@ -439,11 +439,10 @@ function CotizacionDetallePage() {
     ventana.location.href = destino;
   }
 
-  async function descargarPdf() {
-    if (!enlacePdf) return;
+  async function descargarPdf(urlPdf: string) {
     try {
       setError("");
-      const response = await fetch(enlacePdf);
+      const response = await fetch(urlPdf);
       if (!response.ok) throw new Error("No se pudo descargar el PDF.");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -698,21 +697,17 @@ function CotizacionDetallePage() {
                   Generar PDF desde ficha A4
                 </button>
                 <p className="text-xs text-muted-foreground">En la ventana de impresión elige “Guardar como PDF”. Sale idéntico a la ficha A4, sin costos ni notas internas.</p>
-                <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:opacity-50">
-                  {generandoPdf ? "Preparando enlace…" : enlacePdf ? "Actualizar enlace para el cliente" : "Preparar enlace para el cliente"}
+                <button
+                  type="button"
+                  disabled={!cotizacion || generandoPdf}
+                  onClick={async () => {
+                    const urlPdf = await generarPdfCotizacion();
+                    if (urlPdf) await descargarPdf(urlPdf);
+                  }}
+                  className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:opacity-50"
+                >
+                  {generandoPdf ? "Generando PDF…" : "Generar y descargar PDF guardado"}
                 </button>
-                {enlacePdf ? (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <button type="button" onClick={() => void descargarPdf()} className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground hover:opacity-90">
-                      Descargar PDF
-                    </button>
-                  </div>
-                ) : null}
-                {enlacePdf ? (
-                  <a href={enlacePdfCliente() ?? enlacePdf ?? "#"} target="_blank" rel="noreferrer" className="block text-center text-xs font-medium text-primary hover:underline">
-                    Abrir PDF en una pestaña nueva
-                  </a>
-                ) : null}
               </div>
             </Panel>
             <Panel titulo="Acciones">
@@ -727,8 +722,8 @@ function CotizacionDetallePage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!enlacePdf) {
-                          setError("Primero genera el PDF en “Documento para el cliente”.");
+                        if (!cotizacion.seguimiento_codigo?.trim()) {
+                          setError("Esta cotización no tiene código de seguimiento. Verifica la configuración del portal público antes de enviarla.");
                           return;
                         }
                         if (!(await marcarComoEnviada())) return;
@@ -743,7 +738,7 @@ function CotizacionDetallePage() {
                 {mostrarOpcionesEnvio ? (
                       <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
                         <p className="text-xs text-muted-foreground">Comparte la cotización mediante una de estas opciones:</p>
-                        {enlacePdf ? (
+                        {cotizacion.seguimiento_codigo?.trim() ? (
                           <>
                             {numeroWhatsAppRegistrado() ? (
                               <button type="button" onClick={() => abrirWhatsApp()} className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
@@ -784,7 +779,7 @@ function CotizacionDetallePage() {
                             </button>
                           </>
                         ) : (
-                          <p className="text-xs text-muted-foreground">Primero genera el PDF en “Documento para el cliente” para poder compartirlo.</p>
+                          <p className="text-xs text-muted-foreground">No hay código de seguimiento para esta cotización. Verifica la configuración del portal público antes de compartirla.</p>
                         )}
                       </div>
                 ) : null}
