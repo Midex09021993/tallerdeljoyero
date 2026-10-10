@@ -757,9 +757,23 @@ function CotizacionDetallePage() {
                       }}
                       className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
                     >
-                      Enviar al cliente
+                      Preparar envío
                     </button>
                   </>
+                ) : cotizacion.estado === "enviada" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!cotizacion.seguimiento_codigo?.trim()) {
+                        setError("Esta cotización no tiene código de seguimiento. Verifica la configuración del portal público antes de compartirla.");
+                        return;
+                      }
+                      setMostrarOpcionesEnvio((visible) => !visible);
+                    }}
+                    className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+                  >
+                    {mostrarOpcionesEnvio ? "Ocultar opciones" : "Compartir cotización"}
+                  </button>
                 ) : null}
                 {mostrarOpcionesEnvio ? (
                       <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
