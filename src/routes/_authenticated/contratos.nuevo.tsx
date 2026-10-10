@@ -29,7 +29,7 @@ function NuevoContratoPage() {
     numero: "",
     cliente: "",
     telefono: "",
-    origen: "Contrato externo",
+    origen: "Contrato Aurum",
     total: "",
     notas: "",
   });
@@ -92,10 +92,6 @@ function NuevoContratoPage() {
       return;
     }
     try {
-      if (!cotizacionId && !form.numero.trim()) {
-        toast.error("Ingresa el código del contrato externo.");
-        return;
-      }
       const contrato = await crear.mutateAsync({
         numero: form.numero,
         cliente: form.cliente,
@@ -116,7 +112,7 @@ function NuevoContratoPage() {
   return (
     <AppShell
       titulo="Nuevo contrato"
-      subtitulo={cotizacionId ? "Contrato generado desde una cotización aprobada." : "Registra un contrato emitido fuera de Aurum Lab."}
+      subtitulo={cotizacionId ? "Contrato generado desde una cotización aprobada." : "Crea un contrato Aurum de forma independiente."}
       atrasMovil={{ to: "/contratos" }}
     >
       <div className="mx-auto max-w-3xl">
@@ -127,13 +123,12 @@ function NuevoContratoPage() {
               label="Número de contrato"
               value={form.numero}
               onChange={(v) => set("numero", v)}
-              readOnly={Boolean(cotizacionId)}
-              required={!cotizacionId}
-              placeholder={cotizacionId ? "Se asignará automáticamente al guardar" : "Código del contrato externo"}
+              readOnly
+              placeholder="Se asignará automáticamente al guardar"
             />
             <Campo label="Cliente" value={form.cliente} onChange={(v) => set("cliente", v)} required placeholder="Nombre del cliente" />
             <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Opcional" />
-            <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Contrato externo / sistema anterior" />
+            <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Contrato Aurum" />
             <Campo label="Total" value={form.total} onChange={(v) => set("total", v)} type="number" placeholder="0.00" />
             <div className="rounded-xl border border-border bg-surface-muted/50 px-3 py-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sede de este contrato</span>
