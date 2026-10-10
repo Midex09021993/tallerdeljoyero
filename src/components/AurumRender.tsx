@@ -203,7 +203,7 @@ export function AurumRender() {
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, taaPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -597,9 +597,8 @@ export function AurumRender() {
             objeto, glb, ext, colorRhinoHex, clasificarCapa
           );
         }
-        // Runtime budget is derived from the actual renderable geometry, not the
-        // source file size. This keeps CAD-heavy jewelry responsive without
-        // changing geometry, layer identity, materials, or capture quality.
+        // Runtime budget is derived from actual renderable geometry, not source file size.
+        // This keeps CAD-heavy jewelry responsive without changing authored geometry.
         runtimeBudget = getAurumRuntimeBudget(countAurumTriangles(interno));
         if (perfEnabled) {
           console.warn("[AURUM][RUNTIME BUDGET]", runtimeBudget);
@@ -632,8 +631,7 @@ export function AurumRender() {
         aplicarPerfilLive();
 
         // Precompile only after the first LIVE frame has had a chance to paint.
-        // Starting shader compilation immediately competes with the initial render
-        // and can make file loading feel like a photographic capture is running.
+        // This avoids competing with the initial interactive render.
         const shaderTarget=modelo;
         const scheduleShaderPrecompile=()=>{
           if (!vivo || shaderTarget!==modelo || typeof (renderer as any).compileAsync !== "function") return;
