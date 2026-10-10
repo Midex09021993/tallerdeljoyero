@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { formatearFechaZona, zonaValida } from "./fecha-zona";
 
 describe("fecha comercial por zona de sede", () => {
