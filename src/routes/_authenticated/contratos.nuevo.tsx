@@ -41,7 +41,7 @@ function NuevoContratoPage() {
       setCargandoCotizacion(true);
       const { data: q, error } = await supabase
         .from("cotizaciones")
-        .select("id, numero, estado, total, sede_id, cliente_id")
+        .select("id, numero, version, estado, total, sede_id, cliente_id")
         .eq("id", cotizacionId)
         .maybeSingle();
       if (!activo) return;
@@ -69,6 +69,7 @@ function NuevoContratoPage() {
       }
       setForm((actual) => ({
         ...actual,
+        numero: `CT-${q.numero}-V${Number(q.version) || 1}`,
         origen: `Cotización ${q.numero}`,
         cliente: cliente?.nombre ?? actual.cliente,
         telefono: cliente?.telefono ?? cliente?.whatsapp ?? actual.telefono,
@@ -119,7 +120,14 @@ function NuevoContratoPage() {
         <Panel titulo={cotizacionId ? "Datos del contrato desde cotización" : "Datos del contrato"}>
           {cotizacionId ? <p className="px-4 pt-4 text-sm text-muted-foreground">Se conservará el vínculo con la cotización aprobada. La creación del contrato no crea un pedido.</p> : null}
           <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
-            <Campo label="Número de contrato" value={form.numero} onChange={(v) => set("numero", v)} required placeholder="CT-00001" />
+            <Campo
+              label="Número de contrato"
+              value={form.numero}
+              onChange={(v) => set("numero", v)}
+              required
+              readOnly={Boolean(cotizacionId)}
+              placeholder={cotizacionId ? "Se asignará desde la cotización" : "Escribe el número externo"}
+            />
             <Campo label="Cliente" value={form.cliente} onChange={(v) => set("cliente", v)} required placeholder="Nombre del cliente" />
             <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Opcional" />
             <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Contrato Aurum" />
@@ -146,8 +154,8 @@ function NuevoContratoPage() {
   );
 }
 
-function Campo({ label, value, onChange, placeholder, type = "text", required = false }: {
-  label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean;
+function Campo({ label, value, onChange, placeholder, type = "text", required = false, readOnly = false }: {
+  label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean; readOnly?: boolean;
 }) {
   return (
     <label className="block">
