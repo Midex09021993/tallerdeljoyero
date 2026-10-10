@@ -20,7 +20,7 @@ function Ventas2Page() {
   const puedeGestionar = Boolean(sesion?.esAdmin || sesion?.areas.some((a) => areaCoincide(a, "Área ventas")));
   const { data: pedidos = [], isLoading: loadingPedidos } = usePedidos();
   const { data: contratos = [], isLoading: loadingContratos } = useContratos(puedeGestionar);
-  const { esDueno, sedeFiltro, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
+  const { filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const contratosSede = filtrarPedidos(contratos);
   const { data: pagos = [] } = usePagosContratos(contratosSede, puedeGestionar);
   const [vista, setVista] = useState<Vista>("cartera");
