@@ -540,7 +540,7 @@ function CotizacionesPage() {
                         }}
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${index === clienteActivoIndex ? "bg-gold/10" : "hover:bg-gold/[0.06]"}`}
                       >
-                        <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/[0.07] text-xs font-semibold text-gold">{cliente.nombre.trim().split(/\\s+/).slice(0, 2).map(parte => parte[0] ?? "").join("").toUpperCase()}</span>
+                        <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/[0.07] text-xs font-semibold text-gold">{cliente.nombre.trim().split(/\s+/).slice(0, 2).map(parte => parte[0] ?? "").join("").toUpperCase()}</span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium text-foreground">{cliente.nombre}</span>
                           <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{[cliente.telefono, cliente.email].filter(Boolean).join(" · ") || "Sin teléfono ni correo registrados"}</span>
