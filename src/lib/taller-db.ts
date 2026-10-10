@@ -1223,13 +1223,24 @@ export function useContrato(id: string, habilitado = true) {
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato | null> => {
       const selector = esUuid(id) ? "id" : "numero";
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("contratos")
         .select(
           "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, cotizacion_id, estado_firma, firma_validada_at, firma_observacion, sedes(nombre)",
         )
         .eq(selector, id)
         .maybeSingle();
+      // La UI sigue cargando mientras el SQL de firma se aplica; los controles de firma
+      // permanecen inactivos hasta que los campos nuevos estén disponibles.
+      if (error && esErrorCampoFaltante(error)) {
+        const legacy = await supabase
+          .from("contratos")
+          .select("id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)")
+          .eq(selector, id)
+          .maybeSingle();
+        data = legacy.data as typeof data;
+        error = legacy.error;
+      }
       if (error) {
         if (esErrorCampoFaltante(error)) return contratoDesdePedidos(id);
         throw error;
