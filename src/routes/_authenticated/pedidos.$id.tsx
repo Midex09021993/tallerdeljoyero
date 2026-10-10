@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowLeft, Box, CalendarClock, CheckCircle2, ClipboardLi
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePedidos, estadoClases, esEstadoFinalPedido } from "@/lib/taller-db";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { fmtFecha } from "@/lib/utils";
 import { toast } from "sonner";
@@ -23,7 +24,8 @@ function PedidoDetalle() {
   const navigate = useNavigate();
   const { data: pedidos = [] } = usePedidos();
   const { data: sesion } = useSesion();
-  const pedido = pedidos.find((p) => p.id === id);
+  const { filtrarPedidos } = useSedeFiltroDueno();
+  const pedido = filtrarPedidos(pedidos).find((p) => p.id === id);
 
   const { data: contratoFinanciero } = useQuery({
     queryKey: ["pedido-contrato-financiero", pedido?.contrato_id],
