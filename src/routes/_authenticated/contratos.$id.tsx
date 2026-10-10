@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileText } from "lucide-react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { AppShell, Panel } from "@/components/AppShell";
@@ -84,6 +84,14 @@ function ContratoPage() {
   const [pagoAbierto, setPagoAbierto] = useState(false);
   const [form, setForm] = useState<PedidoFormState>(() => formularioContratoVacio());
   const [ruta, setRuta] = useState<string[]>([]);
+  const [firmaModo, setFirmaModo] = useState<"presencial" | "remota" | null>(null);
+  const [guardandoFirma, setGuardandoFirma] = useState(false);
+  const [archivoFirma, setArchivoFirma] = useState<File | null>(null);
+  const [observacionFirma, setObservacionFirma] = useState("");
+  const [revisandoFirma, setRevisandoFirma] = useState(false);
+  const canvasFirmaRef = useRef<HTMLCanvasElement | null>(null);
+  const dibujandoFirmaRef = useRef(false);
+  const [firmaTrazada, setFirmaTrazada] = useState(false);
 
   useEffect(() => {
     if (contrato && modalAbierto) {
@@ -91,6 +99,118 @@ function ContratoPage() {
       setRuta([]);
     }
   }, [contrato, modalAbierto]);
+
+  const requiereFirma = Boolean(contratoEnContexto?.cotizacion_id);
+  const firmaRecibida = ["firmado_documento_subido", "firmado_presencial", "firmado_certificado"].includes(contratoEnContexto?.estado_firma ?? "");
+  const firmaValidada = Boolean(contratoEnContexto?.firma_validada_at);
+  const puedeCrearPedidoContrato = !requiereFirma || (firmaRecibida && firmaValidada);
+
+  function iniciarTrazoFirma(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasFirmaRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    canvas.setPointerCapture(e.pointerId);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#172033";
+    ctx.beginPath();
+    ctx.moveTo((e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height));
+    dibujandoFirmaRef.current = true;
+    setFirmaTrazada(true);
+  }
+
+  function continuarTrazoFirma(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!dibujandoFirmaRef.current) return;
+    const canvas = canvasFirmaRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo((e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height));
+    ctx.stroke();
+  }
+
+  function finalizarTrazoFirma() {
+    dibujandoFirmaRef.current = false;
+  }
+
+  async function guardarFirmaContrato(archivo?: File | Blob, tipo?: "firmado_documento_subido" | "firmado_presencial") {
+    if (!contratoEnContexto || !archivo || guardandoFirma || !tipo) return;
+    setGuardandoFirma(true);
+    try {
+      const bytes = new Uint8Array(await archivo.arrayBuffer());
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      const sha256 = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      const { data: docs, error: docsError } = await supabase
+        .from("contrato_documentos")
+        .select("version")
+        .eq("contrato_id", contratoEnContexto.id)
+        .order("version", { ascending: false })
+        .limit(1);
+      if (docsError) throw docsError;
+      const version = Math.max(1, ...((docs ?? []).map((d: { version: number }) => Number(d.version) || 0)) + 1);
+      const extension = tipo === "firmado_presencial" ? "png" : ((archivo as File).name?.split(".").pop()?.toLowerCase() || "pdf").replace(/[^a-z0-9]/g, "");
+      const storagePath = `contratos/${contratoEnContexto.id}/firmado-v${version}-${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("cotizaciones-publicas").upload(storagePath, archivo, {
+        contentType: tipo === "firmado_presencial" ? "image/png" : ((archivo as File).type || "application/pdf"),
+        upsert: false,
+      });
+      if (uploadError) throw uploadError;
+      const { error: docError } = await supabase.from("contrato_documentos").insert({
+        contrato_id: contratoEnContexto.id,
+        version,
+        tipo,
+        storage_path: storagePath,
+        sha256,
+        plantilla_version: null,
+        plantilla_contenido: { metodo: tipo === "firmado_presencial" ? "firma_en_tableta" : "archivo_devuelto_por_cliente" },
+        creado_por: sesion?.user?.id ?? null,
+      });
+      if (docError) {
+        await supabase.storage.from("cotizaciones-publicas").remove([storagePath]);
+        throw docError;
+      }
+      const { error: updateError } = await supabase.from("contratos").update({
+        estado_firma: tipo,
+        firma_validada_at: null,
+        firma_validada_por: null,
+        firma_observacion: null,
+      }).eq("id", contratoEnContexto.id);
+      if (updateError) throw updateError;
+      toast.success("Firma guardada. Falta la revisión y validación del taller.");
+      setFirmaModo(null);
+      setArchivoFirma(null);
+      setFirmaTrazada(false);
+      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo guardar la firma.");
+    } finally {
+      setGuardandoFirma(false);
+    }
+  }
+
+  async function revisarFirma(decision: "validado" | "rechazado") {
+    if (!contratoEnContexto || revisandoFirma) return;
+    if (decision === "rechazado" && !observacionFirma.trim()) {
+      toast.error("Indica el motivo del rechazo para que quede registrado.");
+      return;
+    }
+    setRevisandoFirma(true);
+    const { error } = await supabase.rpc("revisar_firma_contrato", {
+      _contrato_id: contratoEnContexto.id,
+      _decision: decision,
+      _observacion: observacionFirma.trim() || null,
+    });
+    setRevisandoFirma(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(decision === "validado" ? "Firma validada. Ya se puede crear el pedido." : "Firma rechazada. El pedido continúa bloqueado.");
+    window.location.reload();
+  }
 
   const resumen = useMemo(() => {
     return resumenFinancieroContrato(contratoEnContexto, pagos);
