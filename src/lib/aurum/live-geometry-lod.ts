@@ -7,112 +7,38 @@ export type AurumLiveGeometryReport = {
   ready:boolean;
 };
 
-const triangleCount=(geometry:any)=>{
-  const index=geometry?.getIndex?.();
-  const position=geometry?.getAttribute?.("position");
-  return Math.floor(Number(index?.count ?? position?.count ?? 0)/3);
+/**
+ * Live geometry policy:
+ * Do not run SimplifyModifier in the browser's main thread. It can block the
+ * UI for several seconds on dense CAD meshes. Keep authored geometry intact;
+ * performance is managed by the stable LIVE render budget instead.
+ */
+const countTriangles=(root:any)=>{
+  let triangles=0;
+  root?.traverse?.((object:any)=>{
+    if(!object?.isMesh || !object.geometry || object.userData?.aurumInternalInclusion) return;
+    const index=object.geometry.getIndex?.();
+    const position=object.geometry.getAttribute?.("position");
+    triangles+=Math.floor(Number(index?.count ?? position?.count ?? 0)/3);
+  });
+  return triangles;
 };
 
 export async function prepareAurumLiveGeometry(
   root:Object3D,
-  options:{maxLiveTriangles?:number; minMeshTriangles?:number; removeRatio?:number}={}
+  _options:{maxLiveTriangles?:number; minMeshTriangles?:number; removeRatio?:number}={}
 ):Promise<AurumLiveGeometryReport>{
-  const maxLiveTriangles=Math.max(120000,Math.floor(options.maxLiveTriangles??160000));
-  const minMeshTriangles=Math.max(10000,Math.floor(options.minMeshTriangles??20000));
-  const removeRatio=Math.max(.35,Math.min(.65,Number(options.removeRatio??.55)));
-
-  let sourceTriangles=0;
-  let simplifiedMeshes=0;
-
-  root.traverse((object:any)=>{
-    if(!object?.isMesh || !object.geometry || object.userData?.aurumInternalInclusion) return;
-    const category=String(object.userData?.aurumRhino?.categoria??"").toLowerCase();
-    if(category==="gema") return;
-    sourceTriangles+=triangleCount(object.geometry);
-  });
-
-  if(sourceTriangles<=maxLiveTriangles){
-    root.userData={...(root.userData??{}),aurumLiveGeometryReady:true,aurumLiveGeometryTriangles:sourceTriangles};
-    return {sourceTriangles,liveTriangles:sourceTriangles,simplifiedMeshes:0,ready:true};
-  }
-
-  const { SimplifyModifier } = await import("three/examples/jsm/modifiers/SimplifyModifier.js");
-  const { mergeVertices } = await import("three/examples/jsm/utils/BufferGeometryUtils.js");
-  const modifier=new SimplifyModifier();
-
-  const candidates:any[]=[];
-  root.traverse((object:any)=>{
-    if(!object?.isMesh || !object.geometry || object.userData?.aurumInternalInclusion) return;
-    const category=String(object.userData?.aurumRhino?.categoria??"").toLowerCase();
-    if(category==="gema") return;
-    const triangles=triangleCount(object.geometry);
-    if(triangles<minMeshTriangles) return;
-    candidates.push(object);
-  });
-
-  for(const object of candidates){
-    const source=object.geometry;
-    if(object.userData?.aurumLiveGeometry) continue;
-
-    try{
-      let base=source;
-      let ownsBase=false;
-      if(!base.getIndex?.()){
-        base=mergeVertices(base.clone(),1e-4);
-        ownsBase=true;
-      }
-      const vertices=Number(base.getAttribute?.("position")?.count??0);
-      if(vertices<3000) continue;
-
-      const remove=Math.floor(vertices*removeRatio);
-      if(remove<100) continue;
-
-      const simplified=await modifier.modify(base,remove);
-      if(ownsBase) base.dispose?.();
-      simplified.computeBoundingSphere?.();
-      simplified.computeBoundingBox?.();
-
-      object.userData={
-        ...(object.userData??{}),
-        aurumLiveGeometry: simplified,
-        aurumLiveGeometrySource: source,
-      };
-      simplifiedMeshes++;
-    }catch(error){
-      // A single problematic CAD mesh must not invalidate the whole viewer.
-      object.userData={
-        ...(object.userData??{}),
-        aurumLiveGeometryError:String((error as any)?.message??error),
-      };
-    }
-  }
-
-  let liveTriangles=0;
-  root.traverse((object:any)=>{
-    if(!object?.isMesh || !object.geometry || object.userData?.aurumInternalInclusion) return;
-    const category=String(object.userData?.aurumRhino?.categoria??"").toLowerCase();
-    if(category==="gema") liveTriangles+=triangleCount(object.geometry);
-    else liveTriangles+=triangleCount(object.userData?.aurumLiveGeometry??object.geometry);
-  });
-
+  const sourceTriangles=countTriangles(root);
   root.userData={
     ...(root.userData??{}),
     aurumLiveGeometryReady:true,
-    aurumLiveGeometryTriangles:liveTriangles,
+    aurumLiveGeometryTriangles:sourceTriangles,
   };
-  return {sourceTriangles,liveTriangles,simplifiedMeshes,ready:true};
+  return {sourceTriangles,liveTriangles:sourceTriangles,simplifiedMeshes:0,ready:true};
 }
 
-export function setAurumLiveGeometryQuality(root:any,quality:"live"|"beauty"){
-  if(!root?.userData?.aurumLiveGeometryReady) return;
-  root.traverse((object:any)=>{
-    if(!object?.isMesh || object.userData?.aurumInternalInclusion) return;
-    const live=object.userData?.aurumLiveGeometry;
-    const source=object.userData?.aurumLiveGeometrySource;
-    if(!live || !source) return;
-    object.geometry=quality==="live"?live:source;
-  });
-}
+/** Geometry is unchanged between LIVE and CAPTURE. */
+export function setAurumLiveGeometryQuality(_root:any,_quality:"live"|"beauty"){}
 
 export function disposeAurumLiveGeometry(root:any){
   root?.traverse?.((object:any)=>{
