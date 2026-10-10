@@ -398,7 +398,7 @@ function ContratoPage() {
                       Firmar presencialmente
                     </button>
                     <button type="button" onClick={() => setFirmaModo("remota")} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
-                      Enviar al cliente para firma
+                      Preparar envío para firma
                     </button>
                   </>
                 ) : (
