@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { usePedidosDeArea, type PedidoOperativo } from "@/hooks/use-pedidos-area";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { VisorSTL } from "@/components/VisorSTL";
@@ -152,12 +152,7 @@ function Diseno3DCompleto() {
       ocultarAccionesCelular
       acciones={
         <>
-          <SelectorSedeDueno
-            esDueno={esDueno}
-            sedes={sedes}
-            value={sedeFiltro}
-            onChange={setSedeFiltro}
-          />
+          
           <StatCard etiqueta="En modelado" valor={String(cola.length)} />
           <StatCard etiqueta="Asignados" valor={String(pedidosArea.length)} />
           <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
