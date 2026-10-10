@@ -723,6 +723,32 @@ export type Database = {
         }
         Relationships: []
       }
+      contrato_numeradores: {
+        Row: {
+          anio: number
+          sede_id: string
+          ultimo_numero: number
+        }
+        Insert: {
+          anio: number
+          sede_id: string
+          ultimo_numero?: number
+        }
+        Update: {
+          anio?: number
+          sede_id?: string
+          ultimo_numero?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_numeradores_sede_id_fkey"
+            columns: ["sede_id"]
+            isOneToOne: false
+            referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_pagos: {
         Row: {
           concepto: string
@@ -3525,6 +3551,18 @@ export type Database = {
         Args: { _cotizacion_id: string }
         Returns: Json
       }
+      crear_contrato_comercial: {
+        Args: {
+          _cliente: string
+          _cotizacion_id?: string
+          _notas: string
+          _origen: string
+          _sede_id: string
+          _telefono: string
+          _total: number
+        }
+        Returns: Json
+      }
       crear_cotizacion_comercial: {
         Args: {
           _cantidad: number
@@ -3926,6 +3964,10 @@ export type Database = {
           trabajo: string
           ventas_estado: string
         }[]
+      }
+      siguiente_numero_contrato: {
+        Args: { _anio: number; _sede_id: string }
+        Returns: string
       }
       siguiente_numero_cotizacion: {
         Args: { _anio: number; _sede_id: string }
