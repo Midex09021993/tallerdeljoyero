@@ -111,6 +111,7 @@ const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
   "/inventario": "Inventario",
   "/compras": "Compras",
   "/herramientas": "Herramientas",
+  "/mi-nube": "Mi nube",
   "/migracion": "Migración",
 };
 
