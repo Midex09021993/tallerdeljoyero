@@ -132,10 +132,10 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     }
     const x = queuedObjects[objectIndex];
 
-    if (x !== object && (x.isLine || x.isLineSegments || x.isPoints)) { removeQueue.push(x); if (x.isPoints) pointObjectsRemoved++; else lineObjectsRemoved++; return; }
-    if (!x.isMesh || !x.geometry) return;
+    if (x !== object && (x.isLine || x.isLineSegments || x.isPoints)) { removeQueue.push(x); if (x.isPoints) pointObjectsRemoved++; else lineObjectsRemoved++; continue; }
+    if (!x.isMesh || !x.geometry) continue;
     meshes++; let geometry = x.geometry as THREE.BufferGeometry; geometryRefs.set(geometry, (geometryRefs.get(geometry) ?? 0) + 1);
-    const position = geometry.getAttribute("position"); if (!position || position.count < 3) return;
+    const position = geometry.getAttribute("position"); if (!position || position.count < 3) continue;
     const index = geometry.getIndex(); triangles += index ? Math.floor(index.count / 3) : Math.floor(position.count / 3);
     // Full mesh preflight and per-vertex normal inspection are diagnostic tools,
     // not part of the production 3DM -> GLB path. On jewelry meshes with hundreds
