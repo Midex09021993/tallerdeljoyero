@@ -590,8 +590,11 @@ function NuevoPedido() {
 
           <aside className="space-y-4">
             <section className="rounded-[24px] border border-gold/20 bg-card p-5 shadow-card">
-              <div className="flex items-start gap-3"><UserRound className="mt-0.5 size-5 text-gold" /><div><h2 className="text-sm font-semibold">Taller responsable</h2><p className="mt-1 text-xs text-muted-foreground">La sede queda asociada al pedido desde su creación.</p></div></div>
-              <select value={sedeId} onChange={(e) => setSedeId(e.target.value)} className="mt-4 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50"><option value="">Seleccionar taller</option>{sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}{s.ciudad ? ` · ${s.ciudad}` : ""}</option>)}</select>
+              <div className="flex items-start gap-3"><UserRound className="mt-0.5 size-5 text-gold" /><div><h2 className="text-sm font-semibold">Taller responsable</h2><p className="mt-1 text-xs text-muted-foreground">El pedido utiliza la sede seleccionada desde Inicio.</p></div></div>
+              <div className="mt-4 rounded-xl border border-border bg-background px-3 py-3">
+                <p className="text-sm font-semibold">{sede?.nombre ?? "Selecciona una sede desde Inicio"}</p>
+                {sede?.ciudad ? <p className="mt-1 text-xs text-muted-foreground">{sede.ciudad}</p> : null}
+              </div>
             </section>
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card">
