@@ -150,7 +150,7 @@ function ContratoPage() {
         .order("version", { ascending: false })
         .limit(1);
       if (docsError) throw docsError;
-      const version = Math.max(1, ...((docs ?? []).map((d: { version: number }) => Number(d.version) || 0)) + 1);
+      const version = Math.max(0, ...((docs ?? []).map((d: { version: number }) => Number(d.version) || 0))) + 1;
       const extension = tipo === "firmado_presencial" ? "png" : ((archivo as File).name?.split(".").pop()?.toLowerCase() || "pdf").replace(/[^a-z0-9]/g, "");
       const storagePath = `contratos/${contratoEnContexto.id}/firmado-v${version}-${crypto.randomUUID()}.${extension}`;
       const { error: uploadError } = await supabase.storage.from("cotizaciones-publicas").upload(storagePath, archivo, {
@@ -296,6 +296,7 @@ function ContratoPage() {
                 <button
                   type="button"
                   onClick={() => setModalAbierto(true)}
+                  disabled={!puedeCrearPedidoContrato}
                   className="rounded-xl border border-gold/30 bg-gold px-3 py-2 text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised"
                 >
                   + Nuevo pedido
@@ -346,6 +347,7 @@ function ContratoPage() {
                 <button
                   type="button"
                   onClick={() => setModalAbierto(true)}
+                  disabled={!puedeCrearPedidoContrato}
                   className="w-full rounded-xl border border-dashed border-border bg-surface-muted px-4 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-card"
                 >
                   + Nuevo pedido
@@ -355,6 +357,55 @@ function ContratoPage() {
           </Panel>
         </div>
 
+        <aside className="space-y-4">
+          {requiereFirma ? (
+            <Panel titulo="Acciones">
+              <div className="space-y-3 p-4">
+                <div className="rounded-xl border border-gold/20 bg-gold/[0.04] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/80">Flujo contractual</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {firmaValidada
+                      ? "Firma validada por el taller. El pedido ya puede crearse."
+                      : firmaRecibida
+                        ? "Firma recibida. El taller debe revisarla y validarla antes de crear el pedido."
+                        : "Pendiente de firma. Elige firma presencial en tableta o envío remoto para que el cliente devuelva el documento firmado."}
+                  </p>
+                  <p className="mt-2 text-xs font-semibold">Estado: {firmaValidada ? "Firmado y validado" : firmaRecibida ? "Pendiente de validación" : "Pendiente de firma"}</p>
+                </div>
+                {!firmaRecibida ? (
+                  <>
+                    <button type="button" onClick={() => { setFirmaModo("presencial"); setFirmaTrazada(false); }} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                      Firmar presencialmente
+                    </button>
+                    <button type="button" onClick={() => setFirmaModo("remota")} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
+                      Enviar al cliente para firma
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {firmaValidada ? (
+                      <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">La firma está validada. Ya puedes crear el pedido.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="block text-xs text-muted-foreground">
+                          Observación de revisión
+                          <textarea value={observacionFirma} onChange={(e) => setObservacionFirma(e.target.value)} rows={2} placeholder="Motivo de rechazo o nota de validación" className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" />
+                        </label>
+                        <button type="button" disabled={revisandoFirma} onClick={() => void revisarFirma("validado")} className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                          {revisandoFirma ? "Guardando…" : "Validar firma"}
+                        </button>
+                        <button type="button" disabled={revisandoFirma} onClick={() => void revisarFirma("rechazado")} className="w-full rounded-lg border border-destructive/30 px-4 py-2.5 text-sm font-semibold text-destructive disabled:opacity-50">
+                          Rechazar firma
+                        </button>
+                      </div>
+                    )}
+                    {contratoEnContexto.firma_observacion ? <p className="text-xs text-muted-foreground">Última observación: {contratoEnContexto.firma_observacion}</p> : null}
+                  </>
+                )}
+                {!puedeCrearPedidoContrato ? <p className="text-xs text-muted-foreground">El pedido está bloqueado hasta validar la firma.</p> : null}
+              </div>
+            </Panel>
+          ) : null}
         <aside className="rounded-xl border border-border bg-card p-5 shadow-card lg:rounded-2xl">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Resumen comercial
@@ -468,6 +519,46 @@ function ContratoPage() {
         </aside>
       </div>
 
+      {firmaModo ? (
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/60 p-4" role="dialog" aria-modal="true">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-surface p-5 shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold">{firmaModo === "presencial" ? "Firma presencial en tableta" : "Firma remota del cliente"}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {firmaModo === "presencial" ? "El cliente debe firmar dentro del recuadro. Guarda la firma y luego el taller deberá validarla." : "Abre la ficha A4 del contrato, imprímela o guárdala como PDF, envíala al cliente y carga aquí el archivo firmado que te devuelva."}
+                </p>
+              </div>
+              <button type="button" onClick={() => setFirmaModo(null)} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button>
+            </div>
+            {firmaModo === "presencial" ? (
+              <div className="mt-4 space-y-3">
+                <canvas ref={canvasFirmaRef} width={900} height={260} onPointerDown={iniciarTrazoFirma} onPointerMove={continuarTrazoFirma} onPointerUp={finalizarTrazoFirma} onPointerCancel={finalizarTrazoFirma} className="w-full touch-none rounded-xl border border-border bg-white" aria-label="Área para firmar" />
+                <div className="flex flex-wrap justify-between gap-2">
+                  <button type="button" onClick={() => { const canvas = canvasFirmaRef.current; canvas?.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height); setFirmaTrazada(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Borrar firma</button>
+                  <button type="button" disabled={!firmaTrazada || guardandoFirma} onClick={() => { const canvas = canvasFirmaRef.current; canvas?.toBlob((blob) => { if (blob) void guardarFirmaContrato(blob, "firmado_presencial"); }, "image/png"); }} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
+                    {guardandoFirma ? "Guardando…" : "Guardar firma"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                <div className="rounded-xl border border-border bg-surface-muted p-3 text-sm text-muted-foreground">
+                  Usa el botón <strong>Vista A4</strong> en la ficha del contrato para imprimir o guardar el documento. No se subirá ningún PDF automáticamente.
+                </div>
+                <label className="block text-sm font-medium">
+                  Archivo firmado devuelto por el cliente (PDF o imagen)
+                  <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" onChange={(e) => setArchivoFirma(e.target.files?.[0] ?? null)} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-surface-muted file:px-3 file:py-2 file:text-sm file:font-semibold" />
+                </label>
+                <button type="button" disabled={!archivoFirma || guardandoFirma} onClick={() => archivoFirma && void guardarFirmaContrato(archivoFirma, "firmado_documento_subido")} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {guardandoFirma ? "Guardando archivo…" : "Guardar firma recibida"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       {modalAbierto ? (
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4"
@@ -568,7 +659,7 @@ function ContratoPage() {
               </button>
               <button
                 type="submit"
-                disabled={crearTrabajo.isPending || !form.trabajo.trim() || ruta.length === 0}
+                disabled={!puedeCrearPedidoContrato || crearTrabajo.isPending || !form.trabajo.trim() || ruta.length === 0}
                 className="rounded-lg bg-ink px-4 py-2 text-xs font-medium text-ink-foreground disabled:opacity-50"
               >
                 {crearTrabajo.isPending ? "Creando…" : "Crear pedido"}
