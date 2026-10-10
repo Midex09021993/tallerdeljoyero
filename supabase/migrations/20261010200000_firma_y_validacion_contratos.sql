@@ -107,4 +107,48 @@ create trigger trg_exigir_firma_validada_para_pedido
 before insert or update of contrato_id on public.pedidos
 for each row execute function public.exigir_firma_validada_para_pedido();
 
+
+-- Permite al personal administrador cargar y consultar únicamente archivos de firma
+-- bajo la carpeta del contrato al que tiene acceso por sede.
+drop policy if exists "contratos firmas subir admin" on storage.objects;
+create policy "contratos firmas subir admin"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'cotizaciones-publicas'
+  and name ~ '^contratos/[0-9a-fA-F-]+/firmado-v[0-9]+-[0-9a-fA-F-]+\\.(pdf|png|jpg|jpeg|webp)
+
+  and public.es_admin(auth.uid())
+  and exists (
+    select 1 from public.contratos c
+    where name like ('contratos/' || c.id::text || '/firmado-%')
+      and public.mi_sede(auth.uid()) = c.sede_id
+  )
+);
+
+drop policy if exists "contratos firmas leer admin" on storage.objects;
+create policy "contratos firmas leer admin"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'cotizaciones-publicas'
+  and name like 'contratos/%/firmado-%'
+  and public.es_admin(auth.uid())
+  and exists (
+    select 1 from public.contratos c
+    where name like ('contratos/' || c.id::text || '/firmado-%')
+      and public.mi_sede(auth.uid()) = c.sede_id
+  )
+);
+
+drop policy if exists "contratos documentos insertar admin" on public.contrato_documentos;
+create policy "contratos documentos insertar admin"
+on public.contrato_documentos for insert to authenticated
+with check (
+  public.es_admin(auth.uid())
+  and exists (
+    select 1 from public.contratos c
+    where c.id = contrato_documentos.contrato_id
+      and c.sede_id = public.mi_sede(auth.uid())
+  )
+);
+
 notify pgrst, 'reload schema';
