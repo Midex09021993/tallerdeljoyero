@@ -416,19 +416,31 @@ export function AurumRender() {
                   aurumLiveIridescenceStored:Number(m.iridescence??0),
                 };
               }
+              // Avoid Three.js' full-screen transmission path while interacting.
+              // The native environment reflection keeps facet contrast readable;
+              // the exact authored transmission is restored for idle convergence.
+              if (m.userData?.aurumGemFamily && m.userData?.aurumLiveTransmissionStored === undefined) {
+                m.userData={
+                  ...(m.userData??{}),
+                  aurumLiveTransmissionStored:Number(m.transmission??0),
+                };
+              }
+              const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && Number(m.transmission??0)!==0;
               if (
                 Number(m.clearcoat??0)!==0 ||
                 Number(m.clearcoatRoughness??0)!==0 ||
                 Number(m.dispersion??0)!==0 ||
-                Number(m.iridescence??0)!==0
+                Number(m.iridescence??0)!==0 ||
+                disableGemTransmission
               ) {
                 m.clearcoat=0;
                 m.clearcoatRoughness=0;
-                // Dispersion/iridescence introduce extra physical shader work.
-                // LIVE keeps the core IOR/transmission/refraction path intact;
-                // CAPTURE restores the authored optical effects.
+                // Dispersion/iridescence and screen-space transmission add
+                // substantial per-fragment and full-screen work. LIVE uses
+                // environment reflection; idle convergence restores the optics.
                 m.dispersion=0;
                 m.iridescence=0;
+                if (disableGemTransmission) m.transmission=0;
                 m.needsUpdate=true;
               }
             } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
@@ -436,8 +448,12 @@ export function AurumRender() {
               m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
               m.dispersion=Number(m.userData.aurumLiveDispersionStored??0);
               m.iridescence=Number(m.userData.aurumLiveIridescenceStored??0);
+              if (m.userData?.aurumLiveTransmissionStored !== undefined) {
+                m.transmission=Number(m.userData.aurumLiveTransmissionStored);
+              }
               m.needsUpdate=true;
               const next={...(m.userData??{})};
+              delete next.aurumLiveTransmissionStored;
               delete next.aurumLiveClearcoatStored;
               delete next.aurumLiveClearcoatRoughnessStored;
               delete next.aurumLiveDispersionStored;
