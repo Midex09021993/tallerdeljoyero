@@ -92,6 +92,7 @@ function ContratoPage() {
   const canvasFirmaRef = useRef<HTMLCanvasElement | null>(null);
   const dibujandoFirmaRef = useRef(false);
   const [firmaTrazada, setFirmaTrazada] = useState(false);
+  const [urlFirmaDocumento, setUrlFirmaDocumento] = useState<string | null>(null);
 
   useEffect(() => {
     if (contrato && modalAbierto) {
@@ -104,6 +105,25 @@ function ContratoPage() {
   const firmaRecibida = ["firmado_documento_subido", "firmado_presencial", "firmado_certificado"].includes(contratoEnContexto?.estado_firma ?? "");
   const firmaValidada = Boolean(contratoEnContexto?.firma_validada_at);
   const puedeCrearPedidoContrato = !requiereFirma || (firmaRecibida && firmaValidada);
+
+  useEffect(() => {
+    let activo = true;
+    setUrlFirmaDocumento(null);
+    if (!contratoEnContexto?.id || !firmaRecibida) return;
+    void supabase.from("contrato_documentos")
+      .select("storage_path")
+      .eq("contrato_id", contratoEnContexto.id)
+      .in("tipo", ["firmado_documento_subido", "firmado_presencial", "firmado_certificado"])
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+        if (!activo || error || !data?.storage_path) return;
+        const { data: signed } = await supabase.storage.from("cotizaciones-publicas").createSignedUrl(data.storage_path, 600);
+        if (activo && signed?.signedUrl) setUrlFirmaDocumento(signed.signedUrl);
+      });
+    return () => { activo = false; };
+  }, [contratoEnContexto?.id, firmaRecibida]);
 
   function iniciarTrazoFirma(e: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasFirmaRef.current;
@@ -220,7 +240,7 @@ function ContratoPage() {
   const contratoFinancieroReal = resumen.origen === "contrato";
 
   useEffect(() => {
-    if (!contratoEnContexto || !puedeCrearTrabajo || !nuevoPedido) return;
+    if (!contratoEnContexto || !puedeCrearTrabajo || !nuevoPedido || !puedeCrearPedidoContrato) return;
     setModalAbierto(true);
     setForm(formularioContratoVacio(contrato));
     setRuta([]);
@@ -230,7 +250,7 @@ function ContratoPage() {
       search: { nuevoPedido: false },
       replace: true,
     });
-  }, [contratoEnContexto, puedeCrearTrabajo, nuevoPedido, navigate]);
+  }, [contratoEnContexto, puedeCrearTrabajo, nuevoPedido, navigate, puedeCrearPedidoContrato]);
 
   if (isLoading) {
     return (
@@ -383,6 +403,9 @@ function ContratoPage() {
                   </>
                 ) : (
                   <>
+                    {urlFirmaDocumento ? (
+                      <a href={urlFirmaDocumento} target="_blank" rel="noreferrer" className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-semibold hover:bg-surface-muted">Ver archivo firmado</a>
+                    ) : null}
                     {firmaValidada ? (
                       <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">La firma está validada. Ya puedes crear el pedido.</p>
                     ) : (
