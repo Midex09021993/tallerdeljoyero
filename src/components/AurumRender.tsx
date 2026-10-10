@@ -292,7 +292,7 @@ export function AurumRender() {
         const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
-        applyPostQuality?.({...renderQuality, pixelRatio:dpr});
+        applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
         renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
@@ -904,7 +904,7 @@ export function AurumRender() {
             const idleTransmission = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            applyPostQuality?.({...renderQuality, pixelRatio:idleDpr});
+            applyPostQuality?.({...renderQuality, pixelRatio:idleDpr, qualityId:measuredQualityId});
             liveTransmissionScaleRef.current = idleTransmission;
             (renderer as any).transmissionResolutionScale = idleTransmission;
             liveFastPathRef.current = false;
