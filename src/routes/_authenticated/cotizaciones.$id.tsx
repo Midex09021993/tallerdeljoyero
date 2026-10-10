@@ -89,6 +89,7 @@ function CotizacionDetallePage() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [sedeNombre, setSedeNombre] = useState<string | null>(null);
+  const [identidadFicha, setIdentidadFicha] = useState<FichaCotizacionIdentidad | null>(null);
   const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
   const [imprimirFichaAlAbrir, setImprimirFichaAlAbrir] = useState(false);
   const [cargando, setCargando] = useState(true);
@@ -131,6 +132,24 @@ function CotizacionDetallePage() {
       supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
     ]);
     setCotizacion(q);
+    // Recupera la identidad comercial activa para conservar la vista A4 anterior.
+    let identidadActual: FichaCotizacionIdentidad | null = null;
+    const camposIdentidad = "nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
+    if (q.participante_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("participante_id", q.participante_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    } else if (q.sede_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("sede_id", q.sede_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    }
+    const identidadHistorica = q.identidad_comercial && typeof q.identidad_comercial === "object"
+      ? q.identidad_comercial as FichaCotizacionIdentidad
+      : null;
+    setIdentidadFicha(identidadActual ? { ...identidadActual, ...(identidadHistorica ?? {}) } : identidadHistorica);
     let versionesRelacionadasQuery = supabase
       .from("cotizaciones")
       .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
@@ -187,9 +206,10 @@ function CotizacionDetallePage() {
 
   const fichaCotizacion = useMemo(() => {
     if (!cotizacion) return null;
-    const identidad = cotizacion.identidad_comercial && typeof cotizacion.identidad_comercial === "object"
+    const identidadSnapshot = cotizacion.identidad_comercial && typeof cotizacion.identidad_comercial === "object"
       ? cotizacion.identidad_comercial as FichaCotizacionIdentidad
       : null;
+    const identidad = identidadFicha ?? identidadSnapshot;
     return {
       numero: cotizacion.numero, version: cotizacion.version, fecha: cotizacion.fecha_emision,
       vencimiento: cotizacion.fecha_vencimiento, entrega: cotizacion.fecha_entrega_solicitada,
@@ -201,7 +221,7 @@ function CotizacionDetallePage() {
       impuestos: Number(cotizacion.impuestos) || 0, total: Number(cotizacion.total) || 0,
       notas: cotizacion.notas_cliente || "",
     };
-  }, [cotizacion, cliente, sedeNombre, detalles]);
+  }, [cotizacion, cliente, sedeNombre, detalles, identidadFicha]);
 
   useEffect(() => {
     if (!mostrarFichaA4 || !imprimirFichaAlAbrir || !fichaCotizacion) return;
