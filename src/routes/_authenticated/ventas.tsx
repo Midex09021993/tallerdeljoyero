@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, ArrowRight, Banknote, Box, CheckCircle2, ClipboardList, CreditCard, PackageCheck, Search, Truck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { estadoClases, esEstadoFinalPedido, resumenFinancieroContrato, useContratos, usePagosContratos, usePedidos, type Pedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
@@ -53,7 +53,7 @@ function Ventas2Page() {
     <AppShell
       titulo="Ventas"
       subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : "Control comercial y cierre de pedidos"}
-      acciones={<SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} />}
+      acciones={}
     >
       <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-6 sm:p-8">
