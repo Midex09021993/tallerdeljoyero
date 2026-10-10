@@ -2,7 +2,9 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
-import { useCrearContrato, useSedes } from "@/lib/taller-db";
+import { useCrearContrato } from "@/lib/taller-db";
+import { useSesion } from "@/lib/auth";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/contratos/nuevo")({
@@ -13,20 +15,25 @@ export const Route = createFileRoute("/_authenticated/contratos/nuevo")({
 function NuevoContratoPage() {
   const navigate = useNavigate();
   const crear = useCrearContrato();
-  const { data: sedes = [] } = useSedes();
+  const { data: sesion } = useSesion();
+  const { esDueno, sedeFiltro, etiquetaSede } = useSedeFiltroDueno();
+  const sedeContratoId = esDueno ? (sedeFiltro === TODAS_LAS_SEDES ? null : sedeFiltro) : (sesion?.participante?.sede_id ?? null);
   const [form, setForm] = useState({
     numero: "",
     cliente: "",
     telefono: "",
     origen: "Contrato Aurum",
     total: "",
-    sede_id: "",
     notas: "",
   });
 
   const set = (campo: keyof typeof form, valor: string) => setForm((actual) => ({ ...actual, [campo]: valor }));
 
   async function guardar() {
+    if (!sedeContratoId) {
+      toast.error("Selecciona una sede específica desde Inicio antes de crear un contrato.");
+      return;
+    }
     try {
       const contrato = await crear.mutateAsync({
         numero: form.numero,
@@ -34,7 +41,7 @@ function NuevoContratoPage() {
         telefono: form.telefono,
         origen: form.origen,
         total: Number(form.total) || 0,
-        sede_id: form.sede_id || null,
+        sede_id: sedeContratoId,
         notas: form.notas,
       });
       toast.success(`Contrato ${contrato.numero} creado.`);
@@ -58,13 +65,11 @@ function NuevoContratoPage() {
             <Campo label="Teléfono" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="Opcional" />
             <Campo label="Origen" value={form.origen} onChange={(v) => set("origen", v)} placeholder="Contrato Aurum" />
             <Campo label="Total" value={form.total} onChange={(v) => set("total", v)} type="number" placeholder="0.00" />
-            <label className="block">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sede</span>
-              <select value={form.sede_id} onChange={(e) => set("sede_id", e.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm">
-                <option value="">Sin sede</option>
-                {sedes.map((sede) => <option key={sede.id} value={sede.id}>{sede.nombre}</option>)}
-              </select>
-            </label>
+            <div className="rounded-xl border border-border bg-surface-muted/50 px-3 py-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sede de este contrato</span>
+              <p className="mt-1.5 text-sm font-semibold">{sedeContratoId ? etiquetaSede : "Selecciona una sede desde Inicio"}</p>
+              <p className="mt-1 text-xs text-muted-foreground">El contrato se registrará en la sede activa; no se puede crear sin sede.</p>
+            </div>
             <label className="block sm:col-span-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notas</span>
               <textarea value={form.notas} onChange={(e) => set("notas", e.target.value)} rows={4} className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm" placeholder="Condiciones o notas del contrato" />
