@@ -875,6 +875,10 @@ async function asegurarContratoComercial({
   }
 
   if (existente.data?.id) {
+    const sedeExistente = (existente.data as Record<string, unknown>)["sede_id"];
+    if (sede_id && typeof sedeExistente === "string" && sedeExistente !== sede_id) {
+      throw new Error("Ya existe un contrato con ese número en otra sede. Usa un número distinto para evitar mezclar talleres.");
+    }
     const actualizacion: Partial<ContratoInsert> = {
       cliente: textoCampo(existente.data as Record<string, unknown>, "cliente") || cliente,
       telefono: textoCampo(existente.data as Record<string, unknown>, "telefono") || telefono,
