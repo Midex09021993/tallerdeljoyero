@@ -6,6 +6,7 @@ import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2, Ca
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { CumpleanosClientes } from "@/components/CumpleanosClientes";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 type Cliente = {
   id: string;
@@ -40,6 +41,8 @@ function money(n: number) {
 
 function ClientesPage() {
   const { data: sesion } = useSesion();
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
+  const sedeContextoId = esDueno ? (sedeFiltro === TODAS_LAS_SEDES ? null : sedeFiltro) : (sesion?.participante?.sede_id ?? null);
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const cotizacionesHabilitadas = capacidades.includes("Cotizaciones");
   const puedeVer = Boolean(sesion?.esAdmin) || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
@@ -58,13 +61,12 @@ function ClientesPage() {
 
   const cargar = async () => {
     if (!sesion?.participante?.id) return;
-    const esDueno = Boolean(sesion.esDueno);
-    const clientesQuery = supabase
+    let clientesQuery = supabase
       .from("clientes")
       .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
       .order("nombre");
     const { data: clientesData, error: clientesError } = esDueno
-      ? await clientesQuery
+      ? await (sedeContextoId ? clientesQuery.eq("sede_id", sedeContextoId) : clientesQuery)
       : await clientesQuery.eq("participante_id", sesion.participante.id);
     if (clientesError) throw clientesError;
 
@@ -83,7 +85,7 @@ function ClientesPage() {
     if (seleccionado) setSeleccionado(clientesConSede.find((c) => c.id === seleccionado.id) ?? null);
   };
 
-  useEffect(() => { if (puedeVer) void cargar(); }, [puedeVer, sesion?.participante?.id]);
+  useEffect(() => { if (puedeVer) void cargar(); }, [puedeVer, sesion?.participante?.id, esDueno, sedeContextoId]);
 
   useEffect(() => {
     if (!seleccionado) { setPedidos([]); setCotizaciones([]); return; }
@@ -126,10 +128,19 @@ function ClientesPage() {
     setGuardando(true);
     try {
       if (!sesion?.participante?.id) throw new Error("No hay un taller activo del Ecosistema para guardar el cliente.");
-      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "", participante_id: sesion.participante.id };
-      const result = seleccionado
-        ? await supabase.from("clientes").update(payload).eq("id", seleccionado.id)
-        : await supabase.from("clientes").insert(payload);
+      if (!seleccionado && !sedeContextoId) throw new Error("Selecciona una sede específica desde Inicio antes de crear un cliente.");
+      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "" };
+      let result;
+      if (seleccionado) {
+        // Editar un cliente no debe reasignarlo silenciosamente al participante predeterminado del propietario.
+        result = await supabase.from("clientes").update(payload).eq("id", seleccionado.id);
+      } else {
+        const participanteId = esDueno
+          ? (await supabase.from("ecosistema_participantes").select("id").eq("sede_id", sedeContextoId!).eq("estado", "activo").limit(1).maybeSingle()).data?.id
+          : sesion.participante.id;
+        if (!participanteId) throw new Error("No se encontró un participante activo para la sede seleccionada.");
+        result = await supabase.from("clientes").insert({ ...payload, sede_id: sedeContextoId, participante_id: participanteId });
+      }
       if (result.error) throw result.error;
       setModal(false);
       await cargar();
@@ -137,7 +148,7 @@ function ClientesPage() {
         const { data } = await supabase
           .from("clientes")
           .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
-          .eq("participante_id", sesion.participante.id)
+          .eq("sede_id", sedeContextoId!)
           .eq("nombre", payload.nombre)
           .order("created_at", { ascending: false })
           .limit(1)
