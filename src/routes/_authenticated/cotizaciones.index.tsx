@@ -99,6 +99,9 @@ function CotizacionesPage() {
   const [cotizacionPorEliminar, setCotizacionPorEliminar] = useState<Cotizacion | null>(null);
   const [errorEliminacion, setErrorEliminacion] = useState("");
   const [busquedaCliente, setBusquedaCliente] = useState("");
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
+  const [clienteDropdownAbierto, setClienteDropdownAbierto] = useState(false);
+  const [clienteActivoIndex, setClienteActivoIndex] = useState(0);
   const [nuevoCliente, setNuevoCliente] = useState({ telefono: "", email: "" });
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
@@ -134,6 +137,8 @@ function CotizacionesPage() {
     if (!esDueno) return;
     setForm((actual) => actual.cliente_id ? { ...actual, cliente_id: "" } : actual);
     setBusquedaCliente("");
+    setClienteSeleccionado(null);
+    setClienteDropdownAbierto(false);
     setClientes([]);
   }, [esDueno, sedeFiltro]);
 
@@ -334,6 +339,8 @@ function CotizacionesPage() {
 
       setAbierto(false);
       setBusquedaCliente("");
+      setClienteSeleccionado(null);
+      setClienteDropdownAbierto(false);
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
       setForm({ cliente_id: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
@@ -457,42 +464,107 @@ function CotizacionesPage() {
           <form onSubmit={guardar} className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-gold/15 bg-card p-5 shadow-[0_30px_80px_-35px_hsl(var(--gold)/0.35)]">
             <div className="mb-5 flex items-start justify-between"><div><h2 className="font-display text-2xl">Nueva cotización</h2><p className="text-sm text-muted-foreground">Costo interno separado del precio al cliente.</p></div><button type="button" onClick={() => setAbierto(false)} className="rounded-full border border-border px-3 py-1">×</button></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="relative">
-  <label className="text-xs text-muted-foreground">Cliente</label>
-  <input
-    value={busquedaCliente}
-    onChange={e => {
-      setBusquedaCliente(e.target.value);
-      if (form.cliente_id) setForm({...form, cliente_id:""});
-    }}
-    placeholder="Escribe nombre, teléfono o correo…"
-    className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-gold/40 focus:ring-1 focus:ring-gold/15"
-  />
-  {form.cliente_id ? (
-    <button type="button" onClick={() => { setForm({...form, cliente_id:""}); setBusquedaCliente(""); }} className="absolute right-3 top-8 text-muted-foreground">
-      <X className="size-4" />
-    </button>
-  ) : null}
-  {!form.cliente_id && busquedaCliente.trim() ? (
-    <div className="mt-1 min-h-5 text-[11px]">
-      {clientePredictivo ? (
-        <button
-          type="button"
-          onClick={() => { setForm({...form, cliente_id:clientePredictivo.id}); setBusquedaCliente(clientePredictivo.nombre); }}
-          className="text-left text-muted-foreground transition hover:text-foreground"
-        >
-          <span className="font-medium text-foreground">Coincidencia:</span> {clientePredictivo.nombre}
-          {clientePredictivo.telefono || clientePredictivo.email ? <span className="ml-2 opacity-70">{clientePredictivo.telefono || clientePredictivo.email}</span> : null}
-        </button>
-      ) : coincidenciasCliente > 1 ? (
-        <span className="text-muted-foreground">Hay {coincidenciasCliente} coincidencias. Continúa escribiendo para precisar.</span>
-      ) : (
-        <span className="text-muted-foreground">No hay una coincidencia exacta todavía. Puedes registrar este nombre como nuevo cliente.</span>
-      )}
-    </div>
-  ) : null}
-  {form.cliente_id ? <p className="mt-1 text-[11px] text-muted-foreground">Cliente seleccionado: {clientes.find(c => c.id === form.cliente_id)?.nombre ?? "—"}</p> : null}
-</div>
+              <div className="relative min-w-0">
+                <label htmlFor="cliente-cotizacion" className="text-xs text-muted-foreground">Cliente</label>
+                <div className="relative mt-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="cliente-cotizacion"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={!form.cliente_id && clienteDropdownAbierto && Boolean(busquedaCliente.trim())}
+                    aria-controls="resultados-clientes-cotizacion"
+                    aria-activedescendant={!form.cliente_id && clienteDropdownAbierto && clientes[clienteActivoIndex] ? `cliente-opcion-${clientes[clienteActivoIndex].id}` : undefined}
+                    autoComplete="off"
+                    value={busquedaCliente}
+                    onFocus={() => { if (!form.cliente_id && busquedaCliente.trim()) setClienteDropdownAbierto(true); }}
+                    onChange={e => {
+                      setBusquedaCliente(e.target.value);
+                      setClienteSeleccionado(null);
+                      setClienteActivoIndex(0);
+                      setClienteDropdownAbierto(true);
+                      if (form.cliente_id) setForm(actual => ({...actual, cliente_id:""}));
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === "ArrowDown" && clientes.length) {
+                        e.preventDefault();
+                        setClienteDropdownAbierto(true);
+                        setClienteActivoIndex(index => (index + 1) % clientes.length);
+                      } else if (e.key === "ArrowUp" && clientes.length) {
+                        e.preventDefault();
+                        setClienteDropdownAbierto(true);
+                        setClienteActivoIndex(index => (index - 1 + clientes.length) % clientes.length);
+                      } else if (e.key === "Enter" && clienteDropdownAbierto && clientes[clienteActivoIndex] && !form.cliente_id) {
+                        e.preventDefault();
+                        const cliente = clientes[clienteActivoIndex];
+                        setForm(actual => ({...actual, cliente_id:cliente.id}));
+                        setClienteSeleccionado(cliente);
+                        setBusquedaCliente(cliente.nombre);
+                        setClienteDropdownAbierto(false);
+                      } else if (e.key === "Escape") {
+                        setClienteDropdownAbierto(false);
+                      }
+                    }}
+                    placeholder="Buscar por nombre, teléfono o correo…"
+                    className={`h-11 w-full rounded-lg border bg-background pl-9 pr-10 text-sm outline-none transition focus:border-gold/45 focus:ring-2 focus:ring-gold/10 ${form.cliente_id ? "border-gold/35" : "border-border"}`}
+                  />
+                  {form.cliente_id ? (
+                    <button type="button" aria-label="Cambiar cliente seleccionado" onClick={() => {
+                      setForm(actual => ({...actual, cliente_id:""}));
+                      setClienteSeleccionado(null);
+                      setBusquedaCliente("");
+                      setClientes([]);
+                      setClienteDropdownAbierto(false);
+                    }} className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition hover:bg-gold/10 hover:text-foreground">
+                      <X className="size-4" />
+                    </button>
+                  ) : null}
+                </div>
+                {!form.cliente_id && clienteDropdownAbierto && busquedaCliente.trim() ? (
+                  <div id="resultados-clientes-cotizacion" role="listbox" aria-label="Clientes coincidentes" className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-xl border border-gold/20 bg-card p-1.5 shadow-[0_18px_45px_-20px_hsl(var(--foreground)/0.35)]">
+                    {buscandoClientes ? (
+                      <div className="flex items-center gap-2 px-3 py-3 text-xs text-muted-foreground"><span className="size-3 animate-spin rounded-full border-2 border-gold/25 border-t-gold" />Buscando clientes…</div>
+                    ) : clientes.length ? clientes.map((cliente, index) => (
+                      <button
+                        id={`cliente-opcion-${cliente.id}`}
+                        key={cliente.id}
+                        type="button"
+                        role="option"
+                        aria-selected={index === clienteActivoIndex}
+                        onMouseEnter={() => setClienteActivoIndex(index)}
+                        onClick={() => {
+                          setForm(actual => ({...actual, cliente_id:cliente.id}));
+                          setClienteSeleccionado(cliente);
+                          setBusquedaCliente(cliente.nombre);
+                          setClienteDropdownAbierto(false);
+                        }}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${index === clienteActivoIndex ? "bg-gold/10" : "hover:bg-gold/[0.06]"}`}
+                      >
+                        <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/[0.07] text-xs font-semibold text-gold">{cliente.nombre.trim().split(/\\s+/).slice(0, 2).map(parte => parte[0] ?? "").join("").toUpperCase()}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-foreground">{cliente.nombre}</span>
+                          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{[cliente.telefono, cliente.email].filter(Boolean).join(" · ") || "Sin teléfono ni correo registrados"}</span>
+                        </span>
+                        {index === clienteActivoIndex ? <span className="text-[10px] font-medium text-gold">Seleccionar ↵</span> : null}
+                      </button>
+                    )) : (
+                      <div className="px-3 py-3">
+                        <p className="text-xs font-medium text-foreground">No encontramos clientes con esa búsqueda.</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">Puedes continuar y registrar un cliente nuevo con ese nombre.</p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+                {form.cliente_id ? (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-gold/20 bg-gold/[0.055] px-3 py-2">
+                    <CheckCircle2 className="size-4 shrink-0 text-gold" />
+                    <span className="min-w-0 flex-1"><span className="block text-[10px] uppercase tracking-wider text-muted-foreground">Cliente seleccionado</span><span className="block truncate text-xs font-medium text-foreground">{clienteSeleccionado?.nombre ?? busquedaCliente}</span></span>
+                    <button type="button" onClick={() => { setForm(actual => ({...actual, cliente_id:""})); setClienteSeleccionado(null); setBusquedaCliente(""); setClientes([]); }} className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">Cambiar</button>
+                  </div>
+                ) : busquedaCliente.trim() ? (
+                  <p className="mt-1 text-[11px] text-muted-foreground">Selecciona un resultado o continúa para registrar un cliente nuevo.</p>
+                ) : <p className="mt-1 text-[11px] text-muted-foreground">Busca un cliente existente por nombre, teléfono o correo.</p>}
+              </div>
               {!form.cliente_id && busquedaCliente.trim() ? (
                 <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
                   <label className="text-xs text-muted-foreground">Teléfono del nuevo cliente
