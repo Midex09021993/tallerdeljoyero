@@ -180,13 +180,14 @@ export async function createAurumPostPipeline(
   const applyQuality=(next:any, options:{capture?:boolean}={})=>{
     if(!composer) return;
     const q=next||{};
-    const high=q.pixelRatio>=1.4;
-    const ultra=q.pixelRatio>=1.55;
+    const qualityId=String(q?.qualityId??"");
+    const high=qualityId==="high" || qualityId==="ultra" || q.pixelRatio>=1.4;
+    const ultra=qualityId==="ultra" || q.pixelRatio>=1.55;
 
     // iJewel VJSON explicitly enables progressive jitter + TAA. In Three r185,
     // sampleLevel=5 gives the 32-jitter sequence. SSR is composed over the
     // saved TAA beauty so neither stage is silently discarded.
-    const isLowQuality=String(q?.qualityId??"") === "low" || Number(q?.pixelRatio??1.5) <= 1.01;
+    const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     const taaEnabled=Boolean(options.capture) || (config.taa!==false && !isLowQuality);
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
