@@ -162,9 +162,6 @@ function SeguimientoCliente() {
   const [accionCliente, setAccionCliente] = useState<"aprobada" | "requiere_revision" | "rechazada" | null>(null);
   const [comentarioCliente, setComentarioCliente] = useState("");
   const [respuestaEnviada, setRespuestaEnviada] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [pdfCargando, setPdfCargando] = useState(false);
-  const [pdfError, setPdfError] = useState("");
   const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
 
   const consulta = useMutation({
@@ -240,42 +237,6 @@ function SeguimientoCliente() {
   const nombreTaller = String(cotizacion?.identidad_comercial?.['nombre_comercial'] ?? "").trim();
   const estaVencida = cotizacionVencida(cotizacion?.fecha_vencimiento ?? null);
   const estadoVisible = estaVencida && cotizacion?.estado === "enviada" ? "vencida" : cotizacion?.estado;
-
-  useEffect(() => {
-    let activo = true;
-
-    if (!codigoConsulta || resultado?.tipo !== "cotizacion") {
-      setPdfUrl(null);
-      setPdfError("");
-      setPdfCargando(false);
-      return () => undefined;
-    }
-
-    setPdfCargando(true);
-    setPdfError("");
-
-    void (async () => {
-      const { data, error: pdfUrlError } = await (supabasePublic as any).rpc(
-        "seguimiento_cotizacion_pdf_url",
-        { _codigo: codigoConsulta },
-      );
-
-      if (!activo) return;
-
-      if (pdfUrlError || !data) {
-        setPdfError("El PDF todavía no está disponible para descarga.");
-        setPdfCargando(false);
-        return;
-      }
-
-      setPdfUrl(String(data));
-      setPdfCargando(false);
-    })();
-
-    return () => {
-      activo = false;
-    };
-  }, [codigoConsulta, resultado?.tipo, cotizacion?.version, cotizacion?.estado]);
 
   const estadoActual = pedido ? estadoCliente(pedido) : null;
   const indice = estadoActual ? ESTADOS_CLIENTE.findIndex((estado) => estado === estadoActual) : -1;
