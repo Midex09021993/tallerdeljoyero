@@ -130,18 +130,20 @@ function ClientesPage() {
       if (!sesion?.participante?.id) throw new Error("No hay un taller activo del Ecosistema para guardar el cliente.");
       if (!seleccionado && !sedeContextoId) throw new Error("Selecciona una sede específica desde Inicio antes de crear un cliente.");
       const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "" };
-      let result;
+      let error: { message: string; code?: string } | null = null;
       if (seleccionado) {
         // Editar un cliente no debe reasignarlo silenciosamente al participante predeterminado del propietario.
-        result = await supabase.from("clientes").update(payload).eq("id", seleccionado.id);
+        const result = await supabase.from("clientes").update(payload).eq("id", seleccionado.id);
+        error = result.error;
       } else {
         const participanteId = esDueno
           ? (await supabase.from("ecosistema_participantes").select("id").eq("sede_id", sedeContextoId!).eq("estado", "activo").limit(1).maybeSingle()).data?.id
           : sesion.participante.id;
         if (!participanteId) throw new Error("No se encontró un participante activo para la sede seleccionada.");
-        result = await supabase.from("clientes").insert({ ...payload, sede_id: sedeContextoId, participante_id: participanteId });
+        const result = await supabase.from("clientes").insert({ ...payload, sede_id: sedeContextoId, participante_id: participanteId });
+        error = result.error;
       }
-      if (result.error) throw result.error;
+      if (error) throw error;
       setModal(false);
       await cargar();
       if (!seleccionado) {
