@@ -741,7 +741,7 @@ function CotizacionDetallePage() {
               <div className="space-y-2 p-4">
                 <div className="rounded-xl border border-gold/15 bg-gold/[0.025] p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/80">Flujo comercial</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Revisa la cotización, envíala al cliente y gestiona la respuesta antes de convertirla en operación.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{cotizacion.estado === "borrador" ? "Revisa la ficha y prepara el envío; el estado cambiará cuando compartas la propuesta." : cotizacion.estado === "enviada" ? "Cotización enviada: comparte de nuevo el enlace o consulta la respuesta." : cotizacion.estado === "aprobada" ? "Cotización aprobada: crea un contrato opcional o continúa con el pedido." : cotizacion.estado === "requiere_revision" ? "Revisa los comentarios y crea una nueva versión." : "Consulta el historial y las respuestas de esta cotización."}</p>
                 </div>
                 {cotizacion.estado === "borrador" ? (
                   <>
