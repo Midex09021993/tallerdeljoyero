@@ -27,6 +27,7 @@ function ContratosPage() {
       acciones={
         <Link
           to="/contratos/nuevo"
+          search={{}}
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
         >
           <Plus className="size-4" /> Nuevo contrato
