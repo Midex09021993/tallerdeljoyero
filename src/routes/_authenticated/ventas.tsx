@@ -54,7 +54,6 @@ function Ventas2Page() {
     <AppShell
       titulo="Ventas"
       subtitulo={loadingPedidos || loadingContratos ? "Sincronizando cartera…" : `Control comercial y cierre de pedidos · ${etiquetaSede}`}
-      acciones={}
     >
       <section className="overflow-hidden rounded-[28px] border border-gold/20 bg-card shadow-raised">
         <div className="relative p-6 sm:p-8">
