@@ -40,7 +40,7 @@ const tiposPartida: Array<{ value: TipoPartida; label: string }> = [
 
 type Cotizacion = {
   id: string; numero: string; version: number; estado: string; fecha_emision: string;
-  fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal: number; descuento: number;
+  fecha_vencimiento: string | null; moneda: string; subtotal: number; descuento: number;
   impuestos: number; total: number; cliente_id: string | null; sede_id: string | null; participante_id?: string | null;
   cliente?: { nombre: string } | null;
 };
@@ -103,11 +103,11 @@ function CotizacionesPage() {
   const [errorCliente, setErrorCliente] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoCotizacion[]>([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
   const [impuestoActivo, setImpuestoActivo] = useState(true);
-  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), fecha_entrega_solicitada: "", notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
+  const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
     const [{ data: q }, { data: s }, { data: identidadData }] = await Promise.all([
-      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
+      supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
       (esDueno ? (sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : null) : sesion?.participante?.sede_id)
         ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", esDueno ? sedeFiltro : sesion?.participante?.sede_id ?? "").eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
@@ -317,7 +317,6 @@ function CotizacionesPage() {
         _descuento: form.descuento,
         _impuestos: impuestoCalculado,
         _fecha_vencimiento: form.fecha_vencimiento || null,
-        _fecha_entrega_solicitada: form.fecha_entrega_solicitada || null,
         _notas_cliente: form.notas_cliente,
         _notas_internas: form.notas_internas,
         _descripcion: primero.descripcion,
@@ -337,7 +336,7 @@ function CotizacionesPage() {
       setBusquedaCliente("");
       setNuevoCliente({ telefono: "", email: "" });
       setImpuestoActivo(true);
-      setForm({ cliente_id: "", fecha_entrega_solicitada: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
+      setForm({ cliente_id: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
       await cargar();
@@ -504,12 +503,6 @@ function CotizacionesPage() {
                   </label>
                 </div>
               ) : null}
-              <div className="grid gap-3 sm:col-span-2">
-                <label className="text-xs text-muted-foreground">Entrega solicitada
-                  <input type="date" value={form.fecha_entrega_solicitada} onChange={e => setForm({...form,fecha_entrega_solicitada:e.target.value})} min={fechaHoyPeru()} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
-                  <span className="mt-1 block text-[10px] text-muted-foreground">Fecha comprometida o solicitada por el cliente.</span>
-                </label>
-              </div>
               <section className="sm:col-span-2 overflow-hidden rounded-2xl border border-gold/15 bg-gradient-to-b from-gold/[0.035] to-transparent">
   <div className="flex items-center justify-between gap-4 border-b border-gold/10 px-4 py-4 sm:px-5">
     <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-card text-gold"><FileText className="size-4" /></span><div><p className="text-sm font-semibold tracking-tight">Conceptos de la cotización</p><p className="mt-0.5 text-[11px] text-muted-foreground">Añade productos, servicios o trabajos y define su precio.</p></div></div>
