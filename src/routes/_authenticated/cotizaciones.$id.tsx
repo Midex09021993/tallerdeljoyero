@@ -694,9 +694,12 @@ function CotizacionDetallePage() {
                 <button type="button" onClick={() => setMostrarFichaA4(true)} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
                   Ver ficha A4
                 </button>
-                <p className="text-xs text-muted-foreground">Genera una copia PDF de la propuesta con información comercial. Los costos internos y notas internas nunca se incluyen.</p>
-                <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                  {generandoPdf ? "Generando PDF…" : enlacePdf ? "Regenerar PDF" : "Generar PDF"}
+                <button type="button" onClick={() => { setMostrarFichaA4(true); window.setTimeout(() => window.print(), 400); }} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                  Generar PDF desde ficha A4
+                </button>
+                <p className="text-xs text-muted-foreground">En la ventana de impresión elige “Guardar como PDF”. Sale idéntico a la ficha A4, sin costos ni notas internas.</p>
+                <button type="button" disabled={generandoPdf} onClick={() => void generarPdfCotizacion()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted disabled:opacity-50">
+                  {generandoPdf ? "Preparando enlace…" : enlacePdf ? "Actualizar enlace para el cliente" : "Preparar enlace para el cliente"}
                 </button>
                 {enlacePdf ? (
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -819,8 +822,20 @@ function CotizacionDetallePage() {
       </div>
 
     {mostrarFichaA4 ? (
-      <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/70 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label="Vista previa A4 de la cotización">
-        <div className="mx-auto mb-3 flex max-w-[210mm] justify-end">
+      <div className="ficha-print-overlay fixed inset-0 z-[100] overflow-y-auto bg-slate-900/70 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label="Vista previa A4 de la cotización">
+        <style>{`@page { size: A4; margin: 0; }
+@media print {
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .ficha-print-overlay, .ficha-print-overlay * { visibility: visible !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .ficha-print-overlay { position: absolute !important; inset: 0 auto auto 0 !important; width: 210mm !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+  .ficha-print-toolbar { display: none !important; }
+  .ficha-print-overlay article { width: 210mm !important; max-width: none !important; min-height: 297mm !important; margin: 0 !important; box-shadow: none !important; padding: 14mm 16mm !important; }
+}`}</style>
+        <div className="ficha-print-toolbar mx-auto mb-3 flex max-w-[210mm] justify-end gap-2">
+          <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow">
+            Descargar PDF
+          </button>
           <button type="button" onClick={() => setMostrarFichaA4(false)} className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">
             <span aria-hidden="true">×</span> Cerrar vista previa
           </button>
