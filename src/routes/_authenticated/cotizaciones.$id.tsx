@@ -735,17 +735,17 @@ function CotizacionDetallePage() {
                 <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(false); setMostrarFichaA4(true); }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
                   Ver ficha A4
                 </button>
-                <p className="text-xs text-muted-foreground">Genera y descarga el PDF comercial oficial de esta cotización. El documento no incluye costos ni notas internas.</p>
+                <p className="text-xs text-muted-foreground">El PDF se obtiene desde esta misma ficha A4 para conservar exactamente el diseño, las tablas y los espacios de la vista previa. En el diálogo de impresión, selecciona “Guardar como PDF”. No incluye costos ni notas internas.</p>
                 <button
                   type="button"
-                  disabled={!cotizacion || generandoPdf}
-                  onClick={async () => {
-                    const urlPdf = await generarPdfCotizacion();
-                    if (urlPdf) await descargarPdf(urlPdf);
+                  disabled={!cotizacion || !fichaCotizacion}
+                  onClick={() => {
+                    setImprimirFichaAlAbrir(true);
+                    setMostrarFichaA4(true);
                   }}
                   className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  {generandoPdf ? "Generando PDF…" : "Descargar PDF de cotización"}
+                  Descargar PDF de cotización
                 </button>
               </div>
             </Panel>
