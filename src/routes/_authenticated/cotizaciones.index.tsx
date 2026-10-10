@@ -108,8 +108,8 @@ function CotizacionesPage() {
     const [{ data: q }, { data: s }, { data: identidadData }] = await Promise.all([
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
-      sesion?.participante?.sede_id
-        ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", sesion.participante.sede_id).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
+      (esDueno ? (sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : null) : sesion?.participante?.sede_id)
+        ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", esDueno ? sedeFiltro : sesion?.participante?.sede_id ?? "").eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
     if (q) setCotizaciones(q);
@@ -128,11 +128,26 @@ function CotizacionesPage() {
 
   useEffect(() => {
     if (puedeGestionarCotizaciones) void cargar();
-  }, [puedeGestionarCotizaciones, sesion?.participante?.id]);
+  }, [puedeGestionarCotizaciones, sesion?.participante?.id, esDueno, sedeFiltro]);
+
+  // Cambiar de sede invalida la selección de cliente anterior para no mezclar talleres.
+  useEffect(() => {
+    if (!esDueno) return;
+    setForm((actual) => actual.cliente_id ? { ...actual, cliente_id: "" } : actual);
+    setBusquedaCliente("");
+    setClientes([]);
+  }, [esDueno, sedeFiltro]);
 
   useEffect(() => {
-    if (!puedeGestionarCotizaciones || !sesion?.participante?.id) return;
+    if (!puedeGestionarCotizaciones) return;
     const termino = busquedaCliente.trim();
+    const sedeComercialId = esDueno ? (sedeFiltro === TODAS_LAS_SEDES ? null : sedeFiltro) : sesion?.participante?.sede_id;
+    if (!sedeComercialId) {
+      setClientes([]);
+      setBuscandoClientes(false);
+      return;
+    }
+    if (!esDueno && !sesion?.participante?.id) return;
     if (form.cliente_id && !termino) return;
 
     const timer = window.setTimeout(async () => {
@@ -142,9 +157,11 @@ function CotizacionesPage() {
           .from("clientes")
           .select("id,nombre,telefono,email")
           .eq("estado", "activo")
-          .eq("participante_id", sesion?.participante?.id ?? "")
           .order("nombre")
           .limit(20);
+        query = esDueno
+          ? query.eq("sede_id", sedeComercialId)
+          : query.eq("participante_id", sesion?.participante?.id ?? "");
 
         if (termino) {
           const limpio = termino.replace(/[%_,]/g, "");
@@ -162,7 +179,7 @@ function CotizacionesPage() {
     }, termino ? 250 : 0);
 
     return () => window.clearTimeout(timer);
-  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.participante?.id, form.cliente_id]);
+  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.participante?.id, form.cliente_id, esDueno, sedeFiltro]);
 
   // Una cotización es una entidad comercial; sus versiones son historial.
   // El listado muestra únicamente la versión vigente (la de mayor número)
