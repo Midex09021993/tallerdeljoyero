@@ -240,7 +240,7 @@ function MiNubePage() {
       let archivosNas: ArchivoNube[] = [];
       let carpetasNas: string[] = [];
       if (estadoNas === "online") {
-        const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId } });
+        const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
         if (nasError) {
           console.warn("[Mi Nube] No se pudieron listar los vídeos del NAS.", nasError);
         } else if (Array.isArray(nasData?.files)) {
@@ -499,7 +499,7 @@ function MiNubePage() {
             setProgreso(Math.round(((completados + (chunkIndex + 1) / totalChunks) / seleccionados.length) * 100));
           }
           const { data: finalized, error: finalizeError } = await supabase.functions.invoke("nextcloud-video-files", {
-            body: { action: "finalize", uploadId, folder: carpetaSegura, filename, totalBytes: file.size, participantId },
+            body: { action: "finalize", uploadId, folder: carpetaSegura, filename, totalBytes: file.size, participantId: participanteId },
           });
           if (finalizeError) throw new Error(`No se pudo finalizar el vídeo en el NAS. ${finalizeError.message}`);
           if (finalized?.error) throw new Error(String(finalized.error));
@@ -534,7 +534,7 @@ function MiNubePage() {
     if (!window.confirm("¿Eliminar definitivamente " + nombreVisible(archivo.nombre) + "?")) return;
     if (archivo.origen === "nas") {
       const { data, error: removeError } = await supabase.functions.invoke("nextcloud-video-files", {
-        body: { action: "delete", folder: archivo.carpeta, name: archivo.nombre, participantId },
+        body: { action: "delete", folder: archivo.carpeta, name: archivo.nombre, participantId: participanteId },
       });
       if (removeError || data?.error) { toast.error(data?.error ?? removeError?.message ?? "No se pudo eliminar el vídeo del NAS."); return; }
     } else {
@@ -580,7 +580,7 @@ function MiNubePage() {
         const env = import.meta.env as { VITE_SUPABASE_URL?: string; VITE_SUPABASE_PUBLISHABLE_KEY?: string };
         if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_PUBLISHABLE_KEY) throw new Error("Falta la configuración de conexión segura.");
         const params = new URLSearchParams({ folder: archivo.carpeta, name: archivo.nombre, participantId: participanteId ?? "" });
-        const response = await fetch(`${env.VITE_SUPABASE_URL.replace(/\\/$/, "")}/functions/v1/nextcloud-video-files?${params.toString()}`, {
+        const response = await fetch(`${env.VITE_SUPABASE_URL.replace(/\/$/, "")}/functions/v1/nextcloud-video-files?${params.toString()}`, {
           headers: { Authorization: `Bearer ${sessionData.session.access_token}`, apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY },
         });
         if (!response.ok) {

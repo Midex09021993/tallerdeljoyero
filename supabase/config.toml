@@ -25,3 +25,6 @@ verify_jwt = true
 
 [functions.nextcloud-status]
 verify_jwt = true
+
+[functions.nextcloud-video-files]
+verify_jwt = true
