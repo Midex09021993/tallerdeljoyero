@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     const parsed = new URL(baseUrl);
     if (parsed.protocol !== "https:" || parsed.username || parsed.password) return json({ error: "La URL de Nextcloud debe ser HTTPS y no contener credenciales." }, 503);
 
-    const root = `AurumLab/${participantId}/${user.id}`;
+    const root = ["AurumLab", participantId, user.id];
     const davRoot = new URL(`remote.php/dav/files/${encodeURIComponent(username)}/`, baseUrl.endsWith("/") ? baseUrl : baseUrl + "/");
     const auth = `Basic ${btoa(`${username}:${appPassword}`)}`;
     const dav = (segments: string[]) => new URL(segments.map((s) => encodeURIComponent(s)).join("/"), davRoot);
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       const folder = safeSegment(url.searchParams.get("folder") ?? "");
       const name = safeSegment(url.searchParams.get("name") ?? "");
       if (!folder || !name || folder !== url.searchParams.get("folder") || name !== url.searchParams.get("name")) return json({ error: "Ruta de archivo no válida." }, 400);
-      const response = await fetch(dav([root, folder, name]), { headers: { Authorization: auth }, redirect: "error" });
+      const response = await fetch(dav([...root, folder, name]), { headers: { Authorization: auth }, redirect: "error" });
       if (!response.ok || !response.body) {
         await response.body?.cancel();
         return json({ error: response.status === 404 ? "El vídeo no existe en el NAS." : `No se pudo descargar el vídeo (HTTP ${response.status}).` }, response.status === 404 ? 404 : 502);
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       const result = [];
       for (const item of folders) {
         if (!item.folder) continue;
-        const files = await listDirectory([root, item.name]);
+        const files = await listDirectory([...root, item.name]);
         for (const file of files) {
           if (file.folder || !/\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(file.name)) continue;
           result.push({ name: file.name, folder: item.name, bytes: file.bytes, updated: file.updated });
@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
       if (!/^[A-Za-z0-9-]{20,50}$/.test(uploadId) || !folder || !filename || !Number.isSafeInteger(totalBytes) || totalBytes < 1) return json({ error: "Datos de finalización no válidos." }, 400);
       await ensureCollection(["AurumLab", participantId, user.id, folder]);
       const source = new URL(["remote.php", "dav", "uploads", username, uploadId, ".file"].map(encodeURIComponent).join("/"), baseUrl.endsWith("/") ? baseUrl + "/" : baseUrl + "/");
-      const destination = dav([root, folder, filename]);
+      const destination = dav([...root, folder, filename]);
       const moved = await fetch(source, { method: "MOVE", headers: { Authorization: auth, Destination: destination.toString(), "OC-Total-Length": String(totalBytes), "OC-Chunked": "1", Overwrite: "F" }, redirect: "error" });
       if (moved.status !== 201 && moved.status !== 204) {
         const status = moved.status; await moved.body?.cancel();
@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
       const folder = safeSegment(typeof body.folder === "string" ? body.folder : "");
       const filename = safeSegment(typeof body.name === "string" ? body.name : "");
       if (!folder || !filename) return json({ error: "Archivo no válido." }, 400);
-      const response = await fetch(dav([root, folder, filename]), { method: "DELETE", headers: { Authorization: auth }, redirect: "error" });
+      const response = await fetch(dav([...root, folder, filename]), { method: "DELETE", headers: { Authorization: auth }, redirect: "error" });
       if (response.status !== 204 && response.status !== 200 && response.status !== 404) {
         const status = response.status; await response.body?.cancel();
         return json({ error: `No se pudo eliminar el vídeo (HTTP ${status}).` }, 502);
