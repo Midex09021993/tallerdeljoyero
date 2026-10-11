@@ -102,6 +102,7 @@ function MiNubePage() {
   const participanteId = sesion?.participante?.id ?? null;
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
+  const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
@@ -450,7 +451,45 @@ function MiNubePage() {
                       {proyecto.tieneStl && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">PDF</span>}
                     </div>
-                    <button type="button" onClick={() => setBusqueda(proyecto.nombre)} className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">Ver archivos del proyecto</button>
+                    <button
+                      type="button"
+                      aria-expanded={proyectoAbierto === proyecto.nombre}
+                      onClick={() => setProyectoAbierto((actual) => actual === proyecto.nombre ? null : proyecto.nombre)}
+                      className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50"
+                    >
+                      {proyectoAbierto === proyecto.nombre ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}
+                    </button>
+                    {proyectoAbierto === proyecto.nombre && (
+                      <div className="space-y-2 border-t border-border pt-3">
+                        {proyecto.archivos.map((archivo) => (
+                          <div key={archivo.ruta} className="flex flex-col gap-2 rounded-xl bg-surface-muted/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="break-all text-xs font-medium">{nombreVisible(archivo.nombre)}</p>
+                              <p className="mt-1 text-[11px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {archivo.nombre.toLowerCase().endsWith(".stl") && (
+                                <button type="button" onClick={async () => {
+                                  const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
+                                  if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; }
+                                  window.location.href = "/herramientas?archivoUrl=" + encodeURIComponent(data.signedUrl) + "&archivoNombre=" + encodeURIComponent(nombreVisible(archivo.nombre));
+                                }} className="rounded-lg border border-gold/40 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">
+                                  Ver 3D y calcular peso
+                                </button>
+                              )}
+                              {archivo.nombre.toLowerCase().endsWith(".3dm") && (
+                                <button type="button" onClick={() => toast.info("La apertura directa en Aurum Render aún está pendiente de integrar.")} className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">
+                                  Abrir en Aurum Render
+                                </button>
+                              )}
+                              <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">
+                                Abrir / descargar
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {proyecto.stlArchivo && (
                       <button
                         type="button"
