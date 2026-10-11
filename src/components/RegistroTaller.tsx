@@ -46,8 +46,13 @@ export function RegistroTaller({ className = "" }: Props) {
 
       if (loginError) throw new Error("El taller se creó, pero no se pudo iniciar la sesión automáticamente.");
       setCreado(true);
+      const importTransfer = new URLSearchParams(window.location.search).get("importTransfer");
       window.setTimeout(() => {
-        window.location.href = "/";
+        if (importTransfer && /^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) {
+          window.location.href = `/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`;
+        } else {
+          window.location.href = "/";
+        }
       }, 450);
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : "No se pudo crear el taller.");
