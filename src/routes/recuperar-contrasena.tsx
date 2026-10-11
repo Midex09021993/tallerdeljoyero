@@ -156,6 +156,9 @@ function RecuperarContrasenaPage() {
               <p className="mt-2 text-sm leading-relaxed text-white/55">
                 Introduce el correo con el que registraste tu taller. Te enviaremos un enlace seguro para crear una nueva contraseña.
               </p>
+              <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.025] p-3 text-xs leading-relaxed text-white/50">
+                Si tu cuenta es de un taller registrado con correo, usa ese correo completo. Si tienes una cuenta interna antigua que entra con un usuario técnico y no tienes un correo propio asociado, solicita al dueño o gerente que restablezca tu contraseña desde la administración de usuarios.
+              </div>
 
               <form onSubmit={solicitar} className="mt-7 space-y-5">
                 <label className="block text-[10px] uppercase tracking-wider text-white/50">
