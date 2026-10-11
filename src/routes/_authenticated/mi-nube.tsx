@@ -117,6 +117,7 @@ function MiNubePage() {
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
+  const [carpetaDestinoEdicion, setCarpetaDestinoEdicion] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [progreso, setProgreso] = useState(0);
@@ -540,9 +541,37 @@ function MiNubePage() {
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
-                    <button type="button" onClick={() => { setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setProyectoAbierto(proyecto.nombre); }} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">
+                    <button type="button" onClick={() => { setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setProyectoAbierto(proyecto.nombre); setCarpetaDestinoEdicion(null); setSeleccionados([]); }} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">
                       <Pencil className="size-3.5" /> {modoEdicion === proyecto.nombre ? "Terminar edición" : "Editar archivos de la carpeta"}
                     </button>
+                    {modoEdicion === proyecto.nombre && (
+                      <div className="space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
+                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-gold/40 px-3 py-2.5 text-xs font-semibold hover:bg-gold/10">
+                          <UploadCloud className="size-4" /> Añadir archivos a esta carpeta
+                          <input type="file" multiple className="sr-only" disabled={subiendo} onChange={(event) => {
+                            const files = Array.from(event.currentTarget.files ?? []);
+                            if (!files.length) return;
+                            setCarpeta(proyecto.nombre);
+                            setCarpetaDestinoEdicion(proyecto.nombre);
+                            setSeleccionados(files);
+                            event.currentTarget.value = "";
+                          }} />
+                        </label>
+                        {carpetaDestinoEdicion === proyecto.nombre && seleccionados.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs text-muted-foreground">{seleccionados.length} archivo(s) seleccionados para {proyecto.nombre}</p>
+                            <ul className="max-h-24 space-y-1 overflow-auto text-xs text-muted-foreground">
+                              {seleccionados.map((file, index) => <li key={file.name + index} className="truncate">{file.name} · {etiquetaTamano(file.size)}</li>)}
+                            </ul>
+                            {subiendo && <div className="h-1.5 overflow-hidden rounded-full bg-surface-muted"><div className="h-full bg-gold transition-all" style={{ width: progreso + "%" }} /></div>}
+                            <div className="flex gap-2">
+                              <button type="button" disabled={subiendo} onClick={() => { setSeleccionados([]); setCarpetaDestinoEdicion(null); }} className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cancelar</button>
+                              <button type="button" disabled={subiendo} onClick={async () => { await subirSeleccion(); setCarpetaDestinoEdicion(null); }} className="flex-1 rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-background disabled:opacity-50">{subiendo ? "Subiendo…" : "Subir a esta carpeta"}</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <button
                       type="button"
                       aria-expanded={proyectoAbierto === proyecto.nombre}
