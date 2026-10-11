@@ -22,3 +22,6 @@ verify_jwt = true
 
 [functions.generar-contrato-pdf]
 verify_jwt = true
+
+[functions.nextcloud-status]
+verify_jwt = true
