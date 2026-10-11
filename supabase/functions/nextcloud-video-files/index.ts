@@ -14,7 +14,7 @@ function json(body: unknown, status = 200) {
   });
 }
 function safeSegment(value: string) {
-  return value.normalize("NFKC").replace(/[\\/\\\\]/g, "_").replace(/[\\u0000-\\u001f]/g, "_").replace(/^\\.+|\\.+$/g, "").slice(0, 160);
+  return value.normalize("NFKC").replace(/[\/\\]/g, "_").replace(/[\\u0000-\\u001f]/g, "_").replace(/^\\.+|\\.+$/g, "").slice(0, 160);
 }
 function xmlValue(block: string, name: string) {
   const match = block.match(new RegExp("<(?:[A-Za-z0-9_-]+:)?" + name + "\\b[^>]*>([\\s\\S]*?)<\\/(?:[A-Za-z0-9_-]+:)?" + name + "\\s*>", "i"));
