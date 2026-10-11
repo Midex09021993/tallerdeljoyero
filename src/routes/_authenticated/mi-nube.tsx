@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -43,6 +43,22 @@ export const Route = createFileRoute("/_authenticated/mi-nube")({
 
 const BUCKET = "mi-nube";
 const MAX_FILES_PER_BATCH = 30;
+
+/** Marco visual compartido para que las fichas propias y recibidas evolucionen juntas. */
+function FichaProyecto({ portada, nombre, children }: { portada: string | null; nombre: string; children: ReactNode }) {
+  return (
+    <article className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
+      {portada ? (
+        <img src={portada} alt={`Portada del proyecto ${nombre}`} className="h-36 w-full bg-[#f5f4f1] object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
+      ) : (
+        <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
+          <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
+        </div>
+      )}
+      {children}
+    </article>
+  );
+}
 
 type Categoria = "fotos" | "videos" | "documentos" | "modelos-3d" | "otros";
 type CarpetaCompartida = { id: string; propietario_participante_id: string; propietario_usuario_id: string; carpeta: string; destinatario_participante_id: string; created_at: string; destinatario_nombre?: string };
@@ -615,14 +631,7 @@ function MiNubePage() {
           {proyectos.length > 0 && (
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {proyectos.map((proyecto) => (
-                <article key={proyecto.nombre} className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
-                  {proyecto.portada ? (
-                    <img src={proyecto.portada} alt={`Portada del proyecto ${proyecto.nombre}`} className="h-36 w-full bg-[#f5f4f1] object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
-                  ) : (
-                    <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
-                      <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
-                    </div>
-                  )}
+                <FichaProyecto key={proyecto.nombre} portada={proyecto.portada} nombre={proyecto.nombre}>
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -730,7 +739,7 @@ function MiNubePage() {
                     )}
 
                   </div>
-                </article>
+                </FichaProyecto>
               ))}
             </div>
           )}
@@ -747,14 +756,7 @@ function MiNubePage() {
                   if (a.categoria === "documentos") return "PDF";
                   return "Archivo";
                 }))];
-                return <article key={recibida.id} className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
-                  {recibida.portada ? (
-                    <img src={recibida.portada} alt={`Portada del proyecto ${recibida.nombre}`} className="h-36 w-full bg-[#f5f4f1] object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
-                  ) : (
-                    <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
-                      <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
-                    </div>
-                  )}
+                return <FichaProyecto key={recibida.id} portada={recibida.portada} nombre={recibida.nombre}>
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -787,7 +789,7 @@ function MiNubePage() {
                     )}
                     <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
                   </div>
-                </article>;
+                </FichaProyecto>;
               })}
             </div>
           )}
