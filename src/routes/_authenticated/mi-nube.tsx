@@ -7,7 +7,7 @@ import {
   Box,
   CheckCircle2,
   Cloud,
-  File,
+  File as FileIcon,
   FileText,
   Folder,
   HardDrive,
@@ -1234,7 +1234,7 @@ function MiNubePage() {
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">{proyecto.archivos.map((archivo) => (
                           <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
-                              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div>
+                              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <FileIcon className="size-4" />}</div>
                               <div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold leading-5">{nombreVisible(archivo.nombre)}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} <span className="px-1">·</span> {archivo.nombre.split(".").pop()?.toUpperCase()}</p><span className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${archivo.origen === "nas" ? "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}`}><CheckCircle2 className="size-3" /> {archivo.origen === "nas" ? "NAS · Nextcloud" : "Supabase Storage"}</span></div>
                             </div>
                             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -1307,7 +1307,7 @@ function MiNubePage() {
                         <div className="grid gap-2 sm:grid-cols-2">
                           {recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
-                              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div>
+                              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <FileIcon className="size-4" />}</div>
                               <div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p></div>
                             </div>
                             <div className="mt-3 flex flex-wrap gap-1.5">
