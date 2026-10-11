@@ -257,11 +257,16 @@ function MiNubePage() {
         const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
         const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 100, sortBy: { column: "name", order: "asc" } });
         if (listaError) throw listaError;
-        const base = (entradas ?? []).filter((e) => Boolean(e.id || e.metadata)).map((e): ArchivoNube => ({
-          nombre: e.name, ruta: `${ruta}/${e.name}`, carpeta: share.carpeta,
-          bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
-          categoria: clasificarArchivo(nombreVisible(e.name)),
-        }));
+        // Storage puede devolver metadata nula para objetos heredados; no descartarlos
+        // solo por ese motivo. Las entradas que son subcarpetas no tienen extensión
+        // de archivo y se excluyen de esta vista de proyecto.
+        const base = (entradas ?? [])
+          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.name.includes(".")))
+          .map((e): ArchivoNube => ({
+            nombre: e.name, ruta: `${ruta}/${e.name}`, carpeta: share.carpeta,
+            bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
+            categoria: clasificarArchivo(nombreVisible(e.name)),
+          }));
         const conVistas = await Promise.all(base.map(async (archivo) => {
           if (archivo.categoria !== "fotos") return archivo;
           const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
