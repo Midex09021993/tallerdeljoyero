@@ -92,7 +92,7 @@ const secciones: Array<{
 function clasificarArchivo(nombre: string): Categoria {
   const ext = nombre.split(".").pop()?.toLocaleLowerCase("es") ?? "";
   if (["jpg", "jpeg", "png", "webp", "avif", "gif", "heic", "heif"].includes(ext)) return "fotos";
-  if (["mp4", "mov", "webm", "m4v", "avi"].includes(ext)) return "videos";
+  if (["mp4", "mov", "webm", "m4v", "avi", "mkv"].includes(ext)) return "videos";
   if (["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "rtf", "odt"].includes(ext)) return "documentos";
   if (["3dm", "stl", "obj", "glb", "gltf", "3mf", "ply", "fbx"].includes(ext)) return "modelos-3d";
   return "otros";
