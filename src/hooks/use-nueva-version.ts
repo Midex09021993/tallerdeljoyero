@@ -29,7 +29,8 @@ export function useNuevaVersion(intervaloMs = 120_000): boolean {
 
     const comprobar = async () => {
       try {
-        const res = await fetch(\`\${window.location.origin}/?_version_check=\${Date.now()}\`, {
+        const url = window.location.origin + "/?_version_check=" + Date.now();
+        const res = await fetch(url, {
           cache: "no-store",
           credentials: "same-origin",
           headers: { "Cache-Control": "no-cache" },
