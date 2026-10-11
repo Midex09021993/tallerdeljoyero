@@ -141,6 +141,7 @@ function MiNubePage() {
   const [carpetaDestinoEdicion, setCarpetaDestinoEdicion] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
+  const nuevaVersion = useNuevaVersion();
   const [progreso, setProgreso] = useState(0);
   const [estadoSubida, setEstadoSubida] = useState("Preparando subida…");
   const [error, setError] = useState<string | null>(null);
@@ -455,6 +456,10 @@ function MiNubePage() {
   }, [archivosFiltrados]);
 
   const subirSeleccion = async () => {
+    if (nuevaVersion) {
+      toast.error("Hay una versión nueva de Mi Nube. Recarga la página antes de subir archivos.");
+      return;
+    }
     if (!participanteId || !usuarioId) {
       toast.error("Tu usuario no tiene un taller activo vinculado para Mi Nube.");
       return;
@@ -657,6 +662,17 @@ function MiNubePage() {
       atrasMovil={{ to: "/inicio" }}
     >
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
+        {nuevaVersion && (
+          <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-gold/60 bg-gold/10 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              <strong>Hay una versión nueva de Mi Nube.</strong>{" "}
+              {subiendo ? "Espera a que termine la subida en curso y luego recarga la página." : "Recarga la página antes de subir archivos."}
+            </p>
+            <button type="button" disabled={subiendo} onClick={() => window.location.reload()} className="shrink-0 rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-background disabled:opacity-50">
+              Recargar ahora
+            </button>
+          </div>
+        )}
         <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-card sm:p-7">
           <div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-gold/10 blur-3xl" aria-hidden="true" />
           <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
