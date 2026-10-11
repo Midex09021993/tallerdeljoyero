@@ -277,67 +277,29 @@ function MiNubePage() {
     await cargarBiblioteca();
   };
   const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
-    if (!proyecto.archivos.length) { setErrorCompartir({ proyecto: proyecto.nombre, mensaje: "Esta carpeta no contiene archivos para transferir." }); return; }
-    if (proyecto.archivos.length > 10) { setErrorCompartir({ proyecto: proyecto.nombre, mensaje: "AURUM Transfer admite hasta 10 archivos por enlace." }); return; }
+    if (!proyecto.archivos.length) { toast.error("Esta carpeta no contiene archivos."); return; }
+    if (proyecto.archivos.length > 10) { toast.error("AURUM Transfer admite hasta 10 archivos por enlace."); return; }
     setCompartiendo(proyecto.nombre);
-    setProgresoCompartir("Preparando archivos de " + proyecto.nombre + "…");
+    setProgresoCompartir("Preparando acceso seguro a los archivos…");
     setErrorCompartir(null);
-    setEnlaceCompartido(null);
     try {
-      const supabaseUrl = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ?? "";
-      const supabaseKey = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
-      if (!supabaseUrl || !supabaseKey) throw new Error("Falta la configuración pública de Supabase en esta versión de la web.");
-      const callCreate = async (body: unknown) => {
-        const response = await fetch(supabaseUrl.replace(/\/$/, "") + "/functions/v1/aurum-transfer-create", {
-          method: "POST", headers: { apikey: supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify(body),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "AURUM Transfer respondió con el error " + response.status + ".");
-        return data;
-      };
-      const archivosLocales: File[] = [];
-      for (let i = 0; i < proyecto.archivos.length; i++) {
-        const archivo = proyecto.archivos[i]!;
-        setProgresoCompartir("Leyendo archivo " + (i + 1) + " de " + proyecto.archivos.length + ": " + nombreVisible(archivo.nombre));
-        const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
-        if (urlError || !data?.signedUrl) throw new Error("No se pudo generar el acceso temporal a " + nombreVisible(archivo.nombre) + (urlError?.message ? ": " + urlError.message : "."));
-        const response = await fetch(data.signedUrl);
-        if (!response.ok) throw new Error("No se pudo leer " + nombreVisible(archivo.nombre) + " desde Mi Nube (HTTP " + response.status + ").");
-        const blob = await response.blob();
-        archivosLocales.push(new File([blob], nombreVisible(archivo.nombre), { type: blob.type || "application/octet-stream", lastModified: Date.now() }));
+      const fuentes: Array<{ name: string; url: string }> = [];
+      for (const archivo of proyecto.archivos) {
+        const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+        if (signedError || !data?.signedUrl) throw new Error("No se pudo preparar " + nombreVisible(archivo.nombre) + ".");
+        fuentes.push({ name: nombreVisible(archivo.nombre), url: data.signedUrl });
       }
-      const metadata = archivosLocales.map((file) => ({ name: file.name, size: file.size, type: file.type || "application/octet-stream" }));
-      setProgresoCompartir("Conectando con AURUM Transfer…");
-      const prep = await callCreate({ action: "prepare", files: metadata }) as { token: string; uploads: Array<{ name: string; size: number; type: string; path: string; signedUrl: string }> };
-      if (!prep.token || !Array.isArray(prep.uploads) || prep.uploads.length !== archivosLocales.length) throw new Error("AURUM Transfer no devolvió todos los destinos de subida.");
-      for (let i = 0; i < archivosLocales.length; i++) {
-        const archivo = archivosLocales[i]!;
-        const destino = prep.uploads[i]!;
-        setProgresoCompartir("Enviando archivo " + (i + 1) + " de " + archivosLocales.length + ": " + archivo.name);
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("PUT", destino.signedUrl);
-          if (archivo.type) xhr.setRequestHeader("Content-Type", archivo.type);
-          xhr.upload.onprogress = (event) => { if (event.lengthComputable) setProgresoCompartir("Enviando " + archivo.name + " · " + Math.round(event.loaded / event.total * 100) + "%"); };
-          xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("AURUM Transfer no pudo recibir " + archivo.name + " (HTTP " + xhr.status + ")."));
-          xhr.onerror = () => reject(new Error("Error de red al enviar " + archivo.name + " a AURUM Transfer."));
-          xhr.send(archivo);
-        });
-      }
-      setProgresoCompartir("Verificando archivos y creando enlace…");
-      const done = await callCreate({ action: "finalize", token: prep.token, files: prep.uploads.map(({ name, size, type, path }) => ({ name, size, type, path })) }) as { token: string };
-      if (!done.token) throw new Error("AURUM Transfer no confirmó el enlace final.");
-      setEnlaceCompartido({ proyecto: proyecto.nombre, url: window.location.origin + "/transfer/" + done.token });
-      setProgresoCompartir("");
-      toast.success("Enlace de AURUM Transfer creado.");
+      const destino = new URL("/transfer/", window.location.origin);
+      destino.searchParams.set("fromMiNube", JSON.stringify({ proyecto: proyecto.nombre, files: fuentes }));
+      window.location.assign(destino.toString());
     } catch (cause) {
-      const mensaje = cause instanceof Error ? cause.message : "No se pudo compartir la carpeta.";
+      const mensaje = cause instanceof Error ? cause.message : "No se pudo abrir AURUM Transfer.";
       setErrorCompartir({ proyecto: proyecto.nombre, mensaje });
-      setProgresoCompartir("");
       toast.error(mensaje);
     } finally { setCompartiendo(null); }
   };
 
+  
   const abrirArchivo = async (archivo: ArchivoNube) => {
     const { data, error: errorUrl } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10, {
       download: nombreVisible(archivo.nombre),
