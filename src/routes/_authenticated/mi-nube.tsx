@@ -214,6 +214,32 @@ function MiNubePage() {
     }
   }, [participanteId, usuarioId]);
 
+  const [importandoTransferencia, setImportandoTransferencia] = useState(false);
+
+  useEffect(() => {
+    const importTransfer = new URLSearchParams(window.location.search).get("importTransfer");
+    if (!importTransfer || !sesion || importandoTransferencia || !/^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) return;
+    setImportandoTransferencia(true);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("importTransfer");
+    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    void (async () => {
+      try {
+        const { data, error: importError } = await supabase.functions.invoke("aurum-transfer-import", {
+          body: { token: importTransfer },
+        });
+        if (importError) throw importError;
+        if (data?.error) throw new Error(data.error);
+        toast.success(`Se guardaron ${data?.file_count ?? 0} archivo(s) en Mi Nube, en la carpeta ${data?.folder ?? "de la transferencia"}.`);
+        await cargarBiblioteca();
+      } catch (cause) {
+        toast.error(cause instanceof Error ? cause.message : "No se pudieron importar los archivos. Revisa que la transferencia siga disponible.");
+      } finally {
+        setImportandoTransferencia(false);
+      }
+    })();
+  }, [sesion, importandoTransferencia, cargarBiblioteca]);
+
   useEffect(() => {
     void cargarBiblioteca();
   }, [cargarBiblioteca]);
