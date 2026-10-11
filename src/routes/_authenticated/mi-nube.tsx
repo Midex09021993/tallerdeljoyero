@@ -153,6 +153,38 @@ function MiNubePage() {
   const [cargandoCompartidas, setCargandoCompartidas] = useState(false);
   const [anadiendoCatalogo, setAnadiendoCatalogo] = useState<string | null>(null);
 
+  type EstadoNas = "checking" | "online" | "offline" | "misconfigured" | "not_configured" | "unknown";
+  const [estadoNas, setEstadoNas] = useState<EstadoNas>("checking");
+  const [mensajeNas, setMensajeNas] = useState("Comprobando conexión segura…");
+  const comprobarNas = useCallback(async () => {
+    if (!participanteId || !usuarioId) {
+      setEstadoNas("unknown");
+      setMensajeNas("Inicia sesión con un taller activo");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("nextcloud-status", { body: {} });
+      if (error) throw error;
+      const estado = data?.status as EstadoNas | undefined;
+      if (estado && ["online", "offline", "misconfigured", "not_configured", "unknown"].includes(estado)) {
+        setEstadoNas(estado);
+        setMensajeNas(typeof data?.message === "string" ? data.message : "Estado actualizado");
+      } else {
+        setEstadoNas("unknown");
+        setMensajeNas("No se pudo confirmar el estado");
+      }
+    } catch {
+      setEstadoNas("unknown");
+      setMensajeNas("No se pudo consultar el estado");
+    }
+  }, [participanteId, usuarioId]);
+
+  useEffect(() => {
+    void comprobarNas();
+    const intervalo = window.setInterval(() => void comprobarNas(), 60_000);
+    return () => window.clearInterval(intervalo);
+  }, [comprobarNas]);
+
   const cargarBiblioteca = useCallback(async () => {
     if (!participanteId || !usuarioId) {
       setCarpetas([]);
@@ -522,18 +554,15 @@ function MiNubePage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label="Estado del NAS">
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label={`Estado del NAS: ${mensajeNas}`}>
                 <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><Server className="size-5" /></div>
                 <div>
                   <p className="text-sm font-semibold">Mi NAS</p>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="relative flex size-2.5 shrink-0" aria-hidden="true">
-                      <span className="absolute inline-flex size-full rounded-full bg-amber-500/40" />
-                      <span className="relative inline-flex size-2.5 rounded-full bg-amber-500" />
-                    </span>
-                    Pendiente de conexión
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+                    <span className={`relative flex size-2.5 shrink-0 rounded-full ${estadoNas === "online" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.65)]" : estadoNas === "offline" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.55)]" : estadoNas === "misconfigured" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
+                    {estadoNas === "online" ? "Conectado" : estadoNas === "offline" ? "Desconectado" : estadoNas === "misconfigured" ? "Revisar credenciales" : estadoNas === "checking" ? "Comprobando…" : estadoNas === "not_configured" ? "Pendiente de configurar" : "Estado no confirmado"}
                   </p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">Estado real disponible al configurar el acceso seguro</p>
+                  <p className="mt-1 max-w-48 text-[10px] text-muted-foreground">{mensajeNas}</p>
                 </div>
               </div>
             </div>
