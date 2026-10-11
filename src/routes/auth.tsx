@@ -59,6 +59,12 @@ function LoginPage() {
     if (window.location.hash === "#conoce-plataforma") {
       setSeccionPlataforma("ecosistema");
       setMostrarPlataforma(true);
+      return;
+    }
+    if (window.location.hash === "#crear-taller") {
+      window.requestAnimationFrame(() => {
+        document.getElementById("crear-taller")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
     }
   }, []);
 
@@ -242,7 +248,7 @@ function LoginPage() {
 
           </section>
 
-          <div className="mt-5 flex flex-col gap-3 rounded-xl border border-gold/25 bg-gold/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-xl border border-gold/25 bg-gold/[0.04] p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-white">¿Listo para llevar tu taller al siguiente nivel?</p>
               <p className="mt-1 text-xs leading-relaxed text-white/55">Crea tu taller y empieza a organizar tu operación en Aurum Lab.</p>
