@@ -48,6 +48,7 @@ type ArchivoNube = {
   bytes: number;
   actualizado: string | null;
   categoria: Categoria;
+  urlVista?: string | null;
 };
 
 const secciones: Array<{
@@ -143,7 +144,15 @@ function MiNubePage() {
             });
         }),
       );
-      setArchivos(resultados.flat());
+      const archivosPlanos = resultados.flat();
+      const archivosConVistas = await Promise.all(
+        archivosPlanos.map(async (archivo) => {
+          if (archivo.categoria !== "fotos") return archivo;
+          const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
+          return { ...archivo, urlVista: data?.signedUrl ?? null };
+        }),
+      );
+      setArchivos(archivosConVistas);
     } catch (cause) {
       const mensaje = cause instanceof Error ? cause.message : "No se pudo cargar la biblioteca.";
       setError(mensaje);
@@ -164,6 +173,23 @@ function MiNubePage() {
       return coincideSeccion && coincideBusqueda;
     });
   }, [archivos, busqueda, seccionActiva]);
+
+  const proyectos = useMemo(() => {
+    const grupos = new Map<string, ArchivoNube[]>();
+    for (const archivo of archivosFiltrados) {
+      const actuales = grupos.get(archivo.carpeta) ?? [];
+      actuales.push(archivo);
+      grupos.set(archivo.carpeta, actuales);
+    }
+    return Array.from(grupos.entries()).map(([nombre, elementos]) => ({
+      nombre,
+      archivos: elementos,
+      portada: elementos.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null,
+      tiene3dm: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".3dm")),
+      tieneStl: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")),
+      tienePdf: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".pdf")),
+    }));
+  }, [archivosFiltrados]);
 
   const subirSeleccion = async () => {
     if (!participanteId || !usuarioId) {
@@ -386,6 +412,32 @@ function MiNubePage() {
               </button>
             </div>
           </div>
+
+          {proyectos.length > 0 && (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {proyectos.map((proyecto) => (
+                <article key={proyecto.nombre} className="overflow-hidden rounded-2xl border border-border bg-background">
+                  {proyecto.portada ? (
+                    <img src={proyecto.portada} alt={`Portada del proyecto ${proyecto.nombre}`} className="h-44 w-full bg-surface-muted object-contain p-2" loading="lazy" />
+                  ) : (
+                    <div className="grid h-44 place-items-center bg-surface-muted text-muted-foreground">
+                      <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
+                    </div>
+                  )}
+                  <div className="space-y-3 p-4">
+                    <div><h4 className="truncate text-sm font-semibold">{proyecto.nombre}</h4><p className="mt-1 text-xs text-muted-foreground">{proyecto.archivos.length} archivo(s) vinculados</p></div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">Imagen</span>}
+                      {proyecto.tiene3dm && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">3DM</span>}
+                      {proyecto.tieneStl && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">STL</span>}
+                      {proyecto.tienePdf && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">PDF</span>}
+                    </div>
+                    <button type="button" onClick={() => setBusqueda(proyecto.nombre)} className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">Ver archivos del proyecto</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
 
           {carpetas.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
