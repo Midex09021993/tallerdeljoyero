@@ -2,7 +2,9 @@
 -- no solo tipo_participante='organizacion' (valor que excluía talleres registrados con otros tipos).
 begin;
 
-create or replace function public.listar_talleres_para_compartir_mi_nube()
+drop function if exists public.listar_talleres_para_compartir_mi_nube();
+
+create function public.listar_talleres_para_compartir_mi_nube()
 returns table (id uuid, nombre text)
 language sql
 stable
