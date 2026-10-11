@@ -163,7 +163,7 @@ function MiNubePage() {
       const raiz = `${participanteId}/${usuarioId}`;
       const { data: entradas, error: errorRaiz } = await supabase.storage
         .from(BUCKET)
-        .list(raiz, { limit: 100, sortBy: { column: "name", order: "asc" } });
+        .list(raiz, { limit: 1000, sortBy: { column: "name", order: "asc" } });
       if (errorRaiz) throw errorRaiz;
 
       const nombresCarpetas = (entradas ?? [])
@@ -177,7 +177,7 @@ function MiNubePage() {
           const { data, error: errorLista } = await supabase.storage
             .from(BUCKET)
             .list(`${raiz}/${nombreCarpeta}`, {
-              limit: 100,
+              limit: 1000,
               sortBy: { column: "name", order: "desc" },
             });
           if (errorLista) throw errorLista;
@@ -271,7 +271,7 @@ function MiNubePage() {
       })));
       const carpetas = await Promise.all((recibidas ?? []).map(async (share) => {
         const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
-        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 100, sortBy: { column: "name", order: "asc" } });
+        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
         if (listaError) throw listaError;
         // Storage puede devolver metadata nula para objetos heredados; no descartarlos
         // solo por ese motivo. Las entradas que son subcarpetas no tienen extensión
