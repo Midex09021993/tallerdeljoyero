@@ -21,7 +21,7 @@ async function sha256(value: string) {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 function safeName(name: string) {
-  return name.normalize("NFKC").replace(/[\\/\\\\]/g, "_").replace(/[\\u0000-\\u001f]/g, "_").slice(0, 180) || "archivo";
+  return name.normalize("NFKC").replace(/[\/\\]/g, "_").replace(/[\u0000-\u001f]/g, "_").slice(0, 180) || "archivo";
 }
 type FileMeta = { name: string; size: number; type: string; path: string };
 
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
   const authorization = req.headers.get("Authorization") ?? "";
-  const bearer = authorization.match(/^Bearer\\s+(.+)$/i)?.[1];
+  const bearer = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!bearer) return json({ error: "Inicia sesión para guardar archivos en Mi Nube." }, 401);
 
   const url = Deno.env.get("SUPABASE_URL");
