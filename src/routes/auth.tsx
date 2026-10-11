@@ -77,7 +77,7 @@ function LoginPage() {
     if (!sesion) return;
     const importTransfer = new URLSearchParams(window.location.search).get("importTransfer");
     if (importTransfer && /^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) {
-      navigate({ to: "/mi-nube", search: { importTransfer } as never });
+      window.location.assign(`/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`);
       return;
     }
     navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
