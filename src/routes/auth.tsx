@@ -285,12 +285,6 @@ function LoginPage() {
                 <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
               </span>
             </label>
-            {!modoAlta ? (
-              <p className="-mt-3 mb-5 text-[11px] leading-relaxed text-white/45">
-                Si registraste tu taller con un correo, escribe ese correo completo. Las cuentas internas antiguas pueden seguir usando su usuario asignado.
-              </p>
-            ) : null}
-
             <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
               Contraseña
               <span className="relative mt-2 block">
@@ -335,9 +329,6 @@ function LoginPage() {
                   <HelpCircle className="size-3.5" />
                   ¿Olvidaste tu contraseña?
                 </button>
-                <p className="mt-3 text-center text-[11px] leading-relaxed text-white/40">
-                  ¿No recuerdas tu usuario? Si registraste un taller, prueba con el correo de registro. Si eres usuario interno de un taller, solicita al dueño o gerente que confirme tu usuario desde la administración de usuarios.
-                </p>
               </>
             ) : null}
           </form>
