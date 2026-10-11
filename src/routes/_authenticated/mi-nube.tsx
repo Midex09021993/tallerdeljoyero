@@ -204,7 +204,7 @@ function MiNubePage() {
     if (!participanteId || !usuarioId) { setCompartidas([]); setCarpetasRecibidas([]); return; }
     setCargandoCompartidas(true);
     try {
-      const { data: recibidas, error: errorRecibidas } = await supabase
+      const { data: recibidas, error: errorRecibidas } = await (supabase as any)
         .from("mi_nube_compartidas")
         .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
         .eq("destinatario_participante_id", participanteId)
@@ -261,7 +261,7 @@ function MiNubePage() {
     }
     setGuardandoComparticion(true);
     try {
-      const { error } = await supabase.from("mi_nube_compartidas").upsert({
+      const { error } = await (supabase as any).from("mi_nube_compartidas").upsert({
         propietario_participante_id: participanteId,
         propietario_usuario_id: usuarioId,
         carpeta: proyectoParaCompartir,
@@ -595,6 +595,9 @@ function MiNubePage() {
                       {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
+                    <button type="button" onClick={() => void abrirCompartirEcosistema(proyecto)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-xs font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40">
+                      <Share2 className="size-4" /> Compartir con otro taller
+                    </button>
                     <button
                       type="button"
                       disabled={compartiendo !== null}
@@ -693,6 +696,29 @@ function MiNubePage() {
           )}
 
         </section>
+        {proyectoParaCompartir && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-compartir-title">
+            <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Acceso entre talleres</p><h3 id="mi-nube-compartir-title" className="mt-1 text-lg font-semibold">Compartir carpeta</h3><p className="mt-1 text-sm text-muted-foreground">“{proyectoParaCompartir}” seguirá en tu Mi Nube. No se copiarán archivos.</p></div>
+                <button type="button" onClick={() => setProyectoParaCompartir(null)} className="rounded-lg p-2 hover:bg-muted" aria-label="Cerrar"><X className="size-4" /></button>
+              </div>
+              <label className="mt-5 block text-xs font-semibold" htmlFor="mi-nube-taller-destino">Taller receptor</label>
+              {cargandoTalleres ? <p className="mt-2 rounded-xl border border-border p-3 text-sm text-muted-foreground">Cargando talleres del ecosistema…</p> : talleresDisponibles.length === 0 ? <p className="mt-2 rounded-xl border border-border p-3 text-sm text-muted-foreground">No hay otros talleres activos disponibles para compartir.</p> : (
+                <select id="mi-nube-taller-destino" value={tallerDestino} onChange={(event) => setTallerDestino(event.target.value)} className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm">
+                  <option value="">Seleccionar taller…</option>
+                  {talleresDisponibles.map((taller) => <option key={taller.id} value={taller.id}>{taller.nombre}{taller.ciudad ? " · " + taller.ciudad : ""}</option>)}
+                </select>
+              )}
+              <div className="mt-4 rounded-xl bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">El taller receptor podrá abrir y consultar los archivos mientras mantengas el permiso. No podrá modificarlos ni eliminarlos.</div>
+              <div className="mt-4 flex gap-2">
+                <button type="button" onClick={() => setProyectoParaCompartir(null)} className="flex-1 rounded-xl border border-border px-3 py-2.5 text-sm font-semibold">Cancelar</button>
+                <button type="button" disabled={!tallerDestino || guardandoComparticion || cargandoTalleres} onClick={() => void confirmarCompartirEcosistema()} className="flex-1 rounded-xl bg-gold px-3 py-2.5 text-sm font-semibold text-black disabled:opacity-50">{guardandoComparticion ? "Compartiendo…" : "Compartir carpeta"}</button>
+              </div>
+              {compartidas.filter((s) => s.carpeta === proyectoParaCompartir).length > 0 && <div className="mt-5 border-t border-border pt-4"><p className="text-xs font-semibold">Accesos concedidos</p>{compartidas.filter((s) => s.carpeta === proyectoParaCompartir).map((s) => <div key={s.id} className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="truncate">Taller receptor · {s.destinatario_participante_id.slice(0, 8)}…</span><button type="button" onClick={() => void revocarComparticion(s)} className="shrink-0 rounded-lg border border-destructive/40 px-2 py-1.5 font-semibold text-destructive">Revocar acceso</button></div>)}</div>}
+            </div>
+          </div>
+        )}
         {enlaceCompartido && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-enlace-title">
             <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
