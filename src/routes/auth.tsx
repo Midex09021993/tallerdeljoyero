@@ -430,8 +430,6 @@ function LoginPage() {
                       { icon: PackageCheck, title: "Controla la producción", text: "Del pedido a la orden de producción, los trabajos, las piezas y el control de calidad, con responsables y seguimiento por área." },
                       { icon: Sparkles, title: "Visualiza en 3D", text: "AURUM Render (beta) para explorar diseños de joyería con metales, gemas, iluminación y escenas." },
                       { icon: Calculator, title: "Herramientas para joyeros", text: "Yeso / agua, aleaciones de oro, tallas y visualización y peso 3D." },
-                      { icon: Boxes, title: "Mi Nube", text: "Un espacio de trabajo para organizar documentos, imágenes, vídeos y archivos técnicos del taller." },
-                      { icon: ShoppingBag, title: "Catálogo digital", text: "Prepara modelos e imágenes para presentar el trabajo de tu joyería mediante un catálogo público configurado por taller." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
                         <Icon className="size-6 text-gold"/>
