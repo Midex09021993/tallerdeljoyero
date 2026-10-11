@@ -661,30 +661,51 @@ function MiNubePage() {
       toast.error("Espera a que termine la operación en curso.");
       return;
     }
-    if (proyecto.archivos.some((archivo) => archivo.categoria === "videos") && (estadoNas !== "online" || nasPausado)) {
-      toast.error("El NAS debe estar conectado para comprobar y eliminar todas las copias del proyecto. No se eliminó nada.");
+    // La lista visible puede estar filtrada o incompleta. Exigimos que el NAS
+    // responda antes de borrar para descubrir también vídeos no visibles.
+    if (estadoNas !== "online" || nasPausado) {
+      toast.error("Conecta el NAS antes de eliminar un proyecto. Así podemos verificar todos los archivos y evitar copias huérfanas.");
       return;
     }
-    const confirmacion = window.confirm(
-      `¿Eliminar TODO el proyecto “${proyecto.nombre}”, incluidos ${proyecto.archivos.length} archivo(s) de Mi Nube y las copias que existan en el NAS? Esta acción no se puede deshacer.`,
-    );
-    if (!confirmacion) return;
 
     try {
-      const tieneVideos = proyecto.archivos.some((archivo) => archivo.categoria === "videos");
-      let archivosNas: Array<{ name: string; folder: string }> = [];
-      if (tieneVideos) {
-        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "list", participantId: participanteId },
+      const raizProyecto = `${participanteId}/${usuarioId}/${proyecto.nombre}`;
+      const rutasWeb: string[] = [];
+      // Storage admite paginación; no limitar la eliminación a los archivos
+      // que estén cargados en pantalla o que sobrevivan a los filtros.
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await supabase.storage.from(BUCKET).list(raizProyecto, {
+          limit: 1000,
+          offset,
+          sortBy: { column: "name", order: "asc" },
         });
-        if (error || data?.error || !Array.isArray(data?.files)) {
-          toast.error("No se pudo verificar el contenido del NAS. No se eliminó ningún archivo.");
+        if (error) {
+          toast.error("No se pudo verificar todo el contenido web. No se eliminó ningún archivo.");
           return;
         }
-        archivosNas = data.files.filter((archivo: { name: string; folder: string }) => archivo.folder === proyecto.nombre);
+        const entradas = data ?? [];
+        rutasWeb.push(...entradas
+          .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
+          .map((entrada) => `${raizProyecto}/${entrada.name}`));
+        if (entradas.length < 1000) break;
       }
 
-      // Eliminar primero del NAS. Si una operación falla, no se toca Supabase.
+      const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
+        body: { action: "list", participantId: participanteId },
+      });
+      if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
+        toast.error("No se pudo verificar el contenido completo del NAS. No se eliminó ningún archivo.");
+        return;
+      }
+      const archivosNas = (nasData.files as Array<{ name: string; folder: string }>)
+        .filter((archivo) => archivo.folder === proyecto.nombre);
+
+      const confirmacion = window.confirm(
+        `¿Eliminar TODO el proyecto “${proyecto.nombre}”, incluidos ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS? Esta acción no se puede deshacer.`,
+      );
+      if (!confirmacion) return;
+
+      // Eliminar primero el NAS. Si falla una operación, conservamos Storage.
       for (const archivo of archivosNas) {
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
           body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId: participanteId },
@@ -696,21 +717,21 @@ function MiNubePage() {
         }
       }
 
-      const rutasWeb = proyecto.archivos
-        .filter((archivo) => archivo.origen === "supabase")
-        .map((archivo) => archivo.ruta);
       if (rutasWeb.length > 0) {
-        const { error } = await supabase.storage.from(BUCKET).remove(rutasWeb);
-        if (error) {
-          toast.error("Se eliminaron las copias del NAS, pero no se pudieron borrar todos los archivos web: " + error.message);
-          await cargarBiblioteca();
-          return;
+        // Storage remove acepta lotes; dividir evita exceder límites de petición.
+        for (let i = 0; i < rutasWeb.length; i += 100) {
+          const { error } = await supabase.storage.from(BUCKET).remove(rutasWeb.slice(i, i + 100));
+          if (error) {
+            toast.error("El NAS se limpió, pero quedaron archivos web sin eliminar. Detalle: " + error.message);
+            await cargarBiblioteca();
+            return;
+          }
         }
       }
 
       setProyectoAbierto(null);
       setModoEdicion(null);
-      toast.success(`Proyecto “${proyecto.nombre}” eliminado de Mi Nube y del NAS.`);
+      toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS.`);
       await cargarBiblioteca();
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudo eliminar el proyecto completo.");
