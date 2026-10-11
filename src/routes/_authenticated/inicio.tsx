@@ -297,7 +297,7 @@ function Inicio() {
     >
       <div className="space-y-6">
         <section className="rounded-3xl border border-gold/20 bg-card shadow-card">
-          <div className="flex flex-col gap-4 border-b border-border p-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+          <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:p-6">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="grid size-9 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold-deep">
