@@ -89,7 +89,7 @@ function MiNubePage() {
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
-  const [carpeta, setCarpeta] = useState("Diseños");
+  const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
@@ -180,7 +180,7 @@ function MiNubePage() {
     }
     const carpetaSegura = nombreSeguro(carpeta.trim()).replace(/^\.+|\.+$/g, "");
     if (!carpetaSegura) {
-      toast.error("Escribe un nombre de carpeta válido.");
+      toast.error("Ponle un nombre al proyecto para guardar juntos todos sus archivos.");
       return;
     }
 
@@ -286,8 +286,8 @@ function MiNubePage() {
         <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h3 className="font-semibold">Subir archivos</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Selecciona varios archivos y guárdalos juntos en una carpeta.</p>
+              <h3 className="font-semibold">Subir un proyecto completo</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Agrupa la imagen, el archivo 3DM, el STL y el PDF del mismo diseño en una sola carpeta.</p>
             </div>
             <UploadCloud className="size-6 shrink-0 text-gold" />
           </div>
@@ -303,20 +303,20 @@ function MiNubePage() {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
               <div className="space-y-3">
                 <label className="block text-xs font-semibold">
-                  Carpeta
+                  Nombre del proyecto / carpeta
                   <input
                     value={carpeta}
                     onChange={(event) => setCarpeta(event.target.value)}
                     maxLength={60}
-                    placeholder="Ej. Anillo esmeralda"
+                    placeholder="Ej. Anillo dos corazones"
                     className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-normal outline-none focus-visible:ring-2 focus-visible:ring-gold"
                     disabled={subiendo}
                   />
                 </label>
                 <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-center transition hover:bg-gold/10">
                   <UploadCloud className="size-7 text-gold" />
-                  <span className="mt-2 text-sm font-semibold">Elegir archivos</span>
-                  <span className="mt-1 text-xs text-muted-foreground">Imágenes, PDF, STL, 3DM y más · hasta 30 por lote</span>
+                  <span className="mt-2 text-sm font-semibold">Elegir todos los archivos del proyecto</span>
+                  <span className="mt-1 text-xs text-muted-foreground">Selecciona juntos la imagen, el 3DM, el STL y el PDF · hasta 30 archivos</span>
                   <input
                     id="mi-nube-archivos"
                     type="file"
@@ -353,7 +353,8 @@ function MiNubePage() {
               <div className="rounded-xl border border-border bg-background p-4">
                 <p className="text-sm font-semibold">Cómo se guardan</p>
                 <ul className="mt-3 space-y-3 text-xs leading-5 text-muted-foreground">
-                  <li className="flex gap-2"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" /> Los archivos quedan en una carpeta con el nombre que elijas.</li>
+                  <li className="flex gap-2"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" /> Todos los archivos seleccionados se guardan juntos bajo el nombre de este proyecto.</li>
+                  <li className="flex gap-2"><Box className="mt-0.5 size-4 shrink-0 text-gold" /> Ejemplo: “Anillo dos corazones” contiene su imagen, 3DM, STL y PDF.</li>
                   <li className="flex gap-2"><LockKeyhole className="mt-0.5 size-4 shrink-0 text-emerald-600" /> El bucket es privado; no se publican enlaces permanentes.</li>
                   <li className="flex gap-2"><Box className="mt-0.5 size-4 shrink-0 text-gold" /> STL y 3DM se conservan como archivos originales; la apertura en las herramientas se comprobará en la siguiente prueba.</li>
                 </ul>
@@ -419,7 +420,7 @@ function MiNubePage() {
             <div className="mt-4 rounded-xl border border-dashed border-border px-4 py-10 text-center">
               <Folder className="mx-auto size-7 text-muted-foreground" />
               <p className="mt-3 text-sm font-semibold">{error ? "No se pudo leer el almacenamiento" : "Tu biblioteca está vacía"}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{error ? "Revisa que Lovable haya aplicado la migración de Mi Nube." : "Selecciona la imagen, el STL y el 3DM para hacer la primera prueba."}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{error ? "Revisa que Lovable haya aplicado la migración de Mi Nube." : "Crea el nombre del proyecto y selecciona juntos su imagen, archivo 3DM, STL y PDF."}</p>
             </div>
           )}
         </section>
