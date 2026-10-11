@@ -456,33 +456,6 @@ function MiNubePage() {
             </div>
           )}
 
-          {cargando ? (
-            <div className="flex justify-center py-12 text-sm text-muted-foreground"><LoaderCircle className="mr-2 size-4 animate-spin" /> Cargando archivos…</div>
-          ) : archivosFiltrados.length > 0 ? (
-            <div className="mt-4 divide-y divide-border rounded-xl border border-border">
-              {archivosFiltrados.map((archivo) => {
-                const Icono = archivo.categoria === "fotos" ? ImageIcon : archivo.categoria === "videos" ? Video : archivo.categoria === "documentos" ? FileText : archivo.categoria === "modelos-3d" ? Box : File;
-                return (
-                  <div key={archivo.ruta} className="flex items-center gap-3 p-3 sm:p-4">
-                    <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-muted text-muted-foreground"><Icono className="size-5" /></div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{nombreVisible(archivo.nombre)}</p>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{archivo.carpeta} · {etiquetaTamano(archivo.bytes)}</p>
-                    </div>
-                    <button type="button" onClick={() => void abrirArchivo(archivo)} className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:border-gold/50" aria-label={`Descargar ${nombreVisible(archivo.nombre)}`}>
-                      <ArrowDownToLine className="size-4" /><span className="hidden sm:inline">Abrir / descargar</span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="mt-4 rounded-xl border border-dashed border-border px-4 py-10 text-center">
-              <Folder className="mx-auto size-7 text-muted-foreground" />
-              <p className="mt-3 text-sm font-semibold">{error ? "No se pudo leer el almacenamiento" : "Tu biblioteca está vacía"}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{error ? "Revisa que Lovable haya aplicado la migración de Mi Nube." : "Crea el nombre del proyecto y selecciona juntos su imagen, archivo 3DM, STL y PDF."}</p>
-            </div>
-          )}
         </section>
         <p className="flex items-start gap-2 px-1 text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 size-3.5 shrink-0" /> Los enlaces de apertura duran 10 minutos. Los archivos no se hacen públicos.</p>
       </div>
