@@ -747,20 +747,43 @@ function MiNubePage() {
                   if (a.categoria === "documentos") return "PDF";
                   return "Archivo";
                 }))];
-                return <article key={recibida.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
-                  <div className="relative flex h-36 items-center justify-center overflow-hidden bg-muted/50">
-                    {recibida.portada ? <img src={recibida.portada} alt={recibida.nombre} className="h-full w-full object-contain p-2" /> : <div className="flex flex-col items-center gap-2 text-muted-foreground"><Folder className="size-9" /><span className="text-xs">Carpeta compartida</span></div>}
-                    <span className="absolute right-3 top-3 rounded-full border border-border/70 bg-background/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider">Compartida</span>
-                  </div>
+                return <article key={recibida.id} className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
+                  {recibida.portada ? (
+                    <img src={recibida.portada} alt={`Portada del proyecto ${recibida.nombre}`} className="h-36 w-full bg-[#f5f4f1] object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
+                  ) : (
+                    <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
+                      <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
+                    </div>
+                  )}
                   <div className="space-y-3 p-4">
-                    <div><h4 className="truncate text-sm font-semibold">{recibida.nombre}</h4><p className="mt-1 text-xs text-muted-foreground">{recibida.archivos.length} archivos · Compartida por {recibida.propietarioNombre}</p></div>
-                    <div className="flex flex-wrap gap-1.5">{tipos.map((tipo) => <span key={tipo} className="rounded-full bg-muted px-2.5 py-1 text-[10px] text-muted-foreground">{tipo}</span>)}</div>
-                    <button type="button" onClick={() => setProyectoAbierto(proyectoAbierto === "compartida:" + recibida.id ? null : "compartida:" + recibida.id)} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs font-semibold transition-colors hover:border-gold/50">{proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}</button>
-                    {proyectoAbierto === "compartida:" + recibida.id && <div className="space-y-2 border-t border-border pt-3">{recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl bg-muted/35 p-3"><div className="flex min-w-0 items-start gap-2"><div className="grid size-8 shrink-0 place-items-center rounded-lg bg-background text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div><div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p></div></div><div className="mt-2 flex flex-wrap gap-1.5">
-                      {archivo.nombre.toLowerCase().endsWith(".stl") && <button type="button" onClick={async () => { const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600); if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; } const destino = new URL("/herramientas", window.location.origin); destino.searchParams.set("archivoUrl", data.signedUrl); destino.searchParams.set("archivoNombre", nombreVisible(archivo.nombre)); destino.searchParams.set("herramienta", "peso"); window.location.assign(destino.toString()); }} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10">Abrir en Visualizador y peso 3D</button>}
-                      {archivo.nombre.toLowerCase().endsWith(".3dm") && <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10">Abrir en Aurum Render</button>}
-                      <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium hover:border-gold/50">Abrir / descargar</button>
-                    </div></div>)}</div>}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{recibida.nombre}</h4>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{recibida.archivos.length} archivos <span className="px-1 text-border">·</span> Compartida por {recibida.propietarioNombre}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Compartida</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {tipos.map((tipo) => <span key={tipo} className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">{tipo}</span>)}
+                    </div>
+                    <button type="button" onClick={() => setProyectoAbierto(proyectoAbierto === "compartida:" + recibida.id ? null : "compartida:" + recibida.id)} className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40">{proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}</button>
+                    {proyectoAbierto === "compartida:" + recibida.id && (
+                      <div className="space-y-2 border-t border-border pt-3">
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
+                            <div className="flex min-w-0 items-start gap-2.5">
+                              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div>
+                              <div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p></div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {archivo.nombre.toLowerCase().endsWith(".stl") && <button type="button" onClick={async () => { const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600); if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; } const destino = new URL("/herramientas", window.location.origin); destino.searchParams.set("archivoUrl", data.signedUrl); destino.searchParams.set("archivoNombre", nombreVisible(archivo.nombre)); destino.searchParams.set("herramienta", "peso"); window.location.assign(destino.toString()); }} className="rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-2.5 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17]">Abrir en Visualizador y peso 3D</button>}
+                              {archivo.nombre.toLowerCase().endsWith(".3dm") && <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-2.5 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17]">Abrir en Aurum Render</button>}
+                              <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border/80 bg-background px-2.5 py-2 text-[11px] font-medium hover:border-gold/45">Abrir / descargar</button>
+                            </div>
+                          </div>)}
+                        </div>
+                      </div>
+                    )}
                     <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
                   </div>
                 </article>;
