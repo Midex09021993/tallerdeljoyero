@@ -153,6 +153,18 @@ function Inicio() {
     const atencion = [...activos]
       .filter((p) => esUrgente(p) || pedidoEnRecepcion(p.estado))
       .sort((a, b) => {
+        // Prioridad operativa: vencidos, entrega hoy, mañana y luego recepción.
+        const prioridad = (p: PedidoSelector) => {
+          const dias = diasHastaEntrega(p);
+          if (dias !== null && dias < 0) return 0;
+          if (dias === 0) return 1;
+          if (dias === 1) return 2;
+          if (pedidoEnRecepcion(p.estado)) return 3;
+          return 4;
+        };
+        const pa = prioridad(a);
+        const pb = prioridad(b);
+        if (pa !== pb) return pa - pb;
         const da = diasHastaEntrega(a);
         const db = diasHastaEntrega(b);
         if (da === null && db === null) return 0;
@@ -160,7 +172,8 @@ function Inicio() {
         if (db === null) return -1;
         return da - db;
       });
-    return { activos, produccion, recepcion, vencidos, hoy, urgentes, atencion };
+    const sinFecha = activos.filter((p) => diasHastaEntrega(p) === null);
+    return { activos, produccion, recepcion, vencidos, hoy, urgentes, atencion, sinFecha };
   }, [pedidosSede]);
 
   const cargaAreas = useMemo(() => {
@@ -332,6 +345,50 @@ function Inicio() {
         </section>
 
         <section className="rounded-2xl border border-gold/20 bg-card"><header className="flex items-center justify-between border-b p-4"><h2 className="font-semibold">🎂 Próximos cumpleaños</h2><Link to="/clientes" className="text-xs font-semibold text-gold">Ver clientes <ChevronRight className="inline size-3"/></Link></header>{cumpleanos.length?cumpleanos.map(c=><div key={c.id} className="flex items-center gap-3 border-b p-3"><Gift className="size-4 text-gold"/><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.fecha.toLocaleDateString("es-PE",{day:"2-digit",month:"short"})}</span></span><span className="text-xs font-semibold text-gold">{c.dias===0?"Hoy":`En ${c.dias} días`}</span></div>):<p className="p-4 text-sm text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>}</section>
+        <section className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card sm:p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Enfoque del día</p>
+              <h2 className="mt-1 text-base font-semibold">¿Qué conviene resolver primero?</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">{resumen.vencidos.length + resumen.hoy.length + resumen.recepcion.length} asunto(s) prioritario(s)</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-danger/40 hover:bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold">Entregas vencidas</span>
+                <span className={resumen.vencidos.length ? "rounded-full bg-danger/10 px-2 py-1 text-xs font-bold text-danger" : "rounded-full bg-muted px-2 py-1 text-xs font-semibold"}>{resumen.vencidos.length}</span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.vencidos.length ? "Revisa fechas y actualiza el compromiso con el cliente." : "No hay pedidos vencidos."}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Revisar pedidos <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
+            </Link>
+            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold">Entrega hoy</span>
+                <span className={resumen.hoy.length ? "rounded-full bg-gold/15 px-2 py-1 text-xs font-bold text-gold-deep" : "rounded-full bg-muted px-2 py-1 text-xs font-semibold"}>{resumen.hoy.length}</span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.hoy.length ? "Confirma el avance y prepara la entrega." : "No hay entregas programadas para hoy."}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Ver agenda <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
+            </Link>
+            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold">En recepción</span>
+                <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">{resumen.recepcion.length}</span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.recepcion.length ? "Comprueba lo recibido y define el siguiente paso." : "No hay pedidos pendientes de recepción."}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Gestionar recepción <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
+            </Link>
+            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold">Sin fecha de entrega</span>
+                <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">{resumen.sinFecha.length}</span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.sinFecha.length ? "Completa las fechas para detectar riesgos a tiempo." : "Todos los pedidos activos tienen fecha."}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Completar planificación <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
+            </Link>
+          </div>
+        </section>
+
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatCard etiqueta="Pedidos activos" valor={String(resumen.activos.length)} />
           <StatCard etiqueta="En producción" valor={String(resumen.produccion.length)} />
