@@ -24,11 +24,13 @@ jobs:
       - name: TypeScript
         run: npm run typecheck
 
-      - name: Lint
-        run: npm run lint
-
+      # Build before lint so repository-wide formatting failures do not hide
+      # whether the application itself compiles successfully.
       - name: Build
         run: npm run build
+
+      - name: Lint
+        run: npm run lint
 
   edge-functions:
     runs-on: ubuntu-latest
