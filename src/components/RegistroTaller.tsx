@@ -156,9 +156,11 @@ export function RegistroTaller({ className = "" }: Props) {
                   </label>
                 </div>
 
-                <p className="text-[11px] leading-relaxed text-white/40">
-                  Usarás este correo para entrar a Aurum Lab. No necesitas crear primero una sede, participante ni usuario por separado.
-                </p>
+                <div className="rounded-lg border border-white/10 bg-white/[0.025] p-3 text-[11px] leading-relaxed text-white/55">
+                  <p>Este registro crea tu taller y tu primera cuenta con rol de <span className="font-semibold text-gold">gerente</span>.</p>
+                  <p className="mt-1.5">Después de ingresar, podrás crear usuarios para tu equipo y asignarles sus permisos.</p>
+                  <p className="mt-1.5">El correo registrado quedará vinculado a tu cuenta para identificarte y recibir comunicaciones de acceso.</p>
+                </div>
 
                 {error ? <p role="alert" className="text-xs text-danger">{error}</p> : null}
 
