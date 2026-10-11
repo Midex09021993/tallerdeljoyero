@@ -1794,6 +1794,54 @@ export type Database = {
           },
         ]
       }
+      mi_nube_compartidas: {
+        Row: {
+          carpeta: string
+          creado_por: string
+          created_at: string
+          destinatario_participante_id: string
+          id: string
+          propietario_participante_id: string
+          propietario_usuario_id: string
+          revoked_at: string | null
+        }
+        Insert: {
+          carpeta: string
+          creado_por?: string
+          created_at?: string
+          destinatario_participante_id: string
+          id?: string
+          propietario_participante_id: string
+          propietario_usuario_id: string
+          revoked_at?: string | null
+        }
+        Update: {
+          carpeta?: string
+          creado_por?: string
+          created_at?: string
+          destinatario_participante_id?: string
+          id?: string
+          propietario_participante_id?: string
+          propietario_usuario_id?: string
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mi_nube_compartidas_destinatario_participante_id_fkey"
+            columns: ["destinatario_participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mi_nube_compartidas_propietario_participante_id_fkey"
+            columns: ["propietario_participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orden_produccion_costos: {
         Row: {
           cantidad: number
@@ -3713,6 +3761,13 @@ export type Database = {
           prioridad: string
           referencia_pedido: string
           titulo: string
+        }[]
+      }
+      listar_talleres_para_compartir_mi_nube: {
+        Args: never
+        Returns: {
+          id: string
+          nombre: string
         }[]
       }
       listar_trabajos_operario: {
