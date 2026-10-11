@@ -153,6 +153,28 @@ function TransferDownloadPage() {
                   <p className="mt-3 text-xs text-white/35">Si no finalizas, se eliminarán automáticamente en unas horas.</p>
                 </>
               )}
+              {links.length > 0 && (
+                <div className="mt-8 rounded-2xl border border-[#d7ad48]/25 bg-gradient-to-br from-[#d7ad48]/[.12] to-white/[.025] p-5 text-left sm:p-6">
+                  <div className="flex items-start gap-3">
+                    <div className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#d7ad48]/25 bg-[#d7ad48]/10 text-[#d7ad48]">
+                      <Sparkles className="size-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d7ad48]">Tu espacio de trabajo</p>
+                      <h3 className="mt-2 text-xl font-semibold leading-snug text-white">¿Y si tus diseños estuvieran siempre a tu alcance?</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-white/60">
+                        Guarda y organiza tus fotos, modelos 3D, archivos STL, 3DM y documentos en Mi Nube para volver a encontrarlos cuando los necesites.
+                      </p>
+                    </div>
+                  </div>
+                  <a href="/auth#conoce-plataforma" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
+                    Conocer Mi Nube y solicitar acceso <ArrowRight className="size-4" />
+                  </a>
+                  <p className="mt-3 text-[11px] leading-relaxed text-white/35">
+                    Estos archivos no se guardan automáticamente en Mi Nube. Primero descarga tu transferencia; después podrás conocer las opciones de acceso a la plataforma.
+                  </p>
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/transfer" className="mt-7 inline-flex items-center gap-2 rounded-xl border border-[#d7ad48]/30 px-5 py-3 text-sm font-semibold text-[#d7ad48]">
                   Crear mi propia transferencia
