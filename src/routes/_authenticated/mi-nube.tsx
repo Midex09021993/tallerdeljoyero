@@ -456,15 +456,6 @@ function MiNubePage() {
             </div>
           )}
 
-          {carpetas.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" onClick={() => setBusqueda("")} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:border-gold/50"><Folder className="size-3.5" /> Todas las carpetas</button>
-              {carpetas.map((nombre) => (
-                <button key={nombre} type="button" onClick={() => setBusqueda(nombre)} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:border-gold/50"><Folder className="size-3.5" /> {nombre}</button>
-              ))}
-            </div>
-          )}
-
           {cargando ? (
             <div className="flex justify-center py-12 text-sm text-muted-foreground"><LoaderCircle className="mr-2 size-4 animate-spin" /> Cargando archivos…</div>
           ) : archivosFiltrados.length > 0 ? (
