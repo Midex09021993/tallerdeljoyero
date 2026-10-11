@@ -329,7 +329,7 @@ function MiNubePage() {
         ...s,
         destinatario_nombre: nombresDestinatarios.get(s.destinatario_participante_id) ?? "Taller del ecosistema",
       })));
-      const carpetas = await Promise.all((recibidas ?? []).map(async (share) => {
+      const carpetas = await Promise.all(((recibidas ?? []) as CarpetaCompartida[]).map(async (share) => {
         const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
         const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
         if (listaError) throw listaError;
