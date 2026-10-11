@@ -231,9 +231,23 @@ function MiNubePage() {
         setEstadoNas("unknown");
         setMensajeNas("No se pudo confirmar el estado");
       }
-    } catch {
+    } catch (cause) {
       setEstadoNas("unknown");
-      setMensajeNas("No se pudo consultar el estado");
+      let detalle = cause instanceof Error ? cause.message : "Error inesperado";
+      let codigoHttp: number | null = null;
+      if (cause && typeof cause === "object" && "context" in cause && cause.context instanceof Response) {
+        codigoHttp = cause.context.status;
+        try {
+          const respuesta = await cause.context.clone().json() as { error?: unknown; message?: unknown };
+          const mensajeServidor = typeof respuesta.message === "string" ? respuesta.message : typeof respuesta.error === "string" ? respuesta.error : null;
+          if (mensajeServidor) detalle = mensajeServidor;
+        } catch {
+          // La respuesta puede no ser JSON; conservamos el diagnóstico original.
+        }
+      }
+      const detalleSeguro = detalle.replace(/https?:\/\/\S+/gi, "[servidor]").replace(/[\r\n]+/g, " ").slice(0, 140);
+      setMensajeNas(`No se pudo consultar el estado${codigoHttp ? ` (HTTP ${codigoHttp})` : ""}: ${detalleSeguro}`);
+      console.warn("[Mi Nube] Falló la comprobación de Mi NAS.", { status: codigoHttp, error: detalleSeguro });
     }
   }, [participanteId, usuarioId]);
 
@@ -941,19 +955,22 @@ function MiNubePage() {
                     {nasPausado ? "Conexión pausada" : estadoNas === "online" ? "Conectado" : estadoNas === "offline" ? "Desconectado" : estadoNas === "misconfigured" ? "Revisar credenciales" : estadoNas === "checking" ? "Comprobando…" : estadoNas === "not_configured" ? "Pendiente de configurar" : "Estado no confirmado"}
                   </p>
                   <p className="mt-1 max-w-48 text-[10px] text-muted-foreground">{nasPausado ? "Los vídeos del NAS quedan ocultos y no se pueden subir nuevos." : mensajeNas}</p>
-                  <button type="button" disabled={subiendo || estadoNas === "checking" || (!nasPausado && estadoNas !== "online")} onClick={() => {
+                  <button type="button" disabled={subiendo || estadoNas === "checking"} onClick={() => {
                     if (nasPausado) {
                       try { window.localStorage.setItem("mi-nube-nas-pausado", "false"); } catch { /* pausa solo en memoria */ }
                       setNasPausado(false);
+                      toast.info("Revisando la conexión con el NAS…");
                       void comprobarNas();
-                      toast.success("Conexión con el NAS reactivada en Mi Nube.");
+                    } else if (estadoNas !== "online") {
+                      toast.info("Reintentando la conexión con el NAS…");
+                      void comprobarNas();
                     } else {
                       try { window.localStorage.setItem("mi-nube-nas-pausado", "true"); } catch { /* pausa solo en memoria */ }
                       setNasPausado(true);
                       toast.success("Conexión con el NAS pausada en Mi Nube. El equipo sigue encendido.");
                     }
                   }} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-semibold hover:border-gold/50 disabled:cursor-not-allowed disabled:opacity-50">
-                    <Power className="size-3" /> {nasPausado ? "Reconectar" : "Desconectar"}
+                    <Power className="size-3" /> {nasPausado ? "Reconectar" : estadoNas === "online" ? "Desconectar" : "Reintentar"}
                   </button>
                 </div>
               </div>
