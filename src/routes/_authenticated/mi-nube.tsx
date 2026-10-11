@@ -652,6 +652,72 @@ function MiNubePage() {
       toast.error(cause instanceof Error ? cause.message : "No se pudo completar la eliminación.");
     }
   };
+  const eliminarProyectoCompleto = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
+    if (!participanteId || !usuarioId) {
+      toast.error("No se encontró tu taller activo.");
+      return;
+    }
+    if (subiendo || compartiendo !== null) {
+      toast.error("Espera a que termine la operación en curso.");
+      return;
+    }
+    if (proyecto.archivos.some((archivo) => archivo.categoria === "videos") && (estadoNas !== "online" || nasPausado)) {
+      toast.error("El NAS debe estar conectado para comprobar y eliminar todas las copias del proyecto. No se eliminó nada.");
+      return;
+    }
+    const confirmacion = window.confirm(
+      `¿Eliminar TODO el proyecto “${proyecto.nombre}”, incluidos ${proyecto.archivos.length} archivo(s) de Mi Nube y las copias que existan en el NAS? Esta acción no se puede deshacer.`,
+    );
+    if (!confirmacion) return;
+
+    try {
+      const tieneVideos = proyecto.archivos.some((archivo) => archivo.categoria === "videos");
+      let archivosNas: Array<{ name: string; folder: string }> = [];
+      if (tieneVideos) {
+        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "list", participantId },
+        });
+        if (error || data?.error || !Array.isArray(data?.files)) {
+          toast.error("No se pudo verificar el contenido del NAS. No se eliminó ningún archivo.");
+          return;
+        }
+        archivosNas = data.files.filter((archivo: { name: string; folder: string }) => archivo.folder === proyecto.nombre);
+      }
+
+      // Eliminar primero del NAS. Si una operación falla, no se toca Supabase.
+      for (const archivo of archivosNas) {
+        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId },
+        });
+        if (error || data?.error || data?.ok !== true) {
+          toast.error(data?.error ?? error?.message ?? `No se pudo eliminar “${archivo.name}” del NAS. Los archivos web se conservaron.`);
+          await cargarBiblioteca();
+          return;
+        }
+      }
+
+      const rutasWeb = proyecto.archivos
+        .filter((archivo) => archivo.origen === "supabase")
+        .map((archivo) => archivo.ruta);
+      if (rutasWeb.length > 0) {
+        const { error } = await supabase.storage.from(BUCKET).remove(rutasWeb);
+        if (error) {
+          toast.error("Se eliminaron las copias del NAS, pero no se pudieron borrar todos los archivos web: " + error.message);
+          await cargarBiblioteca();
+          return;
+        }
+      }
+
+      setProyectoAbierto(null);
+      setModoEdicion(null);
+      toast.success(`Proyecto “${proyecto.nombre}” eliminado de Mi Nube y del NAS.`);
+      await cargarBiblioteca();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo eliminar el proyecto completo.");
+      await cargarBiblioteca();
+    }
+  };
+
   const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
     if (proyecto.archivos.some((archivo) => archivo.origen === "nas")) {
       toast.error("Los vídeos guardados en el NAS aún no están habilitados para AURUM Transfer.");
@@ -987,6 +1053,9 @@ function MiNubePage() {
                     </button>
                     <button type="button" onClick={() => { setProyectoAbierto(proyecto.nombre); setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setCarpetaDestinoEdicion(null); setSeleccionados([]); }} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/35 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5">
                       <X className="size-3.5 shrink-0" /> {modoEdicion === proyecto.nombre ? "Cerrar gestión de archivos" : "Gestionar / eliminar archivos"}
+                    </button>
+                    <button type="button" onClick={() => void eliminarProyectoCompleto(proyecto)} disabled={subiendo || compartiendo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/50 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50">
+                      <X className="size-3.5 shrink-0" /> Eliminar todo el proyecto
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
