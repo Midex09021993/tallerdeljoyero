@@ -45,6 +45,9 @@ const BUCKET = "mi-nube";
 const MAX_FILES_PER_BATCH = 30;
 
 type Categoria = "fotos" | "videos" | "documentos" | "modelos-3d" | "otros";
+type CarpetaCompartida = { id: string; propietario_participante_id: string; propietario_usuario_id: string; carpeta: string; destinatario_participante_id: string; created_at: string; destinatario_nombre?: string };
+type TallerCompartir = { id: string; nombre: string; ciudad: string | null };
+type CarpetaRecibida = { id: string; nombre: string; propietarioNombre: string; archivos: ArchivoNube[] };
 type ArchivoNube = {
   nombre: string;
   ruta: string;
@@ -122,6 +125,14 @@ function MiNubePage() {
   const [subiendo, setSubiendo] = useState(false);
   const [progreso, setProgreso] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [proyectoParaCompartir, setProyectoParaCompartir] = useState<string | null>(null);
+  const [talleresDisponibles, setTalleresDisponibles] = useState<TallerCompartir[]>([]);
+  const [tallerDestino, setTallerDestino] = useState("");
+  const [cargandoTalleres, setCargandoTalleres] = useState(false);
+  const [guardandoComparticion, setGuardandoComparticion] = useState(false);
+  const [compartidas, setCompartidas] = useState<CarpetaCompartida[]>([]);
+  const [carpetasRecibidas, setCarpetasRecibidas] = useState<CarpetaRecibida[]>([]);
+  const [cargandoCompartidas, setCargandoCompartidas] = useState(false);
 
   const cargarBiblioteca = useCallback(async () => {
     if (!participanteId || !usuarioId) {
@@ -188,6 +199,91 @@ function MiNubePage() {
   useEffect(() => {
     void cargarBiblioteca();
   }, [cargarBiblioteca]);
+
+  const cargarCompartidas = useCallback(async () => {
+    if (!participanteId || !usuarioId) { setCompartidas([]); setCarpetasRecibidas([]); return; }
+    setCargandoCompartidas(true);
+    try {
+      const { data: recibidas, error: errorRecibidas } = await supabase
+        .from("mi_nube_compartidas")
+        .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
+        .eq("destinatario_participante_id", participanteId)
+        .is("revoked_at", null);
+      if (errorRecibidas) throw errorRecibidas;
+      const { data: enviadas, error: errorEnviadas } = await supabase
+        .from("mi_nube_compartidas")
+        .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
+        .eq("propietario_usuario_id", usuarioId)
+        .is("revoked_at", null);
+      if (errorEnviadas) throw errorEnviadas;
+      setCompartidas((enviadas ?? []) as CarpetaCompartida[]);
+      const carpetas = await Promise.all((recibidas ?? []).map(async (share) => {
+        const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
+        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 100, sortBy: { column: "name", order: "asc" } });
+        if (listaError) throw listaError;
+        const base = (entradas ?? []).filter((e) => Boolean(e.id || e.metadata)).map((e): ArchivoNube => ({
+          nombre: e.name, ruta: `${ruta}/${e.name}`, carpeta: share.carpeta,
+          bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
+          categoria: clasificarArchivo(nombreVisible(e.name)),
+        }));
+        const conVistas = await Promise.all(base.map(async (archivo) => {
+          if (archivo.categoria !== "fotos") return archivo;
+          const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+          return { ...archivo, urlVista: data?.signedUrl ?? null };
+        }));
+        const { data: propietario } = await supabase.from("ecosistema_participantes").select("nombre").eq("id", share.propietario_participante_id).maybeSingle();
+        return { id: share.id, nombre: share.carpeta, propietarioNombre: propietario?.nombre ?? "Taller del ecosistema", archivos: conVistas };
+      }));
+      setCarpetasRecibidas(carpetas);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar las carpetas compartidas.");
+    } finally { setCargandoCompartidas(false); }
+  }, [participanteId, usuarioId]);
+
+  useEffect(() => { void cargarCompartidas(); }, [cargarCompartidas]);
+
+  const abrirCompartirEcosistema = async (proyecto: { nombre: string }) => {
+    setProyectoParaCompartir(proyecto.nombre);
+    setTallerDestino("");
+    setCargandoTalleres(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("listar_talleres_para_compartir_mi_nube");
+      if (error) throw error;
+      setTalleresDisponibles((data ?? []) as TallerCompartir[]);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo cargar el directorio de talleres.");
+    } finally { setCargandoTalleres(false); }
+  };
+
+  const confirmarCompartirEcosistema = async () => {
+    if (!participanteId || !usuarioId || !proyectoParaCompartir || !tallerDestino) {
+      toast.error("Selecciona el taller que recibirá la carpeta."); return;
+    }
+    setGuardandoComparticion(true);
+    try {
+      const { error } = await supabase.from("mi_nube_compartidas").upsert({
+        propietario_participante_id: participanteId,
+        propietario_usuario_id: usuarioId,
+        carpeta: proyectoParaCompartir,
+        destinatario_participante_id: tallerDestino,
+        creado_por: usuarioId,
+        revoked_at: null,
+      }, { onConflict: "propietario_usuario_id,propietario_participante_id,carpeta,destinatario_participante_id" });
+      if (error) throw error;
+      toast.success("Carpeta compartida sin duplicar archivos.");
+      setProyectoParaCompartir(null);
+      await cargarCompartidas();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo compartir la carpeta.");
+    } finally { setGuardandoComparticion(false); }
+  };
+
+  const revocarComparticion = async (share: CarpetaCompartida) => {
+    const { error } = await supabase.from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Se revocó el acceso a la carpeta.");
+    await cargarCompartidas();
+  };
 
   const archivosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLocaleLowerCase("es");
