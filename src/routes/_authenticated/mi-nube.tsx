@@ -574,44 +574,41 @@ function MiNubePage() {
               {proyectos.map((proyecto) => (
                 <article key={proyecto.nombre} className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
                   {proyecto.portada ? (
-                    <img src={proyecto.portada} alt={`Portada del proyecto ${proyecto.nombre}`} className="h-44 w-full bg-[#f5f4f1] object-contain p-3 transition-transform duration-300 group-hover:scale-[1.015]" loading="lazy" />
+                    <img src={proyecto.portada} alt={`Portada del proyecto ${proyecto.nombre}`} className="h-36 w-full bg-[#f5f4f1] object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
                   ) : (
-                    <div className="grid h-44 place-items-center bg-[#f5f4f1] text-muted-foreground">
+                    <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
                       <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
                     </div>
                   )}
-                  <div className="space-y-4 p-4 sm:p-5">
+                  <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{proyecto.nombre}</h4>
-                        <p className="mt-1.5 text-xs text-muted-foreground">{proyecto.archivos.length} archivos <span className="px-1 text-border">·</span> proyecto</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{proyecto.archivos.length} archivos <span className="px-1 text-border">·</span> proyecto</p>
                       </div>
                       <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Mi nube</span>
                     </div>
-                    <div className="flex min-h-6 flex-wrap gap-1.5">
-                      {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">Imagen</span>}
+                    <div className="flex flex-wrap gap-1">
+                      {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-md bg-muted/70 px-2 py-0.5 text-[9px] font-medium text-muted-foreground">Imagen</span>}
                       {proyecto.tiene3dm && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">3DM</span>}
                       {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
-                    <button type="button" onClick={() => void abrirCompartirEcosistema(proyecto)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-xs font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40">
-                      <Share2 className="size-4" /> Compartir con otro taller
-                    </button>
-                    <button
-                      type="button"
-                      disabled={compartiendo !== null}
-                      onClick={() => void compartirCarpetaTransfer(proyecto)}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#c5a15d]/55 bg-[#c5a15d]/[0.09] px-3 py-2.5 text-xs font-semibold tracking-[0.005em] text-foreground transition-colors hover:border-[#c5a15d] hover:bg-[#c5a15d]/[0.15] disabled:opacity-50"
-                    >
-                      <Share2 className="size-4" /> {compartiendo === proyecto.nombre ? "Preparando enlace seguro…" : "Compartir carpeta por AURUM Transfer"}
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => void abrirCompartirEcosistema(proyecto)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-2 py-2 text-[11px] font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17]">
+                        <Share2 className="size-3.5 shrink-0" /> Compartir taller
+                      </button>
+                      <button type="button" disabled={compartiendo !== null} onClick={() => void compartirCarpetaTransfer(proyecto)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 py-2 text-[11px] font-medium leading-tight text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40 disabled:opacity-50">
+                        <UploadCloud className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando…" : "Enviar por Transfer"}
+                      </button>
+                    </div>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
                     <button
                       type="button"
                       aria-expanded={proyectoAbierto === proyecto.nombre}
                       onClick={() => setProyectoAbierto((actual) => actual === proyecto.nombre ? null : proyecto.nombre)}
-                      className="w-full rounded-xl border border-border/80 bg-background/70 px-3 py-2.5 text-xs font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40"
+                      className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40"
                     >
                       {proyectoAbierto === proyecto.nombre ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}
                     </button>
