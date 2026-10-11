@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 
 /**
- * Obtiene únicamente el punto de entrada de Vite del HTML.
- * No compara todos los assets del DOM: las rutas/cargas diferidas de la SPA
- * pueden añadir chunks dinámicos y provocar avisos de versión falsos.
+ * Detecta una publicación nueva comparando el entrypoint de la página abierta
+ * con el entrypoint del HTML publicado. Nunca recarga automáticamente.
  */
 function entradaDesdeHtml(html: string): string {
-  const etiquetas = html.match(/<script\\b[^>]*>/gi) ?? [];
+  const etiquetas = html.match(/<script\b[^>]*>/gi) ?? [];
   for (const etiqueta of etiquetas) {
-    if (!/\\btype=["']module["']/i.test(etiqueta)) continue;
-    const src = etiqueta.match(/\\bsrc=["']([^"']+)["']/i)?.[1];
+    if (!/\btype=["']module["']/i.test(etiqueta)) continue;
+    const src = etiqueta.match(/\bsrc=["']([^"']+)["']/i)?.[1];
     if (src) return src;
   }
   return "";
@@ -19,22 +18,18 @@ function entradaActual(): string {
   return document.querySelector<HTMLScriptElement>('script[type="module"][src]')?.getAttribute("src") ?? "";
 }
 
-/**
- * Detecta una publicación nueva comparando el entrypoint de la página abierta
- * con el entrypoint del HTML publicado. Nunca recarga automáticamente.
- */
 export function useNuevaVersion(intervaloMs = 120_000): boolean {
   const [nueva, setNueva] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const inicial = entradaActual();
-    if (!inicial || !/\\/assets\\//.test(inicial)) return; // sin build de producción
+    if (!inicial || !/\/assets\//.test(inicial)) return;
     let cancelado = false;
 
     const comprobar = async () => {
       try {
-        const res = await fetch(`${window.location.origin}/?_version_check=${Date.now()}`, {
+        const res = await fetch(\`\${window.location.origin}/?_version_check=\${Date.now()}\`, {
           cache: "no-store",
           credentials: "same-origin",
           headers: { "Cache-Control": "no-cache" },
@@ -43,7 +38,7 @@ export function useNuevaVersion(intervaloMs = 120_000): boolean {
         const publicado = entradaDesdeHtml(await res.text());
         if (!cancelado && publicado && publicado !== inicial) setNueva(true);
       } catch {
-        // Si no hay red, no mostrar un aviso falso; volver a comprobar después.
+        // Sin conexión, no mostrar un aviso falso; volver a comprobar después.
       }
     };
 
