@@ -566,7 +566,7 @@ function MiNubePage() {
                             {subiendo && <div className="h-1.5 overflow-hidden rounded-full bg-surface-muted"><div className="h-full bg-gold transition-all" style={{ width: progreso + "%" }} /></div>}
                             <div className="flex gap-2">
                               <button type="button" disabled={subiendo} onClick={() => { setSeleccionados([]); setCarpetaDestinoEdicion(null); }} className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cancelar</button>
-                              <button type="button" disabled={subiendo} onClick={async () => { await subirSeleccion(); setCarpetaDestinoEdicion(null); }} className="flex-1 rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-background disabled:opacity-50">{subiendo ? "Subiendo…" : "Subir a esta carpeta"}</button>
+                              <button type="button" disabled={subiendo} onClick={() => void subirSeleccion()} className="flex-1 rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-background disabled:opacity-50">{subiendo ? "Subiendo…" : "Subir a esta carpeta"}</button>
                             </div>
                           </div>
                         )}
