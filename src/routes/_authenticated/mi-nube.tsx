@@ -544,9 +544,13 @@ function MiNubePage() {
                                 <button type="button" onClick={async () => {
                                   const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
                                   if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; }
-                                  window.location.href = "/herramientas?archivoUrl=" + encodeURIComponent(data.signedUrl) + "&archivoNombre=" + encodeURIComponent(nombreVisible(archivo.nombre));
+                                  const destino = new URL("/herramientas", window.location.origin);
+                                  destino.searchParams.set("archivoUrl", data.signedUrl);
+                                  destino.searchParams.set("archivoNombre", nombreVisible(archivo.nombre));
+                                  destino.searchParams.set("herramienta", "peso");
+                                  window.location.assign(destino.toString());
                                 }} className="rounded-lg border border-gold/40 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">
-                                  Ver 3D y calcular peso
+                                  Abrir en Visualizador y peso 3D
                                 </button>
                               )}
                               {archivo.nombre.toLowerCase().endsWith(".3dm") && (
@@ -568,7 +572,11 @@ function MiNubePage() {
                         onClick={async () => {
                           const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(proyecto.stlArchivo!.ruta, 60 * 10);
                           if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; }
-                          window.location.href = "/herramientas?archivoUrl=" + encodeURIComponent(data.signedUrl) + "&archivoNombre=" + encodeURIComponent(nombreVisible(proyecto.stlArchivo!.nombre));
+                          const destino = new URL("/herramientas", window.location.origin);
+                          destino.searchParams.set("archivoUrl", data.signedUrl);
+                          destino.searchParams.set("archivoNombre", nombreVisible(proyecto.stlArchivo!.nombre));
+                          destino.searchParams.set("herramienta", "peso");
+                          window.location.assign(destino.toString());
                         }}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-3 py-2 text-xs font-semibold hover:bg-gold/10"
                       >
