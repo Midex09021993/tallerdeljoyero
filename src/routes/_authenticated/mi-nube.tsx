@@ -477,27 +477,33 @@ function MiNubePage() {
           {proyectos.length > 0 && (
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {proyectos.map((proyecto) => (
-                <article key={proyecto.nombre} className="overflow-hidden rounded-2xl border border-border bg-background">
+                <article key={proyecto.nombre} className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
                   {proyecto.portada ? (
-                    <img src={proyecto.portada} alt={`Portada del proyecto ${proyecto.nombre}`} className="h-44 w-full bg-surface-muted object-contain p-2" loading="lazy" />
+                    <img src={proyecto.portada} alt={`Portada del proyecto ${proyecto.nombre}`} className="h-44 w-full bg-[#f5f4f1] object-contain p-3 transition-transform duration-300 group-hover:scale-[1.015]" loading="lazy" />
                   ) : (
-                    <div className="grid h-44 place-items-center bg-surface-muted text-muted-foreground">
+                    <div className="grid h-44 place-items-center bg-[#f5f4f1] text-muted-foreground">
                       <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
                     </div>
                   )}
-                  <div className="space-y-3 p-4">
-                    <div><h4 className="truncate text-sm font-semibold">{proyecto.nombre}</h4><p className="mt-1 text-xs text-muted-foreground">{proyecto.archivos.length} archivo(s) vinculados</p></div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">Imagen</span>}
-                      {proyecto.tiene3dm && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">3DM</span>}
-                      {proyecto.tieneStl && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">STL</span>}
-                      {proyecto.tienePdf && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">PDF</span>}
+                  <div className="space-y-4 p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{proyecto.nombre}</h4>
+                        <p className="mt-1.5 text-xs text-muted-foreground">{proyecto.archivos.length} archivos <span className="px-1 text-border">·</span> proyecto</p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Mi nube</span>
+                    </div>
+                    <div className="flex min-h-6 flex-wrap gap-1.5">
+                      {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">Imagen</span>}
+                      {proyecto.tiene3dm && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">3DM</span>}
+                      {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
+                      {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
                     <button
                       type="button"
                       disabled={compartiendo !== null}
                       onClick={() => void compartirCarpetaTransfer(proyecto)}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-3 py-2 text-xs font-semibold hover:bg-gold/10 disabled:opacity-50"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#c5a15d]/55 bg-[#c5a15d]/[0.09] px-3 py-2.5 text-xs font-semibold tracking-[0.005em] text-foreground transition-colors hover:border-[#c5a15d] hover:bg-[#c5a15d]/[0.15] disabled:opacity-50"
                     >
                       <Share2 className="size-4" /> {compartiendo === proyecto.nombre ? "Preparando enlace seguro…" : "Compartir carpeta por AURUM Transfer"}
                     </button>
@@ -507,7 +513,7 @@ function MiNubePage() {
                       type="button"
                       aria-expanded={proyectoAbierto === proyecto.nombre}
                       onClick={() => setProyectoAbierto((actual) => actual === proyecto.nombre ? null : proyecto.nombre)}
-                      className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50"
+                      className="w-full rounded-xl border border-border/80 bg-background/70 px-3 py-2.5 text-xs font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40"
                     >
                       {proyectoAbierto === proyecto.nombre ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}
                     </button>
