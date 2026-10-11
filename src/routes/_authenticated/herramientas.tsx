@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
@@ -50,6 +50,29 @@ const tarjetaBase =
 
 function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
+  const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
+  const [errorArchivoInicial, setErrorArchivoInicial] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get("archivoUrl");
+    const nombre = params.get("archivoNombre") || "modelo.stl";
+    if (!url) return;
+    let cancelado = false;
+    setHerramientaActiva("peso");
+    (async () => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("No se pudo descargar el STL desde Mi Nube.");
+        const blob = await response.blob();
+        const archivo = new File([blob], nombre, { type: "model/stl" });
+        if (!cancelado) setArchivoInicial(archivo);
+      } catch (error) {
+        if (!cancelado) setErrorArchivoInicial(error instanceof Error ? error.message : "No se pudo abrir el archivo.");
+      }
+    })();
+    return () => { cancelado = true; };
+  }, []);
 
   const titulos: Record<Exclude<HerramientaInterna, null>, string> = {
     yeso: "Calculadora de yeso",
@@ -131,7 +154,7 @@ function HerramientasPage() {
             <div className="mx-auto min-h-[560px] w-full min-w-0 max-w-full [&>*]:!mx-auto [&>*]:!w-full [&>*]:!max-w-full">
               {herramientaActiva === "yeso" ? <CalculadoraYeso /> : null}
               {herramientaActiva === "aleacion" ? <CalculadoraAleacionOro /> : null}
-              {herramientaActiva === "peso" ? <VisorPesoJoyeria /> : null}
+              {herramientaActiva === "peso" ? <><VisorPesoJoyeria archivoInicial={archivoInicial} />{errorArchivoInicial && <p role="alert" className="mt-3 text-sm text-destructive">{errorArchivoInicial}</p>}</> : null}
               {herramientaActiva === "gemas" ? <CalculadoraPesoGemas /> : null}
               {herramientaActiva === "tallas" ? <ConversorTallasAnillo /> : null}
             </div>
