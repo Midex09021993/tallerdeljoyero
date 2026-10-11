@@ -210,8 +210,7 @@ function MiNubePage() {
         .eq("destinatario_participante_id", participanteId)
         .is("revoked_at", null);
       if (errorRecibidas) throw errorRecibidas;
-      const { data: enviadas, error: errorEnviadas } = await supabase
-        .from("mi_nube_compartidas")
+      const { data: enviadas, error: errorEnviadas } = await (supabase as any).from("mi_nube_compartidas")
         .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
         .eq("propietario_usuario_id", usuarioId)
         .is("revoked_at", null);
@@ -279,7 +278,7 @@ function MiNubePage() {
   };
 
   const revocarComparticion = async (share: CarpetaCompartida) => {
-    const { error } = await supabase.from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
+    const { error } = await (supabase as any).from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Se revocó el acceso a la carpeta.");
     await cargarCompartidas();
@@ -702,7 +701,7 @@ function MiNubePage() {
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {carpetasRecibidas.map((recibida) => <article key={recibida.id} className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="flex items-center gap-3 border-b border-border bg-muted/30 p-4"><div className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Folder className="size-5" /></div><div className="min-w-0"><h4 className="truncate text-sm font-semibold">{recibida.nombre}</h4><p className="mt-1 truncate text-xs text-muted-foreground">Compartida por {recibida.propietarioNombre} · {recibida.archivos.length} archivos</p></div></div>
-                <div className="space-y-2 p-3">{recibida.archivos.map((archivo) => <div key={archivo.ruta} className="flex items-center justify-between gap-2 rounded-lg bg-muted/25 p-2.5"><div className="min-w-0"><p className="break-all text-xs font-medium">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} · {archivo.categoria === "modelos-3d" ? "Modelo 3D" : archivo.categoria === "fotos" ? "Imagen" : archivo.categoria === "documentos" ? "Documento" : "Archivo"}</p></div><button type="button" onClick={() => void abrirArchivo(archivo)} className="shrink-0 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">Abrir</button></div>)}<p className="px-1 pt-1 text-[10px] text-muted-foreground">Solo lectura · los archivos siguen perteneciendo al taller de origen.</p></div>
+                <div className="space-y-2 p-3">{recibida.archivos.map((archivo) => <div key={archivo.ruta} className="flex items-center justify-between gap-2 rounded-lg bg-muted/25 p-2.5"><div className="min-w-0"><p className="break-all text-xs font-medium">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} · {archivo.categoria === "modelos-3d" ? "Modelo 3D" : archivo.categoria === "fotos" ? "Imagen" : archivo.categoria === "documentos" ? "Documento" : "Archivo"}</p></div>{archivo.nombre.toLowerCase().endsWith(".stl") && <button type="button" onClick={async () => { const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600); if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; } const destino = new URL("/herramientas", window.location.origin); destino.searchParams.set("archivoUrl", data.signedUrl); destino.searchParams.set("archivoNombre", nombreVisible(archivo.nombre)); destino.searchParams.set("herramienta", "peso"); window.location.assign(destino.toString()); }} className="shrink-0 rounded-lg border border-gold/40 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">Visualizar 3D y peso</button>}<button type="button" onClick={() => void abrirArchivo(archivo)} className="shrink-0 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">Abrir</button></div>)}<p className="px-1 pt-1 text-[10px] text-muted-foreground">Solo lectura · los archivos siguen perteneciendo al taller de origen.</p></div>
               </article>)}
             </div>
           )}
