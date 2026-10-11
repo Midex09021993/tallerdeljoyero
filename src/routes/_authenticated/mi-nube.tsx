@@ -580,7 +580,7 @@ function MiNubePage() {
         const env = import.meta.env as { VITE_SUPABASE_URL?: string; VITE_SUPABASE_PUBLISHABLE_KEY?: string };
         if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_PUBLISHABLE_KEY) throw new Error("Falta la configuración de conexión segura.");
         const params = new URLSearchParams({ folder: archivo.carpeta, name: archivo.nombre, participantId: participanteId ?? "" });
-        const response = await fetch(`${env.VITE_SUPABASE_URL.replace(/\\/$/, "")}/functions/v1/nextcloud-video-files?${params.toString()}`, {
+        const response = await fetch(`${env.VITE_SUPABASE_URL.replace(/\/$/, "")}/functions/v1/nextcloud-video-files?${params.toString()}`, {
           headers: { Authorization: `Bearer ${sessionData.session.access_token}`, apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY },
         });
         if (!response.ok) {
