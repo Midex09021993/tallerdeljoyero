@@ -160,8 +160,15 @@ function MiNubePage() {
 
   type EstadoNas = "checking" | "online" | "offline" | "misconfigured" | "not_configured" | "unknown";
   const [estadoNas, setEstadoNas] = useState<EstadoNas>("checking");
-  // Pausa local de la integración. No apaga físicamente el servidor; prepara el punto de control para una futura acción segura de administración.
+  // Pausa local de la integración. No apaga físicamente el servidor.
   const [nasPausado, setNasPausado] = useState(false);
+  useEffect(() => {
+    try {
+      setNasPausado(window.localStorage.getItem("mi-nube-nas-pausado") === "true");
+    } catch {
+      // Si el navegador bloquea el almacenamiento local, se mantiene el estado predeterminado.
+    }
+  }, []);
   const [mensajeNas, setMensajeNas] = useState("Comprobando conexión segura…");
   const [errorListadoNas, setErrorListadoNas] = useState<string | null>(null);
   const comprobarNas = useCallback(async () => {
@@ -869,10 +876,12 @@ function MiNubePage() {
                   <p className="mt-1 max-w-48 text-[10px] text-muted-foreground">{nasPausado ? "Los vídeos del NAS quedan ocultos y no se pueden subir nuevos." : mensajeNas}</p>
                   <button type="button" disabled={subiendo || estadoNas === "checking" || (!nasPausado && estadoNas !== "online")} onClick={() => {
                     if (nasPausado) {
+                      try { window.localStorage.setItem("mi-nube-nas-pausado", "false"); } catch { /* pausa solo en memoria */ }
                       setNasPausado(false);
                       void comprobarNas();
                       toast.success("Conexión con el NAS reactivada en Mi Nube.");
                     } else {
+                      try { window.localStorage.setItem("mi-nube-nas-pausado", "true"); } catch { /* pausa solo en memoria */ }
                       setNasPausado(true);
                       toast.success("Conexión con el NAS pausada en Mi Nube. El equipo sigue encendido.");
                     }
