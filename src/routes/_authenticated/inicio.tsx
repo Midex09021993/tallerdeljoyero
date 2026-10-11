@@ -278,6 +278,7 @@ function Inicio() {
     <AppShell
       titulo="Centro de control"
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
+      encabezadoMovilCompacto
       acciones={
         <>
           {sesion?.esAdmin ? (
