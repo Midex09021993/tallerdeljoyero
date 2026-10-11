@@ -73,6 +73,7 @@ type ArchivoNube = {
   actualizado: string | null;
   categoria: Categoria;
   urlVista?: string | null;
+  origen?: "supabase" | "nas";
 };
 
 const secciones: Array<{
@@ -204,8 +205,6 @@ function MiNubePage() {
         .filter((entrada) => !entrada.id && !entrada.metadata)
         .map((entrada) => entrada.name)
         .filter(Boolean);
-      setCarpetas(nombresCarpetas);
-
       const resultados = await Promise.all(
         nombresCarpetas.map(async (nombreCarpeta) => {
           const { data, error: errorLista } = await supabase.storage
@@ -238,7 +237,27 @@ function MiNubePage() {
           return { ...archivo, urlVista: data?.signedUrl ?? null };
         }),
       );
-      setArchivos(archivosConVistas);
+      let archivosNas: ArchivoNube[] = [];
+      let carpetasNas: string[] = [];
+      if (estadoNas === "online") {
+        const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list" } });
+        if (nasError) {
+          console.warn("[Mi Nube] No se pudieron listar los vídeos del NAS.", nasError);
+        } else if (Array.isArray(nasData?.files)) {
+          archivosNas = nasData.files.map((item: { name: string; folder: string; bytes: number; updated: string | null }): ArchivoNube => ({
+            nombre: item.name,
+            ruta: `${item.folder}/${item.name}`,
+            carpeta: item.folder,
+            bytes: Number(item.bytes ?? 0),
+            actualizado: item.updated ? new Date(item.updated).toISOString() : null,
+            categoria: "videos",
+            origen: "nas",
+          }));
+          carpetasNas = [...new Set(archivosNas.map((archivo) => archivo.carpeta))];
+        }
+      }
+      setCarpetas([...new Set([...nombresCarpetas, ...carpetasNas])]);
+      setArchivos([...archivosConVistas, ...archivosNas]);
     } catch (cause) {
       const mensaje = cause instanceof Error ? cause.message : "No se pudo cargar la biblioteca.";
       setError(mensaje);
@@ -458,12 +477,39 @@ function MiNubePage() {
         const nombre = nombreSeguro(file.name);
         if (!nombre) throw new Error(`El nombre de “${file.name}” no es válido.`);
         const ruta = `${participanteId}/${usuarioId}/${carpetaSegura}/${Date.now()}-${nombre}`;
-        await subirConProgreso({
-          bucket: BUCKET,
-          ruta,
-          file,
-          onProgreso: (porcentaje) => setProgreso(Math.round(((completados + porcentaje / 100) / seleccionados.length) * 100)),
-        });
+        if (clasificarArchivo(nombre) === "videos") {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError || !sessionData.session?.access_token) throw new Error("Tu sesión caducó. Vuelve a entrar e inténtalo de nuevo.");
+          const uploadId = crypto.randomUUID();
+          const filename = `${Date.now()}-${nombre}`;
+          const chunkSize = 4 * 1024 * 1024;
+          const totalChunks = Math.ceil(file.size / chunkSize);
+          for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+            const formData = new FormData();
+            formData.append("action", "chunk");
+            formData.append("uploadId", uploadId);
+            formData.append("folder", carpetaSegura);
+            formData.append("filename", filename);
+            formData.append("chunkIndex", String(chunkIndex));
+            formData.append("totalChunks", String(totalChunks));
+            formData.append("chunk", file.slice(chunkIndex * chunkSize, Math.min(file.size, (chunkIndex + 1) * chunkSize)), `chunk-${chunkIndex}`);
+            const { error: chunkError } = await supabase.functions.invoke("nextcloud-video-files", { body: formData });
+            if (chunkError) throw new Error(`Falló la subida del vídeo (fragmento ${chunkIndex + 1} de ${totalChunks}). ${chunkError.message}`);
+            setProgreso(Math.round(((completados + (chunkIndex + 1) / totalChunks) / seleccionados.length) * 100));
+          }
+          const { data: finalized, error: finalizeError } = await supabase.functions.invoke("nextcloud-video-files", {
+            body: { action: "finalize", uploadId, folder: carpetaSegura, filename, totalBytes: file.size },
+          });
+          if (finalizeError) throw new Error(`No se pudo finalizar el vídeo en el NAS. ${finalizeError.message}`);
+          if (finalized?.error) throw new Error(String(finalized.error));
+        } else {
+          await subirConProgreso({
+            bucket: BUCKET,
+            ruta,
+            file,
+            onProgreso: (porcentaje) => setProgreso(Math.round(((completados + porcentaje / 100) / seleccionados.length) * 100)),
+          });
+        }
         completados += 1;
         setProgreso(Math.round((completados / seleccionados.length) * 100));
       }
@@ -485,12 +531,23 @@ function MiNubePage() {
 
   const eliminarArchivoProyecto = async (archivo: ArchivoNube) => {
     if (!window.confirm("¿Eliminar definitivamente " + nombreVisible(archivo.nombre) + "?")) return;
-    const { error: removeError } = await supabase.storage.from(BUCKET).remove([archivo.ruta]);
-    if (removeError) { toast.error(removeError.message); return; }
+    if (archivo.origen === "nas") {
+      const { data, error: removeError } = await supabase.functions.invoke("nextcloud-video-files", {
+        body: { action: "delete", folder: archivo.carpeta, name: archivo.nombre },
+      });
+      if (removeError || data?.error) { toast.error(data?.error ?? removeError?.message ?? "No se pudo eliminar el vídeo del NAS."); return; }
+    } else {
+      const { error: removeError } = await supabase.storage.from(BUCKET).remove([archivo.ruta]);
+      if (removeError) { toast.error(removeError.message); return; }
+    }
     toast.success("Archivo eliminado.");
     await cargarBiblioteca();
   };
   const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
+    if (proyecto.archivos.some((archivo) => archivo.origen === "nas")) {
+      toast.error("Los vídeos guardados en el NAS aún no están habilitados para AURUM Transfer.");
+      return;
+    }
     if (!proyecto.archivos.length) { toast.error("Esta carpeta no contiene archivos."); return; }
     if (proyecto.archivos.length > 10) { toast.error("AURUM Transfer admite hasta 10 archivos por enlace."); return; }
     setCompartiendo(proyecto.nombre);
@@ -515,6 +572,34 @@ function MiNubePage() {
 
   
   const abrirArchivo = async (archivo: ArchivoNube) => {
+    if (archivo.origen === "nas") {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session?.access_token) throw new Error("Tu sesión caducó. Vuelve a entrar.");
+        const env = import.meta.env as { VITE_SUPABASE_URL?: string; VITE_SUPABASE_PUBLISHABLE_KEY?: string };
+        if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_PUBLISHABLE_KEY) throw new Error("Falta la configuración de conexión segura.");
+        const params = new URLSearchParams({ folder: archivo.carpeta, name: archivo.nombre });
+        const response = await fetch(`${env.VITE_SUPABASE_URL.replace(/\\/$/, "")}/functions/v1/nextcloud-video-files?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${sessionData.session.access_token}`, apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error ?? "No se pudo descargar el vídeo del NAS.");
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = nombreVisible(archivo.nombre);
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } catch (cause) {
+        toast.error(cause instanceof Error ? cause.message : "No se pudo descargar el vídeo del NAS.");
+      }
+      return;
+    }
     const { data, error: errorUrl } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10, {
       download: nombreVisible(archivo.nombre),
     });
