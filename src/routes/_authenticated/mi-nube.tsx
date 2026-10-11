@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
+import { encolarArchivo, listarColaArchivos, quitarDeCola, type ArchivoEnCola } from "@/lib/cola-subidas-local";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/mi-nube")({
@@ -140,10 +141,52 @@ function MiNubePage() {
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
+  const [colaLocal, setColaLocal] = useState<ArchivoEnCola[]>([]);
+  const [guardandoCola, setGuardandoCola] = useState(false);
   const [carpetaDestinoEdicion, setCarpetaDestinoEdicion] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const nuevaVersion = useNuevaVersion();
+
+  const actualizarColaLocal = useCallback(async () => {
+    if (!usuarioId) { setColaLocal([]); return; }
+    try { setColaLocal(await listarColaArchivos(usuarioId)); }
+    catch (cause) { console.warn("[Mi Nube] No se pudo leer la cola local.", cause); }
+  }, [usuarioId]);
+
+  useEffect(() => { void actualizarColaLocal(); }, [actualizarColaLocal]);
+
+  const guardarSeleccionEnCola = async () => {
+    if (!usuarioId) { toast.error("Inicia sesión para guardar archivos en este dispositivo."); return; }
+    if (seleccionados.length === 0) { toast.error("Selecciona primero los archivos que quieres guardar."); return; }
+    if (seleccionados.length > MAX_FILES_PER_BATCH) { toast.error(`Puedes guardar hasta ${MAX_FILES_PER_BATCH} archivos por lote.`); return; }
+    setGuardandoCola(true);
+    try {
+      const actuales = await listarColaArchivos(usuarioId);
+      let agregados = 0;
+      for (const file of seleccionados) {
+        const yaGuardado = actuales.some((item) => item.nombre === file.name && item.tamano === file.size && item.modificado === file.lastModified);
+        if (!yaGuardado) { await encolarArchivo(usuarioId, file); agregados += 1; }
+      }
+      await actualizarColaLocal();
+      toast.success(agregados ? `${agregados} archivo(s) guardados en la cola local de este dispositivo.` : "Estos archivos ya estaban en la cola local.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudieron guardar los archivos en este dispositivo.");
+    } finally { setGuardandoCola(false); }
+  };
+
+  const recuperarArchivoDeCola = (item: ArchivoEnCola) => {
+    const file = new File([item.blob], item.nombre, { type: item.tipo, lastModified: item.modificado });
+    setSeleccionados((actuales) => actuales.some((actual) => actual.name === file.name && actual.size === file.size && actual.lastModified === file.lastModified) ? actuales : [...actuales, file]);
+    setCarpeta((actual) => actual || nombreSeguro(item.nombre.replace(/\.[^.]+$/, "")));
+    toast.success("Archivo recuperado. Revisa la carpeta de destino y pulsa Subir a Mi Nube.");
+  };
+
+  const eliminarDeColaLocal = async (item: ArchivoEnCola) => {
+    if (!usuarioId) return;
+    try { await quitarDeCola(usuarioId, item.id); await actualizarColaLocal(); toast.success("Archivo quitado de la cola local; no se borró de Mi Nube."); }
+    catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo quitar el archivo de la cola."); }
+  };
   const [progreso, setProgreso] = useState(0);
   const [estadoSubida, setEstadoSubida] = useState("Preparando subida…");
   const [error, setError] = useState<string | null>(null);
@@ -493,6 +536,21 @@ function MiNubePage() {
       return;
     }
 
+    // Persistir antes de subir. Si el almacenamiento local no está disponible,
+    // la subida normal continúa para no romper el flujo existente.
+    try {
+      const actuales = await listarColaArchivos(usuarioId);
+      for (const file of seleccionados) {
+        if (!actuales.some((item) => item.nombre === file.name && item.tamano === file.size && item.modificado === file.lastModified)) {
+          await encolarArchivo(usuarioId, file);
+        }
+      }
+      await actualizarColaLocal();
+    } catch (cause) {
+      console.warn("[Mi Nube] No se pudo persistir la selección; se intentará la subida directa.", cause);
+      toast.warning("No se pudo guardar una copia local de seguridad. Se intentará la subida normal.");
+    }
+
     setSubiendo(true);
     setProgreso(0);
     setEstadoSubida("Preparando subida…");
@@ -567,6 +625,14 @@ function MiNubePage() {
             onProgreso: (porcentaje) => setProgreso(Math.round(((completados + porcentaje / 100) / seleccionados.length) * 100)),
           });
         }
+        try {
+          const pendientes = await listarColaArchivos(usuarioId);
+          const registro = pendientes.find((item) => item.nombre === file.name && item.tamano === file.size && item.modificado === file.lastModified);
+          if (registro) await quitarDeCola(usuarioId, registro.id);
+          await actualizarColaLocal();
+        } catch (cause) {
+          console.warn("[Mi Nube] La subida terminó, pero no se pudo actualizar la cola local.", cause);
+        }
         completados += 1;
         setProgreso(Math.round((completados / seleccionados.length) * 100));
         setEstadoSubida(completados < seleccionados.length ? "Preparando siguiente archivo…" : "Confirmado; actualizando biblioteca…");
@@ -585,6 +651,7 @@ function MiNubePage() {
     } finally {
       setSubiendo(false);
       setEstadoSubida("Preparando subida…");
+      await actualizarColaLocal();
     }
   };
 
@@ -1016,6 +1083,30 @@ function MiNubePage() {
                     <p className="text-xs font-semibold">{seleccionados.length} archivo(s) seleccionados</p>
                     <ul className="mt-2 max-h-24 space-y-1 overflow-auto text-xs text-muted-foreground">
                       {seleccionados.map((file, index) => <li key={`${file.name}-${index}`} className="truncate">{file.name} · {etiquetaTamano(file.size)}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {seleccionados.length > 0 && (
+                  <button type="button" onClick={() => void guardarSeleccionEnCola()} disabled={subiendo || guardandoCola} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold hover:border-gold/50 disabled:opacity-50">
+                    {guardandoCola ? <LoaderCircle className="size-4 animate-spin" /> : <HardDrive className="size-4" />}
+                    {guardandoCola ? "Guardando en este dispositivo…" : "Guardar selección para subir después"}
+                  </button>
+                )}
+                {colaLocal.length > 0 && (
+                  <div className="space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold">Cola local de este dispositivo</p>
+                      <span className="rounded-full bg-background px-2 py-1 text-[10px]">{colaLocal.length} pendiente(s)</span>
+                    </div>
+                    <p className="text-[11px] leading-5 text-muted-foreground">Se conservan en este navegador para recuperarlos manualmente. No se suben en segundo plano. Si borras los datos del navegador, podrías perder esta copia local.</p>
+                    <ul className="space-y-2">
+                      {colaLocal.map((item) => (
+                        <li key={item.id} className="flex items-center gap-2 text-xs">
+                          <span className="min-w-0 flex-1 truncate">{item.nombre} · {etiquetaTamano(item.tamano)}{item.ultimoError ? " · requiere revisión" : ""}</span>
+                          <button type="button" onClick={() => recuperarArchivoDeCola(item)} disabled={subiendo} className="shrink-0 rounded-lg border border-border px-2 py-1.5 font-semibold hover:border-gold/50 disabled:opacity-50">Recuperar</button>
+                          <button type="button" onClick={() => void eliminarDeColaLocal(item)} disabled={subiendo} aria-label={`Quitar ${item.nombre} de la cola local`} className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-muted-foreground hover:text-destructive disabled:opacity-50"><X className="size-3.5" /></button>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 )}
