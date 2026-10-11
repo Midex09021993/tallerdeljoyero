@@ -374,7 +374,7 @@ function MiNubePage() {
           }));
         const conVistas = await Promise.all(base.map(async (archivo) => {
           if (archivo.categoria !== "fotos") return archivo;
-          const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+          const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60);
           return { ...archivo, urlVista: data?.signedUrl ?? null };
         }));
         const { data: propietario } = await supabase.from("ecosistema_participantes").select("nombre").eq("id", share.propietario_participante_id).maybeSingle();
