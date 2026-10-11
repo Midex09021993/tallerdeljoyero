@@ -47,7 +47,7 @@ const MAX_FILES_PER_BATCH = 30;
 type Categoria = "fotos" | "videos" | "documentos" | "modelos-3d" | "otros";
 type CarpetaCompartida = { id: string; propietario_participante_id: string; propietario_usuario_id: string; carpeta: string; destinatario_participante_id: string; created_at: string; destinatario_nombre?: string };
 type TallerCompartir = { id: string; nombre: string; ciudad: string | null };
-type CarpetaRecibida = { id: string; nombre: string; propietarioNombre: string; archivos: ArchivoNube[] };
+type CarpetaRecibida = { id: string; nombre: string; propietarioNombre: string; archivos: ArchivoNube[]; portada: string | null };
 type ArchivoNube = {
   nombre: string;
   ruta: string;
@@ -268,7 +268,8 @@ function MiNubePage() {
           return { ...archivo, urlVista: data?.signedUrl ?? null };
         }));
         const { data: propietario } = await supabase.from("ecosistema_participantes").select("nombre").eq("id", share.propietario_participante_id).maybeSingle();
-        return { id: share.id, nombre: share.carpeta, propietarioNombre: propietario?.nombre ?? "Taller del ecosistema", archivos: conVistas };
+        const imagenPortada = conVistas.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null;
+        return { id: share.id, nombre: share.carpeta, propietarioNombre: propietario?.nombre ?? "Taller del ecosistema", archivos: conVistas, portada: imagenPortada };
       }));
       setCarpetasRecibidas(carpetas);
     } catch (cause) {
@@ -734,10 +735,31 @@ function MiNubePage() {
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Colaboración</p><h3 className="mt-1 font-display text-2xl">Compartidas conmigo</h3><p className="mt-1 text-sm text-muted-foreground">Carpetas originales de otros talleres, sin duplicar archivos.</p></div><button type="button" onClick={() => void cargarCompartidas()} disabled={cargandoCompartidas} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">{cargandoCompartidas ? "Actualizando…" : "Actualizar"}</button></div>
           {cargandoCompartidas && carpetasRecibidas.length === 0 ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Buscando carpetas compartidas…</p> : carpetasRecibidas.length === 0 ? <div className="rounded-2xl border border-dashed border-border p-6 text-center"><Folder className="mx-auto size-6 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes carpetas compartidas</p><p className="mt-1 text-xs text-muted-foreground">Cuando otro taller comparta una carpeta contigo, aparecerá aquí.</p></div> : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {carpetasRecibidas.map((recibida) => <article key={recibida.id} className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div className="flex items-center gap-3 border-b border-border bg-muted/30 p-4"><div className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Folder className="size-5" /></div><div className="min-w-0"><h4 className="truncate text-sm font-semibold">{recibida.nombre}</h4><p className="mt-1 truncate text-xs text-muted-foreground">Compartida por {recibida.propietarioNombre} · {recibida.archivos.length} archivos</p></div></div>
-                <div className="space-y-2 p-3">{recibida.archivos.map((archivo) => <div key={archivo.ruta} className="flex items-center justify-between gap-2 rounded-lg bg-muted/25 p-2.5"><div className="min-w-0"><p className="break-all text-xs font-medium">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} · {archivo.categoria === "modelos-3d" ? "Modelo 3D" : archivo.categoria === "fotos" ? "Imagen" : archivo.categoria === "documentos" ? "Documento" : "Archivo"}</p></div>{archivo.nombre.toLowerCase().endsWith(".stl") && <button type="button" onClick={async () => { const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600); if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; } const destino = new URL("/herramientas", window.location.origin); destino.searchParams.set("archivoUrl", data.signedUrl); destino.searchParams.set("archivoNombre", nombreVisible(archivo.nombre)); destino.searchParams.set("herramienta", "peso"); window.location.assign(destino.toString()); }} className="shrink-0 rounded-lg border border-gold/40 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">Visualizar 3D y peso</button>}<button type="button" onClick={() => void abrirArchivo(archivo)} className="shrink-0 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">Abrir</button></div>)}<p className="px-1 pt-1 text-[10px] text-muted-foreground">Solo lectura · los archivos siguen perteneciendo al taller de origen.</p></div>
-              </article>)}
+              {carpetasRecibidas.map((recibida) => {
+                const tipos = [...new Set(recibida.archivos.map((a) => {
+                  if (a.categoria === "fotos") return "Imagen";
+                  if (a.categoria === "modelos-3d") return a.nombre.toLowerCase().endsWith(".3dm") ? "3DM" : a.nombre.toLowerCase().endsWith(".stl") ? "STL" : "3D";
+                  if (a.categoria === "documentos") return "PDF";
+                  return "Archivo";
+                }))];
+                return <article key={recibida.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+                  <div className="relative flex h-36 items-center justify-center overflow-hidden bg-muted/50">
+                    {recibida.portada ? <img src={recibida.portada} alt={recibida.nombre} className="h-full w-full object-contain p-2" /> : <div className="flex flex-col items-center gap-2 text-muted-foreground"><Folder className="size-9" /><span className="text-xs">Carpeta compartida</span></div>}
+                    <span className="absolute right-3 top-3 rounded-full border border-border/70 bg-background/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider">Compartida</span>
+                  </div>
+                  <div className="space-y-3 p-4">
+                    <div><h4 className="truncate text-sm font-semibold">{recibida.nombre}</h4><p className="mt-1 text-xs text-muted-foreground">{recibida.archivos.length} archivos · Compartida por {recibida.propietarioNombre}</p></div>
+                    <div className="flex flex-wrap gap-1.5">{tipos.map((tipo) => <span key={tipo} className="rounded-full bg-muted px-2.5 py-1 text-[10px] text-muted-foreground">{tipo}</span>)}</div>
+                    <button type="button" onClick={() => setProyectoAbierto(proyectoAbierto === "compartida:" + recibida.id ? null : "compartida:" + recibida.id)} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs font-semibold transition-colors hover:border-gold/50">{proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}</button>
+                    {proyectoAbierto === "compartida:" + recibida.id && <div className="space-y-2 border-t border-border pt-3">{recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl bg-muted/35 p-3"><div className="flex min-w-0 items-start gap-2"><div className="grid size-8 shrink-0 place-items-center rounded-lg bg-background text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div><div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p></div></div><div className="mt-2 flex flex-wrap gap-1.5">
+                      {archivo.nombre.toLowerCase().endsWith(".stl") && <button type="button" onClick={async () => { const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600); if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; } const destino = new URL("/herramientas", window.location.origin); destino.searchParams.set("archivoUrl", data.signedUrl); destino.searchParams.set("archivoNombre", nombreVisible(archivo.nombre)); destino.searchParams.set("herramienta", "peso"); window.location.assign(destino.toString()); }} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10">Abrir en Visualizador y peso 3D</button>}
+                      {archivo.nombre.toLowerCase().endsWith(".3dm") && <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10">Abrir en Aurum Render</button>}
+                      <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium hover:border-gold/50">Abrir / descargar</button>
+                    </div></div>)}</div>}
+                    <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
+                  </div>
+                </article>;
+              })}
             </div>
           )}
         </section>
@@ -777,7 +799,7 @@ function MiNubePage() {
             </div>
           </div>
         )}
-        <p className="flex items-start gap-2 px-1 text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 size-3.5 shrink-0" /> Los enlaces de apertura duran 10 minutos. Los archivos no se hacen públicos.</p>
+        <p className="flex items-start gap-2 px-1 text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 size-3.5 shrink-0" /> El acceso a carpetas compartidas se mantiene hasta que el propietario lo revoque. Las vistas y descargas usan enlaces temporales; los archivos no se hacen públicos.</p>
       </div>
     </AppShell>
   );
