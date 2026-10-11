@@ -157,6 +157,7 @@ function MiNubePage() {
   type EstadoNas = "checking" | "online" | "offline" | "misconfigured" | "not_configured" | "unknown";
   const [estadoNas, setEstadoNas] = useState<EstadoNas>("checking");
   const [mensajeNas, setMensajeNas] = useState("Comprobando conexión segura…");
+  const [errorListadoNas, setErrorListadoNas] = useState<string | null>(null);
   const comprobarNas = useCallback(async () => {
     if (!participanteId || !usuarioId) {
       setEstadoNas("unknown");
@@ -194,6 +195,7 @@ function MiNubePage() {
     }
     setCargando(true);
     setError(null);
+    setErrorListadoNas(null);
     try {
       const raiz = `${participanteId}/${usuarioId}`;
       const { data: entradas, error: errorRaiz } = await supabase.storage
@@ -225,6 +227,7 @@ function MiNubePage() {
                 bytes: Number(entrada.metadata?.size ?? 0),
                 actualizado: entrada.updated_at ?? entrada.created_at ?? null,
                 categoria: clasificarArchivo(nombreVisible(nombre)),
+                origen: "supabase",
               };
             });
         }),
@@ -243,6 +246,7 @@ function MiNubePage() {
         const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
         if (nasError) {
           console.warn("[Mi Nube] No se pudieron listar los vídeos del NAS.", nasError);
+          setErrorListadoNas(nasError.message || "No se pudo consultar el NAS.");
         } else if (Array.isArray(nasData?.files)) {
           archivosNas = nasData.files.map((item: { name: string; folder: string; bytes: number; updated: string | null }): ArchivoNube => ({
             nombre: item.name,
@@ -660,6 +664,36 @@ function MiNubePage() {
           </div>
         </section>
 
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5" aria-label="Verificación de almacenamiento">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-sm font-semibold">Ubicación de tus archivos</h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">El recuento se basa en los archivos que cada almacenamiento devuelve al consultar su contenido.</p>
+            </div>
+            <button type="button" onClick={() => void cargarBiblioteca()} disabled={cargando || subiendo} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50 disabled:opacity-50">
+              <RefreshCw className={`size-3.5 ${cargando ? "animate-spin" : ""}`} /> {cargando ? "Comprobando…" : "Comprobar almacenamiento"}
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-border/80 bg-background p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-xs font-semibold"><HardDrive className="size-4 text-gold" /> Supabase Storage</span>
+                <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold">{archivos.filter((archivo) => archivo.origen === "supabase").length} archivo(s)</span>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">Confirmados por el listado del almacenamiento web.</p>
+            </div>
+            <div className="rounded-xl border border-border/80 bg-background p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-xs font-semibold"><Server className="size-4 text-gold" /> NAS · Nextcloud</span>
+                <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold">{archivos.filter((archivo) => archivo.origen === "nas").length} archivo(s)</span>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">{errorListadoNas ? "No verificado: falló la consulta al NAS." : estadoNas === "online" ? "Videos confirmados por el listado del NAS." : "No se pudo confirmar el contenido del NAS en este momento."}</p>
+              {errorListadoNas && <p className="mt-1 text-[10px] text-destructive">{errorListadoNas}</p>}
+            </div>
+          </div>
+          {error && <p className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"><AlertCircle className="mt-0.5 size-3.5 shrink-0" /> No se pudo completar la comprobación: {error}</p>}
+        </section>
+
         {seccionActiva !== "todos" && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/25 bg-gold/[0.045] px-4 py-3" role="status">
             <p className="text-xs text-muted-foreground">
@@ -877,7 +911,7 @@ function MiNubePage() {
                           <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
                               <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div>
-                              <div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold leading-5">{nombreVisible(archivo.nombre)}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} <span className="px-1">·</span> {archivo.nombre.split(".").pop()?.toUpperCase()}</p></div>
+                              <div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold leading-5">{nombreVisible(archivo.nombre)}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} <span className="px-1">·</span> {archivo.nombre.split(".").pop()?.toUpperCase()}</p><span className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${archivo.origen === "nas" ? "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}`}><CheckCircle2 className="size-3" /> {archivo.origen === "nas" ? "NAS · Nextcloud" : "Supabase Storage"}</span></div>
                             </div>
                             <div className="mt-3 flex flex-wrap gap-1.5">
                               {archivo.nombre.toLowerCase().endsWith(".stl") && (
