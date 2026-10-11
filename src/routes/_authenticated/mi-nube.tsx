@@ -731,8 +731,20 @@ function MiNubePage() {
 
       setProyectoAbierto(null);
       setModoEdicion(null);
-      toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS.`);
+      const { error: errorRevocarComparticiones } = await (supabase as any)
+        .from("mi_nube_compartidas")
+        .update({ revoked_at: new Date().toISOString() })
+        .eq("propietario_usuario_id", usuarioId)
+        .eq("propietario_participante_id", participanteId)
+        .eq("carpeta", proyecto.nombre)
+        .is("revoked_at", null);
+      if (errorRevocarComparticiones) {
+        toast.warning(`Proyecto eliminado, pero no se pudo revocar automáticamente el permiso compartido de “${proyecto.nombre}”. Revisa Compartir proyecto.`);
+      } else {
+        toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS.`);
+      }
       await cargarBiblioteca();
+      await cargarCompartidas();
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudo eliminar el proyecto completo.");
       await cargarBiblioteca();
