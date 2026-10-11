@@ -160,18 +160,24 @@ function TransferDownloadPage() {
                       <Sparkles className="size-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d7ad48]">Aurum Lab · El ecosistema para tu taller</p>
-                      <h3 className="mt-2 text-xl font-semibold leading-snug text-white">Todo tu taller, mejor conectado y bajo control.</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d7ad48]">Aurum Lab · El ecosistema del sector joyero</p>
+                      <h3 className="mt-2 text-xl font-semibold leading-snug text-white">¿Te gustaría hacer mucho más que compartir archivos?</h3>
                       <p className="mt-2 text-sm leading-relaxed text-white/70">
-                        Organiza tus clientes, prepara cotizaciones, genera contratos y gestiona pedidos desde un mismo ecosistema diseñado para el sector joyero. Comparte diseños y documentos con AURUM Transfer, guarda tus archivos en Mi Nube y descubre herramientas que te ayudan a conectar y hacer crecer tu trabajo.
+                        Guarda tus diseños en tu propia nube, organiza tus clientes, prepara cotizaciones, genera contratos y gestiona tus pedidos desde un entorno pensado para el trabajo real de un taller de joyería.
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-white/70">
+                        Conecta con otros talleres, profesionales y proveedores; comparte diseños, coordina trabajos y descubre herramientas digitales para llevar tu negocio al siguiente nivel.
+                      </p>
+                      <p className="mt-3 text-sm font-semibold leading-relaxed text-white">
+                        AURUM Transfer y Mi Nube son solo el comienzo. Descubre todo lo que puedes hacer cuando tu taller forma parte de Aurum Lab.
                       </p>
                     </div>
                   </div>
                   <a href={`/auth?importTransfer=${encodeURIComponent(token)}`} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
-                    Descubrir Aurum Lab y crear mi cuenta <ArrowRight className="size-4" />
+                    Quiero digitalizar mi taller <ArrowRight className="size-4" />
                   </a>
                   <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-                    Regístrate para descubrir el ecosistema y guardar estos archivos en tu Mi Nube. La importación está disponible durante las 6 horas posteriores al inicio de la descarga; hazlo antes de pulsar «Finalizar y eliminar».
+                    Crea tu cuenta y descubre el ecosistema. Si quieres guardar también estos archivos en Mi Nube, completa la importación antes de pulsar «Finalizar y eliminar»; la opción está disponible durante las 6 horas posteriores al inicio de la descarga.
                   </p>
                 </div>
               )}
