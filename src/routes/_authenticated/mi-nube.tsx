@@ -18,7 +18,6 @@ import {
   Share2,
   Copy,
   Pencil,
-  Trash2,
   X,
   UploadCloud,
   Video,
@@ -576,7 +575,7 @@ function MiNubePage() {
                               </button>
                               {modoEdicion === proyecto.nombre && (
                                 <button type="button" onClick={() => void eliminarArchivoProyecto(archivo)} className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5">
-                                  <Trash2 className="size-3.5" /> Eliminar
+                                  Eliminar archivo
                                 </button>
                               )}
                             </div>
