@@ -19,8 +19,10 @@ import {
   Wrench,
   BookOpen,
   Cloud,
+  Menu,
+  X,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
@@ -285,6 +287,7 @@ export function AppShell({
   );
   const visiblesOrdenadas = ordenarMenu(visibles);
   const esOperario = sesion?.rolPrincipal === "operario";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const nombrePersonal = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
     .map((valor) => valor?.trim())
     .filter(Boolean)
@@ -428,35 +431,48 @@ export function AppShell({
           ) : null}
         </header>
 
-        {!ocultarNavegacion && !sesion?.esAdmin && !esOperario ? (
-          <nav
-            className={`sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden ${
-              encabezadoMovilCompacto ? "max-lg:hidden" : ""
-            }`}
-          >
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium">{nombreVisible}</p>
-                <p className="truncate text-[10px] text-muted-foreground">
-                  {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
-                  {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
-                </p>
+        {!ocultarNavegacion && Boolean(sesion?.roles?.length) ? (
+          <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/25 bg-gold/10 font-semibold text-gold-deep">
+                  {inicial}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold">{nombreVisible}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">
+                    {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
+                    {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => void cerrarSesion()}
-                className="shrink-0 rounded-full border border-danger/25 bg-danger-soft px-3 py-2 text-xs font-semibold text-danger"
-              >
-                Cerrar sesión
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen((open) => !open)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold shadow-card"
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="navegacion-movil-modulos"
+                  aria-label={mobileMenuOpen ? "Cerrar menú de módulos" : "Abrir menú de módulos"}
+                >
+                  {mobileMenuOpen ? <X className="size-4" aria-hidden="true" /> : <Menu className="size-4" aria-hidden="true" />}
+                  {mobileMenuOpen ? "Cerrar" : "Módulos"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void cerrarSesion()}
+                  className="min-h-11 rounded-xl border border-danger/25 bg-danger-soft px-3 text-xs font-semibold text-danger"
+                >
+                  Salir
+                </button>
+              </div>
             </div>
 
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/80 to-transparent" aria-hidden="true" />
-              <div className="scrollbar-hidden flex gap-5 overflow-x-auto pb-1 pr-8">
+            {mobileMenuOpen ? (
+              <div id="navegacion-movil-modulos" className="mt-3 max-h-[65dvh] overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-raised">
                 {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
                   const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
-                  if (!items.length) return null;
+                  if (items.length === 0) return null;
                   const nombres = {
                     principal: "Principal",
                     comercial: "Comercial",
@@ -467,25 +483,30 @@ export function AppShell({
                     administracion: "Administración",
                   } as const;
                   return (
-                    <div key={grupo} className="shrink-0">
-                      <p className="mb-2 px-1 text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{nombres[grupo]}</p>
-                      <div className="flex gap-2">
-                        {items.map((s) => (
-                          <Link
-                            key={s.to}
-                            to={s.to}
-                            className="shrink-0 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"
-                            activeProps={{ className: "bg-gold/10 text-gold-deep border-gold/20" }}
-                          >
-                            {s.label}
-                          </Link>
-                        ))}
+                    <section key={grupo} className="mb-3 last:mb-0">
+                      <h2 className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{nombres[grupo]}</h2>
+                      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                        {items.map((s) => {
+                          const Icon = s.icono;
+                          return (
+                            <Link
+                              key={s.to}
+                              to={s.to}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              activeProps={{ className: "bg-gold/10 text-gold-deep font-semibold" }}
+                            >
+                              {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}
+                              <span className="min-w-0">{s.label}</span>
+                            </Link>
+                          );
+                        })}
                       </div>
-                    </div>
+                    </section>
                   );
                 })}
               </div>
-            </div>
+            ) : null}
           </nav>
         ) : null}
 
