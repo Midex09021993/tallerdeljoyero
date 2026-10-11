@@ -569,6 +569,22 @@ function MiNubePage() {
           </div>
         </section>
 
+        {seccionActiva !== "todos" && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/25 bg-gold/[0.045] px-4 py-3" role="status">
+            <p className="text-xs text-muted-foreground">
+              Filtro activo: <span className="font-semibold text-foreground">{secciones.find((seccion) => seccion.id === seccionActiva)?.titulo}</span>
+              <span className="ml-2">· {archivosFiltrados.length} archivo(s)</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => setSeccionActiva("todos")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-gold/50 hover:bg-gold/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+            >
+              <X className="size-3.5" /> Quitar filtro · Ver todos
+            </button>
+          </div>
+        )}
+
         <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Filtrar por tipo de archivo">
           {secciones.map(({ id, titulo, descripcion, formatos, Icono }) => {
             const activa = seccionActiva === id;
