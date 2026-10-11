@@ -236,7 +236,23 @@ function MiNubePage() {
         .eq("propietario_usuario_id", usuarioId)
         .is("revoked_at", null);
       if (errorEnviadas) throw errorEnviadas;
-      setCompartidas((enviadas ?? []) as CarpetaCompartida[]);
+
+      // Resolver nombres de los talleres receptores para que el propietario
+      // identifique cada permiso sin mostrar solo el UUID.
+      const idsDestinatarios = [...new Set((enviadas ?? []).map((s: CarpetaCompartida) => s.destinatario_participante_id).filter(Boolean))];
+      let nombresDestinatarios = new Map<string, string>();
+      if (idsDestinatarios.length > 0) {
+        const { data: destinatarios, error: errorDestinatarios } = await (supabase as any)
+          .from("ecosistema_participantes")
+          .select("id, nombre")
+          .in("id", idsDestinatarios);
+        if (errorDestinatarios) throw errorDestinatarios;
+        nombresDestinatarios = new Map((destinatarios ?? []).map((t: { id: string; nombre: string | null }) => [t.id, t.nombre?.trim() || "Taller sin nombre"]));
+      }
+      setCompartidas(((enviadas ?? []) as CarpetaCompartida[]).map((s) => ({
+        ...s,
+        destinatario_nombre: nombresDestinatarios.get(s.destinatario_participante_id) ?? "Taller del ecosistema",
+      })));
       const carpetas = await Promise.all((recibidas ?? []).map(async (share) => {
         const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
         const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 100, sortBy: { column: "name", order: "asc" } });
@@ -744,7 +760,7 @@ function MiNubePage() {
                 <button type="button" onClick={() => setProyectoParaCompartir(null)} className="flex-1 rounded-xl border border-border px-3 py-2.5 text-sm font-semibold">Cancelar</button>
                 <button type="button" disabled={!tallerDestino || guardandoComparticion || cargandoTalleres} onClick={() => void confirmarCompartirEcosistema()} className="flex-1 rounded-xl bg-gold px-3 py-2.5 text-sm font-semibold text-black disabled:opacity-50">{guardandoComparticion ? "Compartiendo…" : "Compartir carpeta"}</button>
               </div>
-              {compartidas.filter((s) => s.carpeta === proyectoParaCompartir).length > 0 && <div className="mt-5 border-t border-border pt-4"><p className="text-xs font-semibold">Accesos concedidos</p>{compartidas.filter((s) => s.carpeta === proyectoParaCompartir).map((s) => <div key={s.id} className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="truncate">Taller receptor · {s.destinatario_participante_id.slice(0, 8)}…</span><button type="button" onClick={() => void revocarComparticion(s)} className="shrink-0 rounded-lg border border-destructive/40 px-2 py-1.5 font-semibold text-destructive">Revocar acceso</button></div>)}</div>}
+              {compartidas.filter((s) => s.carpeta === proyectoParaCompartir).length > 0 && <div className="mt-5 border-t border-border pt-4"><p className="text-xs font-semibold">Accesos concedidos</p>{compartidas.filter((s) => s.carpeta === proyectoParaCompartir).map((s) => <div key={s.id} className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="truncate">{s.destinatario_nombre ?? "Taller del ecosistema"}</span><button type="button" onClick={() => void revocarComparticion(s)} className="shrink-0 rounded-lg border border-destructive/40 px-2 py-1.5 font-semibold text-destructive">Revocar acceso</button></div>)}</div>}
             </div>
           </div>
         )}
