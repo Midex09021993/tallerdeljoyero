@@ -277,7 +277,7 @@ function MiNubePage() {
         // solo por ese motivo. Las entradas que son subcarpetas no tienen extensión
         // de archivo y se excluyen de esta vista de proyecto.
         const base = (entradas ?? [])
-          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.name.includes(".")))
+          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
           .map((e): ArchivoNube => ({
             nombre: e.name, ruta: `${ruta}/${e.name}`, carpeta: share.carpeta,
             bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
