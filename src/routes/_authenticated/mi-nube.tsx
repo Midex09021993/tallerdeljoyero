@@ -142,6 +142,7 @@ function MiNubePage() {
   const [progreso, setProgreso] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [proyectoParaCompartir, setProyectoParaCompartir] = useState<string | null>(null);
+  const [opcionesCompartir, setOpcionesCompartir] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
   const [talleresDisponibles, setTalleresDisponibles] = useState<TallerCompartir[]>([]);
   const [tallerDestino, setTallerDestino] = useState("");
   const [cargandoTalleres, setCargandoTalleres] = useState(false);
@@ -646,14 +647,9 @@ function MiNubePage() {
                       {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => void abrirCompartirEcosistema(proyecto)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-2 py-2 text-[11px] font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17]">
-                        <Share2 className="size-3.5 shrink-0" /> Compartir taller
-                      </button>
-                      <button type="button" disabled={compartiendo !== null} onClick={() => void compartirCarpetaTransfer(proyecto)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 py-2 text-[11px] font-medium leading-tight text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40 disabled:opacity-50">
-                        <UploadCloud className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando…" : "Enviar por Transfer"}
-                      </button>
-                    </div>
+                    <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
+                      <Share2 className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando transferencia…" : "Compartir proyecto"}
+                    </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
                     <button
@@ -794,6 +790,32 @@ function MiNubePage() {
             </div>
           )}
         </section>
+        {opcionesCompartir && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-opciones-title">
+            <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Compartir desde Mi Nube</p>
+                  <h3 id="mi-nube-opciones-title" className="mt-1 text-lg font-semibold">Compartir proyecto</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">“{opcionesCompartir.nombre}” · elige cómo quieres compartirlo.</p>
+                </div>
+                <button type="button" onClick={() => setOpcionesCompartir(null)} className="rounded-lg p-2 hover:bg-muted" aria-label="Cerrar"><X className="size-4" /></button>
+              </div>
+              <div className="mt-5 grid gap-3">
+                <button type="button" onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void abrirCompartirEcosistema(proyecto); }} className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14]">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><Share2 className="size-5" /></div>
+                  <div><span className="block text-sm font-semibold">Compartir con un taller registrado</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">La carpeta original aparecerá en “Compartidas conmigo” de su Mi Nube. Sin duplicar archivos; puedes revocar el acceso.</span></div>
+                </button>
+                <button type="button" disabled={compartiendo !== null} onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void compartirCarpetaTransfer(proyecto); }} className="flex items-start gap-3 rounded-xl border border-border bg-background p-4 text-left transition-colors hover:border-gold/45 hover:bg-muted/40 disabled:opacity-50">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground"><UploadCloud className="size-5" /></div>
+                  <div><span className="block text-sm font-semibold">Generar enlace temporal · AURUM Transfer</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">Para alguien externo al ecosistema. Enlace de un solo uso, con vencimiento de 24 horas y hasta 10 archivos.</span></div>
+                </button>
+              </div>
+              <p className="mt-4 text-xs leading-5 text-muted-foreground">Elige compartir permanentemente con un taller registrado o enviar una copia descargable mediante Transfer. Los originales de Mi Nube no se eliminan.</p>
+              <button type="button" onClick={() => setOpcionesCompartir(null)} className="mt-4 w-full rounded-xl border border-border px-3 py-2.5 text-sm font-semibold">Cancelar</button>
+            </div>
+          </div>
+        )}
         {proyectoParaCompartir && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-compartir-title">
             <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
