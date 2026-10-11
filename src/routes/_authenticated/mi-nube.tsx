@@ -142,6 +142,7 @@ function MiNubePage() {
   const [cargando, setCargando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [progreso, setProgreso] = useState(0);
+  const [estadoSubida, setEstadoSubida] = useState("Preparando subida…");
   const [error, setError] = useState<string | null>(null);
   const [proyectoParaCompartir, setProyectoParaCompartir] = useState<string | null>(null);
   const [opcionesCompartir, setOpcionesCompartir] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
@@ -474,6 +475,7 @@ function MiNubePage() {
 
     setSubiendo(true);
     setProgreso(0);
+    setEstadoSubida("Preparando subida…");
     setError(null);
     let completados = 0;
     try {
@@ -508,6 +510,7 @@ function MiNubePage() {
           if (finalizeError) throw new Error(`No se pudo finalizar el vídeo en el NAS. ${finalizeError.message}`);
           if (finalized?.error) throw new Error(String(finalized.error));
           if (!finalized?.ok || Number(finalized.bytes) !== file.size) throw new Error("Nextcloud no confirmó el guardado del vídeo.");
+          setEstadoSubida(`Verificando ${nombre} en el NAS…`);
           // Verificación real en Nextcloud: dar tiempo a que WebDAV refleje el archivo.
           // Nunca mostramos éxito hasta encontrar nombre, carpeta y tamaño exactos.
           let existe = false;
@@ -546,12 +549,14 @@ function MiNubePage() {
         }
         completados += 1;
         setProgreso(Math.round((completados / seleccionados.length) * 100));
+        setEstadoSubida(completados < seleccionados.length ? "Preparando siguiente archivo…" : "Confirmado; actualizando biblioteca…");
       }
       setSeleccionados([]);
       const selector = document.getElementById("mi-nube-archivos") as HTMLInputElement | null;
       if (selector) selector.value = "";
       setCarpeta(carpetaSegura);
       await cargarBiblioteca();
+      setEstadoSubida("Guardado y verificado.");
       toast.success(`${completados} archivo(s) guardados en Mi Nube.`);
     } catch (cause) {
       const mensaje = cause instanceof Error ? cause.message : "No se pudieron subir los archivos.";
@@ -559,6 +564,7 @@ function MiNubePage() {
       toast.error(mensaje);
     } finally {
       setSubiendo(false);
+      setEstadoSubida("Preparando subida…");
     }
   };
 
@@ -815,7 +821,7 @@ function MiNubePage() {
                 )}
                 {subiendo && (
                   <div>
-                    <div className="mb-1 flex justify-between text-xs"><span>Subiendo…</span><span>{progreso}%</span></div>
+                    <div className="mb-1 flex justify-between gap-3 text-xs"><span aria-live="polite">{estadoSubida}</span><span className="shrink-0">{progreso}%</span></div>
                     <div className="h-2 overflow-hidden rounded-full bg-surface-muted"><div className="h-full rounded-full bg-gold transition-all" style={{ width: `${progreso}%` }} /></div>
                   </div>
                 )}
