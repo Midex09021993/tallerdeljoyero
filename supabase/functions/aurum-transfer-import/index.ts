@@ -37,6 +37,8 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !anonKey || !serviceKey) return json({ error: "La importación no está configurada en el servidor." }, 500);
 
+  let cleanupAdmin: ReturnType<typeof createClient> | null = null;
+  let copiedPaths: string[] = [];
   try {
     const authClient = createClient(url, anonKey, { global: { headers: { Authorization: `Bearer ${bearer}` } }, auth: { persistSession: false } });
     const { data: authData, error: authError } = await authClient.auth.getUser();
@@ -47,6 +49,7 @@ Deno.serve(async (req) => {
     if (!token || token.length > 256) return json({ error: "Transferencia no válida." }, 400);
 
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
+    cleanupAdmin = admin;
     const { data: accounts, error: accountError } = await admin
       .from("participante_cuentas")
       .select("participante_id")
@@ -88,7 +91,6 @@ Deno.serve(async (req) => {
     if (!participant) return json({ error: "Tu taller no está activo para Mi Nube." }, 403);
 
     const folder = `AURUM-Transfer-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}`;
-    const copiedPaths: string[] = [];
     const storage = admin.storage;
     for (const file of files) {
       const { data: blob, error: downloadError } = await storage.from(TRANSFER_BUCKET).download(file.path);
@@ -115,6 +117,9 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, file_count: copiedPaths.length, folder, message: "Archivos guardados en Mi Nube." });
   } catch (error) {
+    if (cleanupAdmin && copiedPaths.length) {
+      await cleanupAdmin.storage.from(CLOUD_BUCKET).remove(copiedPaths).catch(() => undefined);
+    }
     console.error("[aurum-transfer-import]", error);
     return json({ error: error instanceof Error ? error.message : "No se pudieron guardar los archivos." }, 500);
   }
