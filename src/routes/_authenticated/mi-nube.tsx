@@ -696,6 +696,17 @@ function MiNubePage() {
           )}
 
         </section>
+        <section className="space-y-4" aria-label="Carpetas compartidas conmigo">
+          <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Colaboración</p><h3 className="mt-1 font-display text-2xl">Compartidas conmigo</h3><p className="mt-1 text-sm text-muted-foreground">Carpetas originales de otros talleres, sin duplicar archivos.</p></div><button type="button" onClick={() => void cargarCompartidas()} disabled={cargandoCompartidas} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">{cargandoCompartidas ? "Actualizando…" : "Actualizar"}</button></div>
+          {cargandoCompartidas && carpetasRecibidas.length === 0 ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Buscando carpetas compartidas…</p> : carpetasRecibidas.length === 0 ? <div className="rounded-2xl border border-dashed border-border p-6 text-center"><Folder className="mx-auto size-6 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes carpetas compartidas</p><p className="mt-1 text-xs text-muted-foreground">Cuando otro taller comparta una carpeta contigo, aparecerá aquí.</p></div> : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {carpetasRecibidas.map((recibida) => <article key={recibida.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+                <div className="flex items-center gap-3 border-b border-border bg-muted/30 p-4"><div className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Folder className="size-5" /></div><div className="min-w-0"><h4 className="truncate text-sm font-semibold">{recibida.nombre}</h4><p className="mt-1 truncate text-xs text-muted-foreground">Compartida por {recibida.propietarioNombre} · {recibida.archivos.length} archivos</p></div></div>
+                <div className="space-y-2 p-3">{recibida.archivos.map((archivo) => <div key={archivo.ruta} className="flex items-center justify-between gap-2 rounded-lg bg-muted/25 p-2.5"><div className="min-w-0"><p className="break-all text-xs font-medium">{nombreVisible(archivo.nombre)}</p><p className="mt-1 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} · {archivo.categoria === "modelos-3d" ? "Modelo 3D" : archivo.categoria === "fotos" ? "Imagen" : archivo.categoria === "documentos" ? "Documento" : "Archivo"}</p></div><button type="button" onClick={() => void abrirArchivo(archivo)} className="shrink-0 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">Abrir</button></div>)}<p className="px-1 pt-1 text-[10px] text-muted-foreground">Solo lectura · los archivos siguen perteneciendo al taller de origen.</p></div>
+              </article>)}
+            </div>
+          )}
+        </section>
         {proyectoParaCompartir && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-compartir-title">
             <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
