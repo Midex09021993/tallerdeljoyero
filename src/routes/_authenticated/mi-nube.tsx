@@ -667,7 +667,7 @@ function MiNubePage() {
                         </div>
                       )}
 
-                        {proyecto.archivos.map((archivo) => (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">{proyecto.archivos.map((archivo) => (
                           <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
                               <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div>
@@ -703,7 +703,7 @@ function MiNubePage() {
                               )}
                             </div>
                           </div>
-                        ))}
+                        ))}</div>
                       </div>
                     )}
 
