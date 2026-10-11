@@ -22,7 +22,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
@@ -286,7 +286,6 @@ export function AppShell({
     modalidadesCargadas ? modalidadesMenu : undefined,
   );
   const visiblesOrdenadas = ordenarMenu(visibles);
-  const esOperario = sesion?.rolPrincipal === "operario";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const nombrePersonal = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
     .map((valor) => valor?.trim())
@@ -306,6 +305,9 @@ export function AppShell({
   const inicial = nombreVisible.charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
   const esRutaProduccion = [
     "/diseno-3d",
     "/impresion-3d",
