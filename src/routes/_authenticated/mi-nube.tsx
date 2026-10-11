@@ -17,6 +17,7 @@ import {
   Search,
   Share2,
   Copy,
+  Pencil,
   X,
   UploadCloud,
   Video,
@@ -106,6 +107,7 @@ function MiNubePage() {
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
+  const [modoEdicion, setModoEdicion] = useState<string | null>(null);
   const [compartiendo, setCompartiendo] = useState<string | null>(null);
   const [enlaceCompartido, setEnlaceCompartido] = useState<{ proyecto: string; url: string } | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
@@ -264,6 +266,13 @@ function MiNubePage() {
   };
 
 
+  const eliminarArchivoProyecto = async (archivo: ArchivoNube) => {
+    if (!window.confirm("¿Eliminar definitivamente " + nombreVisible(archivo.nombre) + "?")) return;
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove([archivo.ruta]);
+    if (removeError) { toast.error(removeError.message); return; }
+    toast.success("Archivo eliminado.");
+    await cargarBiblioteca();
+  };
   const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
     if (proyecto.archivos.length > 10) {
       toast.error("AURUM Transfer permite hasta 10 archivos por enlace. Esta carpeta tiene " + proyecto.archivos.length + ".");
@@ -523,6 +532,9 @@ function MiNubePage() {
                     >
                       <Share2 className="size-4" /> {compartiendo === proyecto.nombre ? "Preparando enlace seguro…" : "Compartir carpeta por AURUM Transfer"}
                     </button>
+                    <button type="button" onClick={() => { setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setProyectoAbierto(proyecto.nombre); }} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">
+                      <Pencil className="size-3.5" /> {modoEdicion === proyecto.nombre ? "Terminar edición" : "Editar archivos de la carpeta"}
+                    </button>
                     <button
                       type="button"
                       aria-expanded={proyectoAbierto === proyecto.nombre}
@@ -561,6 +573,11 @@ function MiNubePage() {
                               <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">
                                 Abrir / descargar
                               </button>
+                              {modoEdicion === proyecto.nombre && (
+                                <button type="button" onClick={() => void eliminarArchivoProyecto(archivo)} className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5">
+                                  <Trash2 className="size-3.5" /> Eliminar
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
