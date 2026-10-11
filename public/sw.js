@@ -1,4 +1,5 @@
 const CACHE_NAME = "taller-del-joyero-pwa-v1";
+const CACHE_PREFIX = "taller-del-joyero-pwa-";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/pwa-icon.svg", "/favicon.ico"];
 
 self.addEventListener("install", (event) => {
@@ -13,7 +14,11 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
       ),
   );
   self.clients.claim();
@@ -21,7 +26,11 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  event.respondWith(
+    fetch(event.request).catch(() =>
+      caches.open(CACHE_NAME).then((cache) => cache.match(event.request)),
+    ),
+  );
 });
 
 self.addEventListener("push", (event) => {
