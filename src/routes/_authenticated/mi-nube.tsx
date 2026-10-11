@@ -133,6 +133,7 @@ function MiNubePage() {
   const [compartidas, setCompartidas] = useState<CarpetaCompartida[]>([]);
   const [carpetasRecibidas, setCarpetasRecibidas] = useState<CarpetaRecibida[]>([]);
   const [cargandoCompartidas, setCargandoCompartidas] = useState(false);
+  const [anadiendoCatalogo, setAnadiendoCatalogo] = useState<string | null>(null);
 
   const cargarBiblioteca = useCallback(async () => {
     if (!participanteId || !usuarioId) {
@@ -200,6 +201,26 @@ function MiNubePage() {
     void cargarBiblioteca();
   }, [cargarBiblioteca]);
 
+  const anadirImagenAlCatalogo = async (archivo: ArchivoNube) => {
+    if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
+    setAnadiendoCatalogo(archivo.ruta);
+    try {
+      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+      if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo leer la imagen original.");
+      const response = await fetch(signed.signedUrl);
+      if (!response.ok) throw new Error("No se pudo descargar la imagen desde Mi Nube.");
+      const blob = await response.blob();
+      const destino = participanteId + "/mi-nube/" + crypto.randomUUID() + "-" + nombreSeguro(nombreVisible(archivo.nombre));
+      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: publicData } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
+      if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
+      sessionStorage.setItem("mi-nube-catalogo-pendiente", JSON.stringify({ nombre: nombreVisible(archivo.nombre).replace(/\\.[^.]+$/, ""), imagen_principal_url: publicData.publicUrl }));
+      toast.success("Imagen preparada. Completa la ficha para añadirla al catálogo.");
+      window.location.assign("/catalogo?desde=mi-nube");
+    } catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo preparar la imagen para el catálogo."); }
+    finally { setAnadiendoCatalogo(null); }
+  };
   const cargarCompartidas = useCallback(async () => {
     if (!participanteId || !usuarioId) { setCompartidas([]); setCarpetasRecibidas([]); return; }
     setCargandoCompartidas(true);
@@ -647,12 +668,12 @@ function MiNubePage() {
                       )}
 
                         {proyecto.archivos.map((archivo) => (
-                          <div key={archivo.ruta} className="flex flex-col gap-2 rounded-xl bg-surface-muted/60 p-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="min-w-0">
-                              <p className="break-all text-xs font-medium">{nombreVisible(archivo.nombre)}</p>
-                              <p className="mt-1 text-[11px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
+                          <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
+                            <div className="flex min-w-0 items-start gap-2.5">
+                              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <File className="size-4" />}</div>
+                              <div className="min-w-0 flex-1"><p className="break-words text-xs font-semibold leading-5">{nombreVisible(archivo.nombre)}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{etiquetaTamano(archivo.bytes)} <span className="px-1">·</span> {archivo.nombre.split(".").pop()?.toUpperCase()}</p></div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="mt-3 flex flex-wrap gap-1.5">
                               {archivo.nombre.toLowerCase().endsWith(".stl") && (
                                 <button type="button" onClick={async () => {
                                   const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
@@ -671,7 +692,8 @@ function MiNubePage() {
                                   Abrir en Aurum Render
                                 </button>
                               )}
-                              <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">
+                              {archivo.categoria === "fotos" && <button type="button" onClick={() => void anadirImagenAlCatalogo(archivo)} disabled={anadiendoCatalogo === archivo.ruta} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c5a15d]/50 bg-[#c5a15d]/10 px-2.5 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/15 disabled:opacity-50"><ImageIcon className="size-3.5" /> {anadiendoCatalogo === archivo.ruta ? "Preparando…" : "Añadir al catálogo"}</button>}
+                              <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium hover:border-gold/50">
                                 Abrir / descargar
                               </button>
                               {modoEdicion === proyecto.nombre && (
