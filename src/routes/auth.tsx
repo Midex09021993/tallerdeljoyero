@@ -344,17 +344,19 @@ function LoginPage() {
             </button>
 
             {!modoAlta ? (
-              <button
-                type="button"
-                onClick={() => { window.location.href = "/recuperar-contrasena"; }}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-white/45 transition hover:text-gold"
-              >
-                <HelpCircle className="size-3.5" />
-                ¿Olvidaste tu contraseña?
-              </button>
-              <p className="mt-3 text-center text-[11px] leading-relaxed text-white/40">
-                ¿No recuerdas tu usuario? Si registraste un taller, prueba con el correo de registro. Si eres usuario interno de un taller, solicita al dueño o gerente que confirme tu usuario desde la administración de usuarios.
-              </p>
+              <>
+                <button
+                  type="button"
+                  onClick={() => { window.location.href = "/recuperar-contrasena"; }}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-white/45 transition hover:text-gold"
+                >
+                  <HelpCircle className="size-3.5" />
+                  ¿Olvidaste tu contraseña?
+                </button>
+                <p className="mt-3 text-center text-[11px] leading-relaxed text-white/40">
+                  ¿No recuerdas tu usuario? Si registraste un taller, prueba con el correo de registro. Si eres usuario interno de un taller, solicita al dueño o gerente que confirme tu usuario desde la administración de usuarios.
+                </p>
+              </>
             ) : null}
           </form>
 
