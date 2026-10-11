@@ -583,18 +583,74 @@ function MiNubePage() {
 
 
   const eliminarArchivoProyecto = async (archivo: ArchivoNube) => {
-    if (!window.confirm("¿Eliminar definitivamente " + nombreVisible(archivo.nombre) + "?")) return;
-    if (archivo.origen === "nas") {
-      const { data, error: removeError } = await supabase.functions.invoke("nextcloud-video-files", {
-        body: { action: "delete", folder: archivo.carpeta, name: archivo.nombre, participantId: participanteId },
-      });
-      if (removeError || data?.error) { toast.error(data?.error ?? removeError?.message ?? "No se pudo eliminar el vídeo del NAS."); return; }
-    } else {
-      const { error: removeError } = await supabase.storage.from(BUCKET).remove([archivo.ruta]);
-      if (removeError) { toast.error(removeError.message); return; }
+    if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
+    const nombreLogico = nombreVisible(archivo.nombre).toLocaleLowerCase("es");
+    const esVideo = archivo.categoria === "videos";
+    if (!window.confirm(esVideo
+      ? `¿Eliminar definitivamente “${nombreVisible(archivo.nombre)}” de Mi Nube y del NAS si existe una copia?`
+      : `¿Eliminar definitivamente “${nombreVisible(archivo.nombre)}”?`)) return;
+
+    try {
+      // Para vídeos, localizar la copia hermana antes de borrar nada. Si el NAS
+      // no responde, abortar para no dejar una copia huérfana sin avisar.
+      let copiaNas: { name: string; folder: string } | null = null;
+      let copiaSupabase: ArchivoNube | null = null;
+      if (esVideo && archivo.origen === "supabase" && estadoNas === "online" && !nasPausado) {
+        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "list", participantId },
+        });
+        if (error || data?.error || !Array.isArray(data?.files)) {
+          toast.error("No se pudo comprobar la copia del NAS. No se eliminó nada; vuelve a comprobar el almacenamiento.");
+          return;
+        }
+        copiaNas = data.files.find((f: { name: string; folder: string }) =>
+          f.folder === archivo.carpeta && nombreVisible(f.name).toLocaleLowerCase("es") === nombreLogico,
+        ) ?? null;
+      } else if (esVideo && archivo.origen === "supabase" && (estadoNas !== "online" || nasPausado)) {
+        toast.error("El NAS no está disponible para comprobar la copia. Reconéctalo antes de eliminar este vídeo.");
+        return;
+      }
+
+      if (esVideo && archivo.origen === "nas") {
+        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "list", participantId },
+        });
+        if (error || data?.error || !Array.isArray(data?.files)) {
+          toast.error("No se pudo comprobar el almacenamiento web. No se eliminó nada.");
+          return;
+        }
+        // La lista del NAS no contiene Supabase; localizamos la copia web en el estado
+        // cargado, limitado al mismo proyecto y al mismo nombre lógico.
+        copiaSupabase = archivos.find((f) => f.origen === "supabase" && f.carpeta === archivo.carpeta &&
+          f.categoria === "videos" && nombreVisible(f.nombre).toLocaleLowerCase("es") === nombreLogico) ?? null;
+      }
+
+      // Borrar primero el NAS: si falla, se conserva la copia de Supabase.
+      if (archivo.origen === "nas" || copiaNas) {
+        const destino = archivo.origen === "nas" ? archivo : copiaNas!;
+        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "delete", folder: destino.carpeta, name: destino.nombre, participantId },
+        });
+        if (error || data?.error || data?.ok !== true) {
+          toast.error(data?.error ?? error?.message ?? "No se pudo eliminar la copia del NAS; se conservó el original web.");
+          return;
+        }
+      }
+
+      const rutaWeb = archivo.origen === "supabase" ? archivo.ruta : copiaSupabase?.ruta;
+      if (rutaWeb) {
+        const { error } = await supabase.storage.from(BUCKET).remove([rutaWeb]);
+        if (error) {
+          toast.error("La copia del NAS se eliminó, pero la copia web no: " + error.message);
+          await cargarBiblioteca();
+          return;
+        }
+      }
+      toast.success(esVideo ? "Archivo y copias encontradas eliminados." : "Archivo eliminado.");
+      await cargarBiblioteca();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo completar la eliminación.");
     }
-    toast.success("Archivo eliminado.");
-    await cargarBiblioteca();
   };
   const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
     if (proyecto.archivos.some((archivo) => archivo.origen === "nas")) {
@@ -928,6 +984,9 @@ function MiNubePage() {
                     </div>
                     <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
                       <Share2 className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando transferencia…" : "Compartir proyecto"}
+                    </button>
+                    <button type="button" onClick={() => { setProyectoAbierto(proyecto.nombre); setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setCarpetaDestinoEdicion(null); setSeleccionados([]); }} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/35 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5">
+                      <X className="size-3.5 shrink-0" /> {modoEdicion === proyecto.nombre ? "Cerrar gestión de archivos" : "Gestionar / eliminar archivos"}
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
