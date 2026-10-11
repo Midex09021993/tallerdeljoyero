@@ -1,6 +1,6 @@
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Check, Copy, FileUp, Link2, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
 
 export const Route = createFileRoute("/transfer/")({
@@ -79,7 +79,43 @@ function TransferPage() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
+  const [loadingMiNube, setLoadingMiNube] = useState(false);
+  const [sourceProject, setSourceProject] = useState("");
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get("fromMiNube");
+    if (!source) return;
+    let active = true;
+    const load = async () => {
+      setLoadingMiNube(true);
+      setError("");
+      try {
+        const payload = JSON.parse(source) as { proyecto?: string; files?: Array<{ name: string; url: string }> };
+        if (!Array.isArray(payload.files) || payload.files.length === 0 || payload.files.length > 10) throw new Error("La carpeta no contiene una lista válida de hasta 10 archivos.");
+        const loaded: File[] = [];
+        let bytes = 0;
+        for (const item of payload.files) {
+          if (!item.name || !item.url) throw new Error("Falta el nombre o el acceso temporal de un archivo.");
+          const response = await fetch(item.url);
+          if (!response.ok) throw new Error("No se pudo cargar " + item.name + " desde Mi Nube.");
+          const blob = await response.blob();
+          bytes += blob.size;
+          if (bytes > MAX_BYTES) throw new Error("La carpeta supera el límite de 2 GB de AURUM Transfer.");
+          const namedBlob = Object.assign(blob, { name: item.name, lastModified: Date.now() }) as File;
+          loaded.push(namedBlob);
+        }
+        if (!active) return;
+        setFiles(loaded);
+        setSourceProject(payload.proyecto ?? "Mi Nube");
+        window.history.replaceState({}, "", window.location.pathname);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : "No se pudieron cargar los archivos de Mi Nube.");
+      } finally { if (active) setLoadingMiNube(false); }
+    };
+    void load();
+    return () => { active = false; };
+  }, []);
   const total = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
 
   const addFiles = (incoming: FileList | File[]) => {
@@ -134,6 +170,11 @@ function TransferPage() {
 
         {!link ? (
           <div className="mt-10 grid gap-6 lg:grid-cols-[1.3fr_.7fr]">
+            {(loadingMiNube || sourceProject) && (
+              <div className="lg:col-span-2 rounded-2xl border border-[#d7ad48]/30 bg-[#d7ad48]/[.06] px-5 py-4 text-sm">
+                {loadingMiNube ? "Cargando automáticamente los archivos de Mi Nube…" : <>Proyecto cargado desde Mi Nube: <strong>{sourceProject}</strong>. Revisa los archivos y crea el enlace cuando estés listo.</>}
+              </div>
+            )}
             <section
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); addFiles(event.dataTransfer.files); }}
