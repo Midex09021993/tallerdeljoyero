@@ -6,6 +6,7 @@ import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2, Ca
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { CumpleanosClientes } from "@/components/CumpleanosClientes";
+import { CentroCampanasClientes } from "@/components/CentroCampanasClientes";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
 type Cliente = {
@@ -57,7 +58,7 @@ function ClientesPage() {
   const [eliminando, setEliminando] = useState(false);
   const [confirmarEliminacion, setConfirmarEliminacion] = useState(false);
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
-  const [vista, setVista] = useState<"clientes" | "cumpleanos">("clientes");
+  const [vista, setVista] = useState<"clientes" | "cumpleanos" | "campanas">("clientes");
   const cargaClientesRef = useRef(0);
 
   const cargar = async () => {
@@ -270,7 +271,7 @@ function ClientesPage() {
         </>
       }
     >
-      <div className="mb-5 flex gap-2 rounded-2xl border border-border bg-card p-2"><button type="button" onClick={()=>setVista("clientes")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="clientes"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}>Clientes</button><button type="button" onClick={()=>setVista("cumpleanos")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="cumpleanos"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}><Cake className="mr-2 inline size-4"/>Cumpleaños</button></div>
+      <div className="mb-5 flex gap-2 rounded-2xl border border-border bg-card p-2"><button type="button" onClick={()=>setVista("clientes")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="clientes"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}>Clientes</button><button type="button" onClick={()=>setVista("cumpleanos")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="cumpleanos"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}><Cake className="mr-2 inline size-4"/>Cumpleaños</button><button type="button" onClick={()=>setVista("campanas")} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${vista==="campanas"?"bg-gold text-gold-foreground":"text-muted-foreground"}`}><Mail className="mr-2 inline size-4"/>Campañas</button></div>
       <div className={vista==="clientes"?"grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]":"hidden"}>
         <section className="overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,0.35)]">
           <div className="border-b border-border p-4 sm:p-5">
@@ -348,7 +349,7 @@ function ClientesPage() {
           )}
         </section>
       </div>
-      {vista==="cumpleanos"?<CumpleanosClientes clientes={clientes} alSeleccionar={id=>{const c=clientes.find(x=>x.id===id);if(c){setSeleccionado(c);setVista("clientes");}}}/>:null}
+      {vista==="cumpleanos"?<CumpleanosClientes clientes={clientes} alSeleccionar={id=>{const c=clientes.find(x=>x.id===id);if(c){setSeleccionado(c);setVista("clientes");}}}/>:null}{vista==="campanas"?<CentroCampanasClientes clientes={clientes}/>:null}
 
       {confirmarEliminacion && seleccionado ? <div className="fixed inset-0 z-[60] grid place-items-center bg-foreground/35 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="confirmar-eliminacion-titulo">
         <div className="w-full max-w-md rounded-2xl border border-danger/20 bg-card p-6 shadow-raised">
