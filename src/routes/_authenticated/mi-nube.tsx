@@ -508,10 +508,34 @@ function MiNubePage() {
           if (finalizeError) throw new Error(`No se pudo finalizar el vídeo en el NAS. ${finalizeError.message}`);
           if (finalized?.error) throw new Error(String(finalized.error));
           if (!finalized?.ok || Number(finalized.bytes) !== file.size) throw new Error("Nextcloud no confirmó el guardado del vídeo.");
-          // Confirmación explícita: el vídeo debe aparecer en la misma ruta que lista Mi Nube.
-          const { data: verificado, error: verificarError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
-          const existe = Array.isArray(verificado?.files) && verificado.files.some((f: { name: string; folder: string; bytes: number }) => f.folder === carpetaSegura && f.name === filename && Number(f.bytes) === file.size);
-          if (verificarError || !existe) throw new Error("El vídeo se envió, pero Nextcloud no lo muestra guardado. Inténtalo de nuevo.");
+          // Verificación real en Nextcloud: dar tiempo a que WebDAV refleje el archivo.
+          // Nunca mostramos éxito hasta encontrar nombre, carpeta y tamaño exactos.
+          let existe = false;
+          let ultimoError: string | null = null;
+          const intentosVerificacion = 5;
+          for (let intento = 1; intento <= intentosVerificacion; intento++) {
+            if (intento > 1) await new Promise((resolve) => window.setTimeout(resolve, 1500 * (intento - 1)));
+            const { data: verificado, error: verificarError } = await supabase.functions.invoke("nextcloud-video-files", {
+              body: { action: "list", participantId: participanteId },
+            });
+            if (verificarError) {
+              ultimoError = verificarError.message;
+              continue;
+            }
+            if (verificado?.error) {
+              ultimoError = String(verificado.error);
+              continue;
+            }
+            existe = Array.isArray(verificado?.files) && verificado.files.some(
+              (f: { name: string; folder: string; bytes: number }) =>
+                f.folder === carpetaSegura && f.name === filename && Number(f.bytes) === file.size,
+            );
+            if (existe) break;
+          }
+          if (!existe) {
+            const detalle = ultimoError ? ` Detalle: ${ultimoError}` : "";
+            throw new Error(`El vídeo se envió, pero no pudimos confirmar que esté guardado en el NAS tras ${intentosVerificacion} comprobaciones. No lo damos por guardado.${detalle}`);
+          }
         } else {
           await subirConProgreso({
             bucket: BUCKET,
