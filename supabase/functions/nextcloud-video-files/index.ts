@@ -44,7 +44,19 @@ Deno.serve(async (req) => {
       .select("participante_id").eq("user_id", user.id).eq("estado", "activo");
     if (accountError) throw accountError;
     const participantIds = (accounts ?? []).map((x: { participante_id: string }) => x.participante_id).filter(Boolean);
-    if (participantIds.length !== 1) return json({ error: participantIds.length ? "Tu usuario está vinculado a más de un taller. Selecciona un taller antes de usar el NAS." : "Tu cuenta no tiene un taller activo." }, 403);
+    if (!participantIds.length) return json({ error: "Tu cuenta no tiene un taller activo." }, 403);
+    let requestedParticipantId = "";
+    if (req.method === "GET") {
+      requestedParticipantId = new URL(req.url).searchParams.get("participantId") ?? "";
+    } else if ((req.headers.get("content-type") ?? "").includes("multipart/form-data")) {
+      const form = await req.clone().formData();
+      requestedParticipantId = String(form.get("participantId") ?? "");
+    } else {
+      const body = await req.clone().json().catch(() => ({}));
+      requestedParticipantId = typeof body.participantId === "string" ? body.participantId : "";
+    }
+    const participantId = requestedParticipantId || (participantIds.length === 1 ? participantIds[0] : "");
+    if (!participantId || !participantIds.includes(participantId)) return json({ error: "Selecciona un taller al que tengas acceso." }, 403);
 
     const baseUrl = Deno.env.get("NEXTCLOUD_URL")?.trim().replace(/\\/+$/, "");
     const username = Deno.env.get("NEXTCLOUD_USERNAME")?.trim();
@@ -53,7 +65,6 @@ Deno.serve(async (req) => {
     const parsed = new URL(baseUrl);
     if (parsed.protocol !== "https:" || parsed.username || parsed.password) return json({ error: "La URL de Nextcloud debe ser HTTPS y no contener credenciales." }, 503);
 
-    const participantId = participantIds[0];
     const root = `AurumLab/${participantId}/${user.id}`;
     const davRoot = new URL(`remote.php/dav/files/${encodeURIComponent(username)}/`, baseUrl.endsWith("/") ? baseUrl : baseUrl + "/");
     const auth = `Basic ${btoa(`${username}:${appPassword}`)}`;
