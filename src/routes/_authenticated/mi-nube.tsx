@@ -200,6 +200,7 @@ function MiNubePage() {
       portada: elementos.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null,
       tiene3dm: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".3dm")),
       tieneStl: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")),
+      stlArchivo: elementos.find((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")) ?? null,
       tienePdf: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".pdf")),
     }));
   }, [archivosFiltrados]);
@@ -450,6 +451,19 @@ function MiNubePage() {
                       {proyecto.tienePdf && <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px]">PDF</span>}
                     </div>
                     <button type="button" onClick={() => setBusqueda(proyecto.nombre)} className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">Ver archivos del proyecto</button>
+                    {proyecto.stlArchivo && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(proyecto.stlArchivo!.ruta, 60 * 10);
+                          if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el STL para el visor."); return; }
+                          window.location.href = "/herramientas?archivoUrl=" + encodeURIComponent(data.signedUrl) + "&archivoNombre=" + encodeURIComponent(nombreVisible(proyecto.stlArchivo!.nombre));
+                        }}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-3 py-2 text-xs font-semibold hover:bg-gold/10"
+                      >
+                        <Box className="size-4" /> Ver 3D y calcular peso
+                      </button>
+                    )}
                   </div>
                 </article>
               ))}
