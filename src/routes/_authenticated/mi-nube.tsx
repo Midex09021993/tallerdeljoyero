@@ -18,6 +18,7 @@ import {
   Share2,
   Copy,
   Pencil,
+  Trash2,
   X,
   UploadCloud,
   Video,
