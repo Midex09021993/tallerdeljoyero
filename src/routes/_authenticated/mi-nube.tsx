@@ -15,6 +15,9 @@ import {
   LockKeyhole,
   RefreshCw,
   Search,
+  Share2,
+  Copy,
+  X,
   UploadCloud,
   Video,
 } from "lucide-react";
@@ -103,6 +106,8 @@ function MiNubePage() {
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
+  const [compartiendo, setCompartiendo] = useState<string | null>(null);
+  const [enlaceCompartido, setEnlaceCompartido] = useState<{ proyecto: string; url: string } | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
@@ -255,6 +260,65 @@ function MiNubePage() {
       toast.error(mensaje);
     } finally {
       setSubiendo(false);
+    }
+  };
+
+
+  const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
+    if (proyecto.archivos.length > 10) {
+      toast.error("AURUM Transfer permite hasta 10 archivos por enlace. Esta carpeta tiene " + proyecto.archivos.length + ".");
+      return;
+    }
+    setCompartiendo(proyecto.nombre);
+    setEnlaceCompartido(null);
+    try {
+      const archivosLocales: File[] = [];
+      for (const archivo of proyecto.archivos) {
+        const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+        if (urlError || !data?.signedUrl) throw new Error("No se pudo leer " + nombreVisible(archivo.nombre));
+        const response = await fetch(data.signedUrl);
+        if (!response.ok) throw new Error("No se pudo obtener " + nombreVisible(archivo.nombre));
+        const blob = await response.blob();
+        archivosLocales.push(new File([blob], nombreVisible(archivo.nombre), { type: blob.type || "application/octet-stream" }));
+      }
+      const supabaseUrl = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ?? "";
+      const supabaseKey = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+      const callCreate = async (body: unknown) => {
+        const response = await fetch(supabaseUrl + "/functions/v1/aurum-transfer-create", {
+          method: "POST",
+          headers: { apikey: supabaseKey, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error ?? "No se pudo crear el enlace de AURUM Transfer.");
+        return data;
+      };
+      const metadata = archivosLocales.map((file) => ({ name: file.name, size: file.size, type: file.type }));
+      const prep = await callCreate({ action: "prepare", files: metadata }) as {
+        token: string;
+        uploads: Array<{ name: string; size: number; type: string; path: string; signedUrl: string }>;
+      };
+      for (let i = 0; i < archivosLocales.length; i++) {
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", prep.uploads[i]!.signedUrl);
+          if (archivosLocales[i]!.type) xhr.setRequestHeader("Content-Type", archivosLocales[i]!.type);
+          xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("Falló la transferencia de " + archivosLocales[i]!.name));
+          xhr.onerror = () => reject(new Error("Error de red al compartir la carpeta."));
+          xhr.send(archivosLocales[i]);
+        });
+      }
+      const done = await callCreate({
+        action: "finalize",
+        token: prep.token,
+        files: prep.uploads.map(({ name, size, type, path }) => ({ name, size, type, path })),
+      }) as { token: string };
+      setEnlaceCompartido({ proyecto: proyecto.nombre, url: window.location.origin + "/transfer/" + done.token });
+      toast.success("Enlace de AURUM Transfer creado.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo compartir la carpeta.");
+    } finally {
+      setCompartiendo(null);
     }
   };
 
@@ -453,6 +517,14 @@ function MiNubePage() {
                     </div>
                     <button
                       type="button"
+                      disabled={compartiendo !== null}
+                      onClick={() => void compartirCarpetaTransfer(proyecto)}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-3 py-2 text-xs font-semibold hover:bg-gold/10 disabled:opacity-50"
+                    >
+                      <Share2 className="size-4" /> {compartiendo === proyecto.nombre ? "Preparando enlace seguro…" : "Compartir carpeta por AURUM Transfer"}
+                    </button>
+                    <button
+                      type="button"
                       aria-expanded={proyectoAbierto === proyecto.nombre}
                       onClick={() => setProyectoAbierto((actual) => actual === proyecto.nombre ? null : proyecto.nombre)}
                       className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50"
@@ -510,6 +582,19 @@ function MiNubePage() {
           )}
 
         </section>
+        {enlaceCompartido && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-enlace-title">
+            <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div><h3 id="mi-nube-enlace-title" className="text-lg font-semibold">Carpeta lista para compartir</h3><p className="mt-1 text-sm text-muted-foreground">{enlaceCompartido.proyecto} · enlace de un solo uso · expira en 24 horas</p></div>
+                <button type="button" onClick={() => setEnlaceCompartido(null)} className="rounded-lg p-2 hover:bg-muted" aria-label="Cerrar"><X className="size-4" /></button>
+              </div>
+              <div className="mt-4 break-all rounded-xl border border-border bg-background p-3 text-sm">{enlaceCompartido.url}</div>
+              <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlaceCompartido.url); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar el enlace; selecciónalo y cópialo manualmente."); } }} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-black"><Copy className="size-4" /> Copiar enlace</button>
+              <p className="mt-3 text-xs text-muted-foreground">Quien reciba el enlace podrá descargar los archivos una sola vez. Compártelo solo con quien deba recibirlos.</p>
+            </div>
+          </div>
+        )}
         <p className="flex items-start gap-2 px-1 text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 size-3.5 shrink-0" /> Los enlaces de apertura duran 10 minutos. Los archivos no se hacen públicos.</p>
       </div>
     </AppShell>
