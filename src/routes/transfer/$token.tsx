@@ -173,7 +173,7 @@ function TransferDownloadPage() {
                       </p>
                     </div>
                   </div>
-                  <a href={`/auth?importTransfer=${encodeURIComponent(token)}`} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
+                  <a href={`/auth?importTransfer=${encodeURIComponent(token)}#crear-taller`} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
                     Quiero digitalizar mi taller <ArrowRight className="size-4" />
                   </a>
                   <p className="mt-3 text-[11px] leading-relaxed text-white/35">
