@@ -597,7 +597,7 @@ function MiNubePage() {
       let copiaSupabase: ArchivoNube | null = null;
       if (esVideo && archivo.origen === "supabase" && estadoNas === "online" && !nasPausado) {
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "list", participantId },
+          body: { action: "list", participantId: participanteId },
         });
         if (error || data?.error || !Array.isArray(data?.files)) {
           toast.error("No se pudo comprobar la copia del NAS. No se eliminó nada; vuelve a comprobar el almacenamiento.");
@@ -613,7 +613,7 @@ function MiNubePage() {
 
       if (esVideo && archivo.origen === "nas") {
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "list", participantId },
+          body: { action: "list", participantId: participanteId },
         });
         if (error || data?.error || !Array.isArray(data?.files)) {
           toast.error("No se pudo comprobar el almacenamiento web. No se eliminó nada.");
@@ -627,9 +627,9 @@ function MiNubePage() {
 
       // Borrar primero el NAS: si falla, se conserva la copia de Supabase.
       if (archivo.origen === "nas" || copiaNas) {
-        const destino = archivo.origen === "nas" ? archivo : copiaNas!;
+        const destino = archivo.origen === "nas" ? { name: archivo.nombre, folder: archivo.carpeta } : copiaNas!;
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "delete", folder: destino.carpeta, name: destino.nombre, participantId },
+          body: { action: "delete", folder: destino.folder, name: destino.name, participantId: participanteId },
         });
         if (error || data?.error || data?.ok !== true) {
           toast.error(data?.error ?? error?.message ?? "No se pudo eliminar la copia del NAS; se conservó el original web.");
@@ -675,7 +675,7 @@ function MiNubePage() {
       let archivosNas: Array<{ name: string; folder: string }> = [];
       if (tieneVideos) {
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "list", participantId },
+          body: { action: "list", participantId: participanteId },
         });
         if (error || data?.error || !Array.isArray(data?.files)) {
           toast.error("No se pudo verificar el contenido del NAS. No se eliminó ningún archivo.");
@@ -687,7 +687,7 @@ function MiNubePage() {
       // Eliminar primero del NAS. Si una operación falla, no se toca Supabase.
       for (const archivo of archivosNas) {
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId },
+          body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId: participanteId },
         });
         if (error || data?.error || data?.ok !== true) {
           toast.error(data?.error ?? error?.message ?? `No se pudo eliminar “${archivo.name}” del NAS. Los archivos web se conservaron.`);
