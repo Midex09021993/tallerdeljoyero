@@ -182,7 +182,7 @@ function MiNubePage() {
             });
           if (errorLista) throw errorLista;
           return (data ?? [])
-            .filter((entrada) => Boolean(entrada.id || entrada.metadata))
+            .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
             .map((entrada): ArchivoNube => {
               const nombre = entrada.name;
               return {
