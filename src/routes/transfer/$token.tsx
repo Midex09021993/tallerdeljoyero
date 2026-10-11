@@ -160,15 +160,15 @@ function TransferDownloadPage() {
                       <Sparkles className="size-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d7ad48]">Forma parte de Aurum Lab</p>
-                      <h3 className="mt-2 text-xl font-semibold leading-snug text-white">Tu taller puede llegar mucho más lejos.</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d7ad48]">Aurum Lab · El ecosistema para tu taller</p>
+                      <h3 className="mt-2 text-xl font-semibold leading-snug text-white">Todo tu taller, mejor conectado y bajo control.</h3>
                       <p className="mt-2 text-sm leading-relaxed text-white/70">
-                        Aurum Lab es un ecosistema de herramientas y oportunidades para el sector joyero. Mi Nube te ayuda a guardar y organizar tus archivos; AURUM Transfer te permite compartirlos. Y estas son solo algunas de las herramientas que tendrás a tu alcance al registrarte.
+                        Organiza tus clientes, prepara cotizaciones, genera contratos y gestiona pedidos desde un mismo ecosistema diseñado para el sector joyero. Comparte diseños y documentos con AURUM Transfer, guarda tus archivos en Mi Nube y descubre herramientas que te ayudan a conectar y hacer crecer tu trabajo.
                       </p>
                     </div>
                   </div>
                   <a href={`/auth?importTransfer=${encodeURIComponent(token)}`} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
-                    Crear mi cuenta en Aurum Lab <ArrowRight className="size-4" />
+                    Descubrir Aurum Lab y crear mi cuenta <ArrowRight className="size-4" />
                   </a>
                   <p className="mt-3 text-[11px] leading-relaxed text-white/35">
                     Regístrate para descubrir el ecosistema y guardar estos archivos en tu Mi Nube. La importación está disponible durante las 6 horas posteriores al inicio de la descarga; hazlo antes de pulsar «Finalizar y eliminar».
