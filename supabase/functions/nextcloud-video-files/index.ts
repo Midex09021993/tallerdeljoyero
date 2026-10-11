@@ -14,7 +14,7 @@ function json(body: unknown, status = 200) {
   });
 }
 function safeSegment(value: string) {
-  return value.normalize("NFKC").replace(/[\/\\]/g, "_").replace(/[\\u0000-\\u001f]/g, "_").replace(/^\\.+|\\.+$/g, "").slice(0, 160);
+  return value.normalize("NFKC").replace(/[\/\\]/g, "_").replace(/[\u0000-\u001f]/g, "_").replace(/^\.+|\.+$/g, "").slice(0, 160);
 }
 function xmlValue(block: string, name: string) {
   const match = block.match(new RegExp("<(?:[A-Za-z0-9_-]+:)?" + name + "\\b[^>]*>([\\s\\S]*?)<\\/(?:[A-Za-z0-9_-]+:)?" + name + "\\s*>", "i"));
@@ -26,7 +26,7 @@ function hrefPath(href: string, baseUrl: string) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "GET" && req.method !== "POST") return json({ error: "Método no permitido." }, 405);
-  const bearer = (req.headers.get("Authorization") ?? "").match(/^Bearer\\s+(.+)$/i)?.[1];
+  const bearer = (req.headers.get("Authorization") ?? "").match(/^Bearer\s+(.+)$/i)?.[1];
   if (!bearer) return json({ error: "Inicia sesión para acceder a los archivos del NAS." }, 401);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     const participantId = requestedParticipantId || (participantIds.length === 1 ? participantIds[0] : "");
     if (!participantId || !participantIds.includes(participantId)) return json({ error: "Selecciona un taller al que tengas acceso." }, 403);
 
-    const baseUrl = Deno.env.get("NEXTCLOUD_URL")?.trim().replace(/\\/+$/, "");
+    const baseUrl = Deno.env.get("NEXTCLOUD_URL")?.trim().replace(/\/+$/, "");
     const username = Deno.env.get("NEXTCLOUD_USERNAME")?.trim();
     const appPassword = Deno.env.get("NEXTCLOUD_APP_PASSWORD");
     if (!baseUrl || !username || !appPassword) return json({ error: "La conexión con Nextcloud no está configurada." }, 503);
@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
         throw new Error(`No se pudo listar la carpeta del NAS (HTTP ${response.status}).`);
       }
       const xml = await response.text();
-      const blocks = xml.match(/<(?:[A-Za-z0-9_-]+:)?response\\b[\\s\\S]*?<\\/(?:[A-Za-z0-9_-]+:)?response\\s*>/gi) ?? [];
+      const blocks = xml.match(/<(?:[A-Za-z0-9_-]+:)?response\b[\s\S]*?<\/(?:[A-Za-z0-9_-]+:)?response\s*>/gi) ?? [];
       const currentUrl = dav([...segments, ""]).pathname;
       return blocks.map((block) => {
         const href = xmlValue(block, "href");
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
         const resourceType = xmlValue(block, "resourcetype");
         return {
           name: relative,
-          folder: /<(?:[A-Za-z0-9_-]+:)?collection\\b/i.test(resourceType),
+          folder: /<(?:[A-Za-z0-9_-]+:)?collection\b/i.test(resourceType),
           bytes: Number(xmlValue(block, "getcontentlength") || 0),
           updated: xmlValue(block, "getlastmodified") || null,
         };
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
         if (!item.folder) continue;
         const files = await listDirectory([root, item.name]);
         for (const file of files) {
-          if (file.folder || !/\\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(file.name)) continue;
+          if (file.folder || !/\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(file.name)) continue;
           result.push({ name: file.name, folder: item.name, bytes: file.bytes, updated: file.updated });
         }
       }
