@@ -1093,9 +1093,6 @@ function MiNubePage() {
                     <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
                       <Share2 className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando transferencia…" : "Compartir proyecto"}
                     </button>
-                    <button type="button" onClick={() => { setProyectoAbierto(proyecto.nombre); setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setCarpetaDestinoEdicion(null); setSeleccionados([]); }} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/35 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5">
-                      <X className="size-3.5 shrink-0" /> {modoEdicion === proyecto.nombre ? "Cerrar gestión de archivos" : "Gestionar / eliminar archivos"}
-                    </button>
                     <button type="button" onClick={() => void eliminarProyectoCompleto(proyecto)} disabled={subiendo || compartiendo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/50 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50">
                       <X className="size-3.5 shrink-0" /> Eliminar todo el proyecto
                     </button>
