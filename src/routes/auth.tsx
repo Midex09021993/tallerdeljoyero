@@ -253,25 +253,7 @@ function LoginPage() {
 
           </section>
 
-          <section id="mi-nube-catalogo" className="mt-8 max-w-5xl scroll-mt-8">
-            <div className="mb-4 max-w-3xl">
-              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Tu trabajo, organizado y listo para mostrar</p>
-              <h2 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">De los archivos del taller a la presentación de tus joyas.</h2>
-              <p className="mt-2 text-sm leading-relaxed text-white/55">Dos espacios que amplían Aurum Lab: conserva tus recursos de trabajo y prepara una vitrina digital para tus modelos.</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <article className="rounded-2xl border border-white/10 bg-black/35 p-5 transition hover:border-gold/35">
-                <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><Boxes className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Espacio de trabajo</p><h3 className="mt-1 text-base font-semibold text-white">Mi Nube</h3></div></div>
-                <p className="mt-3 text-xs leading-relaxed text-white/55">Centraliza fotografías, vídeos, documentos y archivos técnicos del taller. Mantén tus recursos organizados y enlázalos con el trabajo de tu equipo.</p>
-                <p className="mt-3 text-[10px] leading-relaxed text-white/35">Disponible dentro del entorno de trabajo para usuarios autorizados.</p>
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-black/35 p-5 transition hover:border-gold/35">
-                <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><ShoppingBag className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Vitrina comercial</p><h3 className="mt-1 text-base font-semibold text-white">Catálogo digital</h3></div></div>
-                <p className="mt-3 text-xs leading-relaxed text-white/55">Organiza modelos, imágenes y colecciones para preparar una presentación digital de las joyas de tu taller y compartirla mediante un enlace público cuando esté configurada.</p>
-                <p className="mt-3 text-[10px] leading-relaxed text-white/35">La publicación depende de la configuración del catálogo de cada taller.</p>
-              </article>
-            </div>
-          </section>
+
 
           <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-xl border border-gold/25 bg-gold/[0.04] p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -467,6 +449,26 @@ function LoginPage() {
                       </article>
                     ))}
                   </div>
+
+                  <section className="mt-6 rounded-2xl border border-gold/20 bg-black/20 p-5 sm:p-6">
+                    <div className="mb-4 max-w-3xl">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Tu trabajo, organizado y listo para mostrar</p>
+                      <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">De los archivos del taller a la presentación de tus joyas.</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-white/55">Dos espacios conectados con tu entorno de trabajo: conserva tus recursos y prepara una vitrina digital para tus modelos.</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-gold/35">
+                        <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><Boxes className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Espacio de trabajo</p><h4 className="mt-1 text-base font-semibold text-white">Mi Nube</h4></div></div>
+                        <p className="mt-3 text-xs leading-relaxed text-white/55">Centraliza fotografías, vídeos, documentos y archivos técnicos del taller. Mantén tus recursos organizados y enlázalos con el trabajo de tu equipo.</p>
+                        <p className="mt-3 text-[10px] leading-relaxed text-white/35">Disponible dentro del entorno de trabajo para usuarios autorizados.</p>
+                      </article>
+                      <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-gold/35">
+                        <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><ShoppingBag className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Vitrina comercial</p><h4 className="mt-1 text-base font-semibold text-white">Catálogo digital</h4></div></div>
+                        <p className="mt-3 text-xs leading-relaxed text-white/55">Organiza modelos, imágenes y colecciones para presentar las joyas de tu taller y compartirlas mediante un enlace público cuando esté configurado.</p>
+                        <p className="mt-3 text-[10px] leading-relaxed text-white/35">La publicación depende de la configuración del catálogo de cada taller.</p>
+                      </article>
+                    </div>
+                  </section>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <article className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5">
