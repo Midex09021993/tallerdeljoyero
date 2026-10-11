@@ -167,11 +167,11 @@ function TransferDownloadPage() {
                       </p>
                     </div>
                   </div>
-                  <a href="/auth#conoce-plataforma" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
-                    Conocer Mi Nube y solicitar acceso <ArrowRight className="size-4" />
+                  <a href={`/auth?importTransfer=${encodeURIComponent(token)}`} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ad48] px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#e5c46d] sm:w-auto">
+                    Guardar estos archivos en Mi Nube <ArrowRight className="size-4" />
                   </a>
                   <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-                    Estos archivos no se guardan automáticamente en Mi Nube. Primero descarga tu transferencia; después podrás conocer las opciones de acceso a la plataforma.
+                    Necesitas una cuenta con un taller activo. Guarda los archivos antes de pulsar «Finalizar y eliminar»; la importación estará disponible durante las 6 horas de descarga.
                   </p>
                 </div>
               )}
