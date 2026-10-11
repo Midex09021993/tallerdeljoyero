@@ -20,6 +20,7 @@ import {
   Server,
   Copy,
   Pencil,
+  Power,
   X,
   UploadCloud,
   Video,
@@ -159,6 +160,8 @@ function MiNubePage() {
 
   type EstadoNas = "checking" | "online" | "offline" | "misconfigured" | "not_configured" | "unknown";
   const [estadoNas, setEstadoNas] = useState<EstadoNas>("checking");
+  // Pausa local de la integración. No apaga físicamente el servidor; prepara el punto de control para una futura acción segura de administración.
+  const [nasPausado, setNasPausado] = useState(false);
   const [mensajeNas, setMensajeNas] = useState("Comprobando conexión segura…");
   const [errorListadoNas, setErrorListadoNas] = useState<string | null>(null);
   const comprobarNas = useCallback(async () => {
@@ -245,7 +248,7 @@ function MiNubePage() {
       );
       let archivosNas: ArchivoNube[] = [];
       let carpetasNas: string[] = [];
-      if (estadoNas === "online") {
+      if (estadoNas === "online" && !nasPausado) {
         const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
         if (nasError) {
           console.warn("[Mi Nube] No se pudieron listar los vídeos del NAS.", nasError);
@@ -271,7 +274,7 @@ function MiNubePage() {
     } finally {
       setCargando(false);
     }
-  }, [participanteId, usuarioId, estadoNas]);
+  }, [participanteId, usuarioId, estadoNas, nasPausado]);
 
   const [importandoTransferencia, setImportandoTransferencia] = useState(false);
 
@@ -467,6 +470,10 @@ function MiNubePage() {
     }
     if (seleccionados.length === 0) {
       toast.error("Selecciona al menos un archivo.");
+      return;
+    }
+    if (nasPausado && seleccionados.some((archivo) => clasificarArchivo(archivo.name) === "videos")) {
+      toast.error("La conexión con el NAS está pausada. Reconéctala desde Mi NAS antes de subir vídeos.");
       return;
     }
     if (seleccionados.length > MAX_FILES_PER_BATCH) {
@@ -696,15 +703,27 @@ function MiNubePage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label={`Estado del NAS: ${mensajeNas}`}>
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label={`Estado del NAS: ${nasPausado ? "Conexión pausada desde Mi Nube" : mensajeNas}`}>
                 <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><Server className="size-5" /></div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold">Mi NAS</p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
-                    <span className={`relative flex size-2.5 shrink-0 rounded-full ${estadoNas === "online" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.65)]" : estadoNas === "offline" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.55)]" : estadoNas === "misconfigured" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
-                    {estadoNas === "online" ? "Conectado" : estadoNas === "offline" ? "Desconectado" : estadoNas === "misconfigured" ? "Revisar credenciales" : estadoNas === "checking" ? "Comprobando…" : estadoNas === "not_configured" ? "Pendiente de configurar" : "Estado no confirmado"}
+                    <span className={`relative flex size-2.5 shrink-0 rounded-full ${nasPausado ? "bg-amber-500" : estadoNas === "online" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.65)]" : estadoNas === "offline" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.55)]" : estadoNas === "misconfigured" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
+                    {nasPausado ? "Conexión pausada" : estadoNas === "online" ? "Conectado" : estadoNas === "offline" ? "Desconectado" : estadoNas === "misconfigured" ? "Revisar credenciales" : estadoNas === "checking" ? "Comprobando…" : estadoNas === "not_configured" ? "Pendiente de configurar" : "Estado no confirmado"}
                   </p>
-                  <p className="mt-1 max-w-48 text-[10px] text-muted-foreground">{mensajeNas}</p>
+                  <p className="mt-1 max-w-48 text-[10px] text-muted-foreground">{nasPausado ? "Los vídeos del NAS quedan ocultos y no se pueden subir nuevos." : mensajeNas}</p>
+                  <button type="button" disabled={subiendo || estadoNas === "checking" || (!nasPausado && estadoNas !== "online")} onClick={() => {
+                    if (nasPausado) {
+                      setNasPausado(false);
+                      void comprobarNas();
+                      toast.success("Conexión con el NAS reactivada en Mi Nube.");
+                    } else {
+                      setNasPausado(true);
+                      toast.success("Conexión con el NAS pausada en Mi Nube. El equipo sigue encendido.");
+                    }
+                  }} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-semibold hover:border-gold/50 disabled:cursor-not-allowed disabled:opacity-50">
+                    <Power className="size-3" /> {nasPausado ? "Reconectar" : "Desconectar"}
+                  </button>
                 </div>
               </div>
             </div>
@@ -734,7 +753,7 @@ function MiNubePage() {
                 <span className="flex items-center gap-2 text-xs font-semibold"><Server className="size-4 text-gold" /> NAS · Nextcloud</span>
                 <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold">{archivos.filter((archivo) => archivo.origen === "nas").length} archivo(s)</span>
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">{errorListadoNas ? "No verificado: falló la consulta al NAS." : estadoNas === "online" ? "Videos confirmados por el listado del NAS." : "No se pudo confirmar el contenido del NAS en este momento."}</p>
+              <p className="mt-2 text-[11px] text-muted-foreground">{nasPausado ? "Conexión pausada desde Mi Nube; el NAS físico sigue encendido." : errorListadoNas ? "No verificado: falló la consulta al NAS." : estadoNas === "online" ? "Videos confirmados por el listado del NAS." : "No se pudo confirmar el contenido del NAS en este momento."}</p>
               {errorListadoNas && <p className="mt-1 text-[10px] text-destructive">{errorListadoNas}</p>}
             </div>
           </div>
