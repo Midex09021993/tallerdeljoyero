@@ -84,6 +84,19 @@ function nombreVisible(nombre: string) {
   return nombre.replace(/^\d{13,}-/, "");
 }
 
+function sugerirNombreProyecto(files: File[]) {
+  const genericos = /^(\d+|img[_ -]?\d*|image[_ -]?\d*|scan[_ -]?\d*|untitled|sin título|documento)$/i;
+  const candidatos = files.map((file) => {
+    const base = file.name.replace(/\.[^.]+$/, "").replace(/^\d{13,}-/, "");
+    const limpio = base.replace(/[_.]+/g, " ").replace(/\s+/g, " ").trim();
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const prioridad = ext === "3dm" ? 5 : ext === "stl" ? 4 : ["obj", "glb", "gltf", "3mf"].includes(ext) ? 3 : 1;
+    return { limpio, prioridad, longitud: limpio.length };
+  }).filter((item) => item.limpio && !genericos.test(item.limpio));
+  candidatos.sort((a, b) => b.prioridad - a.prioridad || b.longitud - a.longitud);
+  return candidatos[0]?.limpio.slice(0, 60) ?? files[0]?.name.replace(/\.[^.]+$/, "").slice(0, 60) ?? "";
+}
+
 function MiNubePage() {
   const { data: sesion, isLoading: cargandoSesion } = useSesion();
   const participanteId = sesion?.participante?.id ?? null;
@@ -329,12 +342,12 @@ function MiNubePage() {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
               <div className="space-y-3">
                 <label className="block text-xs font-semibold">
-                  Nombre del proyecto / carpeta
+                  Nombre del proyecto (se completa automáticamente)
                   <input
                     value={carpeta}
                     onChange={(event) => setCarpeta(event.target.value)}
                     maxLength={60}
-                    placeholder="Ej. Anillo dos corazones"
+                    placeholder="Se obtiene del nombre de tus archivos"
                     className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-normal outline-none focus-visible:ring-2 focus-visible:ring-gold"
                     disabled={subiendo}
                   />
@@ -342,14 +355,18 @@ function MiNubePage() {
                 <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-center transition hover:bg-gold/10">
                   <UploadCloud className="size-7 text-gold" />
                   <span className="mt-2 text-sm font-semibold">Elegir todos los archivos del proyecto</span>
-                  <span className="mt-1 text-xs text-muted-foreground">Selecciona juntos la imagen, el 3DM, el STL y el PDF · hasta 30 archivos</span>
+                  <span className="mt-1 text-xs text-muted-foreground">Selecciona juntos los archivos del proyecto. El nombre se toma del archivo más descriptivo · hasta 30 archivos</span>
                   <input
                     id="mi-nube-archivos"
                     type="file"
                     multiple
                     className="sr-only"
                     disabled={subiendo}
-                    onChange={(event) => setSeleccionados(Array.from(event.target.files ?? []))}
+                    onChange={(event) => {
+                                          const files = Array.from(event.target.files ?? []);
+                                          setSeleccionados(files);
+                                          if (files.length > 0) setCarpeta(sugerirNombreProyecto(files));
+                                        }}
                   />
                 </label>
                 {seleccionados.length > 0 && (
