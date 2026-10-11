@@ -19,12 +19,12 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Aurum Lab conecta clientes, cotizaciones, pedidos, producción, inventario y herramientas digitales especializadas para el sector joyero.",
+          "Aurum Lab para talleres de joyería: gestión comercial y producción, Mi Nube para archivos del taller, catálogo digital y herramientas técnicas especializadas.",
       },
       { property: "og:title", content: "Aurum Lab — Plataforma digital para talleres de joyería" },
       {
         property: "og:description",
-        content: "Gestiona el trabajo de tu taller y conecta herramientas, producción y comercial en un solo entorno.",
+        content: "Gestiona tu taller, organiza archivos en Mi Nube, publica tu catálogo digital y utiliza herramientas especializadas para joyería.",
       },
     ],
   }),
@@ -173,6 +173,9 @@ function LoginPage() {
           <a href="#herramientas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Grid2X2 className="size-4" /> Herramientas
           </a>
+          <a href="#mi-nube-catalogo" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
+            <Boxes className="size-4" /> Mi Nube y catálogo
+          </a>
         </nav>
         <a href="#login" className="rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink">
           Iniciar sesión
@@ -182,12 +185,12 @@ function LoginPage() {
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
         <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
-            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-gold">Infraestructura digital para el ecosistema joyero</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-gold">Plataforma digital creada para el trabajo real del sector joyero</p>
             <h1 className="mt-3 max-w-4xl font-display text-3xl italic leading-tight text-white sm:text-4xl lg:text-5xl [@media(max-height:800px)]:lg:text-[2.1rem]">
               Digitaliza tu taller. Conecta tu trabajo. Hazlo crecer.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-2">
-              Herramientas, comercial, producción, visualización y ecosistema en un mismo entorno, adaptado a la forma real de trabajar de cada taller.
+              Gestiona clientes, cotizaciones y producción; conserva archivos en Mi Nube, presenta tus diseños en un catálogo digital y utiliza herramientas técnicas en un solo entorno.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-2.5 [@media(max-height:800px)]:mt-3">
               <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:-translate-y-0.5 hover:opacity-90">
@@ -204,6 +207,8 @@ function LoginPage() {
               [Boxes, "Comercial", "Clientes, proyectos, cotizaciones y pedidos conectados."],
               [PackageCheck, "Producción", "Órdenes, trabajos, piezas, responsables y calidad."],
               [Eye, "Visualización", "AURUM Render para explorar y presentar tus diseños 3D."],
+              [Boxes, "Mi Nube", "Organiza archivos, fotografías, vídeos y documentos del taller."],
+              [ShoppingBag, "Catálogo digital", "Prepara y publica modelos para mostrar tu trabajo a clientes."],
               [Network, "Ecosistema", "Conecta talleres, profesionales, proveedores y servicios."],
             ].map(([Icon, title, text]) => {
               const FeatureIcon = Icon as LucideIcon;
@@ -246,6 +251,26 @@ function LoginPage() {
               ))}
             </div>
 
+          </section>
+
+          <section id="mi-nube-catalogo" className="mt-8 max-w-5xl scroll-mt-8">
+            <div className="mb-4 max-w-3xl">
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Tu trabajo, organizado y listo para mostrar</p>
+              <h2 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">De los archivos del taller a la presentación de tus joyas.</h2>
+              <p className="mt-2 text-sm leading-relaxed text-white/55">Dos espacios que amplían Aurum Lab: conserva tus recursos de trabajo y prepara una vitrina digital para tus modelos.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <article className="rounded-2xl border border-white/10 bg-black/35 p-5 transition hover:border-gold/35">
+                <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><Boxes className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Espacio de trabajo</p><h3 className="mt-1 text-base font-semibold text-white">Mi Nube</h3></div></div>
+                <p className="mt-3 text-xs leading-relaxed text-white/55">Centraliza fotografías, vídeos, documentos y archivos técnicos del taller. Mantén tus recursos organizados y enlázalos con el trabajo de tu equipo.</p>
+                <p className="mt-3 text-[10px] leading-relaxed text-white/35">Disponible dentro del entorno de trabajo para usuarios autorizados.</p>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-black/35 p-5 transition hover:border-gold/35">
+                <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><ShoppingBag className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Vitrina comercial</p><h3 className="mt-1 text-base font-semibold text-white">Catálogo digital</h3></div></div>
+                <p className="mt-3 text-xs leading-relaxed text-white/55">Organiza modelos, imágenes y colecciones para preparar una presentación digital de las joyas de tu taller y compartirla mediante un enlace público cuando esté configurada.</p>
+                <p className="mt-3 text-[10px] leading-relaxed text-white/35">La publicación depende de la configuración del catálogo de cada taller.</p>
+              </article>
+            </div>
           </section>
 
           <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-xl border border-gold/25 bg-gold/[0.04] p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
@@ -422,6 +447,8 @@ function LoginPage() {
                       { icon: PackageCheck, title: "Controla la producción", text: "Del pedido a la orden de producción, los trabajos, las piezas y el control de calidad, con responsables y seguimiento por área." },
                       { icon: Sparkles, title: "Visualiza en 3D", text: "AURUM Render (beta) para explorar diseños de joyería con metales, gemas, iluminación y escenas." },
                       { icon: Calculator, title: "Herramientas para joyeros", text: "Yeso / agua, aleaciones de oro, tallas y visualización y peso 3D." },
+                      { icon: Boxes, title: "Mi Nube", text: "Un espacio de trabajo para organizar documentos, imágenes, vídeos y archivos técnicos del taller." },
+                      { icon: ShoppingBag, title: "Catálogo digital", text: "Prepara modelos e imágenes para presentar el trabajo de tu joyería mediante un catálogo público configurado por taller." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
                         <Icon className="size-6 text-gold"/>
