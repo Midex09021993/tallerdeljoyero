@@ -503,6 +503,11 @@ function MiNubePage() {
           });
           if (finalizeError) throw new Error(`No se pudo finalizar el vídeo en el NAS. ${finalizeError.message}`);
           if (finalized?.error) throw new Error(String(finalized.error));
+          if (!finalized?.ok || Number(finalized.bytes) !== file.size) throw new Error("Nextcloud no confirmó el guardado del vídeo.");
+          // Confirmación explícita: el vídeo debe aparecer en la misma ruta que lista Mi Nube.
+          const { data: verificado, error: verificarError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
+          const existe = Array.isArray(verificado?.files) && verificado.files.some((f: { name: string; folder: string; bytes: number }) => f.folder === carpetaSegura && f.name === filename && Number(f.bytes) === file.size);
+          if (verificarError || !existe) throw new Error("El vídeo se envió, pero Nextcloud no lo muestra guardado. Inténtalo de nuevo.");
         } else {
           await subirConProgreso({
             bucket: BUCKET,
