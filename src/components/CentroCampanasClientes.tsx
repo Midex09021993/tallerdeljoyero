@@ -12,7 +12,7 @@ type Destinatario = {
 
 type Props = { clientes: Destinatario[] };
 
-const soloDigitos = (valor: string) => valor.replace(/\\D/g, "");
+const soloDigitos = (valor: string) => valor.replace(/\D/g, "");
 function telefonoWhatsApp(valor: string) {
   const digitos = soloDigitos(valor);
   if (!digitos) return "";
@@ -48,7 +48,7 @@ export function CentroCampanasClientes({ clientes }: Props) {
         ? "Tenemos novedades en el taller y queremos compartirlas contigo."
         : "Tenemos novedades y promociones del taller que quizá te interesen.";
     const cuerpo = textoPersonalizado.trim() || saludo;
-    return [cuerpo, enlace.trim() ? "Míralo aquí: " + enlace.trim() : ""].filter(Boolean).join("\\n\\n");
+    return [cuerpo, enlace.trim() ? "Míralo aquí: " + enlace.trim() : ""].filter(Boolean).join("\n\n");
   }, [tipo, textoPersonalizado, enlace]);
 
   const seleccionadosConTelefono = elegibles.filter((c) => seleccionados.includes(c.id));
