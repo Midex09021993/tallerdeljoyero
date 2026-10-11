@@ -37,13 +37,15 @@ type Props = {
   categorias: string[];
   onClose: () => void;
   onSaved: () => void;
+  initialImageUrl?: string | null;
+  initialName?: string | null;
 };
 
 function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved }: Props) {
+export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName }: Props) {
   const [form, setForm] = useState({
     codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? "Otros", descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
@@ -62,11 +64,11 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     if (!open) return;
     setForm({
       codigo: producto?.codigo ?? "",
-      nombre: producto?.nombre ?? "",
+      nombre: producto?.nombre ?? initialName ?? "",
       slug: producto ? slugify(producto.nombre) : "",
       categoria: producto?.categoria ?? categorias[0] ?? "Otros",
       descripcion: producto?.descripcion ?? "",
-      imagen_principal_url: producto?.imagen_principal_url ?? "",
+      imagen_principal_url: producto?.imagen_principal_url ?? initialImageUrl ?? "",
       galeria: Array.isArray(producto?.galeria) ? producto.galeria.join("\n") : "",
       video_url: producto?.video_url ?? "",
       aurum_render_url: producto?.aurum_render_url ?? "",
