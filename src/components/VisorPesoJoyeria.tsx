@@ -55,7 +55,7 @@ function num(valor: number, decimales = 2) {
 /* Componente                                                          */
 /* ------------------------------------------------------------------ */
 
-export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
+export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { compacto?: boolean; archivoInicial?: File | null }) {
   const contenedor = useRef<HTMLDivElement>(null);
   const inputArchivo = useRef<HTMLInputElement>(null);
   const api = useRef<{
@@ -342,6 +342,10 @@ export function VisorPesoJoyeria({ compacto = false }: { compacto?: boolean }) {
       limpiarEscena();
     };
   }, []);
+
+  useEffect(() => {
+    if (listo && archivoInicial) void cargarArchivo(archivoInicial);
+  }, [listo, archivoInicial]);
 
   /* -------- Material visual según metal seleccionado -------- */
   useEffect(() => {
