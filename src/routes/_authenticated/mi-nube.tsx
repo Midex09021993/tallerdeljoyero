@@ -109,6 +109,8 @@ function MiNubePage() {
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
   const [modoEdicion, setModoEdicion] = useState<string | null>(null);
   const [compartiendo, setCompartiendo] = useState<string | null>(null);
+  const [progresoCompartir, setProgresoCompartir] = useState("");
+  const [errorCompartir, setErrorCompartir] = useState<{ proyecto: string; mensaje: string } | null>(null);
   const [enlaceCompartido, setEnlaceCompartido] = useState<{ proyecto: string; url: string } | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
   const [carpeta, setCarpeta] = useState("");
@@ -274,61 +276,65 @@ function MiNubePage() {
     await cargarBiblioteca();
   };
   const compartirCarpetaTransfer = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
-    if (proyecto.archivos.length > 10) {
-      toast.error("AURUM Transfer permite hasta 10 archivos por enlace. Esta carpeta tiene " + proyecto.archivos.length + ".");
-      return;
-    }
+    if (!proyecto.archivos.length) { setErrorCompartir({ proyecto: proyecto.nombre, mensaje: "Esta carpeta no contiene archivos para transferir." }); return; }
+    if (proyecto.archivos.length > 10) { setErrorCompartir({ proyecto: proyecto.nombre, mensaje: "AURUM Transfer admite hasta 10 archivos por enlace." }); return; }
     setCompartiendo(proyecto.nombre);
+    setProgresoCompartir("Preparando archivos de " + proyecto.nombre + "…");
+    setErrorCompartir(null);
     setEnlaceCompartido(null);
     try {
-      const archivosLocales: File[] = [];
-      for (const archivo of proyecto.archivos) {
-        const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
-        if (urlError || !data?.signedUrl) throw new Error("No se pudo leer " + nombreVisible(archivo.nombre));
-        const response = await fetch(data.signedUrl);
-        if (!response.ok) throw new Error("No se pudo obtener " + nombreVisible(archivo.nombre));
-        const blob = await response.blob();
-        archivosLocales.push(new File([blob], nombreVisible(archivo.nombre), { type: blob.type || "application/octet-stream" }));
-      }
       const supabaseUrl = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ?? "";
       const supabaseKey = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+      if (!supabaseUrl || !supabaseKey) throw new Error("Falta la configuración pública de Supabase en esta versión de la web.");
       const callCreate = async (body: unknown) => {
-        const response = await fetch(supabaseUrl + "/functions/v1/aurum-transfer-create", {
-          method: "POST",
-          headers: { apikey: supabaseKey, "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+        const response = await fetch(supabaseUrl.replace(/\/$/, "") + "/functions/v1/aurum-transfer-create", {
+          method: "POST", headers: { apikey: supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify(body),
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error ?? "No se pudo crear el enlace de AURUM Transfer.");
+        if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "AURUM Transfer respondió con el error " + response.status + ".");
         return data;
       };
-      const metadata = archivosLocales.map((file) => ({ name: file.name, size: file.size, type: file.type }));
-      const prep = await callCreate({ action: "prepare", files: metadata }) as {
-        token: string;
-        uploads: Array<{ name: string; size: number; type: string; path: string; signedUrl: string }>;
-      };
+      const archivosLocales: File[] = [];
+      for (let i = 0; i < proyecto.archivos.length; i++) {
+        const archivo = proyecto.archivos[i]!;
+        setProgresoCompartir("Leyendo archivo " + (i + 1) + " de " + proyecto.archivos.length + ": " + nombreVisible(archivo.nombre));
+        const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+        if (urlError || !data?.signedUrl) throw new Error("No se pudo generar el acceso temporal a " + nombreVisible(archivo.nombre) + (urlError?.message ? ": " + urlError.message : "."));
+        const response = await fetch(data.signedUrl);
+        if (!response.ok) throw new Error("No se pudo leer " + nombreVisible(archivo.nombre) + " desde Mi Nube (HTTP " + response.status + ").");
+        const blob = await response.blob();
+        archivosLocales.push(new File([blob], nombreVisible(archivo.nombre), { type: blob.type || "application/octet-stream", lastModified: Date.now() }));
+      }
+      const metadata = archivosLocales.map((file) => ({ name: file.name, size: file.size, type: file.type || "application/octet-stream" }));
+      setProgresoCompartir("Conectando con AURUM Transfer…");
+      const prep = await callCreate({ action: "prepare", files: metadata }) as { token: string; uploads: Array<{ name: string; size: number; type: string; path: string; signedUrl: string }> };
+      if (!prep.token || !Array.isArray(prep.uploads) || prep.uploads.length !== archivosLocales.length) throw new Error("AURUM Transfer no devolvió todos los destinos de subida.");
       for (let i = 0; i < archivosLocales.length; i++) {
+        const archivo = archivosLocales[i]!;
+        const destino = prep.uploads[i]!;
+        setProgresoCompartir("Enviando archivo " + (i + 1) + " de " + archivosLocales.length + ": " + archivo.name);
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("PUT", prep.uploads[i]!.signedUrl);
-          if (archivosLocales[i]!.type) xhr.setRequestHeader("Content-Type", archivosLocales[i]!.type);
-          xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("Falló la transferencia de " + archivosLocales[i]!.name));
-          xhr.onerror = () => reject(new Error("Error de red al compartir la carpeta."));
-          xhr.send(archivosLocales[i]);
+          xhr.open("PUT", destino.signedUrl);
+          if (archivo.type) xhr.setRequestHeader("Content-Type", archivo.type);
+          xhr.upload.onprogress = (event) => { if (event.lengthComputable) setProgresoCompartir("Enviando " + archivo.name + " · " + Math.round(event.loaded / event.total * 100) + "%"); };
+          xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("AURUM Transfer no pudo recibir " + archivo.name + " (HTTP " + xhr.status + ")."));
+          xhr.onerror = () => reject(new Error("Error de red al enviar " + archivo.name + " a AURUM Transfer."));
+          xhr.send(archivo);
         });
       }
-      const done = await callCreate({
-        action: "finalize",
-        token: prep.token,
-        files: prep.uploads.map(({ name, size, type, path }) => ({ name, size, type, path })),
-      }) as { token: string };
+      setProgresoCompartir("Verificando archivos y creando enlace…");
+      const done = await callCreate({ action: "finalize", token: prep.token, files: prep.uploads.map(({ name, size, type, path }) => ({ name, size, type, path })) }) as { token: string };
+      if (!done.token) throw new Error("AURUM Transfer no confirmó el enlace final.");
       setEnlaceCompartido({ proyecto: proyecto.nombre, url: window.location.origin + "/transfer/" + done.token });
+      setProgresoCompartir("");
       toast.success("Enlace de AURUM Transfer creado.");
     } catch (cause) {
-      toast.error(cause instanceof Error ? cause.message : "No se pudo compartir la carpeta.");
-    } finally {
-      setCompartiendo(null);
-    }
+      const mensaje = cause instanceof Error ? cause.message : "No se pudo compartir la carpeta.";
+      setErrorCompartir({ proyecto: proyecto.nombre, mensaje });
+      setProgresoCompartir("");
+      toast.error(mensaje);
+    } finally { setCompartiendo(null); }
   };
 
   const abrirArchivo = async (archivo: ArchivoNube) => {
@@ -532,6 +538,8 @@ function MiNubePage() {
                     >
                       <Share2 className="size-4" /> {compartiendo === proyecto.nombre ? "Preparando enlace seguro…" : "Compartir carpeta por AURUM Transfer"}
                     </button>
+                    {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
+                    {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
                     <button type="button" onClick={() => { setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setProyectoAbierto(proyecto.nombre); }} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">
                       <Pencil className="size-3.5" /> {modoEdicion === proyecto.nombre ? "Terminar edición" : "Editar archivos de la carpeta"}
                     </button>
