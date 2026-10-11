@@ -1007,7 +1007,7 @@ function MiNubePage() {
           </div>
         )}
 
-        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Filtrar por tipo de archivo">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Filtrar por tipo de archivo">
           {secciones.map(({ id, titulo, descripcion, formatos, Icono }) => {
             const activa = seccionActiva === id;
             const cantidad = archivos.filter((archivo) => archivo.categoria === id).length;
