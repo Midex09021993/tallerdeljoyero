@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Search,
   Share2,
+  Server,
   Copy,
   Pencil,
   X,
@@ -511,13 +512,29 @@ function MiNubePage() {
                 Sube imágenes, documentos, videos y modelos 3D. Los archivos quedan privados y separados por taller y usuario.
               </p>
             </div>
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4">
-              <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><HardDrive className="size-5" /></div>
-              <div>
-                <p className="text-sm font-semibold">Supabase Storage</p>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <LockKeyhole className="size-3.5 text-emerald-600" /> Acceso privado
-                </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4">
+                <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><HardDrive className="size-5" /></div>
+                <div>
+                  <p className="text-sm font-semibold">Supabase Storage</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <LockKeyhole className="size-3.5 text-emerald-600" /> Acceso privado
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label="Estado del NAS">
+                <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><Server className="size-5" /></div>
+                <div>
+                  <p className="text-sm font-semibold">Mi NAS</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="relative flex size-2.5 shrink-0" aria-hidden="true">
+                      <span className="absolute inline-flex size-full rounded-full bg-amber-500/40" />
+                      <span className="relative inline-flex size-2.5 rounded-full bg-amber-500" />
+                    </span>
+                    Pendiente de conexión
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">Estado real disponible al configurar el acceso seguro</p>
+                </div>
               </div>
             </div>
           </div>
