@@ -395,7 +395,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
   const pesoFinal = pesoConEmpuje;
 
   const inputCls =
-    "h-12 w-full rounded-2xl border border-input bg-background px-3 text-sm outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10";
+    "h-12 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10";
 
   return (
     <div className={`space-y-5 ${compacto ? "p-1" : "p-5 sm:p-6 lg:p-8"}`}>
