@@ -10,8 +10,14 @@ export const Route = createFileRoute("/_authenticated/contratos/")({
   component: ContratosPage,
 });
 
-function money(value: number) {
-  return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(value);
+function money(value: number, moneda = "PEN") {
+  const codigo = /^[A-Z]{3}$/.test(moneda) ? moneda : "PEN";
+  const locale = ({ PEN: "es-PE", COP: "es-CO", MXN: "es-MX", DOP: "es-DO", USD: "en-US" } as Record<string, string>)[codigo] ?? "es";
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency: codigo }).format(value);
+  } catch {
+    return `${codigo} ${Number(value || 0).toFixed(2)}`;
+  }
 }
 
 function ContratosPage() {
@@ -62,8 +68,8 @@ function ContratosPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">{money(contrato.total)}</p>
-                    <p className="text-xs text-muted-foreground">Saldo {money(contrato.saldo)}</p>
+                    <p className="text-sm font-semibold">{money(contrato.total, contrato.moneda)}</p>
+                    <p className="text-xs text-muted-foreground">Saldo {money(contrato.saldo, contrato.moneda)}</p>
                   </div>
                 </div>
               </Link>
