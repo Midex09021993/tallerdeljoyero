@@ -241,7 +241,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
         ciudad: ciudad || null,
         estado: "activo",
         sede_id: sedeId,
-        metadata: { origen: "registro_publico" },
+        metadata: { origen: "registro_publico", plan_comercial: "emprendedor" },
       })
       .select("id")
       .single();
