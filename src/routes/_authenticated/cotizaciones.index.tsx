@@ -51,7 +51,7 @@ type IdentidadComercial = { id: string; sede_id: string | null; participante_id?
 
 function money(n: number, moneda = "PEN") {
   const codigo = /^[A-Z]{3}$/.test(moneda) ? moneda : "PEN";
-  const locale = ({ PEN: "es-PE", COP: "es-CO", MXN: "es-MX", DOP: "es-DO", USD: "en-US" } as Record<string, string>)[codigo] ?? "es";
+  const locale = ({ ARS: "es-AR", BOB: "es-BO", BRL: "pt-BR", CLP: "es-CL", COP: "es-CO", DOP: "es-DO", GYD: "en-GY", MXN: "es-MX", PEN: "es-PE", PYG: "es-PY", SRD: "nl-SR", USD: "en-US", UYU: "es-UY", VES: "es-VE" } as Record<string, string>)[codigo] ?? "es";
   try {
     return new Intl.NumberFormat(locale, { style: "currency", currency: codigo, maximumFractionDigits: 2 }).format(n);
   } catch {
