@@ -110,7 +110,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                   onChange={(e) => setMasa(e.target.value)}
                   placeholder="6.00"
                   aria-label="Masa de oro en gramos"
-                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-10 text-lg font-semibold outline-none transition placeholder:text-muted-foreground/40 focus:border-gold focus:ring-4 focus:ring-gold/10"
+                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-10 text-lg font-semibold text-foreground outline-none transition placeholder:text-muted-foreground/75 focus:border-gold focus:ring-4 focus:ring-gold/10"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">g</span>
               </div>
@@ -129,7 +129,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                   onChange={(e) => setInicial(e.target.value)}
                   placeholder="23.60"
                   aria-label="Ley real del oro en quilates"
-                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-10 text-lg font-semibold outline-none transition placeholder:text-muted-foreground/40 focus:border-gold focus:ring-4 focus:ring-gold/10"
+                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-10 text-lg font-semibold text-foreground outline-none transition placeholder:text-muted-foreground/75 focus:border-gold focus:ring-4 focus:ring-gold/10"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">K</span>
               </div>
@@ -176,7 +176,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                 <input type="number" inputMode="decimal" min="0" max="24" step="0.01" value={final}
                   onChange={(e) => setFinal(e.target.value)} placeholder="Ej. 16.75" aria-label="Ley final personalizada"
                   autoFocus
-                  className="h-12 w-full rounded-2xl border border-gold/40 bg-background px-4 pr-10 text-base font-semibold outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10" />
+                  className="h-12 w-full rounded-2xl border border-gold/40 bg-background px-4 pr-10 text-base font-semibold text-foreground outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10" />
                 <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">K</span>
               </div>
             ) : null}
