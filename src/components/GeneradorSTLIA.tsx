@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Download, ImagePlus, LoaderCircle, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
 import * as ort from "onnxruntime-web/webgpu";
 import * as THREE from "three";
 import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
+import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 
 const MODEL_BASE = "https://huggingface.co/cgb/triposr-onnx-webgpu/resolve/main/";
 const GRID = 64;
@@ -100,8 +101,12 @@ function prepareImage(image: HTMLImageElement): ort.Tensor {
 }
 
 function samplePlane(plane: Float32Array, channel: number, x: number, y: number): number {
-  const fx = Math.max(0, Math.min(63, ((x + 1) * 64 - 1) / 2));
-  const fy = Math.max(0, Math.min(63, ((y + 1) * 64 - 1) / 2));
+  // El decodificador espera coordenadas normalizadas a [-1, 1]; la rejilla
+  // geométrica se consulta dentro del radio original de TripoSR (0.87).
+  const nx = Math.max(-1, Math.min(1, x / 0.87));
+  const ny = Math.max(-1, Math.min(1, y / 0.87));
+  const fx = Math.max(0, Math.min(63, ((nx + 1) * 64 - 1) / 2));
+  const fy = Math.max(0, Math.min(63, ((ny + 1) * 64 - 1) / 2));
   const x0 = Math.floor(fx), y0 = Math.floor(fy);
   const x1 = Math.min(63, x0 + 1), y1 = Math.min(63, y0 + 1);
   const dx = fx - x0, dy = fy - y0;
@@ -144,7 +149,6 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
     const planes = planesTensor.data as Float32Array;
     const count = GRID * GRID * GRID;
     const density = new Float32Array(count);
-    const colors = new Float32Array(count * 3);
     for (let start = 0; start < count; start += BATCH) {
       const end = Math.min(count, start + BATCH);
       const features = new Float32Array((end - start) * 120);
@@ -169,10 +173,17 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
       const densityTensor = decoded[densityName];
       if (!densityTensor) throw new Error("El decodificador no devolvió densidad.");
       const d = densityTensor.data as Float32Array;
-      const colorName = decoderSession.outputNames.find((name) => name.toLowerCase().includes("color"));
-      const c = colorName ? decoded[colorName].data as Float32Array : null;
       density.set(d, start);
-      if (c) colors.set(c, start * 3);
+    }
+    let occupied = 0;
+    for (let i = 0; i < density.length; i += 1) {
+      const value = density[i]!;
+      if (!Number.isFinite(value)) throw new Error("El modelo devolvió valores de densidad no válidos.");
+      if (value >= 25) occupied += 1;
+    }
+    const occupancy = occupied / count;
+    if (occupancy < 0.0001 || occupancy > 0.35) {
+      throw new Error("La reconstrucción no produjo una superficie 3D fiable. Prueba una imagen con la joya aislada, centrada y sobre fondo gris; no se generó un STL.");
     }
     report("meshing", "Extrayendo la superficie y preparando el STL…");
     const material = new THREE.MeshStandardMaterial({ color: 0xc7bda9, metalness: 0.18, roughness: 0.34 });
@@ -204,49 +215,9 @@ export function GeneradorSTLIA() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [message, setMessage] = useState("La imagen se procesa en tu navegador; no se envía a un servicio de generación.");
-  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const viewerRef = useRef<HTMLDivElement>(null);
+  const [generatedSTL, setGeneratedSTL] = useState<File | null>(null);
   const busy = ["loading", "preparing", "generating", "meshing"].includes(stage);
 
-  useEffect(() => {
-    if (!geometry || !viewerRef.current) return;
-    const host = viewerRef.current;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#171815");
-    const camera = new THREE.PerspectiveCamera(40, host.clientWidth / Math.max(host.clientHeight, 1), 0.01, 100);
-    camera.position.set(2.7, 2.1, 3.1);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(host.clientWidth, host.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    host.replaceChildren(renderer.domElement);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x48443b, 2.1));
-    const key = new THREE.DirectionalLight(0xffffff, 2.4);
-    key.position.set(3, 5, 4); scene.add(key);
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xd5c6a5, metalness: 0.2, roughness: 0.3 }));
-    mesh.geometry.computeBoundingBox();
-    const center = new THREE.Vector3();
-    mesh.geometry.boundingBox?.getCenter(center);
-    mesh.position.sub(center);
-    scene.add(mesh);
-    const size = new THREE.Vector3();
-    mesh.geometry.boundingBox?.getSize(size);
-    const max = Math.max(size.x, size.y, size.z, 1);
-    mesh.scale.setScalar(2 / max);
-    const animate = () => { renderer.render(scene, camera); };
-    animate();
-    const resize = () => { camera.aspect = host.clientWidth / Math.max(host.clientHeight, 1); camera.updateProjectionMatrix(); renderer.setSize(host.clientWidth, host.clientHeight); animate(); };
-    const observer = new ResizeObserver(resize); observer.observe(host);
-    let down = false, lastX = 0, lastY = 0;
-    const pointerDown = (event: PointerEvent) => { down = true; lastX = event.clientX; lastY = event.clientY; renderer.domElement.setPointerCapture(event.pointerId); };
-    const pointerMove = (event: PointerEvent) => { if (!down) return; mesh.rotation.y += (event.clientX - lastX) * 0.01; mesh.rotation.x += (event.clientY - lastY) * 0.01; lastX = event.clientX; lastY = event.clientY; animate(); };
-    const pointerUp = () => { down = false; };
-    renderer.domElement.addEventListener("pointerdown", pointerDown);
-    renderer.domElement.addEventListener("pointermove", pointerMove);
-    renderer.domElement.addEventListener("pointerup", pointerUp);
-    renderer.domElement.addEventListener("pointercancel", pointerUp);
-    return () => { observer.disconnect(); renderer.domElement.removeEventListener("pointerdown", pointerDown); renderer.domElement.removeEventListener("pointermove", pointerMove); renderer.domElement.removeEventListener("pointerup", pointerUp); renderer.domElement.removeEventListener("pointercancel", pointerUp); renderer.dispose(); geometry.dispose(); host.replaceChildren(); };
-  }, [geometry]);
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
@@ -255,21 +226,37 @@ export function GeneradorSTLIA() {
     if (!["image/png", "image/jpeg", "image/webp"].includes(next.type)) { setMessage("Usa una imagen PNG, JPG o WebP."); return; }
     if (next.size > 15 * 1024 * 1024) { setMessage("La imagen debe pesar 15 MB o menos."); return; }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(next); setPreviewUrl(URL.createObjectURL(next)); setGeometry(null); setStage("idle");
+    setFile(next); setPreviewUrl(URL.createObjectURL(next)); setGeneratedSTL(null); setStage("idle");
     setMessage("Imagen cargada. Para mejores resultados, usa un diseño centrado y fondo transparente.");
   }, [previewUrl]);
 
   const generate = async () => {
     if (!previewUrl) return;
+    setGeneratedSTL(null);
     setStage("loading");
     try {
       const image = new Image();
       image.src = previewUrl;
       await image.decode();
       const result = await reconstruct(image, (nextStage, nextMessage) => { setStage(nextStage); setMessage(nextMessage); });
-      setGeometry(result);
+      result.computeBoundingBox();
+      const position = result.getAttribute("position");
+      const dimensions = result.boundingBox?.getSize(new THREE.Vector3());
+      if (!position || position.count < 3 || !dimensions || ![dimensions.x, dimensions.y, dimensions.z].every(Number.isFinite) || Math.min(dimensions.x, dimensions.y, dimensions.z) <= 1e-5) {
+        result.dispose();
+        throw new Error("La malla generada está vacía o degenerada. No se creó un STL.");
+      }
+      const material = new THREE.MeshStandardMaterial();
+      const exportMesh = new THREE.Mesh(result, material);
+      const data = new STLExporter().parse(exportMesh, { binary: true });
+      const blob = new Blob([data], { type: "model/stl" });
+      const baseName = file?.name.replace(/\\.[^.]+$/, "") || "joya-generada";
+      const outputFile = new File([blob], `${baseName}.stl`, { type: "model/stl" });
+      material.dispose();
+      result.dispose();
+      setGeneratedSTL(outputFile);
       setStage("done");
-      setMessage("Modelo generado en este dispositivo. Revisa la geometría antes de fabricar la pieza.");
+      setMessage("Modelo generado localmente. La vista previa usa el Visualizador y peso 3D existente. El peso es solo orientativo hasta definir la escala física en CAD.");
     } catch (error) {
       setStage("error");
       setMessage(error instanceof Error ? error.message : "No se pudo generar el modelo.");
@@ -277,14 +264,13 @@ export function GeneradorSTLIA() {
   };
 
   const downloadSTL = () => {
-    if (!geometry) return;
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
-    const data = new STLExporter().parse(mesh, { binary: true });
-    const blob = new Blob([data], { type: "model/stl" });
-    const url = URL.createObjectURL(blob);
+    if (!generatedSTL) return;
+    const url = URL.createObjectURL(generatedSTL);
     const anchor = document.createElement("a");
-    anchor.href = url; anchor.download = (file?.name.replace(/\.[^.]+$/, "") || "joya-generada") + ".stl";
-    anchor.click(); URL.revokeObjectURL(url);
+    anchor.href = url;
+    anchor.download = generatedSTL.name;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (
@@ -306,7 +292,7 @@ export function GeneradorSTLIA() {
             </button>
           </div>
           <div className="min-h-64 overflow-hidden rounded-xl border border-white/10 bg-[#171815]">
-            {geometry ? <div ref={viewerRef} className="h-72 w-full touch-none sm:h-96" aria-label="Vista 3D del modelo generado" /> : <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 p-6 text-center text-white/45"><Sparkles className="size-8 text-[#d8bd7b]/70" /><p className="max-w-xs text-sm">Aquí aparecerá la malla 3D generada. Podrás girarla con el ratón o el dedo.</p></div>}
+            {generatedSTL ? <div className="min-w-0 p-2 sm:p-3"><VisorPesoJoyeria compacto archivoInicial={generatedSTL} /></div> : <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 p-6 text-center text-white/45"><Sparkles className="size-8 text-[#d8bd7b]/70" /><p className="max-w-xs text-sm">Aquí aparecerá la vista previa del STL usando el Visualizador y peso 3D existente.</p></div>}
           </div>
         </div>
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/10 bg-white/[.025] p-3 text-sm text-white/65" role="status" aria-live="polite">
