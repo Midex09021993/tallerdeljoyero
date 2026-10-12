@@ -1,0 +1,70 @@
+/**
+ * Catálogo inicial de planes comerciales.
+ *
+ * Importante: es una matriz de definición y presentación, NO un sistema de permisos.
+ * Las capacidades de sede, roles y cuentas siguen siendo la fuente operativa actual.
+ * No aplicar límites ni bloquear módulos hasta validar cada regla y su enforcement.
+ */
+
+export type PlanComercialId = "emprendedor" | "taller" | "profesional" | "empresarial";
+
+export type PlanComercial = {
+  id: PlanComercialId;
+  nombre: string;
+  precioEtiqueta: string;
+  estadoComercial: "gratis" | "pendiente";
+  enfoque: string;
+  capacidadesRelacionadas: readonly string[];
+  limitesActivos: false;
+};
+
+export const PLANES_COMERCIALES: readonly PlanComercial[] = [
+  {
+    id: "emprendedor",
+    nombre: "Emprendedor",
+    precioEtiqueta: "Gratis",
+    estadoComercial: "gratis",
+    enfoque: "Inicio de actividad con herramientas públicas y gestión comercial básica.",
+    capacidadesRelacionadas: ["Clientes", "Cotizaciones", "Pedidos"],
+    limitesActivos: false,
+  },
+  {
+    id: "taller",
+    nombre: "Taller",
+    precioEtiqueta: "De pago · por definir",
+    estadoComercial: "pendiente",
+    enfoque: "Organización del taller y ampliación de la gestión comercial.",
+    capacidadesRelacionadas: ["Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo"],
+    limitesActivos: false,
+  },
+  {
+    id: "profesional",
+    nombre: "Profesional",
+    precioEtiqueta: "De pago · por definir",
+    estadoComercial: "pendiente",
+    enfoque: "Flujo productivo, inventario y compras junto con la gestión comercial.",
+    capacidadesRelacionadas: [
+      "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
+      "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
+    ],
+    limitesActivos: false,
+  },
+  {
+    id: "empresarial",
+    nombre: "Empresarial",
+    precioEtiqueta: "De pago · por definir",
+    estadoComercial: "pendiente",
+    enfoque: "Operación ampliada para equipos y organizaciones con necesidades multi-sede.",
+    capacidadesRelacionadas: [
+      "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
+      "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
+      "Gestión de equipo", "Multi-sede", "Analítica",
+    ],
+    limitesActivos: false,
+  },
+] as const;
+
+export function obtenerPlanComercial(id: unknown): PlanComercial | null {
+  if (typeof id !== "string") return null;
+  return PLANES_COMERCIALES.find((plan) => plan.id === id) ?? null;
+}
