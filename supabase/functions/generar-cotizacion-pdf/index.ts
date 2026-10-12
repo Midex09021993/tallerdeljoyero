@@ -37,11 +37,17 @@ function json(body: unknown, status = 200) {
 }
 
 function money(value: number, currency: string) {
-  return new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: currency === "USD" ? "USD" : "PEN",
-    minimumFractionDigits: 2,
-  }).format(Number(value ?? 0));
+  const code = /^[A-Z]{3}$/.test(currency) ? currency : "PEN";
+  const locale = ({ PEN: "es-PE", COP: "es-CO", MXN: "es-MX", DOP: "es-DO", USD: "en-US" } as Record<string, string>)[code] ?? "es";
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 2,
+    }).format(Number(value ?? 0));
+  } catch {
+    return `${code} ${Number(value ?? 0).toFixed(2)}`;
+  }
 }
 
 function clean(value: unknown) {
