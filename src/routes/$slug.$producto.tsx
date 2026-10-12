@@ -6,11 +6,17 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$slug/$producto")({
-  head: () => ({
+  head: ({ params }) => ({
     meta: [
-      { title: "Ficha de joya — Aurum Lab" },
-      { name: "description", content: "Ficha pública de una joya del catálogo digital." },
+      { title: `Joya ${params.producto} | Catálogo ${params.slug} · Taller del Joyero` },
+      { name: "description", content: `Consulta detalles, materiales y disponibilidad de esta joya del catálogo digital ${params.slug}.` },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:type", content: "product" },
+      { property: "og:site_name", content: "Taller del Joyero" },
+      { property: "og:title", content: `Joya ${params.producto} | ${params.slug}` },
+      { property: "og:description", content: `Ficha de joya publicada en el catálogo digital ${params.slug}.` },
     ],
+    links: [{ rel: "canonical", href: `https://www.tallerdeljoyero.com/${encodeURIComponent(params.slug)}/${encodeURIComponent(params.producto)}` }],
   }),
   component: CatalogoProductoPublicoPage,
 });
