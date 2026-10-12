@@ -41,6 +41,7 @@ function LoginPage() {
   });
 
   const [usuario, setUsuario] = useState("");
+  const [emailRegistro, setEmailRegistro] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -92,11 +93,12 @@ function LoginPage() {
     setError("");
     setCargando(true);
     try {
-      const email = correoDesdeUsuario(usuario);
+      const email = modoAlta ? emailRegistro.trim().toLowerCase() : correoDesdeUsuario(usuario);
       if (modoAlta) {
         await registrarPrimerDueno({
           data: {
             usuario: usuario.trim(),
+            email: emailRegistro.trim().toLowerCase(),
             password,
             nombre,
             apellidos,
@@ -296,6 +298,10 @@ function LoginPage() {
 
             {modoAlta ? (
               <>
+                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                  Correo electrónico de recuperación
+                  <input required type="email" name="email" autoComplete="email" maxLength={254} value={emailRegistro} onChange={(e) => setEmailRegistro(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                </label>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   Nombre
                   <input required name="given-name" maxLength={80} autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
