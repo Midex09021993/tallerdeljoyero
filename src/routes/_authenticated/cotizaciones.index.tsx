@@ -118,9 +118,30 @@ function CotizacionesPage() {
     const [{ data: q }, { data: s }, { data: identidadData }] = await Promise.all([
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
-      (esDueno ? (sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : null) : sesion?.participante?.sede_id)
-        ? supabase.from("identidades_comerciales").select("id,sede_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido").eq("sede_id", esDueno ? sedeFiltro : sesion?.participante?.sede_id ?? "").eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle()
-        : Promise.resolve({ data: null }),
+      (async () => {
+        const campos = "id,sede_id,participante_id,nombre_comercial,moneda_codigo,moneda_simbolo,impuesto_activo,impuesto_nombre,impuesto_tasa,impuesto_incluido";
+        if (esDueno) {
+          if (!sedeFiltro || sedeFiltro === TODAS_LAS_SEDES) return { data: null };
+          return await supabase.from("identidades_comerciales").select(campos)
+            .eq("sede_id", sedeFiltro).eq("activa", true)
+            .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        }
+
+        const participanteId = sesion?.participante?.id;
+        if (participanteId) {
+          const porParticipante = await supabase.from("identidades_comerciales").select(campos)
+            .eq("participante_id", participanteId).eq("activa", true)
+            .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+          if (porParticipante.data) return porParticipante;
+        }
+
+        const sedeId = sesion?.participante?.sede_id;
+        return sedeId
+          ? await supabase.from("identidades_comerciales").select(campos)
+              .eq("sede_id", sedeId).eq("activa", true)
+              .order("updated_at", { ascending: false }).limit(1).maybeSingle()
+          : { data: null };
+      })(),
     ]);
     if (q) setCotizaciones(q);
     if (s) setSedes(s);
