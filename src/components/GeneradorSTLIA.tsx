@@ -27,7 +27,7 @@ function prepareImage(image: HTMLImageElement): ort.Tensor {
   let minX = source.width, minY = source.height, maxX = -1, maxY = -1;
   for (let y = 0; y < source.height; y += 1) {
     for (let x = 0; x < source.width; x += 1) {
-      if (pixels.data[(y * source.width + x) * 4 + 3] > 8) {
+      if (pixels.data[(y * source.width + x) * 4 + 3]! > 8) {
         minX = Math.min(minX, x); minY = Math.min(minY, y);
         maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
       }
@@ -54,9 +54,9 @@ function prepareImage(image: HTMLImageElement): ort.Tensor {
   const data = ctx.getImageData(0, 0, 512, 512).data;
   const rgb = new Float32Array(3 * 512 * 512);
   for (let i = 0; i < 512 * 512; i += 1) {
-    rgb[i] = data[i * 4] / 255;
-    rgb[512 * 512 + i] = data[i * 4 + 1] / 255;
-    rgb[2 * 512 * 512 + i] = data[i * 4 + 2] / 255;
+    rgb[i] = data[i * 4]! / 255;
+    rgb[512 * 512 + i] = data[i * 4 + 1]! / 255;
+    rgb[2 * 512 * 512 + i] = data[i * 4 + 2]! / 255;
   }
   return new ort.Tensor("float32", rgb, [1, 3, 512, 512]);
 }
@@ -67,7 +67,7 @@ function samplePlane(plane: Float32Array, channel: number, x: number, y: number)
   const x0 = Math.floor(fx), y0 = Math.floor(fy);
   const x1 = Math.min(63, x0 + 1), y1 = Math.min(63, y0 + 1);
   const dx = fx - x0, dy = fy - y0;
-  const at = (yy: number, xx: number) => plane[channel * 4096 + yy * 64 + xx];
+  const at = (yy: number, xx: number) => plane[channel * 4096 + yy * 64 + xx]!;
   return (at(y0, x0) * (1 - dx) + at(y0, x1) * dx) * (1 - dy)
     + (at(y1, x0) * (1 - dx) + at(y1, x1) * dx) * dy;
 }
@@ -97,8 +97,11 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
     graphOptimizationLevel: "all",
   });
   try {
-    const encoded = await triplaneSession.run({ [triplaneSession.inputNames[0]]: input });
-    const planesTensor = encoded[triplaneSession.outputNames[0]];
+    const inputName = triplaneSession.inputNames[0];
+    const outputName = triplaneSession.outputNames[0];
+    if (!inputName || !outputName) throw new Error("El modelo de reconstrucción no contiene entradas o salidas válidas.");
+    const encoded = await triplaneSession.run({ [inputName]: input });
+    const planesTensor = encoded[outputName];
     const planes = planesTensor.data as Float32Array;
     const count = GRID * GRID * GRID;
     const density = new Float32Array(count);
@@ -118,9 +121,11 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
         }
       }
       const decoded = await decoderSession.run({
-        [decoderSession.inputNames[0]]: new ort.Tensor("float32", features, [end - start, 120]),
+        [decoderSession.inputNames[0]!]: new ort.Tensor("float32", features, [end - start, 120]),
       });
-      const d = decoded[decoderSession.outputNames.find((name) => name.toLowerCase().includes("density")) ?? decoderSession.outputNames[0]].data as Float32Array;
+      const densityName = decoderSession.outputNames.find((name) => name.toLowerCase().includes("density")) ?? decoderSession.outputNames[0];
+      if (!densityName) throw new Error("El decodificador no devolvió una salida de densidad.");
+      const d = decoded[densityName].data as Float32Array;
       const colorName = decoderSession.outputNames.find((name) => name.toLowerCase().includes("color"));
       const c = colorName ? decoded[colorName].data as Float32Array : null;
       density.set(d, start);
