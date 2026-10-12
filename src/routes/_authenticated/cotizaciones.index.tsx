@@ -370,7 +370,7 @@ function CotizacionesPage() {
       setClienteSeleccionado(null);
       setClienteDropdownAbierto(false);
       setNuevoCliente({ telefono: "", email: "" });
-      setImpuestoActivo(true);
+      setImpuestoActivo(Boolean(identidad?.impuesto_activo));
       setForm({ cliente_id: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
