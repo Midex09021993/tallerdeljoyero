@@ -59,12 +59,14 @@ function formularioContratoVacio(contrato?: {
   };
 }
 
-function formatCurrency(valor: number) {
-  return new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "PEN",
-    maximumFractionDigits: 2,
-  }).format(valor);
+function formatCurrency(valor: number, moneda = "PEN") {
+  const codigo = /^[A-Z]{3}$/.test(moneda) ? moneda : "PEN";
+  const locale = ({ PEN: "es-PE", COP: "es-CO", MXN: "es-MX", DOP: "es-DO", USD: "en-US" } as Record<string, string>)[codigo] ?? "es";
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency: codigo, maximumFractionDigits: 2 }).format(valor);
+  } catch {
+    return `${codigo} ${Number(valor || 0).toFixed(2)}`;
+  }
 }
 
 function ContratoPage() {
@@ -435,9 +437,9 @@ function ContratoPage() {
           <div className="mt-4 space-y-4">
             {contratoFinancieroReal ? (
               <>
-                <Dato label="Total" valor={formatCurrency(resumen.total)} />
-                <Dato label="Abonado" valor={formatCurrency(resumen.abonado)} />
-                <Dato label="Saldo" valor={formatCurrency(resumen.saldo)} />
+                <Dato label="Total" valor={formatCurrency(resumen.total, contrato?.moneda ?? "PEN")} />
+                <Dato label="Abonado" valor={formatCurrency(resumen.abonado, contrato?.moneda ?? "PEN")} />
+                <Dato label="Saldo" valor={formatCurrency(resumen.saldo, contrato?.moneda ?? "PEN")} />
                 <Dato label="Estado financiero" valor={resumen.estado} />
               </>
             ) : (
@@ -527,7 +529,7 @@ function ContratoPage() {
                           {pago.usuario_nombre || "Sin usuario registrado"}
                         </p>
                       </div>
-                      <p className="font-semibold text-foreground">{formatCurrency(pago.monto)}</p>
+                      <p className="font-semibold text-foreground">{formatCurrency(pago.monto, contrato?.moneda ?? "PEN")}</p>
                     </div>
                   </div>
                 ))
