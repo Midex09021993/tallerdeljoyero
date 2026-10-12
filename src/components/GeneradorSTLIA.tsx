@@ -24,6 +24,44 @@ function prepareImage(image: HTMLImageElement): ort.Tensor {
   if (!sourceCtx) throw new Error("No se pudo leer la imagen.");
   sourceCtx.drawImage(image, 0, 0);
   const pixels = sourceCtx.getImageData(0, 0, source.width, source.height);
+
+  // TripoSR needs the subject isolated. Remove near-white background connected
+  // to the image edges (common in product photos) while preserving white/silver
+  // highlights that are enclosed inside the silhouette.
+  const pixelCount = source.width * source.height;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  let head = 0, tail = 0;
+  const isBackground = (index: number) => {
+    const offset = index * 4;
+    const r = pixels.data[offset]!, g = pixels.data[offset + 1]!, b = pixels.data[offset + 2]!;
+    return r > 218 && g > 218 && b > 218 && Math.max(r, g, b) - Math.min(r, g, b) < 38;
+  };
+  const enqueue = (index: number) => {
+    if (index < 0 || index >= pixelCount || visited[index] || !isBackground(index)) return;
+    visited[index] = 1;
+    queue[tail++] = index;
+  };
+  for (let x = 0; x < source.width; x += 1) {
+    enqueue(x);
+    enqueue((source.height - 1) * source.width + x);
+  }
+  for (let y = 0; y < source.height; y += 1) {
+    enqueue(y * source.width);
+    enqueue(y * source.width + source.width - 1);
+  }
+  while (head < tail) {
+    const index = queue[head++]!;
+    pixels.data[index * 4 + 3] = 0;
+    const x = index % source.width;
+    const y = Math.floor(index / source.width);
+    if (x > 0) enqueue(index - 1);
+    if (x + 1 < source.width) enqueue(index + 1);
+    if (y > 0) enqueue(index - source.width);
+    if (y + 1 < source.height) enqueue(index + source.width);
+  }
+  sourceCtx.putImageData(pixels, 0, 0);
+
   let minX = source.width, minY = source.height, maxX = -1, maxY = -1;
   for (let y = 0; y < source.height; y += 1) {
     for (let x = 0; x < source.width; x += 1) {
@@ -138,9 +176,14 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
     surface.field = density;
     surface.update();
     const geometry = surface.geometry.clone();
+    const generatedTriangles = geometry.getAttribute("position").count / 3;
     geometry.computeVertexNormals();
     surface.geometry.dispose();
     material.dispose();
+    if (generatedTriangles >= 300000) {
+      geometry.dispose();
+      throw new Error("La reconstrucción produjo una malla saturada y no fiable. Usa una imagen con la joya aislada y vuelve a intentarlo; no se ha ofrecido un STL defectuoso.");
+    }
     triplaneSession.release();
     decoderSession.release();
     return geometry;
