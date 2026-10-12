@@ -125,7 +125,7 @@ export function FichaCilindrosTallerA4({ cilindros, configuracion, identidad }: 
                       <td className="border border-slate-300 px-1 py-2">{numero(fila.alturaCm)}</td>
                       <td className="border border-slate-300 px-1 py-2">{fila.tipoTarro === "liso" ? "Liso" : "Perforado"}</td>
                       {fila.mezclas.map((mezcla, index) => (
-                        <Fragment key={recetas[index].agua}>
+                        <Fragment key={`${index}-${mezcla.partesYeso}`}>
                           <td className="border border-slate-300 px-1 py-2 font-semibold">{Math.round(mezcla.agua)}</td>
                           <td className="border border-slate-300 px-1 py-2 font-semibold">{Math.round(mezcla.yeso)}</td>
                         </Fragment>
