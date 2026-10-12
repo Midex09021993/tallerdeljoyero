@@ -54,6 +54,25 @@ const NOMBRES_PAIS: Record<string, string> = Object.fromEntries(
   Object.entries(PRESETS).map(([codigo, preset]) => [codigo, preset.pais_nombre ?? codigo]),
 );
 
+const ZONAS_HORARIAS_FALLBACK = [
+  "America/Lima", "America/Bogota", "America/Argentina/Buenos_Aires", "America/Santiago",
+  "America/Mexico_City", "America/New_York", "America/Los_Angeles", "America/Chicago",
+  "America/Guayaquil", "America/La_Paz", "America/Sao_Paulo", "America/Montevideo",
+  "America/Asuncion", "America/Caracas", "America/Panama", "America/Costa_Rica",
+  "Europe/Madrid", "Europe/London", "Europe/Paris", "Europe/Berlin",
+  "Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata", "Asia/Dubai",
+  "Australia/Sydney", "Pacific/Auckland", "UTC",
+];
+function obtenerZonasHorarias(): string[] {
+  try {
+    const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
+    const zonas = intl.supportedValuesOf?.("timeZone");
+    if (zonas?.length) return Array.from(new Set([...zonas, ...ZONAS_HORARIAS_FALLBACK])).sort((a, b) => a.localeCompare(b));
+  } catch {}
+  return ZONAS_HORARIAS_FALLBACK;
+}
+const ZONAS_HORARIAS = obtenerZonasHorarias();
+
 const MONEDAS = [
   { codigo: "ARS", nombre: "Peso argentino", simbolo: "$" },
   { codigo: "BOB", nombre: "Boliviano", simbolo: "Bs" },
@@ -401,7 +420,11 @@ export function ConfiguracionIdentidadComercial() {
               <div className="rounded-xl border border-border p-4"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Apariencia</p><div className="mt-2 flex items-center gap-3"><input type="color" value={form.color_principal || "#B58A3A"} onChange={e=>campo("color_principal",e.target.value)} className="h-10 w-14 cursor-pointer rounded border border-border bg-background" /><span className="font-mono text-xs">{form.color_principal || "#B58A3A"}</span></div></div>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <label className="text-xs font-semibold text-muted-foreground">Zona horaria<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.zona_horaria} onChange={e=>campo("zona_horaria",e.target.value)} /></label>
+              <label className="text-xs font-semibold text-muted-foreground">Zona horaria
+                <input list="zonas-horarias-iana" autoComplete="off" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.zona_horaria} onChange={e=>campo("zona_horaria",e.target.value)} placeholder="Buscar ciudad o zona, ej. America/Bogota" />
+                <datalist id="zonas-horarias-iana">{ZONAS_HORARIAS.map(zona=><option key={zona} value={zona} />)}</datalist>
+                <span className="mt-1 block text-[10px] font-normal">Busca por región o ciudad. Usa identificadores IANA; al cambiar de país se propone una zona predeterminada.</span>
+              </label>
               <label className="text-xs font-semibold text-muted-foreground">Pie de documento<textarea className="mt-1 min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.pie_documento ?? ""} onChange={e=>campo("pie_documento",e.target.value)} /></label>
             </div>
             <CotizacionConfigEditor form={form} campo={campo} />
