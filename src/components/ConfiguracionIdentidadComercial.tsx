@@ -316,6 +316,7 @@ export function ConfiguracionIdentidadComercial() {
     const tasa = Number(form.impuesto_tasa);
     if (!Number.isFinite(tasa) || tasa < 0 || tasa > 100) return toast.error("La tasa de impuesto debe estar entre 0 y 100.");
     if (!/^[A-Z]{3}$/.test(form.moneda_codigo.trim().toUpperCase())) return toast.error("La moneda debe usar un código de 3 letras.");
+    if (!ZONAS_HORARIAS.includes(form.zona_horaria.trim())) return toast.error("Selecciona una zona horaria válida de la lista.");
     setGuardando(true);
     const payload = {
       participante_id: form.participante_id || null,
