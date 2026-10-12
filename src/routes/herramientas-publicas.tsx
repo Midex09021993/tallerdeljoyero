@@ -16,6 +16,7 @@ import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
+import { GeneradorSTLIA } from "@/components/GeneradorSTLIA";
 
 export const Route = createFileRoute("/herramientas-publicas")({
   head: () => ({
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/herramientas-publicas")({
   component: HerramientasPublicasPage,
 });
 
-type HerramientaId = "yeso" | "oro" | "tallas" | "peso" | "gemas";
+type HerramientaId = "yeso" | "oro" | "tallas" | "peso" | "gemas" | "stl";
 
 const herramientas = [
   {
@@ -64,6 +65,12 @@ const herramientas = [
     descripcion: "Calcula estimaciones de peso para gemas de joyería.",
     Icono: CircleDot,
   },
+  {
+    id: "stl" as const,
+    titulo: "Generador STL con IA",
+    descripcion: "Reconstruye un modelo 3D desde una imagen con procesamiento local y descarga STL.",
+    Icono: Sparkles,
+  },
 ];
 
 function HerramientasPublicasPage() {
@@ -75,6 +82,7 @@ function HerramientasPublicasPage() {
     tallas: "Conversor de tallas de anillo",
     peso: "Visualizador y peso 3D",
     gemas: "Calculadora de peso de gemas",
+    stl: "Generador STL con IA",
   };
 
   return (
@@ -171,6 +179,7 @@ function HerramientasPublicasPage() {
               {activa === "tallas" ? <ConversorTallasAnillo /> : null}
               {activa === "peso" ? <VisorPesoJoyeria archivoInicial={null} /> : null}
               {activa === "gemas" ? <CalculadoraPesoGemas /> : null}
+              {activa === "stl" ? <GeneradorSTLIA /> : null}
             </div>
           </section>
         ) : null}
