@@ -173,6 +173,9 @@ function LoginPage() {
           <a href="/herramientas-publicas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Grid2X2 className="size-4" /> Herramientas
           </a>
+          <a href="/tienda" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
+            <ShoppingBag className="size-4" /> Tienda
+          </a>
           <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Gem className="size-4" /> Conocer Aurum Lab
           </button>
@@ -195,6 +198,9 @@ function LoginPage() {
             <div className="mt-7 flex flex-wrap items-center gap-3 [@media(max-height:800px)]:mt-4">
               <a href="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-b from-[#dfc583] to-[#c2a15c] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#211c12] shadow-[0_8px_24px_rgba(194,161,92,.14)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105">
                 Probar herramientas <ArrowRight className="size-3.5" />
+              </a>
+              <a href="/tienda" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d8bd7b]/45 bg-white/[0.04] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#e6d2a0] transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.08]">
+                Tienda de insumos <ShoppingBag className="size-3.5" />
               </a>
               <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.035] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#d7d1c5]/80 transition hover:border-[#d8bd7b]/45 hover:bg-white/[0.06] hover:text-[#e5ca8a]">
                 Conocer la plataforma
