@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowDownRight, ArrowUpRight, BadgeCheck, Banknote, CalendarClock,
+  BadgeCheck, CalendarClock,
   Check, ChevronRight, CircleDollarSign, ClipboardList, Clock3, Gem,
   LayoutDashboard, Package, Plus, Search, ShieldCheck, ShoppingBag,
   Smartphone, Sparkles, Wrench, X,
