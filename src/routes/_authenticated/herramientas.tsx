@@ -7,6 +7,7 @@ import { ArrowLeft, Calculator, Gem, Ruler, ScanLine, Scale, Sparkles, Send, Cir
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
+import { GeneradorSTLIA } from "@/components/GeneradorSTLIA";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -43,6 +44,7 @@ type HerramientaInterna =
   | "peso"
   | "gemas"
   | "tallas"
+  | "stl"
   | null;
 
 const tarjetaBase =
@@ -80,6 +82,7 @@ function HerramientasPage() {
     peso: "Visualizador y peso 3D",
     gemas: "Calculadora de peso de gemas",
     tallas: "Conversor de tallas de anillo",
+    stl: "Generador STL con IA",
   };
 
   const opciones = [
@@ -88,6 +91,7 @@ function HerramientasPage() {
     { id: "peso" as const, titulo: "Peso 3D", Icono: Scale },
     { id: "gemas" as const, titulo: "Peso de gemas", Icono: CircleDot },
     { id: "tallas" as const, titulo: "Tallas de anillo", Icono: Ruler },
+    { id: "stl" as const, titulo: "Generador STL con IA", Icono: Sparkles },
   ];
 
   return (
@@ -157,6 +161,7 @@ function HerramientasPage() {
               {herramientaActiva === "peso" ? <><VisorPesoJoyeria archivoInicial={archivoInicial} />{errorArchivoInicial && <p role="alert" className="mt-3 text-sm text-destructive">{errorArchivoInicial}</p>}</> : null}
               {herramientaActiva === "gemas" ? <CalculadoraPesoGemas /> : null}
               {herramientaActiva === "tallas" ? <ConversorTallasAnillo /> : null}
+              {herramientaActiva === "stl" ? <GeneradorSTLIA /> : null}
             </div>
           </section>
         ) : (
