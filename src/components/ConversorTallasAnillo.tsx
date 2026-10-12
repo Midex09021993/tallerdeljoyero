@@ -127,7 +127,7 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
               <span className="text-xs font-medium">{modos.find((m) => m.id === modo)?.label}</span>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input type="text" inputMode={modo === "americana" ? "text" : "decimal"} className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary" placeholder={modos.find((m) => m.id === modo)?.placeholder} value={valor} onChange={(e) => setValor(e.target.value)} />
+                <input type="text" inputMode={modo === "americana" ? "text" : "decimal"} className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground/75 focus:border-primary" placeholder={modos.find((m) => m.id === modo)?.placeholder} value={valor} onChange={(e) => setValor(e.target.value)} />
               </div>
             </label>
 
