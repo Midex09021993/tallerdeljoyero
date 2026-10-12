@@ -5,7 +5,7 @@ alter table public.cotizaciones
 
 alter table public.cotizaciones
   add constraint cotizaciones_moneda_check
-  check (moneda in ('PEN', 'USD', 'MXN', 'COP', 'DOP'));
+  check (moneda in ('PEN', 'USD', 'MXN', 'COP', 'DOP')) not valid;
 
 -- Keep the existing authorization and transaction logic of the active RPC intact,
 -- changing only the currency allowlist.
