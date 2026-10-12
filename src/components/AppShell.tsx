@@ -52,7 +52,8 @@ type Seccion = {
     | "/mi-nube"
     | "/migracion"
     | "/catalogo"
-    | "/servicios-externos";
+    | "/servicios-externos"
+    | "/tienda-admin";
   label: string;
   area?: string;
   roles?: Rol[];
@@ -85,6 +86,7 @@ const secciones: Seccion[] = [
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
   { to: "/migracion", label: "Migración", roles: ["dueno", "gerente"], icono: FileSpreadsheet, grupo: "administracion" },
   { to: "/catalogo", label: "Catálogo", icono: BookOpen, grupo: "comercial" },
+  { to: "/tienda-admin", label: "Tienda FADILAB", roles: ["dueno", "gerente"], icono: ShoppingBag, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
 
@@ -287,7 +289,9 @@ export function AppShell({
     capacidadesCargadas ? capacidadesMenu : undefined,
     modalidadesCargadas ? modalidadesMenu : undefined,
   );
-  const visiblesOrdenadas = ordenarMenu(visibles);
+  const visiblesOrdenadas = ordenarMenu(
+    visibles.filter((s) => s.to !== "/tienda-admin" || /fadilab/i.test(sesion?.participante?.nombre ?? "")),
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const nombrePersonal = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
     .map((valor) => valor?.trim())
