@@ -158,7 +158,7 @@ function LoginPage() {
         <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-[#0d0e0d]/65 to-transparent" />
       </div>
 
-      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#d8c18b]/15 bg-[#141411]/35 px-5 backdrop-blur-xl lg:h-[76px] lg:px-10 max-[767px]:hidden">
+      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#d8bd7b]/25 bg-[#11110f]/95 px-5 shadow-[0_8px_30px_rgba(0,0,0,0.22)] lg:h-[76px] lg:px-10 max-[767px]:hidden">
         <div className="flex items-center gap-3">
           <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-2xl object-cover ring-1 ring-[#d8bd7b]/60 shadow-[0_0_28px_rgba(203,169,98,.12)]" />
           <div>
