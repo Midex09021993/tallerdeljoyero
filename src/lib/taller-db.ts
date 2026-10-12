@@ -1276,6 +1276,16 @@ export function useContrato(id: string, habilitado = true) {
       const row = data as Record<string, unknown> & { sedes?: { nombre: string } | null };
       const total = Number(row["total"]) || 0;
       const abonado = Number(row["abonado"]) || 0;
+      const cotizacionId = textoCampo(row, "cotizacion_id");
+      const sedeId = typeof row["sede_id"] === "string" ? row["sede_id"] : null;
+      let moneda = "PEN";
+      if (cotizacionId) {
+        const { data: cotizacion } = await supabase.from("cotizaciones").select("moneda").eq("id", cotizacionId).maybeSingle();
+        moneda = cotizacion?.moneda || moneda;
+      } else if (sedeId) {
+        const { data: identidad } = await supabase.from("identidades_comerciales").select("moneda_codigo").eq("sede_id", sedeId).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        moneda = identidad?.moneda_codigo || moneda;
+      }
       return {
         id: textoCampo(row, "id"),
         numero: textoCampo(row, "numero"),
@@ -1289,7 +1299,8 @@ export function useContrato(id: string, habilitado = true) {
         sede_nombre: row.sedes?.nombre ?? null,
         notas: textoCampo(row, "notas"),
         created_at: textoCampo(row, "created_at"),
-        cotizacion_id: typeof row["cotizacion_id"] === "string" ? row["cotizacion_id"] : null,
+        cotizacion_id: cotizacionId || null,
+        moneda,
         estado_firma: textoCampo(row, "estado_firma", "pendiente") as Contrato["estado_firma"],
         firma_validada_at: typeof row["firma_validada_at"] === "string" ? row["firma_validada_at"] : null,
         firma_observacion: textoCampo(row, "firma_observacion"),
@@ -1378,6 +1389,7 @@ export function useCrearPedido() {
         contrato: pedido.contrato?.trim() ?? "",
         cliente_id: pedido.cliente_id ?? null,
         cotizacion_id: pedido.cotizacion_id ?? null,
+    moneda: "PEN",
         contrato_id: pedido.contrato_id ?? null,
       };
 
