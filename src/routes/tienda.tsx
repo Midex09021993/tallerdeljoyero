@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/tienda")({
   head: () => ({
     meta: [
-      { title: "Insumos para joyería | FADILAB — Taller del Joyero" },
+      { title: "Insumos para joyería | Taller del Joyero" },
       { name: "description", content: "Resinas, cubiletes y materiales para el trabajo profesional de joyería." },
       { name: "robots", content: "index, follow" },
     ],
@@ -56,7 +56,7 @@ function TiendaInsumosPage() {
     ? "Consultar precio"
     : new Intl.NumberFormat("es-PE", { style: "currency", currency: p.moneda || tienda?.moneda || "PEN", maximumFractionDigits: 2 }).format(p.precio);
   const whatsappUrl = (p: Producto) => {
-    const mensaje = encodeURIComponent(`Hola, FADILAB. Quisiera consultar por ${p.nombre}.`);
+    const mensaje = encodeURIComponent(`Hola. Quisiera consultar por ${p.nombre}.`);
     return tienda?.whatsapp ? `https://wa.me/${tienda.whatsapp.replace(/\D/g, "")}?text=${mensaje}` : `https://wa.me/?text=${mensaje}`;
   };
 
@@ -75,7 +75,7 @@ function TiendaInsumosPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_20%,rgba(211,177,103,.2),transparent_45%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 sm:py-20 md:grid-cols-[1.3fr_.7fr] md:items-center">
           <div>
-            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.28em] text-[#d9bd7b]"><Sparkles className="size-4" /> Tienda especializada · FADILAB</p>
+            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.28em] text-[#d9bd7b]"><Sparkles className="size-4" /> Tienda especializada</p>
             <h1 className="mt-5 max-w-2xl font-display text-4xl leading-tight sm:text-6xl">Insumos para crear con precisión.</h1>
             <p className="mt-5 max-w-xl text-sm leading-7 text-white/65 sm:text-base">Resinas, cubiletes y materiales seleccionados para acompañar cada etapa de tu trabajo joyero.</p>
             <a href="#productos" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#d6b66e] px-5 py-3 text-xs font-bold text-[#201d15] transition hover:brightness-105">Explorar productos <ArrowRight className="size-4" /></a>
@@ -83,7 +83,7 @@ function TiendaInsumosPage() {
           <div className="hidden rounded-[2rem] border border-white/10 bg-white/[.04] p-8 md:block">
             <div className="grid size-20 place-items-center rounded-3xl border border-[#d9bd7b]/35 bg-[#d9bd7b]/10"><ShoppingBag className="size-9 text-[#d9bd7b]" /></div>
             <p className="mt-6 text-xl font-semibold">Para el taller, de verdad.</p>
-            <p className="mt-2 text-sm leading-6 text-white/55">Consulta disponibilidad y coordina tu pedido directamente con FADILAB.</p>
+            <p className="mt-2 text-sm leading-6 text-white/55">Consulta disponibilidad y coordina tu pedido directamente con nuestro equipo.</p>
           </div>
         </div>
       </section>
@@ -99,7 +99,7 @@ function TiendaInsumosPage() {
           : visibles.length === 0 ? <div className="mt-8 rounded-2xl border border-[#e4ddcf] bg-white p-8 text-sm text-[#777168]">No hay productos que coincidan con tu búsqueda.</div>
           : <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{visibles.map((p) => <article key={p.id} className="group overflow-hidden rounded-2xl border border-[#e5ded1] bg-white shadow-[0_8px_30px_rgba(39,31,18,.035)] transition hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(39,31,18,.09)]"><div className="relative aspect-[4/3] overflow-hidden bg-[#eeebe4]">{p.imagen_url ? <img src={p.imagen_url} alt={p.nombre} loading="lazy" className="size-full object-cover transition duration-500 group-hover:scale-[1.03]" /> : <div className="grid size-full place-items-center"><Package className="size-12 text-[#c2b9a8]" /></div>}{p.destacado && <span className="absolute left-3 top-3 rounded-full bg-[#d6b66e] px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-[#252116]">Destacado</span>}</div><div className="p-5"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#9b7b3f]">{p.categoria}</p><h3 className="mt-2 text-base font-semibold">{p.nombre}</h3><p className="mt-2 min-h-10 text-xs leading-5 text-[#777168]">{p.descripcion || "Consulta los detalles y presentaciones disponibles."}</p><div className="mt-5 flex items-end justify-between gap-3"><div><p className="text-[9px] uppercase tracking-wider text-[#8a8276]">Precio</p><p className="mt-1 text-sm font-bold">{formatoPrecio(p)}</p>{p.stock != null && <p className="mt-1 text-[10px] text-[#777168]">Disponibilidad: {p.stock} {p.unidad}</p>}</div><a href={whatsappUrl(p)} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#24231d] px-3 py-2.5 text-[10px] font-bold text-white transition hover:bg-[#9b7b3f]"><MessageCircle className="size-4" /> Consultar</a></div></div></article>)}</div>}
       </section>
-      <footer className="border-t border-[#e1d8c8] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-[#777168] sm:flex-row sm:items-center sm:justify-between sm:px-8"><p>© {new Date().getFullYear()} FADILAB · Insumos para joyería</p><a href="/auth" className="hover:text-[#9b7b3f]">Volver a Aurum Lab</a></div></footer>
+      <footer className="border-t border-[#e1d8c8] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-[#777168] sm:flex-row sm:items-center sm:justify-between sm:px-8"><p>© {new Date().getFullYear()} · Insumos para joyería</p><a href="/auth" className="hover:text-[#9b7b3f]">Volver a Aurum Lab</a></div></footer>
     </main>
   );
 }
