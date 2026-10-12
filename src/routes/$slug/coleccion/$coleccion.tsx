@@ -24,7 +24,16 @@ type Row = {
 };
 
 export const Route = createFileRoute("/$slug/coleccion/$coleccion")({
-  head: () => ({ meta: [{ title: "Colección · Catálogo" }] }),
+  head: ({ params }) => ({
+    meta: [
+      { title: `Colección ${params.coleccion} | ${params.slug} · Taller del Joyero` },
+      { name: "description", content: `Descubre las joyas de la colección ${params.coleccion} publicadas por ${params.slug} en su catálogo digital.` },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Taller del Joyero" },
+    ],
+    links: [{ rel: "canonical", href: `https://www.tallerdeljoyero.com/${encodeURIComponent(params.slug)}/coleccion/${encodeURIComponent(params.coleccion)}` }],
+  }),
   component: ColeccionPublicaPage,
 });
 
