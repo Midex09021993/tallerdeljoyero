@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
-import { HerramientasFlotantes } from "@/components/HerramientasFlotantes";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
@@ -52,7 +51,6 @@ function LoginPage() {
   const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad">("ecosistema");
-  const [herramientaSeleccionada, setHerramientaSeleccionada] = useState<string | null>(null);
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
   useEffect(() => {
@@ -240,7 +238,7 @@ function LoginPage() {
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setHerramientaSeleccionada(id ?? null)}
+                  onClick={() => navigate({ to: "/herramientas-publicas" })}
                   className="group rounded-2xl border border-white/[0.09] bg-white/[0.025] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/40 hover:bg-white/[0.055] [@media(max-height:800px)]:p-3"
                 >
                   <Gem className="size-6 text-gold" />
@@ -561,7 +559,6 @@ function LoginPage() {
         </div>
       </footer>
 
-      <HerramientasFlotantes herramientaInicial={herramientaSeleccionada} />
     </main>
   );
 }
