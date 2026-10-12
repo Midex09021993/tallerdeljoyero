@@ -23,23 +23,29 @@ async function readModelWithProgress(
   const total = Number.isFinite(header) && header > 0 ? header : null;
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
+  const output = total === null ? null : new Uint8Array(total);
   let loaded = 0;
   while (true) {
     const result = await reader.read();
     if (result.done) break;
     if (result.value) {
-      chunks.push(result.value);
+      if (output) output.set(result.value, loaded);
+      else chunks.push(result.value);
       loaded += result.value.byteLength;
       onProgress(loaded, total);
     }
   }
-  const output = new Uint8Array(loaded);
+  if (output) {
+    if (loaded !== output.byteLength) return output.slice(0, loaded).buffer;
+    return output.buffer;
+  }
+  const combined = new Uint8Array(loaded);
   let offset = 0;
   for (const chunk of chunks) {
-    output.set(chunk, offset);
+    combined.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return output.buffer;
+  return combined.buffer;
 }
 
 type Stage = "idle" | "loading" | "preparing" | "generating" | "meshing" | "done" | "error";
