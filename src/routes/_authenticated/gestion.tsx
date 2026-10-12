@@ -1549,6 +1549,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
 
   const [form, setForm] = useState({
     usuario: "",
+    email: "",
     password: "",
     nombre: "",
     apellidos: "",
@@ -1574,6 +1575,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
       await crear({
         data: {
           usuario: form.usuario,
+          email: form.email,
           password: form.password,
           nombre: form.nombre,
           apellidos: form.apellidos,
@@ -1587,7 +1589,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
         },
       });
       toast.success("Usuario creado");
-      setForm({ ...form, usuario: "", password: "", nombre: "", apellidos: "", dni: "", telefono: "", acceso_desde: "", acceso_hasta: "" });
+      setForm({ ...form, usuario: "", email: "", password: "", nombre: "", apellidos: "", dni: "", telefono: "", acceso_desde: "", acceso_hasta: "" });
       qc.invalidateQueries({ queryKey: ["usuarios"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo crear el usuario");
@@ -1617,6 +1619,15 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
             placeholder="Usuario"
             value={form.usuario}
             onChange={(e) => setForm({ ...form, usuario: e.target.value })}
+            required
+          />
+          <input
+            className={inputCls}
+            type="email"
+            placeholder="Correo electrónico (para recuperar contraseña)"
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
           <input
@@ -1721,7 +1732,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-muted">
-                {["Usuario", "Nombre", "DNI", "Rol", "Sede", "Áreas", "Acceso", ""].map((h) => (
+                {["Usuario", "Correo electrónico", "Nombre", "DNI", "Rol", "Sede", "Áreas", "Acceso", ""].map((h) => (
                   <th
                     key={h}
                     className="px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground"
@@ -1741,6 +1752,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                         <span className="text-[10px] text-warning">Perfil pendiente de completar</span>
                       ) : null}
                     </td>
+                    <td className="px-6 py-3 text-xs text-muted-foreground">{u.email || "—"}</td>
                     <td className="px-6 py-3 text-sm">{u.nombre || "—"} {u.apellidos || ""}</td>
                     <td className="px-6 py-3 text-xs text-muted-foreground">{u.dni || "—"}</td>
                     <td className="px-6 py-3 text-xs">
@@ -1787,7 +1799,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                     ? [
                         fila,
                         <tr key={`${u.id}-edit`} className="bg-surface-muted/40">
-                          <td colSpan={8} className="px-6 py-4">
+                          <td colSpan={9} className="px-6 py-4">
                             <EditorUsuario
                               usuario={u}
                               sedes={sedes}
@@ -1801,7 +1813,7 @@ function ModuloUsuarios({ esDueno, sedePropia }: { esDueno: boolean; sedePropia:
                 })}
               {usuarios.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-sm text-muted-foreground">
+                  <td colSpan={9} className="px-6 py-8 text-sm text-muted-foreground">
                     Sin usuarios todavía.
                   </td>
                 </tr>
@@ -1857,6 +1869,7 @@ function EditorUsuario({
   const actualizar = useServerFn(actualizarUsuario);
   const [datos, setDatos] = useState({
     usuario: usuario.usuario,
+    email: usuario.email ?? "",
     nombre: usuario.nombre,
     apellidos: usuario.apellidos,
     dni: usuario.dni,
@@ -1883,6 +1896,7 @@ function EditorUsuario({
         data: {
           id: usuario.id,
           usuario: datos.usuario,
+          email: datos.email,
           nombre: datos.nombre,
           apellidos: datos.apellidos,
           dni: datos.dni,
@@ -1918,6 +1932,15 @@ function EditorUsuario({
           placeholder="Usuario"
           value={datos.usuario}
           onChange={(e) => setDatos({ ...datos, usuario: e.target.value })}
+          required
+        />
+        <input
+          className={inputCls}
+          type="email"
+          placeholder="Correo electrónico (para recuperar contraseña)"
+          autoComplete="email"
+          value={datos.email}
+          onChange={(e) => setDatos({ ...datos, email: e.target.value })}
           required
         />
         <input
