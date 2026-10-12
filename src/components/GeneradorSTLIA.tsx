@@ -140,6 +140,7 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
     if (!inputName || !outputName) throw new Error("El modelo de reconstrucción no contiene entradas o salidas válidas.");
     const encoded = await triplaneSession.run({ [inputName]: input });
     const planesTensor = encoded[outputName];
+    if (!planesTensor) throw new Error("El modelo no devolvió los planos 3D esperados.");
     const planes = planesTensor.data as Float32Array;
     const count = GRID * GRID * GRID;
     const density = new Float32Array(count);
@@ -158,12 +159,16 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
           features[row + 80 + c] = samplePlane(planes.subarray(80 * 4096, 120 * 4096), c, y, z);
         }
       }
+      const decoderInputName = decoderSession.inputNames[0];
+      if (!decoderInputName) throw new Error("El decodificador no tiene una entrada válida.");
       const decoded = await decoderSession.run({
-        [decoderSession.inputNames[0]!]: new ort.Tensor("float32", features, [end - start, 120]),
+        [decoderInputName]: new ort.Tensor("float32", features, [end - start, 120]),
       });
       const densityName = decoderSession.outputNames.find((name) => name.toLowerCase().includes("density")) ?? decoderSession.outputNames[0];
       if (!densityName) throw new Error("El decodificador no devolvió una salida de densidad.");
-      const d = decoded[densityName].data as Float32Array;
+      const densityTensor = decoded[densityName];
+      if (!densityTensor) throw new Error("El decodificador no devolvió densidad.");
+      const d = densityTensor.data as Float32Array;
       const colorName = decoderSession.outputNames.find((name) => name.toLowerCase().includes("color"));
       const c = colorName ? decoded[colorName].data as Float32Array : null;
       density.set(d, start);
