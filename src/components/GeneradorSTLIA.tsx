@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Download, ImagePlus, LoaderCircle, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
+import { Download, ImagePlus, LoaderCircle, RotateCcw, ShieldCheck, Sparkles, Ruler } from "lucide-react";
 import * as ort from "onnxruntime-web/webgpu";
 import * as THREE from "three";
 import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
@@ -216,6 +216,7 @@ export function GeneradorSTLIA() {
   const [stage, setStage] = useState<Stage>("idle");
   const [message, setMessage] = useState("La imagen se procesa en tu navegador; no se envía a un servicio de generación.");
   const [generatedSTL, setGeneratedSTL] = useState<File | null>(null);
+  const [dimensionMm, setDimensionMm] = useState(25);
   const busy = ["loading", "preparing", "generating", "meshing"].includes(stage);
 
 
@@ -242,10 +243,20 @@ export function GeneradorSTLIA() {
       result.computeBoundingBox();
       const position = result.getAttribute("position");
       const dimensions = result.boundingBox?.getSize(new THREE.Vector3());
-      if (!position || position.count < 3 || !dimensions || ![dimensions.x, dimensions.y, dimensions.z].every(Number.isFinite) || Math.min(dimensions.x, dimensions.y, dimensions.z) <= 1e-5) {
+      if (!position || position.count < 3 || !dimensions || ![dimensions.x, dimensions.y, dimensions.z].every(Number.isFinite) || Math.max(dimensions.x, dimensions.y, dimensions.z) <= 1e-5 || Math.min(dimensions.x, dimensions.y, dimensions.z) < 0) {
         result.dispose();
         throw new Error("La malla generada está vacía o degenerada. No se creó un STL.");
       }
+      // Convención de exportación: la dimensión mayor del STL se expresa en milímetros.
+      // Esto corrige la escala física, pero no valida la fidelidad ni la fabricabilidad de la geometría.
+      const dimensionMaxima = Math.max(dimensions.x, dimensions.y, dimensions.z);
+      if (!Number.isFinite(dimensionMm) || dimensionMm < 1 || dimensionMm > 200) {
+        result.dispose();
+        throw new Error("Indica una dimensión mayor entre 1 y 200 mm.");
+      }
+      const factorEscala = dimensionMm / dimensionMaxima;
+      result.scale(factorEscala, factorEscala, factorEscala);
+      result.computeBoundingBox();
       const material = new THREE.MeshStandardMaterial();
       const exportMesh = new THREE.Mesh(result, material);
       const data = new STLExporter().parse(exportMesh, { binary: true });
@@ -287,7 +298,13 @@ export function GeneradorSTLIA() {
             </label>
             <input id="stl-image" type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={busy} onChange={(event) => chooseFile(event.target.files?.[0] ?? null)} />
             {file && <p className="mt-3 break-all text-xs text-white/50">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>}
-            <button type="button" onClick={generate} disabled={!file || busy} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#d8bd7b] px-4 py-3 text-sm font-semibold text-[#17160f] transition hover:bg-[#ead6a3] disabled:cursor-not-allowed disabled:opacity-45">
+            <label htmlFor="stl-dimension-mm" className="mt-4 flex items-center gap-2 text-sm font-medium text-white/80"><Ruler className="size-4 text-[#d8bd7b]" /> Dimensión mayor del modelo (mm)</label>
+            <div className="mt-2 flex items-center gap-3">
+              <input id="stl-dimension-mm" type="number" min={1} max={200} step={0.5} value={dimensionMm} disabled={busy} onChange={(event) => setDimensionMm(Number(event.target.value))} className="h-11 w-full rounded-xl border border-white/15 bg-black/25 px-3 text-sm text-white outline-none focus:border-[#d8bd7b] disabled:opacity-50" aria-describedby="stl-dimension-help" />
+              <span className="text-sm text-white/50">mm</span>
+            </div>
+            <p id="stl-dimension-help" className="mt-1 text-xs leading-5 text-white/45">Escala uniformemente la dimensión más larga. Rango: 1–200 mm.</p>
+            <button type="button" onClick={generate} disabled={!file || busy || !Number.isFinite(dimensionMm) || dimensionMm < 1 || dimensionMm > 200} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#d8bd7b] px-4 py-3 text-sm font-semibold text-[#17160f] transition hover:bg-[#ead6a3] disabled:cursor-not-allowed disabled:opacity-45">
               {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Sparkles className="size-4" />}{busy ? "Procesando en tu equipo…" : "Generar modelo 3D"}
             </button>
           </div>
