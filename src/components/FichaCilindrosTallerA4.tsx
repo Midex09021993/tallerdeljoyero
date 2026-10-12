@@ -109,8 +109,12 @@ export function FichaCilindrosTallerA4({ cilindros, configuracion, identidad }: 
                     <th className="border border-slate-400 px-1 py-1.5">Ø</th>
                     <th className="border border-slate-400 px-1 py-1.5">Alt.</th>
                     <th className="border border-slate-400 px-1 py-1.5">Tarro</th>
-                    {recetas.map((receta) => <th key={`agua-${receta.agua}`} className="border border-slate-400 px-1 py-1.5">Agua</th>)}
-                    {recetas.map((receta) => <th key={`yeso-${receta.agua}`} className="border border-slate-400 px-1 py-1.5">Yeso</th>)}
+                    {recetas.map((receta) => (
+                      <>
+                        <th key={`agua-${receta.agua}`} className="border border-slate-400 px-1 py-1.5">Agua</th>
+                        <th key={`yeso-${receta.agua}`} className="border border-slate-400 px-1 py-1.5">Yeso</th>
+                      </>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
