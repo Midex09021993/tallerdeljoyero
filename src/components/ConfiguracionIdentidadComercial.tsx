@@ -36,6 +36,15 @@ function obtenerConfigCotizacion(metadata: Record<string, any> | null | undefine
 const PRESETS: Record<string, Partial<Identidad>> = {
   PE: { pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true, impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima" },
   CO: { pais_codigo: "CO", pais_nombre: "Colombia", moneda_codigo: "COP", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 19, impuesto_incluido: false, identificador_fiscal_label: "NIT", zona_horaria: "America/Bogota" },
+  MX: { pais_codigo: "MX", pais_nombre: "México", moneda_codigo: "MXN", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 16, impuesto_incluido: false, identificador_fiscal_label: "RFC", zona_horaria: "America/Mexico_City" },
+  DO: { pais_codigo: "DO", pais_nombre: "República Dominicana", moneda_codigo: "DOP", moneda_simbolo: "RD$", impuesto_activo: true, impuesto_nombre: "ITBIS", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RNC", zona_horaria: "America/Santo_Domingo" },
+};
+
+const NOMBRES_PAIS: Record<string, string> = {
+  PE: "Perú",
+  CO: "Colombia",
+  MX: "México",
+  DO: "República Dominicana",
 };
 
 const CAMPOS = [
@@ -135,7 +144,12 @@ export function ConfiguracionIdentidadComercial() {
 
   function aplicarPais(pais: string) {
     const preset = PRESETS[pais];
-    setForm((x) => x ? { ...x, ...(preset ?? {}), pais_codigo: pais, pais_nombre: pais === "PE" ? "Perú" : pais === "CO" ? "Colombia" : x.pais_nombre } : x);
+    setForm((x) => x ? {
+      ...x,
+      ...(preset ?? {}),
+      pais_codigo: pais,
+      pais_nombre: NOMBRES_PAIS[pais] ?? (pais === "OTHER" ? "Otro" : x.pais_nombre),
+    } : x);
   }
 
   async function subirLogo(file: File) {
@@ -323,7 +337,7 @@ export function ConfiguracionIdentidadComercial() {
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">{form.identificador_fiscal_label || "RUC / NIT"}<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.ruc ?? ""} onChange={e=>campo("ruc",e.target.value)} /></label>
-              <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}><option value="PE">Perú</option><option value="CO">Colombia</option><option value="OTHER">Otro</option></select></label>
+              <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}><option value="PE">Perú</option><option value="CO">Colombia</option><option value="MX">México</option><option value="DO">República Dominicana</option><option value="OTHER">Otro</option></select></label>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <label className="text-xs font-semibold text-muted-foreground">Moneda<input maxLength={3} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal uppercase" value={form.moneda_codigo} onChange={e=>campo("moneda_codigo",e.target.value.toUpperCase())} /></label>
