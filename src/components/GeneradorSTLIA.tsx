@@ -228,31 +228,52 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
       const d = densityTensor.data as Float32Array;
       density.set(d, start);
     }
-    let occupied = 0;
+    let maxDensity = -Infinity;
     for (let i = 0; i < density.length; i += 1) {
       const value = density[i]!;
       if (!Number.isFinite(value)) throw new Error("El modelo devolvió valores de densidad no válidos.");
-      if (value >= 25) occupied += 1;
+      maxDensity = Math.max(maxDensity, value);
     }
-    const occupancy = occupied / count;
-    if (occupancy < 0.0001 || occupancy > 0.35) {
+
+    // La escala de densidad puede variar según la inferencia. Probamos niveles
+    // progresivamente más estrictos para evitar que Marching Cubes sature la malla.
+    const thresholds = Array.from(new Set([25, 35, 50, 75, 100, 150, 200, maxDensity * 0.25, maxDensity * 0.5]))
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .sort((a, b) => a - b);
+    const candidatos = thresholds.filter((threshold) => {
+      let occupied = 0;
+      for (let i = 0; i < density.length; i += 1) {
+        if (density[i]! >= threshold) occupied += 1;
+      }
+      const occupancy = occupied / count;
+      return occupancy >= 0.0001 && occupancy <= 0.35;
+    });
+    if (candidatos.length === 0) {
       throw new Error("La reconstrucción no produjo una superficie 3D fiable. Prueba una imagen con la joya aislada, centrada y sobre fondo gris; no se generó un STL.");
     }
-    report("meshing", "Extrayendo la superficie y preparando el STL…");
+
+    report("meshing", "Ajustando la superficie 3D y preparando la malla…");
     const material = new THREE.MeshStandardMaterial({ color: 0xc7bda9, metalness: 0.18, roughness: 0.34 });
-    const surface = new MarchingCubes(GRID, material, false, false, 300000);
-    surface.isolation = 25;
-    surface.field = density;
-    surface.update();
-    const geometry = surface.geometry.clone();
-    const generatedTriangles = geometry.getAttribute("position").count / 3;
-    geometry.computeVertexNormals();
-    surface.geometry.dispose();
-    material.dispose();
-    if (generatedTriangles >= 300000) {
-      geometry.dispose();
-      throw new Error("La reconstrucción produjo una malla saturada y no fiable. Usa una imagen con la joya aislada y vuelve a intentarlo; no se ha ofrecido un STL defectuoso.");
+    let geometry: THREE.BufferGeometry | null = null;
+    for (const threshold of candidatos) {
+      const surface = new MarchingCubes(GRID, material, false, false, 300000);
+      surface.isolation = threshold;
+      surface.field = density;
+      surface.update();
+      const candidateGeometry = surface.geometry.clone();
+      const generatedTriangles = candidateGeometry.getAttribute("position").count / 3;
+      surface.geometry.dispose();
+      if (generatedTriangles > 0 && generatedTriangles < 300000) {
+        geometry = candidateGeometry;
+        break;
+      }
+      candidateGeometry.dispose();
     }
+    material.dispose();
+    if (!geometry) {
+      throw new Error("La reconstrucción produjo una malla saturada o vacía incluso tras ajustar la densidad. Prueba una imagen más limpia; no se generó un STL.");
+    }
+    geometry.computeVertexNormals();
     triplaneSession.release();
     decoderSession.release();
     return geometry;
