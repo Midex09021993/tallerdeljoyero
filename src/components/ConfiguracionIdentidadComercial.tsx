@@ -71,7 +71,56 @@ function obtenerZonasHorarias(): string[] {
   } catch {}
   return ZONAS_HORARIAS_FALLBACK;
 }
+
 const ZONAS_HORARIAS = obtenerZonasHorarias();
+
+const CIUDADES_ZONA: Record<string, string> = {
+  "America/Lima": "Lima",
+  "America/Bogota": "Bogotá",
+  "America/Guayaquil": "Quito",
+  "America/Rio_Branco": "Río Branco",
+  "America/La_Paz": "La Paz",
+  "America/Caracas": "Caracas",
+  "America/Santiago": "Santiago",
+  "America/Argentina/Buenos_Aires": "Buenos Aires",
+  "America/Sao_Paulo": "São Paulo",
+  "America/Montevideo": "Montevideo",
+  "America/Asuncion": "Asunción",
+  "America/Mexico_City": "Ciudad de México",
+  "America/Panama": "Panamá",
+  "America/Costa_Rica": "San José",
+  "America/New_York": "Nueva York",
+  "America/Chicago": "Chicago",
+  "America/Denver": "Denver",
+  "America/Los_Angeles": "Los Ángeles",
+  "Europe/Madrid": "Madrid",
+  "Europe/London": "Londres",
+  "Europe/Paris": "París",
+  "Europe/Berlin": "Berlín",
+  "Asia/Tokyo": "Tokio",
+  "Asia/Shanghai": "Shanghái",
+  "Asia/Kolkata": "Calcuta",
+  "Asia/Dubai": "Dubái",
+  "Australia/Sydney": "Sídney",
+  "Pacific/Auckland": "Auckland",
+  UTC: "Tiempo universal coordinado",
+};
+
+function obtenerEtiquetaZonaHoraria(zona: string): string {
+  let offset = "UTC";
+  try {
+    const nombre = new Intl.DateTimeFormat("es-PE", {
+      timeZone: zona,
+      timeZoneName: "longOffset",
+    }).formatToParts(new Date()).find((parte) => parte.type === "timeZoneName")?.value;
+    if (nombre) {
+      const normalizado = nombre.replace(/^GMT/, "UTC");
+      offset = normalizado === "UTC" ? "UTC+00:00" : normalizado;
+    }
+  } catch {}
+  const ciudad = CIUDADES_ZONA[zona] ?? zona.split("/").pop()?.replace(/_/g, " ") ?? zona;
+  return `(${offset}) ${ciudad} · ${zona}`;
+}
 
 const MONEDAS = [
   { codigo: "ARS", nombre: "Peso argentino", simbolo: "$" },
@@ -422,9 +471,11 @@ export function ConfiguracionIdentidadComercial() {
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">Zona horaria
-                <input list="zonas-horarias-iana" autoComplete="off" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.zona_horaria} onChange={e=>campo("zona_horaria",e.target.value)} placeholder="Buscar ciudad o zona, ej. America/Bogota" />
-                <datalist id="zonas-horarias-iana">{ZONAS_HORARIAS.map(zona=><option key={zona} value={zona} />)}</datalist>
-                <span className="mt-1 block text-[10px] font-normal">Busca por región o ciudad. Usa identificadores IANA; al cambiar de país se propone una zona predeterminada.</span>
+                <select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.zona_horaria} onChange={e=>campo("zona_horaria",e.target.value)}>
+                  {!ZONAS_HORARIAS.includes(form.zona_horaria) ? <option value={form.zona_horaria}>{obtenerEtiquetaZonaHoraria(form.zona_horaria)}</option> : null}
+                  {ZONAS_HORARIAS.map(zona=><option key={zona} value={zona}>{obtenerEtiquetaZonaHoraria(zona)}</option>)}
+                </select>
+                <span className="mt-1 block text-[10px] font-normal">Formato tipo Windows: diferencia UTC, ciudad y zona técnica. La zona técnica se conserva para calcular correctamente fechas y horas.</span>
               </label>
               <label className="text-xs font-semibold text-muted-foreground">Pie de documento<textarea className="mt-1 min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.pie_documento ?? ""} onChange={e=>campo("pie_documento",e.target.value)} /></label>
             </div>
