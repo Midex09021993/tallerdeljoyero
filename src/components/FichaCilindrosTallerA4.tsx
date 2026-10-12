@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Printer, X } from "lucide-react";
 import { calcularMezclaYeso, type ConfigYeso } from "@/lib/calculadoras-config";
 
@@ -110,10 +110,10 @@ export function FichaCilindrosTallerA4({ cilindros, configuracion, identidad }: 
                     <th className="border border-slate-400 px-1 py-1.5">Alt.</th>
                     <th className="border border-slate-400 px-1 py-1.5">Tarro</th>
                     {recetas.map((receta) => (
-                      <>
-                        <th key={`agua-${receta.agua}`} className="border border-slate-400 px-1 py-1.5">Agua</th>
-                        <th key={`yeso-${receta.agua}`} className="border border-slate-400 px-1 py-1.5">Yeso</th>
-                      </>
+                      <Fragment key={receta.agua}>
+                        <th className="border border-slate-400 px-1 py-1.5">Agua</th>
+                        <th className="border border-slate-400 px-1 py-1.5">Yeso</th>
+                      </Fragment>
                     ))}
                   </tr>
                 </thead>
@@ -124,8 +124,12 @@ export function FichaCilindrosTallerA4({ cilindros, configuracion, identidad }: 
                       <td className="border border-slate-300 px-1 py-2">{numero(fila.diametroCm)}</td>
                       <td className="border border-slate-300 px-1 py-2">{numero(fila.alturaCm)}</td>
                       <td className="border border-slate-300 px-1 py-2">{fila.tipoTarro === "liso" ? "Liso" : "Perforado"}</td>
-                      {fila.mezclas.map((mezcla, index) => <td key={`agua-${index}`} className="border border-slate-300 px-1 py-2 font-semibold">{Math.round(mezcla.agua)}</td>)}
-                      {fila.mezclas.map((mezcla, index) => <td key={`yeso-${index}`} className="border border-slate-300 px-1 py-2 font-semibold">{Math.round(mezcla.yeso)}</td>)}
+                      {fila.mezclas.map((mezcla, index) => (
+                        <Fragment key={recetas[index].agua}>
+                          <td className="border border-slate-300 px-1 py-2 font-semibold">{Math.round(mezcla.agua)}</td>
+                          <td className="border border-slate-300 px-1 py-2 font-semibold">{Math.round(mezcla.yeso)}</td>
+                        </Fragment>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
