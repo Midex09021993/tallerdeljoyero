@@ -19,8 +19,8 @@ begin
   v_definition := pg_get_functiondef(v_signature);
   v_updated := replace(
     v_definition,
-    'if _moneda not in (''PEN'',''USD'') then',
-    'if _moneda not in (''PEN'',''USD'',''MXN'',''COP'',''DOP'') then'
+    'if _moneda is null or length(btrim(_moneda)) <> 3 then raise exception ''Moneda no válida''; end if;',
+    'if upper(btrim(coalesce(_moneda, ''''))) not in (''PEN'',''USD'',''MXN'',''COP'',''DOP'') then raise exception ''Moneda no válida''; end if;'
   );
 
   if v_updated = v_definition then
