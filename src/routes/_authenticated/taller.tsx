@@ -330,7 +330,7 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
         <section className="space-y-3 rounded-2xl border border-gold/20 bg-gold/5 p-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Cilindros guardados</h3>
-            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Se guardan en este navegador y en el perfil local de esta cuenta; todavía no se sincronizan entre dispositivos.</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Se guardan localmente en este navegador, separados por taller cuando hay sesión. No se sincronizan entre dispositivos; si el navegador bloquea el almacenamiento, solo duran durante esta sesión.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input type="text" value={nombreCilindro} onChange={(event) => setNombreCilindro(event.target.value)} placeholder="Nombre del cilindro (opcional)" aria-label="Nombre del cilindro" maxLength={60} className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-gold" />
