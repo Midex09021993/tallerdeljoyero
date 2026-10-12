@@ -81,7 +81,7 @@ function LandingPublica() {
             to="/auth"
             className="inline-flex items-center gap-2 rounded-full bg-[#211d19] px-5 py-3 text-xs font-semibold text-white transition hover:bg-[#40372d]"
           >
-            Ingresar <ArrowRight className="size-3.5" aria-hidden="true" />
+            Probar herramientas <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
         </div>
       </header>
@@ -100,8 +100,8 @@ function LandingPublica() {
               Calcula aleaciones de oro, estima el peso de piezas y gemas, prepara moldes y organiza el trabajo de tu taller desde un solo lugar.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-[#211d19] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5">
-                Acceder a la plataforma <ArrowRight className="size-4" aria-hidden="true" />
+              <Link to="/auth#herramientas" className="inline-flex items-center gap-2 rounded-full bg-[#211d19] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5">
+                Probar herramientas <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <a href="#herramientas" className="inline-flex items-center rounded-full border border-[#211d1930] bg-white/60 px-6 py-4 text-sm font-semibold transition hover:bg-white">
                 Explorar herramientas
@@ -152,6 +152,7 @@ function LandingPublica() {
                 </span>
                 <h3 className="mt-5 font-display text-2xl">{titulo}</h3>
                 <p className="mt-3 text-sm leading-7 text-[#6e655b]">{texto}</p>
+                <Link to="/auth#herramientas" className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-[#8b6b36] underline underline-offset-4">Probar herramienta <ArrowRight className="size-3.5" aria-hidden="true" /></Link>
               </article>
             ))}
           </div>
@@ -160,8 +161,8 @@ function LandingPublica() {
               <h2 className="font-display text-3xl">Lleva tus procesos a un solo lugar</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">Ingresa a Taller del Joyero para conocer las herramientas disponibles para tu cuenta y tu taller.</p>
             </div>
-            <Link to="/auth" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#e0bd76] px-5 py-3 text-xs font-bold text-[#211d19]">
-              Entrar a la plataforma <ArrowRight className="size-3.5" aria-hidden="true" />
+            <Link to="/auth#herramientas" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#e0bd76] px-5 py-3 text-xs font-bold text-[#211d19]">
+              Probar herramientas <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
           </div>
         </div>
