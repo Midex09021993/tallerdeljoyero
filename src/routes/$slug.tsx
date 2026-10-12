@@ -5,11 +5,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$slug")({
-  head: () => ({
+  head: ({ params }) => ({
     meta: [
-      { title: "Showroom digital" },
-      { name: "description", content: "Showroom digital público de una joyería o taller." },
+      { title: `Catálogo de joyería | ${params.slug} · Taller del Joyero` },
+      { name: "description", content: `Explora las joyas y colecciones publicadas por ${params.slug} en su catálogo digital de Taller del Joyero.` },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Taller del Joyero" },
+      { property: "og:title", content: `Catálogo de joyería | ${params.slug}` },
+      { property: "og:description", content: `Descubre joyas y colecciones del catálogo digital ${params.slug}.` },
     ],
+    links: [{ rel: "canonical", href: `https://www.tallerdeljoyero.com/${encodeURIComponent(params.slug)}` }],
   }),
   component: CatalogoPublicoPage,
 });
