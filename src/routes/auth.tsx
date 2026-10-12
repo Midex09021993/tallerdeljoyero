@@ -152,8 +152,8 @@ function LoginPage() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_28%,rgba(199,164,91,.16),transparent_38%),radial-gradient(ellipse_at_82%_16%,rgba(255,245,220,.055),transparent_30%),linear-gradient(135deg,#1b1a17_0%,#111210_48%,#0d0e0d_100%)]" />
         <div
-          className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-25 mix-blend-screen"
-          style={{ backgroundImage: `linear-gradient(90deg,rgba(15,15,13,.38),rgba(15,15,13,.82) 68%,rgba(15,15,13,.98)), linear-gradient(180deg,rgba(15,15,13,.18),rgba(15,15,13,.82)), url(${heroJoyeria})` }}
+          className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-35 mix-blend-screen"
+          style={{ backgroundImage: `linear-gradient(90deg,rgba(15,15,13,.10) 0%,rgba(15,15,13,.58) 44%,rgba(15,15,13,.94) 78%,rgba(15,15,13,.99) 100%), linear-gradient(180deg,rgba(15,15,13,.12),rgba(15,15,13,.68)), url(${heroJoyeria})` }}
         />
         <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-[#0d0e0d]/65 to-transparent" />
       </div>
@@ -186,11 +186,11 @@ function LoginPage() {
         <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
             <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[#d8bd7b]">Plataforma digital creada para el trabajo real del sector joyero</p>
-            <h1 className="mt-4 max-w-4xl font-display text-3xl italic leading-[1.12] tracking-[-0.025em] text-[#f5f0e7] sm:text-4xl lg:text-[3.35rem] [@media(max-height:800px)]:lg:text-[2.5rem]">
-              Digitaliza tu taller. Conecta tu trabajo. Hazlo crecer.
+            <h1 className="mt-4 max-w-4xl font-display text-3xl italic leading-[1.12] tracking-[-0.035em] text-[#f7f1e6] sm:text-4xl lg:text-[3.55rem] [@media(max-height:800px)]:lg:text-[2.55rem]">
+              El arte de crear. La inteligencia de gestionar.
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-[#d0cbc0]/75 sm:text-base sm:leading-7 [@media(max-height:800px)]:mt-3">
-              Gestiona clientes, cotizaciones y producción; conserva archivos en Mi Nube, presenta tus diseños en un catálogo digital y utiliza herramientas técnicas en un solo entorno.
+              Conecta cada etapa de tu taller: desde el diseño y los cálculos técnicos hasta la producción, tus archivos y la presentación de tus joyas.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3 [@media(max-height:800px)]:mt-4">
               <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-b from-[#dfc583] to-[#c2a15c] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#211c12] shadow-[0_8px_24px_rgba(194,161,92,.14)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105">
@@ -212,11 +212,11 @@ function LoginPage() {
               [Network, "Ecosistema", "Conecta talleres, profesionales, proveedores y servicios."],
             ].map(([Icon, title, text]) => {
               const FeatureIcon = Icon as LucideIcon;
-              return <article key={String(title)} className="group rounded-2xl border border-white/[0.09] bg-gradient-to-br from-white/[0.055] to-white/[0.018] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.035)] transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/30 hover:bg-white/[0.06]"><FeatureIcon className="size-5 text-gold" /><h2 className="mt-3 text-[11px] font-semibold uppercase tracking-[0.09em] text-[#f1ece2]">{String(title)}</h2><p className="mt-1.5 text-[10px] leading-relaxed text-[#c3bdb1]/55">{String(text)}</p></article>;
+              return <article key={String(title)} className="group rounded-2xl border border-white/[0.075] bg-[#1b1b17]/65 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.045)] backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/35 hover:bg-[#24231e]/85"><FeatureIcon className="size-5 text-gold" /><h2 className="mt-3 text-[11px] font-semibold uppercase tracking-[0.09em] text-[#f1ece2]">{String(title)}</h2><p className="mt-1.5 text-[10px] leading-relaxed text-[#c3bdb1]/55">{String(text)}</p></article>;
             })}
           </section>
 
-          <section id="herramientas" className="mt-8 max-w-5xl rounded-[1.35rem] border border-[#d8bd7b]/25 bg-gradient-to-br from-[#25231e]/95 via-[#191a17]/95 to-[#111210]/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,.22)] backdrop-blur-xl sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-3">
+          <section id="herramientas" className="mt-8 max-w-5xl rounded-[1.5rem] border border-[#d8bd7b]/20 bg-[#181915]/85 p-4 shadow-[0_28px_80px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,255,255,.035)] backdrop-blur-2xl sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-3">
             <div className="flex items-center gap-3">
               <Gem className="size-7 text-gold" />
               <div>
@@ -267,9 +267,9 @@ function LoginPage() {
 
         <section id="login" className="order-1 mx-auto w-full max-w-[430px] translate-y-0 lg:order-none lg:-translate-y-6 [@media(max-height:800px)]:lg:-translate-y-2 max-[767px]:max-w-[430px]">
           <div className="mb-7 text-center md:hidden">
-            <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
+            <p className="font-display text-4xl italic leading-none tracking-tight text-[#d9bd7b]">Aurum Lab</p>
           </div>
-          <form onSubmit={entrar} className="rounded-[1.6rem] border border-white/[0.12] bg-gradient-to-br from-[#1c1d1a]/95 via-[#151614]/95 to-[#10110f]/95 p-7 shadow-[0_28px_90px_rgba(0,0,0,.38),inset_0_1px_0_rgba(255,255,255,.04)] backdrop-blur-2xl sm:p-9 [@media(max-height:800px)]:p-5 max-[767px]:w-full">
+          <form onSubmit={entrar} className="rounded-[1.7rem] border border-[#d7c18d]/[0.16] bg-[#171815]/90 p-7 shadow-[0_30px_100px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.055)] backdrop-blur-2xl sm:p-9 [@media(max-height:800px)]:p-5 max-[767px]:w-full">
             <div className="mb-7 flex items-center gap-3">
               <LockKeyhole className="size-7 text-gold" />
               <div>
