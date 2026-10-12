@@ -277,8 +277,10 @@ export function AppShell({
 }) {
   const { data: sesion } = useSesion();
   const cerrarSesion = useCerrarSesion();
-  const { data: capacidadesMenu, isSuccess: capacidadesCargadas } = useCapacidadesMenu(sesion);
-  const { data: modalidadesMenu, isSuccess: modalidadesCargadas } = useModalidadesMenu(sesion);
+  const { data: capacidadesMenu, isSuccess: capacidadesCargadas, isError: capacidadesError, isLoading: capacidadesLoading } = useCapacidadesMenu(sesion);
+  const { data: modalidadesMenu, isSuccess: modalidadesCargadas, isError: modalidadesError, isLoading: modalidadesLoading } = useModalidadesMenu(sesion);
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
+  const alcanceGlobalDueno = Boolean(esDueno && sedeFiltro === TODAS_LAS_SEDES);
   const visibles = seccionesVisibles(
     sesion?.roles,
     sesion?.esAdmin,
@@ -329,13 +331,23 @@ export function AppShell({
     (ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`),
   );
   const capacidadRequerida = rutaCapacidad ? capacidadesPorRuta[rutaCapacidad] : null;
+  const requiereModalidad = esRutaProduccion || esRutaServiciosExternos;
+  const verificacionBloqueada = Boolean(
+    sesion?.esAdmin && !alcanceGlobalDueno && (
+      (capacidadRequerida && (capacidadesLoading || capacidadesError)) ||
+      (requiereModalidad && (modalidadesLoading || modalidadesError))
+    ),
+  );
   const capacidadBloqueada = Boolean(
-    sesion?.esAdmin && capacidadesCargadas && capacidadRequerida &&
+    sesion?.esAdmin && !alcanceGlobalDueno && capacidadesCargadas && capacidadRequerida &&
     !capacidadesMenu?.includes(capacidadRequerida),
   );
-  const modalidadBloqueada =
-    (esRutaProduccion && !modalidadesMenu?.produccionActiva) ||
-    (esRutaServiciosExternos && !modalidadesMenu?.serviciosExternosActivos);
+  const modalidadBloqueada = Boolean(
+    sesion?.esAdmin && !alcanceGlobalDueno && modalidadesCargadas && (
+      (esRutaProduccion && !modalidadesMenu?.produccionActiva) ||
+      (esRutaServiciosExternos && !modalidadesMenu?.serviciosExternosActivos)
+    ),
+  );
 
 
   return (
@@ -528,7 +540,31 @@ export function AppShell({
           </nav>
         ) : null}
 
-        {capacidadBloqueada ? (
+        {verificacionBloqueada ? (
+          <Panel titulo={capacidadesError || modalidadesError ? "No se pudo verificar el acceso" : "Verificando acceso"}>
+            <div className="p-6">
+              <p className="text-sm text-muted-foreground">
+                {capacidadesError || modalidadesError
+                  ? "No se pudo comprobar la configuración de este taller. Por seguridad, el módulo permanece bloqueado. Inténtalo de nuevo o vuelve a Gestión."
+                  : "Estamos comprobando las capacidades y modalidades de este taller. Espera un momento antes de continuar."}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.reload();
+                  }}
+                  className="rounded-lg border border-border px-4 py-2.5 text-xs font-semibold"
+                >
+                  Reintentar
+                </button>
+                <Link to="/gestion" className="inline-flex rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black">
+                  Ir a Gestión
+                </Link>
+              </div>
+            </div>
+          </Panel>
+        ) : capacidadBloqueada ? (
           <Panel titulo="Módulo desactivado">
             <div className="p-6">
               <p className="text-sm text-muted-foreground">
