@@ -173,6 +173,9 @@ function LoginPage() {
           <a href="#herramientas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Grid2X2 className="size-4" /> Herramientas
           </a>
+          <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
+            <Gem className="size-4" /> Conocer Aurum Lab
+          </button>
         </nav>
         <a href="#login" className="rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink">
           Iniciar sesión
