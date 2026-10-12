@@ -1,5 +1,6 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ChevronDown } from "lucide-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -127,6 +128,8 @@ function GestionPage() {
   const { data: pedidos = [], isLoading } = usePedidos();
   const { sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
   const [modulo, setModulo] = useState<Modulo>("resumen");
+  const [sedeAbierta, setSedeAbierta] = useState(true);
+  const [plataformaAbierta, setPlataformaAbierta] = useState(false);
 
   useEffect(() => {
     const moduloInicial = new URLSearchParams(window.location.search).get("modulo");
@@ -206,38 +209,70 @@ function GestionPage() {
           </div>
         </header>
 
-        <section>
-          <div className="mb-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
-              Gestión de sede
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Funciones que pertenecen al funcionamiento diario de un taller.
-            </p>
-          </div>
-          <GestionNav
-            items={modulosSede}
-            active={modulo}
-            onChange={setModulo}
-          />
+        <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <button
+            type="button"
+            aria-expanded={sedeAbierta}
+            aria-controls="gestion-sede-modulos"
+            onClick={() => setSedeAbierta((abierta) => !abierta)}
+            className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-muted/60"
+          >
+            <span className="min-w-0">
+              <span className="block text-xs font-bold uppercase tracking-[0.18em] text-foreground">
+                Gestión de sede
+              </span>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Funciones que pertenecen al funcionamiento diario de un taller.
+              </span>
+            </span>
+            <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${sedeAbierta ? "rotate-180" : ""}`} />
+          </button>
+          {sedeAbierta ? (
+            <div id="gestion-sede-modulos" className="border-t border-border p-3">
+              <GestionNav
+                items={modulosSede}
+                active={modulo}
+                onChange={(id) => {
+                  setModulo(id);
+                  setSedeAbierta(true);
+                }}
+              />
+            </div>
+          ) : null}
         </section>
 
         {esDueno ? (
-          <section className="border-t border-border pt-6">
-            <div className="mb-3">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
-                Administración Aurum Lab
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Funciones globales del producto. No pertenecen a la operación de una sede.
-              </p>
-            </div>
-            <GestionNav
-              items={modulosPlataforma}
-              active={modulo}
-              onChange={setModulo}
-              plataforma
-            />
+          <section className="overflow-hidden rounded-2xl border border-border bg-card">
+            <button
+              type="button"
+              aria-expanded={plataformaAbierta}
+              aria-controls="gestion-plataforma-modulos"
+              onClick={() => setPlataformaAbierta((abierta) => !abierta)}
+              className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-muted/60"
+            >
+              <span className="min-w-0">
+                <span className="block text-xs font-bold uppercase tracking-[0.18em] text-foreground">
+                  Administración Aurum Lab
+                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Funciones globales del producto. No pertenecen a la operación de una sede.
+                </span>
+              </span>
+              <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${plataformaAbierta ? "rotate-180" : ""}`} />
+            </button>
+            {plataformaAbierta ? (
+              <div id="gestion-plataforma-modulos" className="border-t border-border p-3">
+                <GestionNav
+                  items={modulosPlataforma}
+                  active={modulo}
+                  onChange={(id) => {
+                    setModulo(id);
+                    setPlataformaAbierta(true);
+                  }}
+                  plataforma
+                />
+              </div>
+            ) : null}
           </section>
         ) : null}
 
