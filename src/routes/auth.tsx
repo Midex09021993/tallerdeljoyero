@@ -148,22 +148,22 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col overflow-hidden bg-[#090a0b] text-ink-foreground">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 max-[767px]:hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_40%,rgba(212,175,55,.12),transparent_32%),radial-gradient(circle_at_78%_35%,rgba(255,255,255,.05),transparent_28%),linear-gradient(180deg,#111315_0%,#08090a_100%)]" />
+    <main className="relative flex min-h-screen flex-col overflow-hidden bg-[#11110f] text-ink-foreground selection:bg-[#d5b66f]/30">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_28%,rgba(199,164,91,.16),transparent_38%),radial-gradient(ellipse_at_82%_16%,rgba(255,245,220,.055),transparent_30%),linear-gradient(135deg,#1b1a17_0%,#111210_48%,#0d0e0d_100%)]" />
         <div
-          className="absolute inset-y-0 left-0 w-[62%] bg-cover bg-center opacity-35 mix-blend-screen"
-          style={{ backgroundImage: `linear-gradient(90deg,rgba(8,9,10,.2),rgba(8,9,10,.78) 78%,rgba(8,9,10,1)), url(${heroJoyeria})` }}
+          className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-25 mix-blend-screen"
+          style={{ backgroundImage: `linear-gradient(90deg,rgba(15,15,13,.38),rgba(15,15,13,.82) 68%,rgba(15,15,13,.98)), linear-gradient(180deg,rgba(15,15,13,.18),rgba(15,15,13,.82)), url(${heroJoyeria})` }}
         />
-        <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-black/50 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-[#0d0e0d]/65 to-transparent" />
       </div>
 
-      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5 lg:h-20 lg:px-10 max-[767px]:hidden">
+      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#d8c18b]/15 bg-[#141411]/35 px-5 backdrop-blur-xl lg:h-[76px] lg:px-10 max-[767px]:hidden">
         <div className="flex items-center gap-3">
-          <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-xl object-cover ring-1 ring-gold/60" />
+          <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-2xl object-cover ring-1 ring-[#d8bd7b]/60 shadow-[0_0_28px_rgba(203,169,98,.12)]" />
           <div>
-            <p className="font-display text-xl font-semibold tracking-tight text-gold">AURUM LAB</p>
-            <p className="text-[9px] uppercase tracking-[0.28em] text-white/45">Sistema del taller de joyería</p>
+            <p className="font-display text-xl font-semibold tracking-[0.04em] text-[#d9bd7b]">AURUM LAB</p>
+            <p className="text-[9px] uppercase tracking-[0.25em] text-[#d5d0c4]/50">Sistema del taller de joyería</p>
           </div>
         </div>
         <nav className="hidden items-center gap-8 md:flex">
@@ -182,27 +182,27 @@ function LoginPage() {
         </a>
       </header>
 
-      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-5 px-5 py-4 sm:py-5 lg:gap-8 lg:px-10 lg:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-4 [@media(max-height:800px)]:py-1 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
+      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-6 px-5 py-7 sm:px-8 sm:py-9 lg:gap-12 lg:px-10 lg:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-5 [@media(max-height:800px)]:py-3 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
         <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1">
           <div className="max-w-4xl">
-            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-gold">Plataforma digital creada para el trabajo real del sector joyero</p>
-            <h1 className="mt-3 max-w-4xl font-display text-3xl italic leading-tight text-white sm:text-4xl lg:text-5xl [@media(max-height:800px)]:lg:text-[2.1rem]">
+            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[#d8bd7b]">Plataforma digital creada para el trabajo real del sector joyero</p>
+            <h1 className="mt-4 max-w-4xl font-display text-3xl italic leading-[1.12] tracking-[-0.025em] text-[#f5f0e7] sm:text-4xl lg:text-[3.35rem] [@media(max-height:800px)]:lg:text-[2.5rem]">
               Digitaliza tu taller. Conecta tu trabajo. Hazlo crecer.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base [@media(max-height:800px)]:mt-2">
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#d0cbc0]/75 sm:text-base sm:leading-7 [@media(max-height:800px)]:mt-3">
               Gestiona clientes, cotizaciones y producción; conserva archivos en Mi Nube, presenta tus diseños en un catálogo digital y utiliza herramientas técnicas en un solo entorno.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-2.5 [@media(max-height:800px)]:mt-3">
-              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:-translate-y-0.5 hover:opacity-90">
+            <div className="mt-7 flex flex-wrap items-center gap-3 [@media(max-height:800px)]:mt-4">
+              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-b from-[#dfc583] to-[#c2a15c] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#211c12] shadow-[0_8px_24px_rgba(194,161,92,.14)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105">
                 Probar herramientas <ArrowRight className="size-3.5" />
               </button>
-              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white/75 transition hover:border-gold/40 hover:text-gold">
+              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.035] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#d7d1c5]/80 transition hover:border-[#d8bd7b]/45 hover:bg-white/[0.06] hover:text-[#e5ca8a]">
                 Conocer la plataforma
               </button>
             </div>
           </div>
 
-          <section className="mt-8 grid max-w-5xl gap-2 sm:grid-cols-2 lg:grid-cols-4 [@media(max-height:800px)]:mt-3">
+          <section className="mt-9 grid max-w-5xl gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 [@media(max-height:800px)]:mt-4">
             {[
               [Boxes, "Comercial", "Clientes, proyectos, cotizaciones y pedidos conectados."],
               [PackageCheck, "Producción", "Órdenes, trabajos, piezas, responsables y calidad."],
@@ -212,11 +212,11 @@ function LoginPage() {
               [Network, "Ecosistema", "Conecta talleres, profesionales, proveedores y servicios."],
             ].map(([Icon, title, text]) => {
               const FeatureIcon = Icon as LucideIcon;
-              return <article key={String(title)} className="rounded-xl border border-white/10 bg-black/25 p-3.5"><FeatureIcon className="size-5 text-gold" /><h2 className="mt-2 text-xs font-semibold uppercase tracking-wider text-white">{String(title)}</h2><p className="mt-1 text-[10px] leading-relaxed text-white/45">{String(text)}</p></article>;
+              return <article key={String(title)} className="group rounded-2xl border border-white/[0.09] bg-gradient-to-br from-white/[0.055] to-white/[0.018] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.035)] transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/30 hover:bg-white/[0.06]"><FeatureIcon className="size-5 text-gold" /><h2 className="mt-3 text-[11px] font-semibold uppercase tracking-[0.09em] text-[#f1ece2]">{String(title)}</h2><p className="mt-1.5 text-[10px] leading-relaxed text-[#c3bdb1]/55">{String(text)}</p></article>;
             })}
           </section>
 
-          <section id="herramientas" className="mt-8 max-w-5xl rounded-2xl border border-gold/30 bg-black/45 p-4 shadow-2xl backdrop-blur-md sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-2.5">
+          <section id="herramientas" className="mt-8 max-w-5xl rounded-[1.35rem] border border-[#d8bd7b]/25 bg-gradient-to-br from-[#25231e]/95 via-[#191a17]/95 to-[#111210]/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,.22)] backdrop-blur-xl sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-3">
             <div className="flex items-center gap-3">
               <Gem className="size-7 text-gold" />
               <div>
@@ -229,7 +229,7 @@ function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 [@media(max-height:800px)]:mt-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 [@media(max-height:800px)]:mt-3">
               {[
                 ["yeso", "Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
                 ["oro", "Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
@@ -241,11 +241,11 @@ function LoginPage() {
                   key={id}
                   type="button"
                   onClick={() => setHerramientaSeleccionada(id ?? null)}
-                  className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-left transition hover:border-gold/40 hover:bg-white/[0.045] [@media(max-height:800px)]:p-3"
+                  className="group rounded-2xl border border-white/[0.09] bg-white/[0.025] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/40 hover:bg-white/[0.055] [@media(max-height:800px)]:p-3"
                 >
                   <Gem className="size-6 text-gold" />
-                  <p className="mt-4 text-sm font-semibold text-white">{titulo}</p>
-                  <p className="mt-2 text-[11px] leading-relaxed text-white/50">{descripcion}</p>
+                  <p className="mt-4 text-sm font-semibold tracking-tight text-[#f5f0e7]">{titulo}</p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-[#c6c0b5]/60">{descripcion}</p>
                   {id === "render" ? <span className="mt-3 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
                 </button>
               ))}
@@ -255,7 +255,7 @@ function LoginPage() {
 
 
 
-          <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-xl border border-gold/25 bg-gold/[0.04] p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
+          <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#d8bd7b]/20 bg-gradient-to-r from-[#c8a85f]/[0.07] to-transparent p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-white">¿Listo para llevar tu taller al siguiente nivel?</p>
               <p className="mt-1 text-xs leading-relaxed text-white/55">Crea tu taller y empieza a organizar tu operación en Aurum Lab.</p>
@@ -265,11 +265,11 @@ function LoginPage() {
 
         </section>
 
-        <section id="login" className="order-1 mx-auto w-full max-w-[430px] translate-y-0 lg:order-none lg:-translate-y-10 [@media(max-height:800px)]:lg:-translate-y-5 max-[767px]:max-w-[430px]">
+        <section id="login" className="order-1 mx-auto w-full max-w-[430px] translate-y-0 lg:order-none lg:-translate-y-6 [@media(max-height:800px)]:lg:-translate-y-2 max-[767px]:max-w-[430px]">
           <div className="mb-7 text-center md:hidden">
             <p className="font-display text-4xl italic leading-none text-gold">Aurum Lab</p>
           </div>
-          <form onSubmit={entrar} className="rounded-2xl border border-white/10 bg-[#111315]/90 p-7 shadow-2xl backdrop-blur-xl sm:p-9 [@media(max-height:800px)]:p-5 max-[767px]:w-full">
+          <form onSubmit={entrar} className="rounded-[1.6rem] border border-white/[0.12] bg-gradient-to-br from-[#1c1d1a]/95 via-[#151614]/95 to-[#10110f]/95 p-7 shadow-[0_28px_90px_rgba(0,0,0,.38),inset_0_1px_0_rgba(255,255,255,.04)] backdrop-blur-2xl sm:p-9 [@media(max-height:800px)]:p-5 max-[767px]:w-full">
             <div className="mb-7 flex items-center gap-3">
               <LockKeyhole className="size-7 text-gold" />
               <div>
@@ -282,14 +282,14 @@ function LoginPage() {
               Correo de tu taller o usuario interno
               <span className="relative mt-2 block">
                 <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-white/[0.12] bg-[#0d0e0c]/70 py-3.5 pl-10 pr-3 text-sm text-[#f5f0e7] outline-none transition placeholder:text-white/30 focus:border-[#d8bd7b]/65 focus:ring-2 focus:ring-[#d8bd7b]/10" />
               </span>
             </label>
             <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
               Contraseña
               <span className="relative mt-2 block">
                 <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                <input required name="password" minLength={6} maxLength={256} type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-lg border border-white/15 bg-black/25 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-gold" />
+                <input required name="password" minLength={6} maxLength={256} type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-white/[0.12] bg-[#0d0e0c]/70 py-3.5 pl-10 pr-10 text-sm text-[#f5f0e7] outline-none transition placeholder:text-white/30 focus:border-[#d8bd7b]/65 focus:ring-2 focus:ring-[#d8bd7b]/10" />
                 <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-gold" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
                   {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -550,7 +550,7 @@ function LoginPage() {
         </div>
       ) : null}
 
-      <footer className="relative z-10 shrink-0 border-t border-white/10 px-5 py-3 lg:px-6 lg:py-5 max-[767px]:block">
+      <footer className="relative z-10 shrink-0 border-t border-white/[0.08] bg-[#10110f]/40 px-5 py-4 lg:px-6 lg:py-5 max-[767px]:block">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 text-xs text-white/45 max-[767px]:flex-col max-[767px]:justify-center max-[767px]:gap-3 max-[767px]:text-center">
           <div className="flex flex-wrap items-center gap-6 max-[767px]:justify-center max-[767px]:gap-2.5">
             <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-gold" /> Seguro y confiable</span>
