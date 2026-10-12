@@ -317,6 +317,22 @@ export function AppShell({
     "/aurum-render",
   ].includes(pathname);
   const esRutaServiciosExternos = pathname === "/servicios-externos";
+  const capacidadesPorRuta: Record<string, string> = {
+    "/clientes": "Clientes", "/cotizaciones": "Cotizaciones", "/contratos": "Contratos",
+    "/pedidos": "Pedidos", "/ventas": "Ventas", "/catalogo": "Catálogo",
+    "/inventario": "Inventario", "/compras": "Compras", "/herramientas": "Herramientas",
+    "/mi-nube": "Mi nube", "/diseno-3d": "Diseño 3D", "/impresion-3d": "Impresión 3D",
+    "/casting": "Casting", "/corte-laser": "Corte Láser", "/taller": "Taller",
+    "/aurum-render": "Diseño 3D",
+  };
+  const rutaCapacidad = Object.keys(capacidadesPorRuta).find(
+    (ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`),
+  );
+  const capacidadRequerida = rutaCapacidad ? capacidadesPorRuta[rutaCapacidad] : null;
+  const capacidadBloqueada = Boolean(
+    sesion?.esAdmin && capacidadesCargadas && capacidadRequerida &&
+    !capacidadesMenu?.includes(capacidadRequerida),
+  );
   const modalidadBloqueada =
     (esRutaProduccion && !modalidadesMenu?.produccionActiva) ||
     (esRutaServiciosExternos && !modalidadesMenu?.serviciosExternosActivos);
@@ -512,7 +528,21 @@ export function AppShell({
           </nav>
         ) : null}
 
-        {modalidadBloqueada ? (
+        {capacidadBloqueada ? (
+          <Panel titulo="Módulo desactivado">
+            <div className="p-6">
+              <p className="text-sm text-muted-foreground">
+                Este módulo no está habilitado para la configuración actual de este taller.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                El dueño o gerente puede revisar las capacidades desde Gestión → Capacidades del taller.
+              </p>
+              <Link to="/gestion" className="mt-4 inline-flex rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black">
+                Ir a Gestión
+              </Link>
+            </div>
+          </Panel>
+        ) : modalidadBloqueada ? (
           <Panel titulo="Modalidad desactivada">
             <div className="p-6">
               <p className="text-sm text-muted-foreground">
