@@ -338,8 +338,8 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
             <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Se guardan localmente en este navegador, separados por taller cuando hay sesión. No se sincronizan entre dispositivos; si el navegador bloquea el almacenamiento, solo duran durante esta sesión.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <input type="text" value={nombreCilindro} onChange={(event) => setNombreCilindro(event.target.value)} placeholder="Nombre del cilindro (opcional)" aria-label="Nombre del cilindro" maxLength={60} className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-gold" />
-            <button type="button" onClick={guardarCilindroActual} disabled={!medidasCompletas} className="min-h-11 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">Guardar cilindro actual</button>
+            <input type="text" value={nombreCilindro} onChange={(event) => setNombreCilindro(event.target.value)} placeholder="Nombre del cilindro (opcional)" aria-label="Nombre del cilindro" maxLength={60} className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-gold" />
+            <button type="button" onClick={guardarCilindroActual} disabled={!medidasCompletas} className="min-h-11 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-[#17160f] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">Guardar cilindro actual</button>
           </div>
           {cilindrosScope === claveCilindros && cilindrosGuardados.length > 0 ? (
             <ul className="space-y-2">
@@ -349,16 +349,16 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
                     <p className="truncate text-xs font-semibold text-foreground">{cilindro.nombre}</p>
                     <p className="mt-1 text-[10px] text-muted-foreground">Ø {formatearCantidad(cilindro.diametroCm, 2)} × {formatearCantidad(cilindro.alturaCm, 2)} cm · {tiposTarro[cilindro.tipoTarro].etiqueta}</p>
                   </div>
-                  <button type="button" onClick={() => cargarCilindro(cilindro)} className="min-h-9 rounded-lg border border-input px-3 text-[10px] font-semibold hover:border-gold/60">Cargar</button>
+                  <button type="button" onClick={() => cargarCilindro(cilindro)} className="min-h-9 rounded-lg border border-input px-3 text-xs font-semibold text-foreground hover:border-gold/60">Cargar</button>
                   <button type="button" onClick={() => guardarListaCilindros(cilindrosGuardados.filter((item) => item.id !== cilindro.id))} className="min-h-9 rounded-lg border border-destructive/30 px-3 text-[10px] font-semibold text-destructive hover:bg-destructive/5">Eliminar</button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Aún no hay cilindros guardados en este navegador.</p>
+            <p className="rounded-xl border border-dashed border-border bg-background px-3 py-4 text-center text-sm font-medium text-foreground">Aún no hay cilindros guardados en este navegador.</p>
           )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-            <p className="text-[10px] text-muted-foreground">La ficha usa los cálculos y tolerancias configurados actualmente.</p>
+            <p className="text-xs font-medium text-foreground">La ficha usa los cálculos y tolerancias configurados actualmente.</p>
             <FichaCilindrosTallerA4 cilindros={cilindrosScope === claveCilindros ? cilindrosGuardados : []} configuracion={configuracion} identidad={{ nombre: sesionCalculadora?.participante?.nombre ?? sesionCalculadora?.sede?.nombre }} />
           </div>
         </section>
