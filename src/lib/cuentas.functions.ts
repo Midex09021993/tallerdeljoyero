@@ -344,11 +344,22 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
       throw new Error("El taller FADILAB todavía no está vinculado al ecosistema. Primero debe aplicarse la migración de talleres.");
     }
 
+    const email = data.email.trim().toLowerCase();
+    const usuario = data.usuario.trim().toLowerCase();
+    const { data: existentes, error: errorExistentes } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (errorExistentes) throw new Error("No se pudo comprobar si el correo ya está registrado");
+    if ((existentes?.users ?? []).some((u) => (u.email ?? "").toLowerCase() === email)) {
+      throw new Error("Ese correo ya está registrado. Utiliza otro correo.");
+    }
+    if ((existentes?.users ?? []).some((u) => (u.user_metadata?.usuario ?? "").toLowerCase() === usuario)) {
+      throw new Error("Ese nombre de usuario ya está registrado. Elige otro.");
+    }
+
     const { data: creado, error } = await supabaseAdmin.auth.admin.createUser({
-      email: `${data.usuario.trim().toLowerCase()}@taller.local`,
+      email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { usuario: data.usuario.trim().toLowerCase(), nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
+      user_metadata: { usuario, nombre: data.nombre, apellidos: data.apellidos, dni: data.dni, telefono: data.telefono },
     });
 
     if (error || !creado.user) {
@@ -357,7 +368,7 @@ export const registrarPrimerDueno = createServerFn({ method: "POST" })
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: creado.user.id,
-      usuario: data.usuario.trim().toLowerCase(),
+      usuario,
       nombre: data.nombre,
       apellidos: data.apellidos,
       dni: data.dni,
