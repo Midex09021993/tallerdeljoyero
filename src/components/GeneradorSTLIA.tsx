@@ -10,7 +10,7 @@ const MODEL_BASE = "https://huggingface.co/cgb/triposr-onnx-webgpu/resolve/main/
 const GRID = 64;
 const BATCH = 2048;
 
-async function readModelWithProgress(
+async function readTripoModelWithProgress(
   response: Response,
   onProgress: (loaded: number, total: number | null) => void,
 ): Promise<ArrayBuffer> {
@@ -165,7 +165,7 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
   ]);
   if (!graphResponse.ok || !weightsResponse.ok || !decoderResponse.ok) throw new Error("No se pudieron descargar los archivos del modelo. Inténtalo de nuevo más tarde.");
   let lastProgressUpdate = 0;
-  const weightsPromise = readModelWithProgress(weightsResponse, (loaded, total) => {
+  const weightsPromise = readTripoModelWithProgress(weightsResponse, (loaded, total) => {
     const now = Date.now();
     if (now - lastProgressUpdate < 150 && total !== null && loaded < total) return;
     lastProgressUpdate = now;
