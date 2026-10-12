@@ -50,7 +50,13 @@ type IdentidadComercial = { id: string; sede_id: string | null; participante_id?
 
 
 function money(n: number, moneda = "PEN") {
-  return new Intl.NumberFormat("es-PE", { style: "currency", currency: moneda, maximumFractionDigits: 2 }).format(n);
+  const codigo = /^[A-Z]{3}$/.test(moneda) ? moneda : "PEN";
+  const locale = ({ PEN: "es-PE", COP: "es-CO", MXN: "es-MX", DOP: "es-DO", USD: "en-US" } as Record<string, string>)[codigo] ?? "es";
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency: codigo, maximumFractionDigits: 2 }).format(n);
+  } catch {
+    return `${codigo} ${Number(n || 0).toFixed(2)}`;
+  }
 }
 
 function etiquetaEstadoCotizacion(estado: string) {
