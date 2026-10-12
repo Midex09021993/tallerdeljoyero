@@ -215,8 +215,18 @@ export const registrarTaller = createServerFn({ method: "POST" })
     let participanteId: string | null = null;
 
     const rollback = async () => {
-      if (participanteId) await supabaseAdmin.from("ecosistema_participantes").delete().eq("id", participanteId);
-      if (sedeId) await supabaseAdmin.from("sedes").delete().eq("id", sedeId);
+      // Limpiar primero las tablas hijas para evitar dejar referencias huérfanas
+      // si falla una etapa intermedia del alta pública.
+      await supabaseAdmin.from("participante_cuentas").delete().eq("user_id", userId);
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+      await supabaseAdmin.from("user_areas").delete().eq("user_id", userId);
+      await supabaseAdmin.from("profiles").delete().eq("id", userId);
+      if (participanteId) {
+        await supabaseAdmin.from("ecosistema_participantes").delete().eq("id", participanteId);
+      }
+      if (sedeId) {
+        await supabaseAdmin.from("sedes").delete().eq("id", sedeId);
+      }
       await supabaseAdmin.auth.admin.deleteUser(userId);
     };
 
