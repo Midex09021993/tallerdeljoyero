@@ -134,7 +134,8 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
     surface.update();
     const geometry = surface.geometry.clone();
     geometry.computeVertexNormals();
-    surface.dispose();
+    surface.geometry.dispose();
+    material.dispose();
     triplaneSession.release();
     decoderSession.release();
     return geometry;
