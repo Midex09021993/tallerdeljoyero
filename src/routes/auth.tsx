@@ -439,7 +439,7 @@ function LoginPage() {
                     ))}
                   </div>
 
-                  <section className="mt-6 rounded-2xl border border-gold/20 bg-black/20 p-5 sm:p-6">
+                  <section id="mi-nube-catalogo" className="mt-6 scroll-mt-8 rounded-2xl border border-gold/20 bg-black/20 p-5 sm:p-6">
                     <div className="mb-4 max-w-3xl">
                       <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Tu trabajo, organizado y listo para mostrar</p>
                       <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">De los archivos del taller a la presentación de tus joyas.</h3>
