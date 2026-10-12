@@ -4,8 +4,11 @@ import { BookOpen, Link2, Sparkles } from "lucide-react";
 export const Route = createFileRoute("/catalogo-publico")({
   head: () => ({
     meta: [
-      { title: "Catálogo digital" },
-      { name: "description", content: "Acceso a un catálogo digital por joyería o taller." },
+      { title: "Catálogo digital para joyerías y talleres | Taller del Joyero" },
+      { name: "description", content: "Conoce los catálogos digitales públicos de joyerías y talleres, con fichas de producto y enlaces para solicitar información." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "Catálogo digital para joyerías | Taller del Joyero" },
+      { property: "og:description", content: "Presenta y comparte las piezas de tu joyería con un catálogo digital." },
     ],
   }),
   component: CatalogoPublicoLanding,
