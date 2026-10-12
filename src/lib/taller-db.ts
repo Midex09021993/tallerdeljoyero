@@ -360,6 +360,7 @@ export type Contrato = {
   notas: string;
   created_at: string;
   cotizacion_id: string | null;
+  moneda: string;
   estado_firma: "pendiente" | "firmado_documento_subido" | "firmado_presencial" | "firmado_certificado";
   firma_validada_at: string | null;
   firma_observacion: string | null;
@@ -898,17 +899,39 @@ export function useContratos(incluirFinanzas = true) {
         .from("contratos")
         .select(
           incluirFinanzas
-            ? "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)"
-            : "id, numero, cliente, origen, sede_id, notas, created_at, sedes(nombre)",
+            ? "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, cotizacion_id, sedes(nombre)"
+            : "id, numero, cliente, origen, sede_id, notas, created_at, cotizacion_id, sedes(nombre)",
         )
         .order("created_at", { ascending: false });
       if (error) {
         if (esErrorCampoFaltante(error)) return [];
         throw error;
       }
-      return ((data ?? []) as unknown as Array<Record<string, unknown>>).map(({ sedes, ...c }) => {
+
+      const filas = (data ?? []) as unknown as Array<Record<string, unknown>>;
+      const cotizacionIds = [...new Set(filas.map((c) => textoCampo(c, "cotizacion_id")).filter(Boolean))];
+      const sedeIds = [...new Set(filas.map((c) => textoCampo(c, "sede_id")).filter(Boolean))];
+      const [{ data: cotizacionesMoneda }, { data: identidadesMoneda }] = await Promise.all([
+        cotizacionIds.length
+          ? supabase.from("cotizaciones").select("id,moneda").in("id", cotizacionIds)
+          : Promise.resolve({ data: [] as Array<{ id: string; moneda: string }> }),
+        sedeIds.length
+          ? supabase.from("identidades_comerciales").select("sede_id,moneda_codigo,updated_at").in("sede_id", sedeIds).eq("activa", true).order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [] as Array<{ sede_id: string; moneda_codigo: string; updated_at: string }> }),
+      ]);
+      const monedaPorCotizacion = new Map((cotizacionesMoneda ?? []).map((q) => [q.id, q.moneda || "PEN"]));
+      const monedaPorSede = new Map<string, string>();
+      for (const identidad of identidadesMoneda ?? []) {
+        if (identidad.sede_id && !monedaPorSede.has(identidad.sede_id)) {
+          monedaPorSede.set(identidad.sede_id, identidad.moneda_codigo || "PEN");
+        }
+      }
+
+      return filas.map(({ sedes, ...c }) => {
         const total = Number(c["total"]) || 0;
         const abonado = Number(c["abonado"]) || 0;
+        const cotizacionId = textoCampo(c, "cotizacion_id");
+        const sedeId = typeof c["sede_id"] === "string" ? c["sede_id"] : null;
         return {
           id: textoCampo(c, "id"),
           numero: textoCampo(c, "numero"),
@@ -918,10 +941,12 @@ export function useContratos(incluirFinanzas = true) {
           total: incluirFinanzas ? total : 0,
           abonado: incluirFinanzas ? abonado : 0,
           saldo: incluirFinanzas ? Math.max(0, total - abonado) : 0,
-          sede_id: typeof c["sede_id"] === "string" ? c["sede_id"] : null,
+          sede_id: sedeId,
           sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
           notas: textoCampo(c, "notas"),
           created_at: textoCampo(c, "created_at"),
+          cotizacion_id: cotizacionId || null,
+          moneda: monedaPorCotizacion.get(cotizacionId) ?? (sedeId ? monedaPorSede.get(sedeId) : undefined) ?? "PEN",
         };
       });
     },
