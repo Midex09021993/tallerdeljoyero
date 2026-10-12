@@ -34,18 +34,42 @@ function obtenerConfigCotizacion(metadata: Record<string, any> | null | undefine
 
 
 const PRESETS: Record<string, Partial<Identidad>> = {
-  PE: { pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true, impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima" },
+  AR: { pais_codigo: "AR", pais_nombre: "Argentina", moneda_codigo: "ARS", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 21, impuesto_incluido: false, identificador_fiscal_label: "CUIT", zona_horaria: "America/Argentina/Buenos_Aires" },
+  BO: { pais_codigo: "BO", pais_nombre: "Bolivia", moneda_codigo: "BOB", moneda_simbolo: "Bs", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 13, impuesto_incluido: false, identificador_fiscal_label: "NIT", zona_horaria: "America/La_Paz" },
+  BR: { pais_codigo: "BR", pais_nombre: "Brasil", moneda_codigo: "BRL", moneda_simbolo: "R$", impuesto_activo: false, impuesto_nombre: "Impuestos", impuesto_tasa: 0, impuesto_incluido: false, identificador_fiscal_label: "CNPJ / CPF", zona_horaria: "America/Sao_Paulo" },
+  CL: { pais_codigo: "CL", pais_nombre: "Chile", moneda_codigo: "CLP", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 19, impuesto_incluido: false, identificador_fiscal_label: "RUT", zona_horaria: "America/Santiago" },
   CO: { pais_codigo: "CO", pais_nombre: "Colombia", moneda_codigo: "COP", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 19, impuesto_incluido: false, identificador_fiscal_label: "NIT", zona_horaria: "America/Bogota" },
+  EC: { pais_codigo: "EC", pais_nombre: "Ecuador", moneda_codigo: "USD", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 15, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Guayaquil" },
+  GY: { pais_codigo: "GY", pais_nombre: "Guyana", moneda_codigo: "GYD", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "VAT", impuesto_tasa: 14, impuesto_incluido: false, identificador_fiscal_label: "TIN", zona_horaria: "America/Guyana" },
+  PY: { pais_codigo: "PY", pais_nombre: "Paraguay", moneda_codigo: "PYG", moneda_simbolo: "₲", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 10, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Asuncion" },
+  PE: { pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true, impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima" },
+  SR: { pais_codigo: "SR", pais_nombre: "Surinam", moneda_codigo: "SRD", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "BTW", impuesto_tasa: 10, impuesto_incluido: false, identificador_fiscal_label: "BTW-nummer", zona_horaria: "America/Paramaribo" },
+  UY: { pais_codigo: "UY", pais_nombre: "Uruguay", moneda_codigo: "UYU", moneda_simbolo: "$U", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 22, impuesto_incluido: false, identificador_fiscal_label: "RUT", zona_horaria: "America/Montevideo" },
+  VE: { pais_codigo: "VE", pais_nombre: "Venezuela", moneda_codigo: "VES", moneda_simbolo: "Bs.", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 16, impuesto_incluido: false, identificador_fiscal_label: "RIF", zona_horaria: "America/Caracas" },
   MX: { pais_codigo: "MX", pais_nombre: "México", moneda_codigo: "MXN", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 16, impuesto_incluido: false, identificador_fiscal_label: "RFC", zona_horaria: "America/Mexico_City" },
   DO: { pais_codigo: "DO", pais_nombre: "República Dominicana", moneda_codigo: "DOP", moneda_simbolo: "RD$", impuesto_activo: true, impuesto_nombre: "ITBIS", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RNC", zona_horaria: "America/Santo_Domingo" },
 };
 
-const NOMBRES_PAIS: Record<string, string> = {
-  PE: "Perú",
-  CO: "Colombia",
-  MX: "México",
-  DO: "República Dominicana",
-};
+const NOMBRES_PAIS: Record<string, string> = Object.fromEntries(
+  Object.entries(PRESETS).map(([codigo, preset]) => [codigo, preset.pais_nombre ?? codigo]),
+);
+
+const MONEDAS = [
+  { codigo: "ARS", nombre: "Peso argentino", simbolo: "$" },
+  { codigo: "BOB", nombre: "Boliviano", simbolo: "Bs" },
+  { codigo: "BRL", nombre: "Real brasileño", simbolo: "R$" },
+  { codigo: "CLP", nombre: "Peso chileno", simbolo: "$" },
+  { codigo: "COP", nombre: "Peso colombiano", simbolo: "$" },
+  { codigo: "GYD", nombre: "Dólar guyanés", simbolo: "$" },
+  { codigo: "MXN", nombre: "Peso mexicano", simbolo: "$" },
+  { codigo: "PEN", nombre: "Sol peruano", simbolo: "S/" },
+  { codigo: "PYG", nombre: "Guaraní paraguayo", simbolo: "₲" },
+  { codigo: "SRD", nombre: "Dólar surinamés", simbolo: "$" },
+  { codigo: "USD", nombre: "Dólar estadounidense", simbolo: "US$" },
+  { codigo: "UYU", nombre: "Peso uruguayo", simbolo: "$U" },
+  { codigo: "VES", nombre: "Bolívar venezolano", simbolo: "Bs." },
+  { codigo: "DOP", nombre: "Peso dominicano", simbolo: "RD$" },
+] as const;
 
 const CAMPOS = [
   "id","sede_id","participante_id","nombre_comercial","razon_social","ruc","rnp_bienes","rpp_servicios","logo_url","email","telefono","whatsapp","direccion","ciudad",
@@ -337,10 +361,10 @@ export function ConfiguracionIdentidadComercial() {
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">{form.identificador_fiscal_label || "RUC / NIT"}<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.ruc ?? ""} onChange={e=>campo("ruc",e.target.value)} /></label>
-              <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}><option value="PE">Perú</option><option value="CO">Colombia</option><option value="MX">México</option><option value="DO">República Dominicana</option><option value="OTHER">Otro</option></select></label>
+              <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}>{Object.entries(NOMBRES_PAIS).sort((a,b)=>a[1].localeCompare(b[1],"es")).map(([codigo,nombre])=><option key={codigo} value={codigo}>{nombre}</option>)}<option value="OTHER">Otro / país no listado</option></select></label>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <label className="text-xs font-semibold text-muted-foreground">Moneda<input maxLength={3} className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal uppercase" value={form.moneda_codigo} onChange={e=>campo("moneda_codigo",e.target.value.toUpperCase())} /></label>
+              <label className="text-xs font-semibold text-muted-foreground">Moneda<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.moneda_codigo} onChange={e=>{const moneda=MONEDAS.find(m=>m.codigo===e.target.value);campo("moneda_codigo",e.target.value);if(moneda)campo("moneda_simbolo",moneda.simbolo);}}>{MONEDAS.map(m=><option key={m.codigo} value={m.codigo}>{m.codigo} · {m.nombre} ({m.simbolo})</option>)}</select></label>
               <label className="text-xs font-semibold text-muted-foreground">Símbolo<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.moneda_simbolo} onChange={e=>campo("moneda_simbolo",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">Impuesto<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.impuesto_nombre} onChange={e=>campo("impuesto_nombre",e.target.value)} /></label>
               <label className="text-xs font-semibold text-muted-foreground">Tasa (%)<input type="number" min={0} max={100} step="0.01" className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.impuesto_tasa} onChange={e=>campo("impuesto_tasa",Number(e.target.value))} /></label>
