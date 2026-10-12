@@ -58,8 +58,22 @@ create policy "tiendas_insumos_participante_select"
 drop policy if exists "tiendas_insumos_admin_write" on public.tiendas_insumos;
 create policy "tiendas_insumos_admin_write"
   on public.tiendas_insumos for all to authenticated
-  using (public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()), participante_id))
-  with check (public.es_admin((select auth.uid())) and public.tiene_participante((select auth.uid()), participante_id));
+  using (
+    public.es_admin((select auth.uid()))
+    and public.tiene_participante((select auth.uid()), participante_id)
+    and exists (
+      select 1 from public.ecosistema_participantes ep
+      where ep.id = participante_id and upper(ep.nombre) like '%FADILAB%'
+    )
+  )
+  with check (
+    public.es_admin((select auth.uid()))
+    and public.tiene_participante((select auth.uid()), participante_id)
+    and exists (
+      select 1 from public.ecosistema_participantes ep
+      where ep.id = participante_id and upper(ep.nombre) like '%FADILAB%'
+    )
+  );
 
 drop policy if exists "tienda_insumos_productos_publicos" on public.tienda_insumos_productos;
 create policy "tienda_insumos_productos_publicos"
@@ -84,12 +98,20 @@ create policy "tienda_insumos_productos_admin_write"
     where t.id = tienda_id
       and public.es_admin((select auth.uid()))
       and public.tiene_participante((select auth.uid()), t.participante_id)
+      and exists (
+        select 1 from public.ecosistema_participantes ep
+        where ep.id = t.participante_id and upper(ep.nombre) like '%FADILAB%'
+      )
   ))
   with check (exists (
     select 1 from public.tiendas_insumos t
     where t.id = tienda_id
       and public.es_admin((select auth.uid()))
       and public.tiene_participante((select auth.uid()), t.participante_id)
+      and exists (
+        select 1 from public.ecosistema_participantes ep
+        where ep.id = t.participante_id and upper(ep.nombre) like '%FADILAB%'
+      )
   ));
 
 grant select on public.tiendas_insumos, public.tienda_insumos_productos to anon, authenticated;
