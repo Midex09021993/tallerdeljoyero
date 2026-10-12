@@ -68,7 +68,7 @@ export const Route = createFileRoute("/_authenticated/gestion")({
       {
         name: "description",
         content:
-          "Zona administrativa del taller: resumen, flujo por áreas, entregados, finanzas, automatización, usuarios y sedes.",
+          "Zona administrativa del taller: operación, configuración comercial, equipo, capacidades, mensajes y alertas.",
       },
       { property: "og:title", content: "Gestión — Aurum Lab" },
       { property: "og:description", content: "Administración completa del taller de joyería." },
@@ -127,13 +127,14 @@ function GestionPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
-  const [modulo, setModulo] = useState<Modulo>("resumen");
+  const [modulo, setModulo] = useState<Modulo>("comercial");
   const [sedeAbierta, setSedeAbierta] = useState(true);
   const [plataformaAbierta, setPlataformaAbierta] = useState(false);
 
   useEffect(() => {
     const moduloInicial = new URLSearchParams(window.location.search).get("modulo");
     if (moduloInicial === "capacidades") setModulo("capacidades");
+    if (moduloInicial === "resumen" || moduloInicial === "finanzas") setModulo("comercial");
   }, []);
 
   const esDueno = Boolean(sesion?.esDueno);
@@ -148,12 +149,10 @@ function GestionPage() {
     : (sesion?.sede?.nombre ?? "tu sede");
 
   const modulosSede: { id: Modulo; label: string; descripcion: string }[] = [
-    { id: "resumen", label: "Resumen", descripcion: "Indicadores y alertas de la sede" },
     { id: "flujo", label: "Operación", descripcion: "Carga y tiempos por área" },
-    { id: "finanzas", label: "Finanzas", descripcion: "Ingresos, gastos y margen" },
     { id: "comercial", label: "Comercial", descripcion: "Identidad y documentos comerciales" },
     { id: "usuarios", label: "Equipo", descripcion: "Usuarios, roles y accesos" },
-    { id: "capacidades", label: "Taller", descripcion: "Capacidades y modalidades de trabajo" },
+    { id: "capacidades", label: "Capacidades", descripcion: "Configura las capacidades y modalidades de trabajo de la sede" },
     { id: "mensajes", label: "Mensajes Automáticos", descripcion: "Personaliza los saludos de cumpleaños" },
     { id: "automatizacion", label: "Alertas", descripcion: "Objetivos de tiempo y alertas internas" },
   ];
@@ -197,7 +196,7 @@ function GestionPage() {
               <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
                 {esDueno
                   ? "Administra una sede concreta sin mezclarla con las funciones globales de Aurum Lab."
-                  : "Controla la operación, el equipo, las finanzas y la configuración de tu taller desde un solo lugar."}
+                  : "Gestiona el equipo, las capacidades y la configuración de tu taller desde un solo lugar."}
               </p>
             </div>
             {esDueno ? (
