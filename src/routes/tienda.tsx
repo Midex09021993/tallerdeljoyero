@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, Boxes, Cpu, HardDrive, MessageCircle, Package, Search, ShieldCheck, ShoppingBag, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, BadgeCheck, Boxes, Cpu, HardDrive, MessageCircle, Package, Search, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -47,7 +47,7 @@ function TiendaInsumosPage() {
   });
   const productos = data?.productos ?? [];
   const categoriasBase = ["Resinas", "Cubiletes", "Yesos e inversiones", "Ceras", "Herramientas", "PC para diseño 3D", "Componentes y hardware", "UPS y protección eléctrica", "NAS y almacenamiento", "Monitores y periféricos", "Impresión 3D y fabricación", "Software y licencias", "Consumibles", "Otros"];
-  const categorias = useMemo(() => ["Todos", ...categoriasBase.filter((c) => productos.some((p) => p.categoria === c)), ...productos.map((p) => p.categoria).filter((c) => !categoriasBase.includes(c)).filter((c, i, a) => a.indexOf(c) === i)], [productos]);
+  const categorias = useMemo(() => ["Todos", ...categoriasBase, ...productos.map((p) => p.categoria).filter((c) => !categoriasBase.includes(c)).filter((c, i, a) => a.indexOf(c) === i)], [productos]);
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLocaleLowerCase("es");
     return productos.filter((p) => (categoria === "Todos" || p.categoria === categoria) && (!q || [p.nombre, p.categoria, p.descripcion ?? ""].join(" ").toLocaleLowerCase("es").includes(q)));
