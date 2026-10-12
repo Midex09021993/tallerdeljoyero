@@ -126,8 +126,23 @@ async function reconstruct(image: HTMLImageElement, report: (stage: Stage, messa
     fetch(MODEL_BASE + "decoder.onnx"),
   ]);
   if (!graphResponse.ok || !weightsResponse.ok || !decoderResponse.ok) throw new Error("No se pudieron descargar los archivos del modelo. Inténtalo de nuevo más tarde.");
-  const [graph, weights, decoder] = await Promise.all([graphResponse.arrayBuffer(), weightsResponse.arrayBuffer(), decoderResponse.arrayBuffer()]);
-  report("preparing", "Preparando la imagen localmente…");
+  let lastProgressUpdate = 0;
+  const weightsPromise = readModelWithProgress(weightsResponse, (loaded, total) => {
+    const now = Date.now();
+    if (now - lastProgressUpdate < 150 && total !== null && loaded < total) return;
+    lastProgressUpdate = now;
+    const loadedMb = (loaded / (1024 * 1024)).toFixed(1);
+    const detail = total === null
+      ? loadedMb + " MB descargados"
+      : Math.min(100, Math.round((loaded / total) * 100)) + "% · " + loadedMb + " de " + (total / (1024 * 1024)).toFixed(1) + " MB";
+    report("loading", "Descargando los pesos del modelo: " + detail + ". La descarga inicial puede rondar los 485 MB…");
+  });
+  const [graph, weights, decoder] = await Promise.all([
+    graphResponse.arrayBuffer(),
+    weightsPromise,
+    decoderResponse.arrayBuffer(),
+  ]);
+  report("preparing", "Descarga completa. Preparando la imagen localmente…");
   const input = prepareImage(image);
   report("generating", "La GPU está reconstruyendo la forma 3D. Puede tardar varios minutos…");
   const triplaneSession = await ort.InferenceSession.create(graph, {
