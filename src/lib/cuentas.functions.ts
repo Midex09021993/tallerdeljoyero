@@ -33,6 +33,7 @@ function normalizarAreas(areas: string[]): string[] {
 
 type NuevoUsuario = {
   usuario: string;
+  email: string;
   password: string;
   nombre: string;
   apellidos: string;
@@ -100,6 +101,7 @@ async function asegurarCuentaParticipantePrincipal(
 
 function validar(input: NuevoUsuario): NuevoUsuario {
   if (!input.usuario?.trim()) throw new Error("El usuario es obligatorio");
+  if (!input.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) throw new Error("Ingresa un correo electrónico válido");
   if (!/^[a-zA-Z0-9._-]{3,50}$/.test(input.usuario.trim())) throw new Error("El usuario debe tener entre 3 y 50 caracteres y sólo puede usar letras, números, punto, guion y guion bajo");
   if (!input.password || input.password.length < 6)
     throw new Error("La contraseña debe tener al menos 6 caracteres");
@@ -724,6 +726,7 @@ export const listarUsuarios = createServerFn({ method: "GET" })
           dni,
           telefono,
           sede_id: sedeId,
+          email: authUser.email ?? "",
           activo: perfil?.activo ?? true,
           acceso_desde: perfil?.acceso_desde ?? null,
           acceso_hasta: perfil?.acceso_hasta ?? null,
@@ -779,7 +782,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
     }
 
     const usuarioNormalizado = data.usuario.trim().toLowerCase();
-    const emailNormalizado = `${usuarioNormalizado}@taller.local`;
+    const emailNormalizado = data.email.trim().toLowerCase();
     const { data: existente } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (existente.users.some((u) => (u.email ?? "").toLowerCase() === emailNormalizado)) {
       throw new Error("Ese usuario ya existe. Búscalo en Usuarios y usa Editar en lugar de crear otra cuenta.");
@@ -790,6 +793,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
       email_confirm: true,
       user_metadata: {
         usuario: usuarioNormalizado,
+        email: emailNormalizado,
         nombre: data.nombre,
         apellidos: data.apellidos,
         dni: data.dni,
@@ -882,6 +886,7 @@ export const borrarUsuario = createServerFn({ method: "POST" })
 type EdicionUsuario = {
   id: string;
   usuario: string;
+  email: string;
   nombre: string;
   apellidos: string;
   dni: string;
@@ -903,6 +908,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: boolean; error?: string }> => {
     if (!data.id) return { ok: false, error: "Usuario no válido" };
     if (!data.usuario?.trim() || !/^[a-zA-Z0-9._-]{3,50}$/.test(data.usuario.trim())) return { ok: false, error: "El usuario no es válido" };
+    if (!data.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) return { ok: false, error: "Ingresa un correo electrónico válido" };
     if (!data.nombre?.trim()) return { ok: false, error: "El nombre es obligatorio" };
     if (!data.apellidos?.trim()) return { ok: false, error: "Los apellidos son obligatorios" };
     if (data.password && data.password.length < 6)
@@ -938,7 +944,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     const { data: authActual, error: authActualError } = await supabaseAdmin.auth.admin.getUserById(data.id);
     if (authActualError || !authActual.user) return { ok: false, error: "La cuenta de autenticación no existe" };
     const usuarioNormalizado = data.usuario.trim().toLowerCase();
-    const emailNormalizado = `${usuarioNormalizado}@taller.local`;
+    const emailNormalizado = data.email.trim().toLowerCase();
     const { data: todosAuth } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (todosAuth?.users.some((u) => u.id !== data.id && (u.email ?? "").toLowerCase() === emailNormalizado)) {
       return { ok: false, error: "Ese usuario ya pertenece a otra cuenta" };
@@ -994,6 +1000,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
       email_confirm: true,
       user_metadata: {
         usuario: usuarioNormalizado,
+        email: emailNormalizado,
         nombre: data.nombre,
         apellidos: data.apellidos,
         dni: data.dni,
