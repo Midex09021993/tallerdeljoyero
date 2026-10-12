@@ -33,15 +33,31 @@ function Ventas2Page() {
   const enCamino = pedidosVenta.filter((p) => p.estado === "En Camino" || p.ventas_estado === "En Camino");
   const entregados = pedidosVenta.filter((p) => p.estado === "Entregado" || p.ventas_estado === "Entregado");
 
-  const finanzas = useMemo(() => contratosSede.map((c) => ({ contratoId: c.id, ...resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id)) })), [contratosSede, pagos]);
+  const finanzas = useMemo(() => contratosSede.map((c) => ({ contratoId: c.id, moneda: c.moneda || "PEN", ...resumenFinancieroContrato(c, pagos.filter((p) => p.contrato_id === c.id)) })), [contratosSede, pagos]);
   const finanzasPorContrato = useMemo(() => new Map(finanzas.map((f) => [f.contratoId, f])), [finanzas]);
+  const totalesPorMoneda = useMemo(() => {
+    const totales = new Map<string, { total: number; abonado: number; saldo: number }>();
+    for (const financiero of finanzas) {
+      const actual = totales.get(financiero.moneda) ?? { total: 0, abonado: 0, saldo: 0 };
+      actual.total += financiero.total;
+      actual.abonado += financiero.abonado;
+      actual.saldo += financiero.saldo;
+      totales.set(financiero.moneda, actual);
+    }
+    return [...totales.entries()];
+  }, [finanzas]);
+  const moneyTotal = (campo: "total" | "abonado" | "saldo") => {
+    const valores = totalesPorMoneda.filter(([, montos]) => montos[campo] !== 0);
+    return valores.length
+      ? valores.map(([moneda, montos]) => money(montos[campo], moneda)).join(" · ")
+      : money(0, contratosSede[0]?.moneda ?? "PEN");
+  };
+  const moneyForPedido = (pedido: Pedido, valor: number) =>
+    money(valor, (pedido.contrato_id ? finanzasPorContrato.get(pedido.contrato_id)?.moneda : undefined) ?? "PEN");
   const saldoPedido = (p: Pedido) => {
     const financiero = p.contrato_id ? finanzasPorContrato.get(p.contrato_id) : undefined;
     return financiero ? financiero.saldo : p.saldo;
   };
-  const totalVenta = finanzas.reduce((s, f) => s + f.total, 0);
-  const totalCobrado = finanzas.reduce((s, f) => s + f.abonado, 0);
-  const totalPendiente = finanzas.reduce((s, f) => s + f.saldo, 0);
   const cobrosPendientes = finanzas.filter((f) => f.saldo > 0).length;
 
   const base = vista === "cobros" ? pedidosVenta.filter((p) => saldoPedido(p) > 0 || !p.contrato_id) : vista === "despacho" ? [...porEntregar, ...enCamino] : vista === "entregados" ? entregados : activos;
@@ -66,8 +82,8 @@ function Ventas2Page() {
             </div>
             <div className="rounded-2xl border border-border bg-surface-muted/70 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">Saldo de cartera</p>
-              <p className="mt-2 text-3xl font-semibold tabular-nums">{money(totalPendiente)}</p>
-              <div className="mt-3 flex items-center justify-between text-xs"><span className="text-muted-foreground">{cobrosPendientes} contratos pendientes</span><span className="font-semibold">{money(totalCobrado)} cobrado</span></div>
+              <p className="mt-2 text-3xl font-semibold tabular-nums">{moneyTotal("saldo")}</p>
+              <div className="mt-3 flex items-center justify-between text-xs"><span className="text-muted-foreground">{cobrosPendientes} contratos pendientes</span><span className="font-semibold">{moneyTotal("abonado")} cobrado</span></div>
             </div>
           </div>
         </div>
@@ -75,8 +91,8 @@ function Ventas2Page() {
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Metric icon={ClipboardList} label="Cartera activa" value={activos.length} />
-        <Metric icon={CreditCard} label="Pendiente de cobro" value={money(totalPendiente)} tone="warning" />
-        <Metric icon={Banknote} label="Cobrado" value={money(totalCobrado)} tone="positive" />
+        <Metric icon={CreditCard} label="Pendiente de cobro" value={moneyTotal("saldo")} tone="warning" />
+        <Metric icon={Banknote} label="Cobrado" value={moneyTotal("abonado")} tone="positive" />
         <Metric icon={Truck} label="Listos para entregar" value={porEntregar.length} />
         <Metric icon={PackageCheck} label="En camino" value={enCamino.length} />
       </div>
@@ -107,7 +123,7 @@ function Ventas2Page() {
           <button key={p.id} type="button" onClick={()=>navigate({to:"/ventas/$id",params:{id:p.id}})} className="w-full p-4 text-left transition hover:bg-surface-muted/50">
             <div className="flex items-start justify-between gap-3"><div><b className="text-sm">{p.referencia}</b><p className="mt-1 text-xs text-muted-foreground">{p.cliente || "Cliente pendiente"}</p></div><Status estado={p.estado}/></div>
             <p className="mt-4 text-sm font-medium">{p.trabajo || p.pieza || "Pedido"}</p>
-            <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold"><span className="rounded-lg bg-gold/10 px-2 py-1 text-gold-deep">{p.sede_nombre || "Taller no asignado"}</span><span className="rounded-lg bg-surface-muted px-2 py-1">{money(saldoPedido(p))} pendiente</span></div>
+            <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold"><span className="rounded-lg bg-gold/10 px-2 py-1 text-gold-deep">{p.sede_nombre || "Taller no asignado"}</span><span className="rounded-lg bg-surface-muted px-2 py-1">{moneyForPedido(p, saldoPedido(p))} pendiente</span></div>
             <div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>{p.medio_envio || "Entrega en taller"}</span><span>{fmtFecha(p.fecha_entrega) || "Sin fecha"}</span></div>
           </button>
         ))}</div>
@@ -115,7 +131,7 @@ function Ventas2Page() {
       </section>
 
       <section className="mt-5 grid gap-4 lg:grid-cols-3">
-        <AreaCard icon={CreditCard} title="Cobranza" text={`${cobrosPendientes} contratos tienen saldo pendiente por ${money(totalPendiente)}.`} />
+        <AreaCard icon={CreditCard} title="Cobranza" text={`${cobrosPendientes} contratos tienen saldo pendiente por ${moneyTotal("saldo")}.`} />
         <AreaCard icon={Truck} title="Despacho" text={`${porEntregar.length} pedidos esperan preparación o entrega y ${enCamino.length} están en camino.`} />
         <AreaCard icon={CheckCircle2} title="Cierre" text={`${entregados.length} pedidos aparecen como entregados en la vista actual.`} />
       </section>
@@ -126,7 +142,7 @@ function Ventas2Page() {
 function VentaRow({ pedido:p, onOpen }: { pedido:Pedido; onOpen:()=>void }) {
   const dias = p.fecha_entrega ? Math.ceil((new Date(p.fecha_entrega).getTime()-new Date().setHours(0,0,0,0))/86400000) : null;
   const estado = p.estado === "Entregado" || p.ventas_estado === "Entregado" ? "Entregado" : p.estado === "En Camino" || p.ventas_estado === "En Camino" ? "En Camino" : p.estado === "Listo para Entrega" || p.ventas_estado === "Listo para Entrega" ? "Listo para Entrega" : p.ventas_estado || p.estado;
-  return <tr onClick={onOpen} className="cursor-pointer hover:bg-surface-muted/60"><td className="px-5 py-4"><b className="text-sm">{p.referencia}</b>{p.contrato?<span className="block text-[10px] text-muted-foreground">{p.contrato}</span>:null}</td><td className="px-5 py-4 text-sm">{p.cliente||"Cliente pendiente"}</td><td className="px-5 py-4"><span className="inline-flex rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold">{p.sede_nombre||"Taller no asignado"}</span></td><td className="px-5 py-4 text-sm">{money(p.importe)}</td><td className="px-5 py-4"><Status estado={estado}/></td><td className="px-5 py-4 text-xs">{fmtFecha(p.fecha_entrega)||"—"}{dias!==null&&dias<0&&!esEstadoFinalPedido(p.estado)?<span className="ml-2 font-semibold text-danger">Vencido</span>:null}</td><td className="px-5 py-4 text-sm font-semibold">{money(p.saldo)}</td><td className="px-5 py-4 text-right"><ArrowRight className="ml-auto size-4 text-muted-foreground"/></td></tr>;
+  return <tr onClick={onOpen} className="cursor-pointer hover:bg-surface-muted/60"><td className="px-5 py-4"><b className="text-sm">{p.referencia}</b>{p.contrato?<span className="block text-[10px] text-muted-foreground">{p.contrato}</span>:null}</td><td className="px-5 py-4 text-sm">{p.cliente||"Cliente pendiente"}</td><td className="px-5 py-4"><span className="inline-flex rounded-lg border border-border bg-surface-muted px-2.5 py-1 text-xs font-semibold">{p.sede_nombre||"Taller no asignado"}</span></td><td className="px-5 py-4 text-sm">{moneyForPedido(p, p.importe)}</td><td className="px-5 py-4"><Status estado={estado}/></td><td className="px-5 py-4 text-xs">{fmtFecha(p.fecha_entrega)||"—"}{dias!==null&&dias<0&&!esEstadoFinalPedido(p.estado)?<span className="ml-2 font-semibold text-danger">Vencido</span>:null}</td><td className="px-5 py-4 text-sm font-semibold">{moneyForPedido(p, p.saldo)}</td><td className="px-5 py-4 text-right"><ArrowRight className="ml-auto size-4 text-muted-foreground"/></td></tr>;
 }
 function Status({estado}:{estado:string}){return <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${estadoClases[estado]??"bg-surface-muted text-muted-foreground"}`}>{estado}</span>}
 function Metric({icon:Icon,label,value,tone="neutral"}:{icon:typeof ClipboardList;label:string;value:number|string;tone?:"neutral"|"warning"|"positive"}){return <div className="rounded-2xl border border-border bg-card p-4 shadow-card"><div className="flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl bg-surface-muted text-gold"><Icon className="size-4"/></span><span className={`text-xl font-semibold tabular-nums ${tone==="warning"?"text-warning":tone==="positive"?"text-success":"text-foreground"}`}>{value}</span></div><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p></div>}
