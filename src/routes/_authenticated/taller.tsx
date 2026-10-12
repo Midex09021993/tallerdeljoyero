@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Calculator, Droplets, RotateCcw, Check } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
@@ -333,6 +333,25 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
         </section>
 
         <section className="space-y-3 rounded-2xl border border-gold/20 bg-gold/5 p-4">
+          {!sesionCalculadora?.user ? (
+            <div className="rounded-xl border border-gold/30 bg-background p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Gratis para todos · Ventajas para tu taller</p>
+              <h3 className="mt-2 text-base font-semibold text-foreground">Tus medidas listas para la próxima fundición</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                La calculadora seguirá siendo gratuita sin registrarte. Crea tu taller en Aurum Lab para descubrir las herramientas de gestión y producción y organizar tu trabajo en un solo lugar.
+              </p>
+              <Link
+                to="/auth"
+                hash="crear-taller"
+                className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-ink transition hover:opacity-90"
+              >
+                Crear mi taller gratis <span aria-hidden="true">→</span>
+              </Link>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                Las medidas que guardes aquí permanecen en este navegador; todavía no se transfieren automáticamente a una cuenta.
+              </p>
+            </div>
+          ) : null}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Cilindros guardados</h3>
             <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Se guardan localmente en este navegador, separados por taller cuando hay sesión. No se sincronizan entre dispositivos; si el navegador bloquea el almacenamiento, solo duran durante esta sesión.</p>
