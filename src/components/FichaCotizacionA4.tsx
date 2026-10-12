@@ -47,10 +47,12 @@ const fechaLarga = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "long", year: "numeric" }).format(date);
 };
 const dinero = (value: number, currency: string) => {
+  const codigo = /^[A-Z]{3}$/.test(currency) ? currency : "PEN";
+  const locale = ({ PEN: "es-PE", COP: "es-CO", MXN: "es-MX", DOP: "es-DO", USD: "en-US" } as Record<string, string>)[codigo] ?? "es";
   try {
-    return new Intl.NumberFormat("es-PE", { style: "currency", currency: /^[A-Z]{3}$/.test(currency) ? currency : "PEN" }).format(Number(value) || 0);
+    return new Intl.NumberFormat(locale, { style: "currency", currency: codigo }).format(Number(value) || 0);
   } catch {
-    return "S/ " + (Number(value) || 0).toFixed(2);
+    return `${codigo} ${(Number(value) || 0).toFixed(2)}`;
   }
 };
 
