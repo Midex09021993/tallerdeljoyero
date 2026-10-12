@@ -173,9 +173,6 @@ function LoginPage() {
           <a href="#herramientas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Grid2X2 className="size-4" /> Herramientas
           </a>
-          <a href="#mi-nube-catalogo" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <Boxes className="size-4" /> Mi Nube y catálogo
-          </a>
         </nav>
         <a href="#login" className="rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink">
           Iniciar sesión
@@ -439,7 +436,7 @@ function LoginPage() {
                     ))}
                   </div>
 
-                  <section id="mi-nube-catalogo" className="mt-6 scroll-mt-8 rounded-2xl border border-gold/20 bg-black/20 p-5 sm:p-6">
+                  <section className="mt-6 rounded-2xl border border-gold/20 bg-black/20 p-5 sm:p-6">
                     <div className="mb-4 max-w-3xl">
                       <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Tu trabajo, organizado y listo para mostrar</p>
                       <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">De los archivos del taller a la presentación de tus joyas.</h3>
