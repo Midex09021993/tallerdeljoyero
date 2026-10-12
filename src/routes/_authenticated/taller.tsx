@@ -7,7 +7,7 @@ import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
-import { CLAVES_CALCULADORAS, leerConfigYeso } from "@/lib/calculadoras-config";
+import { CLAVES_CALCULADORAS, calcularMezclaYeso, leerConfigYeso } from "@/lib/calculadoras-config";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
@@ -62,30 +62,7 @@ function validarMedida(valor: string) {
   return Number.isFinite(numero) && numero > 0;
 }
 
-function calcularMezcla(
-  volumen: number,
-  partesAgua: number,
-  partesYeso: number,
-  volumenPorGramo: number,
-  factorCorreccion: number,
-) {
-  // Las recetas 38/62, 40/60 y 42/58 se expresan como
-  // agua / yeso. Por tanto, 40/60 significa agua ÷ yeso = 0.40.
-  // "partesYeso" se conserva para documentar la receta, pero la
-  // relación operativa se obtiene explícitamente del primer valor.
-  const ratioAguaSobreYeso = partesAgua / 100;
-  const volumenEspecificoAjustado = volumenPorGramo * factorCorreccion;
-  const yeso = volumen / (volumenEspecificoAjustado + ratioAguaSobreYeso);
-  const agua = yeso * ratioAguaSobreYeso;
 
-  return {
-    agua,
-    yeso,
-    ratioAguaSobreYeso,
-    relacionVerificada: yeso > 0 ? agua / yeso : 0,
-    partesYeso,
-  };
-}
 
 function TallerPage() {
   const { data: sesion } = useSesion();
@@ -307,7 +284,7 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
 
           <div className={`grid grid-cols-1 gap-3 ${compacto ? "" : "sm:grid-cols-3"}`}>
             {configuracion.proporciones.map((p) => {
-              const { agua, yeso } = calcularMezcla(
+              const { agua, yeso } = calcularMezclaYeso(
                 volumen,
                 p.agua,
                 p.yeso,

@@ -59,6 +59,29 @@ export const DEFAULT_CONFIG_ALEACION: ConfigAleacion = {
   factorCalculo: 1,
 };
 
+
+export function calcularMezclaYeso(
+  volumen: number,
+  partesAgua: number,
+  partesYeso: number,
+  volumenPorGramo: number,
+  factorCorreccion: number,
+) {
+  // La receta se expresa como agua / yeso: 40/60 significa agua ÷ yeso = 0,40.
+  const ratioAguaSobreYeso = partesAgua / 100;
+  const volumenEspecificoAjustado = volumenPorGramo * factorCorreccion;
+  const yeso = volumen / (volumenEspecificoAjustado + ratioAguaSobreYeso);
+  const agua = yeso * ratioAguaSobreYeso;
+
+  return {
+    agua,
+    yeso,
+    ratioAguaSobreYeso,
+    relacionVerificada: yeso > 0 ? agua / yeso : 0,
+    partesYeso,
+  };
+}
+
 export const DEFAULT_CONFIG_YESO: ConfigYeso = {
   proporciones: [
     { agua: 38, yeso: 62, recomendada: false },
