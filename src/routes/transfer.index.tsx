@@ -1,7 +1,7 @@
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Check, Copy, FileUp, Link2, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Copy, FileUp, Gem, Link2, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
 
 export const Route = createFileRoute("/transfer/")({
   head: () => ({
@@ -157,6 +157,19 @@ function TransferPage() {
     <main className="min-h-screen overflow-hidden bg-[#08090b] text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(215,173,72,.16),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,.06),transparent_25%)]" />
       <div className="relative mx-auto max-w-5xl px-5 py-8 sm:px-8">
+        <nav aria-label="Navegación de AURUM Transfer" className="mb-8 flex items-center justify-between border-b border-[#d7ad48]/20 pb-5">
+          <Link
+            to="/auth"
+            className="inline-flex min-h-10 items-center gap-2 text-sm text-white/65 transition hover:text-[#e5c46d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7ad48] focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090b]"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Volver a Aurum Lab
+          </Link>
+          <div className="flex items-center gap-2 text-[#d7ad48]">
+            <Gem className="size-5" aria-hidden="true" />
+            <span className="text-xs font-semibold uppercase tracking-[.22em]">Aurum Lab</span>
+          </div>
+        </nav>
         <header className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#d7ad48]">AURUM LAB</p>
