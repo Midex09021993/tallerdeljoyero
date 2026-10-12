@@ -1389,7 +1389,6 @@ export function useCrearPedido() {
         contrato: pedido.contrato?.trim() ?? "",
         cliente_id: pedido.cliente_id ?? null,
         cotizacion_id: pedido.cotizacion_id ?? null,
-    moneda: "PEN",
         contrato_id: pedido.contrato_id ?? null,
       };
 
