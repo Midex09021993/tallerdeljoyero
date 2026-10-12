@@ -8,6 +8,7 @@ import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 import { CLAVES_CALCULADORAS, calcularMezclaYeso, leerConfigYeso } from "@/lib/calculadoras-config";
+import { FichaCilindrosTallerA4, type CilindroFicha } from "@/components/FichaCilindrosTallerA4";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
@@ -23,6 +24,13 @@ export const Route = createFileRoute("/_authenticated/taller")({
   }),
   component: TallerPage,
 });
+
+const presetsRapidos = [
+  { nombre: "Pequeño", diametro: 5, altura: 10 },
+  { nombre: "Mediano", diametro: 6, altura: 10 },
+  { nombre: "Estándar", diametro: 7, altura: 10 },
+  { nombre: "Grande", diametro: 8, altura: 12 },
+] as const;
 
 const tiposTarro = {
   liso: {
@@ -108,12 +116,65 @@ function TallerCompleto() {
 
 export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
   const { esDueno } = useSedeFiltroDueno();
+  const { data: sesionCalculadora } = useSesion();
   const { data: configYeso } = useConfigSistema(CLAVES_CALCULADORAS.yeso);
   const configuracion = leerConfigYeso(configYeso?.valor);
   const [diametro, setDiametro] = useState("");
   const [altura, setAltura] = useState("");
   const [tipoTarro, setTipoTarro] = useState<TipoTarro>("perforado");
 const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
+  const [nombreCilindro, setNombreCilindro] = useState("");
+  const [cilindrosGuardados, setCilindrosGuardados] = useState<CilindroFicha[]>([]);
+  const [cilindrosScope, setCilindrosScope] = useState("");
+  const scopeCilindros = sesionCalculadora?.participante?.id ?? sesionCalculadora?.perfil?.participante_id ?? sesionCalculadora?.user?.id ?? "public";
+  const claveCilindros = `aurum:cilindros-taller:v1:${scopeCilindros}`;
+
+  useEffect(() => {
+    try {
+      const guardados = window.localStorage.getItem(claveCilindros);
+      const parsed: unknown = guardados ? JSON.parse(guardados) : [];
+      const validos = Array.isArray(parsed) ? parsed.filter((item): item is CilindroFicha =>
+        item && typeof item.id === "string" && typeof item.nombre === "string" &&
+        Number.isFinite(item.diametroCm) && item.diametroCm > 0 &&
+        Number.isFinite(item.alturaCm) && item.alturaCm > 0 &&
+        (item.tipoTarro === "liso" || item.tipoTarro === "perforado")
+      ) : [];
+      setCilindrosGuardados(validos);
+    } catch {
+      setCilindrosGuardados([]);
+    }
+    setCilindrosScope(claveCilindros);
+  }, [claveCilindros]);
+
+  const guardarListaCilindros = (nuevaLista: CilindroFicha[]) => {
+    setCilindrosGuardados(nuevaLista);
+    setCilindrosScope(claveCilindros);
+    try {
+      window.localStorage.setItem(claveCilindros, JSON.stringify(nuevaLista));
+    } catch {
+      // Si el navegador bloquea el almacenamiento, la lista sigue disponible durante esta sesión.
+    }
+  };
+
+  const guardarCilindroActual = () => {
+    if (!medidasCompletas) return;
+    const nombre = nombreCilindro.trim() || `Cilindro Ø${diametro} × ${altura} cm`;
+    const cilindro: CilindroFicha = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      nombre,
+      diametroCm: Number(diametro),
+      alturaCm: Number(altura),
+      tipoTarro,
+    };
+    guardarListaCilindros([...cilindrosGuardados, cilindro]);
+    setNombreCilindro("");
+  };
+
+  const cargarCilindro = (cilindro: CilindroFicha) => {
+    setDiametro(String(cilindro.diametroCm));
+    setAltura(String(cilindro.alturaCm));
+    setTipoTarro(cilindro.tipoTarro);
+  };
 
 
   const volumenBase = useMemo(() => {
@@ -212,6 +273,19 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
           ) : null}
         </section>
 
+        <section className="rounded-2xl border border-border bg-card/60 p-4">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-foreground">Medidas rápidas</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {presetsRapidos.map((preset) => (
+              <button key={preset.nombre} type="button" onClick={() => { setDiametro(String(preset.diametro)); setAltura(String(preset.altura)); setTipoTarro("perforado"); }} className="min-h-11 rounded-xl border border-input bg-background px-3 py-2 text-left text-xs font-semibold transition hover:border-gold/60 hover:bg-gold/5">
+                <span className="block">{preset.nombre}</span>
+                <span className="mt-1 block text-[10px] font-normal text-muted-foreground">Ø {preset.diametro} × {preset.altura} cm</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">Medidas orientativas; comprueba siempre el cilindro físico.</p>
+        </section>
+
         <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
@@ -250,6 +324,37 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
                 </button>
               );
             })}
+          </div>
+        </section>
+
+        <section className="space-y-3 rounded-2xl border border-gold/20 bg-gold/5 p-4">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Cilindros guardados</h3>
+            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Se guardan en este navegador y en el perfil local de esta cuenta; todavía no se sincronizan entre dispositivos.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input type="text" value={nombreCilindro} onChange={(event) => setNombreCilindro(event.target.value)} placeholder="Nombre del cilindro (opcional)" aria-label="Nombre del cilindro" maxLength={60} className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-gold" />
+            <button type="button" onClick={guardarCilindroActual} disabled={!medidasCompletas} className="min-h-11 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">Guardar cilindro actual</button>
+          </div>
+          {cilindrosScope === claveCilindros && cilindrosGuardados.length > 0 ? (
+            <ul className="space-y-2">
+              {cilindrosGuardados.map((cilindro) => (
+                <li key={cilindro.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-foreground">{cilindro.nombre}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Ø {formatearCantidad(cilindro.diametroCm, 2)} × {formatearCantidad(cilindro.alturaCm, 2)} cm · {tiposTarro[cilindro.tipoTarro].etiqueta}</p>
+                  </div>
+                  <button type="button" onClick={() => cargarCilindro(cilindro)} className="min-h-9 rounded-lg border border-input px-3 text-[10px] font-semibold hover:border-gold/60">Cargar</button>
+                  <button type="button" onClick={() => guardarListaCilindros(cilindrosGuardados.filter((item) => item.id !== cilindro.id))} className="min-h-9 rounded-lg border border-destructive/30 px-3 text-[10px] font-semibold text-destructive hover:bg-destructive/5">Eliminar</button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Aún no hay cilindros guardados en este navegador.</p>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+            <p className="text-[10px] text-muted-foreground">La ficha usa los cálculos y tolerancias configurados actualmente.</p>
+            <FichaCilindrosTallerA4 cilindros={cilindrosScope === claveCilindros ? cilindrosGuardados : []} configuracion={configuracion} identidad={{ nombre: sesionCalculadora?.participante?.nombre ?? sesionCalculadora?.sede?.nombre }} />
           </div>
         </section>
 
