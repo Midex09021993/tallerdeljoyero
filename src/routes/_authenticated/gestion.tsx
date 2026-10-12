@@ -307,7 +307,12 @@ function GestionPage() {
         {modulo === "web" && esDueno ? <ComunidadAurumLab configuracion /> : null}
         {modulo === "aurumTransfer" && esDueno ? <AurumTransferHistorialOwner /> : null}
         {modulo === "analitica" && esDueno ? <AnaliticaAurumLab /> : null}
-        {modulo === "mensajes" && puedeGestionSede ? <ConfiguracionMensajesCumpleanos participanteId={sesion?.participante?.id ?? null} sedeId={sedeActiva} /> : null}
+        {modulo === "mensajes" && puedeGestionSede ? (
+          <ConfiguracionMensajesCumpleanos
+            participanteId={esDueno ? null : (sesion?.participante?.id ?? null)}
+            sedeId={esDueno ? (sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : null) : sedeActiva}
+          />
+        ) : null}
         {modulo === "capacidades" && puedeGestionSede ? (
           <CapacidadesSedeAdmin
             sedeId={sedeActiva}
