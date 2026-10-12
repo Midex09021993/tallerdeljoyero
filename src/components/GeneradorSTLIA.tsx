@@ -10,6 +10,38 @@ const MODEL_BASE = "https://huggingface.co/cgb/triposr-onnx-webgpu/resolve/main/
 const GRID = 64;
 const BATCH = 2048;
 
+async function readModelWithProgress(
+  response: Response,
+  onProgress: (loaded: number, total: number | null) => void,
+): Promise<ArrayBuffer> {
+  if (!response.body) {
+    const buffer = await response.arrayBuffer();
+    onProgress(buffer.byteLength, buffer.byteLength);
+    return buffer;
+  }
+  const header = Number(response.headers.get("content-length"));
+  const total = Number.isFinite(header) && header > 0 ? header : null;
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+  while (true) {
+    const result = await reader.read();
+    if (result.done) break;
+    if (result.value) {
+      chunks.push(result.value);
+      loaded += result.value.byteLength;
+      onProgress(loaded, total);
+    }
+  }
+  const output = new Uint8Array(loaded);
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return output.buffer;
+}
+
 type Stage = "idle" | "loading" | "preparing" | "generating" | "meshing" | "done" | "error";
 
 function prepareImage(image: HTMLImageElement): ort.Tensor {
