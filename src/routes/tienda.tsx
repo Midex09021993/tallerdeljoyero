@@ -57,7 +57,7 @@ function TiendaInsumosPage() {
     : new Intl.NumberFormat("es-PE", { style: "currency", currency: p.moneda || tienda?.moneda || "PEN", maximumFractionDigits: 2 }).format(p.precio);
   const whatsappUrl = (p: Producto) => {
     const mensaje = encodeURIComponent(`Hola, FADILAB. Quisiera consultar por ${p.nombre}.`);
-    return tienda?.whatsapp ? `https://wa.me/${tienda.whatsapp.replace(/\\D/g, "")}?text=${mensaje}` : `https://wa.me/?text=${mensaje}`;
+    return tienda?.whatsapp ? `https://wa.me/${tienda.whatsapp.replace(/\D/g, "")}?text=${mensaje}` : `https://wa.me/?text=${mensaje}`;
   };
 
   return (
