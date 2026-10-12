@@ -613,7 +613,7 @@ export function Panel({
       className={`overflow-hidden rounded-xl border border-border bg-card shadow-card lg:rounded-2xl ${className}`}
     >
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 lg:px-6 lg:py-4">
-        <h2 className="text-sm font-medium">{titulo}</h2>
+        <h2 className="text-sm font-medium text-foreground">{titulo}</h2>
         {accion}
       </div>
       {children}
