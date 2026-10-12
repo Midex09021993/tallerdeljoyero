@@ -771,6 +771,9 @@ export const crearUsuario = createServerFn({ method: "POST" })
     if (data.rol === "dueno" && !misRoles.includes("dueno")) {
       throw new Error("Sólo un dueño puede crear otro dueño");
     }
+    if (data.rol === "gerente" && !misRoles.includes("dueno")) {
+      throw new Error("Sólo un dueño puede crear cuentas de gerente");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -938,6 +941,9 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     if (data.rol === "dueno" && !misRoles.includes("dueno")) {
       return { ok: false, error: "Sólo un dueño puede asignar el rol de dueño" };
     }
+    if (data.rol === "gerente" && !misRoles.includes("dueno")) {
+      return { ok: false, error: "Sólo un dueño puede asignar el rol de gerente" };
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: destinoRoles } = await supabaseAdmin
@@ -964,6 +970,16 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
     const participanteDestino = await resolverParticipantePorSede(supabaseAdmin, data.sede_id, data.participante_id ?? null);
     if (!participanteDestino?.id) {
       return { ok: false, error: "El taller seleccionado no está vinculado al ecosistema" };
+    }
+    if (!misRoles.includes("dueno")) {
+      const { data: misCuentas, error: misCuentasError } = await supabaseAdmin
+        .from("participante_cuentas")
+        .select("participante_id")
+        .eq("user_id", context.userId)
+        .eq("estado", "activo");
+      if (misCuentasError || !(misCuentas ?? []).some((cuenta: any) => cuenta.participante_id === participanteDestino.id)) {
+        return { ok: false, error: "No puedes asignar usuarios fuera de tu taller" };
+      }
     }
 
     const { error: errPerfil } = await supabaseAdmin.from("profiles").upsert({
