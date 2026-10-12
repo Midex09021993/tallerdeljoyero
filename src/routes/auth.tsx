@@ -537,7 +537,7 @@ function LoginPage() {
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       {[
                         { title: "Plan comercial", text: "Define el conjunto de funciones y límites contratados por la organización." },
-                        { title: "Rol de usuario", text: "Determina las acciones permitidas a cada persona: Dueño, Gerente, Operario, Monitor o Cliente." },
+                        { title: "Rol de usuario", text: "Determina las acciones permitidas a cada persona del taller: Gerente, Operario, Monitor o Cliente. La administración global de Aurum Lab corresponde al propietario de la plataforma y no es un rol comercial del taller." },
                         { title: "Capacidades del taller", text: "Indican las especialidades y modalidades habilitadas para cada sede." },
                       ].map((item) => <article key={item.title} className="rounded-xl border border-white/10 p-3"><p className="text-xs font-semibold text-gold">{item.title}</p><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{item.text}</p></article>)}
                     </div>
