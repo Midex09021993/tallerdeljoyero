@@ -156,10 +156,13 @@ export function RegistroTaller({ className = "" }: Props) {
                   </label>
                 </div>
 
-                <div className="rounded-lg border border-white/10 bg-white/[0.025] p-3 text-[11px] leading-relaxed text-white/55">
-                  <p>Este registro crea tu taller y tu primera cuenta con rol de <span className="font-semibold text-gold">gerente</span>.</p>
-                  <p className="mt-1.5">Después de ingresar, podrás crear usuarios para tu equipo y asignarles sus permisos.</p>
-                  <p className="mt-1.5">El correo registrado quedará vinculado a tu cuenta para identificarte y recibir comunicaciones de acceso.</p>
+                <div className="rounded-lg border border-gold/25 bg-gold/5 p-4 text-sm leading-relaxed text-white/75">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold text-gold">Plan Emprendedor</p>
+                    <span className="rounded-full border border-gold/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gold">Gratis</span>
+                  </div>
+                  <p className="mt-2">Empieza sin pagar y utiliza las herramientas públicas gratuitas. La propuesta del plan incluye funciones comerciales básicas para organizar clientes, cotizaciones y pedidos; la disponibilidad de límites y funciones por plan se habilitará cuando terminemos su configuración.</p>
+                  <p className="mt-2 text-xs text-white/60">Este registro crea tu taller y tu primera cuenta con rol de <span className="font-semibold text-gold">gerente</span>. Después podrás incorporar a tu equipo. No se activa ninguna suscripción de pago.</p>
                 </div>
 
                 {error ? <p role="alert" className="text-xs text-danger">{error}</p> : null}
