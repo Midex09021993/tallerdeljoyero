@@ -8,7 +8,7 @@ export const Route = createFileRoute("/tienda")({
   head: () => ({
     meta: [
       { title: "Insumos para joyería | Taller del Joyero" },
-      { name: "description", content: "Resinas, cubiletes y materiales para el trabajo profesional de joyería." },
+      { name: "description", content: "Insumos, equipos y tecnología para joyería, diseño 3D y fabricación digital." },
       { name: "robots", content: "index, follow" },
     ],
   }),
@@ -76,14 +76,14 @@ function TiendaInsumosPage() {
         <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 sm:py-20 md:grid-cols-[1.3fr_.7fr] md:items-center">
           <div>
             <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.28em] text-[#d9bd7b]"><Sparkles className="size-4" /> Tienda especializada</p>
-            <h1 className="mt-5 max-w-2xl font-display text-4xl leading-tight sm:text-6xl">Insumos para crear con precisión.</h1>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-white/65 sm:text-base">Resinas, cubiletes y materiales seleccionados para acompañar cada etapa de tu trabajo joyero.</p>
+            <h1 className="mt-5 max-w-2xl font-display text-4xl leading-tight sm:text-6xl">Todo para tu taller y diseño 3D.</h1>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-white/65 sm:text-base">Resinas, cubiletes, PC portátiles y de escritorio para diseño 3D, UPS, NAS y tecnología para impulsar tu trabajo.</p>
             <a href="#productos" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#d6b66e] px-5 py-3 text-xs font-bold text-[#201d15] transition hover:brightness-105">Explorar productos <ArrowRight className="size-4" /></a>
           </div>
           <div className="hidden rounded-[2rem] border border-white/10 bg-white/[.04] p-8 md:block">
             <div className="grid size-20 place-items-center rounded-3xl border border-[#d9bd7b]/35 bg-[#d9bd7b]/10"><ShoppingBag className="size-9 text-[#d9bd7b]" /></div>
             <p className="mt-6 text-xl font-semibold">Para el taller, de verdad.</p>
-            <p className="mt-2 text-sm leading-6 text-white/55">Consulta disponibilidad y coordina tu pedido directamente con nuestro equipo.</p>
+            <p className="mt-2 text-sm leading-6 text-white/55">Desde materiales de joyería hasta equipos informáticos, energía de respaldo y almacenamiento para tu taller.</p>
           </div>
         </div>
       </section>
