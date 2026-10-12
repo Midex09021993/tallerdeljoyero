@@ -51,7 +51,7 @@ function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
-  const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad">("ecosistema");
+  const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
   useEffect(() => {
@@ -405,6 +405,7 @@ function LoginPage() {
                 ["participantes","Quién puede participar",UsersRound],
                 ["flujo","Cómo se conecta",Grid2X2],
                 ["comunidad","Comunidad Aurum Lab",Gem],
+                ["planes","Planes y accesos",ShieldCheck],
               ] as [string, string, LucideIcon][]).map(([id,label,Icon]) => (
                 <button key={String(id)} type="button" onClick={() => setSeccionPlataforma(id as typeof seccionPlataforma)}
                   className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider transition ${seccionPlataforma===id ? "bg-gold/10 text-gold" : "text-white/45 hover:text-white"}`}>
@@ -499,6 +500,49 @@ function LoginPage() {
                       Las herramientas gratuitas permiten conocer Aurum Lab y resolver necesidades técnicas antes de dar el siguiente paso.
                     </p>
                   </div>
+                </>
+              ) : null}
+
+              {seccionPlataforma === "planes" ? (
+                <>
+                  <section className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5 sm:p-6">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Planes comerciales Aurum Lab</p>
+                    <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Empieza con lo esencial. Crece cuando tu taller lo necesite.</h3>
+                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/60">Los planes organizan las funcionalidades previstas para cada etapa del negocio. Las herramientas públicas siguen disponibles gratuitamente. Los accesos definitivos y los límites de cada plan todavía están en definición y no se aplican automáticamente.</p>
+                  </section>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      { id: "emprendedor", nombre: "Emprendedor", precio: "Gratis", enfoque: "Para empezar a organizar tu negocio.", items: ["Herramientas públicas para joyeros", "Clientes", "Cotizaciones", "Pedidos básicos"], destacado: true },
+                      { id: "taller", nombre: "Taller", precio: "Precio por definir", enfoque: "Para ordenar la gestión comercial.", items: ["Todo lo esencial de Emprendedor", "Contratos", "Ventas", "Catálogo digital"] },
+                      { id: "profesional", nombre: "Profesional", precio: "Precio por definir", enfoque: "Para conectar gestión y producción.", items: ["Gestión comercial ampliada", "Diseño e impresión 3D", "Casting y corte láser", "Taller, inventario y compras"] },
+                      { id: "empresarial", nombre: "Empresarial", precio: "Precio por definir", enfoque: "Para equipos y organizaciones con varias sedes.", items: ["Funciones de Profesional", "Gestión de equipo", "Operación multi-sede", "Analítica y seguimiento"] },
+                    ].map((plan) => (
+                      <article key={plan.id} className={"flex flex-col rounded-2xl border p-4 " + (plan.destacado ? "border-gold/40 bg-gold/[0.06]" : "border-white/10 bg-white/[0.025]")}>
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-base font-semibold text-white">{plan.nombre}</h4>
+                          {plan.destacado ? <span className="rounded-full border border-gold/30 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-gold">Inicial</span> : null}
+                        </div>
+                        <p className="mt-2 text-sm font-semibold text-gold">{plan.precio}</p>
+                        <p className="mt-2 min-h-10 text-[11px] leading-relaxed text-white/50">{plan.enfoque}</p>
+                        <ul className="mt-4 flex-1 space-y-2">
+                          {plan.items.map((item) => <li key={item} className="flex gap-2 text-[11px] leading-relaxed text-white/70"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-gold/80" /><span>{item}</span></li>)}
+                        </ul>
+                      </article>
+                    ))}
+                  </div>
+
+                  <section className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5">
+                    <h4 className="text-sm font-semibold text-white">El plan no sustituye los permisos de usuario</h4>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      {[
+                        { title: "Plan comercial", text: "Define el conjunto de funciones y límites contratados por la organización." },
+                        { title: "Rol de usuario", text: "Determina las acciones permitidas a cada persona: Dueño, Gerente, Operario, Monitor o Cliente." },
+                        { title: "Capacidades del taller", text: "Indican las especialidades y modalidades habilitadas para cada sede." },
+                      ].map((item) => <article key={item.title} className="rounded-xl border border-white/10 p-3"><p className="text-xs font-semibold text-gold">{item.title}</p><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{item.text}</p></article>)}
+                    </div>
+                    <p className="mt-4 rounded-lg border border-gold/20 bg-gold/[0.05] p-3 text-[10px] leading-relaxed text-white/55">Importante: esta es la propuesta informativa de los planes. Los precios de los planes de pago, sus límites y la aplicación automática de permisos aún deben definirse e implementarse.</p>
+                  </section>
                 </>
               ) : null}
 
