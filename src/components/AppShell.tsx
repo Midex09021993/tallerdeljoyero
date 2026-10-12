@@ -18,6 +18,7 @@ import {
   FileText,
   Wrench,
   BookOpen,
+  ShoppingBag,
   Cloud,
   Menu,
   X,
