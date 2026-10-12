@@ -88,7 +88,7 @@ function GestionTiendaInsumos() {
         if (!imagenArchivo.type.startsWith("image/")) throw new Error("Selecciona un archivo de imagen válido.");
         if (imagenArchivo.size > 5 * 1024 * 1024) throw new Error("La imagen no puede superar los 5 MB.");
         const extension = imagenArchivo.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-        const rutaImagen = `${sesion!.participante!.id}/tienda-insumos/${crypto.randomUUID()}.${extension}`;
+        const rutaImagen = `${sesion!.participante!.id}/mi-nube/tienda-insumos-${crypto.randomUUID()}.${extension}`;
         const { error: errorSubida } = await supabase.storage.from("catalogo-joyas").upload(rutaImagen, imagenArchivo, { contentType: imagenArchivo.type, upsert: false });
         if (errorSubida) throw new Error(`No se pudo subir la imagen: ${errorSubida.message}`);
         const { data: imagenPublica } = supabase.storage.from("catalogo-joyas").getPublicUrl(rutaImagen);
