@@ -63,15 +63,8 @@ function TiendaInsumosPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] text-[#211f1a]">
-      <header className="border-b border-[#d8c7a1]/50 bg-[#171713] text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <a href="/auth" className="flex items-center gap-3" aria-label="Volver a Aurum Lab">
-            <img src="/icon-512.png" alt="" className="size-10 rounded-xl" />
-            <span><strong className="block text-sm tracking-[.16em] text-[#dec587]">TALLER DEL JOYERO</strong><small className="text-[10px] text-white/55">Insumos para profesionales</small></span>
-          </a>
-          <a href="/herramientas-publicas" className="text-xs text-white/70 transition hover:text-[#dec587]">Herramientas</a>
-        </div>
-      </header>
+      <div className="bg-[#ed6b2c] text-white"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold sm:px-8 sm:text-xs"><span>Insumos y tecnología para joyería y fabricación digital</span><a href="/herramientas-publicas" className="hover:underline">Herramientas gratuitas</a></div></div>
+      <header className="sticky top-0 z-30 border-b border-[#e7e7e7] bg-white/95 text-[#252525] shadow-sm backdrop-blur"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3 px-5 py-3 sm:px-8 lg:flex-nowrap"><a href="/auth" className="flex shrink-0 items-center gap-2.5" aria-label="Volver a Aurum Lab"><img src="/icon-512.png" alt="" className="size-10 rounded-xl" /><span><strong className="block whitespace-nowrap text-xs font-extrabold tracking-[.11em] sm:text-sm">TALLER DEL JOYERO</strong><small className="text-[10px] text-[#777]">Tecnología para crear</small></span></a><a href="#categorias" className="hidden shrink-0 rounded-full bg-[#ed6b2c] px-5 py-3 text-xs font-bold text-white sm:inline-flex">Categorías</a><label className="order-3 flex h-11 w-full min-w-0 items-center gap-3 rounded-full border border-[#e2e2e2] bg-[#fafafa] px-4 focus-within:border-[#ed6b2c] lg:order-none lg:flex-1"><Search className="size-4 shrink-0 text-[#777]"/><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="¿Qué estás buscando?" className="min-w-0 flex-1 bg-transparent text-sm outline-none"/></label><a href="/herramientas-publicas" className="ml-auto hidden rounded-full border border-[#ed6b2c] px-4 py-2.5 text-xs font-semibold text-[#d95d22] md:inline-flex">Herramientas</a></div></header>
       <section className="relative overflow-hidden border-b border-[#e7dfd1] bg-[#f0ede5] text-[#24231d]">
         <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(ellipse_at_70%_45%,rgba(200,166,91,.22),transparent_58%)] lg:block" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:py-12">
