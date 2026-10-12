@@ -13,10 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
-import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
@@ -81,11 +81,6 @@ const AurumRenderPublicRoute = AurumRenderPublicRouteImport.update({
   path: '/aurum-render-public',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
-  id: '/herramientas-publicas',
-  path: '/herramientas-publicas',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -99,6 +94,11 @@ const CatalogoPublicoRoute = CatalogoPublicoRouteImport.update({
 const ClienteRoute = ClienteRouteImport.update({
   id: '/cliente',
   path: '/cliente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
+  id: '/herramientas-publicas',
+  path: '/herramientas-publicas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
@@ -340,10 +340,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
@@ -393,10 +393,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
@@ -446,10 +446,10 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
@@ -501,10 +501,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/aurum-render-public'
-    | '/herramientas-publicas'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/$slug/$producto'
     | '/aurum-render'
@@ -554,10 +554,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/aurum-render-public'
-    | '/herramientas-publicas'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/$slug/$producto'
     | '/aurum-render'
@@ -606,10 +606,10 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$slug'
     | '/aurum-render-public'
-    | '/herramientas-publicas'
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/$slug/$producto'
     | '/_authenticated/aurum-render'
@@ -661,10 +661,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRouteWithChildren
   AurumRenderPublicRoute: typeof AurumRenderPublicRoute
-  HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
+  HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
   JoyaTokenRoute: typeof JoyaTokenRoute
@@ -705,13 +705,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AurumRenderPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/herramientas-publicas': {
-      id: '/herramientas-publicas'
-      path: '/herramientas-publicas'
-      fullPath: '/herramientas-publicas'
-      preLoaderRoute: typeof HerramientasPublicasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -731,6 +724,13 @@ declare module '@tanstack/react-router' {
       path: '/cliente'
       fullPath: '/cliente'
       preLoaderRoute: typeof ClienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/herramientas-publicas': {
+      id: '/herramientas-publicas'
+      path: '/herramientas-publicas'
+      fullPath: '/herramientas-publicas'
+      preLoaderRoute: typeof HerramientasPublicasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recuperar-contrasena': {
@@ -1177,10 +1177,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRouteWithChildren,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
-  HerramientasPublicasRoute: HerramientasPublicasRoute,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
+  HerramientasPublicasRoute: HerramientasPublicasRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
   JoyaTokenRoute: JoyaTokenRoute,
