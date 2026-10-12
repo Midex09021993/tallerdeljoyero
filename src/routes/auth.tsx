@@ -170,7 +170,7 @@ function LoginPage() {
           <a href="/auth" className="flex items-center gap-2 text-sm text-gold">
             <Home className="size-4" /> Inicio
           </a>
-          <a href="#herramientas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
+          <a href="/herramientas-publicas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Grid2X2 className="size-4" /> Herramientas
           </a>
           <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
@@ -193,9 +193,9 @@ function LoginPage() {
               Conecta cada etapa de tu taller: desde el diseño y los cálculos técnicos hasta la producción, tus archivos y la presentación de tus joyas.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3 [@media(max-height:800px)]:mt-4">
-              <button type="button" onClick={() => document.getElementById("herramientas")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-b from-[#dfc583] to-[#c2a15c] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#211c12] shadow-[0_8px_24px_rgba(194,161,92,.14)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105">
+              <a href="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-b from-[#dfc583] to-[#c2a15c] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#211c12] shadow-[0_8px_24px_rgba(194,161,92,.14)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105">
                 Probar herramientas <ArrowRight className="size-3.5" />
-              </button>
+              </a>
               <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.035] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#d7d1c5]/80 transition hover:border-[#d8bd7b]/45 hover:bg-white/[0.06] hover:text-[#e5ca8a]">
                 Conocer la plataforma
               </button>
