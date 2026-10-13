@@ -94,16 +94,17 @@ export function CatalogoProductoPublicoPage() {
       const raw = window.localStorage.getItem(key);
       const guardado = raw ? JSON.parse(raw) : [];
       const actual = Array.isArray(guardado) ? guardado.filter((x) => x && typeof x.id === "string" && Number.isInteger(x.cantidad) && x.cantidad > 0) : [];
-      const existente = actual.find((x) => x.id === item.producto_id && (x.talla ?? "") === tallaSeleccionada);
+      const tallaFinal = (tallaSeleccionada || item.talla || "").trim();
+      const existente = actual.find((x) => x.id === item.producto_id && (x.talla ?? "") === tallaFinal);
       const linea = {
         id: item.producto_id,
         slug: item.producto_slug ?? productoSlug,
         codigo: item.codigo,
-        nombre: item.nombre + (tallaSeleccionada ? " · Talla " + tallaSeleccionada : ""),
+        nombre: item.nombre + (tallaFinal ? " · Talla " + tallaFinal : ""),
         precio: item.mostrar_precio && item.precio_desde != null ? item.precio_desde : null,
         moneda: item.moneda ?? "PEN",
         imagen: item.imagen_principal_url,
-        talla: tallaSeleccionada || null,
+        talla: tallaFinal || null,
         cantidad: 1,
       };
       const actualizado = existente
