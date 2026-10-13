@@ -97,8 +97,31 @@ function CatalogoPublicoPage() {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<any[]>([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
-  useEffect(() => { try { const raw = window.localStorage.getItem("carrito-joyas-" + slugNormalizado); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) setCarrito(parsed.filter((x) => x && typeof x.id === "string" && Number.isInteger(x.cantidad) && x.cantidad > 0)); } } catch { window.localStorage.removeItem("carrito-joyas-" + slugNormalizado); } }, [slugNormalizado]);
-  useEffect(() => { try { window.localStorage.setItem("carrito-joyas-" + slugNormalizado, JSON.stringify(carrito)); } catch { /* Carrito temporal durante esta visita. */ } }, [carrito, slugNormalizado]);
+  const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("carrito-joyas-" + slugNormalizado);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setCarrito(parsed.filter((x) => x && typeof x.id === "string" && Number.isInteger(x.cantidad) && x.cantidad > 0));
+        } else {
+          setCarrito([]);
+        }
+      } else {
+        setCarrito([]);
+      }
+    } catch {
+      setCarrito([]);
+      try { window.localStorage.removeItem("carrito-joyas-" + slugNormalizado); } catch { /* Almacenamiento no disponible. */ }
+    } finally {
+      setCarritoCargadoPara(slugNormalizado);
+    }
+  }, [slugNormalizado]);
+  useEffect(() => {
+    if (carritoCargadoPara !== slugNormalizado) return;
+    try { window.localStorage.setItem("carrito-joyas-" + slugNormalizado, JSON.stringify(carrito)); } catch { /* Carrito temporal durante esta visita. */ }
+  }, [carrito, carritoCargadoPara, slugNormalizado]);
   const agregarAlCarrito = (p: Producto) => { setCarrito((actual) => { const found = actual.find((x) => x.id === p.id && !x.talla); return found ? actual.map((x) => x.id === p.id && !x.talla ? { ...x, cantidad: x.cantidad + 1 } : x) : [...actual, { id: p.id, slug: p.slug, codigo: p.codigo, nombre: p.nombre, precio: p.mostrarPrecio ? p.precioDesde : null, moneda: p.moneda, imagen: p.imagen, cantidad: 1 }]; }); setCarritoAbierto(true); };
   const cantidadCarrito = carrito.reduce((n, x) => n + x.cantidad, 0);
   const totalCarrito = carrito.reduce((n, x) => n + (x.precio ?? 0) * x.cantidad, 0);
@@ -147,6 +170,24 @@ function CatalogoPublicoPage() {
       mostrarPrecio: row.mostrar_precio,
       mostrarFichaTecnica: row.mostrar_ficha_tecnica,
     })), [rows]);
+
+  useEffect(() => {
+    if (isLoading || error || !config) return;
+    const productosPublicados = new Map(productos.map((producto) => [producto.id, producto]));
+    setCarrito((actual) => actual.flatMap((linea) => {
+      const producto = productosPublicados.get(linea.id);
+      if (!producto) return [];
+      return [{
+        ...linea,
+        slug: producto.slug,
+        codigo: producto.codigo,
+        nombre: producto.nombre + (linea.talla ? " · Talla " + linea.talla : ""),
+        precio: producto.mostrarPrecio ? producto.precioDesde : null,
+        moneda: producto.moneda,
+        imagen: producto.imagen,
+      }];
+    }));
+  }, [isLoading, error, config, productos]);
 
   const categorias = useMemo(
     () => ["Todos", ...new Set(productos.map((producto) => producto.categoria))],
@@ -248,7 +289,7 @@ function CatalogoPublicoPage() {
                 <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{destacado.codigo} · destacado</p>
                 <div className="mt-1 flex items-end justify-between gap-3">
                   <h2 className="text-lg font-semibold">{destacado.nombre}</h2>
-                  <span className="text-sm font-semibold">{formatPrice(destacado.precioDesde, destacado.moneda)}</span>
+                  {destacado.mostrarPrecio ? <span className="text-sm font-semibold">{formatPrice(destacado.precioDesde, destacado.moneda)}</span> : <span className="text-xs text-[#746b62]">Precio a consultar</span>}
                 </div>
               </div>
             ) : null}
