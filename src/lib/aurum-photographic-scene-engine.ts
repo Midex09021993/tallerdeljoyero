@@ -48,7 +48,7 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemColor:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   gemLuxury:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_03_2k.hdr",
   // Exact iJewel/WebGi gem environment reference.
-  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",
+  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_URLS["gemDiamond"]!;
 
