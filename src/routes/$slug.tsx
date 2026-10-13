@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, MessageCircle, Search, Share2, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Box, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -95,6 +95,15 @@ function CatalogoPublicoPage() {
   const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
+  const [carrito, setCarrito] = useState<any[]>([]);
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
+  useEffect(() => { try { const raw = window.localStorage.getItem("carrito-joyas-" + slugNormalizado); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) setCarrito(parsed.filter((x) => x && typeof x.id === "string" && Number.isInteger(x.cantidad) && x.cantidad > 0)); } } catch { window.localStorage.removeItem("carrito-joyas-" + slugNormalizado); } }, [slugNormalizado]);
+  useEffect(() => { try { window.localStorage.setItem("carrito-joyas-" + slugNormalizado, JSON.stringify(carrito)); } catch { /* Carrito temporal durante esta visita. */ } }, [carrito, slugNormalizado]);
+  const agregarAlCarrito = (p: Producto) => { setCarrito((actual) => { const found = actual.find((x) => x.id === p.id); return found ? actual.map((x) => x.id === p.id ? { ...x, cantidad: x.cantidad + 1 } : x) : [...actual, { id: p.id, slug: p.slug, codigo: p.codigo, nombre: p.nombre, precio: p.mostrarPrecio ? p.precioDesde : null, moneda: p.moneda, imagen: p.imagen, cantidad: 1 }]; }); setCarritoAbierto(true); };
+  const cantidadCarrito = carrito.reduce((n, x) => n + x.cantidad, 0);
+  const totalCarrito = carrito.reduce((n, x) => n + (x.precio ?? 0) * x.cantidad, 0);
+  const carritoConPrecio = carrito.length > 0 && carrito.every((x) => x.precio !== null);
+  const mensajePedido = "Hola, quisiera solicitar este pedido a " + (config?.nombre_publico ?? "") + ":\n\n" + carrito.map((x) => x.cantidad + " x " + x.nombre + " (" + x.codigo + ")" + (x.precio !== null ? " — " + formatPrice(x.precio * x.cantidad, x.moneda) : " — precio por confirmar")).join("\n") + "\n\n" + (carritoConPrecio ? "Total referencial: " + formatPrice(totalCarrito, carrito[0]?.moneda ?? "PEN") : "Por favor, confirmen los precios finales.");
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
