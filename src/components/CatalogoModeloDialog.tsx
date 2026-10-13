@@ -50,6 +50,21 @@ type Props = {
 
 const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;
 
+function traducirMetalEspanol(value: string | null | undefined) {
+  const original = String(value ?? "").trim();
+  if (!original) return "";
+  const limpio = original.toLowerCase().replace(/[_-]+/g, " ").replace(/\\s+/g, " ").trim();
+  const quilates = limpio.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(?:k|kt|karat|karats|carat|carats)\\b/i)?.[1]?.replace(",", "");
+  const titulo = quilates ? quilates + "K" : "";
+  if (/\\b(white gold|oro blanco)\\b/i.test(limpio)) return ["Oro blanco", titulo].filter(Boolean).join(" ");
+  if (/\\b(yellow gold|oro amarillo)\\b/i.test(limpio)) return ["Oro amarillo", titulo].filter(Boolean).join(" ");
+  if (/\\b(rose gold|pink gold|oro rosa)\\b/i.test(limpio)) return ["Oro rosa", titulo].filter(Boolean).join(" ");
+  if (/\\b(green gold|oro verde)\\b/i.test(limpio)) return ["Oro verde", titulo].filter(Boolean).join(" ");
+  if (/\\b(platinum|platino)\\b/i.test(limpio)) return titulo ? "Platino " + titulo : "Platino";
+  if (/\\b(silver|sterling silver|plata|plata de ley)\\b/i.test(limpio)) return /\\b(sterling silver|plata de ley)\\b/i.test(limpio) ? "Plata de ley" : "Plata";
+  return original;
+}
+
 function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
@@ -100,7 +115,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       aurum_render_url: producto?.aurum_render_url ?? "",
       precio_desde: producto?.precio_desde == null ? "" : String(producto.precio_desde),
       moneda: producto?.moneda || "PEN",
-      metal_principal: producto?.metal_principal ?? "",
+      metal_principal: traducirMetalEspanol(producto?.metal_principal),
       peso_gramos: producto?.peso_gramos == null ? "" : String(producto.peso_gramos),
       piedras: producto?.piedras ?? "",
       medidas: producto?.medidas ?? "",
@@ -165,7 +180,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         ...v,
         nombre: String(c.nombre ?? "").trim() || v.nombre,
         descripcion: String(c.descripcion ?? "").trim() || v.descripcion,
-        metal_principal: String(c.metal_principal ?? "").trim() || v.metal_principal,
+        metal_principal: traducirMetalEspanol(String(c.metal_principal ?? "").trim()) || v.metal_principal,
         peso_gramos: typeof c.peso_gramos === "number" ? String(c.peso_gramos) : v.peso_gramos,
         piedras: String(c.piedras ?? "").trim() || v.piedras,
         medidas: String(c.medidas ?? "").trim() || v.medidas,
@@ -255,7 +270,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         aurum_render_url: form.aurum_render_url.trim() || null,
         precio_desde: precio,
         moneda: form.moneda.trim().toUpperCase() || "PEN",
-        metal_principal: form.metal_principal.trim() || null,
+        metal_principal: traducirMetalEspanol(form.metal_principal) || null,
         peso_gramos: peso,
         piedras: form.piedras.trim() || null,
         medidas: form.medidas.trim() || null,
