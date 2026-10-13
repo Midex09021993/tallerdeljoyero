@@ -19,8 +19,11 @@ export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
       supabaseAdmin.from("profiles").select("id, nombre, usuario, activo").ilike("usuario", usuario).limit(3),
     ]);
     if (errorNombre || errorUsuario) throw new Error("No se pudo verificar el usuario. Inténtalo de nuevo.");
-    const perfiles = [...(porNombre ?? []), ...(porUsuario ?? [])];
-    const coincidencias = (perfiles ?? []).filter((perfil: any) =>
+    // Una misma cuenta puede coincidir por nombre y por usuario; deduplicar por ID.
+    const perfiles = Array.from(new Map(
+      [...(porNombre ?? []), ...(porUsuario ?? [])].map((perfil: any) => [perfil.id, perfil]),
+    ).values());
+    const coincidencias = perfiles.filter((perfil: any) =>
       perfil.activo !== false &&
       [perfil.nombre, perfil.usuario].some((valor: string | null) =>
         typeof valor === "string" && valor.trim().toLocaleLowerCase() === usuario.toLocaleLowerCase()
