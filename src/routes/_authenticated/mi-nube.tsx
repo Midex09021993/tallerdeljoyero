@@ -1412,6 +1412,28 @@ function MiNubePage() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Compartir desde Mi Nube</p>
                   <h3 id="mi-nube-opciones-title" className="mt-1 text-lg font-semibold">Compartir proyecto</h3>
                   <p className="mt-1 text-sm text-muted-foreground">“{opcionesCompartir.nombre}” · elige cómo quieres compartirlo.</p>
+                {compartidas.filter((share) => share.carpeta === opcionesCompartir.nombre).length > 0 && (
+                  <div className="mt-3 rounded-xl border border-border bg-background p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold">Talleres con acceso a esta carpeta</p>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{compartidas.filter((share) => share.carpeta === opcionesCompartir.nombre).length}</span>
+                    </div>
+                    <div className="mt-2 space-y-2">
+                      {compartidas.filter((share) => share.carpeta === opcionesCompartir.nombre).map((share) => (
+                        <div key={share.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold">{share.destinatario_nombre ?? "Taller del ecosistema"}</p>
+                            <p className="text-[10px] text-muted-foreground">Acceso activo · carpeta compartida</p>
+                          </div>
+                          <button type="button" disabled={guardandoComparticion} onClick={() => { if (window.confirm("¿Quitar el acceso de " + (share.destinatario_nombre ?? "este taller") + " a la carpeta “" + share.carpeta + "”?")) void revocarComparticion(share); }} className="shrink-0 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">Quitar acceso</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {compartidas.filter((share) => share.carpeta === opcionesCompartir.nombre).length === 0 && (
+                  <p className="mt-3 rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground">Esta carpeta todavía no está compartida con ningún taller registrado.</p>
+                )}
                 </div>
                 <button type="button" onClick={() => setOpcionesCompartir(null)} className="rounded-lg p-2 hover:bg-muted" aria-label="Cerrar"><X className="size-4" /></button>
               </div>
