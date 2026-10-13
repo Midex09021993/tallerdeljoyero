@@ -8,9 +8,11 @@ type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-m
 function getAurumNormalExperimentMode(): AurumNormalMode {
   try {
     const value = new URLSearchParams(window.location.search).get("aurumNormals");
-    if (value === "diagnostic" || value === "recompute-metal" || value === "crease-metal") return value;
+    if (value === "authored" || value === "diagnostic" || value === "recompute-metal" || value === "crease-metal") return value;
   } catch {}
-  return "authored";
+  // Conservative crease-normal smoothing is the default for positively identified
+  // metal meshes. Gemstones and unknown meshes are excluded in the processing pass.
+  return "crease-metal";
 }
 
 function getAurumMeshFamily(x: any): "metal" | "gema" | "otro" {
