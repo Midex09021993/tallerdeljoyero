@@ -62,6 +62,9 @@ type CatalogoRow = {
   piedras: string | null;
   medidas: string | null;
   talla: string | null;
+  modalidad_talla: string | null;
+  sistema_tallas: string | null;
+  tallas_disponibles: string | null;
   tecnica: string | null;
   acabado: string | null;
   disponibilidad: string | null;
@@ -107,9 +110,10 @@ export function CatalogoProductoPublicoPage() {
 
   const agregarProductoAlCarrito = () => {
     if (!item?.producto_id || !config) return;
-    const tallaElegida = tallaSeleccionada || (item.talla && TALLAS_AMERICANAS.includes(item.talla as typeof TALLAS_AMERICANAS[number]) ? item.talla : "");
-    if (!tallaElegida) {
-      setErrorCarrito("Selecciona una talla americana antes de añadir la pieza.");
+    const modalidadTalla = item.modalidad_talla ?? "sin_seleccion";
+    const tallaElegida = modalidadTalla === "ajustable" ? "Ajustable" : modalidadTalla === "unica" ? "Talla única" : tallaSeleccionada.trim();
+    if ((modalidadTalla === "a_medida" || modalidadTalla === "disponibles") && !tallaElegida) {
+      setErrorCarrito("Indica o selecciona la talla para fabricar la pieza.");
       return;
     }
     try {
@@ -186,7 +190,7 @@ export function CatalogoProductoPublicoPage() {
                 ["Peso", item.peso_gramos ? item.peso_gramos + " g" : null],
                 ["Piedras", item.piedras],
                 ["Medidas", item.medidas],
-                ["Talla", item.talla],
+                ["Talla", item.modalidad_talla === "a_medida" ? "Fabricación según talla del cliente" : item.modalidad_talla === "disponibles" ? "Tallas disponibles: " + (item.tallas_disponibles || "Consultar") : item.modalidad_talla === "ajustable" ? "Ajustable" : item.modalidad_talla === "unica" ? "Talla única" : item.talla],
                 ["Técnica", item.tecnica],
                 ["Acabado", item.acabado],
                 ["Disponibilidad", item.disponibilidad],
@@ -249,7 +253,7 @@ export function CatalogoProductoPublicoPage() {
               <>
                 <div className="px-5 pt-5"><div className="flex h-48 items-center justify-center overflow-hidden rounded-sm bg-[#f7f7f7]">{item.imagen_principal_url ? <img src={item.imagen_principal_url} alt={item.nombre} className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <Box className="size-10 text-[#8a6b36]" />}</div>{imagenes.length > 1 ? <div className="mt-3 flex justify-center gap-2">{imagenes.slice(0, 6).map((url, i) => <span key={url + i} className={"size-1.5 rounded-full " + (i === 0 ? "bg-[#242321]" : "bg-[#c9c6c2]")} />)}</div> : null}<h3 className="mt-5 font-display text-xl leading-snug">{item.nombre}</h3><p className="mt-2 text-lg font-semibold">{precio}</p><div className="my-5 border-t border-[#dedbd7]" /></div>
                 <div className="px-5 pb-5">
-                  <div><label htmlFor="talla-joya" className="mb-2 block text-sm text-[#625b54]">Talla americana (US)</label><select id="talla-joya" value={tallaSeleccionada || (item.talla && TALLAS_AMERICANAS.includes(item.talla as typeof TALLAS_AMERICANAS[number]) ? item.talla : "")} onChange={(e) => setTallaSeleccionada(e.target.value)} className="h-11 w-full border border-[#d6d3cf] bg-white px-4 text-sm outline-none focus:border-[#8a6b36]"><option value="">Selecciona una talla</option>{TALLAS_AMERICANAS.map((talla) => <option key={talla} value={talla}>{talla}</option>)}</select><p className="mt-2 text-xs text-[#746b62]">Tallas disponibles de referencia: US 5 a US 10, en medios números.</p></div>
+                  {(item.modalidad_talla === "a_medida" || item.modalidad_talla === "disponibles") ? <div><label htmlFor="talla-joya" className="mb-2 block text-sm text-[#625b54]">{item.modalidad_talla === "disponibles" ? "Selecciona la talla (" + (item.sistema_tallas || "Peruana") + ")" : "Talla para fabricar (" + (item.sistema_tallas || "Peruana") + ")"}</label>{item.modalidad_talla === "disponibles" ? <select id="talla-joya" required value={tallaSeleccionada} onChange={(e) => setTallaSeleccionada(e.target.value)} className="h-11 w-full border border-[#d6d3cf] bg-white px-4 text-sm outline-none focus:border-[#8a6b36]"><option value="">Selecciona una talla</option>{(item.tallas_disponibles || "").split(/[,;\n]+/).map((t) => t.trim()).filter(Boolean).map((talla) => <option key={talla} value={talla}>{talla}</option>)}</select> : <input id="talla-joya" value={tallaSeleccionada} onChange={(e) => setTallaSeleccionada(e.target.value)} placeholder="Escribe tu talla" className="h-11 w-full border border-[#d6d3cf] bg-white px-4 text-sm outline-none focus:border-[#8a6b36]" /> }<p className="mt-2 text-xs text-[#746b62]">{item.modalidad_talla === "disponibles" ? "El taller fabricará la pieza en una de estas tallas." : "Si no conoces tu talla, consulta al taller antes de confirmar."}</p></div> : <div className="rounded border border-[#e2dfdb] bg-[#f7f4ef] p-3 text-sm">{item.modalidad_talla === "ajustable" ? "Esta joya es ajustable; no necesitas elegir talla." : item.modalidad_talla === "unica" ? "Esta joya se fabrica en talla única." : "La talla se coordinará directamente con el taller."}</div>}
                   <div className="mt-5"><p className="mb-3 text-sm font-medium">Tipo de preparación y entrega</p><div className="space-y-2"><button type="button" onClick={() => setTipoEnvio("rapido")} className={"w-full border p-3 text-left " + (tipoEnvio === "rapido" ? "border-[#8a6b36] bg-[#f7f4ef]" : "border-[#e2dfdb]")}><span className="flex items-center justify-between text-sm font-semibold">Envío rápido <span className="text-xs text-[#746b62]">3–5 días hábiles</span></span><span className="mt-1 block text-xs text-[#746b62]">Sujeto a stock y confirmación del taller</span></button><button type="button" onClick={() => setTipoEnvio("fabricacion")} className={"w-full border p-3 text-left " + (tipoEnvio === "fabricacion" ? "border-[#8a6b36] bg-[#f7f4ef]" : "border-[#e2dfdb]")}><span className="flex items-center justify-between text-sm font-semibold">Hecho a pedido <span className="text-xs text-[#746b62]">15–20 días hábiles</span></span><span className="mt-1 block text-xs text-[#746b62]">Incluye tiempo estimado de fabricación</span></button></div></div>
                   <div className="mt-4 space-y-4 border-y border-[#dedbd7] py-4 text-sm"><div className="flex items-start gap-3"><Truck className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><div><p className="font-medium">Llegada estimada</p><p className="mt-1 text-[#746b62]">{formatoFechaEntrega(sumarDiasHabiles(new Date(), tipoEnvio === "rapido" ? 3 : 15))} – {formatoFechaEntrega(sumarDiasHabiles(new Date(), tipoEnvio === "rapido" ? 5 : 20))}</p><p className="mt-1 text-xs text-[#746b62]">Estimación orientativa; el taller confirmará fecha y costo según destino y disponibilidad.</p></div></div><div className="flex items-start gap-3"><Ruler className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><p>La talla seleccionada y el tipo de entrega se guardarán en tu carrito.</p></div></div>
                   {errorCarrito ? <p className="mt-3 text-xs text-red-600">{errorCarrito}</p> : null}<button type="button" onClick={agregarProductoAlCarrito} className="mt-5 w-full bg-[#242321] px-5 py-4 text-xs font-bold uppercase tracking-[.12em] text-white transition hover:bg-[#8a6b36]">Añadir al carrito</button><p className="mt-3 text-center text-xs leading-5 text-[#746b62]">El carrito no realiza cobros. El taller confirmará precio final, disponibilidad y entrega.</p>
