@@ -292,12 +292,12 @@ function CatalogoPublicoPage() {
                   className="relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-white ring-1 ring-[#1f1b18]/[0.06] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_-28px_rgba(31,27,24,.38)]"
                 >
                   {producto.imagen ? (
-                    <img src={producto.imagen} alt={producto.nombre} loading="lazy" className="size-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.025] sm:p-5" />
+                    <img src={producto.imagen} alt={producto.nombre} loading="lazy" className="size-full scale-[1.22] object-contain p-1 transition-transform duration-500 group-hover:scale-[1.28] sm:p-2" />
                   ) : (
                     <div className="grid size-full place-items-center"><Box className="size-10 text-[#b19a70]" /></div>
                   )}
                   {producto.destacado ? <span className="absolute left-3 top-3 rounded-full border border-[#8a6b36]/20 bg-[#fbf8f2]/95 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[.16em] text-[#806331]">Selección</span> : null}
-                  <span className="absolute inset-x-3 bottom-3 flex items-center justify-between rounded-full bg-[#1f1b18]/90 px-4 py-3 text-[11px] font-semibold text-white opacity-0 backdrop-blur transition-opacity duration-300 group-hover:opacity-100 focus-visible:opacity-100">
+                  <span className="absolute inset-x-3 bottom-3 flex items-center justify-between rounded-full bg-[#1f1b18]/90 px-4 py-3 text-[11px] font-semibold text-white backdrop-blur transition-colors duration-300 hover:bg-[#8a6b36]">
                     <span>Descubrir la joya</span><ArrowRight className="size-3.5" />
                   </span>
                 </a>
