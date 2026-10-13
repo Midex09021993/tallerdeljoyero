@@ -22,13 +22,13 @@ jobs:
       - name: Install dependencies
         run: npm install --no-package-lock
 
-      - name: TypeScript
-        run: npm run typecheck
-
-      # Build before lint so repository-wide formatting failures do not hide
-      # whether the application itself compiles successfully.
+      # TanStack Router generates src/routeTree.gen.ts during the Vite build.
+      # Build first so TypeScript checks the generated route tree, including new file routes.
       - name: Build
         run: npm run build
+
+      - name: TypeScript
+        run: npm run typecheck
 
       - name: Lint
         run: npm run lint
