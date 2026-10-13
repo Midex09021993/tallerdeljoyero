@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Formato de imagen no compatible. Usa PNG, JPG, WebP o AVIF." }, 400);
     }
 
-    const imageResponse = await fetch(imageUrl);
+    const imageResponse = await fetch(image.toString());
     if (!imageResponse.ok) return json({ error: "No se pudo leer la imagen principal. Vuelve a cargarla e inténtalo de nuevo." }, 400);
     const contentType = (imageResponse.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
     const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
