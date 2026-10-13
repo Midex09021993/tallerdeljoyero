@@ -41,7 +41,9 @@ type Props = {
   initialName?: string | null;
 };
 
-const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;\n\nfunction slugify(value: string) {
+const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;
+
+function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
