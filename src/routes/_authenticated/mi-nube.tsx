@@ -367,6 +367,13 @@ function MiNubePage() {
   }, [sesion, importandoTransferencia, cargarBiblioteca]);
 
   useEffect(() => {
+    const proyectoSolicitado = new URLSearchParams(window.location.search).get("proyecto")?.trim().slice(0, 120);
+    if (!proyectoSolicitado) return;
+    setBusqueda(proyectoSolicitado);
+    setProyectoAbierto(proyectoSolicitado);
+  }, []);
+
+  useEffect(() => {
     void cargarBiblioteca();
   }, [cargarBiblioteca]);
 
