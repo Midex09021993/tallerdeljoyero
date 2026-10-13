@@ -239,6 +239,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     if (precio !== null && (!Number.isFinite(precio) || precio <= 0)) return setError("El precio debe ser mayor que 0 o dejarse vacío para mostrar 'Consultar'.");
     if (peso !== null && (!Number.isFinite(peso) || peso <= 0)) return setError("El peso debe ser mayor que 0.");
     if (tiempo !== null && (!Number.isInteger(tiempo) || tiempo <= 0)) return setError("El tiempo de fabricación debe ser un número entero mayor que 0.");
+    if (form.modalidad_talla === "disponibles" && !form.tallas_disponibles.split(/[\n,;]+/).map((v) => v.trim()).filter(Boolean).length) return setError("Añade al menos una talla disponible para este producto.");
 
     setGuardando(true);
     setError(null);
