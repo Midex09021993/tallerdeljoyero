@@ -112,7 +112,7 @@ function resolveRhinoLayerIndex(x:any): number {
 function colorToHex(color:any): string | undefined {
   if (typeof color === "string") {
     const match = color.match(/^#?([0-9a-f]{6})$/i);
-    return match ? "#" + match[1].toLowerCase() : undefined;
+    return match?.[1] ? "#" + match[1].toLowerCase() : undefined;
   }
   let channels:any[] | undefined;
   if (Array.isArray(color) && color.length >= 3) channels = color.slice(0,3);
