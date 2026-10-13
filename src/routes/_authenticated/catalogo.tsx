@@ -96,7 +96,6 @@ function CatalogoPage() {
         setModeloEditando(null);
         setEditorAbierto(true);
       }
-      sessionStorage.removeItem("mi-nube-catalogo-pendiente");
     } catch { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); }
   }, []);
 
@@ -350,7 +349,7 @@ function CatalogoPage() {
         )}
       </section>
 
-      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url} initialName={imagenDesdeMiNube?.nombre} initialProject={proyectoDesdeMiNube} onClose={() => { setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); }} onSaved={() => { setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url} initialName={imagenDesdeMiNube?.nombre} initialProject={proyectoDesdeMiNube} onClose={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); }} onSaved={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
       <CatalogoCategoriasDialog open={categoriasAbierta} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
       <CatalogoColeccionesDialog open={coleccionesAbierta} participanteId={sesion?.participante?.id ?? ""} productos={productoRows.map((p) => ({ id: p.id, nombre: p.nombre, codigo: p.codigo }))} onClose={() => setColeccionesAbierta(false)} onChanged={() => { if (sesion?.participante?.id) { void queryClient.invalidateQueries({ queryKey: ["catalogo-producto-colecciones", sesion.participante.id] }); void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); } }} />
