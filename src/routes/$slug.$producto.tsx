@@ -21,8 +21,6 @@ export const Route = createFileRoute("/$slug/$producto")({
   component: CatalogoProductoPublicoPage,
 });
 
-const TALLAS_AMERICANAS = ["5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0", "9.5", "10.0"] as const;
-
 function sumarDiasHabiles(fechaBase: Date, dias: number) {
   const fecha = new Date(fechaBase);
   let sumados = 0;
@@ -81,7 +79,11 @@ export function CatalogoProductoPublicoPage() {
     queryFn: async () => {
       const { data, error: rpcError } = await supabase.rpc("obtener_catalogo_publico", { _slug: slug.trim().toLowerCase() });
       if (rpcError) throw rpcError;
-      return (data ?? []) as CatalogoRow[];
+      const rows = (data ?? []) as CatalogoRow[];
+      const { data: tallas, error: errorTallas } = await supabase.rpc("obtener_tallas_catalogo_publico", { _slug: slug.trim().toLowerCase() });
+      if (errorTallas) throw errorTallas;
+      const porProducto = new Map((tallas ?? []).map((t: any) => [t.producto_id, t]));
+      return rows.map((row) => ({ ...row, ...(porProducto.get(row.producto_id) ?? {}) }));
     },
     staleTime: 60_000,
     retry: 1,
