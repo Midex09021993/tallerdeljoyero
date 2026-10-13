@@ -103,7 +103,6 @@ function CatalogoPublicoPage() {
   const cantidadCarrito = carrito.reduce((n, x) => n + x.cantidad, 0);
   const totalCarrito = carrito.reduce((n, x) => n + (x.precio ?? 0) * x.cantidad, 0);
   const carritoConPrecio = carrito.length > 0 && carrito.every((x) => x.precio !== null);
-  const mensajePedido = "Hola, quisiera solicitar este pedido a " + (config?.nombre_publico ?? "") + ":\n\n" + carrito.map((x) => x.cantidad + " x " + x.nombre + " (" + x.codigo + ")" + (x.precio !== null ? " — " + formatPrice(x.precio * x.cantidad, x.moneda) : " — precio por confirmar")).join("\n") + "\n\n" + (carritoConPrecio ? "Total referencial: " + formatPrice(totalCarrito, carrito[0]?.moneda ?? "PEN") : "Por favor, confirmen los precios finales.");
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
@@ -118,6 +117,7 @@ function CatalogoPublicoPage() {
   });
 
   const config = rows[0] ?? null;
+  const mensajePedido = "Hola, quisiera solicitar este pedido a " + (config?.nombre_publico ?? "") + ":\n\n" + carrito.map((x) => x.cantidad + " x " + x.nombre + " (" + x.codigo + ")" + (x.precio !== null ? " — " + formatPrice(x.precio * x.cantidad, x.moneda) : " — precio por confirmar")).join("\n") + "\n\n" + (carritoConPrecio ? "Total referencial: " + formatPrice(totalCarrito, carrito[0]?.moneda ?? "PEN") : "Por favor, confirmen los precios finales.");
   const productos = useMemo<Producto[]>(() => rows
     .filter((row) => row.producto_id && row.codigo && row.nombre && row.categoria)
     .map((row) => ({
