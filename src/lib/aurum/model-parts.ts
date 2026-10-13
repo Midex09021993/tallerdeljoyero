@@ -30,10 +30,9 @@ function matrixFamilyCategory(layer:any,index:number,colorCapa:string|undefined,
   const classified=clasificarCapa(name,colorCapa);
   if(classified!=="otro") return classified;
 
-  // Backward-compatible fallback for unnamed/legacy MatrixGold files:
-  // first four slots are metals, next four are gems, later layers are other.
-  if(index>=0 && index<4) return "metal";
-  if(index>=4 && index<8) return "gema";
+  // Never infer a material family from traversal/layer position alone.
+  // If name and color are unavailable, keep the part neutral instead of
+  // assigning the wrong metal/gem to an unrelated layer.
   return "otro";
 }
 
@@ -43,9 +42,8 @@ function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"
   const explicit=name.match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
   if (explicit) return Number(explicit[1]);
 
-  // Positional slot is only a fallback when the layer name does not encode it.
-  if(category==="metal" && index<4) return index+1;
-  if(category==="gema" && index>=4 && index<8) return index-3;
+  // Slots must come from an explicit layer name; raw layer indices are not
+  // stable across Rhino documents and must never cause cross-layer material edits.
   return undefined;
 }
 
@@ -69,9 +67,9 @@ export function getAurumModelParts(
 
     const attrs = x.userData?.attributes || {};
     const meta = x.userData?.aurumRhino;
-    const layerIndex = Number.isInteger(meta?.layerIndex)
-      ? Number(meta.layerIndex)
-      : (Number.isInteger(attrs.layerIndex) ? attrs.layerIndex : -1);
+    const rawLayerIndex = meta?.layerIndex ?? attrs.layerIndex ?? attrs.LayerIndex ?? x.userData?.layerIndex;
+    const parsedLayerIndex = rawLayerIndex === null || rawLayerIndex === undefined || rawLayerIndex === "" ? -1 : Number(rawLayerIndex);
+    const layerIndex = Number.isInteger(parsedLayerIndex) && parsedLayerIndex >= 0 ? parsedLayerIndex : -1;
     const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
     const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
     const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
