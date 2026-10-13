@@ -140,7 +140,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   async function guardar(event: FormEvent) {
     event.preventDefault();
     const nombre = form.nombre.trim();
-    const slug = slugify(nombre);
+    let slug = slugify(nombre);
     const precio = form.precio_desde.trim() === "" ? null : Number(form.precio_desde);
     const peso = form.peso_gramos.trim() === "" ? null : Number(form.peso_gramos);
     const tiempo = form.tiempo_fabricacion_dias.trim() === "" ? null : Number(form.tiempo_fabricacion_dias);
@@ -153,16 +153,22 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setGuardando(true);
     setError(null);
     try {
-      const { data: slugExistente, error: slugCheckError } = await supabase
-        .from("catalogo_productos")
-        .select("id, nombre")
-        .eq("participante_id", participanteId)
-        .eq("slug", slug)
-        .maybeSingle();
+      const slugBase = slug;
+      let sufijo = 2;
+      while (true) {
+        const { data: slugExistente, error: slugCheckError } = await supabase
+          .from("catalogo_productos")
+          .select("id")
+          .eq("participante_id", participanteId)
+          .eq("slug", slug)
+          .maybeSingle();
 
-      if (slugCheckError) throw slugCheckError;
-      if (slugExistente && slugExistente.id !== producto?.id) {
-        throw new Error(`Ya existe una joya con la URL "${slug}". Cambia el nombre para generar un slug único.`);
+        if (slugCheckError) throw slugCheckError;
+        if (!slugExistente || slugExistente.id === producto?.id) break;
+
+        const finalSufijo = `-${sufijo++}`;
+        slug = slugBase.slice(0, 80 - finalSufijo.length).replace(/-+$/g, "") + finalSufijo;
+        if (sufijo > 10000) throw new Error("No se pudo generar una URL única para esta joya.");
       }
 
       const payload = {
