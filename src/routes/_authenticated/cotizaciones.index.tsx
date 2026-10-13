@@ -462,21 +462,28 @@ function CotizacionesPage() {
 
       let errorVinculoSolicitud = "";
       if (solicitudEnConversion) {
-        const { error: vinculoError } = await supabase.from("catalogo_solicitudes_cotizacion")
+        const { data: cotizacionVinculada } = await supabase.from("cotizaciones")
+          .select("cliente_id")
+          .eq("id", cotizacionCreadaId)
+          .maybeSingle();
+        const clienteIdReal = cotizacionVinculada?.cliente_id ?? form.cliente_id || null;
+        const { data: solicitudActualizada, error: vinculoError } = await supabase.from("catalogo_solicitudes_cotizacion")
           .update({
-            cliente_id: form.cliente_id || null,
+            cliente_id: clienteIdReal,
             cotizacion_id: cotizacionCreadaId,
             estado: "cotizada",
             updated_at: new Date().toISOString(),
           })
           .eq("id", solicitudEnConversion.id)
           .eq("participante_id", solicitudEnConversion.participante_id)
-          .is("cotizacion_id", null);
-        if (vinculoError) {
+          .is("cotizacion_id", null)
+          .select("id")
+          .maybeSingle();
+        if (vinculoError || !solicitudActualizada) {
           errorVinculoSolicitud = "La cotización se creó, pero no se pudo vincular a la solicitud original. No vuelvas a crearla; revisa la solicitud y los permisos de Supabase.";
           setErrorSolicitud(errorVinculoSolicitud);
         } else {
-          setSolicitudesCatalogo(items => items.map(item => item.id === solicitudEnConversion.id ? { ...item, cotizacion_id: String(cotizacionCreadaId), cliente_id: form.cliente_id || null, estado: "cotizada" } : item));
+          setSolicitudesCatalogo(items => items.map(item => item.id === solicitudEnConversion.id ? { ...item, cotizacion_id: String(cotizacionCreadaId), cliente_id: clienteIdReal, estado: "cotizada" } : item));
           setErrorSolicitud("");
         }
       }
