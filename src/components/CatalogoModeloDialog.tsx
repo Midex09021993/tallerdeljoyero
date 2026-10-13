@@ -338,7 +338,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           <section className="grid gap-3 rounded-2xl border border-gold/30 bg-gold/5 p-4">
             <div className="flex items-start gap-3">
               <div className="rounded-xl bg-gold/10 p-2.5 text-gold"><Sparkles className="size-5" /></div>
-              <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Subida inteligente con IA</p><p className="mt-1 text-xs text-muted-foreground">Carga una ficha PDF para proponer nombre, metal, peso y piedras. Revisa los campos antes de guardar; no se publica automáticamente.</p></div>
+              <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Subida inteligente con IA</p><p className="mt-1 text-xs text-muted-foreground">Carga una ficha PDF para proponer nombre, metal, peso, piedras y una descripción pública en español. Revisa los campos antes de guardar; no se publica automáticamente.</p></div>
             </div>
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold/40 bg-background px-4 py-3 text-xs font-semibold transition hover:bg-gold/5">
               <FileText className="size-4" />{analizandoPdf ? "Analizando ficha…" : "Seleccionar ficha técnica PDF"}
