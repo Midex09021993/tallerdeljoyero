@@ -53,15 +53,15 @@ const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras",
 function traducirMetalEspanol(value: string | null | undefined) {
   const original = String(value ?? "").trim();
   if (!original) return "";
-  const limpio = original.toLowerCase().replace(/[_-]+/g, " ").replace(/\\s+/g, " ").trim();
-  const quilates = limpio.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(?:k|kt|karat|karats|carat|carats)\\b/i)?.[1]?.replace(",", "");
+  const limpio = original.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  const quilates = limpio.match(/\b(\d+(?:[.,]\d+)?)\s*(?:k|kt|karat|karats|carat|carats)\b/i)?.[1]?.replace(",", "");
   const titulo = quilates ? quilates + "K" : "";
-  if (/\\b(white gold|oro blanco)\\b/i.test(limpio)) return ["Oro blanco", titulo].filter(Boolean).join(" ");
-  if (/\\b(yellow gold|oro amarillo)\\b/i.test(limpio)) return ["Oro amarillo", titulo].filter(Boolean).join(" ");
-  if (/\\b(rose gold|pink gold|oro rosa)\\b/i.test(limpio)) return ["Oro rosa", titulo].filter(Boolean).join(" ");
-  if (/\\b(green gold|oro verde)\\b/i.test(limpio)) return ["Oro verde", titulo].filter(Boolean).join(" ");
-  if (/\\b(platinum|platino)\\b/i.test(limpio)) return titulo ? "Platino " + titulo : "Platino";
-  if (/\\b(silver|sterling silver|plata|plata de ley)\\b/i.test(limpio)) return /\\b(sterling silver|plata de ley)\\b/i.test(limpio) ? "Plata de ley" : "Plata";
+  if (/\b(white gold|oro blanco)\b/i.test(limpio)) return ["Oro blanco", titulo].filter(Boolean).join(" ");
+  if (/\b(yellow gold|oro amarillo)\b/i.test(limpio)) return ["Oro amarillo", titulo].filter(Boolean).join(" ");
+  if (/\b(rose gold|pink gold|oro rosa)\b/i.test(limpio)) return ["Oro rosa", titulo].filter(Boolean).join(" ");
+  if (/\b(green gold|oro verde)\b/i.test(limpio)) return ["Oro verde", titulo].filter(Boolean).join(" ");
+  if (/\b(platinum|platino)\b/i.test(limpio)) return titulo ? "Platino " + titulo : "Platino";
+  if (/\b(silver|sterling silver|plata|plata de ley)\b/i.test(limpio)) return /\b(sterling silver|plata de ley)\b/i.test(limpio) ? "Plata de ley" : "Plata";
   return original;
 }
 
