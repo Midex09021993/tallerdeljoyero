@@ -175,7 +175,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
       // shared CAD geometries and other layer instances remain unchanged.
       geometry = geometry.clone();
       if (experimentMode === "crease-metal") {
-        geometry = toCreasedNormals(geometry, Math.PI / 3);
+        geometry = toCreasedNormals(geometry, 35 * Math.PI / 180);
         creasedNormalsForTest++;
       } else {
         geometry.computeVertexNormals();
