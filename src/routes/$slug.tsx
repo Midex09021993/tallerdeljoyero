@@ -214,10 +214,14 @@ function CatalogoPublicoPage() {
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-24">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#8a6b36]">Showroom · {config.slug}</p>
-            <h1 className="mt-4 max-w-xl font-display text-5xl leading-[.95] tracking-tight">{config.descripcion_publica || "Joyas hechas para quedarse."}</h1>
-            <p className="mt-6 max-w-lg text-sm leading-7 text-[#625b54]">
-              Explora los modelos publicados por {config.nombre_publico} y solicita una propuesta personalizada directamente con el taller.
-            </p>
+            <h1 className="mt-4 max-w-xl font-display text-4xl leading-tight tracking-tight sm:text-5xl">Joyas hechas para quedarse.</h1>
+            {config.descripcion_publica?.trim() ? (
+              <p className="mt-5 max-w-xl font-sans text-base leading-7 text-[#625b54] sm:text-lg sm:leading-8">{config.descripcion_publica}</p>
+            ) : (
+              <p className="mt-5 max-w-lg font-sans text-sm leading-7 text-[#625b54]">
+                Explora los modelos publicados por {config.nombre_publico} y solicita una propuesta personalizada directamente con el taller.
+              </p>
+            )}
             <div className="mt-7 flex flex-wrap gap-2">
               <a href="#coleccion" className="rounded-full bg-[#1f1b18] px-5 py-3 text-xs font-semibold text-white">
                 Explorar colección <ArrowRight className="ml-1 inline size-3.5" />
