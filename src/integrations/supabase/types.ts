@@ -3310,6 +3310,121 @@ export type Database = {
           },
         ]
       }
+      tienda_insumos_productos: {
+        Row: {
+          categoria: string
+          codigo: string | null
+          created_at: string
+          descripcion: string | null
+          destacado: boolean
+          id: string
+          imagen_url: string | null
+          moneda: string
+          nombre: string
+          orden: number
+          precio: number | null
+          publicado: boolean
+          slug: string
+          stock: number | null
+          tienda_id: string
+          unidad: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string
+          codigo?: string | null
+          created_at?: string
+          descripcion?: string | null
+          destacado?: boolean
+          id?: string
+          imagen_url?: string | null
+          moneda?: string
+          nombre: string
+          orden?: number
+          precio?: number | null
+          publicado?: boolean
+          slug: string
+          stock?: number | null
+          tienda_id: string
+          unidad?: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          codigo?: string | null
+          created_at?: string
+          descripcion?: string | null
+          destacado?: boolean
+          id?: string
+          imagen_url?: string | null
+          moneda?: string
+          nombre?: string
+          orden?: number
+          precio?: number | null
+          publicado?: boolean
+          slug?: string
+          stock?: number | null
+          tienda_id?: string
+          unidad?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tienda_insumos_productos_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas_insumos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tiendas_insumos: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          moneda: string
+          nombre_publico: string
+          participante_id: string
+          slug: string
+          updated_at: string
+          visible: boolean
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          moneda?: string
+          nombre_publico: string
+          participante_id: string
+          slug: string
+          updated_at?: string
+          visible?: boolean
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          moneda?: string
+          nombre_publico?: string
+          participante_id?: string
+          slug?: string
+          updated_at?: string
+          visible?: boolean
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiendas_insumos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: true
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trabajo_archivos: {
         Row: {
           created_at: string
