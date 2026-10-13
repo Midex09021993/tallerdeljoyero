@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$slug/$producto")({
   head: ({ params }) => ({
