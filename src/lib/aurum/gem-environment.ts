@@ -131,10 +131,13 @@ export function createAurumGemEnvironment(
           }
           current = next;
           onLoaded(next);
-        } catch {
+        } catch (error) {
           hdrTexture.dispose?.();
+          console.warn("[Aurum Render] No se pudo procesar el HDR de gemas:", url, error);
         }
-      }, undefined, () => {});
+      }, undefined, (error:any) => {
+        console.warn("[Aurum Render] No se pudo cargar el HDR de gemas; se conservará el entorno anterior:", url, error);
+      });
     },
     applyToModel,
     dispose(texture?:any) {
