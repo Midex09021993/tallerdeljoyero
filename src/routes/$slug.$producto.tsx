@@ -107,12 +107,17 @@ export function CatalogoProductoPublicoPage() {
 
   const agregarProductoAlCarrito = () => {
     if (!item?.producto_id || !config) return;
+    const tallaElegida = tallaSeleccionada || (item.talla && TALLAS_AMERICANAS.includes(item.talla as typeof TALLAS_AMERICANAS[number]) ? item.talla : "");
+    if (!tallaElegida) {
+      setErrorCarrito("Selecciona una talla americana antes de añadir la pieza.");
+      return;
+    }
     try {
       const key = "carrito-joyas-" + slug.trim().toLowerCase();
       const raw = window.localStorage.getItem(key);
       const guardado = raw ? JSON.parse(raw) : [];
       const actual = Array.isArray(guardado) ? guardado.filter((x) => x && typeof x.id === "string" && Number.isInteger(x.cantidad) && x.cantidad > 0) : [];
-      const tallaFinal = (tallaSeleccionada || item.talla || "").trim();
+      const tallaFinal = tallaElegida.trim();
       const existente = actual.find((x) => x.id === item.producto_id && (x.talla ?? "") === tallaFinal);
       const linea = {
         id: item.producto_id,
