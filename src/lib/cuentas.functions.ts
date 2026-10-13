@@ -14,13 +14,12 @@ export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
     if (usuario.includes("@")) return { email: usuario.toLowerCase() };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: perfiles, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id, nombre, usuario, activo")
-      .or("nombre.ilike." + usuario.replace(/[,%()]/g, "") + ",usuario.ilike." + usuario.replace(/[,%()]/g, ""))
-      .limit(3);
-
-    if (error) throw new Error("No se pudo verificar el usuario. Inténtalo de nuevo.");
+    const [{ data: porNombre, error: errorNombre }, { data: porUsuario, error: errorUsuario }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, nombre, usuario, activo").ilike("nombre", usuario).limit(3),
+      supabaseAdmin.from("profiles").select("id, nombre, usuario, activo").ilike("usuario", usuario).limit(3),
+    ]);
+    if (errorNombre || errorUsuario) throw new Error("No se pudo verificar el usuario. Inténtalo de nuevo.");
+    const perfiles = [...(porNombre ?? []), ...(porUsuario ?? [])];
     const coincidencias = (perfiles ?? []).filter((perfil: any) =>
       perfil.activo !== false &&
       [perfil.nombre, perfil.usuario].some((valor: string | null) =>
