@@ -83,8 +83,24 @@ type Producto = {
   mostrarFichaTecnica: boolean;
 };
 
+type LineaCarrito = {
+  id: string;
+  cantidad: number;
+  slug?: string;
+  codigo?: string;
+  nombre?: string;
+  precio?: number | null;
+  moneda?: string;
+  imagen?: string | null;
+  talla?: string | null;
+  tipoEnvio?: string;
+  plazoEntrega?: string;
+  fechaEntregaDesde?: string;
+  fechaEntregaHasta?: string;
+};
+
 const RESERVED_SLUGS = new Set([
-  "auth", "c", "catalogo", "catalogo-publico", "inicio", "pedidos",
+  "auth", "c", "api", "catalogo", "catalogo-publico", "inicio", "pedidos", "pedidos-2",
   "cotizaciones", "gestion", "operario", "taller", "herramientas", "perfil",
   "joya", "aurum-render", "aurum-render-public", "transfer", "lovable",
 ]);
@@ -95,7 +111,7 @@ function CatalogoPublicoPage() {
   const slugReservado = RESERVED_SLUGS.has(slugNormalizado);
   const [categoria, setCategoria] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
-  const [carrito, setCarrito] = useState<any[]>([]);
+  const [carrito, setCarrito] = useState<LineaCarrito[]>([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
   useEffect(() => {
@@ -125,7 +141,7 @@ function CatalogoPublicoPage() {
   const agregarAlCarrito = (p: Producto) => { setCarrito((actual) => { const found = actual.find((x) => x.id === p.id && !x.talla); return found ? actual.map((x) => x.id === p.id && !x.talla ? { ...x, cantidad: x.cantidad + 1 } : x) : [...actual, { id: p.id, slug: p.slug, codigo: p.codigo, nombre: p.nombre, precio: p.mostrarPrecio ? p.precioDesde : null, moneda: p.moneda, imagen: p.imagen, cantidad: 1 }]; }); setCarritoAbierto(true); };
   const cantidadCarrito = carrito.reduce((n, x) => n + x.cantidad, 0);
   const totalCarrito = carrito.reduce((n, x) => n + (x.precio ?? 0) * x.cantidad, 0);
-  const carritoConPrecio = carrito.length > 0 && carrito.every((x) => x.precio !== null);
+  const carritoConPrecio = carrito.length > 0 && carrito.every((x) => x.precio != null);
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
