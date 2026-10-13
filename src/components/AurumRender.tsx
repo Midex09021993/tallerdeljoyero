@@ -611,7 +611,7 @@ export function AurumRender() {
             objeto, null, ext, colorRhinoHex, clasificarCapa
           );
         } else {
-          const glb = await convertAurumToGlb(objeto);
+          const glb = await convertAurumToGlb(objeto, colorRhinoHex, clasificarCapa);
           interno = await normalizeAurumModel(
             objeto, glb, ext, colorRhinoHex, clasificarCapa
           );
