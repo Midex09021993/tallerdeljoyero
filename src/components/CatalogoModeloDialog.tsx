@@ -184,7 +184,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         nombre: String(c.nombre ?? "").trim() || v.nombre,
         descripcion: String(c.descripcion ?? "").trim() || v.descripcion,
         metal_principal: traducirMetalEspanol(String(c.metal_principal ?? "").trim()) || v.metal_principal,
-        peso_gramos: typeof c.peso_gramos === "number" ? String(c.peso_gramos) : v.peso_gramos,
+        peso_gramos: typeof c.peso_gramos === "number" && Number.isFinite(c.peso_gramos) ? String(c.peso_gramos) : "",
         piedras: String(c.piedras ?? "").trim() || v.piedras,
         medidas: String(c.medidas ?? "").trim() || v.medidas,
         talla: String(c.talla ?? "").trim() || v.talla,
