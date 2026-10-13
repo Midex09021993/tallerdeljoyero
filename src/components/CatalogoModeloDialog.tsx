@@ -61,6 +61,16 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   const [progresoSubida, setProgresoSubida] = useState(0);
   const [carpetaSubida, setCarpetaSubida] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [costosPrecio, setCostosPrecio] = useState({ metal: "", piedras: "", manoObra: "", otros: "", margen: "30", impuesto: "0" });
+
+  const numeroCosto = (valor: string) => valor.trim() === "" ? 0 : Number(valor);
+  const costoBase = numeroCosto(costosPrecio.metal) + numeroCosto(costosPrecio.piedras) + numeroCosto(costosPrecio.manoObra) + numeroCosto(costosPrecio.otros);
+  const margenPrecio = numeroCosto(costosPrecio.margen);
+  const impuestoPrecio = numeroCosto(costosPrecio.impuesto);
+  const precioCalculado = costoBase > 0 && margenPrecio >= 0 && margenPrecio < 100 && impuestoPrecio >= 0
+    ? (costoBase / (1 - margenPrecio / 100)) * (1 + impuestoPrecio / 100)
+    : null;
+  const formatoMoneda = (valor: number) => new Intl.NumberFormat("es-PE", { style: "currency", currency: form.moneda.trim().toUpperCase().length === 3 ? form.moneda.trim().toUpperCase() : "PEN" }).format(valor);
 
   useEffect(() => {
     if (!open) return;
@@ -230,6 +240,26 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Comercial</p></div>
             <label className="grid gap-1.5 text-xs font-semibold">Precio desde<input type="number" min="0" step="0.01" value={form.precio_desde} onChange={(e) => setForm(v => ({ ...v, precio_desde: e.target.value }))} className={input} placeholder="Dejar vacío = Consultar" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Moneda<input maxLength={3} value={form.moneda} onChange={(e) => setForm(v => ({ ...v, moneda: e.target.value.toUpperCase() }))} className={input} /></label>
+            <div className="grid gap-3 rounded-2xl border border-gold/25 bg-gold/5 p-4 sm:col-span-2">
+              <div>
+                <p className="text-sm font-semibold">Calculadora de precio para joyeros</p>
+                <p className="mt-1 text-xs font-normal text-muted-foreground">Introduce tus costes y el margen deseado. Los importes son solo para este cálculo y no se guardan en la ficha.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1.5 text-xs font-medium">Coste del metal<input type="number" min="0" step="0.01" value={costosPrecio.metal} onChange={e => setCostosPrecio(v => ({ ...v, metal: e.target.value }))} className={input} placeholder="0.00" /></label>
+                <label className="grid gap-1.5 text-xs font-medium">Coste de piedras<input type="number" min="0" step="0.01" value={costosPrecio.piedras} onChange={e => setCostosPrecio(v => ({ ...v, piedras: e.target.value }))} className={input} placeholder="0.00" /></label>
+                <label className="grid gap-1.5 text-xs font-medium">Mano de obra<input type="number" min="0" step="0.01" value={costosPrecio.manoObra} onChange={e => setCostosPrecio(v => ({ ...v, manoObra: e.target.value }))} className={input} placeholder="0.00" /></label>
+                <label className="grid gap-1.5 text-xs font-medium">Otros costes<input type="number" min="0" step="0.01" value={costosPrecio.otros} onChange={e => setCostosPrecio(v => ({ ...v, otros: e.target.value }))} className={input} placeholder="0.00" /></label>
+                <label className="grid gap-1.5 text-xs font-medium">Margen de ganancia (%)<input type="number" min="0" max="99.99" step="0.5" value={costosPrecio.margen} onChange={e => setCostosPrecio(v => ({ ...v, margen: e.target.value }))} className={input} /></label>
+                <label className="grid gap-1.5 text-xs font-medium">Impuesto adicional (%)<input type="number" min="0" max="100" step="0.5" value={costosPrecio.impuesto} onChange={e => setCostosPrecio(v => ({ ...v, impuesto: e.target.value }))} className={input} /></label>
+              </div>
+              <div className="rounded-xl border border-border bg-background p-3">
+                <div className="flex items-center justify-between gap-3 text-xs"><span className="text-muted-foreground">Coste total</span><span className="font-semibold tabular-nums">{formatoMoneda(costoBase)}</span></div>
+                <div className="mt-2 flex items-center justify-between gap-3"><span className="text-sm font-semibold">Precio sugerido</span><span className="text-lg font-bold tabular-nums">{precioCalculado !== null && Number.isFinite(precioCalculado) ? formatoMoneda(precioCalculado) : "Completa los costes"}</span></div>
+                <p className="mt-1 text-[11px] text-muted-foreground">Precio = coste total ÷ (1 − margen) + impuesto aplicado al resultado.</p>
+                <button type="button" disabled={precioCalculado === null || !Number.isFinite(precioCalculado) || costoBase <= 0} onClick={() => setForm(v => ({ ...v, precio_desde: precioCalculado!.toFixed(2) }))} className="mt-3 w-full rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50">Usar precio calculado</button>
+              </div>
+            </div>
             <label className="flex items-center gap-3 rounded-xl border border-border p-3 text-xs sm:col-span-2"><input type="checkbox" checked={form.mostrar_precio} onChange={e => setForm(v => ({ ...v, mostrar_precio: e.target.checked }))} /> Mostrar precio en el catálogo público</label>
           </section>
 
