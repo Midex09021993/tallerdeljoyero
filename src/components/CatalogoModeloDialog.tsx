@@ -74,7 +74,7 @@ function traducirPiedrasEspanol(value: string | null | undefined) {
     [/\brubies\b/gi, "rubíes"],
     [/\bruby\b/gi, "rubí"],
     [/\bsapphires?\b/gi, "zafiro"],
-    [/\ emeralds?\b/gi, "esmeralda"],
+    [/\bemeralds?\b/gi, "esmeralda"],
     [/\bamethysts?\b/gi, "amatista"],
     [/\bgarnets?\b/gi, "granate"],
     [/\btopazes?\b/gi, "topacio"],
