@@ -1272,6 +1272,7 @@ function MiNubePage() {
                       </button>
                       {modoEdicion === proyecto.nombre && (
                         <div className="space-y-2 rounded-xl border border-gold/25 bg-gold/5 p-3">
+                          <p className="text-[11px] text-muted-foreground">Puedes eliminar un archivo concreto desde su botón «Eliminar archivo». Tras confirmar, se borra ese archivo; los demás de la carpeta se conservan.</p>
                           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-gold/40 px-3 py-2.5 text-xs font-semibold hover:bg-gold/10">
                             <UploadCloud className="size-4" /> Añadir archivos a esta carpeta
                             <input type="file" multiple className="sr-only" disabled={subiendo} onChange={(event) => {
