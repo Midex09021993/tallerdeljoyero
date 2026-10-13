@@ -385,7 +385,7 @@ function MiNubePage() {
     if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
     const imagen = archivo ?? proyecto?.archivos.find((item) => item.categoria === "fotos") ?? null;
     if (!imagen && !proyecto && !pdf) { toast.error("Selecciona una imagen, un PDF o un proyecto."); return; }
-    if (imagen && imagen.origen !== "supabase") { toast.error("La portada debe ser una imagen guardada en Mi Nube."); return; }
+    if (imagen && imagen.origen === "nas") { toast.error("Esta imagen está en Nextcloud y debe descargarse a Mi Nube antes de usarla como portada."); return; }
     setAnadiendoCatalogo(proyecto?.nombre ?? imagen?.ruta ?? "proyecto");
     try {
       let imagenPrincipalUrl = "";
@@ -402,7 +402,23 @@ function MiNubePage() {
         if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
         imagenPrincipalUrl = publicData.publicUrl;
       }
-      const nombreProyecto = proyecto?.nombre ?? nombreVisible((imagen ?? pdf)!.nombre).replace(/\.[^.]+$/, "");
+      let pdfParaCatalogo = pdf ?? null;
+      if (pdfParaCatalogo && pdfParaCatalogo.origen !== "nas") {
+        const prefijoPrivado = `${participanteId}/${usuarioId}/`;
+        if (!pdfParaCatalogo.ruta.startsWith(prefijoPrivado)) {
+          const { data: signedPdf, error: signedPdfError } = await supabase.storage.from(BUCKET).createSignedUrl(pdfParaCatalogo.ruta, 600);
+          if (signedPdfError || !signedPdf?.signedUrl) throw signedPdfError ?? new Error("No se pudo leer el PDF compartido.");
+          const respuestaPdf = await fetch(signedPdf.signedUrl);
+          if (!respuestaPdf.ok) throw new Error("No se pudo descargar el PDF compartido.");
+          const blobPdf = await respuestaPdf.blob();
+          if (blobPdf.size > 10 * 1024 * 1024) throw new Error("El PDF supera el límite de 10 MB para análisis con IA.");
+          const rutaPdfPropia = `${participanteId}/${usuarioId}/compartidos/${crypto.randomUUID()}-${nombreSeguro(nombreVisible(pdfParaCatalogo.nombre))}`;
+          const { error: copiaPdfError } = await supabase.storage.from(BUCKET).upload(rutaPdfPropia, blobPdf, { contentType: "application/pdf", upsert: false });
+          if (copiaPdfError) throw copiaPdfError;
+          pdfParaCatalogo = { ...pdfParaCatalogo, ruta: rutaPdfPropia, origen: "supabase" };
+        }
+      }
+      const nombreProyecto = proyecto?.nombre ?? nombreVisible((imagen ?? pdfParaCatalogo)!.nombre).replace(/\.[^.]+$/, "");
       const proyectoNube = proyecto ? {
         carpeta: proyecto.nombre,
         archivos: proyecto.archivos.map((item) => ({
@@ -412,7 +428,7 @@ function MiNubePage() {
       } : null;
       sessionStorage.setItem("mi-nube-catalogo-pendiente", JSON.stringify({
         nombre: nombreProyecto, imagen_principal_url: imagenPrincipalUrl, proyecto_nube: proyectoNube,
-        pdf_nube: pdf ? { nombre: nombreVisible(pdf.nombre), ruta: pdf.ruta } : null,
+        pdf_nube: pdfParaCatalogo ? { nombre: nombreVisible(pdfParaCatalogo.nombre), ruta: pdfParaCatalogo.ruta } : null,
       }));
       toast.success(pdf ? "PDF privado preparado para analizar con IA. Revisa la ficha antes de guardar." : proyecto ? "Proyecto preparado. Revisa la ficha y sus archivos antes de guardar." : "Imagen preparada. Completa la ficha para añadirla al catálogo.");
       window.location.assign("/catalogo?desde=mi-nube");
@@ -463,7 +479,7 @@ function MiNubePage() {
           .map((e): ArchivoNube => ({
             nombre: e.name, ruta: `${ruta}/${e.name}`, carpeta: share.carpeta,
             bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
-            categoria: clasificarArchivo(nombreVisible(e.name)),
+            categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
           }));
         const conVistas = await Promise.all(base.map(async (archivo) => {
           if (archivo.categoria !== "fotos") return archivo;
