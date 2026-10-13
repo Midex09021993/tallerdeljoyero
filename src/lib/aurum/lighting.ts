@@ -159,6 +159,8 @@ export function createAurumLightingController(
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
+        if (lights.softbox) lights.softbox.visible = true;
+        if (lights.front) lights.front.visible = true;
       }
     },
     update(patch) {
