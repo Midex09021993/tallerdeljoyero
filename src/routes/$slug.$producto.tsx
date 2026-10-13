@@ -21,6 +21,23 @@ export const Route = createFileRoute("/$slug/$producto")({
   component: CatalogoProductoPublicoPage,
 });
 
+const TALLAS_AMERICANAS = ["5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0", "9.5", "10.0"] as const;
+
+function sumarDiasHabiles(fechaBase: Date, dias: number) {
+  const fecha = new Date(fechaBase);
+  let sumados = 0;
+  while (sumados < dias) {
+    fecha.setDate(fecha.getDate() + 1);
+    const dia = fecha.getDay();
+    if (dia !== 0 && dia !== 6) sumados++;
+  }
+  return fecha;
+}
+
+function formatoFechaEntrega(fecha: Date) {
+  return new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(fecha);
+}
+
 type CatalogoRow = {
   slug: string;
   nombre_publico: string;
@@ -84,6 +101,7 @@ export function CatalogoProductoPublicoPage() {
   const [formSolicitud, setFormSolicitud] = useState({ nombre: "", telefono: "", email: "", cantidad: 1, mensaje: "" });
   const [compraAbierta, setCompraAbierta] = useState(false);
   const [tallaSeleccionada, setTallaSeleccionada] = useState("");
+  const [tipoEnvio, setTipoEnvio] = useState<"rapido" | "fabricacion">("rapido");
   const [anadidoAlCarrito, setAnadidoAlCarrito] = useState(false);
   const [errorCarrito, setErrorCarrito] = useState("");
 
@@ -105,6 +123,10 @@ export function CatalogoProductoPublicoPage() {
         moneda: item.moneda ?? "PEN",
         imagen: item.imagen_principal_url,
         talla: tallaFinal || null,
+        tipoEnvio,
+        plazoEntrega: tipoEnvio === "rapido" ? "3–5 días hábiles" : "15–20 días hábiles",
+        fechaEntregaDesde: formatoFechaEntrega(sumarDiasHabiles(new Date(), tipoEnvio === "rapido" ? 3 : 15)),
+        fechaEntregaHasta: formatoFechaEntrega(sumarDiasHabiles(new Date(), tipoEnvio === "rapido" ? 5 : 20)),
         cantidad: 1,
       };
       const actualizado = existente
@@ -222,8 +244,9 @@ export function CatalogoProductoPublicoPage() {
               <>
                 <div className="px-5 pt-5"><div className="flex h-48 items-center justify-center overflow-hidden rounded-sm bg-[#f7f7f7]">{item.imagen_principal_url ? <img src={item.imagen_principal_url} alt={item.nombre} className="h-full w-full object-contain" /> : <Box className="size-10 text-[#8a6b36]" />}</div>{imagenes.length > 1 ? <div className="mt-3 flex justify-center gap-2">{imagenes.slice(0, 6).map((url, i) => <span key={url + i} className={"size-1.5 rounded-full " + (i === 0 ? "bg-[#242321]" : "bg-[#c9c6c2]")} />)}</div> : null}<h3 className="mt-5 font-display text-xl leading-snug">{item.nombre}</h3><p className="mt-2 text-lg font-semibold">{precio}</p><div className="my-5 border-t border-[#dedbd7]" /></div>
                 <div className="px-5 pb-5">
-                  {item.talla ? <div><label htmlFor="talla-joya" className="mb-2 block text-sm text-[#625b54]">Talla</label><input id="talla-joya" value={tallaSeleccionada || item.talla} onChange={(e) => setTallaSeleccionada(e.target.value)} placeholder={item.talla} className="h-11 w-full border border-[#d6d3cf] bg-white px-4 text-sm outline-none focus:border-[#8a6b36]" /><p className="mt-2 text-xs text-[#746b62]">Puedes ajustar la talla antes de añadir la pieza.</p></div> : <div className="rounded-sm border border-[#e2dfdb] p-3"><label htmlFor="talla-joya" className="text-sm font-medium">Talla o medida (opcional)</label><input id="talla-joya" value={tallaSeleccionada} onChange={(e) => setTallaSeleccionada(e.target.value)} placeholder="Indica tu talla" className="mt-2 h-10 w-full border border-[#d6d3cf] px-3 text-sm outline-none focus:border-[#8a6b36]" /></div>}
-                  <div className="mt-5 space-y-4 border-y border-[#dedbd7] py-4 text-sm"><div className="flex items-start gap-3"><Truck className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><p>Coordina la fecha y el costo de entrega directamente con el taller.</p></div><div className="flex items-start gap-3"><Ruler className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><p>Confirma la talla, los materiales y la disponibilidad antes de finalizar tu pedido.</p></div></div>
+                  <div><label htmlFor="talla-joya" className="mb-2 block text-sm text-[#625b54]">Talla americana (US)</label><select id="talla-joya" value={tallaSeleccionada || (item.talla && TALLAS_AMERICANAS.includes(item.talla as typeof TALLAS_AMERICANAS[number]) ? item.talla : "")} onChange={(e) => setTallaSeleccionada(e.target.value)} className="h-11 w-full border border-[#d6d3cf] bg-white px-4 text-sm outline-none focus:border-[#8a6b36]"><option value="">Selecciona una talla</option>{TALLAS_AMERICANAS.map((talla) => <option key={talla} value={talla}>{talla}</option>)}</select><p className="mt-2 text-xs text-[#746b62]">Tallas disponibles de referencia: US 5 a US 10, en medios números.</p></div>
+                  <div className="mt-5"><p className="mb-3 text-sm font-medium">Tipo de preparación y entrega</p><div className="space-y-2"><button type="button" onClick={() => setTipoEnvio("rapido")} className={"w-full border p-3 text-left " + (tipoEnvio === "rapido" ? "border-[#8a6b36] bg-[#f7f4ef]" : "border-[#e2dfdb]")}><span className="flex items-center justify-between text-sm font-semibold">Envío rápido <span className="text-xs text-[#746b62]">3–5 días hábiles</span></span><span className="mt-1 block text-xs text-[#746b62]">Sujeto a stock y confirmación del taller</span></button><button type="button" onClick={() => setTipoEnvio("fabricacion")} className={"w-full border p-3 text-left " + (tipoEnvio === "fabricacion" ? "border-[#8a6b36] bg-[#f7f4ef]" : "border-[#e2dfdb]")}><span className="flex items-center justify-between text-sm font-semibold">Hecho a pedido <span className="text-xs text-[#746b62]">15–20 días hábiles</span></span><span className="mt-1 block text-xs text-[#746b62]">Incluye tiempo estimado de fabricación</span></button></div></div>
+                  <div className="mt-4 space-y-4 border-y border-[#dedbd7] py-4 text-sm"><div className="flex items-start gap-3"><Truck className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><div><p className="font-medium">Llegada estimada</p><p className="mt-1 text-[#746b62]">{formatoFechaEntrega(sumarDiasHabiles(new Date(), tipoEnvio === "rapido" ? 3 : 15))} – {formatoFechaEntrega(sumarDiasHabiles(new Date(), tipoEnvio === "rapido" ? 5 : 20))}</p><p className="mt-1 text-xs text-[#746b62]">Estimación orientativa; el taller confirmará fecha y costo según destino y disponibilidad.</p></div></div><div className="flex items-start gap-3"><Ruler className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><p>La talla seleccionada y el tipo de entrega se guardarán en tu carrito.</p></div></div>
                   {errorCarrito ? <p className="mt-3 text-xs text-red-600">{errorCarrito}</p> : null}<button type="button" onClick={agregarProductoAlCarrito} className="mt-5 w-full bg-[#242321] px-5 py-4 text-xs font-bold uppercase tracking-[.12em] text-white transition hover:bg-[#8a6b36]">Añadir al carrito</button><p className="mt-3 text-center text-xs leading-5 text-[#746b62]">El carrito no realiza cobros. El taller confirmará precio final, disponibilidad y entrega.</p>
                 </div>
               </>
