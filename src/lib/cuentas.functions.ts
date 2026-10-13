@@ -1,6 +1,41 @@
 // @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+
+/** Resuelve el correo de Auth a partir del nombre de usuario visible en el login. */
+export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
+  .inputValidator((input: { usuario: string }) => input)
+  .handler(async ({ data }) => {
+    const usuario = data.usuario?.trim();
+    if (!usuario || usuario.length > 120) throw new Error("Ingresa tu usuario.");
+
+    // Compatibilidad para cuentas antiguas que todavía ingresan con correo.
+    if (usuario.includes("@")) return { email: usuario.toLowerCase() };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: perfiles, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, nombre, usuario, activo")
+      .or("nombre.ilike." + usuario.replace(/[,%()]/g, "") + ",usuario.ilike." + usuario.replace(/[,%()]/g, ""))
+      .limit(3);
+
+    if (error) throw new Error("No se pudo verificar el usuario. Inténtalo de nuevo.");
+    const coincidencias = (perfiles ?? []).filter((perfil: any) =>
+      perfil.activo !== false &&
+      [perfil.nombre, perfil.usuario].some((valor: string | null) =>
+        typeof valor === "string" && valor.trim().toLocaleLowerCase() === usuario.toLocaleLowerCase()
+      )
+    );
+    if (coincidencias.length !== 1) {
+      throw new Error("Usuario o contraseña incorrectos");
+    }
+
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(coincidencias[0].id);
+    if (authError || !authUser.user?.email) throw new Error("Usuario o contraseña incorrectos");
+    return { email: authUser.user.email };
+  });
+
 const AREAS_VALIDAS = [
   "Pedidos",
   "Diseño 3D",
