@@ -19,6 +19,7 @@ import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
+import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
@@ -113,6 +114,11 @@ const TiendaRoute = TiendaRouteImport.update({
   id: '/tienda',
   path: '/tienda',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SlugIndexRoute = SlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SlugRoute,
 } as any)
 const SlugProductoRoute = SlugProductoRouteImport.update({
   id: '/$producto',
@@ -394,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/$slug/': typeof SlugIndexRoute
   '/transfer/': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -413,7 +420,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
@@ -448,6 +454,7 @@ export interface FileRoutesByTo {
   '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/$slug': typeof SlugIndexRoute
   '/transfer': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
   '/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -506,6 +513,7 @@ export interface FileRoutesById {
   '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/$slug/': typeof SlugIndexRoute
   '/transfer/': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
   '/_authenticated/contratos/$id': typeof AuthenticatedContratosIdRoute
@@ -564,6 +572,7 @@ export interface FileRouteTypes {
     | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/$slug/'
     | '/transfer/'
     | '/$slug/coleccion/$coleccion'
     | '/contratos/$id'
@@ -583,7 +592,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/$slug'
     | '/aurum-render-public'
     | '/auth'
     | '/catalogo-publico'
@@ -618,6 +626,7 @@ export interface FileRouteTypes {
     | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/$slug'
     | '/transfer'
     | '/$slug/coleccion/$coleccion'
     | '/contratos/$id'
@@ -675,6 +684,7 @@ export interface FileRouteTypes {
     | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/$slug/'
     | '/transfer/'
     | '/$slug/coleccion/$coleccion'
     | '/_authenticated/contratos/$id'
@@ -785,6 +795,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tienda'
       preLoaderRoute: typeof TiendaRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/$slug/': {
+      id: '/$slug/'
+      path: '/'
+      fullPath: '/$slug/'
+      preLoaderRoute: typeof SlugIndexRouteImport
+      parentRoute: typeof SlugRoute
     }
     '/$slug/$producto': {
       id: '/$slug/$producto'
@@ -1213,11 +1230,13 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface SlugRouteChildren {
   SlugProductoRoute: typeof SlugProductoRoute
+  SlugIndexRoute: typeof SlugIndexRoute
   SlugColeccionColeccionRoute: typeof SlugColeccionColeccionRoute
 }
 
 const SlugRouteChildren: SlugRouteChildren = {
   SlugProductoRoute: SlugProductoRoute,
+  SlugIndexRoute: SlugIndexRoute,
   SlugColeccionColeccionRoute: SlugColeccionColeccionRoute,
 }
 
