@@ -38,7 +38,8 @@ const colorRhinoHex = (c:any): string | undefined => {
   if (!c) return undefined;
   const r = Number(c.r ?? c.R), g = Number(c.g ?? c.G), b = Number(c.b ?? c.B);
   if (![r,g,b].every(Number.isFinite)) return undefined;
-  return "#" + [r,g,b].map(n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,"0")).join("");
+  const channels = Math.max(r,g,b) <= 1 ? [r*255,g*255,b*255] : [r,g,b];
+  return "#" + channels.map(n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,"0")).join("");
 };
 const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
   const n = normalizarTexto(nombre);
