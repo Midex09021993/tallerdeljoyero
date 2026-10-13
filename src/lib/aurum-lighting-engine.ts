@@ -22,8 +22,8 @@ export const AURUM_LIGHTING_RENDER_PRESETS={
   // Product shot: broad diffusion is dominant; direct sources are restrained
   // so polished metal is described by long, soft reflections rather than hot spots.
   // A separate gem source remains available for controlled stone brilliance.
-  productSoft:{key:.36,fill:.22,rim:.14,gem:.58,softbox:1.00,strip:.62,front:.28,kicker:.22,edgeLeft:.24,edgeRight:.22},
-  studioSoft:{key:.55,fill:.13,rim:.21,gem:.46,softbox:.88,strip:.54,front:.46,kicker:.56,edgeLeft:.50,edgeRight:.48},
+  productSoft:{key:.42,fill:.30,rim:.18,gem:.62,softbox:1.08,strip:.68,front:.46,kicker:.24,edgeLeft:.30,edgeRight:.28},
+  studioSoft:{key:.58,fill:.20,rim:.23,gem:.50,softbox:.94,strip:.58,front:.52,kicker:.54,edgeLeft:.50,edgeRight:.48},
   studioHard:{key:.46,fill:.05,rim:.28,gem:.12,softbox:.54,strip:.30,front:.14,kicker:.82,edgeLeft:.28,edgeRight:.34},
   jewelry:{key:.58,fill:.14,rim:.25,gem:.52,softbox:.90,strip:.58,front:.38,kicker:.62,edgeLeft:.46,edgeRight:.44},
   ijewelReference:{key:.42,fill:.10,rim:.18,gem:.62,softbox:.92,strip:.72,front:.30,kicker:.52,edgeLeft:.34,edgeRight:.34},
