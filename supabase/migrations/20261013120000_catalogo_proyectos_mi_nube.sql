@@ -7,7 +7,7 @@ create table if not exists public.catalogo_proyectos_nube (
   usuario_id uuid not null,
   carpeta text not null check (length(trim(carpeta)) between 1 and 120),
   archivos jsonb not null default '[]'::jsonb
-    check (jsonb_typeof(archivos) = 'array' and jsonb_array_length(archivos) <= 200),
+    check (case when jsonb_typeof(archivos) = 'array' then jsonb_array_length(archivos) <= 200 else false end),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
