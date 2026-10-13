@@ -234,7 +234,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
       password: data.password,
       email_confirm: true,
       user_metadata: {
-        usuario: email,
+        usuario: nombre,
         nombre,
         apellidos: "",
         telefono,
@@ -303,7 +303,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
 
     const { error: perfilError } = await supabaseAdmin.from("profiles").upsert({
       id: userId,
-      usuario: email,
+      usuario: nombre,
       nombre,
       apellidos: "",
       dni: "",
