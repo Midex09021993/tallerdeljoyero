@@ -193,7 +193,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         disponibilidad: String(c.disponibilidad ?? "").trim() || v.disponibilidad,
       }));
       setArchivoPdfNombre(file?.name ?? initialPdf?.nombre ?? "PDF de Mi Nube");
-      setAvisosExtraccion(Array.isArray(data.advertencias) ? data.advertencias.filter((x) => typeof x === "string") : []);
+      const avisos = Array.isArray(data.advertencias) ? data.advertencias.filter((x) => typeof x === "string") : [];
+      if (typeof c.peso_evidencia === "string" && c.peso_evidencia.trim()) avisos.unshift(`Referencia de peso leída del PDF: “${c.peso_evidencia.trim()}”. Comprueba que corresponda al peso total de la joya.`);
+      setAvisosExtraccion(avisos);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo analizar la ficha PDF.");
     } finally { setAnalizandoPdf(false); }
