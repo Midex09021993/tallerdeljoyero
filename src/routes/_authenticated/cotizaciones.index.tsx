@@ -46,6 +46,30 @@ type Cotizacion = {
 };
 
 type Sede = { id: string; nombre: string };
+type SolicitudCatalogo = {
+  id: string;
+  participante_id: string;
+  producto_id: string;
+  nombre_cliente: string;
+  telefono: string | null;
+  email: string | null;
+  cantidad: number;
+  mensaje: string | null;
+  estado: string;
+  cotizacion_id: string | null;
+  created_at: string;
+  producto?: {
+    nombre: string;
+    slug: string;
+    precio_desde: number | null;
+    moneda: string;
+    metal_principal: string | null;
+    piedras: string | null;
+    medidas: string | null;
+    talla: string | null;
+    descripcion: string | null;
+  } | null;
+};
 type IdentidadComercial = { id: string; sede_id: string | null; participante_id?: string | null; nombre_comercial: string; moneda_codigo: string; moneda_simbolo: string; impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean };
 
 
@@ -96,6 +120,11 @@ function CotizacionesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [buscandoClientes, setBuscandoClientes] = useState(false);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+  const [solicitudesCatalogo, setSolicitudesCatalogo] = useState<SolicitudCatalogo[]>([]);
+  const [solicitudEnConversion, setSolicitudEnConversion] = useState<SolicitudCatalogo | null>(null);
+  const [actualizandoSolicitudId, setActualizandoSolicitudId] = useState<string | null>(null);
+  const [errorSolicitud, setErrorSolicitud] = useState("");
+  const [cargandoSolicitudes, setCargandoSolicitudes] = useState(false);
   const [sedes, setSedes] = useState<Sede[]>([]);
   const [identidad, setIdentidad] = useState<IdentidadComercial | null>(null);
   const [busca, setBusca] = useState("");
@@ -115,7 +144,9 @@ function CotizacionesPage() {
   const [form, setForm] = useState({ cliente_id: "", descuento: 0, moneda: "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: 18 });
 
   const cargar = async () => {
-    const [{ data: q }, { data: s }, { data: identidadData }] = await Promise.all([
+    const participanteIdActual = sesion?.participante?.id;
+    setCargandoSolicitudes(Boolean(participanteIdActual));
+    const [{ data: q }, { data: s }, { data: identidadData }, solicitudesResult] = await Promise.all([
       supabase.from("cotizaciones").select("id,numero,version,estado,fecha_emision,fecha_vencimiento,moneda,subtotal,descuento,impuestos,total,cliente_id,sede_id,participante_id,cliente:clientes!cotizaciones_cliente_id_fkey(nombre)").order("created_at", { ascending: false }),
       supabase.from("sedes").select("id,nombre").eq("activa", true).order("nombre"),
       (async () => {
@@ -142,9 +173,24 @@ function CotizacionesPage() {
               .order("updated_at", { ascending: false }).limit(1).maybeSingle()
           : { data: null };
       })(),
+      participanteIdActual
+        ? supabase.from("catalogo_solicitudes_cotizacion")
+            .select("id,participante_id,producto_id,nombre_cliente,telefono,email,cantidad,mensaje,estado,cotizacion_id,created_at,producto:catalogo_productos!catalogo_solicitudes_cotizacion_producto_id_fkey(nombre,slug,precio_desde,moneda,metal_principal,piedras,medidas,talla,descripcion)")
+            .eq("participante_id", participanteIdActual)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [], error: null }),
     ]);
     if (q) setCotizaciones(q);
     if (s) setSedes(s);
+    setCargandoSolicitudes(false);
+    if (solicitudesResult.error) {
+      setErrorSolicitud("No se pudieron cargar las solicitudes del catálogo. Verifica que la migración de solicitudes esté aplicada y que tu usuario tenga acceso al taller.");
+      setSolicitudesCatalogo([]);
+    } else {
+      setErrorSolicitud("");
+      setSolicitudesCatalogo((solicitudesResult.data ?? []) as unknown as SolicitudCatalogo[]);
+    }
     const identidadActiva = (identidadData ?? null) as IdentidadComercial | null;
     setIdentidad(identidadActiva);
     setImpuestoActivo(identidadActiva ? Boolean(identidadActiva.impuesto_activo) : true);
@@ -279,6 +325,55 @@ function CotizacionesPage() {
   const totalAprobadas = cotizacionesVigentes.filter((q) => q.estado === "aprobada").reduce((s, q) => s + Number(q.total), 0);
   const irALista = () => document.getElementById("lista-cotizaciones")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  function prepararCotizacionDesdeSolicitud(solicitud: SolicitudCatalogo) {
+    if (solicitud.cotizacion_id) {
+      setErrorSolicitud("Esta solicitud ya tiene una cotización vinculada.");
+      return;
+    }
+    setErrorSolicitud("");
+    setSolicitudEnConversion(solicitud);
+    setBusquedaCliente(solicitud.nombre_cliente);
+    setClienteSeleccionado(null);
+    setClienteDropdownAbierto(false);
+    setNuevoCliente({ telefono: solicitud.telefono ?? "", email: solicitud.email ?? "" });
+    setForm(actual => ({
+      ...actual,
+      cliente_id: "",
+      moneda: solicitud.producto?.moneda || identidad?.moneda_codigo || "PEN",
+      notas_cliente: solicitud.mensaje ?? "",
+      notas_internas: `Solicitud del catálogo recibida el ${new Date(solicitud.created_at).toLocaleDateString("es-PE")} · Referencia ${solicitud.id}`,
+    }));
+    const producto = solicitud.producto;
+    const descripcion = [
+      producto?.nombre ?? "Producto solicitado desde el catálogo",
+      producto?.metal_principal ? `Metal: ${producto.metal_principal}` : "",
+      producto?.piedras ? `Piedras: ${producto.piedras}` : "",
+      producto?.medidas ? `Medidas: ${producto.medidas}` : "",
+      producto?.talla ? `Talla: ${producto.talla}` : "",
+      producto?.descripcion ?? "",
+      solicitud.mensaje ? `Personalización solicitada: ${solicitud.mensaje}` : "",
+    ].filter(Boolean).join(" · ");
+    setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion, cantidad: Math.max(1, Number(solicitud.cantidad) || 1), costo: 0, precio: Math.max(0, Number(producto?.precio_desde) || 0) }]);
+    setAbierto(true);
+  }
+
+  async function marcarSolicitudContactada(solicitud: SolicitudCatalogo) {
+    if (!sesion?.participante?.id || actualizandoSolicitudId) return;
+    setActualizandoSolicitudId(solicitud.id);
+    setErrorSolicitud("");
+    const { error } = await supabase.from("catalogo_solicitudes_cotizacion")
+      .update({ estado: "contactada", updated_at: new Date().toISOString() })
+      .eq("id", solicitud.id)
+      .eq("participante_id", sesion.participante.id)
+      .is("cotizacion_id", null);
+    if (error) {
+      setErrorSolicitud("No se pudo actualizar el estado de la solicitud. Comprueba los permisos de Supabase.");
+    } else {
+      setSolicitudesCatalogo(items => items.map(item => item.id === solicitud.id ? { ...item, estado: "contactada" } : item));
+    }
+    setActualizandoSolicitudId(null);
+  }
+
   async function eliminarCotizacion(cotizacion: Cotizacion) {
     if (!sesion?.esDueno || eliminandoId) return;
 
@@ -365,6 +460,27 @@ function CotizacionesPage() {
       const { error: detallesError } = await supabase.rpc("guardar_detalles_cotizacion", { _cotizacion_id: cotizacionCreadaId, _detalles: conceptos.map((item, index) => ({ orden: index + 1, tipo: item.tipo, descripcion: item.descripcion.trim(), cantidad: item.cantidad, unidad: "und", costo_unitario: item.costo, precio_unitario: item.precio })) });
       if (detallesError) throw detallesError;
 
+      let errorVinculoSolicitud = "";
+      if (solicitudEnConversion) {
+        const { error: vinculoError } = await supabase.from("catalogo_solicitudes_cotizacion")
+          .update({
+            cliente_id: form.cliente_id || null,
+            cotizacion_id: cotizacionCreadaId,
+            estado: "cotizada",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", solicitudEnConversion.id)
+          .eq("participante_id", solicitudEnConversion.participante_id)
+          .is("cotizacion_id", null);
+        if (vinculoError) {
+          errorVinculoSolicitud = "La cotización se creó, pero no se pudo vincular a la solicitud original. No vuelvas a crearla; revisa la solicitud y los permisos de Supabase.";
+          setErrorSolicitud(errorVinculoSolicitud);
+        } else {
+          setSolicitudesCatalogo(items => items.map(item => item.id === solicitudEnConversion.id ? { ...item, cotizacion_id: String(cotizacionCreadaId), cliente_id: form.cliente_id || null, estado: "cotizada" } : item));
+          setErrorSolicitud("");
+        }
+      }
+
       setAbierto(false);
       setBusquedaCliente("");
       setClienteSeleccionado(null);
@@ -374,8 +490,14 @@ function CotizacionesPage() {
       setForm({ cliente_id: "", descuento: 0, moneda: identidad?.moneda_codigo ?? "PEN", fecha_vencimiento: fechaVencimientoPorDefecto(), notas_cliente: "", notas_internas: "", tasaImpuesto: Number(identidad?.impuesto_tasa ?? 18) });
       setConceptos([{ id: crypto.randomUUID(), tipo: "modelo", descripcion: "", cantidad: 1, costo: 0, precio: 0 }]);
       setBusquedaCliente("");
+      const huboSolicitud = Boolean(solicitudEnConversion);
+      setSolicitudEnConversion(null);
       await cargar();
-      await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
+      if (errorVinculoSolicitud) {
+        setErrorSolicitud(errorVinculoSolicitud);
+      } else {
+        await navigate({ to: "/cotizaciones/$id", params: { id: cotizacionCreadaId } });
+      }
     } catch (error) {
       const mensaje =
         error && typeof error === "object" && "message" in error
@@ -411,6 +533,52 @@ function CotizacionesPage() {
       }
     >
       <div className="space-y-6">
+        <section id="solicitudes-catalogo" className="overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.22)]">
+          <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">Entrada comercial</p>
+              <h2 className="mt-1 text-lg font-semibold">Solicitudes del catálogo</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Consultas recibidas desde las fichas públicas de tus joyas.</p>
+            </div>
+            <div className="rounded-xl border border-gold/15 bg-gold/[0.04] px-3 py-2 text-xs text-muted-foreground">
+              {solicitudesCatalogo.filter(item => !item.cotizacion_id && ["pendiente", "contactada"].includes(item.estado)).length} pendientes de cotización
+            </div>
+          </div>
+          {errorSolicitud ? <p role="alert" className="mx-5 mt-4 rounded-xl border border-danger/20 bg-danger-soft px-3 py-2 text-xs text-danger">{errorSolicitud}</p> : null}
+          {cargandoSolicitudes ? <p className="p-5 text-sm text-muted-foreground">Cargando solicitudes…</p> : solicitudesCatalogo.length ? (
+            <div className="divide-y divide-border">
+              {solicitudesCatalogo.map(solicitud => (
+                <article key={solicitud.id} className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold">{solicitud.producto?.nombre ?? "Joya del catálogo"}</h3>
+                      <span className={"rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide " + (solicitud.cotizacion_id ? "border-gold/30 bg-gold/10 text-gold" : "border-border text-muted-foreground")}>
+                        {solicitud.cotizacion_id ? "Cotizada" : solicitud.estado === "contactada" ? "Contactada" : solicitud.estado === "descartada" ? "Descartada" : solicitud.estado === "cerrada" ? "Cerrada" : "Pendiente"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm">{solicitud.nombre_cliente} <span className="text-muted-foreground">· Cantidad: {solicitud.cantidad}</span></p>
+                    <p className="mt-1 text-xs text-muted-foreground">{[solicitud.telefono, solicitud.email].filter(Boolean).join(" · ") || "Sin teléfono ni correo"} · {new Date(solicitud.created_at).toLocaleString("es-PE")}</p>
+                    {solicitud.mensaje ? <p className="mt-2 whitespace-pre-wrap rounded-lg bg-surface-muted/50 px-3 py-2 text-xs text-muted-foreground">{solicitud.mensaje}</p> : null}
+                    {solicitud.producto ? <p className="mt-2 text-xs text-muted-foreground">{[solicitud.producto.metal_principal, solicitud.producto.piedras, solicitud.producto.medidas, solicitud.producto.talla].filter(Boolean).join(" · ")}</p> : null}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                    {!solicitud.cotizacion_id && !["cerrada", "descartada"].includes(solicitud.estado) ? <>
+                      {solicitud.estado === "pendiente" ? <button type="button" disabled={actualizandoSolicitudId !== null} onClick={() => void marcarSolicitudContactada(solicitud)} className="rounded-xl border border-border px-3 py-2 text-xs font-medium transition hover:border-gold/30 disabled:opacity-50">{actualizandoSolicitudId === solicitud.id ? "Actualizando…" : "Marcar contactada"}</button> : null}
+                      <button type="button" onClick={() => prepararCotizacionDesdeSolicitud(solicitud)} className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-gold/15">Crear cotización</button>
+                    </> : null}
+                    {solicitud.cotizacion_id ? <Link to="/cotizaciones/$id" params={{ id: solicitud.cotizacion_id }} className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-2 text-xs font-semibold">Ver cotización</Link> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="px-5 py-10 text-center">
+              <span className="mx-auto grid size-12 place-items-center rounded-2xl border border-gold/15 bg-gold/[0.04] text-gold"><FileText className="size-5" /></span>
+              <p className="mt-3 text-sm font-medium">Todavía no hay solicitudes del catálogo</p>
+              <p className="mt-1 text-xs text-muted-foreground">Cuando un cliente solicite una cotización desde una ficha pública, aparecerá aquí.</p>
+            </div>
+          )}
+        </section>
         <section id="lista-cotizaciones" className="scroll-mt-6 overflow-hidden rounded-2xl border border-gold/15 bg-card shadow-[0_18px_50px_-35px_rgba(0,0,0,.28)]">
           <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
