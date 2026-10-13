@@ -1360,6 +1360,7 @@ function MiNubePage() {
                     <div className="flex flex-wrap gap-1">
                       {tipos.map((tipo) => <span key={tipo} className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">{tipo}</span>)}
                     </div>
+                    <button type="button" disabled={anadiendoCatalogo === recibida.nombre} onClick={() => void anadirImagenAlCatalogo(recibida.archivos.find((item) => item.categoria === "fotos") ?? null, { nombre: recibida.nombre, archivos: recibida.archivos }, recibida.archivos.find((item) => item.categoria === "documentos" && item.nombre.toLowerCase().endsWith(".pdf")) ?? null)} className="w-full rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">{anadiendoCatalogo === recibida.nombre ? "Preparando ficha…" : "Crear ficha para mi catálogo"}</button>
                     <button type="button" onClick={() => setProyectoAbierto(proyectoAbierto === "compartida:" + recibida.id ? null : "compartida:" + recibida.id)} className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40">{proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}</button>
                     {proyectoAbierto === "compartida:" + recibida.id && (
                       <div className="space-y-2 border-t border-border pt-3">
