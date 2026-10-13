@@ -122,7 +122,7 @@ export function AurumRender() {
   }, []);
   const apiRef = useRef<any>(null);
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
-  const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("perspectiva");
+  const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -637,7 +637,7 @@ export function AurumRender() {
           configureMetal:configurarMaterial,
           createInclusions:()=>{},
           applyGemEnvironment:aplicarEntornoGema,
-          initialMetalId:"plata925_pulida",
+          initialMetalId:"plata950_pulida",
           initialGemId:"diamante_natural",
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
@@ -712,7 +712,7 @@ export function AurumRender() {
         });
         applyPostQuality?.(renderQuality);
         encuadrar();
-        setVista("perspectiva");
+        setVista("frontal");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
         // Si todavía está en red, su callback lo aplicará al terminar.
         if (entornoGema) aplicarEntornoGema();
@@ -722,18 +722,19 @@ export function AurumRender() {
         limpiarResaltado();
         escena.add(modelo);
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
-        // Presentación inicial: encuadrar siempre después de añadir el modelo.
+        // Presentación inicial: usar la geometría real para encuadrar y
+        // mostrar el anillo de frente, como referencia de catálogo de joyería.
+        // La cámara iJewel de distancia fija dejaba pequeños los modelos Rhino
+        // cuyos límites/unidades no coinciden con el modelo de referencia.
         encuadrar();
-        if (escenarioId === "ijewelReference") {
-          applyAurumIJEWELPresentationCamera(camara, controles, modelo);
-          // frameAurumProduct reasserts its generic frontal view on the next
-          // animation frame; reapply the calibrated iJewel composition after it.
-          requestAnimationFrame(() => {
-            if (modelo && escenarioId === "ijewelReference") {
-              applyAurumIJEWELPresentationCamera(camara, controles, modelo);
-            }
-          });
-        }
+        camaraVista("frontal");
+        setVista("frontal");
+        requestAnimationFrame(() => {
+          if (modelo) {
+            camaraVista("frontal");
+            invalidateRenderRef.current?.();
+          }
+        });
       };
       const camaraVista=(id:VistaId)=>{
         applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
