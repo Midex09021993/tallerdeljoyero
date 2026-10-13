@@ -170,9 +170,21 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     const normalInspection = diagnostic && !generated ? inspectMeshNormals(geometry) : null;
     if (generated) {
       meshesWithoutNormals++;
-      geometry.computeVertexNormals();
+      const family = getAurumMeshFamily(x);
+      if (family === "metal") {
+        // Rhino/mesh imports without authored normals can look faceted when plain
+        // per-triangle vertex normals are generated. Repair only these metal meshes
+        // with a crease-aware pass; keep gem facets and unknown parts untouched.
+        geometry = geometry.clone();
+        geometry = toCreasedNormals(geometry, 50 * Math.PI / 180);
+        x.geometry = geometry;
+        x.userData = { ...x.userData, aurumMetalNormalsGeneratedWithCreases: true };
+        creasedNormalsForTest++;
+      } else {
+        geometry.computeVertexNormals();
+        if (gem) x.userData = { ...x.userData, aurumNeedsFacetNormals: true };
+      }
       normalsBuilt++;
-      if (gem) x.userData = { ...x.userData, aurumNeedsFacetNormals: true };
     } else if ((experimentMode === "crease-metal" || experimentMode === "recompute-metal") && getAurumMeshFamily(x) === "metal") {
       // Controlled repair experiment: touch only meshes positively identified as
       // metal, never gemstones or unknown/ornamental geometry. Clone first so
