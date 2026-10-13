@@ -215,7 +215,8 @@ export async function convertAurumToGlb(
   // serializes the scene. The GLB must not depend on mesh traversal order.
   if (colorRhinoHex && clasificarCapa) {
     const parts = getAurumModelParts(object, colorRhinoHex, clasificarCapa);
-    const byId = new Map(parts.filter((part:any) => part.tipo === "malla").map((part:any) => [part.id, part]));
+    const byId = new Map<string, any>();
+    parts.filter((part:any) => part.tipo === "malla").forEach((part:any) => byId.set(part.id, part));
     object.traverse((x:any) => {
       if (!x.isMesh) return;
       const part:any = byId.get(x.uuid);
