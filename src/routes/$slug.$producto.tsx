@@ -209,7 +209,7 @@ export function CatalogoProductoPublicoPage() {
               {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, quisiera información sobre " + item.nombre + " (" + item.codigo + ").")} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">WhatsApp</a> : null}
               {item.aurum_render_url ? <a href={item.aurum_render_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">AURUM Render</a> : null}
               {item.video_url ? <a href={item.video_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ver video</a> : null}
-              {item.ficha_tecnica_url ? <a href={item.ficha_tecnica_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ficha técnica</a> : null}
+              {item.mostrar_ficha_tecnica && item.ficha_tecnica_url ? <a href={item.ficha_tecnica_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ficha técnica</a> : null}
             </div>
           </div>
           {solicitudAbierta ? (
