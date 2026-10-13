@@ -39,7 +39,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   }
   const bakedShadowTexture=new THREE.DataTexture(shadowData,shadowSize,shadowSize,THREE.RGBAFormat,THREE.UnsignedByteType);
   bakedShadowTexture.colorSpace=THREE.NoColorSpace; bakedShadowTexture.minFilter=THREE.LinearFilter; bakedShadowTexture.magFilter=THREE.LinearFilter; bakedShadowTexture.needsUpdate=true;
-  const bakedShadowMaterial = new THREE.MeshBasicMaterial({map:bakedShadowTexture,color:0x000000,transparent:true,opacity:.22,depthWrite:false,depthTest:true});
+  const bakedShadowMaterial = new THREE.MeshBasicMaterial({map:bakedShadowTexture,color:0x000000,transparent:true,opacity:.26,depthWrite:false,depthTest:true,toneMapped:false});
   const bakedShadow = new THREE.Mesh(new THREE.PlaneGeometry(1,1),bakedShadowMaterial);
   bakedShadow.rotation.x = -Math.PI / 2;
   bakedShadow.renderOrder = -0.5;
@@ -88,14 +88,18 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       const center = new THREE.Vector3();
       box.getCenter(center);
       bakedShadow.position.set(center.x, mesh.position.y + .002, center.z);
-      const sx=Math.max(size.x*1.45,.12), sz=Math.max(size.z*1.45,.12);
+      const sx=Math.max(size.x*1.12,.12), sz=Math.max(size.z*1.12,.12);
       bakedShadow.scale.set(sx,sz,1);
       bakedShadow.visible = mesh.visible && size.x > .001 && size.z > .001;
     },
     updateFromPreset(preset) {
       if (!preset) return;
       mesh.visible = preset.groundVisible !== false;
-      bakedShadow.visible = mesh.visible && preset.id === "ijewelReference";
+      const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
+      // Keep a subtle photographic contact shadow in every grounded product scene,
+      // not only the iJewel reference preset. Transparent scenes remain shadow-free.
+      bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + shadowStrength * .48));
+      bakedShadow.visible = mesh.visible && preset.groundVisible !== false && shadowStrength > .03;
       if (preset.ground != null) mesh.material.color.setHex(preset.ground);
       if (preset.groundRoughness != null) mesh.material.roughness = preset.groundRoughness;
       if (preset.groundMetalness != null) mesh.material.metalness = preset.groundMetalness;
