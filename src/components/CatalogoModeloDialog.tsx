@@ -4,6 +4,11 @@ import { FileText, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
+export type ProyectoNubeInicial = {
+  carpeta: string;
+  archivos: Array<{ nombre: string; ruta: string; categoria: string; bytes: number; origen: "supabase" | "nas"; actualizado: string | null }>;
+};
+
 export type CatalogoProductoEditor = {
   id: string;
   codigo: string;
@@ -39,6 +44,7 @@ type Props = {
   onSaved: () => void;
   initialImageUrl?: string | null;
   initialName?: string | null;
+  initialProject?: ProyectoNubeInicial | null;
 };
 
 const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;
@@ -47,7 +53,7 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName }: Props) {
+export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject }: Props) {
   const [form, setForm] = useState({
     codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? CATEGORIAS_PREDETERMINADAS[0], descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
@@ -60,6 +66,8 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   const [analizandoPdf, setAnalizandoPdf] = useState(false);
   const [archivoPdfNombre, setArchivoPdfNombre] = useState("");
   const [avisosExtraccion, setAvisosExtraccion] = useState<string[]>([]);
+  const [proyectoNube, setProyectoNube] = useState<ProyectoNubeInicial | null>(null);
+  const [productoCreadoId, setProductoCreadoId] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [progresoSubida, setProgresoSubida] = useState(0);
   const [carpetaSubida, setCarpetaSubida] = useState("");
@@ -110,7 +118,22 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setError(null);
     setArchivoPdfNombre("");
     setAvisosExtraccion([]);
-  }, [open, producto, categorias]);
+    setProductoCreadoId(null);
+    setProyectoNube(initialProject ?? null);
+    if (producto?.id) {
+      void (async () => {
+        const { data, error: projectError } = await (supabase as any).from("catalogo_proyectos_nube")
+          .select("carpeta, archivos").eq("producto_id", producto.id).maybeSingle();
+        if (projectError) {
+          console.warn("[Catálogo] No se pudo consultar el proyecto vinculado de Mi Nube.", projectError.message);
+          return;
+        }
+        if (data && typeof data.carpeta === "string" && Array.isArray(data.archivos)) {
+          setProyectoNube({ carpeta: data.carpeta, archivos: data.archivos });
+        }
+      })();
+    }
+  }, [open, producto, categorias, initialProject]);
 
   if (!open) return null;
 
@@ -241,8 +264,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         mostrar_ficha_tecnica: form.mostrar_ficha_tecnica,
       };
 
-      const result = producto
-        ? await supabase.from("catalogo_productos").update(payload).eq("id", producto.id).eq("participante_id", participanteId)
+      const productoIdActual = producto?.id ?? productoCreadoId;
+      const result = productoIdActual
+        ? await supabase.from("catalogo_productos").update(payload).eq("id", productoIdActual).eq("participante_id", participanteId)
         : await supabase.from("catalogo_productos").insert(payload).select("id, codigo, nombre, participante_id").single();
 
       if (result.error) {
@@ -251,6 +275,19 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         }
         const detalle = [result.error.message, result.error.details, result.error.hint, result.error.code ? `Código: ${result.error.code}` : ""].filter(Boolean).join(" · ");
         throw new Error(detalle || "No se pudo guardar el modelo.");
+      }
+      const productoIdGuardado = productoIdActual ?? result.data?.id;
+      if (proyectoNube && productoIdGuardado) {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) throw new Error("La ficha se guardó, pero no se pudo verificar la sesión para vincular Mi Nube.");
+        const { error: linkError } = await (supabase as any).from("catalogo_proyectos_nube").upsert({
+          producto_id: productoIdGuardado, participante_id: participanteId, usuario_id: authData.user.id,
+          carpeta: proyectoNube.carpeta, archivos: proyectoNube.archivos,
+        }, { onConflict: "producto_id" });
+        if (linkError) {
+          if (!productoIdActual) setProductoCreadoId(productoIdGuardado);
+          throw new Error("La ficha se guardó, pero no se pudo vincular el proyecto de Mi Nube. Puedes volver a guardar sin duplicar la ficha. Detalle: " + linkError.message);
+        }
       }
       onSaved();
       onClose();
@@ -341,6 +378,25 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             </div>
             <label className="flex items-center gap-3 rounded-xl border border-border p-3 text-xs sm:col-span-2"><input type="checkbox" checked={form.mostrar_precio} onChange={e => setForm(v => ({ ...v, mostrar_precio: e.target.checked }))} /> Mostrar precio en el catálogo público</label>
           </section>
+
+          {proyectoNube ? (
+            <section className="grid gap-3 rounded-2xl border border-gold/30 bg-gold/5 p-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Proyecto vinculado a Mi Nube</p>
+                <p className="mt-1 text-sm font-semibold">{proyectoNube.carpeta}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{proyectoNube.archivos.length} archivo(s) asociados. Los originales permanecen privados en Mi Nube; el catálogo solo guarda sus referencias.</p>
+              </div>
+              <ul className="grid gap-1 sm:grid-cols-2">
+                {proyectoNube.archivos.map((archivo, index) => (
+                  <li key={archivo.ruta + index} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border/70 bg-background px-3 py-2 text-xs">
+                    <span className="min-w-0 truncate">{archivo.nombre}</span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">{archivo.origen === "nas" ? "Nextcloud" : archivo.categoria}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[11px] text-muted-foreground">Los PDF, STL, 3DM y vídeos no se publican automáticamente. Revisa los permisos antes de compartir archivos.</p>
+            </section>
+          ) : null}
 
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
