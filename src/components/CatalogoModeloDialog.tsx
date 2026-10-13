@@ -203,8 +203,11 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         : await supabase.from("catalogo_productos").insert(payload).select("id, codigo, nombre, participante_id").single();
 
       if (result.error) {
+        if (result.error.code === "23505") {
+          throw new Error("Otra operación acaba de utilizar esa URL pública. Vuelve a guardar para generar una variante única.");
+        }
         const detalle = [result.error.message, result.error.details, result.error.hint, result.error.code ? `Código: ${result.error.code}` : ""].filter(Boolean).join(" · ");
-        throw new Error(detalle || "Supabase rechazó el guardado del modelo.");
+        throw new Error(detalle || "No se pudo guardar el modelo.");
       }
       onSaved();
       onClose();
