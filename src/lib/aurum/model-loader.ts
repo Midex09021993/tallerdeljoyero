@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { inspectAurumMesh } from "./mesh-preflight";
+import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
@@ -205,7 +206,33 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   throw new Error("Formato no compatible.");
 }
 
-export async function convertAurumToGlb(object: THREE.Object3D) {
+export async function convertAurumToGlb(
+  object: THREE.Object3D,
+  colorRhinoHex?: (color:any) => string | undefined,
+  clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro"
+) {
+  // Stamp stable Rhino layer metadata on each source mesh BEFORE GLTFExporter
+  // serializes the scene. The GLB must not depend on mesh traversal order.
+  if (colorRhinoHex && clasificarCapa) {
+    const parts = getAurumModelParts(object, colorRhinoHex, clasificarCapa);
+    const byId = new Map(parts.filter((part:any) => part.tipo === "malla").map((part:any) => [part.id, part]));
+    object.traverse((x:any) => {
+      if (!x.isMesh) return;
+      const part:any = byId.get(x.uuid);
+      if (!part) return;
+      x.userData = {
+        ...(x.userData ?? {}),
+        aurumRhino: {
+          ...(x.userData?.aurumRhino ?? {}),
+          capa: part.capa,
+          colorCapa: part.colorCapa,
+          categoria: part.categoria,
+          layerIndex: part.layerIndex ?? -1,
+          matrixSlot: part.matrixSlot,
+        },
+      };
+    });
+  }
   enforceRhinoLayerVisibilityBeforeExport(object);
   await preprocessAurumModel(object);
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
