@@ -136,7 +136,7 @@ function classifyRhinoLayer(name:string,colorCapa?:string,clasificarCapa?:(capa:
 
 function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro"):number|undefined {
   if (category==="otro") return undefined;
-  const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\\s_-]*([1-4])\\b/);
+  const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
   return match ? Number(match[1]) : undefined;
 }
 
@@ -209,11 +209,8 @@ export async function normalizeAurumModel(
   colorRhinoHex:(color:any)=>string|undefined,
   clasificarCapa:(capa:string,colorCapa?:string)=> "metal"|"gema"|"otro"
 ) {
-  // Do not traverse the Rhino scene just to build fallback metadata on every load.
-  // The internal GLB is authoritative and carries Rhino layer extras. We only
-  // reconstruct legacy metadata if the exported GLB actually lacks that data.
-  let metadataCapas:any[] = [];
-
+  // The source mesh metadata is stamped before export; the internal GLB is then
+  // hydrated from each node's stable Rhino layer identity.
   // 3DM es la entrada oficial. Su representación de ejecución es el GLB
   // generado internamente. El Object3D Rhino se usa para preparar/exportar,
   // pero el visor trabaja finalmente sobre el GLB, igual que el activo oficial.
