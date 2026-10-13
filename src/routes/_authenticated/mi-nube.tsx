@@ -1315,6 +1315,7 @@ function MiNubePage() {
                                 </button>
                               )}
                               {archivo.categoria === "fotos" && <button type="button" onClick={() => void anadirImagenAlCatalogo(archivo)} disabled={anadiendoCatalogo === archivo.ruta} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c5a15d]/50 bg-[#c5a15d]/10 px-2.5 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/15 disabled:opacity-50"><ImageIcon className="size-3.5" /> {anadiendoCatalogo === archivo.ruta ? "Preparando…" : "Añadir al catálogo"}</button>}
+                              {archivo.categoria === "documentos" && archivo.nombre.toLowerCase().endsWith(".pdf") && archivo.origen === "supabase" && <button type="button" onClick={() => void anadirImagenAlCatalogo(proyecto.archivos.find((item) => item.categoria === "fotos") ?? null, proyecto, archivo)} disabled={anadiendoCatalogo !== null} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c5a15d]/50 bg-[#c5a15d]/10 px-2.5 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/15 disabled:opacity-50"><FileText className="size-3.5" /> {anadiendoCatalogo === archivo.ruta ? "Preparando PDF…" : "Analizar PDF con IA"}</button>}
                               <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium hover:border-gold/50">
                                 Abrir / descargar
                               </button>
