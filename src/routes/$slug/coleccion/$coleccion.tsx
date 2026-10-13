@@ -2,7 +2,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Box, MessageCircle, Share2, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
 type Row = {
   slug: string;
@@ -18,6 +18,7 @@ type Row = {
   imagen_principal_url: string | null;
   precio_desde: number | null;
   moneda: string | null;
+  mostrar_precio: boolean;
   destacado: boolean | null;
   coleccion_slug: string | null;
   coleccion_nombre: string | null;
@@ -87,7 +88,7 @@ function ColeccionPublicaPage() {
                 <p className="mt-1 text-xs leading-5 text-[#746b62]">{producto.descripcion_producto}</p>
               </Link>
               <div className="mt-3 flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold">{producto.precio_desde == null ? "Consultar" : new Intl.NumberFormat("es-PE", { style: "currency", currency: producto.moneda ?? "PEN", maximumFractionDigits: 2 }).format(producto.precio_desde)}</span>
+                <span className="text-sm font-semibold">{!producto.mostrar_precio || producto.precio_desde == null ? "Consultar" : new Intl.NumberFormat("es-PE", { style: "currency", currency: producto.moneda ?? "PEN", maximumFractionDigits: 2 }).format(producto.precio_desde)}</span>
                 {whatsappHref ? <a href={`${whatsappHref}?text=${encodeURIComponent(`Hola, quisiera información sobre ${producto.nombre} (${producto.codigo}).`)}`} target="_blank" rel="noreferrer" className="text-xs font-semibold underline underline-offset-4">Solicitar cotización</a> : null}
               </div>
             </article>
