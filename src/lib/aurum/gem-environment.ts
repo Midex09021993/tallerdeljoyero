@@ -35,7 +35,8 @@ export interface AurumGemEnvironmentController {
 
 export function createAurumGemEnvironment(
   environmentController:any,
-  RGBELoader:any
+  RGBELoader:any,
+  EXRLoader?:any
 ): AurumGemEnvironmentController {
   let current:any = null;
   const cache = new Map<string, any>();
@@ -107,7 +108,8 @@ export function createAurumGemEnvironment(
         return;
       }
 
-      new RGBELoader().load(url, (hdrTexture:any) => {
+      const Loader = /\\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
+      new Loader().load(url, (hdrTexture:any) => {
         if (!isCurrent()) {
           hdrTexture.dispose?.();
           return;
