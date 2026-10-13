@@ -45,6 +45,7 @@ type Props = {
   initialImageUrl?: string | null;
   initialName?: string | null;
   initialProject?: ProyectoNubeInicial | null;
+  initialPdf?: { nombre: string; ruta: string } | null;
 };
 
 const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;
@@ -53,7 +54,7 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject }: Props) {
+export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject, initialPdf }: Props) {
   const [form, setForm] = useState({
     codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? CATEGORIAS_PREDETERMINADAS[0], descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
@@ -137,21 +138,26 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
 
   if (!open) return null;
 
-  async function analizarFichaPdf(file: File) {
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+  async function analizarFichaPdf(file?: File) {
+    if (file && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       setError("Selecciona un archivo PDF válido."); return;
     }
-    if (file.size > 10 * 1024 * 1024) {
+    if (file && file.size > 10 * 1024 * 1024) {
       setError("El PDF supera los 10 MB. Reduce el tamaño e inténtalo de nuevo."); return;
     }
+    if (!file && !initialPdf) { setError("Selecciona un PDF de Mi Nube o desde tu dispositivo."); return; }
     setAnalizandoPdf(true); setError(null); setAvisosExtraccion([]);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      let binary = "";
-      for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-      const { data, error: invokeError } = await supabase.functions.invoke("catalogo-extraer-ficha-pdf", {
-        body: { participanteId, fileName: file.name, pdfBase64: btoa(binary) },
-      });
+      let body: Record<string, string>;
+      if (file) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        let binary = "";
+        for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+        body = { participanteId, fileName: file.name, pdfBase64: btoa(binary) };
+      } else {
+        body = { participanteId, fileName: initialPdf!.nombre, storagePath: initialPdf!.ruta };
+      }
+      const { data, error: invokeError } = await supabase.functions.invoke("catalogo-extraer-ficha-pdf", { body });
       if (invokeError) throw new Error(invokeError.message || "No se pudo analizar el PDF.");
       if (!data?.ok || !data?.campos) throw new Error(data?.error || "No se pudieron reconocer los datos.");
       const c = data.campos;
@@ -168,7 +174,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         acabado: String(c.acabado ?? "").trim() || v.acabado,
         disponibilidad: String(c.disponibilidad ?? "").trim() || v.disponibilidad,
       }));
-      setArchivoPdfNombre(file.name);
+      setArchivoPdfNombre(file?.name ?? initialPdf?.nombre ?? "PDF de Mi Nube");
       setAvisosExtraccion(Array.isArray(data.advertencias) ? data.advertencias.filter((x) => typeof x === "string") : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo analizar la ficha PDF.");
@@ -318,6 +324,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               <FileText className="size-4" />{analizandoPdf ? "Analizando ficha…" : "Seleccionar ficha técnica PDF"}
               <input type="file" accept="application/pdf,.pdf" disabled={analizandoPdf || guardando || subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) void analizarFichaPdf(file); }} className="sr-only" />
             </label>
+            {initialPdf ? <button type="button" onClick={() => void analizarFichaPdf()} disabled={analizandoPdf || guardando || subiendo} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-xs font-semibold hover:bg-gold/10 disabled:opacity-50">{analizandoPdf ? "Analizando PDF de Mi Nube…" : `Analizar PDF privado de Mi Nube: ${initialPdf.nombre}`}</button> : null}
             {analizandoPdf ? <p className="text-xs text-muted-foreground">La IA está leyendo el documento…</p> : null}
             {archivoPdfNombre ? <p className="text-xs font-medium text-emerald-700">Ficha analizada: {archivoPdfNombre}. Comprueba los campos antes de guardar.</p> : null}
             {avisosExtraccion.length ? <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">{avisosExtraccion.map((aviso, index) => <li key={index}>{aviso}</li>)}</ul> : null}
