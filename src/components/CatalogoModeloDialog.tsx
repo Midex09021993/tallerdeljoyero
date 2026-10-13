@@ -204,7 +204,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slugify(form.nombre)} readOnly aria-readonly="true" className={`${input} cursor-not-allowed bg-surface-muted text-muted-foreground`} placeholder="Se genera a partir del nombre" /><span className="text-[10px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre y no se puede editar.</span></label>
             <label className="grid gap-1.5 text-xs font-semibold">Categoría
               <select value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input}>
-                {categorias.map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
+                {[...new Set([...(categorias.length ? categorias : CATEGORIAS_PREDETERMINADAS), form.categoria].filter(Boolean))].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
               </select>
               <span className="text-[10px] font-normal text-muted-foreground">Selecciona una categoría administrada por tu taller.</span>
             </label>
