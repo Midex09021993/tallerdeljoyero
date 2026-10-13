@@ -50,7 +50,7 @@ const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
     if (m) {
       const x=parseInt(m[1]!,16), rr=(x>>16)&255, gg=(x>>8)&255, bb=x&255;
       if (gg > rr*1.15 && gg > bb*1.15 && gg > 90) return "metal";
-      if (bb > rr*1.15 && bb > gg*1.05 && bb > 90) return "gema";
+      if (bb > rr*1.15 && bb >= gg*0.9 && bb > 90) return "gema";
     }
   }
   return "otro";
