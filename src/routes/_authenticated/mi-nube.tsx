@@ -370,24 +370,44 @@ function MiNubePage() {
     void cargarBiblioteca();
   }, [cargarBiblioteca]);
 
-  const anadirImagenAlCatalogo = async (archivo: ArchivoNube) => {
+  const anadirImagenAlCatalogo = async (
+    archivo: ArchivoNube | null,
+    proyecto?: { nombre: string; archivos: ArchivoNube[] },
+  ) => {
     if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
-    setAnadiendoCatalogo(archivo.ruta);
+    const imagen = archivo ?? proyecto?.archivos.find((item) => item.categoria === "fotos") ?? null;
+    if (!imagen && !proyecto) { toast.error("Selecciona una imagen o un proyecto."); return; }
+    if (imagen && imagen.origen !== "supabase") { toast.error("La portada debe ser una imagen guardada en Mi Nube."); return; }
+    setAnadiendoCatalogo(proyecto?.nombre ?? imagen?.ruta ?? "proyecto");
     try {
-      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
-      if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo leer la imagen original.");
-      const response = await fetch(signed.signedUrl);
-      if (!response.ok) throw new Error("No se pudo descargar la imagen desde Mi Nube.");
-      const blob = await response.blob();
-      const destino = participanteId + "/mi-nube/" + crypto.randomUUID() + "-" + nombreSeguro(nombreVisible(archivo.nombre));
-      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/jpeg", upsert: false });
-      if (uploadError) throw uploadError;
-      const { data: publicData } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
-      if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
-      sessionStorage.setItem("mi-nube-catalogo-pendiente", JSON.stringify({ nombre: nombreVisible(archivo.nombre).replace(/\\.[^.]+$/, ""), imagen_principal_url: publicData.publicUrl }));
-      toast.success("Imagen preparada. Completa la ficha para añadirla al catálogo.");
+      let imagenPrincipalUrl = "";
+      if (imagen) {
+        const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(imagen.ruta, 600);
+        if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo leer la imagen original.");
+        const response = await fetch(signed.signedUrl);
+        if (!response.ok) throw new Error("No se pudo descargar la imagen desde Mi Nube.");
+        const blob = await response.blob();
+        const destino = participanteId + "/mi-nube/" + crypto.randomUUID() + "-" + nombreSeguro(nombreVisible(imagen.nombre));
+        const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: publicData } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
+        if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
+        imagenPrincipalUrl = publicData.publicUrl;
+      }
+      const nombreProyecto = proyecto?.nombre ?? nombreVisible(imagen!.nombre).replace(/\\.[^.]+$/, "");
+      const proyectoNube = proyecto ? {
+        carpeta: proyecto.nombre,
+        archivos: proyecto.archivos.map((item) => ({
+          nombre: nombreVisible(item.nombre), ruta: item.ruta, categoria: item.categoria,
+          bytes: item.bytes, origen: item.origen ?? "supabase", actualizado: item.actualizado,
+        })),
+      } : null;
+      sessionStorage.setItem("mi-nube-catalogo-pendiente", JSON.stringify({
+        nombre: nombreProyecto, imagen_principal_url: imagenPrincipalUrl, proyecto_nube: proyectoNube,
+      }));
+      toast.success(proyecto ? "Proyecto preparado. Revisa la ficha y sus archivos antes de guardar." : "Imagen preparada. Completa la ficha para añadirla al catálogo.");
       window.location.assign("/catalogo?desde=mi-nube");
-    } catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo preparar la imagen para el catálogo."); }
+    } catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo preparar el proyecto para el catálogo."); }
     finally { setAnadiendoCatalogo(null); }
   };
   const cargarCompartidas = useCallback(async () => {
@@ -512,15 +532,18 @@ function MiNubePage() {
       actuales.push(archivo);
       grupos.set(archivo.carpeta, actuales);
     }
-    return Array.from(grupos.entries()).map(([nombre, elementos]) => ({
-      nombre,
-      archivos: elementos,
-      portada: elementos.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null,
-      tiene3dm: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".3dm")),
-      tieneStl: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")),
-      stlArchivo: elementos.find((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")) ?? null,
-      tienePdf: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".pdf")),
-    }));
+    return Array.from(grupos.entries()).map(([nombre]) => {
+      // Los filtros afectan qué proyectos se muestran, no los archivos vinculados.
+      const elementos = archivos.filter((archivo) => archivo.carpeta === nombre);
+      return {
+        nombre, archivos: elementos,
+        portada: elementos.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null,
+        tiene3dm: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".3dm")),
+        tieneStl: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")),
+        stlArchivo: elementos.find((archivo) => archivo.nombre.toLowerCase().endsWith(".stl")) ?? null,
+        tienePdf: elementos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".pdf")),
+      };
+    });
   }, [archivosFiltrados]);
 
   const subirSeleccion = async () => {
@@ -1198,7 +1221,10 @@ function MiNubePage() {
                       {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
-                    <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
+                    <button type="button" onClick={() => void anadirImagenAlCatalogo(proyecto.archivos.find((item) => item.categoria === "fotos") ?? null, proyecto)} disabled={anadiendoCatalogo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
+                      {anadiendoCatalogo === proyecto.nombre ? "Preparando ficha…" : "Crear ficha en catálogo"}
+                    </button>
+                    <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:border-gold/40 disabled:opacity-50">
                       <Share2 className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando transferencia…" : "Compartir proyecto"}
                     </button>
                     <button type="button" onClick={() => void eliminarProyectoCompleto(proyecto)} disabled={subiendo || compartiendo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/50 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50">
