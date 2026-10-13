@@ -62,7 +62,10 @@ Deno.serve(async (req) => {
       descripcion: typeof parsed.descripcion === "string" ? clean(parsed.descripcion, 1500) : null,
       metal_principal: typeof parsed.metal_principal === "string" ? clean(parsed.metal_principal, 120) : null,
       peso_gramos: typeof parsed.peso_gramos === "number" && Number.isFinite(parsed.peso_gramos) && parsed.peso_gramos > 0 && parsed.peso_gramos < 10000 ? parsed.peso_gramos : null,
-      piedras: typeof parsed.piedras === "string" ? clean(parsed.piedras, 500) : null,
+      piedras: typeof parsed.piedras === "string" ? clean(parsed.piedras, 500)
+        : Array.isArray(parsed.piedras) || (parsed.piedras && typeof parsed.piedras === "object")
+          ? clean((Array.isArray(parsed.piedras) ? parsed.piedras : [parsed.piedras]).map((p: unknown) => p && typeof p === "object" ? Object.values(p as Record<string, unknown>).filter((v) => v !== null && v !== "").join(" ") : String(p ?? "")).filter(Boolean).join("; "), 500) || null
+          : null,
       medidas: typeof parsed.medidas === "string" ? clean(parsed.medidas, 160) : null,
       talla: typeof parsed.talla === "string" ? clean(parsed.talla, 120) : null,
       tecnica: typeof parsed.tecnica === "string" ? clean(parsed.tecnica, 160) : null,
