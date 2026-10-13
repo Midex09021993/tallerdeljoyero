@@ -10,9 +10,11 @@ function getAurumNormalExperimentMode(): AurumNormalMode {
     const value = new URLSearchParams(window.location.search).get("aurumNormals");
     if (value === "authored" || value === "diagnostic" || value === "recompute-metal" || value === "crease-metal") return value;
   } catch {}
-  // Conservative crease-normal smoothing is the default for positively identified
-  // metal meshes. Gemstones and unknown meshes are excluded in the processing pass.
-  return "crease-metal";
+  // Preserve authored CAD normals by default. The crease-normal path remains
+  // available as an explicit diagnostic experiment via ?aurumNormals=crease-metal;
+  // forcing it on every metal mesh can introduce visible shading seams on polished
+  // jewelry even when the source normals are already correct.
+  return "authored";
 }
 
 function getAurumMeshFamily(x: any): "metal" | "gema" | "otro" {
