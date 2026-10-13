@@ -173,7 +173,8 @@ function CatalogoPublicoPage() {
 
   useEffect(() => {
     if (isLoading || error || !config) return;
-    const productosPublicados = new Map(productos.map((producto) => [producto.id, producto]));
+    const productosPublicados = new Map<string, Producto>();
+    for (const producto of productos) productosPublicados.set(producto.id, producto);
     setCarrito((actual) => actual.flatMap((linea) => {
       const producto = productosPublicados.get(linea.id);
       if (!producto) return [];
