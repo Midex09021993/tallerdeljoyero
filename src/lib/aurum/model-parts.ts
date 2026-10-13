@@ -8,6 +8,7 @@ export type AurumModelPart = {
   categoria: "metal" | "gema" | "otro";
   matrixSlot?: number;
   layerIndex?: number;
+  layerId?: string | number;
 };
 
 function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefined {
@@ -73,6 +74,7 @@ export function getAurumModelParts(
     const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
     const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
     const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
+    const layerId = meta?.rhinoLayerId ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? layer?.id ?? layer?.Id;
     const categoria = meta?.categoria ?? (layer
       ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa)
       : clasificarCapa(capa || "",colorCapa));
@@ -81,7 +83,7 @@ export function getAurumModelParts(
       ? Number(meta.matrixSlot)
       : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria) : undefined);
 
-    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
+    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
 
   return result;
