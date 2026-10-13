@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles } from "lucide-react";
+import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,6 +82,40 @@ export function CatalogoProductoPublicoPage() {
   const [enviada, setEnviada] = useState(false);
   const [errorSolicitud, setErrorSolicitud] = useState("");
   const [formSolicitud, setFormSolicitud] = useState({ nombre: "", telefono: "", email: "", cantidad: 1, mensaje: "" });
+  const [compraAbierta, setCompraAbierta] = useState(false);
+  const [tallaSeleccionada, setTallaSeleccionada] = useState("");
+  const [anadidoAlCarrito, setAnadidoAlCarrito] = useState(false);
+  const [errorCarrito, setErrorCarrito] = useState("");
+
+  const agregarProductoAlCarrito = () => {
+    if (!item?.producto_id || !config) return;
+    try {
+      const key = "carrito-joyas-" + slug.trim().toLowerCase();
+      const raw = window.localStorage.getItem(key);
+      const guardado = raw ? JSON.parse(raw) : [];
+      const actual = Array.isArray(guardado) ? guardado.filter((x) => x && typeof x.id === "string" && Number.isInteger(x.cantidad) && x.cantidad > 0) : [];
+      const existente = actual.find((x) => x.id === item.producto_id && (x.talla ?? "") === tallaSeleccionada);
+      const linea = {
+        id: item.producto_id,
+        slug: item.producto_slug ?? productoSlug,
+        codigo: item.codigo,
+        nombre: item.nombre + (tallaSeleccionada ? " · Talla " + tallaSeleccionada : ""),
+        precio: item.mostrar_precio && item.precio_desde != null ? item.precio_desde : null,
+        moneda: item.moneda ?? "PEN",
+        imagen: item.imagen_principal_url,
+        talla: tallaSeleccionada || null,
+        cantidad: 1,
+      };
+      const actualizado = existente
+        ? actual.map((x) => x === existente ? { ...x, cantidad: x.cantidad + 1 } : x)
+        : [...actual, linea];
+      window.localStorage.setItem(key, JSON.stringify(actualizado));
+      setErrorCarrito("");
+      setAnadidoAlCarrito(true);
+    } catch {
+      setErrorCarrito("No pudimos guardar la pieza en este dispositivo. Inténtalo nuevamente.");
+    }
+  };
 
   if (isLoading) return <Estado titulo="Cargando ficha…" texto="Estamos preparando la información de la pieza." />;
   if (error || !config || !item?.producto_id || !item.nombre || !item.codigo) {
@@ -136,9 +170,12 @@ export function CatalogoProductoPublicoPage() {
           ) : null}
 
           <div className="mt-8 rounded-[24px] border border-[#1f1b1818] bg-white/75 p-3 shadow-[0_20px_60px_-45px_rgba(31,27,24,.45)] backdrop-blur">
-            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="group flex w-full items-center justify-between rounded-[18px] bg-[#1f1b18] px-5 py-4 text-left text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(31,27,24,.55)]">
-              <span><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#d7b56d]">Atención personalizada</span><span className="mt-1 block text-sm font-semibold">Solicitar cotización</span></span>
-              <MessageCircle className="size-4 text-[#d7b56d]" />
+            <button type="button" onClick={() => { setCompraAbierta(true); setAnadidoAlCarrito(false); setErrorCarrito(""); }} className="group flex w-full items-center justify-between rounded-[18px] bg-[#1f1b18] px-5 py-4 text-left text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(31,27,24,.55)]">
+              <span><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#d7b56d]">Tu selección</span><span className="mt-1 block text-sm font-semibold">Añadir al carrito</span></span>
+              <ShoppingBag className="size-4 text-[#d7b56d]" />
+            </button>
+            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="mt-2 flex w-full items-center justify-between rounded-[18px] border border-[#1f1b1820] px-5 py-3.5 text-left transition hover:border-[#8a6b36]">
+              <span className="text-sm font-semibold">Solicitar cotización</span><MessageCircle className="size-4 text-[#8a6b36]" />
             </button>
             <div className="mt-2 flex flex-wrap gap-2 px-1 pb-1 pt-1">
               {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, quisiera información sobre " + item.nombre + " (" + item.codigo + ").")} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">WhatsApp</a> : null}
