@@ -234,15 +234,36 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           </section>
 
           <section className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Multimedia</p></div>
-            <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Imagen principal
-              <div className="flex flex-col gap-2 sm:flex-row"><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.target.files?.[0]; e.currentTarget.value = ""; if (file) void subirImagen(file, "principal"); }} className={`${input} flex-1 py-2`} /><input type="url" value={form.imagen_principal_url} onChange={e => setForm(v => ({ ...v, imagen_principal_url: e.target.value }))} className={`${input} flex-1`} placeholder="O pega una URL externa" /></div>
-            </label>
-            <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Galería
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.target.files ?? []); e.currentTarget.value = ""; void Promise.all(files.map((file) => subirImagen(file, "galeria"))); }} className={`${input} py-2`} />
-              <textarea rows={3} value={form.galeria} onChange={e => setForm(v => ({ ...v, galeria: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="Una URL por línea." />
+            <div className="sm:col-span-2">
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Multimedia</p>
+              <p className="mt-1 text-xs text-muted-foreground">Sube las imágenes directamente. Los enlaces de almacenamiento se gestionan automáticamente y no necesitas copiarlos.</p>
+            </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <span className="text-xs font-semibold">Imagen principal</span>
+              {form.imagen_principal_url ? (
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted/30 p-3">
+                  <img src={form.imagen_principal_url} alt="Vista previa de la imagen principal" className="size-20 rounded-lg border border-border object-cover" />
+                  <div className="min-w-0 flex-1"><p className="text-xs font-medium">Imagen principal cargada</p><p className="mt-1 text-[11px] text-muted-foreground">Puedes reemplazarla seleccionando otra imagen.</p></div>
+                </div>
+              ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Todavía no has seleccionado una imagen principal.</div>}
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-xs font-semibold transition hover:bg-gold/10">
+                {subiendo ? "Subiendo imagen…" : form.imagen_principal_url ? "Cambiar imagen principal" : "Seleccionar imagen principal"}
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) void subirImagen(file, "principal"); }} className="sr-only" />
+              </label>
+            </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <span className="text-xs font-semibold">Galería de imágenes</span>
+              {form.galeria.split(/\\n/).map((url) => url.trim()).filter(Boolean).length > 0 ? (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  {form.galeria.split(/\\n/).map((url) => url.trim()).filter(Boolean).map((url, index) => <img key={url + index} src={url} alt={`Imagen de galería ${index + 1}`} className="aspect-square w-full rounded-lg border border-border object-cover" />)}
+                </div>
+              ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Aún no hay imágenes en la galería.</div>}
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-xs font-semibold transition hover:bg-surface-muted">
+                Añadir imágenes a la galería
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; void Promise.all(files.map((file) => subirImagen(file, "galeria"))); }} className="sr-only" />
+              </label>
               {subiendo ? <span className="text-[11px] text-muted-foreground">Subiendo imágenes… {progresoSubida}%</span> : null}
-            </label>
+            </div>
             <label className="grid gap-1.5 text-xs font-semibold">Video (URL)<input type="url" value={form.video_url} onChange={e => setForm(v => ({ ...v, video_url: e.target.value }))} className={input} placeholder="https://..." /></label>
             <label className="grid gap-1.5 text-xs font-semibold">AURUM Render (URL)<input type="url" value={form.aurum_render_url} onChange={e => setForm(v => ({ ...v, aurum_render_url: e.target.value }))} className={input} placeholder="https://..." /></label>
           </section>
