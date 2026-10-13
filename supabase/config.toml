@@ -31,3 +31,6 @@ verify_jwt = true
 
 [functions.catalogo-extraer-ficha-pdf]
 verify_jwt = true
+
+[functions.catalogo-generar-descripcion]
+verify_jwt = true
