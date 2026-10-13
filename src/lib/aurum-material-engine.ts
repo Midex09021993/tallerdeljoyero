@@ -119,9 +119,17 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // broader micro-surface response than the previous .12 setting. This is still
   // a polished metal; it only reduces clipped highlights on small ornamental faces.
   const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
-  material.roughness=response.family==="yellow-gold"
+  const finishId=String(preset.id??"").toLowerCase();
+  const isPolishedPreciousMetal=/(pulid[oa]|polished|rodinad[oa])/.test(finishId);
+  const calibratedRoughness=response.family==="yellow-gold"
     ? Math.max(.075,Math.min(.55,baseRoughness*1.33))
     : baseRoughness;
+  // A physically polished jewelry surface still needs a tiny microfacet spread.
+  // Apply only to explicitly polished/rodinated finishes; satin, matte, brushed
+  // and hammered materials retain their authored roughness.
+  material.roughness=isPolishedPreciousMetal
+    ? Math.max(.08,Math.min(.55,calibratedRoughness))
+    : calibratedRoughness;
 
   material.envMapIntensity=response.environmentIntensity;
 
