@@ -191,16 +191,18 @@ const inspectAurumGemGeometry=(target:any)=>{
 
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
 const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
+const selectionLayerIndex=(part:any):number|null=>{
+  const meta=selectionMeta(part);
+  const raw=meta.layerIndex ?? part?.userData?.attributes?.layerIndex ?? part?.userData?.attributes?.LayerIndex ?? part?.userData?.layerIndex;
+  const value=raw===null||raw===undefined||raw===""?NaN:Number(raw);
+  return Number.isInteger(value)&&value>=0?value:null;
+};
 
 export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any) {
   if (!model || !activePart?.isMesh) return false;
   const selectedMeta=selectionMeta(activePart);
   const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
-  const selectedLayerIndex=Number.isInteger(selectedMeta.layerIndex)&&selectedMeta.layerIndex>=0
-    ? selectedMeta.layerIndex
-    : Number.isInteger(activePart?.userData?.attributes?.layerIndex)&&activePart.userData.attributes.layerIndex>=0
-      ? activePart.userData.attributes.layerIndex
-      : null;
+  const selectedLayerIndex=selectionLayerIndex(activePart);
   const selectedCategory=selectionCategory(activePart);
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
@@ -212,7 +214,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     x.castShadow=category !== "gema";
     x.receiveShadow=true;
     const meta=selectionMeta(x);
-    const partLayerIndex=Number.isInteger(meta.layerIndex)&&meta.layerIndex>=0?meta.layerIndex:null;
+    const partLayerIndex=selectionLayerIndex(x);
     const sameLayerIdentity=selectedLayerIndex!==null
       ? partLayerIndex===selectedLayerIndex
       : !!selectedLayer&&meta.capa===selectedLayer;
@@ -234,16 +236,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   while(modelRoot.parent)modelRoot=modelRoot.parent;
   const selectedMeta=selectionMeta(target);
   const selectedLayer=selectedMeta.capa||target.userData?.attributes?.layerName||null;
-  const selectedLayerIndex=Number.isInteger(selectedMeta.layerIndex)&&selectedMeta.layerIndex>=0
-    ? selectedMeta.layerIndex
-    : Number.isInteger(target.userData?.attributes?.layerIndex)&&target.userData.attributes.layerIndex>=0
-      ? target.userData.attributes.layerIndex
-      : null;
+  const selectedLayerIndex=selectionLayerIndex(target);
   const targets:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const meta=selectionMeta(x),category=selectionCategory(x);
-    const partLayerIndex=Number.isInteger(meta.layerIndex)&&meta.layerIndex>=0?meta.layerIndex:null;
+    const partLayerIndex=selectionLayerIndex(x);
     const sameLayerIdentity=selectedLayerIndex!==null
       ? partLayerIndex===selectedLayerIndex
       : !!selectedLayer&&meta.capa===selectedLayer;
