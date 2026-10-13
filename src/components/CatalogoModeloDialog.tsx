@@ -243,7 +243,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setGenerandoDescripcion(true);
     setError(null);
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke("catalogo-generar-descripcion", {
+      const { data, error: invokeError } = await supabase.functions.invoke(
+        "catalogo-generar-descripcion",
+        {
         body: {
           participanteId,
           imagenUrl,
