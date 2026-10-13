@@ -93,7 +93,7 @@ export function createAurumEnvironment(
         return;
       }
 
-      const Loader = /\\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
+      const Loader = /\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
       new Loader().load(url, (hdrTexture: any) => {
         if (!isCurrent()) {
           hdrTexture.dispose?.();
