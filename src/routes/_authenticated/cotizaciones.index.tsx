@@ -466,7 +466,7 @@ function CotizacionesPage() {
           .select("cliente_id")
           .eq("id", cotizacionCreadaId)
           .maybeSingle();
-        const clienteIdReal = cotizacionVinculada?.cliente_id ?? form.cliente_id || null;
+        const clienteIdReal = (cotizacionVinculada?.cliente_id ?? form.cliente_id) || null;
         const { data: solicitudActualizada, error: vinculoError } = await supabase.from("catalogo_solicitudes_cotizacion")
           .update({
             cliente_id: clienteIdReal,
