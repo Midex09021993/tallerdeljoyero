@@ -88,7 +88,7 @@ export function applyAurumCameraView(
   // Encuadre de presentación: un poco más de aire alrededor de la pieza.
   // El mismo factor base se aplica a todas las vistas para conservar
   // proporcionalidad visual entre frontal, perspectiva, superior y lateral.
-  const distance = Math.max(radius * 2.95 * profile.distance, 3.6);
+  const distance = Math.max(radius * 2.15 * profile.distance, 2.4);
   const verticalBias = radius * profile.vertical;
 
   controls.target.copy(target);
