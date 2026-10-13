@@ -128,7 +128,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // Apply only to explicitly polished/rodinated finishes; satin, matte, brushed
   // and hammered materials retain their authored roughness.
   material.roughness=isPolishedPreciousMetal
-    ? Math.max(.08,Math.min(.55,calibratedRoughness))
+    ? Math.max(.11,Math.min(.55,calibratedRoughness))
     : calibratedRoughness;
 
   material.envMapIntensity=response.environmentIntensity;
