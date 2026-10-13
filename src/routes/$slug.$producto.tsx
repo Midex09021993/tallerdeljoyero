@@ -68,7 +68,8 @@ export function CatalogoProductoPublicoPage() {
   });
 
   const config = rows[0] ?? null;
-  const productoSolicitado = decodeURIComponent(productoSlug).trim().toLowerCase();
+  // TanStack Router entrega el parámetro ya decodificado; no volver a decodificarlo.
+  const productoSolicitado = productoSlug.trim().toLowerCase();
   const item = rows.find((row) =>
     row.producto_id &&
     (
