@@ -153,6 +153,18 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setGuardando(true);
     setError(null);
     try {
+      const { data: slugExistente, error: slugCheckError } = await supabase
+        .from("catalogo_productos")
+        .select("id, nombre")
+        .eq("participante_id", participanteId)
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (slugCheckError) throw slugCheckError;
+      if (slugExistente && slugExistente.id !== producto?.id) {
+        throw new Error(`Ya existe una joya con la URL "${slug}". Cambia el nombre para generar un slug único.`);
+      }
+
       const payload = {
         participante_id: participanteId,
         nombre,
