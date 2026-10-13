@@ -395,6 +395,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
                 ))}
               </ul>
               <p className="text-[11px] text-muted-foreground">Los PDF, STL, 3DM y vídeos no se publican automáticamente. Revisa los permisos antes de compartir archivos.</p>
+              <button type="button" onClick={() => window.open("/mi-nube?proyecto=" + encodeURIComponent(proyectoNube.carpeta), "_blank", "noopener,noreferrer")} className="w-full rounded-xl border border-gold/40 bg-background px-3 py-2.5 text-xs font-semibold hover:bg-gold/5">Abrir proyecto en Mi Nube</button>
             </section>
           ) : null}
 
