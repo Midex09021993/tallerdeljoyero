@@ -88,9 +88,13 @@ export function applyAurumInitialModelMaterials(
     }
 
     if(meta?.categoria==="gema"){
-      // First-load presentation: only the four MatrixGold gem layers receive
-      // the default diamond preview. "Other" layers never enter this branch.
-      const initialGemId = options.initialGemId ?? "diamante_natural";
+      // MatrixGold's Gem 01–04 layers are independent material slots.
+      // Keep the assignment layer-based; never infer a stone from mesh size,
+      // traversal order, or an individual object.
+      const layerName=String(meta?.capa??x.userData?.attributes?.layerName??"");
+      const slot=Number(meta?.matrixSlot) || Number(layerName.match(/\b(?:gem|gema|piedra|stone)[\s_-]*0?([1-4])\b/i)?.[1]) || 0;
+      const gemBySlot:Record<number,string>={1:"diamante_natural",2:"esmeralda_1",3:"rubi_natural"};
+      const initialGemId=gemBySlot[slot] ?? options.initialGemId ?? "diamante_natural";
       const gem=options.gems.find((g:any)=>g.id===initialGemId) ?? options.gems.find((g:any)=>g.id==="diamante_natural") ?? options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
