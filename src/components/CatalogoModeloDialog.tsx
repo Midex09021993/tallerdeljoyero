@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useState, type FormEvent } from "react";
-import { X } from "lucide-react";
+import { FileText, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
@@ -57,6 +57,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     ficha_tecnica_url: "", notas_internas: "", mostrar_precio: true, mostrar_ficha_tecnica: true,
   });
   const [guardando, setGuardando] = useState(false);
+  const [analizandoPdf, setAnalizandoPdf] = useState(false);
+  const [archivoPdfNombre, setArchivoPdfNombre] = useState("");
+  const [avisosExtraccion, setAvisosExtraccion] = useState<string[]>([]);
   const [subiendo, setSubiendo] = useState(false);
   const [progresoSubida, setProgresoSubida] = useState(0);
   const [carpetaSubida, setCarpetaSubida] = useState("");
@@ -105,9 +108,49 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setCarpetaSubida(producto?.id ?? "");
     setProgresoSubida(0);
     setError(null);
+    setArchivoPdfNombre("");
+    setAvisosExtraccion([]);
   }, [open, producto, categorias]);
 
   if (!open) return null;
+
+  async function analizarFichaPdf(file: File) {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setError("Selecciona un archivo PDF válido."); return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("El PDF supera los 10 MB. Reduce el tamaño e inténtalo de nuevo."); return;
+    }
+    setAnalizandoPdf(true); setError(null); setAvisosExtraccion([]);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+      const { data, error: invokeError } = await supabase.functions.invoke("catalogo-extraer-ficha-pdf", {
+        body: { participanteId, fileName: file.name, pdfBase64: btoa(binary) },
+      });
+      if (invokeError) throw new Error(invokeError.message || "No se pudo analizar el PDF.");
+      if (!data?.ok || !data?.campos) throw new Error(data?.error || "No se pudieron reconocer los datos.");
+      const c = data.campos;
+      setForm((v) => ({
+        ...v,
+        nombre: String(c.nombre ?? "").trim() || v.nombre,
+        descripcion: String(c.descripcion ?? "").trim() || v.descripcion,
+        metal_principal: String(c.metal_principal ?? "").trim() || v.metal_principal,
+        peso_gramos: typeof c.peso_gramos === "number" ? String(c.peso_gramos) : v.peso_gramos,
+        piedras: String(c.piedras ?? "").trim() || v.piedras,
+        medidas: String(c.medidas ?? "").trim() || v.medidas,
+        talla: String(c.talla ?? "").trim() || v.talla,
+        tecnica: String(c.tecnica ?? "").trim() || v.tecnica,
+        acabado: String(c.acabado ?? "").trim() || v.acabado,
+        disponibilidad: String(c.disponibilidad ?? "").trim() || v.disponibilidad,
+      }));
+      setArchivoPdfNombre(file.name);
+      setAvisosExtraccion(Array.isArray(data.advertencias) ? data.advertencias.filter((x) => typeof x === "string") : []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo analizar la ficha PDF.");
+    } finally { setAnalizandoPdf(false); }
+  }
 
   async function subirImagen(file: File, tipo: "principal" | "galeria") {
     if (!participanteId || !file.type.startsWith("image/")) {
@@ -229,6 +272,19 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         </div>
 
         <form onSubmit={guardar} className="grid gap-5 p-6">
+          <section className="grid gap-3 rounded-2xl border border-gold/30 bg-gold/5 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-gold/10 p-2.5 text-gold"><Sparkles className="size-5" /></div>
+              <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Subida inteligente con IA</p><p className="mt-1 text-xs text-muted-foreground">Carga una ficha PDF para proponer nombre, metal, peso y piedras. Revisa los campos antes de guardar; no se publica automáticamente.</p></div>
+            </div>
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold/40 bg-background px-4 py-3 text-xs font-semibold transition hover:bg-gold/5">
+              <FileText className="size-4" />{analizandoPdf ? "Analizando ficha…" : "Seleccionar ficha técnica PDF"}
+              <input type="file" accept="application/pdf,.pdf" disabled={analizandoPdf || guardando || subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) void analizarFichaPdf(file); }} className="sr-only" />
+            </label>
+            {analizandoPdf ? <p className="text-xs text-muted-foreground">La IA está leyendo el documento…</p> : null}
+            {archivoPdfNombre ? <p className="text-xs font-medium text-emerald-700">Ficha analizada: {archivoPdfNombre}. Comprueba los campos antes de guardar.</p> : null}
+            {avisosExtraccion.length ? <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">{avisosExtraccion.map((aviso, index) => <li key={index}>{aviso}</li>)}</ul> : null}
+          </section>
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Identidad</p><p className="mt-1 text-xs text-muted-foreground">Datos que identifican la pieza en el catálogo.</p></div>
             <label className="grid gap-1.5 text-xs font-semibold">Código
@@ -328,7 +384,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           </section>
 
           {error ? <p className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">{error}</p> : null}
-          <div className="flex justify-end gap-2"><button type="button" onClick={onClose} disabled={guardando || subiendo} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold disabled:opacity-50">Cancelar</button><button type="submit" disabled={guardando || subiendo} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:opacity-50">{subiendo ? "Subiendo imágenes…" : guardando ? "Guardando…" : producto ? "Guardar cambios" : "Crear ficha"}</button></div>
+          <div className="flex justify-end gap-2"><button type="button" onClick={onClose} disabled={guardando || subiendo || analizandoPdf} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold disabled:opacity-50">Cancelar</button><button type="submit" disabled={guardando || subiendo || analizandoPdf} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:opacity-50">{analizandoPdf ? "Analizando PDF…" : subiendo ? "Subiendo imágenes…" : guardando ? "Guardando…" : producto ? "Guardar cambios" : "Crear ficha"}</button></div>
         </form>
       </div>
     </div>
