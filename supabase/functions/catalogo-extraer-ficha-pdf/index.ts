@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
     let response: Response | null = null;
     let ultimoError = "";
     let ultimoStatus = 503;
+    let modeloUsado = MODELOS[0];
 
     for (let i = 0; i < MODELOS.length; i++) {
       const modelo = MODELOS[i];
@@ -80,6 +81,7 @@ Deno.serve(async (req) => {
 
         if (res.ok) {
           response = res;
+          modeloUsado = modelo;
           console.info("Gemini PDF extraction succeeded", { modelo });
           break;
         }
@@ -115,6 +117,40 @@ Deno.serve(async (req) => {
     const result = await response.json();
     const text = String((result?.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p?.text ?? "").join(""));
     const parsed = parseJson(text);
+    // Segundo intento específico para el peso cuando la extracción general no lo identificó.
+    if (!(typeof parsed.peso_gramos === "number" && Number.isFinite(parsed.peso_gramos) && parsed.peso_gramos > 0 && parsed.peso_gramos < 10000)) {
+      try {
+        const pesoPrompt = "Vuelve a inspeccionar visualmente todas las páginas del PDF adjunto, centrándote exclusivamente en encontrar el peso total de la joya descrita en el documento. Lee también tablas, etiquetas pequeñas y texto dentro de imágenes. Busca rótulos como Peso, Peso total, Peso del anillo, Weight, Total weight o Peso (g). Devuelve SOLO JSON: {peso_gramos: número o null, peso_evidencia: rótulo y valor exactos copiados del PDF o null, motivo: breve explicación si no se encontró}. Conserva el decimal exacto: una impresión 4,13 g significa 4.13. No uses peso de piedras, metal calculado, subtotal ni otras piezas. Si no puedes verificar que el dato corresponde al peso total de esta joya, usa null; no adivines.";
+        const retry = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modeloUsado}:generateContent`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [
+                { text: pesoPrompt },
+                { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
+              ] }],
+              generationConfig: { responseMimeType: "application/json" },
+            }),
+          },
+        );
+        if (retry.ok) {
+          const retryResult = await retry.json();
+          const retryText = String((retryResult?.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p?.text ?? "").join(""));
+          const retryParsed = parseJson(retryText);
+          if (typeof retryParsed.peso_gramos === "number" && Number.isFinite(retryParsed.peso_gramos) && retryParsed.peso_gramos > 0 && retryParsed.peso_gramos < 10000) {
+            parsed.peso_gramos = retryParsed.peso_gramos;
+            parsed.peso_evidencia = typeof retryParsed.peso_evidencia === "string" ? retryParsed.peso_evidencia : null;
+          }
+          console.info("Gemini focused weight extraction completed", { modelo: modeloUsado, found: typeof retryParsed.peso_gramos === "number" });
+        } else {
+          console.warn("Gemini focused weight extraction failed", { modelo: modeloUsado, status: retry.status });
+        }
+      } catch (weightError) {
+        console.warn("Gemini focused weight extraction error", String(weightError).slice(0, 200));
+      }
+    }
     const campos = {
       nombre: typeof parsed.nombre === "string" ? clean(parsed.nombre, 160) : null,
       categoria: typeof parsed.categoria === "string" ? clean(parsed.categoria, 80) : null,
