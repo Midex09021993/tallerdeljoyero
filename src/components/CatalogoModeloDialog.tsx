@@ -64,7 +64,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   const [costosPrecio, setCostosPrecio] = useState({ metal: "", piedras: "", manoObra: "", otros: "", margen: "30", impuesto: "0" });
 
   const numeroCosto = (valor: string) => valor.trim() === "" ? 0 : Number(valor);
-  const costoBase = numeroCosto(costosPrecio.metal) + numeroCosto(costosPrecio.piedras) + numeroCosto(costosPrecio.manoObra) + numeroCosto(costosPrecio.otros);
+  const pesoParaPrecio = numeroCosto(form.peso_gramos);
+  const costoMetalCalculado = pesoParaPrecio * numeroCosto(costosPrecio.metal);
+  const costoBase = costoMetalCalculado + numeroCosto(costosPrecio.piedras) + numeroCosto(costosPrecio.manoObra) + numeroCosto(costosPrecio.otros);
   const margenPrecio = numeroCosto(costosPrecio.margen);
   const impuestoPrecio = numeroCosto(costosPrecio.impuesto);
   const precioCalculado = costoBase > 0 && margenPrecio >= 0 && margenPrecio < 100 && impuestoPrecio >= 0
@@ -246,7 +248,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
                 <p className="mt-1 text-xs font-normal text-muted-foreground">Introduce tus costes y el margen deseado. Los importes son solo para este cálculo y no se guardan en la ficha.</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-xs font-medium">Coste del metal<input type="number" min="0" step="0.01" value={costosPrecio.metal} onChange={e => setCostosPrecio(v => ({ ...v, metal: e.target.value }))} className={input} placeholder="0.00" /></label>
+                <label className="grid gap-1.5 text-xs font-medium">Precio del metal por gramo<input type="number" min="0" step="0.01" value={costosPrecio.metal} onChange={e => setCostosPrecio(v => ({ ...v, metal: e.target.value }))} className={input} placeholder="Precio por gramo" /><span className="text-[11px] font-normal text-muted-foreground">Peso de la ficha: {pesoParaPrecio > 0 ? `${pesoParaPrecio} g` : "introduce primero el peso"} · Coste calculado: {formatoMoneda(costoMetalCalculado)}</span></label>
                 <label className="grid gap-1.5 text-xs font-medium">Coste de piedras<input type="number" min="0" step="0.01" value={costosPrecio.piedras} onChange={e => setCostosPrecio(v => ({ ...v, piedras: e.target.value }))} className={input} placeholder="0.00" /></label>
                 <label className="grid gap-1.5 text-xs font-medium">Mano de obra<input type="number" min="0" step="0.01" value={costosPrecio.manoObra} onChange={e => setCostosPrecio(v => ({ ...v, manoObra: e.target.value }))} className={input} placeholder="0.00" /></label>
                 <label className="grid gap-1.5 text-xs font-medium">Otros costes<input type="number" min="0" step="0.01" value={costosPrecio.otros} onChange={e => setCostosPrecio(v => ({ ...v, otros: e.target.value }))} className={input} placeholder="0.00" /></label>
@@ -256,7 +258,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               <div className="rounded-xl border border-border bg-background p-3">
                 <div className="flex items-center justify-between gap-3 text-xs"><span className="text-muted-foreground">Coste total</span><span className="font-semibold tabular-nums">{formatoMoneda(costoBase)}</span></div>
                 <div className="mt-2 flex items-center justify-between gap-3"><span className="text-sm font-semibold">Precio sugerido</span><span className="text-lg font-bold tabular-nums">{precioCalculado !== null && Number.isFinite(precioCalculado) ? formatoMoneda(precioCalculado) : "Completa los costes"}</span></div>
-                <p className="mt-1 text-[11px] text-muted-foreground">Precio = coste total ÷ (1 − margen) + impuesto aplicado al resultado.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">El coste del metal se calcula con el peso de la ficha × precio por gramo. Precio = coste total ÷ (1 − margen), más el impuesto aplicado al resultado.</p>
                 <button type="button" disabled={precioCalculado === null || !Number.isFinite(precioCalculado) || costoBase <= 0} onClick={() => setForm(v => ({ ...v, precio_desde: precioCalculado!.toFixed(2) }))} className="mt-3 w-full rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50">Usar precio calculado</button>
               </div>
             </div>
