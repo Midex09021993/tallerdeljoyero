@@ -256,18 +256,37 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
     const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
     const partLayerIndex=selectionLayerIndex(x);
-    // Prefer Rhino's stable layer ID, then exact layer name. Use numeric
-    // indices only when names/IDs are absent, because exporters may reuse or
-    // rewrite indices while preserving per-mesh layer names.
-    const sameLayerIdentity=selectedLayerId!=null&&partLayerId!=null
-      ? String(partLayerId)===String(selectedLayerId)
-      : selectedLayer&&partLayer
-        ? partLayer===selectedLayer
-        : selectedLayerIndex!==null&&partLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
+    // Match the actual Rhino layer before considering IDs. Some 3DM loaders
+    // expose object/user-data IDs under layerId; those values are not guaranteed
+    // to be the Rhino layer UUID. Exact layer name is therefore authoritative,
+    // followed by the preserved source layer index, and only then the stable ID.
+    const sameLayerIdentity=selectedLayer&&partLayer
+      ? partLayer===selectedLayer
+      : selectedLayerIndex!==null&&partLayerIndex!==null
+        ? partLayerIndex===selectedLayerIndex
+        : selectedLayerId!=null&&partLayerId!=null
+          ? String(partLayerId)===String(selectedLayerId)
+          : false;
     if(sameLayerIdentity)targets.push(x);
   });
-  // If metadata is incomplete, never recolor other layers by guesswork.
+  // Fail closed: if no matching layer metadata survives conversion, modify only
+  // the clicked mesh rather than guessing from category or applying to all gems.
   if(!targets.length)targets.push(target);
+  console.info("[AURUM][GEM LAYER TARGET]", {
+    selectedMesh:target.name||target.uuid,
+    selectedLayer,
+    selectedLayerIndex,
+    selectedLayerId:selectedLayerId==null?null:String(selectedLayerId),
+    selectedCategory,
+    gemId:String(gemConfig?.id??""),
+    matchedMeshes:targets.length,
+    matches:targets.map((part:any)=>({
+      mesh:part.name||part.uuid,
+      layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
+      layerIndex:selectionLayerIndex(part),
+      layerId:selectionMeta(part).rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
+    })),
+  });
   const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
