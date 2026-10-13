@@ -58,10 +58,10 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     return;
   }
 
-  // Reset de cámara: la escena de referencia conserva la composición iJewel;
-  // las demás escenas usan el frontal de producto estándar.
-  if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model);
-  else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+  // Restablecer siempre a una vista frontal con encuadre calculado
+  // según el tamaño real del modelo. Evita que la cámara fija de referencia
+  // vuelva a acercarse demasiado en archivos 3DM con otras unidades.
+  applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
 }
 
 
