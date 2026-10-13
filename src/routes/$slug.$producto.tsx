@@ -211,6 +211,26 @@ export function CatalogoProductoPublicoPage() {
         </div>
       </section>
 
+      {compraAbierta ? (
+        <div className="fixed inset-0 z-[60] flex justify-end bg-[#1f1b18]/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Añadir pieza al carrito">
+          <section className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-white text-[#1f1b18] shadow-2xl">
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-[#1f1b1815] bg-white px-5 py-4"><h2 className="font-display text-2xl">Añadir al carrito</h2><button type="button" onClick={() => setCompraAbierta(false)} aria-label="Cerrar" className="rounded-full p-2 hover:bg-[#f7f4ef]"><X className="size-5" /></button></header>
+            {anadidoAlCarrito ? (
+              <div className="grid flex-1 content-center justify-items-center px-6 py-12 text-center"><span className="grid size-14 place-items-center rounded-full bg-[#edf4e9] text-[#3d7042]"><CheckCircle2 className="size-7" /></span><h3 className="mt-5 font-display text-3xl">Pieza añadida</h3><p className="mt-2 max-w-xs text-sm leading-6 text-[#746b62]">{item.nombre} está guardada en tu carrito de este taller.</p><Link to="/$slug" params={{ slug }} className="mt-6 w-full bg-[#242321] px-5 py-4 text-center text-xs font-bold uppercase tracking-[.12em] text-white">Volver al catálogo</Link><button type="button" onClick={() => setCompraAbierta(false)} className="mt-4 text-sm underline underline-offset-4">Seguir viendo la pieza</button></div>
+            ) : (
+              <>
+                <div className="px-5 pt-5"><div className="flex h-48 items-center justify-center overflow-hidden rounded-sm bg-[#f7f7f7]">{item.imagen_principal_url ? <img src={item.imagen_principal_url} alt={item.nombre} className="h-full w-full object-contain" /> : <Box className="size-10 text-[#8a6b36]" />}</div>{imagenes.length > 1 ? <div className="mt-3 flex justify-center gap-2">{imagenes.slice(0, 6).map((url, i) => <span key={url + i} className={"size-1.5 rounded-full " + (i === 0 ? "bg-[#242321]" : "bg-[#c9c6c2]")} />)}</div> : null}<h3 className="mt-5 font-display text-xl leading-snug">{item.nombre}</h3><p className="mt-2 text-lg font-semibold">{precio}</p><div className="my-5 border-t border-[#dedbd7]" /></div>
+                <div className="px-5 pb-5">
+                  {item.talla ? <div><label htmlFor="talla-joya" className="mb-2 block text-sm text-[#625b54]">Talla</label><input id="talla-joya" value={tallaSeleccionada || item.talla} onChange={(e) => setTallaSeleccionada(e.target.value)} placeholder={item.talla} className="h-11 w-full border border-[#d6d3cf] bg-white px-4 text-sm outline-none focus:border-[#8a6b36]" /><p className="mt-2 text-xs text-[#746b62]">Puedes ajustar la talla antes de añadir la pieza.</p></div> : <div className="rounded-sm border border-[#e2dfdb] p-3"><label htmlFor="talla-joya" className="text-sm font-medium">Talla o medida (opcional)</label><input id="talla-joya" value={tallaSeleccionada} onChange={(e) => setTallaSeleccionada(e.target.value)} placeholder="Indica tu talla" className="mt-2 h-10 w-full border border-[#d6d3cf] px-3 text-sm outline-none focus:border-[#8a6b36]" /></div>}
+                  <div className="mt-5 space-y-4 border-y border-[#dedbd7] py-4 text-sm"><div className="flex items-start gap-3"><Truck className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><p>Coordina la fecha y el costo de entrega directamente con el taller.</p></div><div className="flex items-start gap-3"><Ruler className="mt-0.5 size-5 shrink-0 text-[#746b62]" /><p>Confirma la talla, los materiales y la disponibilidad antes de finalizar tu pedido.</p></div></div>
+                  {errorCarrito ? <p className="mt-3 text-xs text-red-600">{errorCarrito}</p> : null}<button type="button" onClick={agregarProductoAlCarrito} className="mt-5 w-full bg-[#242321] px-5 py-4 text-xs font-bold uppercase tracking-[.12em] text-white transition hover:bg-[#8a6b36]">Añadir al carrito</button><p className="mt-3 text-center text-xs leading-5 text-[#746b62]">El carrito no realiza cobros. El taller confirmará precio final, disponibilidad y entrega.</p>
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      ) : null}
+
       <footer className="mx-auto max-w-6xl px-5 py-10 sm:px-8"><div className="border-t border-[#1f1b1815] pt-6 text-xs text-[#746b62]">© {config.nombre_publico} · Catálogo digital</div></footer>
     </main>
   );
