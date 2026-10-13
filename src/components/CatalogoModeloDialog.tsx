@@ -264,8 +264,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               </label>
               {subiendo ? <span className="text-[11px] text-muted-foreground">Subiendo imágenes… {progresoSubida}%</span> : null}
             </div>
-            <label className="grid gap-1.5 text-xs font-semibold">Video (URL)<input type="url" value={form.video_url} onChange={e => setForm(v => ({ ...v, video_url: e.target.value }))} className={input} placeholder="https://..." /></label>
-            <label className="grid gap-1.5 text-xs font-semibold">AURUM Render (URL)<input type="url" value={form.aurum_render_url} onChange={e => setForm(v => ({ ...v, aurum_render_url: e.target.value }))} className={input} placeholder="https://..." /></label>
+
           </section>
 
           <section className="grid gap-4 sm:grid-cols-2">
