@@ -378,7 +378,7 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
           )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
             <p className="text-xs font-medium text-foreground">La ficha usa los cálculos y tolerancias configurados actualmente.</p>
-            <FichaCilindrosTallerA4 cilindros={cilindrosScope === claveCilindros ? cilindrosGuardados : []} configuracion={configuracion} identidad={{ nombre: sesionCalculadora?.participante?.nombre ?? sesionCalculadora?.sede?.nombre }} />
+            <FichaCilindrosTallerA4 cilindros={cilindrosScope === claveCilindros ? cilindrosGuardados : []} configuracion={configuracion} identidad={{ nombre: sesionCalculadora?.participante?.nombre ?? sesionCalculadora?.sede?.nombre ?? null }} />
           </div>
         </section>
 
