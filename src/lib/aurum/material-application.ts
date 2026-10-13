@@ -256,17 +256,17 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
     const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
     const partLayerIndex=selectionLayerIndex(x);
-    // Match the actual Rhino layer before considering IDs. Some 3DM loaders
-    // expose object/user-data IDs under layerId; those values are not guaranteed
-    // to be the Rhino layer UUID. Exact layer name is therefore authoritative,
-    // followed by the preserved source layer index, and only then the stable ID.
-    const sameLayerIdentity=selectedLayer&&partLayer
-      ? partLayer===selectedLayer
-      : selectedLayerIndex!==null&&partLayerIndex!==null
-        ? partLayerIndex===selectedLayerIndex
-        : selectedLayerId!=null&&partLayerId!=null
-          ? String(partLayerId)===String(selectedLayerId)
-          : false;
+    // MatrixGold files can reuse a generic layer name such as "Gem" across
+    // several distinct layers. Never group by name while numeric source layer
+    // indices are available: the index is the discriminating identity here.
+    // Prefer index, then stable ID, and use exact name only as a last resort
+    // when BOTH meshes lack index/ID metadata.
+    const sameLayerIdentity=selectedLayerIndex!==null&&partLayerIndex!==null
+      ? partLayerIndex===selectedLayerIndex
+      : selectedLayerId!=null&&partLayerId!=null
+        ? String(partLayerId)===String(selectedLayerId)
+        : selectedLayerIndex===null&&partLayerIndex===null&&selectedLayerId==null&&partLayerId==null
+          &&!!selectedLayer&&!!partLayer&&partLayer===selectedLayer;
     if(sameLayerIdentity)targets.push(x);
   });
   // Fail closed: if no matching layer metadata survives conversion, modify only
