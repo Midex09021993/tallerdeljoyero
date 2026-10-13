@@ -196,8 +196,12 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   if (!model || !activePart?.isMesh) return false;
   const selectedMeta=selectionMeta(activePart);
   const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
+  const selectedLayerIndex=Number.isInteger(selectedMeta.layerIndex)&&selectedMeta.layerIndex>=0
+    ? selectedMeta.layerIndex
+    : Number.isInteger(activePart?.userData?.attributes?.layerIndex)&&activePart.userData.attributes.layerIndex>=0
+      ? activePart.userData.attributes.layerIndex
+      : null;
   const selectedCategory=selectionCategory(activePart);
-  const selectedSlot=selectedMeta.matrixSlot;
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
   applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
@@ -208,9 +212,11 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     x.castShadow=category !== "gema";
     x.receiveShadow=true;
     const meta=selectionMeta(x);
-    const sameLayer=!!selectedLayer&&meta.capa===selectedLayer&&category===selectedCategory;
-    const sameSlot=selectedSlot!=null&&meta.matrixSlot===selectedSlot&&category===selectedCategory;
-    const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&(sameLayer||sameSlot));
+    const partLayerIndex=Number.isInteger(meta.layerIndex)&&meta.layerIndex>=0?meta.layerIndex:null;
+    const sameLayerByIndex=selectedLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
+    const sameLayerByName=!!selectedLayer&&meta.capa===selectedLayer;
+    const sameLayer=(sameLayerByIndex||sameLayerByName)&&category===selectedCategory;
+    const shouldApply=x.uuid===activePart.uuid&&selectedCategory!=="gema"||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
     if(shouldApply){
       const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);applied++;
@@ -226,14 +232,20 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const modelRoot=target.parent?.parent?(()=>{let r=target;while(r.parent)r=r.parent;return r;})():target;
   const selectedMeta=selectionMeta(target);
   const selectedLayer=selectedMeta.capa||target.userData?.attributes?.layerName||null;
-  const selectedSlot=selectedMeta.matrixSlot;
+  const selectedLayerIndex=Number.isInteger(selectedMeta.layerIndex)&&selectedMeta.layerIndex>=0
+    ? selectedMeta.layerIndex
+    : Number.isInteger(target.userData?.attributes?.layerIndex)&&target.userData.attributes.layerIndex>=0
+      ? target.userData.attributes.layerIndex
+      : null;
   const targets:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const meta=selectionMeta(x),category=selectionCategory(x);
-    const sameLayer=!!selectedLayer&&meta.capa===selectedLayer&&category===selectedCategory;
-    const sameSlot=selectedSlot!=null&&meta.matrixSlot===selectedSlot&&category===selectedCategory;
-    if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&(sameLayer||sameSlot)))targets.push(x);
+    const partLayerIndex=Number.isInteger(meta.layerIndex)&&meta.layerIndex>=0?meta.layerIndex:null;
+    const sameLayerByIndex=selectedLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
+    const sameLayerByName=!!selectedLayer&&meta.capa===selectedLayer;
+    const sameLayer=(sameLayerByIndex||sameLayerByName)&&category===selectedCategory;
+    if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&sameLayer))targets.push(x);
   });
   if(!targets.length)targets.push(target);
   const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
