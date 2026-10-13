@@ -285,7 +285,7 @@ function LoginPage() {
             </div>
 
             <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
-              Correo de tu taller o usuario interno
+              Usuario
               <span className="relative mt-2 block">
                 <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
                 <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-white/[0.12] bg-[#0d0e0c]/70 py-3.5 pl-10 pr-3 text-sm text-[#f5f0e7] outline-none transition placeholder:text-white/30 focus:border-[#d8bd7b]/65 focus:ring-2 focus:ring-[#d8bd7b]/10" />
