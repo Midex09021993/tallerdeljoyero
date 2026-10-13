@@ -1302,7 +1302,13 @@ function MiNubePage() {
                                 </button>
                               )}
                               {archivo.nombre.toLowerCase().endsWith(".3dm") && (
-                                <button type="button" onClick={() => toast.info("La apertura directa en Aurum Render aún está pendiente de integrar.")} className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold hover:border-gold/50">
+                                <button type="button" onClick={async () => {
+                                  if (archivo.origen !== "supabase") { toast.error("Este archivo 3DM no está disponible en el almacenamiento privado de Mi Nube."); return; }
+                                  const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+                                  if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el 3DM para Aurum Render."); return; }
+                                  sessionStorage.setItem("aurum-render-archivo-pendiente", JSON.stringify({ url: data.signedUrl, nombre: nombreVisible(archivo.nombre) }));
+                                  window.location.assign("/aurum-render?desde-mi-nube=1");
+                                }} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">
                                   Abrir en Aurum Render
                                 </button>
                               )}
