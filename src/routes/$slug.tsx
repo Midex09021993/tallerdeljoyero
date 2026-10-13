@@ -286,8 +286,9 @@ function CatalogoPublicoPage() {
           <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {productosFiltrados.map((producto) => (
               <article key={producto.id} className="group min-w-0">
-                <a
-                  href={`/${encodeURIComponent(slugNormalizado)}/${encodeURIComponent(producto.slug)}`}
+                <Link
+                  to="/$slug/$producto"
+                  params={{ slug: slugNormalizado, producto: producto.slug }}
                   aria-label={`Ver joya: ${producto.nombre}`}
                   className="relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-white ring-1 ring-[#1f1b18]/[0.06] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_-28px_rgba(31,27,24,.38)]"
                 >
@@ -300,16 +301,16 @@ function CatalogoPublicoPage() {
                   <span className="absolute inset-x-3 bottom-3 flex items-center justify-between rounded-full bg-[#1f1b18]/90 px-4 py-3 text-[11px] font-semibold text-white backdrop-blur transition-colors duration-300 hover:bg-[#8a6b36]">
                     <span>Descubrir la joya</span><ArrowRight className="size-3.5" />
                   </span>
-                </a>
+                </Link>
                 <div className="px-0.5 pt-4">
                   <p className="text-[9px] font-semibold uppercase tracking-[.18em] text-[#8a6b36]">{producto.categoria}</p>
-                  <a href={`/${encodeURIComponent(slugNormalizado)}/${encodeURIComponent(producto.slug)}`} className="mt-1.5 block text-[17px] font-medium leading-snug tracking-[-.02em] text-[#29231d] transition-colors hover:text-[#8a6b36]">{producto.nombre}</a>
+                  <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="mt-1.5 block text-[17px] font-medium leading-snug tracking-[-.02em] text-[#29231d] transition-colors hover:text-[#8a6b36]">{producto.nombre}</Link>
                   {producto.descripcion?.trim() ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-[#746b62]">{producto.descripcion}</p> : null}
                   <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#1f1b18]/[.09] pt-3">
                     {producto.mostrarPrecio ? <span className="text-sm font-semibold tracking-tight">{formatPrice(producto.precioDesde, producto.moneda)}</span> : <span className="text-xs text-[#746b62]">Precio a consultar</span>}
-                    <a href={`/${encodeURIComponent(slugNormalizado)}/${encodeURIComponent(producto.slug)}`} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#8a6b36]">
+                    <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#1f1b18] px-4 py-2.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#8a6b36]">
                       Ver joya <ArrowRight className="size-3.5" />
-                    </a>
+                    </Link>
                   </div>
                   <p className="mt-2 text-[10px] text-[#8b8178]">Ref. {producto.codigo}</p>
                 </div>
