@@ -6,7 +6,7 @@ import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Pencil
 import { AppShell, Panel } from "@/components/AppShell";
 import { CatalogoCategoriasDialog } from "@/components/CatalogoCategoriasDialog";
 import { CatalogoColeccionesDialog } from "@/components/CatalogoColeccionesDialog";
-import { CatalogoModeloDialog, type CatalogoProductoEditor } from "@/components/CatalogoModeloDialog";
+import { CatalogoModeloDialog, type CatalogoProductoEditor, type ProyectoNubeInicial } from "@/components/CatalogoModeloDialog";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,6 +73,7 @@ function CatalogoPage() {
   const [coleccionesAbierta, setColeccionesAbierta] = useState(false);
   const [modeloEditando, setModeloEditando] = useState<CatalogoProductoEditor | null>(null);
   const [imagenDesdeMiNube, setImagenDesdeMiNube] = useState<{ nombre: string; imagen_principal_url: string } | null>(null);
+  const [proyectoDesdeMiNube, setProyectoDesdeMiNube] = useState<ProyectoNubeInicial | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
 
@@ -83,10 +84,18 @@ function CatalogoPage() {
       const parsed = JSON.parse(pendiente);
       if (typeof parsed?.imagen_principal_url === "string" && typeof parsed?.nombre === "string") {
         setImagenDesdeMiNube(parsed);
+        const proyecto = parsed?.proyecto_nube;
+        if (proyecto && typeof proyecto.carpeta === "string" && Array.isArray(proyecto.archivos)) {
+          const archivos = proyecto.archivos.filter((archivo: any) =>
+            archivo && typeof archivo.nombre === "string" && typeof archivo.ruta === "string" &&
+            typeof archivo.categoria === "string" && typeof archivo.bytes === "number" &&
+            (archivo.origen === "nas" || archivo.origen === "supabase"),
+          );
+          setProyectoDesdeMiNube({ carpeta: proyecto.carpeta, archivos });
+        } else setProyectoDesdeMiNube(null);
         setModeloEditando(null);
         setEditorAbierto(true);
       }
-      sessionStorage.removeItem("mi-nube-catalogo-pendiente");
     } catch { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); }
   }, []);
 
@@ -340,7 +349,7 @@ function CatalogoPage() {
         )}
       </section>
 
-      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url} initialName={imagenDesdeMiNube?.nombre} onClose={() => { setEditorAbierto(false); setImagenDesdeMiNube(null); }} onSaved={() => { setImagenDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url} initialName={imagenDesdeMiNube?.nombre} initialProject={proyectoDesdeMiNube} onClose={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); }} onSaved={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
       <CatalogoCategoriasDialog open={categoriasAbierta} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
       <CatalogoColeccionesDialog open={coleccionesAbierta} participanteId={sesion?.participante?.id ?? ""} productos={productoRows.map((p) => ({ id: p.id, nombre: p.nombre, codigo: p.codigo }))} onClose={() => setColeccionesAbierta(false)} onChanged={() => { if (sesion?.participante?.id) { void queryClient.invalidateQueries({ queryKey: ["catalogo-producto-colecciones", sesion.participante.id] }); void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); } }} />
