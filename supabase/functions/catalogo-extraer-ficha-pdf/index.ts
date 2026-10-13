@@ -1,14 +1,22 @@
-import { withSupabase } from "npm:@supabase/server@1";
+import { createClient } from "npm:@supabase/supabase-js@2";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 function json(body: unknown, status = 200) { return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
 function clean(value: unknown, max = 1000) { return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max); }
 function parseJson(text: string) { const value = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""); const a = value.indexOf("{"); const b = value.lastIndexOf("}"); if (a < 0 || b <= a) throw new Error("La IA no devolvió datos estructurados."); return JSON.parse(value.slice(a, b + 1)); }
-export default { fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
   try {
-    const userId = ctx.userClaims?.sub;
-    if (!userId) return json({ error: "Inicia sesión para analizar la ficha." }, 401);
+    const bearer = (req.headers.get("Authorization") ?? "").match(/^Bearer\s+(.+)$/i)?.[1];
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    if (!supabaseUrl || !anonKey) return json({ error: "Servicio no configurado." }, 500);
+    if (!bearer) return json({ error: "Inicia sesión para analizar la ficha." }, 401);
+    const supabase = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${bearer}` } }, auth: { persistSession: false } });
+    const { data: authData, error: authError } = await supabase.auth.getUser(bearer);
+    const userId = authData?.user?.id;
+    if (authError || !userId) return json({ error: "Inicia sesión para analizar la ficha." }, 401);
+    const ctx = { supabase };
     const body = await req.json().catch(() => ({}));
     const participanteId = clean(body?.participanteId, 100);
     const fileName = clean(body?.fileName, 180);
@@ -55,4 +63,4 @@ export default { fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
     if (campos.peso_gramos === null) advertencias.push("No se rellenó el peso en gramos; revisa si el documento usa otra unidad.");
     return json({ ok: true, archivo: fileName, campos, advertencias });
   } catch (error) { console.error("catalogo-extraer-ficha-pdf", error); return json({ error: "Ocurrió un error al analizar la ficha. Inténtalo de nuevo." }, 500); }
-}) };
+});
