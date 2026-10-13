@@ -394,7 +394,7 @@ function MiNubePage() {
         if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
         imagenPrincipalUrl = publicData.publicUrl;
       }
-      const nombreProyecto = proyecto?.nombre ?? nombreVisible(imagen!.nombre).replace(/\\.[^.]+$/, "");
+      const nombreProyecto = proyecto?.nombre ?? nombreVisible(imagen!.nombre).replace(/\.[^.]+$/, "");
       const proyectoNube = proyecto ? {
         carpeta: proyecto.nombre,
         archivos: proyecto.archivos.map((item) => ({
