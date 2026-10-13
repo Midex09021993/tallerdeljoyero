@@ -37,36 +37,42 @@ type HerramientaId = "yeso" | "oro" | "tallas" | "peso" | "gemas" | "stl";
 const herramientas = [
   {
     id: "yeso" as const,
+    ruta: "yeso-agua" as const,
     titulo: "Yeso / Agua",
     descripcion: "Calcula proporciones para preparar mezclas de revestimiento.",
     Icono: FlaskConical,
   },
   {
     id: "oro" as const,
+    ruta: "aleacion-oro" as const,
     titulo: "Aleación de oro",
     descripcion: "Calcula los metales necesarios para obtener la ley deseada.",
     Icono: Coins,
   },
   {
     id: "tallas" as const,
+    ruta: "tallas-anillos" as const,
     titulo: "Conversor de tallas",
     descripcion: "Consulta equivalencias entre escalas de tallas de anillos.",
     Icono: Ruler,
   },
   {
     id: "peso" as const,
+    ruta: "peso-joya-3d" as const,
     titulo: "Visualizador y peso 3D",
     descripcion: "Carga un modelo compatible y consulta su estimación de peso.",
     Icono: Scale,
   },
   {
     id: "gemas" as const,
+    ruta: "peso-gemas" as const,
     titulo: "Peso de gemas",
     descripcion: "Calcula estimaciones de peso para gemas de joyería.",
     Icono: CircleDot,
   },
   {
     id: "stl" as const,
+    ruta: "generador-stl-ia" as const,
     titulo: "Generador STL con IA",
     descripcion: "Reconstruye un modelo 3D desde una imagen con procesamiento local y descarga STL.",
     Icono: Sparkles,
@@ -116,27 +122,18 @@ function HerramientasPublicasPage() {
         </section>
 
         <section aria-label="Catálogo de herramientas" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {herramientas.map(({ id, titulo, descripcion, Icono }) => (
-            <button
+          {herramientas.map(({ id, ruta, titulo, descripcion, Icono }) => (
+            <Link
               key={id}
-              type="button"
-              onClick={() => setActiva(id)}
-              aria-pressed={activa === id}
-              className={`group flex min-h-52 flex-col rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b] ${
-                activa === id
-                  ? "border-[#d8bd7b]/60 bg-[#d8bd7b]/[.08]"
-                  : "border-white/10 bg-white/[.02]"
-              }`}
+              to="/herramientas/$herramienta"
+              params={{ herramienta: ruta }}
+              className="group flex min-h-52 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]"
             >
-              <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]">
-                <Icono className="size-5" />
-              </span>
+              <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Icono className="size-5" /></span>
               <span className="mt-4 text-base font-semibold">{titulo}</span>
               <span className="mt-2 flex-1 text-sm leading-6 text-white/55">{descripcion}</span>
-              <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">
-                Abrir herramienta <ArrowRight className="size-3.5 transition group-hover:translate-x-1" />
-              </span>
-            </button>
+              <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir herramienta <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+            </Link>
           ))}
           <Link
             to="/aurum-render-public"
