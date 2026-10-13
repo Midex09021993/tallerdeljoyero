@@ -151,6 +151,34 @@ Deno.serve(async (req) => {
         console.warn("Gemini focused weight extraction error", String(weightError).slice(0, 200));
       }
     }
+    // Si la extracción general no produjo descripción, pedir una segunda generación enfocada en el texto comercial.
+    if (typeof parsed.descripcion !== "string" || !parsed.descripcion.trim()) {
+      try {
+        const descripcionPrompt = `Redacta una descripción pública comercial en español, natural y elegante, de 2 a 4 frases para una ficha de joyería. Usa exclusivamente estos datos extraídos del PDF: nombre=${String(parsed.nombre ?? "no identificado")}; metal=${String(parsed.metal_principal ?? "no identificado")}; piedras=${typeof parsed.piedras === "string" ? parsed.piedras : JSON.stringify(parsed.piedras ?? null)}; medidas=${String(parsed.medidas ?? "no identificadas")}; talla=${String(parsed.talla ?? "no identificada")}; técnica=${String(parsed.tecnica ?? "no identificada")}; acabado=${String(parsed.acabado ?? "no identificado")}. Devuelve SOLO JSON con la clave descripcion. No inventes diseño, autenticidad, origen, piedras naturales, procesos ni propiedades no confirmadas. Si hay pocos datos, escribe una descripción breve basada solo en lo conocido.`;
+        const retryDescripcion = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modeloUsado}:generateContent`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: descripcionPrompt }] }],
+              generationConfig: { responseMimeType: "application/json" },
+            }),
+          },
+        );
+        if (retryDescripcion.ok) {
+          const descripcionResult = await retryDescripcion.json();
+          const descripcionText = String((descripcionResult?.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p?.text ?? "").join(""));
+          const descripcionParsed = parseJson(descripcionText);
+          if (typeof descripcionParsed.descripcion === "string" && descripcionParsed.descripcion.trim()) {
+            parsed.descripcion = descripcionParsed.descripcion;
+          }
+        }
+        console.info("Gemini focused description generation completed", { modelo: modeloUsado, found: typeof parsed.descripcion === "string" && !!parsed.descripcion.trim() });
+      } catch (descriptionError) {
+        console.warn("Gemini focused description generation failed", String(descriptionError).slice(0, 200));
+      }
+    }
     const campos = {
       nombre: typeof parsed.nombre === "string" ? clean(parsed.nombre, 160) : null,
       categoria: typeof parsed.categoria === "string" ? clean(parsed.categoria, 80) : null,
