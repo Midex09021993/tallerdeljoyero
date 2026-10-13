@@ -14,20 +14,22 @@ export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
     if (usuario.includes("@")) throw new Error("Ingresa tu nombre de usuario, no tu correo electrónico.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: porNombre, error: errorNombre }, { data: porUsuario, error: errorUsuario }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, nombre, usuario, activo").ilike("nombre", usuario).limit(3),
-      supabaseAdmin.from("profiles").select("id, nombre, usuario, activo").ilike("usuario", usuario).limit(3),
-    ]);
-    if (errorNombre || errorUsuario) throw new Error("No se pudo verificar el usuario. Inténtalo de nuevo.");
-    // Una misma cuenta puede coincidir por nombre y por usuario; deduplicar por ID.
-    const perfiles = Array.from(new Map(
-      [...(porNombre ?? []), ...(porUsuario ?? [])].map((perfil: any) => [perfil.id, perfil]),
-    ).values());
-    const coincidencias = perfiles.filter((perfil: any) =>
+    // Resolver únicamente por la credencial guardada en profiles.usuario.
+    // No usar profiles.nombre como alternativa: dos personas pueden compartir nombre
+    // y una coincidencia ambigua nunca debe decidir qué cuenta se autentica.
+    const { data: perfilesUsuario, error: errorUsuario } = await supabaseAdmin
+      .from("profiles")
+      .select("id, usuario, activo")
+      .ilike("usuario", usuario)
+      .limit(3);
+    if (errorUsuario) throw new Error("No se pudo verificar el usuario. Inténtalo de nuevo.");
+    // ilike puede interpretar % y _ como comodines; validar igualdad literal y
+    // sin distinguir mayúsculas antes de aceptar una sola cuenta activa.
+    const usuarioNormalizado = usuario.toLocaleLowerCase();
+    const coincidencias = (perfilesUsuario ?? []).filter((perfil: any) =>
       perfil.activo !== false &&
-      [perfil.nombre, perfil.usuario].some((valor: string | null) =>
-        typeof valor === "string" && valor.trim().toLocaleLowerCase() === usuario.toLocaleLowerCase()
-      )
+      typeof perfil.usuario === "string" &&
+      perfil.usuario.trim().toLocaleLowerCase() === usuarioNormalizado
     );
     if (coincidencias.length !== 1) {
       throw new Error("Usuario o contraseña incorrectos");
