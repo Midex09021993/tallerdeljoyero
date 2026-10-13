@@ -380,10 +380,11 @@ function MiNubePage() {
   const anadirImagenAlCatalogo = async (
     archivo: ArchivoNube | null,
     proyecto?: { nombre: string; archivos: ArchivoNube[] },
+    pdf?: ArchivoNube | null,
   ) => {
     if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
     const imagen = archivo ?? proyecto?.archivos.find((item) => item.categoria === "fotos") ?? null;
-    if (!imagen && !proyecto) { toast.error("Selecciona una imagen o un proyecto."); return; }
+    if (!imagen && !proyecto && !pdf) { toast.error("Selecciona una imagen, un PDF o un proyecto."); return; }
     if (imagen && imagen.origen !== "supabase") { toast.error("La portada debe ser una imagen guardada en Mi Nube."); return; }
     setAnadiendoCatalogo(proyecto?.nombre ?? imagen?.ruta ?? "proyecto");
     try {
@@ -401,7 +402,7 @@ function MiNubePage() {
         if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
         imagenPrincipalUrl = publicData.publicUrl;
       }
-      const nombreProyecto = proyecto?.nombre ?? nombreVisible(imagen!.nombre).replace(/\.[^.]+$/, "");
+      const nombreProyecto = proyecto?.nombre ?? nombreVisible((imagen ?? pdf)!.nombre).replace(/\.[^.]+$/, "");
       const proyectoNube = proyecto ? {
         carpeta: proyecto.nombre,
         archivos: proyecto.archivos.map((item) => ({
@@ -411,8 +412,9 @@ function MiNubePage() {
       } : null;
       sessionStorage.setItem("mi-nube-catalogo-pendiente", JSON.stringify({
         nombre: nombreProyecto, imagen_principal_url: imagenPrincipalUrl, proyecto_nube: proyectoNube,
+        pdf_nube: pdf ? { nombre: nombreVisible(pdf.nombre), ruta: pdf.ruta } : null,
       }));
-      toast.success(proyecto ? "Proyecto preparado. Revisa la ficha y sus archivos antes de guardar." : "Imagen preparada. Completa la ficha para añadirla al catálogo.");
+      toast.success(pdf ? "PDF privado preparado para analizar con IA. Revisa la ficha antes de guardar." : proyecto ? "Proyecto preparado. Revisa la ficha y sus archivos antes de guardar." : "Imagen preparada. Completa la ficha para añadirla al catálogo.");
       window.location.assign("/catalogo?desde=mi-nube");
     } catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo preparar el proyecto para el catálogo."); }
     finally { setAnadiendoCatalogo(null); }
