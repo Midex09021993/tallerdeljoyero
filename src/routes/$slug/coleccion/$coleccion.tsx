@@ -81,7 +81,7 @@ function ColeccionPublicaPage() {
             <article key={producto.producto_id} className="group">
               <Link to="/$slug/$producto" params={{ slug: catalogoSlug, producto: producto.producto_slug ?? producto.producto_id! }} className="block">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] bg-[#e9e3da]">
-                  {producto.imagen_principal_url ? <img src={producto.imagen_principal_url} alt={producto.nombre ?? ""} className="size-full object-cover transition duration-700 group-hover:scale-[1.035]" /> : <div className="grid size-full place-items-center"><Box className="size-10 text-[#8a6b36]" /></div>}
+                  {producto.imagen_principal_url ? <img src={producto.imagen_principal_url} alt={producto.nombre ?? ""} className="size-full object-cover transition duration-700 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-10 text-[#8a6b36]" /></div>}
                 </div>
                 <p className="mt-4 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{producto.codigo} · {producto.categoria}</p>
                 <h2 className="mt-1 text-lg font-semibold">{producto.nombre}</h2>
