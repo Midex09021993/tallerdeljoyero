@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -11,12 +10,6 @@ import {
   Sparkles,
   FlaskConical,
 } from "lucide-react";
-import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
-import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
-import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
-import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
-import { CalculadoraYeso } from "@/routes/_authenticated/taller";
-import { GeneradorSTLIA } from "@/components/GeneradorSTLIA";
 
 export const Route = createFileRoute("/herramientas-publicas")({
   head: () => ({
@@ -32,7 +25,6 @@ export const Route = createFileRoute("/herramientas-publicas")({
   component: HerramientasPublicasPage,
 });
 
-type HerramientaId = "yeso" | "oro" | "tallas" | "peso" | "gemas" | "stl";
 
 const herramientas = [
   {
@@ -80,17 +72,6 @@ const herramientas = [
 ];
 
 function HerramientasPublicasPage() {
-  const [activa, setActiva] = useState<HerramientaId | null>(null);
-
-  const titulos: Record<HerramientaId, string> = {
-    yeso: "Yeso / Agua",
-    oro: "Calculadora de aleación de oro",
-    tallas: "Conversor de tallas de anillo",
-    peso: "Visualizador y peso 3D",
-    gemas: "Calculadora de peso de gemas",
-    stl: "Generador STL con IA",
-  };
-
   return (
     <main className="min-h-screen bg-[#10110f] text-[#f5f0e7]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(216,189,123,.12),transparent_68%)]" />
@@ -154,32 +135,6 @@ function HerramientasPublicasPage() {
             <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir transferencia <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
           </Link>
         </section>
-
-        {activa ? (
-          <section className="mt-8 scroll-mt-6 rounded-2xl border border-[#d8bd7b]/25 bg-[#181915] p-4 shadow-2xl sm:p-6" aria-labelledby="herramienta-activa">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d8bd7b]">Herramienta seleccionada</p>
-                <h2 id="herramienta-activa" className="mt-1 text-xl font-semibold">{titulos[activa]}</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiva(null)}
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white/65 transition hover:border-[#d8bd7b]/40 hover:text-white"
-              >
-                <ArrowLeft className="size-4" /> Volver al catálogo
-              </button>
-            </div>
-            <div className="mx-auto min-h-80 w-full min-w-0 max-w-5xl [&>*]:!mx-auto [&>*]:!w-full [&>*]:!max-w-full">
-              {activa === "yeso" ? <CalculadoraYeso /> : null}
-              {activa === "oro" ? <CalculadoraAleacionOro /> : null}
-              {activa === "tallas" ? <ConversorTallasAnillo /> : null}
-              {activa === "peso" ? <VisorPesoJoyeria archivoInicial={null} /> : null}
-              {activa === "gemas" ? <CalculadoraPesoGemas /> : null}
-              {activa === "stl" ? <GeneradorSTLIA /> : null}
-            </div>
-          </section>
-        ) : null}
 
         <footer className="mt-12 border-t border-white/10 py-6 text-xs text-white/35">
           Aurum Lab · Herramientas técnicas para el sector joyero
