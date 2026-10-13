@@ -245,19 +245,28 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
   const selectedMeta=selectionMeta(target);
-  const selectedLayer=selectedMeta.capa||target.userData?.attributes?.layerName||null;
+  const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||"").trim();
+  const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
   const selectedLayerIndex=selectionLayerIndex(target);
   const targets:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const meta=selectionMeta(x),category=selectionCategory(x);
+    if(category!==selectedCategory)return;
+    const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
+    const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
     const partLayerIndex=selectionLayerIndex(x);
-    const sameLayerIdentity=selectedLayerIndex!==null
-      ? partLayerIndex===selectedLayerIndex
-      : !!selectedLayer&&meta.capa===selectedLayer;
-    const sameLayer=sameLayerIdentity&&category===selectedCategory;
-    if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&sameLayer))targets.push(x);
+    // Prefer Rhino's stable layer ID, then exact layer name. Use numeric
+    // indices only when names/IDs are absent, because exporters may reuse or
+    // rewrite indices while preserving per-mesh layer names.
+    const sameLayerIdentity=selectedLayerId!=null&&partLayerId!=null
+      ? String(partLayerId)===String(selectedLayerId)
+      : selectedLayer&&partLayer
+        ? partLayer===selectedLayer
+        : selectedLayerIndex!==null&&partLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
+    if(sameLayerIdentity)targets.push(x);
   });
+  // If metadata is incomplete, never recolor other layers by guesswork.
   if(!targets.length)targets.push(target);
   const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
   const preset:any=presetFromCatalog(gemConfig);
