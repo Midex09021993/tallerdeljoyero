@@ -36,8 +36,8 @@ export const AURUM_HDRI_URLS:Record<string,string>={
   warm:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   white:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/white_studio_06_2k.hdr",
   // Exact iJewel/WebGi environment references found in the supplied VJSON.
-  ijewelMetal:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-003.hdr",
-  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",
+  ijewelMetal:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-010.exr",
+  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
 };
 export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS["jewelry"]!;
 
