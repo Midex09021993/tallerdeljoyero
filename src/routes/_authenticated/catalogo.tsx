@@ -195,7 +195,7 @@ function CatalogoPage() {
     enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
       const { data, error } = await supabase.from("catalogo_productos")
-        .select("id, codigo, nombre, slug, categoria, descripcion, imagen_principal_url, galeria, video_url, aurum_render_url, precio_desde, moneda, publicado, destacado, orden, metal_principal, peso_gramos, piedras, medidas, talla, modalidad_talla, sistema_tallas, tallas_disponibles, tecnica, acabado, disponibilidad, tiempo_fabricacion_dias, ficha_tecnica_url, mostrar_precio, mostrar_ficha_tecnica, notas_internas")
+        .select("id, codigo, nombre, slug, categoria, descripcion, imagen_principal_url, galeria, video_url, aurum_render_url, precio_desde, moneda, publicado, destacado, orden, metal_principal, peso_gramos, piedras, medidas, talla, tecnica, acabado, disponibilidad, tiempo_fabricacion_dias, ficha_tecnica_url, mostrar_precio, mostrar_ficha_tecnica, notas_internas")
         .eq("participante_id", sesion!.participante!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
       if (error) throw error;
       return (data ?? []) as ProductoRow[];
