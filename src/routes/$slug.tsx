@@ -209,11 +209,8 @@ function CatalogoPublicoPage() {
             >
               <Share2 className="mr-1.5 size-3.5" /> Compartir
             </button>
-            {whatsappHref ? (
-              <a href={whatsappHref} target="_blank" rel="noreferrer" className="rounded-full bg-[#1f1b18] px-3.5 py-2 text-xs font-semibold text-white">
-                WhatsApp
-              </a>
-            ) : null}
+            <button type="button" onClick={() => setCarritoAbierto(true)} className="relative inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3.5 py-2 text-xs font-semibold" aria-label={"Carrito de compras, " + cantidadCarrito + " artículos"}><ShoppingBag className="size-4" /> Carrito {cantidadCarrito > 0 ? <span className="rounded-full bg-[#8a6b36] px-1.5 py-0.5 text-[10px] text-white">{cantidadCarrito}</span> : null}</button>
+            {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="rounded-full bg-[#1f1b18] px-3.5 py-2 text-xs font-semibold text-white">WhatsApp</a> : null}
           </div>
         </div>
       </header>
@@ -304,7 +301,7 @@ function CatalogoPublicoPage() {
                   <p className="mt-1 text-xs leading-5 text-[#746b62]">{producto.descripcion}</p>
                   <div className="mt-3 flex items-center justify-between gap-3">
                     {producto.mostrarPrecio ? <span className="text-sm font-semibold">{formatPrice(producto.precioDesde, producto.moneda)}</span> : <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="text-sm font-semibold hover:text-[#8a6b36]">Consultar</Link>}
-                    <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="text-xs font-semibold underline underline-offset-4">Ver ficha</Link>
+                    <div className="flex items-center gap-3"><Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="text-xs font-semibold underline underline-offset-4">Ver ficha</Link><button type="button" onClick={() => agregarAlCarrito(producto)} className="inline-flex items-center gap-1.5 rounded-full bg-[#1f1b18] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#8a6b36]"><ShoppingBag className="size-3.5" /> Añadir</button></div>
                   </div>
                 </div>
               </article>
