@@ -68,7 +68,14 @@ export function CatalogoProductoPublicoPage() {
   });
 
   const config = rows[0] ?? null;
-  const item = rows.find((row) => row.producto_id && row.producto_slug === productoSlug.toLowerCase());
+  const productoSolicitado = decodeURIComponent(productoSlug).trim().toLowerCase();
+  const item = rows.find((row) =>
+    row.producto_id &&
+    (
+      row.producto_slug?.trim().toLowerCase() === productoSolicitado ||
+      row.producto_id.toLowerCase() === productoSolicitado
+    )
+  );
   const [solicitudAbierta, setSolicitudAbierta] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [enviada, setEnviada] = useState(false);
