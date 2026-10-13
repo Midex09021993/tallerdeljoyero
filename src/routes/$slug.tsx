@@ -198,7 +198,7 @@ function CatalogoPublicoPage() {
         ...linea,
         slug: producto.slug,
         codigo: producto.codigo,
-        nombre: producto.nombre + (linea.talla ? " · Talla " + linea.talla : ""),
+        nombre: producto.nombre,
         precio: producto.mostrarPrecio ? producto.precioDesde : null,
         moneda: producto.moneda,
         imagen: producto.imagen,
