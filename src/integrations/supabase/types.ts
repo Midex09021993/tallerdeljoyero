@@ -390,6 +390,44 @@ export type Database = {
           },
         ]
       }
+      catalogo_proyectos_nube: {
+        Row: {
+          archivos: Json
+          carpeta: string
+          created_at: string
+          participante_id: string
+          producto_id: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          archivos?: Json
+          carpeta: string
+          created_at?: string
+          participante_id: string
+          producto_id: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          archivos?: Json
+          carpeta?: string
+          created_at?: string
+          participante_id?: string
+          producto_id?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_proyectos_nube_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: true
+            referencedRelation: "catalogo_productos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalogo_solicitudes_cotizacion: {
         Row: {
           cantidad: number
