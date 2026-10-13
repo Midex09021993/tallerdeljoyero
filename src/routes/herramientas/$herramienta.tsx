@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Calculator, CircleDot, Coins, FlaskConical, Gem, Ruler, Scale, Sparkles } from "lucide-react";
+import { ArrowLeft, CircleDot, Coins, FlaskConical, Gem, Ruler, Scale, Sparkles } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
@@ -66,6 +66,7 @@ export const Route = createFileRoute("/herramientas/$herramienta")({
         { property: "og:description", content: pagina?.descripcion ?? "Herramientas técnicas para joyería." },
         { property: "og:type", content: "website" },
       ],
+      links: pagina ? [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas/" + encodeURIComponent(params.herramienta) }] : [],
     };
   },
   component: HerramientaPublicaPage,
