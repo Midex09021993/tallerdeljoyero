@@ -213,9 +213,10 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     x.receiveShadow=true;
     const meta=selectionMeta(x);
     const partLayerIndex=Number.isInteger(meta.layerIndex)&&meta.layerIndex>=0?meta.layerIndex:null;
-    const sameLayerByIndex=selectedLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
-    const sameLayerByName=!!selectedLayer&&meta.capa===selectedLayer;
-    const sameLayer=(sameLayerByIndex||sameLayerByName)&&category===selectedCategory;
+    const sameLayerIdentity=selectedLayerIndex!==null
+      ? partLayerIndex===selectedLayerIndex
+      : !!selectedLayer&&meta.capa===selectedLayer;
+    const sameLayer=sameLayerIdentity&&category===selectedCategory;
     const shouldApply=x.uuid===activePart.uuid&&selectedCategory!=="gema"||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
     if(shouldApply){
       const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
@@ -229,7 +230,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   if(selectedCategory!=="gema"&&selectedCategory!=="otro")return false;
-  const modelRoot=target.parent?.parent?(()=>{let r=target;while(r.parent)r=r.parent;return r;})():target;
+  let modelRoot:any=target;
+  while(modelRoot.parent)modelRoot=modelRoot.parent;
   const selectedMeta=selectionMeta(target);
   const selectedLayer=selectedMeta.capa||target.userData?.attributes?.layerName||null;
   const selectedLayerIndex=Number.isInteger(selectedMeta.layerIndex)&&selectedMeta.layerIndex>=0
@@ -242,9 +244,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const meta=selectionMeta(x),category=selectionCategory(x);
     const partLayerIndex=Number.isInteger(meta.layerIndex)&&meta.layerIndex>=0?meta.layerIndex:null;
-    const sameLayerByIndex=selectedLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
-    const sameLayerByName=!!selectedLayer&&meta.capa===selectedLayer;
-    const sameLayer=(sameLayerByIndex||sameLayerByName)&&category===selectedCategory;
+    const sameLayerIdentity=selectedLayerIndex!==null
+      ? partLayerIndex===selectedLayerIndex
+      : !!selectedLayer&&meta.capa===selectedLayer;
+    const sameLayer=sameLayerIdentity&&category===selectedCategory;
     if(x===target||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="gema"&&sameLayer))targets.push(x);
   });
   if(!targets.length)targets.push(target);
