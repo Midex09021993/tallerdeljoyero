@@ -160,7 +160,10 @@ export function AurumRender() {
     (async () => {
       const THREE = await import("three");
             const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
-      const { RGBELoader } = await import("three/examples/jsm/loaders/RGBELoader.js");
+      const [{ RGBELoader }, { EXRLoader }] = await Promise.all([
+        import("three/examples/jsm/loaders/RGBELoader.js"),
+        import("three/examples/jsm/loaders/EXRLoader.js"),
+      ]);
       const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       let renderQuality = getAurumRenderQuality(renderQualityId);
@@ -212,7 +215,7 @@ export function AurumRender() {
         renderQuality
       );
 
-      const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader);
+      const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader, EXRLoader);
       let entorno = environmentController.current;
       // El EnvironmentController es la única autoridad para HDRI,
       // intensidad y rotación. El componente no escribe estado de entorno directamente.
@@ -220,7 +223,7 @@ export function AurumRender() {
       // El mapa de entorno y el GemEnvironment son independientes: el metal
       // necesita bandas de reflexión controladas y la gema necesita un entorno
       // óptico limpio para refracción/dispersion.
-      const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader);
+      const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader, EXRLoader);
       let entornoGema:any = null;
       let gemEnvironmentUrl = getAurumGemHdriUrl("gemNeutral");
       let gemEnvironmentRotation = .28;
