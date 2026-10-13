@@ -41,13 +41,13 @@ type Props = {
   initialName?: string | null;
 };
 
-function slugify(value: string) {
+const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;\n\nfunction slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
 export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName }: Props) {
   const [form, setForm] = useState({
-    codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? "Otros", descripcion: "",
+    codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? CATEGORIAS_PREDETERMINADAS[0], descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
     precio_desde: "", moneda: "PEN",
     metal_principal: "", peso_gramos: "", piedras: "", medidas: "", talla: "",
@@ -66,7 +66,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       codigo: producto?.codigo ?? "",
       nombre: producto?.nombre ?? initialName ?? "",
       slug: producto ? slugify(producto.nombre) : "",
-      categoria: producto?.categoria ?? categorias[0] ?? "Otros",
+      categoria: producto?.categoria ?? categorias[0] ?? CATEGORIAS_PREDETERMINADAS[0],
       descripcion: producto?.descripcion ?? "",
       imagen_principal_url: producto?.imagen_principal_url ?? initialImageUrl ?? "",
       galeria: Array.isArray(producto?.galeria) ? producto.galeria.join("\n") : "",
@@ -126,7 +126,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   async function guardar(event: FormEvent) {
     event.preventDefault();
     const nombre = form.nombre.trim();
-    const slug = slugify(form.slug || nombre);
+    const slug = slugify(nombre);
     const precio = form.precio_desde.trim() === "" ? null : Number(form.precio_desde);
     const peso = form.peso_gramos.trim() === "" ? null : Number(form.peso_gramos);
     const tiempo = form.tiempo_fabricacion_dias.trim() === "" ? null : Number(form.tiempo_fabricacion_dias);
@@ -200,8 +200,8 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               <input value={form.codigo} readOnly className={`${input} bg-surface-muted font-mono font-semibold text-muted-foreground`} placeholder="Se genera automáticamente" />
               <span className="text-[10px] font-normal text-muted-foreground">{producto ? "Código permanente." : "Se asignará automáticamente al crearla."}</span>
             </label>
-            <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: v.slug || slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
-            <label className="grid gap-1.5 text-xs font-semibold">Slug público<input required value={form.slug} onChange={(e) => setForm(v => ({ ...v, slug: slugify(e.target.value) }))} className={input} /><span className="text-[10px] font-normal text-muted-foreground">Será la identificación pública de la pieza.</span></label>
+            <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
+            <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slugify(form.nombre)} readOnly aria-readonly="true" className={`${input} cursor-not-allowed bg-surface-muted text-muted-foreground`} placeholder="Se genera a partir del nombre" /><span className="text-[10px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre y no se puede editar.</span></label>
             <label className="grid gap-1.5 text-xs font-semibold">Categoría
               <select value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input}>
                 {categorias.map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
