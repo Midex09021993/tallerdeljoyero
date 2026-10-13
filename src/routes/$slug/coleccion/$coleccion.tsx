@@ -40,8 +40,8 @@ export const Route = createFileRoute("/$slug/coleccion/$coleccion")({
 
 function ColeccionPublicaPage() {
   const { slug, coleccion } = Route.useParams();
-  const catalogoSlug = slug.toLowerCase();
-  const coleccionSlug = coleccion.toLowerCase();
+  const catalogoSlug = slug.trim().toLowerCase();
+  const coleccionSlug = coleccion.trim().toLowerCase();
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["catalogo-coleccion-publica", catalogoSlug, coleccionSlug],
