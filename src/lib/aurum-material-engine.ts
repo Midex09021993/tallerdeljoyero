@@ -124,11 +124,12 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   const calibratedRoughness=response.family==="yellow-gold"
     ? Math.max(.075,Math.min(.55,baseRoughness*1.33))
     : baseRoughness;
-  // A physically polished jewelry surface still needs a tiny microfacet spread.
-  // Apply only to explicitly polished/rodinated finishes; satin, matte, brushed
-  // and hammered materials retain their authored roughness.
+  // Preserve the preset's polished finish instead of imposing the previous .11
+  // roughness floor on every white metal. A lower floor reduces the broad, hazy
+  // reflection that can read as surface grain, while leaving authored satin/matte
+  // values untouched and retaining a small physically plausible microfacet spread.
   material.roughness=isPolishedPreciousMetal
-    ? Math.max(.11,Math.min(.55,calibratedRoughness))
+    ? Math.max(.065,Math.min(.55,calibratedRoughness))
     : calibratedRoughness;
 
   material.envMapIntensity=response.environmentIntensity;
@@ -136,7 +137,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // Base precious metals are not lacquered. Keep clearcoat only as a tiny
   // residual response so polished metal highlights come from the metal itself.
   material.clearcoat=Math.max(.025,Math.min(.055,preset.clearcoat*.10+.015));
-  material.clearcoatRoughness=Math.max(.045,Math.min(.14,material.roughness*.8));
+  material.clearcoatRoughness=Math.max(.025,Math.min(.12,material.roughness*.7));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
   const surfaceMicrostructure=getAurumSurfaceMicrostructure(THREE,preset);
