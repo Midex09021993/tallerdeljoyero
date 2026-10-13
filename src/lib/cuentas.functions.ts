@@ -217,6 +217,23 @@ export const registrarTaller = createServerFn({ method: "POST" })
       throw new Error("Ese correo ya tiene una cuenta. Puedes entrar con él desde el acceso principal.");
     }
 
+    // El nombre de la persona es también el usuario de acceso del registro público.
+    // Evitar duplicados activos para que el login no quede ambiguo por nombres iguales.
+    const { data: usuariosExistentes, error: usuariosExistentesError } = await supabaseAdmin
+      .from("profiles")
+      .select("usuario, activo")
+      .ilike("usuario", nombre)
+      .limit(10);
+    if (usuariosExistentesError) throw new Error("No se pudo comprobar la disponibilidad del usuario.");
+    const nombreNormalizado = nombre.toLocaleLowerCase();
+    if ((usuariosExistentes ?? []).some((perfil: any) =>
+      perfil.activo !== false &&
+      typeof perfil.usuario === "string" &&
+      perfil.usuario.trim().toLocaleLowerCase() === nombreNormalizado
+    )) {
+      throw new Error("Ese nombre de usuario ya está registrado. Usa un nombre que te identifique de forma única.");
+    }
+
     const { data: tallerExistente } = await supabaseAdmin
       .from("ecosistema_participantes")
       .select("id")
