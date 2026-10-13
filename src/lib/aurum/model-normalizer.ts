@@ -95,16 +95,36 @@ function buildRhinoLayerVisibility(layers:any[]) {
 
 function resolveRhinoLayerIndex(x:any): number {
   const candidates = [
+    x?.userData?.aurumRhino?.layerIndex,
     x?.userData?.attributes?.layerIndex,
     x?.userData?.attributes?.LayerIndex,
     x?.userData?.layerIndex,
     x?.userData?.LayerIndex,
   ];
   for (const value of candidates) {
-    const n = Number(value);
+    if (value === null || value === undefined || value === "") continue;
+    const n = typeof value === "number" ? value : Number(value);
     if (Number.isInteger(n) && n >= 0) return n;
   }
   return -1;
+}
+
+function colorToHex(color:any): string | undefined {
+  if (typeof color === "string") {
+    const match = color.match(/^#?([0-9a-f]{6})$/i);
+    return match ? "#" + match[1].toLowerCase() : undefined;
+  }
+  let channels:any[] | undefined;
+  if (Array.isArray(color) && color.length >= 3) channels = color.slice(0,3);
+  else if (color && typeof color === "object") {
+    if (color.r !== undefined || color.R !== undefined) channels = [color.r ?? color.R, color.g ?? color.G, color.b ?? color.B];
+    else if (color.red !== undefined || color.Red !== undefined) channels = [color.red ?? color.Red, color.green ?? color.Green, color.blue ?? color.Blue];
+  }
+  if (!channels || !channels.every((v:any) => Number.isFinite(Number(v)))) return undefined;
+  let rgb = channels.map((v:any) => Number(v));
+  // Some exporters expose normalized 0..1 RGB; Rhino layer colors are commonly 0..255.
+  if (Math.max(...rgb) <= 1) rgb = rgb.map(v => v * 255);
+  return "#" + rgb.map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("");
 }
 
 function classifyRhinoLayer(name:string,colorCapa?:string,clasificarCapa?:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
@@ -116,58 +136,64 @@ function classifyRhinoLayer(name:string,colorCapa?:string,clasificarCapa?:(capa:
 
 function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro"):number|undefined {
   if (category==="otro") return undefined;
-  const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
-  if (match) return Number(match[1]);
-  return undefined;
+  const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\\s_-]*([1-4])\\b/);
+  return match ? Number(match[1]) : undefined;
 }
 
 /**
- * iJewel reference GLB stores authoritative MatrixGold assignment on each
- * node: node extras contain rhinoLayer and attributes.layerIndex.
- * Never infer assignment from mesh traversal order or GLTF material index.
+ * Resolve each mesh from its own Rhino layer index/name and the root layer table.
+ * Never pair source and exported meshes by traversal order: GLTF export may reorder nodes.
  */
 function hydrateRhinoLayerMetadata(
   object:any,
   clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
 ) {
+  const rootData=object?.userData??{};
+  const layers=Array.isArray(rootData.layers)?rootData.layers:
+    Array.isArray(rootData.rhinoLayers)?rootData.rhinoLayers:[];
+  const byId=new Map<string,any>();
+  const byName=new Map<string,any>();
+  layers.forEach((layer:any,index:number)=>{
+    const id=layer?.id??layer?.Id;
+    if(id!=null)byId.set(String(id),layer);
+    const name=String(layer?.name??layer?.Name??"").trim().toLowerCase();
+    if(name)byName.set(name,layer);
+    // Keep index lookup implicit through the original array.
+    void index;
+  });
+
   object?.traverse?.((x:any)=>{
-    if (!x?.isMesh) return;
+    if(!x?.isMesh)return;
     const data=x.userData??{};
-    const layer=data.rhinoLayer ?? data.RhinoLayer ?? null;
-    const attrs=data.attributes ?? {};
-    const layerName=String(
-      layer?.name ??
-      layer?.Name ??
-      attrs.layerName ??
-      attrs.LayerName ??
-      data.layerName ??
-      ""
-    ).trim();
-    const layerIndex=resolveRhinoLayerIndex(x);
-    const color=layer?.color ?? layer?.Color;
-    const colorCapa=typeof color==="string"
-      ? color
-      : color
-        ? "#"+[color.r??color.R,color.g??color.G,color.b??color.B]
-            .map((v:any)=>Math.max(0,Math.min(255,Math.round(Number(v)||0))).toString(16).padStart(2,"0"))
-            .join("")
-        : undefined;
-    const category=classifyRhinoLayer(layerName,colorCapa,clasificarCapa);
-    const matrixSlot=matrixSlotFromLayer(layerName,category);
+    const attrs=data.attributes??{};
     const existing=data.aurumRhino??{};
-    if (!layerName && !existing.capa) return;
+    const layerIndex=resolveRhinoLayerIndex(x);
+    const layerId=attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
+    let layer=layerIndex>=0?layers[layerIndex]:undefined;
+    if(!layer&&layerId!=null)layer=byId.get(String(layerId));
+    const rawName=layer?.name??layer?.Name??data.rhinoLayer?.name??data.rhinoLayer?.Name??
+      data.RhinoLayer?.name??data.RhinoLayer?.Name??attrs.layerName??attrs.LayerName??
+      data.layerName??data.LayerName??existing.capa??"";
+    const layerName=String(rawName??"").trim();
+    if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
+    const color=colorToHex(layer?.color??layer?.Color??data.rhinoLayer?.color??data.RhinoLayer?.color??
+      attrs.layerColor??attrs.LayerColor??existing.colorCapa);
+    const category=classifyRhinoLayer(layerName,color,clasificarCapa);
+    const matrixSlot=matrixSlotFromLayer(layerName,category)??existing.matrixSlot;
+    const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa;
+    if(!hasAnyLayerEvidence)return;
 
     x.userData={
       ...data,
       aurumRhino:{
         ...existing,
-        capa:layerName || existing.capa || undefined,
-        colorCapa:colorCapa || existing.colorCapa || undefined,
+        capa:layerName||existing.capa||(layerIndex>=0?`Capa ${layerIndex+1}`:undefined),
+        colorCapa:color||existing.colorCapa||undefined,
         categoria:category,
-        layerIndex:layerIndex>=0 ? layerIndex : (existing.layerIndex ?? -1),
-        matrixSlot:matrixSlot ?? existing.matrixSlot,
-        rhinoLayerId:layer?.id ?? layer?.Id ?? existing.rhinoLayerId ?? null,
-        rhinoMaterialIndex:attrs.materialIndex ?? existing.rhinoMaterialIndex ?? null,
+        layerIndex:layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1),
+        matrixSlot,
+        rhinoLayerId:layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null,
+        rhinoMaterialIndex:attrs.materialIndex??existing.rhinoMaterialIndex??null,
         visible:x.visible!==false,
         hiddenByRhino:x.visible===false,
       },
@@ -200,34 +226,9 @@ export async function normalizeAurumModel(
     // traversal index. Mesh order is not a stable MatrixGold layer identity.
     hydrateRhinoLayerMetadata(interno,clasificarCapa);
 
-    // Fallback only for legacy 3DM exports that did not preserve Rhino extras.
-    const unresolved:any[]=[];
-    interno.traverse((x:any)=>{ if(x.isMesh && !x.userData?.aurumRhino?.capa) unresolved.push(x); });
-    if (unresolved.length) {
-      metadataCapas = getAurumModelParts(object,colorRhinoHex,clasificarCapa)
-        .filter(p=>p.tipo==="malla")
-        .map(p=>({
-          nombre:p.nombre,
-          capa:p.capa,
-          colorCapa:p.colorCapa,
-          categoria:p.categoria,
-          matrixSlot:p.matrixSlot,
-          layerIndex:p.layerIndex,
-        }));
-      metadataCapas.forEach((meta:any,index:number)=>{
-        const x=unresolved[index];
-        if(!x) return;
-        x.userData={
-          ...x.userData,
-          aurumRhino:{
-            ...meta,
-            layerIndex:meta.layerIndex ?? -1,
-            visible:x.visible!==false,
-            hiddenByRhino:x.visible===false,
-          },
-        };
-      });
-    }
+    // Do not assign source metadata by mesh traversal order: the GLB exporter can
+    // reorder or split meshes. Unresolved meshes remain category "otro" and can be
+    // selected individually; never silently apply a wrong layer's material.
     interno.updateMatrixWorld(true);
     return interno;
   }
