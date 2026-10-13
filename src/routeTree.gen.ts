@@ -18,6 +18,7 @@ import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
+import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
@@ -40,6 +41,7 @@ import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedServiciosExternosRouteImport } from './routes/_authenticated/servicios-externos'
 import { Route as AuthenticatedTallerRouteImport } from './routes/_authenticated/taller'
+import { Route as AuthenticatedTiendaAdminRouteImport } from './routes/_authenticated/tienda-admin'
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
@@ -104,6 +106,11 @@ const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
 const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
   id: '/recuperar-contrasena',
   path: '/recuperar-contrasena',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TiendaRoute = TiendaRouteImport.update({
+  id: '/tienda',
+  path: '/tienda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlugProductoRoute = SlugProductoRouteImport.update({
@@ -221,6 +228,12 @@ const AuthenticatedTallerRoute = AuthenticatedTallerRouteImport.update({
   path: '/taller',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTiendaAdminRoute =
+  AuthenticatedTiendaAdminRouteImport.update({
+    id: '/tienda-admin',
+    path: '/tienda-admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedVectorizadorLaserRoute =
   AuthenticatedVectorizadorLaserRouteImport.update({
     id: '/vectorizador-laser',
@@ -345,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/cliente': typeof ClienteRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
+  '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
@@ -367,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/tienda-admin': typeof AuthenticatedTiendaAdminRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
@@ -398,6 +413,7 @@ export interface FileRoutesByTo {
   '/cliente': typeof ClienteRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
+  '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/casting': typeof AuthenticatedCastingRoute
@@ -418,6 +434,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/taller': typeof AuthenticatedTallerRoute
+  '/tienda-admin': typeof AuthenticatedTiendaAdminRoute
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
@@ -451,6 +468,7 @@ export interface FileRoutesById {
   '/cliente': typeof ClienteRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
+  '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
@@ -473,6 +491,7 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/servicios-externos': typeof AuthenticatedServiciosExternosRoute
   '/_authenticated/taller': typeof AuthenticatedTallerRoute
+  '/_authenticated/tienda-admin': typeof AuthenticatedTiendaAdminRoute
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
@@ -506,6 +525,7 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
+    | '/tienda'
     | '/$slug/$producto'
     | '/aurum-render'
     | '/casting'
@@ -528,6 +548,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/servicios-externos'
     | '/taller'
+    | '/tienda-admin'
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
@@ -559,6 +580,7 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
+    | '/tienda'
     | '/$slug/$producto'
     | '/aurum-render'
     | '/casting'
@@ -579,6 +601,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/servicios-externos'
     | '/taller'
+    | '/tienda-admin'
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
@@ -611,6 +634,7 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
+    | '/tienda'
     | '/$slug/$producto'
     | '/_authenticated/aurum-render'
     | '/_authenticated/casting'
@@ -633,6 +657,7 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/servicios-externos'
     | '/_authenticated/taller'
+    | '/_authenticated/tienda-admin'
     | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
     | '/c/$codigo'
@@ -666,6 +691,7 @@ export interface RootRouteChildren {
   ClienteRoute: typeof ClienteRoute
   HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
+  TiendaRoute: typeof TiendaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
   JoyaTokenRoute: typeof JoyaTokenRoute
   TransferTokenRoute: typeof TransferTokenRoute
@@ -738,6 +764,13 @@ declare module '@tanstack/react-router' {
       path: '/recuperar-contrasena'
       fullPath: '/recuperar-contrasena'
       preLoaderRoute: typeof RecuperarContrasenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tienda': {
+      id: '/tienda'
+      path: '/tienda'
+      fullPath: '/tienda'
+      preLoaderRoute: typeof TiendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$slug/$producto': {
@@ -892,6 +925,13 @@ declare module '@tanstack/react-router' {
       path: '/taller'
       fullPath: '/taller'
       preLoaderRoute: typeof AuthenticatedTallerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tienda-admin': {
+      id: '/_authenticated/tienda-admin'
+      path: '/tienda-admin'
+      fullPath: '/tienda-admin'
+      preLoaderRoute: typeof AuthenticatedTiendaAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vectorizador-laser': {
@@ -1108,6 +1148,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedServiciosExternosRoute: typeof AuthenticatedServiciosExternosRoute
   AuthenticatedTallerRoute: typeof AuthenticatedTallerRoute
+  AuthenticatedTiendaAdminRoute: typeof AuthenticatedTiendaAdminRoute
   AuthenticatedVectorizadorLaserRoute: typeof AuthenticatedVectorizadorLaserRoute
   AuthenticatedVentasRoute: typeof AuthenticatedVentasRouteWithChildren
   AuthenticatedContratosIdRoute: typeof AuthenticatedContratosIdRoute
@@ -1138,6 +1179,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedServiciosExternosRoute: AuthenticatedServiciosExternosRoute,
   AuthenticatedTallerRoute: AuthenticatedTallerRoute,
+  AuthenticatedTiendaAdminRoute: AuthenticatedTiendaAdminRoute,
   AuthenticatedVectorizadorLaserRoute: AuthenticatedVectorizadorLaserRoute,
   AuthenticatedVentasRoute: AuthenticatedVentasRouteWithChildren,
   AuthenticatedContratosIdRoute: AuthenticatedContratosIdRoute,
@@ -1182,6 +1224,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClienteRoute: ClienteRoute,
   HerramientasPublicasRoute: HerramientasPublicasRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
+  TiendaRoute: TiendaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
   JoyaTokenRoute: JoyaTokenRoute,
   TransferTokenRoute: TransferTokenRoute,
