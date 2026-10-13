@@ -1004,6 +1004,55 @@ export function AurumRender() {
       setPaso(null);
     }
   },[]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("desde-mi-nube") !== "1") return;
+    const key = "aurum-render-archivo-pendiente";
+    const pending = sessionStorage.getItem(key);
+    if (!pending) {
+      setError("No se encontró el archivo pendiente de Mi Nube. Vuelve a seleccionarlo desde la nube.");
+      return;
+    }
+    let cancelado = false;
+    let timer: number | undefined;
+    let intentos = 0;
+    const procesar = async () => {
+      if (cancelado) return;
+      if (typeof apiRef.current?.cargar !== "function") {
+        if (intentos++ >= 60) {
+          setError("Aurum Render tardó demasiado en inicializarse. Vuelve a abrir el archivo desde Mi Nube.");
+          return;
+        }
+        timer = window.setTimeout(procesar, 250);
+        return;
+      }
+      try {
+        const datos = JSON.parse(pending) as { url?: string; nombre?: string };
+        if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
+        const response = await fetch(datos.url);
+        if (!response.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
+        const blob = await response.blob();
+        if (cancelado) return;
+        const file = new File([blob], datos.nombre, { type: blob.type || "application/octet-stream" });
+        sessionStorage.removeItem(key);
+        const url = new URL(window.location.href);
+        url.searchParams.delete("desde-mi-nube");
+        window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+        await cargarArchivo(file);
+      } catch (cause) {
+        if (!cancelado) {
+          sessionStorage.removeItem(key);
+          setError(cause instanceof Error ? cause.message : "No se pudo abrir el archivo desde Mi Nube.");
+        }
+      }
+    };
+    void procesar();
+    return () => {
+      cancelado = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [cargarArchivo]);
+
   const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
     apiRef.current?.calidad(id);
