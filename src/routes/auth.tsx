@@ -2,13 +2,13 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { correoDesdeUsuario, esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
+import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
-import { registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
+import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -93,7 +93,7 @@ function LoginPage() {
     setError("");
     setCargando(true);
     try {
-      const email = modoAlta ? emailRegistro.trim().toLowerCase() : correoDesdeUsuario(usuario);
+      const email = modoAlta ? emailRegistro.trim().toLowerCase() : (await resolverEmailInicioSesion({ data: { usuario } })).email;
       if (modoAlta) {
         await registrarPrimerDueno({
           data: {
