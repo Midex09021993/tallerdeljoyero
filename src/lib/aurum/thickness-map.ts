@@ -53,9 +53,20 @@ const AURUM_THICKNESS_CACHE_LIMIT=16;
 const geometryCacheIdentity=(target:any)=>String(target?.uuid??target?.geometry?.uuid??"anonymous");
 
 export const disposeAurumThicknessCacheForTarget=(target:any)=>{
-  const prefix=`${geometryCacheIdentity(target)}:`;
+  // Cache keys are created per mesh UUID, but cleanup is invoked with the model
+  // root UUID. Collect every descendant mesh identity so unloading a model also
+  // releases its cached GPU textures instead of leaving them until eviction.
+  const identities=new Set<string>();
+  const collect=(item:any)=>{
+    if(item?.uuid)identities.add(String(item.uuid));
+    if(item?.geometry?.uuid)identities.add(String(item.geometry.uuid));
+  };
+  collect(target);
+  target?.traverse?.((child:any)=>collect(child));
+  if(!identities.size)return;
   for(const [key,result] of AURUM_THICKNESS_CACHE){
-    if(key.startsWith(prefix)){
+    const identity=key.slice(0,key.indexOf(":"));
+    if(identities.has(identity)){
       result.texture?.dispose?.();
       AURUM_THICKNESS_CACHE.delete(key);
     }
