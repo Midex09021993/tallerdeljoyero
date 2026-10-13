@@ -193,9 +193,19 @@ const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
 const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
 const selectionLayerIndex=(part:any):number|null=>{
   const meta=selectionMeta(part);
-  const raw=meta.layerIndex ?? part?.userData?.attributes?.layerIndex ?? part?.userData?.attributes?.LayerIndex ?? part?.userData?.layerIndex;
-  const value=raw===null||raw===undefined||raw===""?NaN:Number(raw);
-  return Number.isInteger(value)&&value>=0?value:null;
+  const candidates=[
+    meta.layerIndex,
+    part?.userData?.attributes?.layerIndex,
+    part?.userData?.attributes?.LayerIndex,
+    part?.userData?.layerIndex,
+    part?.userData?.LayerIndex,
+  ];
+  for(const raw of candidates){
+    if(raw===null||raw===undefined||raw==="")continue;
+    const value=Number(raw);
+    if(Number.isInteger(value)&&value>=0)return value;
+  }
+  return null;
 };
 
 export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any) {
