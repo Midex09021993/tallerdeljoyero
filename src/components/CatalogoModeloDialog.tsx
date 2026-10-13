@@ -239,7 +239,6 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     if (precio !== null && (!Number.isFinite(precio) || precio <= 0)) return setError("El precio debe ser mayor que 0 o dejarse vacío para mostrar 'Consultar'.");
     if (peso !== null && (!Number.isFinite(peso) || peso <= 0)) return setError("El peso debe ser mayor que 0.");
     if (tiempo !== null && (!Number.isInteger(tiempo) || tiempo <= 0)) return setError("El tiempo de fabricación debe ser un número entero mayor que 0.");
-    if (form.modalidad_talla === "disponibles" && !form.tallas_disponibles.split(/[\n,;]+/).map((v) => v.trim()).filter(Boolean).length) return setError("Añade al menos una talla disponible para este producto.");
 
     setGuardando(true);
     setError(null);
@@ -279,9 +278,6 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         piedras: form.piedras.trim() || null,
         medidas: form.medidas.trim() || null,
         talla: form.talla.trim() || null,
-        modalidad_talla: form.modalidad_talla,
-        sistema_tallas: form.sistema_tallas,
-        tallas_disponibles: form.modalidad_talla === "disponibles" ? form.tallas_disponibles.split(/[\n,;]+/).map((v) => v.trim()).filter(Boolean).join(", ") || null : null,
         tecnica: form.tecnica.trim() || null,
         acabado: form.acabado.trim() || null,
         disponibilidad: form.disponibilidad.trim() || "Consultar",
@@ -372,23 +368,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             <label className="grid gap-1.5 text-xs font-semibold">Peso (g)<input type="number" min="0" step="0.001" value={form.peso_gramos} onChange={e => setForm(v => ({ ...v, peso_gramos: e.target.value }))} className={input} placeholder="5.250" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Piedras<input value={form.piedras} onChange={e => setForm(v => ({ ...v, piedras: e.target.value }))} className={input} placeholder="Diamante · 0.20 ct" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Medidas<input value={form.medidas} onChange={e => setForm(v => ({ ...v, medidas: e.target.value }))} className={input} placeholder="18 × 12 mm" /></label>
-            <div className="grid gap-3 sm:col-span-2 rounded-xl border border-border bg-background p-3">
-              <label className="grid gap-1.5 text-xs font-semibold">Modalidad de talla
-                <select value={form.modalidad_talla} onChange={e => setForm(v => ({ ...v, modalidad_talla: e.target.value }))} className={input}>
-                  <option value="a_medida">Fabricar según la talla del cliente</option><option value="disponibles">Tallas disponibles</option><option value="ajustable">Talla ajustable</option><option value="unica">Talla única</option>
-                </select>
-              </label>
-              {form.modalidad_talla !== "ajustable" && form.modalidad_talla !== "unica" ? <>
-                <label className="grid gap-1.5 text-xs font-semibold">Sistema de tallas
-                  <select value={form.sistema_tallas} onChange={e => setForm(v => ({ ...v, sistema_tallas: e.target.value }))} className={input}><option>Peruana</option><option>Americana (US)</option><option>Europea (EU)</option><option>Milímetros (mm)</option></select>
-                </label>
-                {form.modalidad_talla === "disponibles" ? <label className="grid gap-1.5 text-xs font-semibold">Tallas que puede fabricar
-                  <textarea value={form.tallas_disponibles} onChange={e => setForm(v => ({ ...v, tallas_disponibles: e.target.value }))} className={input} rows={2} placeholder="Ej.: 14, 15, 16, 17, 18" />
-                  <span className="text-[10px] font-normal text-muted-foreground">Separa cada talla con coma o salto de línea.</span>
-                </label> : <p className="text-[10px] text-muted-foreground">El cliente indicará la talla al hacer el pedido.</p>}
-              </> : <p className="text-[10px] text-muted-foreground">{form.modalidad_talla === "ajustable" ? "El cliente no necesita elegir una talla." : "La pieza se ofrece en una única medida."}</p>}
-              <label className="grid gap-1.5 text-xs font-semibold">Nota de talla (opcional)<input value={form.talla} onChange={e => setForm(v => ({ ...v, talla: e.target.value }))} className={input} placeholder="Ej.: medida orientativa o rango de ajuste" /></label>
-            </div>
+            <label className="grid gap-1.5 text-xs font-semibold">Talla<input value={form.talla} onChange={e => setForm(v => ({ ...v, talla: e.target.value }))} className={input} placeholder="16 · ajustable" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Acabado<input value={form.acabado} onChange={e => setForm(v => ({ ...v, acabado: e.target.value }))} className={input} placeholder="Pulido espejo" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Disponibilidad<select value={form.disponibilidad} onChange={e => setForm(v => ({ ...v, disponibilidad: e.target.value }))} className={input}><option>Consultar</option><option>Disponible</option><option>Por encargo</option><option>No disponible</option></select></label>
             <label className="grid gap-1.5 text-xs font-semibold">Fabricación (días)<input type="number" min="1" step="1" value={form.tiempo_fabricacion_dias} onChange={e => setForm(v => ({ ...v, tiempo_fabricacion_dias: e.target.value }))} className={input} placeholder="7" /></label>
