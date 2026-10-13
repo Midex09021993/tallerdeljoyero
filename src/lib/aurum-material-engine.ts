@@ -182,7 +182,7 @@ export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)
 };
 
 export const metalPresetFromConfig=(m:any):AurumMetalPreset=>({
-  color:m.color,metalness:m.metalness,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
+  id:m.id,color:m.color,metalness:m.metalness,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
   clearcoat:m.clearcoat,anisotropy:m.anisotropy,anisotropyRotation:m.anisotropyRotation
 });
 
