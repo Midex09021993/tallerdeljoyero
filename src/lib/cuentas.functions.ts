@@ -10,8 +10,8 @@ export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
     const usuario = data.usuario?.trim();
     if (!usuario || usuario.length > 120) throw new Error("Ingresa tu usuario.");
 
-    // Compatibilidad para cuentas antiguas que todavía ingresan con correo.
-    if (usuario.includes("@")) return { email: usuario.toLowerCase() };
+    // El login acepta exclusivamente el nombre registrado, nunca el correo.
+    if (usuario.includes("@")) throw new Error("Ingresa tu nombre de usuario, no tu correo electrónico.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: porNombre, error: errorNombre }, { data: porUsuario, error: errorUsuario }] = await Promise.all([
