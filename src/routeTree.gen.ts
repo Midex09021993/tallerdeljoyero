@@ -45,6 +45,7 @@ import { Route as AuthenticatedTiendaAdminRouteImport } from './routes/_authenti
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
+import { Route as HerramientasHerramientaRouteImport } from './routes/herramientas/$herramienta'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
@@ -250,6 +251,11 @@ const CCodigoRoute = CCodigoRouteImport.update({
   path: '/c/$codigo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HerramientasHerramientaRoute = HerramientasHerramientaRouteImport.update({
+  id: '/herramientas/$herramienta',
+  path: '/herramientas/$herramienta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoyaTokenRoute = JoyaTokenRouteImport.update({
   id: '/joya/$token',
   path: '/joya/$token',
@@ -385,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer/': typeof TransferIndexRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer': typeof TransferIndexRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/transfer/': typeof TransferIndexRoute
@@ -552,6 +561,7 @@ export interface FileRouteTypes {
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
+    | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
     | '/transfer/'
@@ -605,6 +615,7 @@ export interface FileRouteTypes {
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
+    | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
     | '/transfer'
@@ -661,6 +672,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
     | '/c/$codigo'
+    | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
     | '/transfer/'
@@ -693,6 +705,7 @@ export interface RootRouteChildren {
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
+  HerramientasHerramientaRoute: typeof HerramientasHerramientaRoute
   JoyaTokenRoute: typeof JoyaTokenRoute
   TransferTokenRoute: typeof TransferTokenRoute
   TransferIndexRoute: typeof TransferIndexRoute
@@ -953,6 +966,13 @@ declare module '@tanstack/react-router' {
       path: '/c/$codigo'
       fullPath: '/c/$codigo'
       preLoaderRoute: typeof CCodigoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/herramientas/$herramienta': {
+      id: '/herramientas/$herramienta'
+      path: '/herramientas/$herramienta'
+      fullPath: '/herramientas/$herramienta'
+      preLoaderRoute: typeof HerramientasHerramientaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/joya/$token': {
@@ -1226,6 +1246,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
+  HerramientasHerramientaRoute: HerramientasHerramientaRoute,
   JoyaTokenRoute: JoyaTokenRoute,
   TransferTokenRoute: TransferTokenRoute,
   TransferIndexRoute: TransferIndexRoute,
