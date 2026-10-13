@@ -65,6 +65,38 @@ function traducirMetalEspanol(value: string | null | undefined) {
   return original;
 }
 
+function traducirPiedrasEspanol(value: string | null | undefined) {
+  let texto = String(value ?? "").trim();
+  if (!texto) return "";
+  const traducciones: Array<[RegExp, string]> = [
+    [/\bdiamonds?\b/gi, "diamantes"],
+    [/\bdiamond\b/gi, "diamante"],
+    [/\brubies\b/gi, "rubíes"],
+    [/\bruby\b/gi, "rubí"],
+    [/\bsapphires?\b/gi, "zafiro"],
+    [/\ emeralds?\b/gi, "esmeralda"],
+    [/\bamethysts?\b/gi, "amatista"],
+    [/\bgarnets?\b/gi, "granate"],
+    [/\btopazes?\b/gi, "topacio"],
+    [/\btourmalines?\b/gi, "turmalina"],
+    [/\bquartz\b/gi, "cuarzo"],
+    [/\bopals?\b/gi, "ópalo"],
+    [/\bpearls?\b/gi, "perla"],
+    [/\bmoissanites?\b/gi, "moissanita"],
+    [/\bround\b/gi, "redondo"],
+    [/\bprincess\b/gi, "princesa"],
+    [/\boval\b/gi, "oval"],
+    [/\bmarquise\b/gi, "marquesa"],
+    [/\bcushion\b/gi, "cojín"],
+    [/\bheart\b/gi, "corazón"],
+    [/\bpear\b/gi, "pera"],
+    [/\bcarats?\b/gi, "quilates"],
+    [/\btotal weight\b/gi, "peso total"],
+  ];
+  for (const [patron, reemplazo] of traducciones) texto = texto.replace(patron, reemplazo);
+  return texto.replace(/\s+/g, " ").replace(/\b(\d+),(\d+)\b/g, "$1,$2").trim();
+}
+
 function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
@@ -185,7 +217,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         descripcion: String(c.descripcion ?? "").trim() || v.descripcion,
         metal_principal: traducirMetalEspanol(String(c.metal_principal ?? "").trim()) || v.metal_principal,
         peso_gramos: typeof c.peso_gramos === "number" && Number.isFinite(c.peso_gramos) ? String(c.peso_gramos) : "",
-        piedras: String(c.piedras ?? "").trim() || v.piedras,
+        piedras: traducirPiedrasEspanol(String(c.piedras ?? "").trim()) || v.piedras,
         medidas: String(c.medidas ?? "").trim() || v.medidas,
         talla: String(c.talla ?? "").trim() || v.talla,
         tecnica: String(c.tecnica ?? "").trim() || v.tecnica,
