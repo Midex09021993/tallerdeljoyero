@@ -112,6 +112,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   });
   const [guardando, setGuardando] = useState(false);
   const [analizandoPdf, setAnalizandoPdf] = useState(false);
+  const [generandoDescripcion, setGenerandoDescripcion] = useState(false);
   const [archivoPdfNombre, setArchivoPdfNombre] = useState("");
   const [avisosExtraccion, setAvisosExtraccion] = useState<string[]>([]);
   const [proyectoNube, setProyectoNube] = useState<ProyectoNubeInicial | null>(null);
@@ -231,6 +232,42 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo analizar la ficha PDF.");
     } finally { setAnalizandoPdf(false); }
+  }
+
+  async function generarDescripcionConIA() {
+    const imagenUrl = form.imagen_principal_url.trim();
+    if (!imagenUrl) {
+      setError("Carga primero la imagen principal de la joya para que la IA pueda analizarla.");
+      return;
+    }
+    setGenerandoDescripcion(true);
+    setError(null);
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke("catalogo-generar-descripcion", {
+        body: {
+          participanteId,
+          imagenUrl,
+          nombre: form.nombre,
+          categoria: form.categoria,
+          metal: form.metal_principal,
+          piedras: form.piedras,
+          medidas: form.medidas,
+          talla: form.talla,
+          tecnica: form.tecnica,
+          acabado: form.acabado,
+        },
+      });
+      if (invokeError) throw new Error(invokeError.message || "No se pudo conectar con la IA.");
+      if (!data?.ok || typeof data?.descripcion !== "string" || !data.descripcion.trim()) {
+        throw new Error(data?.error || "La IA no devolvió una descripción válida.");
+      }
+      setForm(actual => ({ ...actual, descripcion: data.descripcion.trim() }));
+      setAvisosExtraccion(actual => [...actual.filter(aviso => !aviso.startsWith("Descripción pública generada")), "Descripción pública generada con IA a partir de la imagen. Revísala antes de guardar."]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo generar la descripción pública.");
+    } finally {
+      setGenerandoDescripcion(false);
+    }
   }
 
   async function subirImagen(file: File, tipo: "principal" | "galeria") {
@@ -492,7 +529,17 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
 
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Descripción y publicación</p></div>
-            <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={4} value={form.descripcion} onChange={e => setForm(v => ({ ...v, descripcion: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" /></label>
+            <div className="grid gap-2 sm:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor="catalogo-descripcion-publica" className="text-xs font-semibold">Descripción pública</label>
+                <button type="button" onClick={() => void generarDescripcionConIA()} disabled={generandoDescripcion || analizandoPdf || guardando || subiendo || !form.imagen_principal_url.trim()} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-3 py-2 text-xs font-semibold transition hover:bg-gold/10 disabled:cursor-not-allowed disabled:opacity-50">
+                  <Sparkles className={`size-4 ${generandoDescripcion ? "animate-pulse" : ""}`} />
+                  {generandoDescripcion ? "Redactando descripción…" : "Generar descripción con IA"}
+                </button>
+              </div>
+              <textarea id="catalogo-descripcion-publica" rows={4} value={form.descripcion} onChange={e => setForm(v => ({ ...v, descripcion: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="Describe la pieza para tus clientes o genera una propuesta con IA a partir de la imagen principal." />
+              <p className="text-[11px] font-normal text-muted-foreground">La IA combina lo visible en la imagen con los datos técnicos disponibles. Puedes editar el texto; nada se publica hasta que guardes la ficha.</p>
+            </div>
             <label className="flex items-center gap-3 rounded-xl border border-border p-3 text-xs sm:col-span-2"><input type="checkbox" checked={form.mostrar_ficha_tecnica} onChange={e => setForm(v => ({ ...v, mostrar_ficha_tecnica: e.target.checked }))} /> Mostrar ficha técnica pública</label>
             <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Notas internas<textarea rows={3} value={form.notas_internas} onChange={e => setForm(v => ({ ...v, notas_internas: e.target.value }))} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-gold/40" placeholder="Información interna que nunca se publica." /></label>
           </section>
