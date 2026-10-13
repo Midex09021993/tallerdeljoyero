@@ -21,7 +21,8 @@ export function createAurumEnvironment(
   scene: any,
   THREE: any,
   RoomEnvironment: any,
-  RGBELoader: any
+  RGBELoader: any,
+  EXRLoader?: any
 ): AurumEnvironmentController {
   const pmrem = new THREE.PMREMGenerator(renderer);
   pmrem.compileEquirectangularShader();
