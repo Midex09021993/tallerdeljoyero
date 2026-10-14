@@ -57,7 +57,14 @@ export function getAurumModelParts(
   clasificarCapa: (capa: string, colorCapa?: string) => "metal" | "gema" | "otro"
 ): AurumModelPart[] {
   const result: AurumModelPart[] = [];
-  const layers = Array.isArray(object?.userData?.layers) ? object.userData.layers : [];
+  const rootData = object?.userData ?? {};
+  // Use the same source-layer manifest in both classification and post-GLB
+  // hydration. This is the exact table captured before GLTFExporter runs.
+  const sourceLayerManifest = Array.isArray(rootData.aurumRhinoSourceLayers) && rootData.aurumRhinoSourceLayers.length
+    ? rootData.aurumRhinoSourceLayers
+    : Array.isArray(rootData.layers) ? rootData.layers
+    : Array.isArray(rootData.rhinoLayers) ? rootData.rhinoLayers : [];
+  const layers = sourceLayerManifest;
 
   object.traverse((x: any) => {
     if (x === object) return;
@@ -71,18 +78,16 @@ export function getAurumModelParts(
 
     const attrs = x.userData?.attributes || {};
     const meta = x.userData?.aurumRhino;
-    // Resolve the first VALID index instead of trusting a non-null sentinel
-    // such as -1 from partially hydrated GLB extras.
-    // Source object attributes and the source layer table are authoritative.
-    // aurumRhino is a hydrated/cache copy and can contain stale values from a
-    // previous import, so consult it only when no source index is available.
-    const indexCandidates=[attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex,meta?.layerIndex];
+    const sourceMeta = x.userData?.aurumRhinoSource ?? {};
+    // Follow the same source-of-truth order as the GLB hydrator: preserved
+    // source identity first, then importer attributes, then cached metadata.
+    const indexCandidates=[sourceMeta.layerIndex,attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex,meta?.layerIndex];
     const layerIndex=indexCandidates.map((value:any)=>value===null||value===undefined||value===""?-1:Number(value))
       .find((value:number)=>Number.isInteger(value)&&value>=0)??-1;
     const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
-    const capa = String(layer?.name||layer?.Name||attrs.layerName||attrs.LayerName||x.userData?.layerName||meta?.capa||"").trim()||undefined;
-    const colorCapa = colorRhinoHex(layer?.color??layer?.Color)||colorRhinoHex(attrs.layerColor??attrs.LayerColor)||meta?.colorCapa;
-    const layerId = layer?.id ?? layer?.Id ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? meta?.rhinoLayerId;
+    const capa = String(layer?.name||layer?.Name||sourceMeta.layerName||attrs.layerName||attrs.LayerName||x.userData?.layerName||meta?.capa||"").trim()||undefined;
+    const colorCapa = colorRhinoHex(layer?.color??layer?.Color)||colorRhinoHex(sourceMeta.layerColor)||colorRhinoHex(attrs.layerColor??attrs.LayerColor)||meta?.colorCapa;
+    const layerId = layer?.id ?? layer?.Id ?? sourceMeta.layerId ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? meta?.rhinoLayerId;
     const hasLayerClassification=Boolean(layer||capa||colorCapa);
     const categoria = hasLayerClassification
       ? (layer ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa) : clasificarCapa(capa||"",colorCapa))
