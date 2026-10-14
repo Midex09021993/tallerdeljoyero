@@ -18,21 +18,21 @@ const empty={tipo_participante:"profesional" as Tipo,nombre:"",razon_social:"",e
 export function EcosistemaParticipantesOwner(){
  const qc=useQueryClient(); const [vincular,setVincular]=useState<Participante|null>(null); const [capacidades,setCapacidades]=useState<Participante|null>(null); const [buscar,setBuscar]=useState(""); const [tipo,setTipo]=useState<"todos"|Tipo>("todos"); const [estado,setEstado]=useState<"todos"|Estado>("activo"); const [edit,setEdit]=useState<Participante|null>(null); const [form,setForm]=useState(empty); const [nuevo,setNuevo]=useState(false); const [saving,setSaving]=useState(false);
  const {data=[],isLoading,error}=useQuery({queryKey:["ecosistema-participantes"],queryFn:async()=>{const {data,error}=await supabase.from("ecosistema_participantes").select("*").order("nombre");if(error)throw error;return(data??[]) as Participante[]}});
- type CuotaPlan = { plan_id: PlanComercialId; operaciones_comerciales_mes: number; almacenamiento_mib: number; usos_render_mes: number };
+ type CuotaPlan = { plan_id: PlanComercialId; operaciones_comerciales_mes: number; almacenamiento_mib: number; usos_render_mes: number; productos_catalogo_max: number };
  const [cuotasEdit, setCuotasEdit] = useState<Record<string, CuotaPlan>>({});
  const [guardandoCuota, setGuardandoCuota] = useState<string | null>(null);
  const cuotasQuery = useQuery({ queryKey: ["aurum-plan-quotas"], queryFn: async () => {
-   const { data, error } = await supabase.from("aurum_plan_quotas").select("plan_id,operaciones_comerciales_mes,almacenamiento_mib,usos_render_mes").order("plan_id");
+   const { data, error } = await supabase.from("aurum_plan_quotas").select("plan_id,operaciones_comerciales_mes,almacenamiento_mib,usos_render_mes,productos_catalogo_max").order("plan_id");
    if (error) throw error;
    return (data ?? []) as CuotaPlan[];
  }});
  const cuotaActual = (id: PlanComercialId) => cuotasEdit[id] ?? cuotasQuery.data?.find(q => q.plan_id === id);
  async function guardarCuota(id: PlanComercialId) {
    const cuota = cuotaActual(id);
-   if (!cuota || [cuota.operaciones_comerciales_mes, cuota.almacenamiento_mib, cuota.usos_render_mes].some(v => !Number.isInteger(v) || v < -1)) { toast.error("Usa enteros no negativos; -1 significa sin límite."); return; }
+   if (!cuota || [cuota.operaciones_comerciales_mes, cuota.almacenamiento_mib, cuota.usos_render_mes, cuota.productos_catalogo_max].some(v => !Number.isInteger(v) || v < -1)) { toast.error("Usa enteros no negativos; -1 significa sin límite."); return; }
    setGuardandoCuota(id);
    try {
-     const { error } = await supabase.from("aurum_plan_quotas").update({ operaciones_comerciales_mes: cuota.operaciones_comerciales_mes, almacenamiento_mib: cuota.almacenamiento_mib, usos_render_mes: cuota.usos_render_mes, updated_at: new Date().toISOString() }).eq("plan_id", id);
+     const { error } = await supabase.from("aurum_plan_quotas").update({ operaciones_comerciales_mes: cuota.operaciones_comerciales_mes, almacenamiento_mib: cuota.almacenamiento_mib, usos_render_mes: cuota.usos_render_mes, productos_catalogo_max: cuota.productos_catalogo_max, updated_at: new Date().toISOString() }).eq("plan_id", id);
      if (error) throw error;
      toast.success("Cuotas guardadas");
      setCuotasEdit(prev => { const next = { ...prev }; delete next[id]; return next; });
@@ -64,11 +64,11 @@ export function EcosistemaParticipantesOwner(){
   <details className="overflow-hidden rounded-xl border border-border bg-card">
    <summary className="cursor-pointer list-none px-5 py-4 font-medium hover:bg-muted/40 [&::-webkit-details-marker]:hidden"><span className="flex items-center justify-between gap-3">Cuotas comerciales por plan <span className="text-xs text-muted-foreground">Desplegar / contraer</span></span></summary>
    <div className="space-y-4 border-t border-border p-4">
-    <p className="text-xs text-muted-foreground">Configura los límites por plan. Productos de catálogo se bloquean en base de datos al aplicar el SQL; las demás cuotas siguen siendo informativas. -1 significa sin límite.</p>
+    <p className="text-xs text-muted-foreground">Configura los límites por plan. El catálogo tiene bloqueo en base de datos. Las demás cuotas siguen siendo informativas hasta implementar sus controles. -1 significa sin límite.</p>
     {cuotasQuery.error ? <p className="rounded-lg border border-amber-500/30 p-3 text-xs text-amber-700">Aplica primero el SQL de 20261014193000_aurum_plan_quotas.sql en Supabase.</p> : null}
     <div className="grid gap-3 xl:grid-cols-2">{PLANES_COMERCIALES.map(plan => { const q=cuotaActual(plan.id); return <div key={plan.id} className="rounded-xl border border-border p-4">
      <p className="mb-3 font-semibold">{plan.nombre}</p>
-     {q ? <div className="grid grid-cols-3 gap-2">{([{key:"operaciones_comerciales_mes",label:"Operaciones"},{key:"almacenamiento_mib",label:"Mi Nube MiB"},{key:"usos_render_mes",label:"Render"}] as const).map(f=> <label key={f.key} className="text-[10px] text-muted-foreground">{f.label}<Input type="number" min={-1} step={1} className="mt-1" value={cuotaActual(plan.id)?.[f.key] ?? q[f.key]} onChange={e=>setCuotasEdit(prev=>({...prev,[plan.id]:{...q,...prev[plan.id],[f.key]:Number(e.target.value)}}))}/></label>)}</div> : <p className="text-xs text-muted-foreground">Cuotas no disponibles hasta aplicar el SQL.</p>}
+     {q ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{([{key:"productos_catalogo_max",label:"Productos catálogo"},{key:"operaciones_comerciales_mes",label:"Operaciones/mes"},{key:"almacenamiento_mib",label:"Mi Nube MiB"},{key:"usos_render_mes",label:"Render/mes"}] as const).map(f=> <label key={f.key} className="text-[10px] text-muted-foreground">{f.label}<Input type="number" min={-1} step={1} className="mt-1" value={cuotaActual(plan.id)?.[f.key] ?? q[f.key]} onChange={e=>setCuotasEdit(prev=>({...prev,[plan.id]:{...q,...prev[plan.id],[f.key]:Number(e.target.value)}}))}/></label>)}</div> : <p className="text-xs text-muted-foreground">Cuotas no disponibles hasta aplicar el SQL.</p>}
      <div className="mt-3 flex justify-between text-[10px] text-muted-foreground"><span>-1 = sin límite</span><Button size="sm" disabled={!q||guardandoCuota===plan.id} onClick={()=>void guardarCuota(plan.id)}>{guardandoCuota===plan.id?"Guardando…":"Guardar cuotas"}</Button></div>
     </div>})}</div>
    </div>
