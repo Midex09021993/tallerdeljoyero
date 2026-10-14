@@ -444,7 +444,13 @@ export function AurumRender() {
                 // environment reflection; idle convergence restores the optics.
                 m.dispersion=0;
                 m.iridescence=0;
-                if (disableGemTransmission) m.transmission=0;
+                if (disableGemTransmission) {
+                  // Keep a small amount of physical transmission during orbit.
+                  // Dropping to zero made the moving gem look opaque, then the
+                  // idle restore caused a visible pop when full transmission returned.
+                  const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
+                  m.transmission=Math.min(authoredTransmission,0.35);
+                }
                 m.needsUpdate=true;
               }
             } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
