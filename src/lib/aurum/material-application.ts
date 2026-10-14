@@ -246,7 +246,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
 export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
-  if(selectedCategory!=="gema"&&selectedCategory!=="otro")return false;
+  if(selectedCategory!=="gema")return false;
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
@@ -345,7 +345,17 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
   const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
   const apply=(base:any,partTarget:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
-    const next=base?.clone?base.clone():new THREE.MeshPhysicalMaterial();
+    // Gem optics require MeshPhysicalMaterial. Rhino 3DM imports commonly
+    // arrive as MeshStandardMaterial; cloning that class silently ignores
+    // transmission, IOR, attenuation, dispersion and the dedicated diamond shader.
+    // Preserve only neutral render state from the source material, never its class.
+    const next=new THREE.MeshPhysicalMaterial({
+      color:base?.color?.clone?.()??new THREE.Color(0xffffff),
+      side:base?.side??THREE.FrontSide,
+      depthTest:base?.depthTest??true,
+      depthWrite:true,
+    });
+    if(base?.name)next.name=String(base.name);
     applyAurumGem(next,preset,partThickness);
     applyAurumOpticalProfile(next,opticalProfile);
     applyAurumFamilyOpticalResponse(next,opticalProfile);
