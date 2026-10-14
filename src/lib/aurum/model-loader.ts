@@ -244,8 +244,46 @@ export async function convertAurumToGlb(
   colorRhinoHex?: (color:any) => string | undefined,
   clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro"
 ) {
-  // Stamp stable Rhino layer metadata on each source mesh BEFORE GLTFExporter
-  // serializes the scene. The GLB must not depend on mesh traversal order.
+  // Preserve the original Rhino layer table and each mesh's own source
+  // attributes as explicit GLB extras. Do not rely on traversal order or on
+  // reconstructed metadata after GLTFExporter/GLTFLoader round-tripping.
+  const sourceLayers = Array.isArray((object as any)?.userData?.layers)
+    ? (object as any).userData.layers
+    : Array.isArray((object as any)?.userData?.rhinoLayers)
+      ? (object as any).userData.rhinoLayers : [];
+  (object as any).userData = {
+    ...((object as any).userData ?? {}),
+    aurumRhinoSourceLayers: sourceLayers.map((layer:any,index:number) => ({
+      index,
+      id: layer?.id ?? layer?.Id ?? null,
+      name: layer?.name ?? layer?.Name ?? null,
+      color: layer?.color ?? layer?.Color ?? null,
+      parentLayerId: layer?.parentLayerId ?? layer?.parentId ?? layer?.ParentLayerId ?? null,
+    })),
+  };
+  object.traverse((x:any) => {
+    if (!x?.isMesh) return;
+    const attrs = x.userData?.attributes ?? {};
+    const rawIndex = attrs.layerIndex ?? attrs.LayerIndex ?? x.userData?.layerIndex ?? x.userData?.LayerIndex;
+    const index = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
+      ? Number(rawIndex) : null;
+    const sourceLayer = index !== null ? sourceLayers[index] : null;
+    x.userData = {
+      ...(x.userData ?? {}),
+      aurumRhinoSource: {
+        layerIndex: index,
+        layerId: sourceLayer?.id ?? sourceLayer?.Id ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? null,
+        layerName: sourceLayer?.name ?? sourceLayer?.Name ?? attrs.layerName ?? attrs.LayerName ?? x.userData?.layerName ?? x.userData?.LayerName ?? null,
+        layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? attrs.layerColor ?? attrs.LayerColor ?? null,
+        materialIndex: attrs.materialIndex ?? attrs.MaterialIndex ?? null,
+        objectId: attrs.id ?? attrs.Id ?? null,
+        objectName: x.name ?? null,
+        rawLayerIndex: rawIndex ?? null,
+        rawLayerName: attrs.layerName ?? attrs.LayerName ?? null,
+        rawLayerId: attrs.layerId ?? attrs.LayerId ?? null,
+      },
+    };
+  });
   if (colorRhinoHex && clasificarCapa) {
     const parts = getAurumModelParts(object, colorRhinoHex, clasificarCapa);
     const byId = new Map<string, any>();
