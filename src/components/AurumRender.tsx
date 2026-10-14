@@ -797,6 +797,14 @@ export function AurumRender() {
         requestAnimationFrame(() => {
           if (modelo) {
             camaraVista("frontal");
+            // First stable frame uses the actual photographic pipeline, not
+            // only the lightweight interaction renderer.
+            liveFastPathRef.current = false;
+            aplicarPerfilLive();
+            renderer.shadowMap.enabled = renderQuality.shadows;
+            renderer.shadowMap.needsUpdate = true;
+            applyPostQuality?.({...renderQuality, pixelRatio:renderer.getPixelRatio(), qualityId:measuredQualityId});
+            viewerLoop.converge?.(32);
             invalidateRenderRef.current?.();
           }
         });
@@ -1213,10 +1221,11 @@ export function AurumRender() {
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
-          // Use the interactive WebGL path at rest as well as during orbit.
-          // This avoids a visual handoff to a separate EffectComposer pipeline;
-          // keep material/shader tuning separate until the result is visually checked.
-          renderer.render(escena,camara);
+          // Keep the direct renderer during orbit, but use the photographic
+          // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
+          // actually reach the interactive preview.
+          if (liveFastPathRef.current) renderer.render(escena,camara);
+          else composer?.render?.();
           perfTick();
         },
         {
@@ -1243,9 +1252,13 @@ export function AurumRender() {
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
             applyPostQuality?.({...renderQuality, pixelRatio:idleDpr, qualityId:measuredQualityId});
-            liveFastPathRef.current = true;
-            renderer.shadowMap.enabled = false;
-            renderer.shadowMap.needsUpdate = false;
+            // Restore the full photographic materials and shadows only after
+            // OrbitControls damping settles; the loop then converges a bounded
+            // number of composer frames instead of keeping RAF alive forever.
+            liveFastPathRef.current = false;
+            aplicarPerfilLive();
+            renderer.shadowMap.enabled = renderQuality.shadows;
+            renderer.shadowMap.needsUpdate = true;
             invalidateRenderRef.current?.();
           },
         }
