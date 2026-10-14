@@ -453,7 +453,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v9-${family}-${familyDispersionScale}-ijewel-${ijewelEnabled?1:0}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v10-${family}-${familyDispersionScale}-ijewel-${ijewelEnabled?1:0}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
 
   // Keep the complete photographic shader available for capture, but allow the
   // interactive viewer to switch to a lean native MeshPhysicalMaterial shader.
