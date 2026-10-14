@@ -18,6 +18,28 @@ const empty={tipo_participante:"profesional" as Tipo,nombre:"",razon_social:"",e
 export function EcosistemaParticipantesOwner(){
  const qc=useQueryClient(); const [vincular,setVincular]=useState<Participante|null>(null); const [capacidades,setCapacidades]=useState<Participante|null>(null); const [buscar,setBuscar]=useState(""); const [tipo,setTipo]=useState<"todos"|Tipo>("todos"); const [estado,setEstado]=useState<"todos"|Estado>("activo"); const [edit,setEdit]=useState<Participante|null>(null); const [form,setForm]=useState(empty); const [nuevo,setNuevo]=useState(false); const [saving,setSaving]=useState(false);
  const {data=[],isLoading,error}=useQuery({queryKey:["ecosistema-participantes"],queryFn:async()=>{const {data,error}=await supabase.from("ecosistema_participantes").select("*").order("nombre");if(error)throw error;return(data??[]) as Participante[]}});
+ type CuotaPlan = { plan_id: PlanComercialId; operaciones_comerciales_mes: number; almacenamiento_mib: number; usos_render_mes: number };
+ const [cuotasEdit, setCuotasEdit] = useState<Record<string, CuotaPlan>>({});
+ const [guardandoCuota, setGuardandoCuota] = useState<string | null>(null);
+ const cuotasQuery = useQuery({ queryKey: ["aurum-plan-quotas"], queryFn: async () => {
+   const { data, error } = await supabase.from("aurum_plan_quotas").select("plan_id,operaciones_comerciales_mes,almacenamiento_mib,usos_render_mes").order("plan_id");
+   if (error) throw error;
+   return (data ?? []) as CuotaPlan[];
+ }});
+ const cuotaActual = (id: PlanComercialId) => cuotasEdit[id] ?? cuotasQuery.data?.find(q => q.plan_id === id);
+ async function guardarCuota(id: PlanComercialId) {
+   const cuota = cuotaActual(id);
+   if (!cuota || [cuota.operaciones_comerciales_mes, cuota.almacenamiento_mib, cuota.usos_render_mes].some(v => !Number.isInteger(v) || v < -1)) { toast.error("Usa enteros no negativos; -1 significa sin límite."); return; }
+   setGuardandoCuota(id);
+   try {
+     const { error } = await supabase.from("aurum_plan_quotas").update({ operaciones_comerciales_mes: cuota.operaciones_comerciales_mes, almacenamiento_mib: cuota.almacenamiento_mib, usos_render_mes: cuota.usos_render_mes, updated_at: new Date().toISOString() }).eq("plan_id", id);
+     if (error) throw error;
+     toast.success("Cuotas guardadas");
+     setCuotasEdit(prev => { const next = { ...prev }; delete next[id]; return next; });
+     await qc.invalidateQueries({ queryKey: ["aurum-plan-quotas"] });
+   } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudieron guardar las cuotas"); }
+   finally { setGuardandoCuota(null); }
+ }
  const lista=useMemo(()=>data.filter(p=>(tipo==="todos"||p.tipo_participante===tipo)&&(estado==="todos"||p.estado===estado)&&(!buscar.trim()||[p.nombre,p.razon_social,p.email,p.ciudad].some(v=>(v??"").toLowerCase().includes(buscar.trim().toLowerCase())))),[data,tipo,estado,buscar]);
  function abrirNuevo(){setEdit(null);setForm({...empty});setNuevo(true)}
  function editar(p:Participante){setNuevo(false);setEdit(p);setForm({tipo_participante:p.tipo_participante,nombre:p.nombre,razon_social:p.razon_social??"",email:p.email??"",telefono:p.telefono??"",ciudad:p.ciudad??"",descripcion:p.descripcion??"",estado:p.estado,notas_owner:p.notas_owner??""})}
@@ -39,6 +61,17 @@ export function EcosistemaParticipantesOwner(){
  async function guardar(){if(!form.nombre.trim()){toast.error("El nombre es obligatorio");return}setSaving(true);try{const payload={...form,nombre:form.nombre.trim(),razon_social:form.razon_social.trim()||null,email:form.email.trim()||null,telefono:form.telefono.trim()||null,ciudad:form.ciudad.trim()||null,descripcion:form.descripcion.trim()||null,notas_owner:form.notas_owner.trim()||null};const r=edit?supabase.from("ecosistema_participantes").update(payload).eq("id",edit.id):supabase.from("ecosistema_participantes").insert(payload);const {error}=await r;if(error)throw error;toast.success(edit?"Participante actualizado":"Participante creado");setEdit(null);setNuevo(false);await qc.invalidateQueries({queryKey:["ecosistema-participantes"]})}catch(e){toast.error(e instanceof Error?e.message:"No se pudo guardar")}finally{setSaving(false)}}
  async function eliminar(p:Participante){if(!confirm("¿Eliminar a "+p.nombre+"? Esta acción no se puede deshacer."))return;const {error}=await supabase.from("ecosistema_participantes").delete().eq("id",p.id);if(error)toast.error(error.message);else{toast.success("Participante eliminado");await qc.invalidateQueries({queryKey:["ecosistema-participantes"]})}}
  return <div className="space-y-6">
+  <Panel titulo="Cuotas comerciales por plan">
+   <div className="space-y-4 p-4">
+    <p className="text-xs text-muted-foreground">Configura límites mensuales. -1 significa sin límite. Esta configuración no bloquea operaciones hasta conectar los controles del servidor.</p>
+    {cuotasQuery.error ? <p className="rounded-lg border border-amber-500/30 p-3 text-xs text-amber-700">Aplica primero el SQL de 20261014193000_aurum_plan_quotas.sql en Supabase.</p> : null}
+    <div className="grid gap-3 xl:grid-cols-2">{PLANES_COMERCIALES.map(plan => { const q=cuotaActual(plan.id); return <div key={plan.id} className="rounded-xl border border-border p-4">
+     <p className="mb-3 font-semibold">{plan.nombre}</p>
+     {q ? <div className="grid grid-cols-3 gap-2">{([{key:"operaciones_comerciales_mes",label:"Operaciones"},{key:"almacenamiento_mib",label:"Mi Nube MiB"},{key:"usos_render_mes",label:"Render"}] as const).map(f=> <label key={f.key} className="text-[10px] text-muted-foreground">{f.label}<Input type="number" min={-1} step={1} className="mt-1" value={cuotaActual(plan.id)?.[f.key] ?? q[f.key]} onChange={e=>setCuotasEdit(prev=>({...prev,[plan.id]:{...q,...prev[plan.id],[f.key]:Number(e.target.value)}}))}/></label>)}</div> : <p className="text-xs text-muted-foreground">Cuotas no disponibles hasta aplicar el SQL.</p>}
+     <div className="mt-3 flex justify-between text-[10px] text-muted-foreground"><span>-1 = sin límite</span><Button size="sm" disabled={!q||guardandoCuota===plan.id} onClick={()=>void guardarCuota(plan.id)}>{guardandoCuota===plan.id?"Guardando…":"Guardar cuotas"}</Button></div>
+    </div>})}</div>
+   </div>
+  </Panel>
   <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">Participantes</p><p className="mt-1 text-2xl font-semibold">{data.length}</p></div><div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">Activos</p><p className="mt-1 text-2xl font-semibold">{data.filter(p=>p.estado==="activo").length}</p></div><div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">Talento / Prácticas</p><p className="mt-1 text-2xl font-semibold">{data.filter(p=>p.tipo_participante==="talento").length}</p></div></div>
   <Panel titulo="Ecosistema de participantes"><div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row"><Input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="Buscar por nombre, empresa, correo o ciudad…" /><select value={tipo} onChange={e=>setTipo(e.target.value as typeof tipo)} className="rounded-md border border-input bg-background px-3 text-sm"><option value="todos">Todos los tipos</option>{Object.entries(tipos).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><select value={estado} onChange={e=>setEstado(e.target.value as typeof estado)} className="rounded-md border border-input bg-background px-3 text-sm"><option value="todos">Todos los estados</option><option value="activo">Activos</option><option value="pausado">Pausados</option><option value="inactivo">Inactivos</option></select><Button onClick={abrirNuevo}>+ Nuevo participante</Button></div>
   {error?<p className="p-6 text-sm text-destructive">No se pudieron cargar los participantes.</p>:null}{isLoading?<p className="p-6 text-sm text-muted-foreground">Cargando…</p>:null}
