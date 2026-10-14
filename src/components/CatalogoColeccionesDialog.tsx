@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Coleccion = {
@@ -14,6 +14,10 @@ type Coleccion = {
 };
 
 type Producto = { id: string; nombre: string; codigo: string };
+
+function slugify(value: string) {
+  return value.trim().toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+}
 
 export function CatalogoColeccionesDialog({
   open,
@@ -38,6 +42,7 @@ export function CatalogoColeccionesDialog({
   const [orden, setOrden] = useState("0");
   const [publicado, setPublicado] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function cargar() {
@@ -98,7 +103,7 @@ export function CatalogoColeccionesDialog({
     setError(null);
   }
 
-  async function guardar() {
+  async function subirImagenPortada(event: any) {\n    const file = (event.target.files?.[0] ?? null) as File | null;\n    event.target.value = "";\n    if (!file) return;\n    if (!file.type.startsWith("image/")) { setError("Selecciona un archivo de imagen."); return; }\n    if (file.size > 8 * 1024 * 1024) { setError("La imagen debe pesar como máximo 8 MB."); return; }\n    setSubiendoImagen(true);\n    setError(null);\n    try {\n      const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";\n      const destino = participanteId + "/colecciones/" + crypto.randomUUID() + "." + extension;\n      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });\n      if (uploadError) throw uploadError;\n      const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);\n      if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de la imagen.");\n      setImagenUrl(data.publicUrl);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : "No se pudo subir la imagen.");\n    } finally { setSubiendoImagen(false); }\n  }\n\n  async function guardar() {
     if (!participanteId || !nombre.trim()) {
       setError("El nombre de la colección es obligatorio.");
       return;
@@ -109,7 +114,7 @@ export function CatalogoColeccionesDialog({
       const payload = {
         participante_id: participanteId,
         nombre: nombre.trim(),
-        slug: slug.trim() || nombre.trim(),
+        slug: slugify(slug || nombre),
         descripcion: descripcion.trim() || null,
         imagen_url: imagenUrl.trim() || null,
         orden: Number(orden) || 0,
@@ -187,13 +192,13 @@ export function CatalogoColeccionesDialog({
               <label className="grid gap-1.5 text-xs font-semibold">Nombre<input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Bodas" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
               <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="bodas" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
               <label className="grid gap-1.5 text-xs font-semibold">Descripción<textarea rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-normal" /></label>
-              <label className="grid gap-1.5 text-xs font-semibold">Imagen de portada URL<input value={imagenUrl} onChange={(e) => setImagenUrl(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+              <div className="grid gap-2"><span className="text-xs font-semibold">Imagen de portada</span>{imagenUrl ? <div className="relative overflow-hidden rounded-xl border border-border"><img src={imagenUrl} alt="Vista previa de portada" className="h-36 w-full object-cover" /><button type="button" onClick={() => setImagenUrl("")} className="absolute right-2 top-2 rounded-lg bg-background/90 px-2 py-1 text-[10px] font-semibold">Quitar imagen</button></div> : null}<label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gold/40 bg-background px-3 py-3 text-xs font-semibold hover:bg-surface-muted"><ImagePlus className="size-4" />{subiendoImagen ? "Subiendo imagen…" : imagenUrl ? "Cambiar imagen" : "Subir imagen desde el dispositivo"}<input type="file" accept="image/*" className="sr-only" disabled={subiendoImagen || guardando} onChange={(event) => void subirImagenPortada(event)} /></label><span className="text-[10px] font-normal text-muted-foreground">JPG, PNG o WebP · máximo 8 MB.</span></div>
               <div className="grid grid-cols-2 gap-3">
                 <label className="grid gap-1.5 text-xs font-semibold">Orden<input type="number" min="0" value={orden} onChange={(e) => setOrden(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
                 <label className="flex items-center gap-2 self-end rounded-xl border border-border p-3 text-xs font-semibold"><input type="checkbox" checked={publicado} onChange={(e) => setPublicado(e.target.checked)} /> Publicar</label>
               </div>
               {error ? <p className="text-xs text-destructive">{error}</p> : null}
-              <button type="button" disabled={guardando} onClick={() => void guardar()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Plus className="size-4" /> {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Crear colección"}</button>
+              <button type="button" disabled={guardando || subiendoImagen} onClick={() => void guardar()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Plus className="size-4" /> {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Crear colección"}</button>
             </div>
           </section>
 
