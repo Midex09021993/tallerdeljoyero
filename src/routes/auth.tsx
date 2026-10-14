@@ -428,7 +428,7 @@ function LoginPage() {
                     <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Aurum Lab · infraestructura digital</p>
                     <h3 className="mt-2 max-w-4xl font-display text-2xl italic text-white sm:text-4xl">Todo el recorrido de una joya, conectado.</h3>
                     <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
-                      Aurum Lab une la relación con el cliente, la gestión comercial y la operación del taller para que la información acompañe a la pieza desde el proyecto hasta la entrega.
+                      Aurum Lab reúne herramientas técnicas gratuitas y módulos de gestión del taller: clientes, proyectos, cotizaciones, pedidos, documentos, archivos, catálogo y seguimiento de producción. Las funciones disponibles dependen de cada módulo y de los permisos del usuario.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider">
                       {["Cliente","Proyecto","Cotización","Pedido","Producción","Calidad","Entrega"].map((item,i) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}{i < 6 ? " →" : ""}</span>)}
@@ -437,10 +437,10 @@ function LoginPage() {
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {[
-                      { icon: Boxes, title: "Gestiona tu taller", text: "Clientes, proyectos, cotizaciones, pedidos, inventario y entregas; información comercial separada de los datos internos." },
-                      { icon: PackageCheck, title: "Controla la producción", text: "Del pedido a la orden de producción, los trabajos, las piezas y el control de calidad, con responsables y seguimiento por área." },
-                      { icon: Sparkles, title: "Visualiza en 3D", text: "AURUM Render (beta) para explorar diseños de joyería con metales, gemas, iluminación y escenas." },
-                      { icon: Calculator, title: "Herramientas para joyeros", text: "Yeso / agua, aleaciones de oro, tallas y visualización y peso 3D." },
+                      { icon: Boxes, title: "Gestión comercial", text: "Registra clientes, prepara proyectos y cotizaciones, gestiona pedidos, ventas y contratos, manteniendo separados los datos internos y los documentos para clientes." },
+                      { icon: PackageCheck, title: "Operación del taller", text: "Organiza órdenes de producción, trabajos y piezas; consulta avances, responsables, materiales, inventario y control de calidad según los módulos habilitados." },
+                      { icon: Sparkles, title: "Diseño y presentación 3D", text: "AURUM Render (beta) permite cargar modelos de joyería y probar materiales, metales, gemas, iluminación y escenas para presentar diseños." },
+                      { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras de yeso y agua, aleación de oro, conversión de tallas y Visualizador y peso 3D para apoyar cálculos y revisión de piezas." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
                         <Icon className="size-6 text-gold"/>
@@ -459,12 +459,12 @@ function LoginPage() {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-gold/35">
                         <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><Boxes className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Espacio de trabajo</p><h4 className="mt-1 text-base font-semibold text-white">Mi Nube</h4></div></div>
-                        <p className="mt-3 text-xs leading-relaxed text-white/55">Centraliza fotografías, vídeos, documentos y archivos técnicos del taller. Mantén tus recursos organizados y enlázalos con el trabajo de tu equipo.</p>
+                        <p className="mt-3 text-xs leading-relaxed text-white/55">Guarda y organiza archivos del taller, como modelos 3D, fotografías, vídeos y documentos técnicos. Conserva recursos y comparte archivos cuando la función correspondiente esté disponible para tu usuario.</p>
                         <p className="mt-3 text-[10px] leading-relaxed text-white/35">Disponible dentro del entorno de trabajo para usuarios autorizados.</p>
                       </article>
                       <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-gold/35">
                         <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><ShoppingBag className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Vitrina comercial</p><h4 className="mt-1 text-base font-semibold text-white">Catálogo digital</h4></div></div>
-                        <p className="mt-3 text-xs leading-relaxed text-white/55">Organiza modelos, imágenes y colecciones para presentar las joyas de tu taller y compartirlas mediante un enlace público cuando esté configurado.</p>
+                        <p className="mt-3 text-xs leading-relaxed text-white/55">Configura modelos y colecciones, administra imágenes y vídeos para el carrusel de cada joya y prepara una página pública para mostrar el catálogo digital del taller.</p>
                         <p className="mt-3 text-[10px] leading-relaxed text-white/35">La publicación depende de la configuración del catálogo de cada taller.</p>
                       </article>
                     </div>
@@ -475,14 +475,14 @@ function LoginPage() {
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Producción y trazabilidad</p>
                       <h3 className="mt-2 text-base font-semibold text-white">Cada trabajo puede seguir su recorrido.</h3>
                       <p className="mt-1.5 text-xs leading-relaxed text-white/55">
-                        El pedido se prepara para producción y se organiza en órdenes, trabajos y piezas. Cada etapa puede registrar responsables, avances, incidencias y control de calidad.
+                        El flujo conecta pedidos con la preparación de producción, órdenes, trabajos y piezas. Los módulos de operación permiten registrar información y dar seguimiento al trabajo, según las funciones habilitadas.
                       </p>
                     </article>
                     <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Ficha técnica</p>
                       <h3 className="mt-2 text-base font-semibold text-white">La información acompaña a la pieza.</h3>
                       <p className="mt-1.5 text-xs leading-relaxed text-white/55">
-                        Material, talla, piedras, peso, cantidad, instrucciones, archivos técnicos, ruta y datos de fabricación.
+                        Materiales, talla, piedras, peso estimado, cantidades, instrucciones y archivos técnicos relevantes para preparar y consultar el trabajo de fabricación.
                       </p>
                     </article>
                   </div>
@@ -609,9 +609,9 @@ function LoginPage() {
                   </div>
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
                     {[
-                      {title:"Diseñar",text:"Definir la pieza, sus especificaciones y visualización."},
-                      {title:"Producir",text:"Preparar órdenes, distribuir trabajos por área y registrar piezas, avances y calidad."},
-                      {title:"Entregar",text:"Consultar materiales y movimientos de inventario, preparar la entrega y conservar el historial."},
+                      {title:"Preparar",text:"Reunir especificaciones de la joya, archivos de diseño, cálculos técnicos y referencias visuales."},
+                      {title:"Gestionar y producir",text:"Conectar la información comercial con pedidos y, donde esté habilitado, órdenes, trabajos, piezas y seguimiento."},
+                      {title:"Presentar y entregar",text:"Organizar recursos en Mi Nube, mostrar modelos en el catálogo digital y consultar la información disponible para cerrar el trabajo."},
                     ].map((x)=><article key={x.title} className="rounded-2xl border border-white/10 p-4"><p className="text-sm font-semibold text-gold">{x.title}</p><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{x.text}</p></article>)}
                   </div>
                 </>
