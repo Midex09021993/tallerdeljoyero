@@ -340,12 +340,12 @@ function CatalogoPublicoPage() {
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
           <div className="flex min-w-0 flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
             {config.logo_url ? (
-              <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={config.logo_url} alt={config.nombre_publico} className="block h-auto max-h-12 w-auto max-w-[min(72vw,260px)] shrink object-contain object-center sm:max-w-[220px] sm:object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={config.logo_url} alt={config.nombre_publico} className="block h-auto max-h-10 w-auto max-w-[min(66vw,240px)] shrink object-contain object-center sm:max-h-12 sm:max-w-[220px] sm:object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
             )}
             <div className="min-w-0">
-              <p className="mt-0.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
+              <p className="mt-0.5 whitespace-nowrap text-[11px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center justify-center gap-2">
