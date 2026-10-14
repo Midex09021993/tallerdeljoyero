@@ -71,16 +71,19 @@ export function getAurumModelParts(
 
     const attrs = x.userData?.attributes || {};
     const meta = x.userData?.aurumRhino;
-    const rawLayerIndex = meta?.layerIndex ?? attrs.layerIndex ?? attrs.LayerIndex ?? x.userData?.layerIndex;
-    const parsedLayerIndex = rawLayerIndex === null || rawLayerIndex === undefined || rawLayerIndex === "" ? -1 : Number(rawLayerIndex);
-    const layerIndex = Number.isInteger(parsedLayerIndex) && parsedLayerIndex >= 0 ? parsedLayerIndex : -1;
+    // Resolve the first VALID index instead of trusting a non-null sentinel
+    // such as -1 from partially hydrated GLB extras.
+    const indexCandidates=[meta?.layerIndex,attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex];
+    const layerIndex=indexCandidates.map((value:any)=>value===null||value===undefined||value===""?-1:Number(value))
+      .find((value:number)=>Number.isInteger(value)&&value>=0)??-1;
     const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
-    const capa = meta?.capa ?? (layer?.name ? String(layer.name) : undefined);
-    const colorCapa = meta?.colorCapa ?? colorRhinoHex(layer?.color);
+    const capa = String(meta?.capa||layer?.name||attrs.layerName||attrs.LayerName||x.userData?.layerName||"").trim()||undefined;
+    const colorCapa = meta?.colorCapa||colorRhinoHex(layer?.color)||colorRhinoHex(attrs.layerColor??attrs.LayerColor);
     const layerId = meta?.rhinoLayerId ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? layer?.id ?? layer?.Id;
-    const categoria = meta?.categoria ?? (layer
-      ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa)
-      : clasificarCapa(capa || "",colorCapa));
+    const hasLayerClassification=Boolean(layer||capa||colorCapa);
+    const categoria = hasLayerClassification
+      ? (layer ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa) : clasificarCapa(capa||"",colorCapa))
+      : (meta?.categoria==="metal"||meta?.categoria==="gema" ? meta.categoria : "otro");
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
     const matrixSlot = Number.isFinite(Number(meta?.matrixSlot))
       ? Number(meta.matrixSlot)
