@@ -229,13 +229,99 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
   if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
-  if (ext === "3dm") { const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js"); const loader = new Rhino3dmLoader();
+  if (ext === "3dm") {
+    const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
+    const loader:any = new Rhino3dmLoader();
     loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
+    // Rhino3dmLoader expands block instances by cloning definition meshes, but
+    // its stock implementation drops the InstanceReference's own attributes.
+    // That makes a stone placed on layer 6 inherit its definition mesh's layer 5.
+    // Patch the conversion boundary: match each generated instance group to its
+    // source InstanceReference transform and carry the reference layer onto the
+    // cloned meshes before the GLB metadata snapshot is taken.
+    const createGeometry = loader._createGeometry.bind(loader);
+    loader._createGeometry = (data:any) => {
+      const root:THREE.Object3D = createGeometry(data);
+      const references = (Array.isArray(data?.objects) ? data.objects : []).filter((item:any) =>
+        item?.objectType === "InstanceReference" && item?.geometry?.xform?.array
+      );
+      const instanceGroups = root.children.filter((child:any) =>
+        !child.isMesh && !child.isLine && !child.isPoints && child.children?.length
+      );
+      const used = new Set<THREE.Object3D>();
+      let patchedReferences = 0;
+      const closeMatrix = (a:THREE.Matrix4,b:THREE.Matrix4) =>
+        a.elements.every((value,index) => Math.abs(value-b.elements[index]) < 1e-5);
+      for (const reference of references) {
+        const values = reference.geometry.xform.array;
+        if (!Array.isArray(values) && !ArrayBuffer.isView(values)) continue;
+        if (values.length !== 16) continue;
+        const expected = new THREE.Matrix4();
+        expected.set(...Array.from(values as ArrayLike<number>).map(Number) as [number,number,number,number,number,number,number,number,number,number,number,number,number,number,number,number]);
+        let group:THREE.Object3D | undefined;
+        for (const candidate of instanceGroups) {
+          if (used.has(candidate)) continue;
+          candidate.updateMatrix();
+          if (closeMatrix(candidate.matrix,expected)) { group = candidate; break; }
+        }
+        if (!group) continue;
+        used.add(group);
+        const attrs = reference.attributes ?? {};
+        const rawIndex = attrs.layerIndex ?? attrs.LayerIndex;
+        const layerIndex = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
+          ? Number(rawIndex) : null;
+        const sourceLayers = Array.isArray(root.userData?.layers) ? root.userData.layers : [];
+        const sourceLayer = layerIndex !== null ? sourceLayers[layerIndex] : null;
+        const referenceIdentity = {
+          objectId: attrs.id ?? attrs.Id ?? null,
+          objectName: attrs.name ?? attrs.Name ?? null,
+          layerIndex,
+          layerId: sourceLayer?.id ?? sourceLayer?.Id ?? null,
+          layerName: sourceLayer?.name ?? sourceLayer?.Name ?? null,
+          layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? null,
+          materialSource: attrs.materialSource ?? null,
+        };
+        group.userData = { ...group.userData, aurumRhinoInstanceReference: referenceIdentity };
+        group.traverse((child:any) => {
+          if (!child.isMesh) return;
+          const definitionAttributes = child.userData?.attributes ?? {};
+          child.userData = {
+            ...child.userData,
+            aurumRhinoInstanceSource: {
+              ...referenceIdentity,
+              definitionObjectId: definitionAttributes.id ?? definitionAttributes.Id ?? null,
+              definitionObjectName: definitionAttributes.name ?? definitionAttributes.Name ?? child.name ?? null,
+              definitionLayerIndex: definitionAttributes.layerIndex ?? definitionAttributes.LayerIndex ?? null,
+            },
+            attributes: layerIndex === null ? definitionAttributes : {
+              ...definitionAttributes,
+              definitionLayerIndex: definitionAttributes.layerIndex ?? definitionAttributes.LayerIndex ?? null,
+              layerIndex,
+              instanceReferenceId: attrs.id ?? attrs.Id ?? null,
+              instanceReferenceName: attrs.name ?? attrs.Name ?? null,
+            },
+          };
+        });
+        patchedReferences++;
+      }
+      root.userData = {
+        ...root.userData,
+        aurumInstanceLayerHydration: {
+          detectedReferences: references.length,
+          generatedInstanceGroups: instanceGroups.length,
+          patchedReferences,
+          unmatchedReferences: references.length - patchedReferences,
+        },
+      };
+      return root;
+    };
     // One 3DM is normally decoded by one worker. A small adaptive pool avoids
     // unnecessarily serializing heavy WASM work on capable desktops while
     // preventing mobile/low-core devices from spawning excessive workers.
     const cores = typeof navigator !== "undefined" ? Number(navigator.hardwareConcurrency || 2) : 2;
-    loader.setWorkerLimit(Math.max(1, Math.min(4, Math.floor(cores / 2) || 1))); return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject)); }
+    loader.setWorkerLimit(Math.max(1, Math.min(4, Math.floor(cores / 2) || 1)));
+    return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject));
+  }
   throw new Error("Formato no compatible.");
 }
 
