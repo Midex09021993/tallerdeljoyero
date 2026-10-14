@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { resolveAurumLayerKey } from "./layer-identity";
+import { getAurumSourceMaterials } from "./gem-material-baseline";
 import {
   applyAurumMetal,
   applyAurumGem,
@@ -191,10 +192,6 @@ const inspectAurumGemGeometry=(target:any)=>{
   };
 };
 
-// Keep the imported CAD material as the immutable baseline. Re-selecting a gem
-// must never clone the already modified material from the previous selection.
-const originalGemMaterials = new WeakMap<object, any[]>();
-
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
 const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
 const selectionLayerIndex=(part:any):number|null=>{
@@ -355,19 +352,13 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     return next;
   };
   targets.forEach((part:any)=>{
-    // Capture the source material once. Using part.material here would clone
-    // the last selected gemstone's optical state (diamond -> sapphire -> diamond).
-    let sourceMaterials=originalGemMaterials.get(part);
-    if(!sourceMaterials){
-      sourceMaterials=(Array.isArray(part.material)?part.material:[part.material]).map((base:any)=>base?.clone?base.clone():base);
-      originalGemMaterials.set(part,sourceMaterials!);
-    }
-    // Rebuild every assignment from the same imported baseline.
+    // Rebuild from the immutable imported material captured before the
+    // initial preview; never inherit the prior gemstone's optical state.
+    const stableSourceMaterials=getAurumSourceMaterials(part);
     part.material=Array.isArray(part.material)
       ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
     const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
-    const stableSourceMaterials=sourceMaterials!;
     const activeGemId=String(gemConfig?.id??"");
     part.userData={
       ...part.userData,
