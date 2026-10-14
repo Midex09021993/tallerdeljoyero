@@ -105,6 +105,10 @@ export function AurumRender() {
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
+  const [snapshotOpen, setSnapshotOpen] = useState(false);
+  const [snapshotWidth, setSnapshotWidth] = useState("1920");
+  const [snapshotHeight, setSnapshotHeight] = useState("1080");
+  const [snapshotFormat, setSnapshotFormat] = useState<"png"|"jpeg"|"webp">("png");
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
@@ -839,12 +843,50 @@ export function AurumRender() {
           link.click();
           URL.revokeObjectURL(url);
         },
-        exportPNG:()=>{
+        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp"}={})=>{
           const canvas=renderer.domElement;
-          if(!canvas) throw new Error("No se encontró el lienzo del render.");
+          if(!canvas||!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
+          const width=Math.max(320,Math.min(4096,Math.round(Number(options.width)||1920)));
+          const height=Math.max(320,Math.min(4096,Math.round(Number(options.height)||1080)));
+          const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
+          const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
+          const oldSize=new THREE.Vector2();
+          renderer.getSize(oldSize);
+          const oldPixelRatio=renderer.getPixelRatio();
+          const oldAspect=camara.aspect;
+          let dataUrl="";
+          try{
+            // Re-render immediately before capture: the interactive renderer uses
+            // preserveDrawingBuffer:false, so reading a stale frame can return black.
+            renderer.setPixelRatio(1);
+            renderer.setSize(width,height,false);
+            camara.aspect=width/height;
+            camara.updateProjectionMatrix();
+            renderer.render(escena,camara);
+            // Composite onto white to avoid transparent/black backgrounds in image viewers.
+            const output=document.createElement("canvas");
+            output.width=width;
+            output.height=height;
+            const context=output.getContext("2d");
+            if(!context) throw new Error("No se pudo preparar la imagen de salida.");
+            context.fillStyle="#ffffff";
+            context.fillRect(0,0,width,height);
+            context.drawImage(canvas,0,0,width,height);
+            dataUrl=output.toDataURL(mime,0.95);
+          }finally{
+            renderer.setPixelRatio(oldPixelRatio);
+            renderer.setSize(oldSize.x,oldSize.y,false);
+            camara.aspect=oldAspect;
+            camara.updateProjectionMatrix();
+            composer?.setSize?.(oldSize.x,oldSize.y);
+            ssaoPass?.setSize?.(oldSize.x,oldSize.y);
+            renderer.render(escena,camara);
+            invalidateRenderRef.current?.();
+          }
           const link=document.createElement("a");
-          link.download=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-")+".png";
-          link.href=canvas.toDataURL("image/png");
+          const baseName=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-");
+          link.download=baseName+"-"+width+"x"+height+"."+format;
+          link.href=dataUrl;
           link.click();
         },
         exportSceneSettings:()=>{
@@ -1210,7 +1252,21 @@ export function AurumRender() {
         <div className="mb-3 flex items-center justify-between"><div><div className="text-sm font-semibold text-white">Exportación AURUM</div><div className="mt-1 text-[10px] text-white/45">Descarga para comparar con iJewel</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-white/50 hover:bg-white/10"><X className="size-4"/></button></div>
         <div className="space-y-2">
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-3 rounded-xl bg-[#7168f4] px-3 py-3 text-left text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-white/70">Geometría y materiales exportables</span></span></button>
-          <button type="button" onClick={()=>{try{apiRef.current?.exportPNG();}catch(e){setError(e instanceof Error?e.message:"No se pudo capturar el render.");}}} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-left text-sm text-white hover:bg-white/[.08]"><ImageIcon className="size-5"/><span><span className="block">Snapshot .png</span><span className="block text-[10px] text-white/45">Captura del visor actual</span></span></button>
+          <button type="button" onClick={()=>setSnapshotOpen(v=>!v)} aria-expanded={snapshotOpen} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-left text-sm text-white hover:bg-white/[.08]"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-white/45">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
+          {snapshotOpen&&<div className="rounded-xl border border-white/10 bg-black/20 p-3">
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-white/50">Salida de imagen</div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-[10px] text-white/55">Ancho (px)<input type="number" min={320} max={4096} step={160} value={snapshotWidth} onChange={e=>setSnapshotWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-white/15 bg-[#111518] px-2 py-2 text-xs text-white outline-none focus:border-[#7168f4]"/></label>
+              <label className="text-[10px] text-white/55">Alto (px)<input type="number" min={320} max={4096} step={120} value={snapshotHeight} onChange={e=>setSnapshotHeight(e.target.value)} className="mt-1 w-full rounded-lg border border-white/15 bg-[#111518] px-2 py-2 text-xs text-white outline-none focus:border-[#7168f4]"/></label>
+            </div>
+            <label className="mt-2 block text-[10px] text-white/55">Formato
+              <select value={snapshotFormat} onChange={e=>setSnapshotFormat(e.target.value as "png"|"jpeg"|"webp")} className="mt-1 w-full rounded-lg border border-white/15 bg-[#111518] px-2 py-2 text-xs text-white outline-none focus:border-[#7168f4]">
+                <option value="png">PNG · máxima compatibilidad</option><option value="jpeg">JPEG · fotografía ligera</option><option value="webp">WebP · archivo optimizado</option>
+              </select>
+            </label>
+            <div className="mt-2 text-[10px] leading-relaxed text-white/35">La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco.</div>
+            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Descargar {snapshotFormat.toUpperCase()} · {snapshotWidth||"1920"} × {snapshotHeight||"1080"}</button>
+          </div>}
           <button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-left text-sm text-white hover:bg-white/[.08]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-white/45">Escena, cámara, calidad y selección</span></span></button>
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-white/40">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
