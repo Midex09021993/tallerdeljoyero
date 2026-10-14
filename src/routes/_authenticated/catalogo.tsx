@@ -386,12 +386,14 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, descripcion").eq("participante_id", participanteId).maybeSingle(),
-      supabase.from("identidades_comerciales").select("logo_url").eq("participante_id", participanteId).eq("activa", true).limit(1).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
       setDescripcion(configResult.data?.descripcion ?? "");
-      setLogoUrl(identidadResult.data?.logo_url ?? null);
+      // Prefer the actual logo uploaded for the workshop; fall back to the
+      // logo already stored on its public catalog configuration.
+      setLogoUrl(identidadResult.data?.logo_url ?? configResult.data?.logo_url ?? null);
     });
   }, [open, initial, participanteId]);
 
@@ -435,6 +437,13 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={normalizarSlugCatalogo(slug)} readOnly aria-readonly="true" placeholder="Se genera a partir del nombre público" className="h-11 cursor-not-allowed rounded-xl border border-border bg-surface-muted px-3 text-sm font-normal text-muted-foreground" /><span className="text-[11px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre público y no se puede editar.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
           <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+          <div className="grid gap-2 text-xs font-semibold sm:col-span-2">
+            <span>Logo del showroom (vinculado al logo del taller)</span>
+            <div className="flex min-h-20 items-center gap-4 rounded-xl border border-border bg-background p-3">
+              {logoUrl ? <img src={logoUrl} alt="Logo que se mostrará en el showroom" className="max-h-14 max-w-[220px] object-contain object-left" /> : <span className="text-xs font-normal text-muted-foreground">No se encontró un logo guardado para este taller. Sube el logo en Identidad comercial y vuelve a abrir esta configuración.</span>}
+              {logoUrl ? <span className="text-[11px] font-normal text-muted-foreground">Este logo se guardará en el catálogo público.</span> : null}
+            </div>
+          </div>
           <label className="flex items-center gap-3 rounded-xl border border-border p-4 sm:col-span-2"><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} /><span><b className="block text-xs">Publicar catálogo</b><span className="text-[11px] text-muted-foreground">Hace visible el enlace público.</span></span></label>
           {error ? <p className="sm:col-span-2 text-xs text-destructive">{error}</p> : null}
           <div className="flex justify-end gap-2 sm:col-span-2"><button type="button" onClick={onClose} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold">{guardando ? "Guardando…" : "Guardar configuración"}</button></div>
