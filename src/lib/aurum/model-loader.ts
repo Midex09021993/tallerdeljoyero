@@ -264,6 +264,7 @@ export async function convertAurumToGlb(
           layerIndex: part.layerIndex ?? -1,
           rhinoLayerId: part.layerId ?? x.userData?.aurumRhino?.rhinoLayerId ?? null,
           matrixSlot: part.matrixSlot,
+          layerKey: part.layerKey,
         },
       };
     });
