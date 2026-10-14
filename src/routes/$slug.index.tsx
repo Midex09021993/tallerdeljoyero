@@ -270,19 +270,19 @@ function CatalogoPublicoPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
-      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-5 py-5 backdrop-blur sm:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-4 py-3 backdrop-blur sm:px-8 sm:py-5">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {config.logo_url ? (
-              <img src={config.logo_url} alt={config.nombre_publico} className="block h-12 w-auto max-w-[220px] shrink-0 object-contain object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img src={config.logo_url} alt={config.nombre_publico} className="block h-auto max-h-12 w-auto max-w-[min(52vw,220px)] shrink object-contain object-left sm:max-w-[220px]" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
             )}
             <div className="min-w-0">
-              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.25em] text-[#8a6b36]">Showroom digital</p>
+              <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[9px] sm:tracking-[.25em]">Showroom digital</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={() => void navigator.share?.({ title: config.nombre_publico, url: window.location.href })}
@@ -298,10 +298,10 @@ function CatalogoPublicoPage() {
 
       <section className="relative overflow-hidden border-b border-[#1f1b1815]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(180,145,75,.16),transparent_38%)]" />
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-24">
+        <div className="mx-auto grid max-w-7xl gap-7 px-5 py-10 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-8 lg:py-24">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#8a6b36]">Showroom · {config.nombre_publico}</p>
-            <h1 className="mt-4 max-w-xl font-display text-4xl leading-tight tracking-tight sm:text-5xl">{config.frase_portada?.trim() || "Joyas hechas para quedarse."}</h1>
+            <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#8a6b36] sm:text-[10px] sm:tracking-[.3em]">Showroom · {config.nombre_publico}</p>
+            <h1 className="mt-3 max-w-xl break-words font-display text-4xl leading-[1.08] tracking-tight sm:mt-4 sm:text-5xl">{config.frase_portada?.trim() || "Joyas hechas para quedarse."}</h1>
             {config.descripcion_publica?.trim() ? (
               <p className="mt-5 max-w-xl text-justify font-sans text-base leading-7 text-[#625b54] sm:text-lg sm:leading-8">{config.descripcion_publica}</p>
             ) : (
@@ -316,7 +316,7 @@ function CatalogoPublicoPage() {
             </div>
           </div>
 
-          <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-[#e9e3da] shadow-2xl">
+          <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-[24px] bg-[#e9e3da] shadow-xl sm:rounded-[28px] sm:shadow-2xl">
             {imagenesPortada.length ? (
               <img key={imagenesPortada[indicePortada]} src={imagenesPortada[indicePortada]} alt={"Imagen de portada " + (indicePortada + 1)} className={"size-full object-cover transition-opacity duration-300 " + (portadaVisible ? "opacity-100" : "opacity-0")} onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : destacado?.imagen ? (
