@@ -415,7 +415,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         part.userData={
           ...part.userData,
           aurumOpticalThickness:result.baseThickness,
-          aurumGemThicknessMapDiagnostics:result.diagnostics??null,
+          aurumGemThicknessMapDiagnostics:{method:result.method,hitRatio:result.hitRatio,minDepth:result.minDepth,maxDepth:result.maxDepth,cacheKey:result.cacheKey,normalMapRes:result.normalMapRes},
         };
         requestRender?.();
       }catch(error){

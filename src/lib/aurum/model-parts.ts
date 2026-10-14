@@ -90,7 +90,7 @@ export function getAurumModelParts(
       : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria,colorCapa) : undefined);
 
     const layerKey=resolveAurumLayerKey({layerId,layerIndex,layerName:capa,layerColor:colorCapa,category:categoria,existingKey:meta?.layerKey});
-    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
+    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, ...(capa ? { capa } : {}), ...(colorCapa ? { colorCapa } : {}), categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
 
   return result;
