@@ -251,43 +251,45 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
   const selectedMeta=selectionMeta(target);
-  const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||"").trim();
+  const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||target.userData?.attributes?.LayerName||"").trim();
   const selectedLayerIndex=selectionLayerIndex(target);
   const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
-  const selectedLayerKey=selectedMeta.layerKey??resolveAurumLayerKey({
-    layerId:selectedLayerId,
-    layerIndex:selectedLayerIndex,
-    layerName:selectedLayer,
-    layerColor:selectedMeta.colorCapa??target.userData?.attributes?.layerColor,
-    category:selectedCategory,
-  });
-  // A mesh UUID is not a layer identity. When source metadata is missing,
-  // report the problem and keep the edit strictly on the clicked mesh.
-  const hasStableLayerIdentity=Boolean(selectedLayerKey&&!selectedLayerKey.startsWith("mesh:"));
-  const assignmentKey=hasStableLayerIdentity?selectedLayerKey:"mesh:"+target.uuid;
+  const selectedLayerColor=String(selectedMeta.colorCapa??target.userData?.attributes?.layerColor??target.userData?.attributes?.LayerColor??"").trim().toLowerCase();
+  // Never trust a cached layerKey over the raw source identity for matching:
+  // stale/shared keys can make separate Gem 01–04 layers receive the same stone.
+  const hasStableLayerIdentity=selectedLayerId!=null&&String(selectedLayerId).trim()!==""
+    ||selectedLayerIndex!=null
+    ||selectedLayer!=="";
+  const assignmentKey=selectedLayerId!=null&&String(selectedLayerId).trim()!==""
+    ? "rhino-id:"+String(selectedLayerId).trim()
+    : selectedLayerIndex!=null
+      ? "rhino-index:"+selectedLayerIndex
+      : selectedLayer
+        ? "rhino-layer:"+encodeURIComponent(selectedLayer.toLocaleLowerCase())+"|color:"+(selectedLayerColor||"unknown")
+        : "mesh:"+target.uuid;
   const targets:any[]=[];
   const allGemMeshes:any[]=[];
+  const sameSourceLayer=(part:any):boolean=>{
+    if(!part?.isMesh)return false;
+    const meta=selectionMeta(part);
+    const partLayerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
+    const partLayerIndex=selectionLayerIndex(part);
+    const partLayer=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim();
+    const partColor=String(meta.colorCapa??part.userData?.attributes?.layerColor??part.userData?.attributes?.LayerColor??"").trim().toLowerCase();
+    // Prefer one authoritative identity dimension, never OR unrelated identities.
+    if(selectedLayerId!=null&&String(selectedLayerId).trim()!=="")return partLayerId!=null&&String(partLayerId).trim()===String(selectedLayerId).trim();
+    if(selectedLayerIndex!=null)return partLayerIndex===selectedLayerIndex;
+    if(selectedLayer){
+      const sameName=partLayer.toLocaleLowerCase()===selectedLayer.toLocaleLowerCase();
+      return sameName&&(!selectedLayerColor||!partColor||partColor===selectedLayerColor);
+    }
+    return part.uuid===target.uuid;
+  };
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const category=selectionCategory(x);
     if(category==="gema")allGemMeshes.push(x);
-    if(!hasStableLayerIdentity){
-      if(x.uuid===target.uuid)targets.push(x);
-      return;
-    }
-    const meta=selectionMeta(x);
-    const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
-    const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
-    const partLayerKey=meta.layerKey??resolveAurumLayerKey({
-      layerId:partLayerId,
-      layerIndex:selectionLayerIndex(x),
-      layerName:partLayer,
-      layerColor:meta.colorCapa??x.userData?.attributes?.layerColor,
-      category,
-    });
-    // The layer key is authoritative. Never use category equality as a substitute:
-    // it would combine distinct gemstone layers that share the generic "gema" category.
-    if(partLayerKey===selectedLayerKey)targets.push(x);
+    if(sameSourceLayer(x)&&category==="gema")targets.push(x);
   });
   if(!targets.length){
     console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
