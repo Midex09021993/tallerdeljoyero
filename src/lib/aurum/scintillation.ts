@@ -316,7 +316,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           float ijThirdBounceWeight=0.12*ijDepth;
           ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijThirdBounceWeight;
         }
-        ijAccum*=aurumIJEWELBoostFactors;
+        // The custom internal-ray samples bypass MeshPhysicalMaterial's
+        // envMapIntensity uniform. Apply a restrained diamond-only energy lift
+        // here as well, otherwise changing the gem HDR intensity brightens only
+        // the outer PBR layer and leaves the internal facets comparatively dull.
+        ijAccum*=aurumIJEWELBoostFactors*1.06;
         ijAccum=pow(max(ijAccum,vec3(0.0)),vec3(max(aurumIJEWELGammaFactor,.01)));
         float ijCosTheta=clamp(abs(dot(ijNormal,ijView)),0.0,1.0);
         float ijF0=pow((ijIor-1.0)/(ijIor+1.0),2.0);
