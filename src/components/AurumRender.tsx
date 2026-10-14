@@ -43,16 +43,10 @@ const colorRhinoHex = (c:any): string | undefined => {
 };
 const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
   const n = normalizarTexto(nombre);
-  if (/(piedra|gema|diamante|zafiro|rubi|rubí|esmeralda|moissanita|citrino|amatista|topacio)/.test(n)) return "gema";
-  if (/(metal|oro|plata|platino|metalico|metálico)/.test(n)) return "metal";
-  if (color) {
-    const m = color.match(/^#([0-9a-f]{6})$/i);
-    if (m) {
-      const x=parseInt(m[1]!,16), rr=(x>>16)&255, gg=(x>>8)&255, bb=x&255;
-      if (gg > rr*1.15 && gg > bb*1.15 && gg > 90) return "metal";
-      if (bb > rr*1.15 && bb >= gg*0.9 && bb > 90) return "gema";
-    }
-  }
+  if (/(piedra|gema|gem|diamante|diamond|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)/.test(n)) return "gema";
+  if (/(metal|oro|gold|plata|silver|platino|platinum|metalico|metálico|acero|steel)/.test(n)) return "metal";
+  // RGB is retained as source metadata only. Do not infer a material family by color.
+  void color;
   return "otro";
 };
 

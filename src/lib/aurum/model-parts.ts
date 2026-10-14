@@ -17,7 +17,7 @@ export type AurumModelPart = {
 function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefined {
   const n=String(name||"").trim().toLowerCase();
   if (/(metal|oro|gold|plata|silver|platino|platinum|met[aá]lico|^head[s]?\b)/.test(n)) return "metal";
-  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|esmeralda|emerald|moissanita|moissanite)/.test(n)) return "gema";
+  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)/.test(n)) return "gema";
   return undefined;
 }
 
