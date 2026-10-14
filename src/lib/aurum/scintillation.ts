@@ -299,7 +299,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         ijEnvR=textureCubeUV(envMap,envMapRotation*ijWorldR,0.0).rgb;
         ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
         ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
-        ijDepth=exp(-max(aurumIJEWELAbsorptionFactor,0.001)*.18);
+        ijDepth=exp(-max(aurumIJEWELAbsorptionFactor,0.001)*.12);
         ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*(.42*ijDepth);
 
         // Optional third environment sample: approximate a second pavilion
@@ -360,7 +360,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Blend the environment rays with the physical PBR surface. A bounded
         // weight preserves crown highlights and avoids a dark HDR map swallowing
         // the diamond; this remains an environment-sampling approximation.
-        float ijInternalWeight=clamp(ijReflect*1.12,0.50,0.62);
+        float ijInternalWeight=clamp(ijReflect*1.12,0.54,0.68);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
