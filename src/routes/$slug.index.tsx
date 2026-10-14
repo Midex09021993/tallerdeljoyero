@@ -164,10 +164,10 @@ function CatalogoPublicoPage() {
       const [catalogoResult, portadaResult, textoSuperiorResult, redesResult, contactoResult, carruselResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
-        supabase.rpc("obtener_texto_superior_portada_publica", { _slug: slugNormalizado }),
-        supabase.rpc("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
-        supabase.rpc("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
-        supabase.rpc("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
+        (supabase.rpc as any)("obtener_texto_superior_portada_publica", { _slug: slugNormalizado }),
+        (supabase.rpc as any)("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
+        (supabase.rpc as any)("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
+        (supabase.rpc as any)("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
@@ -179,13 +179,13 @@ function CatalogoPublicoPage() {
       } | undefined);
       const textoSuperiorCandidate = textoSuperiorResult.error ? null : textoSuperiorResult.data;
       const textoSuperiorRow = Array.isArray(textoSuperiorCandidate) ? textoSuperiorCandidate[0] : textoSuperiorCandidate;
-      const textoSuperiorPortada = textoSuperiorRow && typeof textoSuperiorRow === "object" && typeof (textoSuperiorRow as Record<string, unknown>).texto_superior_portada === "string"
-        ? ((textoSuperiorRow as Record<string, unknown>).texto_superior_portada as string)
+      const textoSuperiorPortada = textoSuperiorRow && typeof textoSuperiorRow === "object" && typeof (textoSuperiorRow as Record<string, unknown>)['texto_superior_portada'] === "string"
+        ? ((textoSuperiorRow as Record<string, unknown>)['texto_superior_portada'] as string)
         : null;
       const rawCarrusel = carruselResult.error ? null : carruselResult.data;
       const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
       const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
-      const carrusel = Array.isArray(carruselData.enlaces_carrusel) ? carruselData.enlaces_carrusel.filter((slide: any) => slide && ((typeof slide.url_imagen_externa === "string" && /^https?:\/\//i.test(slide.url_imagen_externa)) || (typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)))).slice(0, 10) : [];
+      const carrusel = Array.isArray(carruselData['enlaces_carrusel']) ? carruselData['enlaces_carrusel'].filter((slide: any) => slide && ((typeof slide.url_imagen_externa === "string" && /^https?:\/\//i.test(slide.url_imagen_externa)) || (typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)))).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
       const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};
@@ -195,11 +195,11 @@ function CatalogoPublicoPage() {
       if (redesCandidate && typeof redesCandidate === "object" && !Array.isArray(redesCandidate)) {
         const candidate = redesCandidate as Record<string, unknown>;
         redes = {
-          instagram: typeof candidate.instagram === "string" ? candidate.instagram : null,
-          tiktok: typeof candidate.tiktok === "string" ? candidate.tiktok : null,
-          youtube: typeof candidate.youtube === "string" ? candidate.youtube : null,
-          facebook: typeof candidate.facebook === "string" ? candidate.facebook : null,
-          pinterest: typeof candidate.pinterest === "string" ? candidate.pinterest : null,
+          instagram: typeof candidate['instagram'] === "string" ? candidate['instagram'] : null,
+          tiktok: typeof candidate['tiktok'] === "string" ? candidate['tiktok'] : null,
+          youtube: typeof candidate['youtube'] === "string" ? candidate['youtube'] : null,
+          facebook: typeof candidate['facebook'] === "string" ? candidate['facebook'] : null,
+          pinterest: typeof candidate['pinterest'] === "string" ? candidate['pinterest'] : null,
         };
       }
       return productosCatalogo.map((row) => ({
@@ -210,9 +210,9 @@ function CatalogoPublicoPage() {
         intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
         redes_sociales: redes,
         enlaces_carrusel: carrusel as CatalogoRow["enlaces_carrusel"],
-        telefono_contacto: typeof contacto.telefono_contacto === "string" ? contacto.telefono_contacto : null,
-        email_contacto: typeof contacto.email_contacto === "string" ? contacto.email_contacto : null,
-        direccion_contacto: typeof contacto.direccion_contacto === "string" ? contacto.direccion_contacto : null,
+        telefono_contacto: typeof contacto['telefono_contacto'] === "string" ? contacto['telefono_contacto'] : null,
+        email_contacto: typeof contacto['email_contacto'] === "string" ? contacto['email_contacto'] : null,
+        direccion_contacto: typeof contacto['direccion_contacto'] === "string" ? contacto['direccion_contacto'] : null,
       })) as CatalogoRow[];
     },
     staleTime: 0,
