@@ -467,6 +467,20 @@ function CatalogoPublicoPage() {
         </div>
       ) : null}
 
+      {whatsappHref ? (
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Escríbenos por WhatsApp"
+          title="Escríbenos por WhatsApp"
+          className="fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-[0_8px_24px_rgba(37,211,102,0.4)] transition-transform hover:scale-105 hover:bg-[#1DA851] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/30 sm:bottom-6 sm:right-6"
+        >
+          <MessageCircle className="size-7" strokeWidth={2.5} />
+          <span className="absolute inset-0 rounded-full border-2 border-[#25D366]/40 animate-ping motion-reduce:animate-none" />
+        </a>
+      ) : null}
+
       <footer className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
         <div className="flex flex-col gap-3 border-t border-[#1f1b1815] pt-6 text-xs text-[#746b62] sm:flex-row sm:items-center sm:justify-between">
           <span>© {config.nombre_publico} · Catálogo digital</span>
