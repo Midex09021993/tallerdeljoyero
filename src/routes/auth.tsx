@@ -181,9 +181,19 @@ function LoginPage() {
             <Gem className="size-4" /> Conocer Aurum Lab
           </button>
         </nav>
-        <a href="#login" className="rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink">
+        <a href="#login" className="hidden rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink md:inline-flex">
           Iniciar sesión
         </a>
+        <button type="button" aria-label={menuMovilAbierto ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuMovilAbierto} onClick={() => setMenuMovilAbierto((abierto) => !abierto)} className="inline-flex size-11 items-center justify-center rounded-xl border border-[#d8bd7b]/35 bg-white/[0.04] text-[#d9bd7b] transition hover:bg-white/[0.09] md:hidden">
+          {menuMovilAbierto ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+        {menuMovilAbierto ? <nav aria-label="Menú móvil" className="absolute inset-x-3 top-[calc(100%+8px)] rounded-2xl border border-[#d8bd7b]/25 bg-[#171815] p-2 shadow-[0_20px_60px_rgba(0,0,0,.55)] md:hidden">
+          <a onClick={() => setMenuMovilAbierto(false)} href="/auth" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Home className="size-4 text-gold" /> Inicio</a>
+          <a onClick={() => setMenuMovilAbierto(false)} href="/herramientas-publicas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Grid2X2 className="size-4 text-gold" /> Herramientas gratuitas</a>
+          <a onClick={() => setMenuMovilAbierto(false)} href="/tienda" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><ShoppingBag className="size-4 text-gold" /> Tienda de insumos</a>
+          <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Conocer Aurum Lab</button>
+          <a onClick={() => setMenuMovilAbierto(false)} href="#login" className="flex items-center gap-3 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-ink"><LockKeyhole className="size-4" /> Iniciar sesión</a>
+        </nav> : null}
       </header>
 
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-6 px-5 py-7 sm:px-8 sm:py-9 lg:gap-12 lg:px-10 lg:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-5 [@media(max-height:800px)]:py-3 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
