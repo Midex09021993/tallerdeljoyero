@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { resolveAurumLayerKey } from "./layer-identity";
-import { getAurumSourceMaterials } from "./gem-material-baseline";
+import { getAurumSourceMaterials, hadAurumSourceMaterialArray } from "./gem-material-baseline";
 import {
   applyAurumMetal,
   applyAurumGem,
@@ -366,7 +366,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   };
   targets.forEach((part:any)=>{
     const stableSourceMaterials=getAurumSourceMaterials(part);
-    const originalMaterialIsArray=stableSourceMaterials.length>1;
+    const originalMaterialIsArray=hadAurumSourceMaterialArray(part);
     part.material=originalMaterialIsArray
       ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
