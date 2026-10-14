@@ -249,6 +249,13 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||"").trim();
   const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
   const selectedLayerIndex=selectionLayerIndex(target);
+  const selectedLayerKey=selectedLayerIndex!==null
+    ? "index:"+selectedLayerIndex
+    : selectedLayerId!=null
+      ? "id:"+String(selectedLayerId)
+      : selectedLayer
+        ? "name:"+selectedLayer
+        : "mesh:"+target.uuid;
   const targets:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
@@ -257,25 +264,44 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
     const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
     const partLayerIndex=selectionLayerIndex(x);
-    // MatrixGold files can reuse a generic layer name such as "Gem" across
-    // several distinct layers. Never group by name while numeric source layer
-    // indices are available: the index is the discriminating identity here.
-    // Prefer index, then stable ID, and use exact name only as a last resort
-    // when BOTH meshes lack index/ID metadata.
-    const sameLayerIdentity=selectedLayerIndex!==null&&partLayerIndex!==null
-      ? partLayerIndex===selectedLayerIndex
-      : selectedLayerId!=null&&partLayerId!=null
-        ? String(partLayerId)===String(selectedLayerId)
-        : selectedLayerIndex===null&&partLayerIndex===null&&selectedLayerId==null&&partLayerId==null
-          &&!!selectedLayer&&!!partLayer&&partLayer===selectedLayer;
+    // Never infer that two meshes belong to the same layer from gem category.
+    // Prefer the source layer index, then stable Rhino/MatrixGold layer ID.
+    // Use exact name only if neither mesh has a stronger identity.
+    let sameLayerIdentity=false;
+    if(selectedLayerIndex!==null||partLayerIndex!==null){
+      sameLayerIdentity=selectedLayerIndex!==null&&partLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
+    }else if(selectedLayerId!=null||partLayerId!=null){
+      sameLayerIdentity=selectedLayerId!=null&&partLayerId!=null&&String(partLayerId)===String(selectedLayerId);
+    }else{
+      sameLayerIdentity=!!selectedLayer&&!!partLayer&&partLayer===selectedLayer;
+    }
     if(sameLayerIdentity)targets.push(x);
   });
   // Fail closed: if no matching layer metadata survives conversion, modify only
   // the clicked mesh rather than guessing from category or applying to all gems.
   if(!targets.length)targets.push(target);
-  console.info("[AURUM][GEM LAYER TARGET]", {
+  const rootUserData=modelRoot.userData??{};
+  const priorAssignments=rootUserData.aurumGemLayerAssignments??{};
+  modelRoot.userData={
+    ...rootUserData,
+    aurumGemLayerAssignments:{
+      ...priorAssignments,
+      [selectedLayerKey]:{
+        layerKey:selectedLayerKey,
+        layerName:selectedLayer||null,
+        layerIndex:selectedLayerIndex,
+        layerId:selectedLayerId==null?null:String(selectedLayerId),
+        gemId:String(gemConfig?.id??""),
+        gemName:String(gemConfig?.nombre??""),
+        updatedAt:Date.now(),
+        matchedMeshUuids:targets.map((part:any)=>part.uuid),
+      },
+    },
+  };
+  console.info("[AURUM][GEM LAYER ASSIGNMENT]", {
     selectedMesh:target.name||target.uuid,
     selectedLayer,
+    selectedLayerKey,
     selectedLayerIndex,
     selectedLayerId:selectedLayerId==null?null:String(selectedLayerId),
     selectedCategory,
