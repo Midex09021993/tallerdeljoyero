@@ -1224,8 +1224,8 @@ export function AurumRender() {
           // Keep the direct renderer during orbit, but use the photographic
           // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
           // actually reach the interactive preview.
-          if (liveFastPathRef.current) renderer.render(escena,camara);
-          else composer?.render?.();
+          if (liveFastPathRef.current || !composer) renderer.render(escena,camara);
+          else composer.render();
           perfTick();
         },
         {
