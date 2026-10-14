@@ -519,10 +519,35 @@ function LoginPage() {
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {[
-                      { id: "emprendedor", nombre: "Emprendedor", precio: "Gratis", enfoque: "Para empezar a organizar tu negocio.", items: ["Herramientas públicas para joyeros", "Clientes", "Cotizaciones", "Pedidos básicos"], destacado: true },
-                      { id: "taller", nombre: "Taller", precio: "Precio por definir", enfoque: "Para ordenar la gestión comercial.", items: ["Todo lo esencial de Emprendedor", "Contratos", "Ventas", "Catálogo digital"] },
-                      { id: "profesional", nombre: "Profesional", precio: "Precio por definir", enfoque: "Para conectar gestión y producción.", items: ["Gestión comercial ampliada", "Diseño e impresión 3D", "Casting y corte láser", "Taller, inventario y compras"] },
-                      { id: "empresarial", nombre: "Empresarial", precio: "Precio por definir", enfoque: "Para equipos y organizaciones con varias sedes.", items: ["Funciones de Profesional", "Gestión de equipo", "Operación multi-sede", "Analítica y seguimiento"] },
+                      {
+                        id: "emprendedor",
+                        nombre: "Emprendedor",
+                        precio: "Gratis",
+                        enfoque: "Empieza con herramientas técnicas y control comercial básico.",
+                        items: ["Herramientas públicas para joyeros", "Calculadoras de yeso/agua y aleación de oro", "Conversor de tallas", "Clientes, proyectos y cotizaciones", "Registro básico de pedidos"],
+                        destacado: true,
+                      },
+                      {
+                        id: "taller",
+                        nombre: "Taller",
+                        precio: "Precio por definir",
+                        enfoque: "Centraliza clientes, ventas y presentación de tus joyas.",
+                        items: ["Todo lo esencial de Emprendedor", "Contratos y documentos comerciales", "Ventas y seguimiento de pedidos", "Catálogo digital con imágenes y vídeos", "Mi Nube para archivos del taller", "AURUM Transfer para compartir archivos"],
+                      },
+                      {
+                        id: "profesional",
+                        nombre: "Profesional",
+                        precio: "Precio por definir",
+                        enfoque: "Conecta diseño, cálculo técnico y producción.",
+                        items: ["Funciones del plan Taller", "Visualizador y peso 3D", "AURUM Render (beta) para materiales, gemas y escenas", "Órdenes de producción, trabajos y piezas", "Inventario, materiales y compras", "Procesos especializados: casting y corte láser"],
+                      },
+                      {
+                        id: "empresarial",
+                        nombre: "Empresarial",
+                        precio: "Precio por definir",
+                        enfoque: "Coordina equipos, áreas y sedes desde una operación central.",
+                        items: ["Funciones del plan Profesional", "Gestión de usuarios, roles y permisos", "Organización por áreas y sedes", "Seguimiento de producción y control de calidad", "Analítica e informes de operación", "Administración centralizada multi-sede"],
+                      },
                     ].map((plan) => (
                       <article key={plan.id} className={"flex flex-col rounded-2xl border p-4 " + (plan.destacado ? "border-gold/40 bg-gold/[0.06]" : "border-white/10 bg-white/[0.025]")}>
                         <div className="flex items-start justify-between gap-2">
