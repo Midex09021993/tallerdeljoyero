@@ -189,7 +189,7 @@ function hydrateRhinoLayerMetadata(
     const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
     const matrixSlot=matrixSlotFromLayer(layerName,category)??existing.matrixSlot;
-    const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa;
+    const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa||!!existing.layerKey;
     if(!hasAnyLayerEvidence){audit.unresolvedMeshes++;audit.categoryCounts.otro++;return;}
 
     if(layerKey){audit.meshesWithLayerKey++;audit.layers[layerKey]=(audit.layers[layerKey]??0)+1;}
