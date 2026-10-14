@@ -106,7 +106,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
     if(ijewelEnabled){
-      shader.uniforms.aurumIJEWELRefractiveIndex={value:Number(ijewel.refractiveIndex??2.6)};
+      // Use the real gemstone IOR for the rendered ray directions.
+      // The iJewel 2.6 value is retained as source-reference metadata only;
+      // applying it here made the diamond refract more strongly than diamond.
+      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(material.ior??2.417)))};
       shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(ijewel.rayBounces??5))))};
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
       shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
@@ -255,7 +258,9 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Three channel rays share this fragment and sample the existing PMREM;
         // no screen-sized transmission target or extra render pass is created.
         float ijIor=max(aurumIJEWELRefractiveIndex,1.0001);
-        float ijEtaR=1.0/max(ijIor-0.010,1.0001);
+        // Approximate visible-band diamond dispersion around the physical
+        // sodium-D reference IOR (2.417): red ~2.410, green 2.417, blue ~2.435.
+        float ijEtaR=1.0/max(ijIor-0.007,1.0001);
         float ijEtaG=1.0/ijIor;
         float ijEtaB=1.0/min(ijIor+0.018,2.65);
         // Preserve the last visually working direction while isolating the
