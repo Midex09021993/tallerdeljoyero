@@ -310,7 +310,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
     // Enable the native iJewel-inspired optical path only for diamonds. The
     // LIVE quality controller swaps this beauty shader out during interaction.
-    if(preset.familia==="Diamante")activateAurumDiamondMaterial(next);
+    if(preset.familia==="Diamante")activateAurumDiamondMaterial(next,preset);
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     // Preserve authored CAD facet normals. Only fall back to flat shading when
     // the geometry has no usable normals; the renderer's normal pipeline handles
