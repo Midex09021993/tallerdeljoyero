@@ -478,15 +478,13 @@ function CatalogoPublicoPage() {
               <div><p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#8a6b36]">Descubre más</p><h2 className="mt-1 font-display text-2xl text-[#30271e]">Un mundo por explorar</h2></div>
               {config.enlaces_carrusel.length > 1 ? <div className="flex gap-2"><button type="button" onClick={() => setIndiceCarrusel(i => (i - 1 + config.enlaces_carrusel!.length) % config.enlaces_carrusel!.length)} aria-label="Imagen anterior" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronLeft className="size-4" /></button><button type="button" onClick={() => setIndiceCarrusel(i => (i + 1) % config.enlaces_carrusel!.length)} aria-label="Imagen siguiente" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronRight className="size-4" /></button></div> : null}
             </div>
-            <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+            <div className="mx-auto flex w-full items-stretch gap-5 overflow-x-auto pb-2 snap-x snap-mandatory">
               {config.enlaces_carrusel.map((slide, index) => {
                 const imageUrl = slide.url_imagen_externa?.trim() || slide.imagen_url;
                 const instagramMatch = imageUrl.match(/^https?:\/\/(?:www\.)?instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i);
                 const instagramEmbedUrl = instagramMatch ? 'https://www.instagram.com/' + instagramMatch[1] + '/' + instagramMatch[2] + '/embed' : null;
                 const content = instagramEmbedUrl ? <iframe src={instagramEmbedUrl} title={slide.texto?.trim() || "Publicación de Instagram"} loading="lazy" className="h-full w-full border-0 bg-white" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen /> : <><img src={imageUrl} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
-                const visible = index >= indiceCarrusel && index < indiceCarrusel + 3;
-                if (!visible) return null;
-                const className = "group relative mx-auto block aspect-[16/9] w-full max-w-[680px] overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06]";
+                const className = "group relative block aspect-[16/9] w-[88%] shrink-0 snap-center overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:w-[calc(50%-0.625rem)] lg:w-[calc(50%-0.625rem)]";
                 return slide.enlace_url?.trim() ? <a key={imageUrl} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={imageUrl} className={className}>{content}</div>;
               })}
             </div>
