@@ -322,10 +322,13 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // surface outright made the diamond nearly opaque/black. Keep enough
         // PBR energy for readable crown facets and a restrained transmission path.
         vec3 ijInternal=mix(ijAccum,ijAccum*1.12,ijFresnel);
-        // Raise the internal-ray contribution enough to reveal the pavilion
-        // pattern, but retain the physical surface and its crown highlights.
-        // The lower bound avoids a washed-out PBR-only look; the upper bound
-        // prevents a dark/flat HDR map from swallowing the diamond.
+        // Diamond-only microcontrast: separate adjacent bright/dark facets
+        // without increasing the scene exposure. Keep the pivot near mid-grey
+        // and clamp negative energy so this cannot create invalid HDR values.
+        ijInternal=max((ijInternal-vec3(0.45))*1.16+vec3(0.45),vec3(0.0));
+        // Blend the environment rays with the physical PBR surface. A bounded
+        // weight preserves crown highlights and avoids a dark HDR map swallowing
+        // the diamond; this remains an environment-sampling approximation.
         float ijInternalWeight=clamp(ijReflect*0.96,0.30,0.56);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
