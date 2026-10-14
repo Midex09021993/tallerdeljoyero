@@ -336,7 +336,7 @@ function CatalogoPublicoPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
-      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-4 py-3 backdrop-blur sm:px-8 sm:py-5">
+      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-3 py-1.5 backdrop-blur sm:px-8 sm:py-5">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {config.logo_url ? (
@@ -345,7 +345,7 @@ function CatalogoPublicoPage() {
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
             )}
             <div className="min-w-0">
-              <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[9px] sm:tracking-[.25em]">Showroom digital</p>
+              <p className="mt-0.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-[.12em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
