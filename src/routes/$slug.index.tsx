@@ -30,6 +30,7 @@ type CatalogoRow = {
   email_contacto?: string | null;
   direccion_contacto?: string | null;
   redes_sociales?: { instagram?: string | null; tiktok?: string | null; youtube?: string | null; facebook?: string | null; pinterest?: string | null } | null;
+  enlaces_carrusel?: { imagen_url: string; enlace_url?: string | null; texto?: string | null; nueva_pestana?: boolean }[] | null;
   frase_portada: string | null;
   imagenes_portada: unknown;
   intervalo_portada_segundos: number | null;
@@ -122,6 +123,7 @@ function CatalogoPublicoPage() {
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
   const [indicePortada, setIndicePortada] = useState(0);
+  const [indiceCarrusel, setIndiceCarrusel] = useState(0);
   const [portadaVisible, setPortadaVisible] = useState(true);
   useEffect(() => {
     try {
@@ -156,11 +158,12 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const [catalogoResult, portadaResult, redesResult, contactoResult] = await Promise.all([
+      const [catalogoResult, portadaResult, redesResult, contactoResult, carruselResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
         supabase.rpc("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
+        supabase.rpc("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
@@ -170,6 +173,10 @@ function CatalogoPublicoPage() {
         imagenes_portada: unknown;
         intervalo_portada_segundos: number | null;
       } | undefined);
+      const rawCarrusel = carruselResult.error ? null : carruselResult.data;
+      const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
+      const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
+      const carrusel = Array.isArray(carruselData.enlaces_carrusel) ? carruselData.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string" && /^https?:\\/\\//i.test(slide.imagen_url)).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
       const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};
@@ -192,6 +199,7 @@ function CatalogoPublicoPage() {
         imagenes_portada: portada?.imagenes_portada ?? [],
         intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
         redes_sociales: redes,
+        enlaces_carrusel: carrusel as CatalogoRow["enlaces_carrusel"],
         telefono_contacto: typeof contacto.telefono_contacto === "string" ? contacto.telefono_contacto : null,
         email_contacto: typeof contacto.email_contacto === "string" ? contacto.email_contacto : null,
         direccion_contacto: typeof contacto.direccion_contacto === "string" ? contacto.direccion_contacto : null,
@@ -456,6 +464,27 @@ function CatalogoPublicoPage() {
           </div>
         )}
       </section>
+
+      {config.enlaces_carrusel?.length ? (
+        <section aria-label="Descubre más" className="border-y border-[#1f1b1810] bg-white/45">
+          <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div><p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#8a6b36]">Descubre más</p><h2 className="mt-1 font-display text-2xl text-[#30271e]">Un mundo por explorar</h2></div>
+              {config.enlaces_carrusel.length > 1 ? <div className="flex gap-2"><button type="button" onClick={() => setIndiceCarrusel(i => (i - 1 + config.enlaces_carrusel!.length) % config.enlaces_carrusel!.length)} aria-label="Imagen anterior" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronLeft className="size-4" /></button><button type="button" onClick={() => setIndiceCarrusel(i => (i + 1) % config.enlaces_carrusel!.length)} aria-label="Imagen siguiente" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronRight className="size-4" /></button></div> : null}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {config.enlaces_carrusel.map((slide, index) => {
+                const content = <><img src={slide.imagen_url} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
+                const visible = index >= indiceCarrusel && index < indiceCarrusel + (typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 1);
+                if (!visible) return null;
+                const className = "group relative block aspect-[16/7] overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:aspect-[16/8]";
+                return slide.enlace_url?.trim() ? <a key={slide.imagen_url} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={slide.imagen_url} className={className}>{content}</div>;
+              })}
+            </div>
+            {config.enlaces_carrusel.length > 1 ? <div className="mt-4 flex justify-center gap-1.5">{config.enlaces_carrusel.map((slide, index) => <button key={slide.imagen_url} type="button" onClick={() => setIndiceCarrusel(index)} aria-label={"Ir a la imagen " + (index + 1)} className={"h-1.5 rounded-full transition-all " + (index === indiceCarrusel ? "w-6 bg-[#8a6b36]" : "w-1.5 bg-[#b99b6b]/45")} />)}</div> : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-y border-[#1f1b1815] bg-[#fbf9f5]">
         <div className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:grid-cols-3 sm:gap-8 sm:px-8 sm:py-14">
