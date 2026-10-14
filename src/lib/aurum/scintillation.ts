@@ -37,7 +37,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
-  const contrastStrength=(family==="Diamante" ? .68 : .075)*facetContrast;
+  const contrastStrength=(family==="Diamante" ? .80 : .075)*facetContrast;
   const colorChange:any=(profile as any).colorChange;
   const oilDrop:any=(profile as any).oilDrop;
   const oilDropEnabled=Boolean(oilDrop?.enabled);
@@ -398,7 +398,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.70" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.56" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
