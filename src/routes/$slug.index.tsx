@@ -481,8 +481,8 @@ function CatalogoPublicoPage() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {config.enlaces_carrusel.map((slide, index) => {
                 const imageUrl = slide.url_imagen_externa?.trim() || slide.imagen_url;
-                const instagramMatch = imageUrl.match(/^https?:\\/\\/(?:www\\.)?instagram\\.com\\/(?:p|reel|tv)\\/([A-Za-z0-9_-]+)/i);
-                const instagramEmbedUrl = instagramMatch ? `https://www.instagram.com/${imageUrl.match(/instagram\\.com\\/(p|reel|tv)\\//i)?.[1] || "p"}/${instagramMatch[1]}/embed` : null;
+                const instagramMatch = imageUrl.match(/^https?:\/\/(?:www\.)?instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i);
+                const instagramEmbedUrl = instagramMatch ? 'https://www.instagram.com/' + instagramMatch[1] + '/' + instagramMatch[2] + '/embed' : null;
                 const content = instagramEmbedUrl ? <iframe src={instagramEmbedUrl} title={slide.texto?.trim() || "Publicación de Instagram"} loading="lazy" className="h-full w-full border-0 bg-white" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen /> : <><img src={imageUrl} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
                 const visible = index >= indiceCarrusel && index < indiceCarrusel + 3;
                 if (!visible) return null;
