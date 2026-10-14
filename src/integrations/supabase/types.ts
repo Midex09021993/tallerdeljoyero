@@ -190,6 +190,9 @@ export type Database = {
         Row: {
           created_at: string
           descripcion: string | null
+          direccion_contacto: string | null
+          email_contacto: string | null
+          enlaces_carrusel: Json
           frase_portada: string | null
           id: string
           imagenes_portada: Json
@@ -197,7 +200,10 @@ export type Database = {
           logo_url: string | null
           nombre_publico: string
           participante_id: string
+          redes_sociales: Json
           slug: string
+          telefono_contacto: string | null
+          texto_superior_portada: string | null
           updated_at: string
           visible: boolean
           whatsapp: string | null
@@ -205,6 +211,9 @@ export type Database = {
         Insert: {
           created_at?: string
           descripcion?: string | null
+          direccion_contacto?: string | null
+          email_contacto?: string | null
+          enlaces_carrusel?: Json
           frase_portada?: string | null
           id?: string
           imagenes_portada?: Json
@@ -212,7 +221,10 @@ export type Database = {
           logo_url?: string | null
           nombre_publico: string
           participante_id: string
+          redes_sociales?: Json
           slug?: string
+          telefono_contacto?: string | null
+          texto_superior_portada?: string | null
           updated_at?: string
           visible?: boolean
           whatsapp?: string | null
@@ -220,6 +232,9 @@ export type Database = {
         Update: {
           created_at?: string
           descripcion?: string | null
+          direccion_contacto?: string | null
+          email_contacto?: string | null
+          enlaces_carrusel?: Json
           frase_portada?: string | null
           id?: string
           imagenes_portada?: Json
@@ -227,7 +242,10 @@ export type Database = {
           logo_url?: string | null
           nombre_publico?: string
           participante_id?: string
+          redes_sociales?: Json
           slug?: string
+          telefono_contacto?: string | null
+          texto_superior_portada?: string | null
           updated_at?: string
           visible?: boolean
           whatsapp?: string | null
@@ -3963,6 +3981,12 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      obtener_carrusel_enlaces_catalogo_publico: {
+        Args: { _slug: string }
+        Returns: {
+          enlaces_carrusel: Json
+        }[]
+      }
       obtener_catalogo_publico: {
         Args: { _slug: string }
         Returns: {
@@ -4006,6 +4030,20 @@ export type Database = {
           frase_portada: string
           imagenes_portada: Json
           intervalo_portada_segundos: number
+        }[]
+      }
+      obtener_contacto_catalogo_publico: {
+        Args: { _slug: string }
+        Returns: Json
+      }
+      obtener_redes_sociales_catalogo_publico: {
+        Args: { _slug: string }
+        Returns: Json
+      }
+      obtener_texto_superior_portada_publica: {
+        Args: { _slug: string }
+        Returns: {
+          texto_superior_portada: string
         }[]
       }
       obtener_trabajo_operativo: {
