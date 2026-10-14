@@ -385,6 +385,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [intervaloPortada, setIntervaloPortada] = useState(5);
   const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
   const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
+  const [urlNuevaImagenCarrusel, setUrlNuevaImagenCarrusel] = useState("");
   const [subiendoImagenes, setSubiendoImagenes] = useState(false);
   const [visible, setVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -447,6 +448,15 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     } finally {
       setSubiendoImagenes(false);
     }
+  }
+
+  function agregarImagenPorUrl() {
+    const url = urlNuevaImagenCarrusel.trim();
+    if (!/^https?:\/\//i.test(url)) { setError("Introduce una URL HTTPS o HTTP válida para la imagen."); return; }
+    if (enlacesCarrusel.length >= 10) { setError("El carrusel admite como máximo 10 imágenes."); return; }
+    setEnlacesCarrusel(actual => [...actual, { imagen_url: url, url_imagen_externa: url, enlace_url: "", texto: "", nueva_pestana: true }]);
+    setUrlNuevaImagenCarrusel("");
+    setError(null);
   }
 
   async function subirImagenesCarrusel(event: any) {
@@ -587,6 +597,14 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                 <input type="file" accept="image/*" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
               </label>
               <p className="text-xs text-muted-foreground">Hasta 10 imágenes, máximo 8 MB cada una. Si una imagen no tiene enlace, se mostrará sin ser clicable.</p>
+              <div className="grid gap-2 rounded-xl bg-background p-3">
+                <p className="text-xs font-semibold">O pega una URL directa de imagen</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input type="url" value={urlNuevaImagenCarrusel} onChange={e => setUrlNuevaImagenCarrusel(e.target.value)} placeholder="https://sitio.com/foto.jpg" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-sm font-normal" />
+                  <button type="button" onClick={agregarImagenPorUrl} disabled={enlacesCarrusel.length >= 10} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Añadir por enlace</button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Debe ser un enlace directo al archivo de imagen. El enlace de una publicación de Instagram normalmente no sirve como URL de imagen.</p>
+              </div>
               {enlacesCarrusel.map((slide, index) => <div key={slide.imagen_url} className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-[112px_1fr]">
                 <div className="relative"><img src={slide.url_imagen_externa.trim() || slide.imagen_url} alt={slide.texto || "Imagen del carrusel"} className="aspect-[4/3] w-full rounded-lg object-cover" onError={event => { event.currentTarget.style.opacity = "0.35"; }} /><button type="button" onClick={() => setEnlacesCarrusel(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar imagen " + (index + 1)}><X className="size-3.5" /></button></div>
                 <div className="grid gap-2">
