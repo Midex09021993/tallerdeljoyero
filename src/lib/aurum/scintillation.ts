@@ -374,7 +374,12 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
-        gl_FragColor.rgb*=mix(0.96,1.0,ijGeometry);\n        ` : ``}
+        gl_FragColor.rgb*=mix(0.96,1.0,ijGeometry);
+        // Diamond-only HDR highlight shoulder: reduce clipped white reflections
+        // while preserving the RGB ratios that carry the subtle spectral fire.
+        float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
+        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.0,0.0)*0.28);
+        gl_FragColor.rgb*=ijHighlightCompression;\\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
