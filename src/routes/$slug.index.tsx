@@ -319,6 +319,13 @@ function CatalogoPublicoPage() {
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#8a6b36] sm:text-[10px] sm:tracking-[.3em]">Showroom · {config.nombre_publico}</p>
             <h1 className="mt-3 max-w-xl break-words font-display text-4xl leading-[1.08] tracking-tight sm:mt-4 sm:text-5xl">{config.frase_portada?.trim() || "Joyas hechas para quedarse."}</h1>
+            {config.descripcion_publica?.trim() ? (
+              <p className="mt-5 max-w-xl font-sans text-sm leading-7 text-[#625b54] sm:text-base">{config.descripcion_publica}</p>
+            ) : (
+              <p className="mt-5 max-w-xl font-sans text-sm leading-7 text-[#625b54] sm:text-base">
+                Explora los modelos publicados por {config.nombre_publico} y solicita una propuesta personalizada directamente con el taller.
+              </p>
+            )}
             <div className="mt-7 flex flex-wrap gap-2">
               <a href="#coleccion" className="rounded-full bg-[#1f1b18] px-5 py-3 text-xs font-semibold text-white">
                 Explorar colección <ArrowRight className="ml-1 inline size-3.5" />
@@ -337,15 +344,6 @@ function CatalogoPublicoPage() {
               </div>
             )}
             {imagenesPortada.length > 1 ? <div className="absolute inset-x-0 top-0 flex justify-center gap-1.5 p-3">{imagenesPortada.map((_, i) => <button key={i} type="button" onClick={() => setIndicePortada(i)} aria-label={"Mostrar imagen " + (i + 1)} className={"h-1.5 rounded-full transition-all " + (indicePortada === i ? "w-6 bg-white" : "w-2 bg-white/60")} />)}</div> : null}
-            {destacado ? (
-              <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/90 p-4 backdrop-blur">
-                <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{destacado.codigo} · destacado</p>
-                <div className="mt-1 flex items-end justify-between gap-3">
-                  <h2 className="text-lg font-semibold">{destacado.nombre}</h2>
-                  {destacado.mostrarPrecio ? <span className="text-sm font-semibold">{formatPrice(destacado.precioDesde, destacado.moneda)}</span> : <span className="text-xs text-[#746b62]">Precio a consultar</span>}
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       </section>
