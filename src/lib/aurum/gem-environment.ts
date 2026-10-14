@@ -69,7 +69,11 @@ export function createAurumGemEnvironment(
         // iJewel exposes the gem environment independently from the scene
         // environment. A very small family-specific rotation offset is applied
         // to the gem light field only; it does not alter geometry or IOR.
-        m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale));
+        // Diamonds need a little more reflected studio energy to reveal their
+        // crown/pavilion contrast. Keep this boost isolated from colored gems
+        // and metals; it does not alter scene exposure or the material's IOR.
+        const familyReflectionScale = family === "Diamante" ? 1.08 : 1;
+        m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();
