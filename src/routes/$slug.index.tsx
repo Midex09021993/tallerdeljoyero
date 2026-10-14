@@ -252,10 +252,11 @@ function CatalogoPublicoPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {config.logo_url ? (
-              <img src={config.logo_url} alt={config.nombre_publico} className="size-10 rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-            ) : null}
-            <div className="min-w-0">
+              <img src={config.logo_url} alt={config.nombre_publico} className="max-h-12 max-w-[220px] object-contain object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+            ) : (
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
+            )}
+            <div className="min-w-0">
               <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.25em] text-[#8a6b36]">Showroom digital</p>
             </div>
           </div>
