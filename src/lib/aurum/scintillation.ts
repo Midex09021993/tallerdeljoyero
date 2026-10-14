@@ -248,10 +248,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         // generation time, so non-iJewel gems do not execute it.
 ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file emits the block only
         // when the material carries the supplied DiamondMaterial parameters.
-        // Three.js vViewPosition is the view-space position of the fragment:
-        // it points from the camera toward the surface. Refract needs that
-        // incident direction, while the negated vector is the outgoing view ray.
-        vec3 ijIncident=normalize(vViewPosition);
+        vec3 ijView=normalize(-vViewPosition);
         vec3 ijNormal=normalize(normal);
         float ijEta=1.0/max(aurumIJEWELRefractiveIndex,1.0001);
         // Dispersion approximation based on diamond's wavelength-dependent IOR.
@@ -261,11 +258,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijEtaR=1.0/max(ijIor-0.010,1.0001);
         float ijEtaG=1.0/ijIor;
         float ijEtaB=1.0/min(ijIor+0.018,2.65);
-        // Trace the incident ray into the diamond. The earlier implementation
-        // used the outgoing view vector here, reversing the optical path.
-        vec3 ijDirR=refract(ijIncident,ijNormal,ijEtaR);
-        vec3 ijDirG=refract(ijIncident,ijNormal,ijEtaG);
-        vec3 ijDirB=refract(ijIncident,ijNormal,ijEtaB);
+        // Preserve the last visually working direction while isolating the
+        // blank-render regression from the recent view-vector change.
+        vec3 ijDirR=refract(ijView,ijNormal,ijEtaR);
+        vec3 ijDirG=refract(ijView,ijNormal,ijEtaG);
+        vec3 ijDirB=refract(ijView,ijNormal,ijEtaB);
         vec3 ijAccum=vec3(0.0);
         float ijWeight=0.58;
         float ijDepth=1.0;
