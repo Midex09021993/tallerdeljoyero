@@ -12,7 +12,7 @@ export type PlanComercial = {
   id: PlanComercialId;
   nombre: string;
   precioEtiqueta: string;
-  estadoComercial: "gratis" | "pendiente";
+  estadoComercial: "gratis" | "pago" | "pendiente";
   enfoque: string;
   capacidadesRelacionadas: readonly string[];
   limitesActivos: false;
@@ -31,9 +31,9 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
   {
     id: "taller",
     nombre: "Taller",
-    precioEtiqueta: "De pago · por definir",
-    estadoComercial: "pendiente",
-    enfoque: "Organización del taller y ampliación de la gestión comercial.",
+    precioEtiqueta: "S/ 1 al día · S/ 30 al mes",
+    estadoComercial: "pago",
+    enfoque: "Organización del taller y ampliación de la gestión comercial por S/ 30 mensuales.",
     capacidadesRelacionadas: ["Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo"],
     limitesActivos: false,
   },
