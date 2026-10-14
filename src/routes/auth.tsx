@@ -538,7 +538,7 @@ function LoginPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="relative mt-5 border-t border-white/[0.08] pt-3 text-[10px] leading-relaxed text-white/40">Las herramientas públicas siguen siendo gratuitas. El plan Taller cuesta S/ 1 al día (S/ 30 al mes). Profesional cuesta S/ 29 al mes y Empresarial S/ 79 al mes; los límites y accesos aún no se aplican automáticamente en todos los módulos.</p>
+                    <p className="relative mt-5 border-t border-white/[0.08] pt-3 text-[10px] leading-relaxed text-white/40">Emprendedor es gratis. Taller cuesta S/ 29 al mes y Profesional S/ 79 al mes. El precio de Empresarial está por definir. Todos los planes comparten las mismas funciones; solo cambian los límites de uso.</p>
                   </section>
 
                   <div className="mt-5 grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -558,7 +558,7 @@ function LoginPage() {
                         numero: "02",
                         nombre: "Taller",
                         etiqueta: "PON ORDEN",
-                        precio: "S/ 1 al día · S/ 30 al mes",
+                        precio: "S/ 29 al mes",
                         enfoque: "Centraliza la relación con tus clientes y presenta tu trabajo.",
                         items: ["Todo lo esencial de Emprendedor", "Contratos y documentos comerciales", "Ventas y seguimiento de pedidos", "Catálogo digital con imágenes y vídeos", "Mi Nube para archivos del taller", "AURUM Transfer para compartir archivos"],
                         estilo: "standard",
@@ -568,8 +568,8 @@ function LoginPage() {
                         numero: "03",
                         nombre: "Profesional",
                         etiqueta: "CONECTA TODO",
-                        precio: "S/ 29 al mes",
-                        enfoque: "Une diseño, herramientas técnicas y operación productiva.",
+                        precio: "S/ 79 al mes",
+                        enfoque: "Todas las funciones de la plataforma, con límites de uso más amplios.",
                         items: ["Funciones del plan Taller", "Visualizador y peso 3D", "AURUM Render (beta) para materiales, gemas y escenas", "Órdenes de producción, trabajos y piezas", "Inventario, materiales y compras", "Procesos especializados: casting y corte láser"],
                         estilo: "featured",
                       },
@@ -578,8 +578,8 @@ function LoginPage() {
                         numero: "04",
                         nombre: "Empresarial",
                         etiqueta: "CRECE EN EQUIPO",
-                        precio: "S/ 79 al mes",
-                        enfoque: "Coordina personas, áreas y sedes con una visión común.",
+                        precio: "Precio por definir",
+                        enfoque: "Todas las funciones de la plataforma, con límites de uso para organizaciones.",
                         items: ["Funciones del plan Profesional", "Gestión de usuarios, roles y permisos", "Organización por áreas y sedes", "Seguimiento de producción y control de calidad", "Analítica e informes de operación", "Administración centralizada multi-sede"],
                         estilo: "standard",
                       },
@@ -612,7 +612,7 @@ function LoginPage() {
                         { title: "Capacidades del taller", text: "Indican las especialidades y modalidades habilitadas para cada sede." },
                       ].map((item) => <article key={item.title} className="rounded-xl border border-white/10 p-3"><p className="text-xs font-semibold text-gold">{item.title}</p><p className="mt-1.5 text-[11px] leading-relaxed text-white/50">{item.text}</p></article>)}
                     </div>
-                    <p className="mt-4 rounded-lg border border-gold/20 bg-gold/[0.05] p-3 text-[10px] leading-relaxed text-white/55">Importante: el plan Taller tiene un precio definido de S/ 1 al día (S/ 30 al mes). Profesional cuesta S/ 29 al mes y Empresarial S/ 79 al mes. La aplicación automática de todos los límites y permisos todavía debe completarse.</p>
+                    <p className="mt-4 rounded-lg border border-gold/20 bg-gold/[0.05] p-3 text-[10px] leading-relaxed text-white/55">Emprendedor es gratis; Taller cuesta S/ 29 al mes; Profesional cuesta S/ 79 al mes y Empresarial está por definir. Todos los planes incluyen las mismas funciones; los límites automáticos de uso aún deben completarse.</p>
                   </section>
                 </>
               ) : null}
