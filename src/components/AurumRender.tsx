@@ -844,43 +844,87 @@ export function AurumRender() {
           URL.revokeObjectURL(url);
         },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp"}={})=>{
-          const canvas=renderer.domElement;
-          if(!canvas||!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
+          if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           const width=Math.max(320,Math.min(4096,Math.round(Number(options.width)||1920)));
           const height=Math.max(320,Math.min(4096,Math.round(Number(options.height)||1080)));
+          if(width*height>12_000_000) throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
           const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
-          const oldSize=new THREE.Vector2();
-          renderer.getSize(oldSize);
-          const oldPixelRatio=renderer.getPixelRatio();
+          const target=new THREE.WebGLRenderTarget(width,height,{
+            format:THREE.RGBAFormat,
+            type:THREE.UnsignedByteType,
+            depthBuffer:true,
+            stencilBuffer:false,
+          });
+          target.texture.colorSpace=THREE.SRGBColorSpace;
+          const oldTarget=renderer.getRenderTarget();
           const oldAspect=camara.aspect;
+          const oldViewport=new THREE.Vector4();
+          const oldScissor=new THREE.Vector4();
+          const oldScissorTest=renderer.getScissorTest();
+          const oldClearColor=new THREE.Color();
+          const oldClearAlpha=renderer.getClearAlpha();
+          const oldLiveMode=liveFastPathRef.current;
+          renderer.getViewport(oldViewport);
+          renderer.getScissor(oldScissor);
+          renderer.getClearColor(oldClearColor);
           let dataUrl="";
           try{
-            // Re-render immediately before capture: the interactive renderer uses
-            // preserveDrawingBuffer:false, so reading a stale frame can return black.
-            renderer.setPixelRatio(1);
-            renderer.setSize(width,height,false);
+            // Snapshot renders into an off-screen WebGL target and reads pixels
+            // from that target. It never depends on the browser preserving the
+            // interactive canvas drawing buffer, which is intentionally disabled.
+            liveFastPathRef.current=false;
+            aplicarPerfilLive();
             camara.aspect=width/height;
             camara.updateProjectionMatrix();
+            renderer.setScissorTest(false);
+            renderer.setRenderTarget(target);
+            renderer.setViewport(0,0,width,height);
+            renderer.setClearColor(0xffffff,1);
+            renderer.clear(true,true,true);
+            renderer.compile(escena,camara);
             renderer.render(escena,camara);
-            // Composite onto white to avoid transparent/black backgrounds in image viewers.
+            const pixels=new Uint8Array(width*height*4);
+            renderer.readRenderTargetPixels(target,0,0,width,height,pixels);
             const output=document.createElement("canvas");
             output.width=width;
             output.height=height;
-            const context=output.getContext("2d");
+            const context=output.getContext("2d",{willReadFrequently:false});
             if(!context) throw new Error("No se pudo preparar la imagen de salida.");
-            context.fillStyle="#ffffff";
-            context.fillRect(0,0,width,height);
-            context.drawImage(canvas,0,0,width,height);
-            dataUrl=output.toDataURL(mime,0.95);
+            const image=context.createImageData(width,height);
+            const rowSize=width*4;
+            // WebGL pixel data starts at the bottom-left; Canvas starts top-left.
+            for(let y=0;y<height;y++){
+              const sourceOffset=(height-1-y)*rowSize;
+              image.data.set(pixels.subarray(sourceOffset,sourceOffset+rowSize),y*rowSize);
+            }
+            context.putImageData(image,0,0);
+            if(format!=="png"){
+              const flattened=document.createElement("canvas");
+              flattened.width=width;
+              flattened.height=height;
+              const flatContext=flattened.getContext("2d");
+              if(!flatContext) throw new Error("No se pudo preparar el formato de imagen.");
+              flatContext.fillStyle="#ffffff";
+              flatContext.fillRect(0,0,width,height);
+              flatContext.drawImage(output,0,0);
+              dataUrl=flattened.toDataURL(mime,0.94);
+            }else{
+              dataUrl=output.toDataURL(mime);
+            }
+            if(!dataUrl||dataUrl.length<1000) throw new Error("La captura está vacía. Inténtalo de nuevo con el visor estable.");
           }finally{
-            renderer.setPixelRatio(oldPixelRatio);
-            renderer.setSize(oldSize.x,oldSize.y,false);
+            renderer.setRenderTarget(oldTarget);
+            renderer.setViewport(oldViewport);
+            renderer.setScissor(oldScissor);
+            renderer.setScissorTest(oldScissorTest);
+            renderer.setClearColor(oldClearColor,oldClearAlpha);
             camara.aspect=oldAspect;
             camara.updateProjectionMatrix();
-            composer?.setSize?.(oldSize.x,oldSize.y);
-            ssaoPass?.setSize?.(oldSize.x,oldSize.y);
-            renderer.render(escena,camara);
+            target.dispose();
+            liveFastPathRef.current=oldLiveMode;
+            aplicarPerfilLive();
+            renderer.shadowMap.needsUpdate=true;
             invalidateRenderRef.current?.();
           }
           const link=document.createElement("a");
