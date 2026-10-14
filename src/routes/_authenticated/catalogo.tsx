@@ -376,6 +376,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [descripcion, setDescripcion] = useState("");
   const [frasePortada, setFrasePortada] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
   const [intervaloPortada, setIntervaloPortada] = useState(5);
   const [subiendoImagenes, setSubiendoImagenes] = useState(false);
@@ -396,9 +397,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setWhatsapp(configResult.data?.whatsapp ?? "");
       setDescripcion(configResult.data?.descripcion ?? "");
       setFrasePortada(configResult.data?.frase_portada ?? "");
-      // Prefer the actual logo uploaded for the workshop; fall back to the
-      // logo already stored on its public catalog configuration.
-      setLogoUrl(identidadResult.data?.logo_url ?? configResult.data?.logo_url ?? null);
+      // The showroom may use its own logo, independent from the workshop identity.
+      setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
       setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
     });
@@ -437,17 +437,40 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     }
   }
 
+  async function subirLogoShowroom(event: any) {
+    const file = (event.target.files?.[0] ?? null) as File | null;
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Selecciona un archivo de imagen para el logo.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError("El logo debe pesar como máximo 8 MB.");
+      return;
+    }
+    setSubiendoLogo(true);
+    setError(null);
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+      const destino = participanteId + "/showroom-logo/" + crypto.randomUUID() + "." + extension;
+      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
+      if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública del logo.");
+      setLogoUrl(data.publicUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo subir el logo personalizado.");
+    } finally {
+      setSubiendoLogo(false);
+    }
+  }
+
   async function eliminarLogoShowroom() {
     if (!logoUrl) return;
     setGuardando(true);
     setError(null);
     try {
-      const { error: identidadError } = await supabase
-        .from("identidades_comerciales")
-        .update({ logo_url: null })
-        .eq("participante_id", participanteId)
-        .eq("logo_url", logoUrl);
-      if (identidadError) throw identidadError;
       const { error: catalogoError } = await supabase
         .from("catalogo_configuracion")
         .update({ logo_url: null })
@@ -526,11 +549,21 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
             </label>
           </section>
           <div className="grid gap-2 text-xs font-semibold sm:col-span-2">
-            <span>Logo del showroom (vinculado al logo del taller)</span>
-            <div className="flex min-h-20 items-center gap-4 rounded-xl border border-border bg-background p-3">
-              {logoUrl ? <img src={logoUrl} alt="Logo que se mostrará en el showroom" className="max-h-14 max-w-[220px] object-contain object-left" /> : <span className="text-xs font-normal text-muted-foreground">No se encontró un logo guardado para este taller. Sube el logo en Identidad comercial y vuelve a abrir esta configuración.</span>}
-              {logoUrl ? <div className="ml-auto flex shrink-0 flex-col items-end gap-2"><span className="text-[11px] font-normal text-muted-foreground">Este logo se guardará en el catálogo público.</span><button type="button" onClick={eliminarLogoShowroom} disabled={guardando} className="rounded-lg border border-destructive/30 px-3 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">{guardando ? "Eliminando…" : "Eliminar logo"}</button></div> : null}
+            <span>Logo personalizado del showroom</span>
+            <div className="grid gap-3 rounded-xl border border-border bg-background p-3 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="flex min-h-16 items-center gap-4">
+                {logoUrl ? <img src={logoUrl} alt="Logo que se mostrará en el showroom" className="max-h-16 max-w-[240px] object-contain object-left" /> : <span className="text-xs font-normal text-muted-foreground">Puedes subir un logo exclusivo para el catálogo, sin cambiar el logo del taller.</span>}
+                {logoUrl ? <span className="text-[11px] font-normal text-muted-foreground">Logo del catálogo público.</span> : null}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-border px-4 py-2.5 text-xs font-semibold hover:border-gold/50">
+                  {subiendoLogo ? "Subiendo…" : logoUrl ? "Cambiar logo" : "Subir logo personalizado"}
+                  <input type="file" accept="image/*" disabled={subiendoLogo || guardando} onChange={subirLogoShowroom} className="sr-only" />
+                </label>
+                {logoUrl ? <button type="button" onClick={eliminarLogoShowroom} disabled={guardando || subiendoLogo} className="rounded-xl border border-destructive/30 px-3 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">{guardando ? "Eliminando…" : "Eliminar logo"}</button> : null}
+              </div>
             </div>
+            <span className="text-[11px] font-normal text-muted-foreground">Guarda la configuración para publicar el logo. Se mantiene independiente de Identidad comercial.</span>
           </div>
           <label className="flex items-center gap-3 rounded-xl border border-border p-4 sm:col-span-2"><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} /><span><b className="block text-xs">Publicar catálogo</b><span className="text-[11px] text-muted-foreground">Hace visible el enlace público.</span></span></label>
           {error ? <p className="sm:col-span-2 text-xs text-destructive">{error}</p> : null}
