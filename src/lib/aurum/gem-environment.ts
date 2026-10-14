@@ -3,7 +3,7 @@ export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; 
   // The gem environment is intentionally independent from the metal environment.
   // Small family offsets improve the way the same HDR light field crosses
   // different optical responses without changing IOR, color or dispersion.
-  Diamante: { intensity: 1.30, rotationOffset: 0.00 },
+  Diamante: { intensity: 1.08, rotationOffset: 0.00 },
   Moissanita: { intensity: 1.24, rotationOffset: 0.025 },
   Esmeralda: { intensity: 1.12, rotationOffset: -0.035 },
   Rubi: { intensity: 1.16, rotationOffset: -0.020 },
@@ -72,7 +72,7 @@ export function createAurumGemEnvironment(
         // Diamonds need a little more reflected studio energy to reveal their
         // crown/pavilion contrast. Keep this boost isolated from colored gems
         // and metals; it does not alter scene exposure or the material's IOR.
-        const familyReflectionScale = family === "Diamante" ? 1.08 : 1;
+        const familyReflectionScale = 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
