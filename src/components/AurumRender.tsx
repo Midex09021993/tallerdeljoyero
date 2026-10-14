@@ -831,6 +831,7 @@ export function AurumRender() {
           const oldToneMappingExposure=renderer.toneMappingExposure;
           renderer.getClearColor(oldClearColor);
           let dataUrl="";
+          const captureTransmissionRestore:Array<{material:any;transmission:number}>=[];
           try{
             // Use the full photographic post pipeline, but render off-screen.
             // Reading EffectComposer's final buffer avoids the cleared WebGL
@@ -838,10 +839,25 @@ export function AurumRender() {
             liveFastPathRef.current=false;
             aplicarPerfilLive();
             applyPostQuality?.(renderQuality,{capture:true});
-            // Keep the original calibrated exposure for capture. Exposure
-            // reduction alone did not fix the diamond's washed-out/translucent
-            // appearance, so do not alter brightness until the optical cause is
-            // isolated. The live viewport remains unchanged.
+            // CAPTURE restores authored transmission for all gems, while the
+            // live viewer deliberately caps it to retain readable facets.
+            // For diamonds only, use a moderate capture value so the PNG keeps
+            // internal reflections instead of washing through the pavilion.
+            modelo?.traverse?.((object:any)=>{
+              if(!object?.isMesh||!object.material)return;
+              const materials=Array.isArray(object.material)?object.material:[object.material];
+              materials.forEach((material:any)=>{
+                if(material?.userData?.aurumGemFamily!=="Diamante")return;
+                const transmission=Number(material.transmission??0);
+                if(transmission>0.55){
+                  captureTransmissionRestore.push({material,transmission});
+                  material.transmission=0.55;
+                  material.needsUpdate=true;
+                }
+              });
+            });
+            // Keep the original calibrated exposure; the live viewer and
+            // other gemstone families retain their existing optical settings.
             renderer.toneMappingExposure=oldToneMappingExposure;
             composer.renderToScreen=false;
             composer.setPixelRatio(1);
@@ -921,6 +937,10 @@ export function AurumRender() {
             camara.updateProjectionMatrix();
             renderer.setClearColor(oldClearColor,oldClearAlpha);
             renderer.toneMappingExposure=oldToneMappingExposure;
+            captureTransmissionRestore.forEach(({material,transmission})=>{
+              material.transmission=transmission;
+              material.needsUpdate=true;
+            });
             liveFastPathRef.current=oldLiveMode;
             aplicarPerfilLive();
             applyPostQuality?.(renderQuality);
