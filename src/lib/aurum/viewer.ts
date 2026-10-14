@@ -245,6 +245,12 @@ export function startAurumViewerLoop(
     observer,
     get frame() { return frame; },
     invalidate: requestRender,
+    // Run a bounded set of frames after switching to the photographic pipeline
+    // so TAA/SSR/SSAO can settle without leaving a permanent animation loop.
+    converge: (count = progressiveFrames) => {
+      idleFramesRemaining = Math.max(idleFramesRemaining, Math.max(1, Math.min(32, Math.floor(count))));
+      requestRender();
+    },
     pause: () => {
       paused = true;
       if (frame) cancelAnimationFrame(frame);
