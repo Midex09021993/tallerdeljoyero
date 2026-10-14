@@ -118,6 +118,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       shader.uniforms.aurumIJEWELGammaFactor={value:Number(ijewel.gammaFactor??1)};
       shader.uniforms.aurumIJEWELTransmissionParameter={value:Number(ijewel.transmissionParameter??0)};
       shader.uniforms.aurumIJEWELBoostFactors={value:new THREE.Vector3(Number(ijewel.boostFactors?.x??1),Number(ijewel.boostFactors?.y??1),Number(ijewel.boostFactors?.z??1))};
+      // Experimental virtual-facet reflection samples; disabled by metadata for A/B.
+      shader.uniforms.aurumIJEWELVirtualFacets={value:ijewel.virtualFacetReflections===true?1:0};
     }
     if(oilDropEnabled){
       shader.uniforms.aurumOilDropStrength={value:Number(oilDrop.strength??.1)};
@@ -202,6 +204,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumIJEWELGammaFactor;
       uniform float aurumIJEWELTransmissionParameter;
       uniform vec3 aurumIJEWELBoostFactors;
+      uniform float aurumIJEWELVirtualFacets;
       uniform vec3 aurumPhenomenonAxisA;
       uniform vec3 aurumPhenomenonAxisB;
       uniform vec3 aurumPhenomenonAxisC;
@@ -315,6 +318,23 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
           float ijThirdBounceWeight=0.12*ijDepth;
           ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijThirdBounceWeight;
+        }
+        // Experimental virtual internal-facet reflections.
+        // These are additional directional PMREM samples, not added triangles:
+        // the imported CAD facets and normals remain untouched. Two nearby
+        // reflected directions approximate light arriving from adjacent pavilion
+        // facets. Keep the contribution low and switchable for visual A/B tests.
+        if(aurumIJEWELVirtualFacets>0.5){
+          vec3 ijFacetAxis=abs(ijNormal.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
+          vec3 ijFacetTangent=normalize(cross(ijNormal,ijFacetAxis));
+          vec3 ijFacetBitangent=normalize(cross(ijNormal,ijFacetTangent));
+          vec3 ijVirtualDirA=normalize(ijDirG+ijFacetTangent*0.045);
+          vec3 ijVirtualDirB=normalize(ijDirG-ijFacetBitangent*0.045);
+          vec3 ijVirtualWorldA=inverseTransformDirection(ijVirtualDirA,viewMatrix);
+          vec3 ijVirtualWorldB=inverseTransformDirection(ijVirtualDirB,viewMatrix);
+          vec3 ijVirtualEnvA=textureCubeUV(envMap,envMapRotation*ijVirtualWorldA,0.0).rgb;
+          vec3 ijVirtualEnvB=textureCubeUV(envMap,envMapRotation*ijVirtualWorldB,0.0).rgb;
+          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.05*ijDepth);
         }
         // The custom internal-ray samples bypass MeshPhysicalMaterial's
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
