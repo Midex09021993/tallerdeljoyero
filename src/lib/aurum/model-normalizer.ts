@@ -129,13 +129,15 @@ function colorToHex(color:any): string | undefined {
 }
 
 function classifyRhinoLayer(name:string,colorCapa?:string,clasificarCapa?:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
-  const n=String(name??"").trim().toLowerCase();
-  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|esmeralda|emerald|moissanita|moissanite)/.test(n)) return "gema";
-  if (/(metal|oro|gold|plata|silver|platino|platinum|met[aá]lico)/.test(n)) return "metal";
+  const normalizedName=String(name??"").trim().toLowerCase();
+  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)/.test(normalizedName)) return "gema";
+  if (/(metal|oro|gold|plata|silver|platino|platinum|acero|steel|met[aá]lico)/.test(normalizedName)) return "metal";
+  // Color alone is not sufficient to decide between gemstone and metal.
+  // MatrixGold layer RGB values must be explicitly mapped from the user's template.
   return clasificarCapa?.(name,colorCapa) ?? "otro";
 }
 
-function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro"):number|undefined {
+function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro",_colorCapa?:string):number|undefined {
   if (category==="otro") return undefined;
   const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
   return match ? Number(match[1]) : undefined;
@@ -188,7 +190,7 @@ function hydrateRhinoLayerMetadata(
     const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
     const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
-    const matrixSlot=matrixSlotFromLayer(layerName,category)??existing.matrixSlot;
+    const matrixSlot=matrixSlotFromLayer(layerName,category,color)??existing.matrixSlot;
     const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa||!!existing.layerKey;
     if(!hasAnyLayerEvidence){audit.unresolvedMeshes++;audit.categoryCounts.otro++;return;}
 
