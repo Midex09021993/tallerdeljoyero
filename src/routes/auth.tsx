@@ -6,7 +6,7 @@ import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
-import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
@@ -51,6 +51,7 @@ function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
@@ -158,7 +159,7 @@ function LoginPage() {
         <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-[#0d0e0d]/65 to-transparent" />
       </div>
 
-      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-[#d8bd7b]/25 bg-[#11110f]/95 px-5 shadow-[0_8px_30px_rgba(0,0,0,0.22)] lg:h-[76px] lg:px-10 max-[767px]:hidden">
+      <header className="relative z-30 flex h-16 shrink-0 items-center justify-between border-b border-[#d8bd7b]/25 bg-[#11110f]/95 px-4 shadow-[0_8px_30px_rgba(0,0,0,0.22)] lg:h-[76px] lg:px-10">
         <div className="flex items-center gap-3">
           <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-2xl object-cover ring-1 ring-[#d8bd7b]/60 shadow-[0_0_28px_rgba(203,169,98,.12)]" />
           <div>
@@ -186,7 +187,7 @@ function LoginPage() {
       </header>
 
       <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-6 px-5 py-7 sm:px-8 sm:py-9 lg:gap-12 lg:px-10 lg:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-5 [@media(max-height:800px)]:py-3 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
-        <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1">
+        <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1 max-[767px]:hidden">
           <div className="max-w-4xl">
             <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[#d8bd7b]">Plataforma digital creada para el trabajo real del sector joyero</p>
             <h1 className="mt-4 max-w-4xl font-display text-3xl italic leading-[1.12] tracking-[-0.035em] text-[#f7f1e6] sm:text-4xl lg:text-[3.55rem] [@media(max-height:800px)]:lg:text-[2.55rem]">
