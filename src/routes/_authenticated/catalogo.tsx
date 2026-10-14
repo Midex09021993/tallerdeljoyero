@@ -437,6 +437,30 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     }
   }
 
+  async function eliminarLogoShowroom() {
+    if (!logoUrl) return;
+    setGuardando(true);
+    setError(null);
+    try {
+      const { error: identidadError } = await supabase
+        .from("identidades_comerciales")
+        .update({ logo_url: null })
+        .eq("participante_id", participanteId)
+        .eq("logo_url", logoUrl);
+      if (identidadError) throw identidadError;
+      const { error: catalogoError } = await supabase
+        .from("catalogo_configuracion")
+        .update({ logo_url: null })
+        .eq("participante_id", participanteId);
+      if (catalogoError) throw catalogoError;
+      setLogoUrl(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo eliminar el logo.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   async function guardar(event: any) {
     event.preventDefault();
     if (!participanteId || !nombre.trim()) return setError("El nombre público es obligatorio.");
@@ -505,7 +529,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
             <span>Logo del showroom (vinculado al logo del taller)</span>
             <div className="flex min-h-20 items-center gap-4 rounded-xl border border-border bg-background p-3">
               {logoUrl ? <img src={logoUrl} alt="Logo que se mostrará en el showroom" className="max-h-14 max-w-[220px] object-contain object-left" /> : <span className="text-xs font-normal text-muted-foreground">No se encontró un logo guardado para este taller. Sube el logo en Identidad comercial y vuelve a abrir esta configuración.</span>}
-              {logoUrl ? <span className="text-[11px] font-normal text-muted-foreground">Este logo se guardará en el catálogo público.</span> : null}
+              {logoUrl ? <div className="ml-auto flex shrink-0 flex-col items-end gap-2"><span className="text-[11px] font-normal text-muted-foreground">Este logo se guardará en el catálogo público.</span><button type="button" onClick={eliminarLogoShowroom} disabled={guardando} className="rounded-lg border border-destructive/30 px-3 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">{guardando ? "Eliminando…" : "Eliminar logo"}</button></div> : null}
             </div>
           </div>
           <label className="flex items-center gap-3 rounded-xl border border-border p-4 sm:col-span-2"><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} /><span><b className="block text-xs">Publicar catálogo</b><span className="text-[11px] text-muted-foreground">Hace visible el enlace público.</span></span></label>
