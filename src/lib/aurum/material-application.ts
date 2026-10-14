@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { resolveAurumLayerKey, normalizeAurumLayerName } from "./layer-identity";
 import {
   applyAurumMetal,
   applyAurumGem,
@@ -252,14 +253,14 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const selectedMeta=selectionMeta(target);
   const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||"").trim();
   const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
+  const selectedLayerKey=resolveAurumLayerKey({
+    layerId:selectedLayerId,
+    layerIndex:selectionLayerIndex(target),
+    layerName:selectedLayer,
+    layerColor:selectedMeta.colorCapa??target.userData?.attributes?.layerColor,
+    category:selectedCategory,
+  })??"mesh:"+target.uuid;
   const selectedLayerIndex=selectionLayerIndex(target);
-  const selectedLayerKey=selectedLayerIndex!==null
-    ? "index:"+selectedLayerIndex
-    : selectedLayerId!=null
-      ? "id:"+String(selectedLayerId)
-      : selectedLayer
-        ? "name:"+selectedLayer
-        : "mesh:"+target.uuid;
   const targets:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
@@ -267,18 +268,16 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(category!==selectedCategory)return;
     const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
     const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
-    const partLayerIndex=selectionLayerIndex(x);
-    // Never infer that two meshes belong to the same layer from gem category.
-    // Prefer the source layer index, then stable Rhino/MatrixGold layer ID.
-    // Use exact name only if neither mesh has a stronger identity.
-    let sameLayerIdentity=false;
-    if(selectedLayerIndex!==null||partLayerIndex!==null){
-      sameLayerIdentity=selectedLayerIndex!==null&&partLayerIndex!==null&&partLayerIndex===selectedLayerIndex;
-    }else if(selectedLayerId!=null||partLayerId!=null){
-      sameLayerIdentity=selectedLayerId!=null&&partLayerId!=null&&String(partLayerId)===String(selectedLayerId);
-    }else{
-      sameLayerIdentity=!!selectedLayer&&!!partLayer&&partLayer===selectedLayer;
-    }
+    const partLayerKey=meta.layerKey??resolveAurumLayerKey({
+      layerId:partLayerId,
+      layerIndex:selectionLayerIndex(x),
+      layerName:partLayer,
+      layerColor:meta.colorCapa??x.userData?.attributes?.layerColor,
+      category,
+    });
+    // The canonical key is hydrated from source metadata and survives GLB
+    // extras. Do not group by the generic "gema" category.
+    const sameLayerIdentity=Boolean(selectedLayerKey&&partLayerKey&&selectedLayerKey===partLayerKey);
     if(sameLayerIdentity)targets.push(x);
   });
   // Fail closed: if no matching layer metadata survives conversion, modify only
@@ -359,13 +358,14 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     let sourceMaterials=originalGemMaterials.get(part);
     if(!sourceMaterials){
       sourceMaterials=(Array.isArray(part.material)?part.material:[part.material]).map((base:any)=>base?.clone?base.clone():base);
-      originalGemMaterials.set(part,sourceMaterials);
+      originalGemMaterials.set(part,sourceMaterials!);
     }
     // Rebuild every assignment from the same imported baseline.
     part.material=Array.isArray(part.material)
-      ? sourceMaterials.map((base:any)=>apply(base,part,thickness,null))
-      : apply(sourceMaterials[0],part,thickness,null);
+      ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
+      : apply(stableSourceMaterials[0],part,thickness,null);
     const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
+    const stableSourceMaterials=sourceMaterials!;
     const activeGemId=String(gemConfig?.id??"");
     part.userData={
       ...part.userData,
