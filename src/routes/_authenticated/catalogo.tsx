@@ -591,25 +591,25 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           </details>
           <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
-              <span><span className="block text-sm font-semibold">Carrusel de imágenes con enlaces</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Aparece debajo de Explora los modelos. Cada imagen puede dirigir a una colección, joya, WhatsApp, Maps o web externa.</span></span>
+              <span><span className="block text-sm font-semibold">Carrusel de imágenes y videos con enlaces</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Aparece debajo de Explora los modelos. Cada imagen o video puede dirigir a una colección, joya, WhatsApp, Maps o web externa.</span></span>
               <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
             </summary>
             <div className="grid gap-3 border-t border-border p-4">
               <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
-                <ImageIcon className="size-4" /> {subiendoCarrusel ? "Subiendo imágenes…" : "Añadir imágenes al carrusel"}
-                <input type="file" accept="image/*" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
+                <ImageIcon className="size-4" /> {subiendoCarrusel ? "Subiendo archivos…" : "Añadir imágenes o videos"}
+                <input type="file" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
               </label>
-              <p className="text-xs text-muted-foreground">Hasta 10 imágenes, máximo 8 MB cada una. Si una imagen no tiene enlace, se mostrará sin ser clicable.</p>
+              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total, máximo 8 MB por archivo. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
               <div className="grid gap-2 rounded-xl bg-background p-3">
-                <p className="text-xs font-semibold">O pega una URL directa de imagen</p>
+                <p className="text-xs font-semibold">O pega una URL directa de imagen o video</p>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <input type="url" value={urlNuevaImagenCarrusel} onChange={e => setUrlNuevaImagenCarrusel(e.target.value)} placeholder="https://sitio.com/foto.jpg" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-sm font-normal" />
+                  <input type="url" value={urlNuevaImagenCarrusel} onChange={e => setUrlNuevaImagenCarrusel(e.target.value)} placeholder="https://sitio.com/foto.jpg o video.mp4" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-sm font-normal" />
                   <button type="button" onClick={agregarImagenPorUrl} disabled={enlacesCarrusel.length >= 10} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Añadir por enlace</button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Debe ser un enlace directo al archivo de imagen. El enlace de una publicación de Instagram normalmente no sirve como URL de imagen.</p>
+                <p className="text-[10px] text-muted-foreground">Usa una URL directa al archivo de imagen o video. Los enlaces a publicaciones de redes sociales no siempre sirven como archivo multimedia directo.</p>
               </div>
               {enlacesCarrusel.map((slide, index) => <div key={slide.imagen_url} className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-[112px_1fr]">
-                <div className="relative"><img src={slide.url_imagen_externa.trim() || slide.imagen_url} alt={slide.texto || "Imagen del carrusel"} className="aspect-[4/3] w-full rounded-lg object-cover" onError={event => { event.currentTarget.style.opacity = "0.35"; }} /><button type="button" onClick={() => setEnlacesCarrusel(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar imagen " + (index + 1)}><X className="size-3.5" /></button></div>
+                <div className="relative">{(slide.tipo_media === "video" || /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(slide.imagen_url)) ? <video src={slide.imagen_url} muted playsInline controls className="aspect-[4/3] w-full rounded-lg bg-black object-contain" /> : <img src={slide.url_imagen_externa.trim() || slide.imagen_url} alt={slide.texto || "Imagen del carrusel"} className="aspect-[4/3] w-full rounded-lg object-cover" onError={event => { event.currentTarget.style.opacity = "0.35"; }} /> }<button type="button" onClick={() => setEnlacesCarrusel(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar elemento " + (index + 1)}><X className="size-3.5" /></button></div>
                 <div className="grid gap-2">
                   <label className="grid gap-1 text-xs font-semibold">Texto opcional<input value={slide.texto} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, texto: e.target.value } : item))} placeholder="Descubre nuestra colección" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /></label>
                   <label className="grid gap-1 text-xs font-semibold">URL directa de la imagen (opcional)<input type="url" value={slide.url_imagen_externa} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, url_imagen_externa: e.target.value } : item))} placeholder="https://sitio.com/imagen.jpg" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /><span className="text-[10px] font-normal text-muted-foreground">Usa un enlace directo al archivo de imagen, no a la página de Instagram.</span></label>
