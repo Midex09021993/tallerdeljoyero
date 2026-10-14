@@ -37,7 +37,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
-  const contrastStrength=(family==="Diamante" ? .68 : .075)*facetContrast
+  const contrastStrength=(family==="Diamante" ? .68 : .075)*facetContrast;
   const colorChange:any=(profile as any).colorChange;
   const oilDrop:any=(profile as any).oilDrop;
   const oilDropEnabled=Boolean(oilDrop?.enabled);
