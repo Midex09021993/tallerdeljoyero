@@ -319,13 +319,6 @@ function CatalogoPublicoPage() {
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#8a6b36] sm:text-[10px] sm:tracking-[.3em]">Showroom · {config.nombre_publico}</p>
             <h1 className="mt-3 max-w-xl break-words font-display text-4xl leading-[1.08] tracking-tight sm:mt-4 sm:text-5xl">{config.frase_portada?.trim() || "Joyas hechas para quedarse."}</h1>
-            {config.descripcion_publica?.trim() ? (
-              <p className="mt-5 max-w-xl text-justify font-sans text-base leading-7 text-[#625b54] sm:text-lg sm:leading-8">{config.descripcion_publica}</p>
-            ) : (
-              <p className="mt-5 max-w-lg font-sans text-sm leading-7 text-[#625b54]">
-                Explora los modelos publicados por {config.nombre_publico} y solicita una propuesta personalizada directamente con el taller.
-              </p>
-            )}
             <div className="mt-7 flex flex-wrap gap-2">
               <a href="#coleccion" className="rounded-full bg-[#1f1b18] px-5 py-3 text-xs font-semibold text-white">
                 Explorar colección <ArrowRight className="ml-1 inline size-3.5" />
