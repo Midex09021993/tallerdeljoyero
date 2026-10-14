@@ -300,15 +300,8 @@ function CatalogoPublicoPage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void navigator.share?.({ title: config.nombre_publico, url: window.location.href })}
-              className="hidden rounded-full border border-[#1f1b1820] px-3 py-2 text-xs font-semibold sm:inline-flex"
-            >
-              <Share2 className="mr-1.5 size-3.5" /> Compartir
-            </button>
             <button type="button" onClick={() => setCarritoAbierto(true)} className="relative inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3.5 py-2 text-xs font-semibold" aria-label={"Carrito de compras, " + cantidadCarrito + " artículos"}><ShoppingBag className="size-4" /> Carrito {cantidadCarrito > 0 ? <span className="rounded-full bg-[#8a6b36] px-1.5 py-0.5 text-[10px] text-white">{cantidadCarrito}</span> : null}</button>
-            {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="rounded-full bg-[#1f1b18] px-3.5 py-2 text-xs font-semibold text-white">WhatsApp</a> : null}
+            {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#1f1b18] px-3.5 py-2 text-xs font-semibold text-white"><MessageCircle className="size-3.5" /> {/(joyer[ií]a)/i.test(config.nombre_publico) ? "Contactar a la joyería" : "Contactar al taller"}</a> : null}
           </div>
         </div>
       </header>
