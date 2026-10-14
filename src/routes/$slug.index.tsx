@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X, Instagram, Youtube, Facebook, Music2, Pin } from "lucide-react";
+import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X, Menu, Instagram, Youtube, Facebook, Music2, Pin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
@@ -121,6 +121,7 @@ function CatalogoPublicoPage() {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<LineaCarrito[]>([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
   const [indicePortada, setIndicePortada] = useState(0);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
@@ -338,7 +339,7 @@ function CatalogoPublicoPage() {
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
       <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-3 pt-5 pb-3 backdrop-blur sm:px-8 sm:py-5">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex min-w-0 flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <div className="relative flex w-full min-w-0 flex-col items-center gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
             {config.logo_url ? (
               <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={config.logo_url} alt={config.nombre_publico} className="block h-auto max-h-9 w-auto max-w-[min(62vw,225px)] shrink object-contain object-center sm:max-h-12 sm:max-w-[220px] sm:object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
@@ -347,15 +348,22 @@ function CatalogoPublicoPage() {
             <div className="min-w-0">
               <p className="mt-0.5 whitespace-nowrap text-[13px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
             </div>
+            <button type="button" onClick={() => setMenuMovilAbierto((open) => !open)} aria-label={menuMovilAbierto ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuMovilAbierto} className="absolute right-0 top-1 grid size-10 place-items-center rounded-full text-[#5c201f] hover:bg-[#8a6b36]/10 sm:hidden">{menuMovilAbierto ? <X className="size-6" /> : <Menu className="size-6" />}</button>
           </div>
           <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-center">
             {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1DA851]"><MessageCircle className="size-3.5" /> Escríbenos por WhatsApp</a> : null}
             <button type="button" onClick={() => setCarritoAbierto(true)} className="relative inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3.5 py-2 text-xs font-semibold" aria-label={"Carrito de compras, " + cantidadCarrito + " artículos"}><ShoppingBag className="size-4" /> Carrito {cantidadCarrito > 0 ? <span className="rounded-full bg-[#8a6b36] px-1.5 py-0.5 text-[10px] text-white">{cantidadCarrito}</span> : null}</button>
           </div>
+          {menuMovilAbierto ? <nav className="w-full border-t border-[#1f1b1815] pt-3 sm:hidden" aria-label="Menú principal">
+            <a onClick={() => setMenuMovilAbierto(false)} href="#coleccion" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Colección</a>
+            {config.enlaces_carrusel?.length ? <a onClick={() => setMenuMovilAbierto(false)} href="#enlaces-carrusel" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Inspiración</a> : null}
+            <a onClick={() => setMenuMovilAbierto(false)} href="#preguntas-frecuentes" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Preguntas frecuentes</a>
+            <a onClick={() => setMenuMovilAbierto(false)} href="#contacto" className="block px-2 py-3 text-sm text-[#30271e]">Contacto</a>
+          </nav> : null}
         </div>
       </header>
 
-      <section className="relative overflow-hidden border-b border-[#1f1b1815]">
+      <section id="inicio" className="relative overflow-hidden border-b border-[#1f1b1815]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(180,145,75,.16),transparent_38%)]" />
         <div className="mx-auto grid max-w-7xl gap-7 px-5 py-10 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-8 lg:py-24">
           <div>
@@ -502,6 +510,20 @@ function CatalogoPublicoPage() {
         </section>
       ) : null}
 
+      <section id="preguntas-frecuentes" className="border-y border-[#1f1b1815] bg-[#f8f4ef]">
+        <div className="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-16">
+          <p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#8a6b36]">Estamos para ayudarte</p>
+          <h2 className="mt-2 font-display text-3xl leading-tight text-[#4a1f22] sm:text-4xl">Lo que quizá te preguntas.</h2>
+          <div className="mt-8 divide-y divide-[#1f1b1818]">
+            <details className="group py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-xl text-[#4a1f22] sm:text-2xl">¿Puedo personalizar una joya?<Plus className="size-5 shrink-0 transition-transform group-open:rotate-45" /></summary><p className="mt-4 max-w-3xl text-sm leading-7 text-[#746b62]">Algunas piezas pueden admitir grabados o detalles personalizados. Escríbenos por WhatsApp para consultar las opciones disponibles para la joya que te interesa.</p></details>
+            <details className="group py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-xl text-[#4a1f22] sm:text-2xl">¿Cuánto demora la entrega?<Plus className="size-5 shrink-0 transition-transform group-open:rotate-45" /></summary><p className="mt-4 max-w-3xl text-sm leading-7 text-[#746b62]">El plazo depende de la pieza, su disponibilidad y si requiere elaboración o personalización. Consulta el tiempo estimado antes de confirmar tu pedido.</p></details>
+            <details className="group py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-xl text-[#4a1f22] sm:text-2xl">¿Cómo puedo pagar mi pedido?<Plus className="size-5 shrink-0 transition-transform group-open:rotate-45" /></summary><p className="mt-4 max-w-3xl text-sm leading-7 text-[#746b62]">Los medios de pago se confirman directamente con la joyería al coordinar tu pedido por WhatsApp.</p></details>
+            <details className="group py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-xl text-[#4a1f22] sm:text-2xl">¿De qué materiales son las joyas?<Plus className="size-5 shrink-0 transition-transform group-open:rotate-45" /></summary><p className="mt-4 max-w-3xl text-sm leading-7 text-[#746b62]">Cada pieza puede tener materiales y acabados distintos. Revisa la descripción del producto o consúltanos para confirmar sus características antes de comprar.</p></details>
+          </div>
+          {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-semibold text-white"><MessageCircle className="size-4" /> ¿Tienes otra pregunta? Escríbenos</a> : null}
+        </div>
+      </section>
+
       <section className="border-y border-[#1f1b1815] bg-[#fbf9f5]">
         <div className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:grid-cols-3 sm:gap-8 sm:px-8 sm:py-14">
           <article className="group rounded-2xl border border-[#8a6b36]/10 bg-white/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#8a6b36]/25 hover:shadow-[0_16px_36px_-24px_rgba(60,43,19,.35)] sm:border-transparent sm:bg-transparent sm:p-4">
@@ -577,7 +599,7 @@ function CatalogoPublicoPage() {
       ) : null}
 
       {config.telefono_contacto || config.email_contacto || config.direccion_contacto ? (
-        <section aria-label="Contacto" className="border-t border-[#1f1b1810] bg-white/35">
+        <section id="contacto" aria-label="Contacto" className="border-t border-[#1f1b1810] bg-white/35">
           <div className="mx-auto grid max-w-7xl gap-5 px-5 py-8 sm:grid-cols-3 sm:px-8">
             {config.telefono_contacto ? <a href={"tel:" + config.telefono_contacto.replace(/[^+\d]/g, "")} className="group flex items-start gap-3 rounded-2xl border border-[#b99b6b]/20 bg-white/60 p-4 transition hover:border-[#b99b6b]/50 hover:shadow-[0_8px_24px_rgba(48,39,30,0.05)]"><span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#b99b6b]/35 bg-[#f8f2e7] text-[#80663c]"><MessageCircle className="size-4" /></span><span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Teléfono</span><span className="mt-1 block break-words text-sm text-[#30271e]">{config.telefono_contacto}</span></span></a> : null}
             {config.email_contacto ? <a href={"mailto:" + config.email_contacto} className="group flex items-start gap-3 rounded-2xl border border-[#b99b6b]/20 bg-white/60 p-4 transition hover:border-[#b99b6b]/50 hover:shadow-[0_8px_24px_rgba(48,39,30,0.05)]"><span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#b99b6b]/35 bg-[#f8f2e7] text-[#80663c]"><Share2 className="size-4" /></span><span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Correo electrónico</span><span className="mt-1 block break-words text-sm text-[#30271e]">{config.email_contacto}</span></span></a> : null}
