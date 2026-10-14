@@ -67,7 +67,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   // VJSON reference: scene environment 1.0, fixed direction, white background.
   // The original UUID environment is not embedded as a local HDR asset, so Aurum
   // uses its closest local white-studio HDR while preserving the measured control values.
-  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"gemDiamond",environmentIntensity:AURUM_IJEWEL_REFERENCE.scene.environmentIntensity,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",
+  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:AURUM_IJEWEL_REFERENCE.scene.environmentIntensity,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",
     // INTERACTIVE VIEW: the HDRI provides the primary reflection structure.
     // Expensive photographic accumulation is reserved for CAPTURE.
     post:{
