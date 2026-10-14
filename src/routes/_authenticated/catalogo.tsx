@@ -415,7 +415,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
       setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
-      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, url_imagen_externa: typeof slide.url_imagen_externa === "string" ? slide.url_imagen_externa : "", enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false })) : []);
+      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, url_imagen_externa: typeof slide.url_imagen_externa === "string" ? slide.url_imagen_externa : "", enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false, tipo_media: slide.tipo_media === "video" ? "video" : "imagen" })) : []);
     });
   }, [open, initial, participanteId]);
 
@@ -454,9 +454,9 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
 
   function agregarImagenPorUrl() {
     const url = urlNuevaImagenCarrusel.trim();
-    if (!/^https?:\/\//i.test(url)) { setError("Introduce una URL HTTPS o HTTP válida para la imagen."); return; }
+    if (!/^https?:\/\//i.test(url)) { setError("Introduce una URL HTTP o HTTPS válida para la imagen o el video."); return; }
     if (enlacesCarrusel.length >= 10) { setError("El carrusel admite como máximo 10 imágenes."); return; }
-    setEnlacesCarrusel(actual => [...actual, { imagen_url: url, url_imagen_externa: url, enlace_url: "", texto: "", nueva_pestana: true }]);
+    setEnlacesCarrusel(actual => [...actual, { imagen_url: url, url_imagen_externa: "", enlace_url: "", texto: "", nueva_pestana: true, tipo_media: /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url) ? "video" : "imagen" }]);
     setUrlNuevaImagenCarrusel("");
     setError(null);
   }
