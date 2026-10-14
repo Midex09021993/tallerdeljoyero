@@ -944,20 +944,18 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Restore requested beauty resolution only after OrbitControls damping
-            // settles. The viewer loop then renders a bounded progressive sequence.
+            // Keep the same LIVE material/shader profile after motion; only raise
+            // raster resolution once the camera settles. This avoids a visual
+            // handoff to different transmission, dispersion and gem-shader settings.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
-            const idleTransmission = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
             applyPostQuality?.({...renderQuality, pixelRatio:idleDpr, qualityId:measuredQualityId});
-            liveTransmissionScaleRef.current = idleTransmission;
-            (renderer as any).transmissionResolutionScale = idleTransmission;
-            liveFastPathRef.current = false;
-            renderer.shadowMap.enabled = renderQuality.shadows;
-            renderer.shadowMap.needsUpdate = true;
-            aplicarPerfilLive();
+            liveFastPathRef.current = true;
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
+            invalidateRenderRef.current?.();
           },
         }
       );
