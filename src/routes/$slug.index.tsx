@@ -345,7 +345,7 @@ function CatalogoPublicoPage() {
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
             )}
             <div className="min-w-0">
-              <p className="mt-0.5 whitespace-nowrap text-[12px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
+              <p className="mt-0.5 whitespace-nowrap text-[13px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center justify-center gap-2">
