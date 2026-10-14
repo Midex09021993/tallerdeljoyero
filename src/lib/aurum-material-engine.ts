@@ -406,11 +406,12 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
   if(!material)return material;
   const r=AURUM_IJEWEL_DIAMOND_REFERENCE;
   applyAurumIJEWELGemParameters(material,r);
-  // Keep a restrained physical transmission contribution while the dedicated
-  // diamond environment-ray term adds internal contrast. Fully disabling
-  // transmission made dark HDR regions dominate and turned the stone opaque.
-  // This override is diamond-only; other gemstone families are untouched.
-  material.transmission=.22;
+  // The supplied iJewel DiamondMaterial uses transmission=0 because its
+  // dedicated shader handles the internal light paths. AURUM still needs a
+  // small physical contribution for Three.js readability, but .22 combined
+  // with the environment-ray estimate washes broad facets toward white.
+  // Keep only a restrained residual contribution; this is diamond-only.
+  material.transmission=.08;
   material.roughness=.010;
   material.clearcoat=.26;
   material.clearcoatRoughness=.010;
