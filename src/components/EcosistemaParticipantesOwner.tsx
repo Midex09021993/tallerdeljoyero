@@ -63,7 +63,7 @@ export function EcosistemaParticipantesOwner(){
  return <div className="space-y-6">
   <Panel titulo="Cuotas comerciales por plan">
    <div className="space-y-4 p-4">
-    <p className="text-xs text-muted-foreground">Configura límites mensuales. -1 significa sin límite. Esta configuración no bloquea operaciones hasta conectar los controles del servidor.</p>
+    <p className="text-xs text-muted-foreground">Configura los límites por plan. Productos de catálogo se bloquean en base de datos al aplicar el SQL; las demás cuotas siguen siendo informativas. -1 significa sin límite.</p>
     {cuotasQuery.error ? <p className="rounded-lg border border-amber-500/30 p-3 text-xs text-amber-700">Aplica primero el SQL de 20261014193000_aurum_plan_quotas.sql en Supabase.</p> : null}
     <div className="grid gap-3 xl:grid-cols-2">{PLANES_COMERCIALES.map(plan => { const q=cuotaActual(plan.id); return <div key={plan.id} className="rounded-xl border border-border p-4">
      <p className="mb-3 font-semibold">{plan.nombre}</p>
