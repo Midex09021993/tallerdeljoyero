@@ -434,8 +434,6 @@ export function AurumRender() {
                   ...(m.userData??{}),
                   aurumLiveClearcoatStored:Number(m.clearcoat??0),
                   aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
-                  aurumLiveDispersionStored:Number(m.dispersion??0),
-                  aurumLiveIridescenceStored:Number(m.iridescence??0),
                 };
               }
               // Avoid Three.js' full-screen transmission path while interacting.
@@ -451,17 +449,13 @@ export function AurumRender() {
               if (
                 Number(m.clearcoat??0)!==0 ||
                 Number(m.clearcoatRoughness??0)!==0 ||
-                Number(m.dispersion??0)!==0 ||
-                Number(m.iridescence??0)!==0 ||
                 disableGemTransmission
               ) {
                 m.clearcoat=0;
                 m.clearcoatRoughness=0;
-                // Dispersion/iridescence and screen-space transmission add
-                // substantial per-fragment and full-screen work. LIVE uses
-                // environment reflection; idle convergence restores the optics.
-                m.dispersion=0;
-                m.iridescence=0;
+                // The shader-quality controller owns dispersion/iridescence
+                // storage and restoration. Keep this function limited to
+                // clearcoat and transmission so capture never loses authored fire.
                 if (disableGemTransmission) {
                   // Keep a lightweight but more faithful live transmission.
                   // The diamond gets the same moderate cap used by the recent PNG
@@ -476,8 +470,6 @@ export function AurumRender() {
             } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
               m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
               m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
-              m.dispersion=Number(m.userData.aurumLiveDispersionStored??0);
-              m.iridescence=Number(m.userData.aurumLiveIridescenceStored??0);
               if (m.userData?.aurumLiveTransmissionStored !== undefined) {
                 m.transmission=Number(m.userData.aurumLiveTransmissionStored);
               }
@@ -486,8 +478,6 @@ export function AurumRender() {
               delete next.aurumLiveTransmissionStored;
               delete next.aurumLiveClearcoatStored;
               delete next.aurumLiveClearcoatRoughnessStored;
-              delete next.aurumLiveDispersionStored;
-              delete next.aurumLiveIridescenceStored;
               m.userData=next;
             }
           });
