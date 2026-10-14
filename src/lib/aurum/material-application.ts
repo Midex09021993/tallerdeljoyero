@@ -190,6 +190,10 @@ const inspectAurumGemGeometry=(target:any)=>{
   };
 };
 
+// Keep the imported CAD material as the immutable baseline. Re-selecting a gem
+// must never clone the already modified material from the previous selection.
+const originalGemMaterials = new WeakMap<object, any[]>();
+
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
 const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
 const selectionLayerIndex=(part:any):number|null=>{
@@ -350,11 +354,17 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     return next;
   };
   targets.forEach((part:any)=>{
-    // Apply the proven scalar thickness immediately so selecting a gem never
-    // waits for the optional spatial bake.
+    // Capture the source material once. Using part.material here would clone
+    // the last selected gemstone's optical state (diamond -> sapphire -> diamond).
+    let sourceMaterials=originalGemMaterials.get(part);
+    if(!sourceMaterials){
+      sourceMaterials=(Array.isArray(part.material)?part.material:[part.material]).map((base:any)=>base?.clone?base.clone():base);
+      originalGemMaterials.set(part,sourceMaterials);
+    }
+    // Rebuild every assignment from the same imported baseline.
     part.material=Array.isArray(part.material)
-      ? part.material.map((base:any)=>apply(base,part,thickness,null))
-      : apply(part.material,part,thickness,null);
+      ? sourceMaterials.map((base:any)=>apply(base,part,thickness,null))
+      : apply(sourceMaterials[0],part,thickness,null);
     const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
     const activeGemId=String(gemConfig?.id??"");
     part.userData={
