@@ -271,6 +271,19 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           }
         );
+
+        // The iJewel reference profile has its own gem HDRI, independent from
+        // the scene/metal environment. Other profiles retain their existing
+        // gem environment unless they explicitly change it here.
+        if (id === "ijewelReference" && (
+          gemEnvironmentUrl !== getAurumGemHdriUrl(photo.gemEnvironmentKey)
+        )) {
+          cargarEntornoGema(
+            photo.gemEnvironmentKey,
+            photo.gemEnvironmentRotation,
+            photo.gemEnvironmentIntensity
+          );
+        }
       };
 
       // El escenario inicial selecciona su propio Environment HDRI.
