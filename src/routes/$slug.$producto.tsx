@@ -4,6 +4,7 @@ import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles, Sh
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
+import { PublicJewelConfigurator } from "@/components/PublicJewelConfigurator";
 
 export const Route = createFileRoute("/$slug/$producto")({
   head: ({ params }) => ({
@@ -177,6 +178,7 @@ export function CatalogoProductoPublicoPage() {
             {item.imagen_principal_url ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={item.imagen_principal_url} alt={item.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.025]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
           </div>
           {imagenes.length ? <div className="mt-3 grid grid-cols-4 gap-2">{imagenes.slice(0, 8).map((url, index) => <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} key={url + index} src={url} alt={item.nombre + " " + (index + 1)} className="aspect-square rounded-xl object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />)}</div> : null}
+          <PublicJewelConfigurator slug={slug} producto={productoSlug} />
         </div>
 
         <div className="self-center">
