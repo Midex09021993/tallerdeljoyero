@@ -258,11 +258,13 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Three channel rays share this fragment and sample the existing PMREM;
         // no screen-sized transmission target or extra render pass is created.
         float ijIor=max(aurumIJEWELRefractiveIndex,1.0001);
-        // Approximate visible-band diamond dispersion around the physical
-        // sodium-D reference IOR (2.417): red ~2.410, green 2.417, blue ~2.435.
-        float ijEtaR=1.0/max(ijIor-0.007,1.0001);
+        // Approximate the visible-band spread around the physical sodium-D
+        // IOR (2.417): red ~2.407, green 2.417, blue ~2.451.
+        // The previous narrower spread barely produced visible fire in the
+        // central stone under a neutral studio environment.
+        float ijEtaR=1.0/max(ijIor-0.010,1.0001);
         float ijEtaG=1.0/ijIor;
-        float ijEtaB=1.0/min(ijIor+0.018,2.65);
+        float ijEtaB=1.0/min(ijIor+0.034,2.65);
         // Preserve the last visually working direction while isolating the
         // blank-render regression from the recent view-vector change.
         vec3 ijDirR=refract(ijView,ijNormal,ijEtaR);
