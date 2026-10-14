@@ -4,6 +4,7 @@ import {
   applyAurumDiamondOptics,
   getAurumOpticalProfile,
 } from "../aurum-material-engine";
+import { applyAurumDynamicScintillation } from "./scintillation";
 
 function getAurumCategoryDiagnostic(){
   try {
@@ -100,7 +101,15 @@ export function applyAurumInitialModelMaterials(
       options.applyGem(m,preset,Math.min(size.x,size.y,size.z)*.85);
       if (preset?.familia) {
         applyAurumOpticalProfile(m,getAurumOpticalProfile(preset.familia));
-        if (preset.familia==="Diamante") applyAurumDiamondOptics(m);
+        if (preset.familia==="Diamante") {
+          applyAurumDiamondOptics(m);
+          m.userData={
+            ...(m.userData??{}),
+            aurumIJEWELActive:true,
+            aurumDiamondShaderMode:"native-ijewel-approx-v1",
+          };
+          applyAurumDynamicScintillation(m,getAurumOpticalProfile(preset.familia));
+        }
       }
       x.material=m;
       x.userData={
