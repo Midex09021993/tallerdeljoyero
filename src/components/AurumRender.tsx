@@ -980,10 +980,11 @@ export function AurumRender() {
         modelo?.traverse((mesh:any) => {
           if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
           const meshMeta = mesh.userData?.aurumRhino ?? {};
+          const sourceMeta = mesh.userData?.aurumRhinoSource ?? {};
           const meshAttrs = mesh.userData?.attributes ?? {};
-          const meshLayerName = String(meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
-          const meshLayerId = meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
-          const meshLayerIndexRaw = meshMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex;
+          const meshLayerName = String(sourceMeta.layerName ?? meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
+          const meshLayerId = sourceMeta.layerId ?? meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
+          const meshLayerIndexRaw = sourceMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? mesh.userData?.layerIndex ?? mesh.userData?.LayerIndex ?? meshMeta.layerIndex;
           const meshLayerIndex = Number.isInteger(Number(meshLayerIndexRaw)) && Number(meshLayerIndexRaw) >= 0 ? Number(meshLayerIndexRaw) : null;
           const meshCategory = String(meshMeta.categoria ?? clasificarCapa(meshLayerName, meshMeta.colorCapa));
           const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).filter(Boolean);
@@ -1000,6 +1001,7 @@ export function AurumRender() {
             layerIndex: meshLayerIndex, layerKey: meshMeta.layerKey ?? null,
             layerColor: meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null,
             rawAttributes: {
+              preservedSource: sourceMeta,
               layerName: meshAttrs.layerName ?? meshAttrs.LayerName ?? null,
               layerId: meshAttrs.layerId ?? meshAttrs.LayerId ?? null,
               layerIndex: meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? null,
@@ -1060,8 +1062,10 @@ export function AurumRender() {
           },
           relatedGemMeshes: relatedGemMeshes.slice(0, 60),
           sameLayerMeshes: sameLayerMeshes.slice(0, 60),
-          sourceLayerTable: (Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers : []).map((layer:any,index:number) => ({
-            index,
+          sourceLayerTable: (Array.isArray(modelo?.userData?.aurumRhinoSourceLayers) && modelo.userData.aurumRhinoSourceLayers.length
+            ? modelo.userData.aurumRhinoSourceLayers
+            : Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers : []).map((layer:any,index:number) => ({
+            index: layer?.index ?? index,
             name: layer?.name ?? layer?.Name ?? null,
             id: layer?.id ?? layer?.Id ?? null,
             color: layer?.color ? String(JSON.stringify(layer.color)) : layer?.Color ? String(JSON.stringify(layer.Color)) : null,
