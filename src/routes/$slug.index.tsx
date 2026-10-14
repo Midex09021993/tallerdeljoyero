@@ -171,7 +171,9 @@ function CatalogoPublicoPage() {
         intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
       })) as CatalogoRow[];
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     retry: 1,
   });
 
