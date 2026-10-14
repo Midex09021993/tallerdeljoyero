@@ -65,8 +65,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
   gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.16,metalEnvironmentScale:.94,highlightProtection:.93,exposure:.76,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
   // VJSON reference: scene environment 1.0, fixed direction, white background.
-  // The original UUID environment is not embedded as a local HDR asset, so Aurum
-  // uses its closest local white-studio HDR while preserving the measured control values.
+  // Keep iJewel HDR resources exclusive to this photographic profile.
   ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:AURUM_IJEWEL_REFERENCE.scene.environmentIntensity,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",
     // INTERACTIVE VIEW: the HDRI provides the primary reflection structure.
     // Expensive photographic accumulation is reserved for CAPTURE.
