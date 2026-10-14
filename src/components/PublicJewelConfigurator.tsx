@@ -19,8 +19,8 @@ const gemas = [
 ] as const;
 
 function layerText(object: THREE.Object3D) {
-  const data = object.userData ?? {}, attrs = data.attributes ?? {};
-  return [object.name, attrs.layerName, attrs.LayerName, data.layerName, data.aurumRhino?.capa]
+  const data = object.userData ?? {}, attrs = data["attributes"] ?? {};
+  return [object.name, attrs["layerName"], attrs["LayerName"], data["layerName"], data["aurumRhino"]?.capa]
     .map((value) => String(value ?? "").toLowerCase()).join(" ");
 }
 function esGema(object: THREE.Object3D) {
