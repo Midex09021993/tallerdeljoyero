@@ -410,6 +410,28 @@ export function AurumRender() {
           const materials=Array.isArray(x.material) ? x.material : [x.material];
           materials.forEach((m:any) => {
             if (!m?.isMeshPhysicalMaterial) return;
+            // Keep the focal diamond optically consistent while orbiting and
+            // at rest. Other gems retain the existing LIVE performance path.
+            if (enabled && m.userData?.aurumGemFamily === "Diamante") {
+              const ud={...(m.userData??{})};
+              if (ud.aurumLiveClearcoatStored !== undefined) {
+                m.clearcoat=Number(ud.aurumLiveClearcoatStored);
+                m.clearcoatRoughness=Number(ud.aurumLiveClearcoatRoughnessStored??0);
+                m.dispersion=Number(ud.aurumLiveDispersionStored??m.dispersion??0);
+                m.iridescence=Number(ud.aurumLiveIridescenceStored??m.iridescence??0);
+                if (ud.aurumLiveTransmissionStored !== undefined) {
+                  m.transmission=Number(ud.aurumLiveTransmissionStored);
+                }
+                delete ud.aurumLiveTransmissionStored;
+                delete ud.aurumLiveClearcoatStored;
+                delete ud.aurumLiveClearcoatRoughnessStored;
+                delete ud.aurumLiveDispersionStored;
+                delete ud.aurumLiveIridescenceStored;
+                m.userData=ud;
+                m.needsUpdate=true;
+              }
+              return;
+            }
             if (enabled) {
               if (m.userData?.aurumLiveClearcoatStored === undefined) {
                 m.userData={
