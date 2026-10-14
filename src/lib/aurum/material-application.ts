@@ -329,9 +329,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     part.material=Array.isArray(part.material)
       ? part.material.map((base:any)=>apply(base,part,thickness,null))
       : apply(part.material,part,thickness,null);
+    const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
+    const activeGemId=String(gemConfig?.id??"");
     part.userData={
       ...part.userData,
-      aurumActiveGemId:String(gemConfig?.id??""),
+      aurumGemApplicationToken:applicationToken,
+      aurumActiveGemId:activeGemId,
       aurumFacetNormalsApplied:true,
       aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",
       aurumOpticalThickness:thickness,
@@ -352,13 +355,17 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     applyAurumLatinGemProfile(part,gemConfig);
 
     // Bake the spatial map after the selection has already been applied.
-    // This keeps the UI/render loop responsive and leaves the scalar fallback
-    // visible if the optional bake cannot be completed.
+    // A selection token prevents an older asynchronous bake from overwriting
+    // the optics of a gem selected later on the same mesh.
+    const expectedMaterials=Array.isArray(part.material)?[...part.material]:[part.material];
     setTimeout(()=>{
       try{
         let root=part;
         while(root?.parent) root=root.parent;
         if(root?.userData?.aurumDisposed)return;
+        if(part.userData?.aurumGemApplicationToken!==applicationToken||part.userData?.aurumActiveGemId!==activeGemId)return;
+        const currentMaterials=Array.isArray(part.material)?part.material:[part.material];
+        if(currentMaterials.length!==expectedMaterials.length||currentMaterials.some((mat:any,index:number)=>mat!==expectedMaterials[index]))return;
         const thicknessResolution=preset.familia==="Diamante" ? 512 : preset.familia==="Moissanita" ? 384 : 256;
         const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
         if(!result)return;
