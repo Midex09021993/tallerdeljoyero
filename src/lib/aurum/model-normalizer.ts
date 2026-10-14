@@ -163,8 +163,10 @@ function hydrateRhinoLayerMetadata(
     void index;
   });
 
+  const audit={meshes:0,meshesWithLayerKey:0,unresolvedMeshes:0,categoryCounts:{metal:0,gema:0,otro:0} as Record<string,number>,layers:{} as Record<string,number>};
   object?.traverse?.((x:any)=>{
     if(!x?.isMesh)return;
+    audit.meshes++;
     const data=x.userData??{};
     const attrs=data.attributes??{};
     const existing=data.aurumRhino??{};
@@ -188,8 +190,10 @@ function hydrateRhinoLayerMetadata(
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
     const matrixSlot=matrixSlotFromLayer(layerName,category)??existing.matrixSlot;
     const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa;
-    if(!hasAnyLayerEvidence)return;
+    if(!hasAnyLayerEvidence){audit.unresolvedMeshes++;audit.categoryCounts.otro++;return;}
 
+    if(layerKey){audit.meshesWithLayerKey++;audit.layers[layerKey]=(audit.layers[layerKey]??0)+1;}
+    audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
     x.userData={
       ...data,
       aurumRhino:{
@@ -207,6 +211,12 @@ function hydrateRhinoLayerMetadata(
       },
     };
   });
+  object.userData={...(object.userData??{}),aurumLayerMetadataAudit:{...audit,source:"GLB node extras + source layer table"}};
+  if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes){
+    console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
+  }else{
+    console.info("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
+  }
   object.updateMatrixWorld?.(true);
 }
 
