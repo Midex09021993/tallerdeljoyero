@@ -296,6 +296,15 @@ export function ConfiguracionIdentidadComercial() {
       return;
     }
 
+    // Keep the public showroom logo in sync with the logo uploaded for this workshop.
+    const { data: catalogoConfig } = await supabase.from("catalogo_configuracion")
+      .select("id").eq("participante_id", form.participante_id).maybeSingle();
+    if (catalogoConfig?.id) {
+      const { error: catalogLogoError } = await supabase.from("catalogo_configuracion")
+        .update({ logo_url: publicUrl }).eq("id", catalogoConfig.id);
+      if (catalogLogoError) toast.error("Logo guardado en identidad, pero no se pudo sincronizar con el showroom: " + catalogLogoError.message);
+    }
+
     if (form.logo_url && form.logo_url !== publicUrl) {
       try {
         const marker = "/storage/v1/object/public/identidades-comerciales/";
@@ -328,6 +337,13 @@ export function ConfiguracionIdentidadComercial() {
     const { error } = await supabase.from("identidades_comerciales").update({ logo_url: null }).eq("id", form.id);
     if (error) toast.error(error.message);
     else {
+      const { data: catalogoConfig } = await supabase.from("catalogo_configuracion")
+        .select("id").eq("participante_id", form.participante_id).maybeSingle();
+      if (catalogoConfig?.id) {
+        const { error: catalogLogoError } = await supabase.from("catalogo_configuracion")
+          .update({ logo_url: null }).eq("id", catalogoConfig.id);
+        if (catalogLogoError) toast.error("Logo eliminado de identidad, pero no se pudo sincronizar con el showroom: " + catalogLogoError.message);
+      }
       setForm((x) => x ? { ...x, logo_url: null } : x);
       toast.success("Logo eliminado.");
     }
