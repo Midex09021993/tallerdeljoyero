@@ -15,6 +15,8 @@ export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
   refractiveIndex: 2.6,
   reflectivity: 0.5,
   rayBounces: 5,
+  // Experimental virtual internal-facet PMREM sampling. Does not modify CAD geometry.
+  virtualFacetReflections: true,
   dispersion: 0.01,
   transmission: 0.08,
   roughness: 0.01,
@@ -44,6 +46,8 @@ export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Reco
       version: AURUM_DIAMOND_MATERIAL_VERSION,
       status: "dedicated-shader-approximation",
       realGeometricMultiBounce: false,
+      virtualFacetReflections: Boolean(supplied.virtualFacetReflections ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.virtualFacetReflections),
+      virtualFacetReflectionsMode: "two-offset-environment-samples",
       presetId: variant,
       variant: String(preset?.["variante"] ?? "Natural"),
       inclusions: hasInclusions,
