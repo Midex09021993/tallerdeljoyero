@@ -26,6 +26,9 @@ type CatalogoRow = {
   descripcion_publica: string | null;
   logo_url: string | null;
   whatsapp: string | null;
+  frase_portada: string | null;
+  imagenes_portada: unknown;
+  intervalo_portada_segundos: number | null;
   producto_id: string | null;
   producto_slug: string | null;
   codigo: string | null;
@@ -114,6 +117,7 @@ function CatalogoPublicoPage() {
   const [carrito, setCarrito] = useState<LineaCarrito[]>([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
+  const [indicePortada, setIndicePortada] = useState(0);
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem("carrito-joyas-" + slugNormalizado);
@@ -229,6 +233,17 @@ function CatalogoPublicoPage() {
   }, [busqueda, categoria, productos]);
 
   const destacado = productos.find((producto) => producto.destacado) ?? productos[0] ?? null;
+  const imagenesPortada = useMemo(() => Array.isArray(config?.imagenes_portada)
+    ? config.imagenes_portada.filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)).slice(0, 10)
+    : [], [config?.imagenes_portada]);
+  useEffect(() => {
+    setIndicePortada(0);
+    if (imagenesPortada.length < 2) return;
+    const intervalo = Math.min(30, Math.max(2, Number(config?.intervalo_portada_segundos ?? 5)));
+    const timer = window.setInterval(() => setIndicePortada(actual => (actual + 1) % imagenesPortada.length), intervalo * 1000);
+    return () => window.clearInterval(timer);
+  }, [imagenesPortada, config?.intervalo_portada_segundos]);
+
   const whatsappHref = config?.whatsapp
     ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}`
     : null;
@@ -279,7 +294,7 @@ function CatalogoPublicoPage() {
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-24">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#8a6b36]">Showroom · {config.nombre_publico}</p>
-            <h1 className="mt-4 max-w-xl font-display text-4xl leading-tight tracking-tight sm:text-5xl">Joyas hechas para quedarse.</h1>
+            <h1 className="mt-4 max-w-xl font-display text-4xl leading-tight tracking-tight sm:text-5xl">{config.frase_portada?.trim() || "Joyas hechas para quedarse."}</h1>
             {config.descripcion_publica?.trim() ? (
               <p className="mt-5 max-w-xl text-justify font-sans text-base leading-7 text-[#625b54] sm:text-lg sm:leading-8">{config.descripcion_publica}</p>
             ) : (
@@ -295,13 +310,16 @@ function CatalogoPublicoPage() {
           </div>
 
           <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-[#e9e3da] shadow-2xl">
-            {destacado?.imagen ? (
+            {imagenesPortada.length ? (
+              <img key={imagenesPortada[indicePortada]} src={imagenesPortada[indicePortada]} alt={"Imagen de portada " + (indicePortada + 1)} className="size-full object-cover transition-opacity duration-700" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+            ) : destacado?.imagen ? (
               <img src={destacado.imagen} alt={destacado.nombre} className="size-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
               <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_35%,rgba(180,145,75,.28),transparent_55%)]">
                 <Sparkles className="size-12 text-[#8a6b36]" />
               </div>
             )}
+            {imagenesPortada.length > 1 ? <div className="absolute inset-x-0 top-0 flex justify-center gap-1.5 p-3">{imagenesPortada.map((_, i) => <button key={i} type="button" onClick={() => setIndicePortada(i)} aria-label={"Mostrar imagen " + (i + 1)} className={"h-1.5 rounded-full transition-all " + (indicePortada === i ? "w-6 bg-white" : "w-2 bg-white/60")} />)}</div> : null}
             {destacado ? (
               <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/90 p-4 backdrop-blur">
                 <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">{destacado.codigo} · destacado</p>
