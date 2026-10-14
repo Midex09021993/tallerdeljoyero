@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { captureAurumSourceMaterials } from "./gem-material-baseline";
 import {
   applyAurumOpticalProfile,
   applyAurumDiamondOptics,
@@ -89,6 +90,8 @@ export function applyAurumInitialModelMaterials(
     }
 
     if(meta?.categoria==="gema"){
+      // Capture the original imported GLB/CAD material before applying the default diamond preview.
+      captureAurumSourceMaterials(x);
       // First-load presentation: only the four MatrixGold gem layers receive
       // the default diamond preview. "Other" layers never enter this branch.
       const initialGemId = options.initialGemId ?? "diamante_natural";
