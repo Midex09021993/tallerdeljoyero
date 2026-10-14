@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X } from "lucide-react";
+import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
@@ -438,11 +438,23 @@ function CatalogoPublicoPage() {
         )}
       </section>
 
-      <section className="border-y border-[#1f1b1815] bg-white/60">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 md:grid-cols-3">
-          <Feature icon={Box} title="Experiencias 3D" text="Los modelos publicados pueden enlazar a una experiencia AURUM Render cuando esté disponible." />
-          <Feature icon={BookOpen} title="Colecciones" text="La estructura del catálogo queda preparada para organizar modelos por colecciones y futuras publicaciones." />
-          <Feature icon={MessageCircle} title="Habla con el taller" text="Cada pieza puede llevar directamente a WhatsApp para solicitar información o una cotización." />
+      <section className="border-y border-[#1f1b1815] bg-[#fbf9f5]">
+        <div className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:grid-cols-3 sm:gap-8 sm:px-8 sm:py-14">
+          <article className="group rounded-2xl border border-[#8a6b36]/10 bg-white/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#8a6b36]/25 hover:shadow-[0_16px_36px_-24px_rgba(60,43,19,.35)] sm:border-transparent sm:bg-transparent sm:p-4">
+            <div className="mb-5 grid size-11 place-items-center rounded-full border border-[#b89a62]/35 bg-[#f3ecdf] text-[#987640]"><Gem className="size-5 stroke-[1.5]" /></div>
+            <h2 className="font-display text-xl tracking-tight text-[#29231d]">Diseño con identidad</h2>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[#766d63]">Piezas que reflejan tu estilo, creadas para acompañar momentos únicos.</p>
+          </article>
+          <article className="group rounded-2xl border border-[#8a6b36]/10 bg-white/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#8a6b36]/25 hover:shadow-[0_16px_36px_-24px_rgba(60,43,19,.35)] sm:border-transparent sm:bg-transparent sm:p-4">
+            <div className="mb-5 grid size-11 place-items-center rounded-full border border-[#b89a62]/35 bg-[#f3ecdf] text-[#987640]"><Sparkles className="size-5 stroke-[1.5]" /></div>
+            <h2 className="font-display text-xl tracking-tight text-[#29231d]">La belleza está en los detalles</h2>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[#766d63]">Cada acabado, cada piedra y cada forma cuentan una historia.</p>
+          </article>
+          <article className="group rounded-2xl border border-[#8a6b36]/10 bg-white/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#8a6b36]/25 hover:shadow-[0_16px_36px_-24px_rgba(60,43,19,.35)] sm:border-transparent sm:bg-transparent sm:p-4">
+            <div className="mb-5 grid size-11 place-items-center rounded-full border border-[#b89a62]/35 bg-[#f3ecdf] text-[#987640]"><HeartHandshake className="size-5 stroke-[1.5]" /></div>
+            <h2 className="font-display text-xl tracking-tight text-[#29231d]">Una experiencia personal</h2>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[#766d63]">Conversa directamente con el taller y encuentra la joya ideal para ti.</p>
+          </article>
         </div>
       </section>
 
