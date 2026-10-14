@@ -383,6 +383,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
   const [intervaloPortada, setIntervaloPortada] = useState(5);
+  const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
+  const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
   const [subiendoImagenes, setSubiendoImagenes] = useState(false);
   const [visible, setVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -395,7 +397,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, telefono_contacto, email_contacto, direccion_contacto, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, telefono_contacto, email_contacto, direccion_contacto, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales, enlaces_carrusel").eq("participante_id", participanteId).maybeSingle(),
       supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
@@ -410,6 +412,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
       setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
+      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false })) : []);
     });
   }, [open, initial, participanteId]);
 
@@ -444,6 +447,30 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     } finally {
       setSubiendoImagenes(false);
     }
+  }
+
+  async function subirImagenesCarrusel(event: any) {
+    const files = Array.from(event.target.files ?? []) as File[];
+    event.target.value = "";
+    if (!files.length) return;
+    if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 imágenes."); return; }
+    setSubiendoCarrusel(true); setError(null);
+    try {
+      const nuevas: { imagen_url: string; enlace_url: string; texto: string; nueva_pestana: boolean }[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) throw new Error("Solo puedes subir archivos de imagen.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen debe pesar como máximo 8 MB.");
+        const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const destino = participanteId + "/carrusel-enlaces/" + crypto.randomUUID() + "." + extension;
+        const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
+        if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de una imagen.");
+        nuevas.push({ imagen_url: data.publicUrl, enlace_url: "", texto: "", nueva_pestana: true });
+      }
+      setEnlacesCarrusel(actual => [...actual, ...nuevas].slice(0, 10));
+    } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir las imágenes del carrusel."); }
+    finally { setSubiendoCarrusel(false); }
   }
 
   async function subirLogoShowroom(event: any) {
@@ -514,6 +541,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         logo_url: logoUrl,
         imagenes_portada: imagenesPortada,
         intervalo_portada_segundos: intervaloPortada,
+        enlaces_carrusel: enlacesCarrusel.map(slide => ({ ...slide, enlace_url: slide.enlace_url.trim(), texto: slide.texto.trim() })),
         visible
       }, { onConflict: "participante_id" });
       if (error) throw error;
@@ -546,6 +574,28 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
               <label className="grid gap-1.5 text-xs font-semibold">Teléfono de contacto<input type="tel" value={telefonoContacto} onChange={e => setTelefonoContacto(e.target.value)} placeholder="+51 999 999 999" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
               <label className="grid gap-1.5 text-xs font-semibold">Correo electrónico<input type="email" value={emailContacto} onChange={e => setEmailContacto(e.target.value)} placeholder="ventas@tujoyeria.com" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
               <label className="grid gap-1.5 text-xs font-semibold">Dirección física<textarea rows={2} value={direccionContacto} onChange={e => setDireccionContacto(e.target.value)} placeholder="Dirección, distrito, ciudad" className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+            </div>
+          </details>
+          <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+              <span><span className="block text-sm font-semibold">Carrusel de imágenes con enlaces</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Aparece debajo de Explora los modelos. Cada imagen puede dirigir a una colección, joya, WhatsApp, Maps o web externa.</span></span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+            </summary>
+            <div className="grid gap-3 border-t border-border p-4">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
+                <ImageIcon className="size-4" /> {subiendoCarrusel ? "Subiendo imágenes…" : "Añadir imágenes al carrusel"}
+                <input type="file" accept="image/*" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
+              </label>
+              <p className="text-xs text-muted-foreground">Hasta 10 imágenes, máximo 8 MB cada una. Si una imagen no tiene enlace, se mostrará sin ser clicable.</p>
+              {enlacesCarrusel.map((slide, index) => <div key={slide.imagen_url} className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-[112px_1fr]">
+                <div className="relative"><img src={slide.imagen_url} alt={slide.texto || "Imagen del carrusel"} className="aspect-[4/3] w-full rounded-lg object-cover" /><button type="button" onClick={() => setEnlacesCarrusel(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar imagen " + (index + 1)}><X className="size-3.5" /></button></div>
+                <div className="grid gap-2">
+                  <label className="grid gap-1 text-xs font-semibold">Texto opcional<input value={slide.texto} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, texto: e.target.value } : item))} placeholder="Descubre nuestra colección" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /></label>
+                  <label className="grid gap-1 text-xs font-semibold">Enlace de destino<input type="url" value={slide.enlace_url} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, enlace_url: e.target.value } : item))} placeholder="https://…" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /></label>
+                  <label className="flex items-center gap-2 text-xs font-normal"><input type="checkbox" checked={slide.nueva_pestana} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, nueva_pestana: e.target.checked } : item))} /> Abrir enlace en una pestaña nueva</label>
+                </div>
+              </div>)}
+              {!enlacesCarrusel.length ? <p className="text-xs text-muted-foreground">Todavía no hay imágenes. Añade fotografías para crear el carrusel.</p> : null}
             </div>
           </details>
           <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
