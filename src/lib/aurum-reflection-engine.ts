@@ -64,7 +64,7 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
     // restrained frontal fill and a soft rear kicker for edge separation.
     softbox:source(15.5,10.0,1.46,[3.6,6.0,5.4]),
     strip:source(2.8,13.5,.62,[-4.2,3.8,3.4]),
-    front:source(7.0,4.5,.18,[0,3.2,6.4]),
+    front:source(8.5,5.5,.24,[0,3.2,6.4]),
     kicker:source(2.2,9.5,.42,[4.8,4.4,-3.6]),
     edgeLeft:source(1.0,7.5,.16,[-5.2,4.0,1.4]),
     edgeRight:source(1.0,7.5,.16,[5.2,4.0,1.4]),
