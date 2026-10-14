@@ -797,14 +797,12 @@ export function AurumRender() {
         requestAnimationFrame(() => {
           if (modelo) {
             camaraVista("frontal");
-            // First stable frame uses the actual photographic pipeline, not
-            // only the lightweight interaction renderer.
-            liveFastPathRef.current = false;
+            // Keep the interactive preview lightweight after initial framing.
+            // Full photographic post-processing is reserved for image capture.
+            liveFastPathRef.current = true;
             aplicarPerfilLive();
-            renderer.shadowMap.enabled = renderQuality.shadows;
-            renderer.shadowMap.needsUpdate = true;
-            applyPostQuality?.({...renderQuality, pixelRatio:renderer.getPixelRatio(), qualityId:measuredQualityId});
-            viewerLoop.converge?.(32);
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           }
         });
@@ -1251,14 +1249,13 @@ export function AurumRender() {
             const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            applyPostQuality?.({...renderQuality, pixelRatio:idleDpr, qualityId:measuredQualityId});
-            // Restore the full photographic materials and shadows only after
-            // OrbitControls damping settles; the loop then converges a bounded
-            // number of composer frames instead of keeping RAF alive forever.
-            liveFastPathRef.current = false;
+            // The interactive preview stays on the fast path even after
+            // OrbitControls settles. Full photographic materials, shadows and
+            // post-processing are activated only inside exportPNG/capture.
+            liveFastPathRef.current = true;
             aplicarPerfilLive();
-            renderer.shadowMap.enabled = renderQuality.shadows;
-            renderer.shadowMap.needsUpdate = true;
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
         }
