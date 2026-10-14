@@ -258,9 +258,13 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijEtaR=1.0/max(ijIor-0.010,1.0001);
         float ijEtaG=1.0/ijIor;
         float ijEtaB=1.0/min(ijIor+0.018,2.65);
-        vec3 ijDirR=refract(-ijView,ijNormal,ijEtaR);
-        vec3 ijDirG=refract(-ijView,ijNormal,ijEtaG);
-        vec3 ijDirB=refract(-ijView,ijNormal,ijEtaB);
+        // vViewPosition points from the fragment toward the camera. ijView
+        // is the incident camera-to-surface ray, so refraction must use it
+        // directly; negating it sends the sampled rays back out of the crown
+        // and produces a flat, grey environment response instead of depth.
+        vec3 ijDirR=refract(ijView,ijNormal,ijEtaR);
+        vec3 ijDirG=refract(ijView,ijNormal,ijEtaG);
+        vec3 ijDirB=refract(ijView,ijNormal,ijEtaB);
         vec3 ijAccum=vec3(0.0);
         float ijWeight=0.58;
         float ijDepth=1.0;
