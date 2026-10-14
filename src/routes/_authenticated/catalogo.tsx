@@ -465,26 +465,26 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     const files = Array.from(event.target.files ?? []) as File[];
     event.target.value = "";
     if (!files.length) return;
-    if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 imágenes."); return; }
+    if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 elementos entre imágenes y videos."); return; }
     setSubiendoCarrusel(true); setError(null);
     try {
-      const nuevas: { imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[] = [];
+      const nuevas: { imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean; tipo_media: "imagen" | "video" }[] = [];
       for (const file of files) {
-        if (!file.type.startsWith("image/")) throw new Error("Solo puedes subir archivos de imagen.");
-        if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen debe pesar como máximo 8 MB.");
-        const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const esVideo = file.type.startsWith("video/");
+        if (!file.type.startsWith("image/") && !esVideo) throw new Error("Selecciona imágenes o videos compatibles.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen o video debe pesar como máximo 8 MB.");
+        const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || (esVideo ? "mp4" : "jpg");
         const destino = participanteId + "/carrusel-enlaces/" + crypto.randomUUID() + "." + extension;
         const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
         if (uploadError) throw uploadError;
         const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
-        if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de una imagen.");
-        nuevas.push({ imagen_url: data.publicUrl, url_imagen_externa: "", enlace_url: "", texto: "", nueva_pestana: true });
+        if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública del archivo.");
+        nuevas.push({ imagen_url: data.publicUrl, url_imagen_externa: "", enlace_url: "", texto: "", nueva_pestana: true, tipo_media: esVideo ? "video" : "imagen" });
       }
       setEnlacesCarrusel(actual => [...actual, ...nuevas].slice(0, 10));
-    } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir las imágenes del carrusel."); }
+    } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir los archivos del carrusel."); }
     finally { setSubiendoCarrusel(false); }
   }
-
   async function subirLogoShowroom(event: any) {
     const file = (event.target.files?.[0] ?? null) as File | null;
     event.target.value = "";
