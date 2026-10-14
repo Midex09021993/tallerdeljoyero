@@ -3963,54 +3963,6 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
-      obtener_catalogo_publico_v2: {
-        Args: { _slug: string }
-        Returns: {
-          acabado: string | null
-          aurum_render_url: string | null
-          categoria: string | null
-          codigo: string | null
-          coleccion_nombre: string | null
-          coleccion_slug: string | null
-          descripcion_producto: string | null
-          descripcion_publica: string | null
-          destacado: boolean | null
-          disponibilidad: string | null
-          ficha_tecnica_url: string | null
-          frase_portada: string | null
-          galeria: Json | null
-          imagen_principal_url: string | null
-          imagenes_portada: Json
-          intervalo_portada_segundos: number
-          logo_url: string | null
-          medidas: string | null
-          metal_principal: string | null
-          moneda: string | null
-          mostrar_ficha_tecnica: boolean
-          mostrar_precio: boolean
-          nombre: string | null
-          nombre_publico: string
-          peso_gramos: number | null
-          piedras: string | null
-          precio_desde: number | null
-          producto_id: string | null
-          producto_slug: string | null
-          slug: string
-          talla: string | null
-          tecnica: string | null
-          tiempo_fabricacion_dias: number | null
-          video_url: string | null
-          whatsapp: string | null
-        }[]
-      }
-      obtener_configuracion_portada_publica: {
-        Args: { _slug: string }
-        Returns: {
-          frase_portada: string | null
-          imagenes_portada: Json
-          intervalo_portada_segundos: number
-        }[]
-      }
       obtener_catalogo_publico: {
         Args: { _slug: string }
         Returns: {
@@ -4046,6 +3998,14 @@ export type Database = {
           tiempo_fabricacion_dias: number
           video_url: string
           whatsapp: string
+        }[]
+      }
+      obtener_configuracion_portada_publica: {
+        Args: { _slug: string }
+        Returns: {
+          frase_portada: string
+          imagenes_portada: Json
+          intervalo_portada_segundos: number
         }[]
       }
       obtener_trabajo_operativo: {
