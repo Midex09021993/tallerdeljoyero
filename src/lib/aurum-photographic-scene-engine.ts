@@ -70,7 +70,30 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:AURUM_IJEWEL_REFERENCE.scene.environmentIntensity,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",
     // INTERACTIVE VIEW: the HDRI provides the primary reflection structure.
     // Expensive photographic accumulation is reserved for CAPTURE.
-    post:{ssao:false,ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,bloom:false,bloomIntensity:0,bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,lut:false,lutIntensity:0,gradeEnabled:true,gradeContrast:1,gradeSaturation:1,ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,taa:false,progressiveFrameCount:1,ssr:false,ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,ssrThickness:.018,dof:false,vignette:false}},
+    post:{
+      // Match the supplied iJewel VJSON rather than disabling the effects that
+      // contribute to its facet separation and stable glossy reflections.
+      ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
+      ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
+      ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,
+      bloom:AURUM_IJEWEL_REFERENCE.bloom.enabled,
+      bloomIntensity:AURUM_IJEWEL_REFERENCE.bloom.intensity,
+      bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,
+      bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,
+      lut:false,
+      lutIntensity:0,
+      gradeEnabled:true,
+      gradeContrast:AURUM_IJEWEL_REFERENCE.toneMapping.contrast,
+      gradeSaturation:AURUM_IJEWEL_REFERENCE.toneMapping.saturation,
+      taa:AURUM_IJEWEL_REFERENCE.taa.enabled,
+      progressiveFrameCount:AURUM_IJEWEL_REFERENCE.progressive.maxFrameCount,
+      ssr:AURUM_IJEWEL_REFERENCE.ssr.enabled,
+      ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,
+      ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,
+      ssrThickness:.018,
+      dof:false,
+      vignette:false
+    }},
 };
 
 export const getAurumPhotographicProfile=(id:string):AurumPhotographicProfile=>AURUM_PHOTOGRAPHIC_PROFILES[id]??AURUM_PHOTOGRAPHIC_PROFILES["producto"]!;
