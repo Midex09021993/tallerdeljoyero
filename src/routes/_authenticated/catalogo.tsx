@@ -375,6 +375,9 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [whatsapp, setWhatsapp] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
+  const [intervaloPortada, setIntervaloPortada] = useState(5);
+  const [subiendoImagenes, setSubiendoImagenes] = useState(false);
   const [visible, setVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -386,7 +389,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url, imagenes_portada, intervalo_portada_segundos").eq("participante_id", participanteId).maybeSingle(),
       supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
@@ -394,10 +397,43 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       // Prefer the actual logo uploaded for the workshop; fall back to the
       // logo already stored on its public catalog configuration.
       setLogoUrl(identidadResult.data?.logo_url ?? configResult.data?.logo_url ?? null);
+      setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
+      setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
     });
   }, [open, initial, participanteId]);
 
   if (!open) return null;
+
+  async function subirImagenesPortada(event: any) {
+    const files = Array.from(event.target.files ?? []) as File[];
+    event.target.value = "";
+    if (!files.length) return;
+    if (imagenesPortada.length + files.length > 10) {
+      setError("Puedes tener como máximo 10 imágenes de portada. Quita alguna antes de subir más.");
+      return;
+    }
+    setSubiendoImagenes(true);
+    setError(null);
+    try {
+      const nuevas: string[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) throw new Error("Solo puedes subir archivos de imagen.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen debe pesar como máximo 8 MB.");
+        const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const destino = "portadas/" + participanteId + "/" + crypto.randomUUID() + "." + extension;
+        const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
+        if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de una imagen.");
+        nuevas.push(data.publicUrl);
+      }
+      setImagenesPortada(actual => [...actual, ...nuevas].slice(0, 10));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudieron subir las imágenes.");
+    } finally {
+      setSubiendoImagenes(false);
+    }
+  }
 
   async function guardar(event: any) {
     event.preventDefault();
@@ -413,6 +449,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         descripcion: descripcion.trim() || null,
         whatsapp: whatsapp.trim() || null,
         logo_url: logoUrl,
+        imagenes_portada: imagenesPortada,
+        intervalo_portada_segundos: intervaloPortada,
         visible
       }, { onConflict: "participante_id" });
       if (error) throw error;
@@ -437,6 +475,25 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={normalizarSlugCatalogo(slug)} readOnly aria-readonly="true" placeholder="Se genera a partir del nombre público" className="h-11 cursor-not-allowed rounded-xl border border-border bg-surface-muted px-3 text-sm font-normal text-muted-foreground" /><span className="text-[11px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre público y no se puede editar.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
           <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+          <section className="grid gap-3 rounded-2xl border border-border p-4 sm:col-span-2">
+            <div><p className="text-sm font-semibold">Imágenes de portada</p><p className="mt-1 text-xs font-normal text-muted-foreground">Sube hasta 10 fotografías. Se alternarán automáticamente en la portada pública.</p></div>
+            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
+              <ImageIcon className="size-4" /> {subiendoImagenes ? "Subiendo imágenes…" : "Añadir imágenes"}
+              <input type="file" accept="image/*" multiple disabled={subiendoImagenes || imagenesPortada.length >= 10} onChange={subirImagenesPortada} className="sr-only" />
+            </label>
+            {imagenesPortada.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {imagenesPortada.map((url: string, index: number) => <div key={url} className="relative overflow-hidden rounded-xl border border-border">
+                <img src={url} alt={"Imagen de portada " + (index + 1)} className="aspect-square w-full object-cover" />
+                <button type="button" onClick={() => setImagenesPortada(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar imagen " + (index + 1)}><X className="size-3.5" /></button>
+                <span className="block px-2 py-1 text-[10px] text-muted-foreground">Imagen {index + 1}</span>
+              </div>)}
+            </div> : <p className="text-xs font-normal text-muted-foreground">Todavía no has añadido imágenes; se mostrará la joya destacada como hasta ahora.</p>}
+            <label className="grid max-w-xs gap-1.5 text-xs font-semibold">Tiempo visible por imagen
+              <select value={intervaloPortada} onChange={e => setIntervaloPortada(Number(e.target.value))} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal">
+                {[2,3,4,5,6,8,10,12,15,20,30].map(seconds => <option key={seconds} value={seconds}>{seconds} segundos</option>)}
+              </select>
+            </label>
+          </section>
           <div className="grid gap-2 text-xs font-semibold sm:col-span-2">
             <span>Logo del showroom (vinculado al logo del taller)</span>
             <div className="flex min-h-20 items-center gap-4 rounded-xl border border-border bg-background p-3">
