@@ -374,6 +374,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [slug, setSlug] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [frasePortada, setFrasePortada] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
   const [intervaloPortada, setIntervaloPortada] = useState(5);
@@ -389,11 +390,12 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url, imagenes_portada, intervalo_portada_segundos").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos").eq("participante_id", participanteId).maybeSingle(),
       supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
       setDescripcion(configResult.data?.descripcion ?? "");
+      setFrasePortada(configResult.data?.frase_portada ?? "");
       // Prefer the actual logo uploaded for the workshop; fall back to the
       // logo already stored on its public catalog configuration.
       setLogoUrl(identidadResult.data?.logo_url ?? configResult.data?.logo_url ?? null);
@@ -447,6 +449,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         nombre_publico: nombre.trim(),
         slug: slugNormalizado,
         descripcion: descripcion.trim() || null,
+        frase_portada: frasePortada.trim() || null,
         whatsapp: whatsapp.trim() || null,
         logo_url: logoUrl,
         imagenes_portada: imagenesPortada,
@@ -475,6 +478,10 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={normalizarSlugCatalogo(slug)} readOnly aria-readonly="true" placeholder="Se genera a partir del nombre público" className="h-11 cursor-not-allowed rounded-xl border border-border bg-surface-muted px-3 text-sm font-normal text-muted-foreground" /><span className="text-[11px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre público y no se puede editar.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
           <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Frase principal de portada
+            <input maxLength={120} value={frasePortada} onChange={e => setFrasePortada(e.target.value)} placeholder="Joyas hechas para quedarse." className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" />
+            <span className="text-[11px] font-normal text-muted-foreground">Se muestra en la portada pública. Si lo dejas vacío, se usa la frase predeterminada.</span>
+          </label>
           <section className="grid gap-3 rounded-2xl border border-border p-4 sm:col-span-2">
             <div><p className="text-sm font-semibold">Imágenes de portada</p><p className="mt-1 text-xs font-normal text-muted-foreground">Sube hasta 10 fotografías. Se alternarán automáticamente en la portada pública.</p></div>
             <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
