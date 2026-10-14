@@ -876,7 +876,7 @@ export function AurumRender() {
             renderer.setClearColor(0xffffff,1);
             // A few beauty passes let temporal anti-aliasing settle without
             // running the full interactive progressive loop indefinitely.
-            const captureFrames=taaPass?.enabled?4:1;
+            const captureFrames=(composer.passes??[]).some((pass:any)=>pass?.enabled&&pass.constructor?.name==="TAARenderPass")?4:1;
             for(let frame=0;frame<captureFrames;frame++) composer.render();
             const target=composer.readBuffer;
             if(!target||target.width!==width||target.height!==height) throw new Error("La resolución interna de captura no coincide con la solicitada.");
