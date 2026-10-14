@@ -385,7 +385,7 @@ function CatalogoPublicoPage() {
         </div>
 
         {productosFiltrados.length ? (
-          <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {productosFiltrados.map((producto) => (
               <article key={producto.id} className="group min-w-0">
                 <Link
