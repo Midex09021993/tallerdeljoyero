@@ -40,9 +40,9 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
   {
     id: "profesional",
     nombre: "Profesional",
-    precioEtiqueta: "De pago · por definir",
-    estadoComercial: "pendiente",
-    enfoque: "Flujo productivo, inventario y compras junto con la gestión comercial.",
+    precioEtiqueta: "S/ 29 al mes",
+    estadoComercial: "pago",
+    enfoque: "Flujo productivo, inventario y compras junto con la gestión comercial por S/ 29 mensuales.",
     capacidadesRelacionadas: [
       "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
       "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
@@ -52,9 +52,9 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
   {
     id: "empresarial",
     nombre: "Empresarial",
-    precioEtiqueta: "De pago · por definir",
-    estadoComercial: "pendiente",
-    enfoque: "Operación ampliada para equipos y organizaciones con necesidades multi-sede.",
+    precioEtiqueta: "S/ 79 al mes",
+    estadoComercial: "pago",
+    enfoque: "Operación ampliada para equipos y organizaciones con necesidades multi-sede por S/ 79 mensuales.",
     capacidadesRelacionadas: [
       "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
       "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
