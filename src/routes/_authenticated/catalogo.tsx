@@ -422,7 +422,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         if (!file.type.startsWith("image/")) throw new Error("Solo puedes subir archivos de imagen.");
         if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen debe pesar como máximo 8 MB.");
         const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-        const destino = "portadas/" + participanteId + "/" + crypto.randomUUID() + "." + extension;
+        const destino = participanteId + "/portadas/" + crypto.randomUUID() + "." + extension;
         const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
         if (uploadError) throw uploadError;
         const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
