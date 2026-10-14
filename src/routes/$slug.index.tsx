@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X } from "lucide-react";
+import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X, Instagram, Youtube, Facebook, Music2, Pin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +26,7 @@ type CatalogoRow = {
   descripcion_publica: string | null;
   logo_url: string | null;
   whatsapp: string | null;
+  redes_sociales?: { instagram?: string | null; tiktok?: string | null; youtube?: string | null; facebook?: string | null; pinterest?: string | null } | null;
   frase_portada: string | null;
   imagenes_portada: unknown;
   intervalo_portada_segundos: number | null;
@@ -152,9 +153,10 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const [catalogoResult, portadaResult] = await Promise.all([
+      const [catalogoResult, portadaResult, redesResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
+        supabase.rpc("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
@@ -164,11 +166,13 @@ function CatalogoPublicoPage() {
         imagenes_portada: unknown;
         intervalo_portada_segundos: number | null;
       } | undefined);
+      const redes = redesResult.error ? null : ((redesResult.data ?? null) as CatalogoRow["redes_sociales"] | null);
       return productosCatalogo.map((row) => ({
         ...row,
         frase_portada: portada?.frase_portada ?? null,
         imagenes_portada: portada?.imagenes_portada ?? [],
         intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
+        redes_sociales: redes,
       })) as CatalogoRow[];
     },
     staleTime: 0,
@@ -479,6 +483,21 @@ function CatalogoPublicoPage() {
           <svg viewBox="0 0 32 32" className="size-8 fill-current" aria-hidden="true"><path d="M16.04 3C9.01 3 3.3 8.62 3.3 15.55c0 2.2.59 4.35 1.7 6.25L3.2 28.8l7.2-1.88a13 13 0 0 0 5.63 1.27h.01c7.02 0 12.74-5.62 12.74-12.54 0-3.35-1.33-6.5-3.75-8.87A12.7 12.7 0 0 0 16.04 3zm0 22.99h-.01c-1.72 0-3.4-.45-4.87-1.3l-.35-.2-4.27 1.12 1.14-4.12-.23-.37a10.2 10.2 0 0 1-1.57-5.47c0-5.58 4.56-10.12 10.17-10.12 2.72 0 5.27 1.05 7.19 2.96a10.03 10.03 0 0 1 2.98 7.16c0 5.58-4.56 10.12-10.18 10.12zm5.58-7.58c-.3-.15-1.78-.87-2.06-.97-.28-.1-.48-.15-.68.15-.2.3-.78.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.39-1.48-.88-.78-1.48-1.74-1.65-2.04-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.62-.93-2.22-.24-.58-.49-.5-.68-.51h-.58c-.2 0-.53.08-.8.38-.28.3-1.05 1.02-1.05 2.48s1.08 2.87 1.23 3.07c.15.2 2.12 3.23 5.13 4.53.72.31 1.28.5 1.72.64.72.23 1.38.2 1.9.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.17-1.43-.08-.13-.28-.2-.58-.35z"/></svg>
           <span className="absolute inset-0 rounded-full border-2 border-[#25D366]/40 animate-ping motion-reduce:animate-none" />
         </a>
+      ) : null}
+
+      {config.redes_sociales ? (
+        <nav aria-label="Redes sociales" className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-5 pb-5 sm:justify-start sm:px-8">
+          {([
+            ["instagram", "Instagram", Instagram],
+            ["tiktok", "TikTok", Music2],
+            ["youtube", "YouTube", Youtube],
+            ["facebook", "Facebook", Facebook],
+            ["pinterest", "Pinterest", Pin],
+          ] as const).map(([key, label, Icon]) => {
+            const href = config.redes_sociales?.[key];
+            return href ? <a key={key} href={href} target="_blank" rel="noreferrer" aria-label={label} title={label} className="grid size-9 place-items-center rounded-full border border-[#1f1b1830] text-[#746b62] transition hover:border-[#8a6b36] hover:bg-[#8a6b36] hover:text-white"><Icon className="size-4" /></a> : null;
+          })}
+        </nav>
       ) : null}
 
       <footer className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
