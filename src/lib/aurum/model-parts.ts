@@ -40,14 +40,14 @@ function matrixFamilyCategory(layer:any,index:number,colorCapa:string|undefined,
   return "otro";
 }
 
-function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro"):number|undefined {
+function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro", colorCapa?:string):number|undefined {
   if (category==="otro" || index<0) return undefined;
   const name=String(layer?.name ?? "").trim().toLowerCase();
   const explicit=name.match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
   if (explicit) return Number(explicit[1]);
 
-  // Slots must come from an explicit layer name; raw layer indices are not
-  // stable across Rhino documents and must never cause cross-layer material edits.
+  // Do not infer slot order from layer index or RGB without exact template rules.
+  void colorCapa;
   return undefined;
 }
 
@@ -87,7 +87,7 @@ export function getAurumModelParts(
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
     const matrixSlot = Number.isFinite(Number(meta?.matrixSlot))
       ? Number(meta.matrixSlot)
-      : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria) : undefined);
+      : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria,colorCapa) : undefined);
 
     const layerKey=resolveAurumLayerKey({layerId,layerIndex,layerName:capa,layerColor:colorCapa,category:categoria,existingKey:meta?.layerKey});
     result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });

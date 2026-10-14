@@ -55,6 +55,7 @@ export function applyAurumInitialModelMaterials(
     metals:any[];
     initialMetalId?:string;
     initialGemId?:string;
+    initialGemByLayer?:Record<string,string>;
     fallbackMaterial:any;
     applyGem:(material:any,preset:any,thickness:number)=>void;
     gemPresetFromConfig:(gem:any)=>any;
@@ -94,8 +95,11 @@ export function applyAurumInitialModelMaterials(
       captureAurumSourceMaterials(x);
       // First-load presentation: only the four MatrixGold gem layers receive
       // the default diamond preview. "Other" layers never enter this branch.
-      const initialGemId = options.initialGemId ?? "diamante_natural";
-      const gem=options.gems.find((g:any)=>g.id===initialGemId) ?? options.gems.find((g:any)=>g.id==="diamante_natural") ?? options.gems[0];
+      const layerKey=String(meta?.layerKey??"");
+      const savedAssignments=model.userData?.aurumGemLayerAssignments??{};
+      const assignedGemId=String(savedAssignments[layerKey]?.gemId??options.initialGemByLayer?.[layerKey]??meta?.gemId??"");
+      const initialGemId=assignedGemId||options.initialGemId||"diamante_natural";
+      const gem=options.gems.find((g:any)=>g.id===initialGemId)??options.gems.find((g:any)=>g.id==="diamante_natural")??options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
@@ -118,6 +122,7 @@ export function applyAurumInitialModelMaterials(
       x.userData={
         ...(x.userData??{}),
         aurumActiveGemId:String(gem.id??"diamante_natural"),
+        aurumInitialLayerGemId:String(gem.id??"diamante_natural"),
       };
       // Procedural inclusions are deferred to CAPTURE. Creating dozens of
       // transparent meshes during every model load is unnecessary for LIVE.

@@ -365,8 +365,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     return next;
   };
   targets.forEach((part:any)=>{
-    const originalMaterialIsArray=Array.isArray(part.material);
     const stableSourceMaterials=getAurumSourceMaterials(part);
+    const originalMaterialIsArray=stableSourceMaterials.length>1;
     part.material=originalMaterialIsArray
       ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
