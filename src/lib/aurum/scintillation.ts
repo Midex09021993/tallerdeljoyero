@@ -37,7 +37,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
-  const contrastStrength=(family==="Diamante" ? .55 : .075)*facetContrast;
+  const contrastStrength=(family==="Diamante" ? .68 : .075)*facetContrast
   const colorChange:any=(profile as any).colorChange;
   const oilDrop:any=(profile as any).oilDrop;
   const oilDropEnabled=Boolean(oilDrop?.enabled);
@@ -325,7 +325,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // the previous 0.8% modulation was effectively invisible on white stones.
         // Keep colored gems unchanged and deepen only the diamond's reflected
         // facet contrast without tinting the base color or raising exposure.
-        float aurumFacetFloor=${family === "Diamante" ? "0.955" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.92" : "0.992"};
         float aurumContrast=mix(1.0,aurumFacetFloor,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
