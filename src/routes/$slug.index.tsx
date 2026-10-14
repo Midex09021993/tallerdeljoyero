@@ -351,11 +351,7 @@ function CatalogoPublicoPage() {
                 <button type="button" onClick={() => { setPortadaVisible(false); window.setTimeout(() => { setIndicePortada(actual => (actual + 1) % imagenesPortada.length); setPortadaVisible(true); }, 180); }} aria-label="Fotografía siguiente" className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-white/65 text-[#30271e] opacity-100 shadow-sm backdrop-blur-md transition hover:bg-white sm:opacity-0 sm:group-hover:opacity-100">
                   <ChevronRight className="size-4" />
                 </button>
-                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/40 bg-[#211d18]/55 px-3.5 py-2 shadow-lg backdrop-blur-md">
-                  <span className="min-w-[2.7rem] text-center font-sans text-[10px] font-medium tracking-[.14em] text-white tabular-nums">{String(indicePortada + 1).padStart(2, "0")} <span className="text-white/55">/</span> {String(imagenesPortada.length).padStart(2, "0")}</span>
-                  <span className="h-3.5 w-px bg-white/30" />
-                  <div className="flex items-center gap-1.5">{imagenesPortada.map((_, i) => <button key={i} type="button" onClick={() => { setPortadaVisible(false); window.setTimeout(() => { setIndicePortada(i); setPortadaVisible(true); }, 180); }} aria-label={"Mostrar imagen " + (i + 1)} aria-current={indicePortada === i ? "true" : undefined} className={"h-1.5 rounded-full transition-all duration-500 " + (indicePortada === i ? "w-5 bg-white" : "w-1.5 bg-white/55 hover:bg-white/90")} />)}</div>
-                </div>
+
               </>
             ) : null}
           </div>
