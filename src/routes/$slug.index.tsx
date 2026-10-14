@@ -166,7 +166,19 @@ function CatalogoPublicoPage() {
         imagenes_portada: unknown;
         intervalo_portada_segundos: number | null;
       } | undefined);
-      const redes = redesResult.error ? null : ((redesResult.data ?? null) as CatalogoRow["redes_sociales"] | null);
+      const rawRedes = redesResult.error ? null : redesResult.data;
+      const redesCandidate = Array.isArray(rawRedes) ? rawRedes[0] : rawRedes;
+      let redes: CatalogoRow["redes_sociales"] | null = null;
+      if (redesCandidate && typeof redesCandidate === "object" && !Array.isArray(redesCandidate)) {
+        const candidate = redesCandidate as Record<string, unknown>;
+        redes = {
+          instagram: typeof candidate.instagram === "string" ? candidate.instagram : null,
+          tiktok: typeof candidate.tiktok === "string" ? candidate.tiktok : null,
+          youtube: typeof candidate.youtube === "string" ? candidate.youtube : null,
+          facebook: typeof candidate.facebook === "string" ? candidate.facebook : null,
+          pinterest: typeof candidate.pinterest === "string" ? candidate.pinterest : null,
+        };
+      }
       return productosCatalogo.map((row) => ({
         ...row,
         frase_portada: portada?.frase_portada ?? null,
@@ -485,19 +497,28 @@ function CatalogoPublicoPage() {
         </a>
       ) : null}
 
-      {config.redes_sociales ? (
-        <nav aria-label="Redes sociales" className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-5 pb-5 sm:justify-start sm:px-8">
-          {([
-            ["instagram", "Instagram", Instagram],
-            ["tiktok", "TikTok", Music2],
-            ["youtube", "YouTube", Youtube],
-            ["facebook", "Facebook", Facebook],
-            ["pinterest", "Pinterest", Pin],
-          ] as const).map(([key, label, Icon]) => {
-            const href = config.redes_sociales?.[key];
-            return href ? <a key={key} href={href} target="_blank" rel="noreferrer" aria-label={label} title={label} className="grid size-9 place-items-center rounded-full border border-[#1f1b1830] text-[#746b62] transition hover:border-[#8a6b36] hover:bg-[#8a6b36] hover:text-white"><Icon className="size-4" /></a> : null;
-          })}
-        </nav>
+      {config.redes_sociales && Object.values(config.redes_sociales).some((url) => typeof url === "string" && /^https?:\\/\\//i.test(url.trim())) ? (
+        <section aria-label="Redes sociales" className="border-t border-[#1f1b1810] bg-white/35">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-5 py-7 sm:flex-row sm:justify-between sm:px-8">
+            <div className="text-center sm:text-left">
+              <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#8a6b36]">Conecta con nosotros</p>
+              <p className="mt-1 font-display text-lg text-[#30271e]">Síguenos en redes sociales</p>
+            </div>
+            <nav className="flex items-center justify-center gap-2.5" aria-label="Perfiles sociales">
+              {([
+                ["instagram", "Instagram", Instagram],
+                ["tiktok", "TikTok", Music2],
+                ["youtube", "YouTube", Youtube],
+                ["facebook", "Facebook", Facebook],
+                ["pinterest", "Pinterest", Pin],
+              ] as const).map(([key, label, Icon]) => {
+                const href = config.redes_sociales?.[key]?.trim();
+                if (!href || !/^https?:\\/\\//i.test(href)) return null;
+                return <a key={key} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="group grid size-10 place-items-center rounded-full border border-[#b99b6b]/35 bg-white text-[#80663c] shadow-[0_2px_8px_rgba(48,39,30,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#b99b6b] hover:bg-[#b99b6b] hover:text-white hover:shadow-[0_6px_18px_rgba(139,107,54,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99b6b]/60"><Icon className="size-[17px] transition-transform duration-200 group-hover:scale-110" /></a>;
+              })}
+            </nav>
+          </div>
+        </section>
       ) : null}
 
       <footer className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
