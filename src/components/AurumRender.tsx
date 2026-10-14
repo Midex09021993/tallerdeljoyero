@@ -1262,19 +1262,18 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Keep interaction lightweight, then converge to the photographic
-            // preview when the camera settles. This is important for the focal
-            // diamond: the idle frame must restore authored transmission,
-            // dispersion, clearcoat, shadows and the configured composer passes.
+            // Agreed behavior: interactive preview remains lightweight after
+            // orbit settles. Full photographic gem optics, transmission,
+            // dispersion, clearcoat, shadows and post-processing are capture-only.
+            // Raise resolution for a sharper live view without enabling beauty effects.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            liveFastPathRef.current = false;
+            liveFastPathRef.current = true;
             aplicarPerfilLive();
-            renderer.shadowMap.enabled = renderQuality.shadows;
-            renderer.shadowMap.needsUpdate = true;
-            applyPostQuality?.({...renderQuality, qualityId:renderQualityId});
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
         }
