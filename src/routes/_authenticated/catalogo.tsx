@@ -373,6 +373,9 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [nombre, setNombre] = useState("");
   const [slug, setSlug] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [telefonoContacto, setTelefonoContacto] = useState("");
+  const [emailContacto, setEmailContacto] = useState("");
+  const [direccionContacto, setDireccionContacto] = useState("");
   const [redesSociales, setRedesSociales] = useState({ instagram: "", tiktok: "", youtube: "", facebook: "", pinterest: "" });
   const [descripcion, setDescripcion] = useState("");
   const [frasePortada, setFrasePortada] = useState("");
@@ -392,10 +395,13 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, telefono_contacto, email_contacto, direccion_contacto, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales").eq("participante_id", participanteId).maybeSingle(),
       supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
+      setTelefonoContacto(configResult.data?.telefono_contacto ?? "");
+      setEmailContacto(configResult.data?.email_contacto ?? "");
+      setDireccionContacto(configResult.data?.direccion_contacto ?? "");
       const redes = configResult.data?.redes_sociales && typeof configResult.data.redes_sociales === "object" ? configResult.data.redes_sociales : {};
       setRedesSociales({ instagram: redes.instagram ?? "", tiktok: redes.tiktok ?? "", youtube: redes.youtube ?? "", facebook: redes.facebook ?? "", pinterest: redes.pinterest ?? "" });
       setDescripcion(configResult.data?.descripcion ?? "");
@@ -501,6 +507,9 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         descripcion: descripcion.trim() || null,
         frase_portada: frasePortada.trim() || null,
         whatsapp: whatsapp.trim() || null,
+        telefono_contacto: telefonoContacto.trim() || null,
+        email_contacto: emailContacto.trim() || null,
+        direccion_contacto: direccionContacto.trim() || null,
         redes_sociales: Object.fromEntries(Object.entries(redesSociales).map(([key, value]) => [key, value.trim() || null])),
         logo_url: logoUrl,
         imagenes_portada: imagenesPortada,
@@ -528,6 +537,17 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => { const nuevoNombre = e.target.value; setNombre(nuevoNombre); if (!slug.trim() || slug === normalizarSlugCatalogo(nombre)) setSlug(normalizarSlugCatalogo(nuevoNombre)); }} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(normalizarSlugCatalogo(e.target.value))} placeholder="siberiana" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[11px] font-normal text-muted-foreground">Puedes personalizar la dirección pública. Usa letras, números y guiones.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
           <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="51987654321" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+          <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+              <span><span className="block text-sm font-semibold">Datos de contacto</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Teléfono, correo y dirección que aparecerán en el catálogo público.</span></span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+            </summary>
+            <div className="grid gap-3 border-t border-border p-4">
+              <label className="grid gap-1.5 text-xs font-semibold">Teléfono de contacto<input type="tel" value={telefonoContacto} onChange={e => setTelefonoContacto(e.target.value)} placeholder="+51 999 999 999" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+              <label className="grid gap-1.5 text-xs font-semibold">Correo electrónico<input type="email" value={emailContacto} onChange={e => setEmailContacto(e.target.value)} placeholder="ventas@tujoyeria.com" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+              <label className="grid gap-1.5 text-xs font-semibold">Dirección física<textarea rows={2} value={direccionContacto} onChange={e => setDireccionContacto(e.target.value)} placeholder="Dirección, distrito, ciudad" className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+            </div>
+          </details>
           <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
               <span><span className="block text-sm font-semibold">Redes sociales</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Configura los perfiles que aparecerán en tu catálogo público.</span></span>
