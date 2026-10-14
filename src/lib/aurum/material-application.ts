@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { resolveAurumLayerKey, normalizeAurumLayerName } from "./layer-identity";
+import { resolveAurumLayerKey } from "./layer-identity";
 import {
   applyAurumMetal,
   applyAurumGem,
@@ -220,6 +220,8 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
   const selectedLayerIndex=selectionLayerIndex(activePart);
   const selectedCategory=selectionCategory(activePart);
+  const selectedLayerId=selectedMeta.rhinoLayerId??activePart?.userData?.attributes?.layerId??activePart?.userData?.attributes?.LayerId??activePart?.userData?.layerId??activePart?.userData?.LayerId??null;
+  const selectedLayerKey=resolveAurumLayerKey({layerId:selectedLayerId,layerIndex:selectedLayerIndex,layerName:selectedLayer,layerColor:selectedMeta.colorCapa,category:selectedCategory,existingKey:selectedMeta.layerKey});
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
   applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
@@ -231,9 +233,9 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     x.receiveShadow=true;
     const meta=selectionMeta(x);
     const partLayerIndex=selectionLayerIndex(x);
-    const sameLayerIdentity=selectedLayerIndex!==null
-      ? partLayerIndex===selectedLayerIndex
-      : !!selectedLayer&&meta.capa===selectedLayer;
+    const partLayerId=meta.rhinoLayerId??x?.userData?.attributes?.layerId??x?.userData?.attributes?.LayerId??x?.userData?.layerId??x?.userData?.LayerId??null;
+    const partLayerKey=meta.layerKey??resolveAurumLayerKey({layerId:partLayerId,layerIndex:partLayerIndex,layerName:meta.capa,layerColor:meta.colorCapa,category,existingKey:meta.layerKey});
+    const sameLayerIdentity=Boolean(selectedLayerKey&&partLayerKey&&selectedLayerKey===partLayerKey);
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
     const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
     if(shouldApply){
