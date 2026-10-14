@@ -838,10 +838,11 @@ export function AurumRender() {
             liveFastPathRef.current=false;
             aplicarPerfilLive();
             applyPostQuality?.(renderQuality,{capture:true});
-            // Capture-only highlight protection: the live viewport keeps its
-            // calibrated exposure. Lower the beauty capture's exposure slightly
-            // to retain facet separation in bright diamond HDR reflections.
-            renderer.toneMappingExposure=oldToneMappingExposure*0.78;
+            // Keep the original calibrated exposure for capture. Exposure
+            // reduction alone did not fix the diamond's washed-out/translucent
+            // appearance, so do not alter brightness until the optical cause is
+            // isolated. The live viewport remains unchanged.
+            renderer.toneMappingExposure=oldToneMappingExposure;
             composer.renderToScreen=false;
             composer.setPixelRatio(1);
             composer.setSize(width,height);
