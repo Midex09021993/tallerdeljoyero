@@ -401,6 +401,13 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
   const apply=(material:any)=>{
     if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
     const ud=material.userData;
+    // Keep the optical/facet shader active for diamonds in the interactive
+    // viewer. Disabling onBeforeCompile for every live gemstone also removed
+    // the iJewel-inspired diamond facet response, so the central stone appeared
+    // uniformly white. Limit this exception to diamonds; other gems stay lean.
+    if(quality==="live" && ud.aurumGemFamily==="Diamante"){
+      return;
+    }
     if(quality==="live"){
       if(ud.aurumLiveShaderQuality!=="live"){
         ud.aurumLiveDispersionStored=Number(material.dispersion??ud.aurumLiveDispersionStored??0);
