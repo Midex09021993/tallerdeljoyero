@@ -478,10 +478,12 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
   const apply=(material:any)=>{
     if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
     const ud=material.userData;
-    // Capture-only contract: no gemstone's custom beauty shader stays active
-    // in the interactive viewer. The diamond's iJewel-inspired environment-ray
-    // sampling, facet contrast and spectral response are restored only for PNG
-    // capture; the live path uses the native lightweight MeshPhysicalMaterial.
+    // Preserve the advanced optical shader for diamonds in the interactive
+    // viewer: switching it off removes the spectral fire and facet response.
+    // Other gemstone families retain the lightweight live path.
+    if(quality==="live" && ud.aurumGemFamily==="Diamante"){
+      return;
+    }
     if(quality==="live"){
       if(ud.aurumLiveShaderQuality!=="live"){
         ud.aurumLiveDispersionStored=Number(material.dispersion??ud.aurumLiveDispersionStored??0);
