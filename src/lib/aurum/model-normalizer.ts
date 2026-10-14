@@ -165,7 +165,16 @@ function hydrateRhinoLayerMetadata(
     void index;
   });
 
-  const audit={meshes:0,meshesWithLayerKey:0,unresolvedMeshes:0,categoryCounts:{metal:0,gema:0,otro:0} as Record<string,number>,layers:{} as Record<string,number>};
+  const audit={
+    meshes:0,
+    meshesWithLayerKey:0,
+    unresolvedMeshes:0,
+    meshesWithoutSourceIdentity:0,
+    duplicateLayerKeys:[] as Array<{layerKey:string;meshCount:number;sourceIds:string[];layerNames:string[]}>,
+    categoryCounts:{metal:0,gema:0,otro:0} as Record<string,number>,
+    layers:{} as Record<string,number>,
+  };
+  const layerSources=new Map<string,{meshCount:number;sourceIds:Set<string>;layerNames:Set<string>}>();
   object?.traverse?.((x:any)=>{
     if(!x?.isMesh)return;
     audit.meshes++;
@@ -191,16 +200,50 @@ function hydrateRhinoLayerMetadata(
     const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
     const matrixSlot=matrixSlotFromLayer(layerName,category,color)??existing.matrixSlot;
-    const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa||!!existing.layerKey;
-    if(!hasAnyLayerEvidence){audit.unresolvedMeshes++;audit.categoryCounts["otro"]=(audit.categoryCounts["otro"]??0)+1;return;}
+    const hasAnyLayerEvidence=Boolean(layerName||color||layerIndex>=0||layerId!=null||existing.capa||existing.layerKey);
+    const sourceIdentity=resolvedLayerId!=null
+      ? "id:"+String(resolvedLayerId)
+      : resolvedLayerIndex>=0
+        ? "index:"+String(resolvedLayerIndex)
+        : layerName
+          ? "name:"+layerName.toLocaleLowerCase()
+          : "";
+    if(!sourceIdentity)audit.meshesWithoutSourceIdentity++;
+    if(!hasAnyLayerEvidence||!layerKey){
+      audit.unresolvedMeshes++;
+      audit.categoryCounts["otro"]=(audit.categoryCounts["otro"]??0)+1;
+      x.userData={
+        ...data,
+        aurumRhino:{
+          ...existing,
+          capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
+          colorCapa:color||existing.colorCapa||undefined,
+          categoria:category,
+          layerIndex:resolvedLayerIndex,
+          layerKey:layerKey??null,
+          matrixSlot,
+          rhinoLayerId:resolvedLayerId,
+          metadataResolution:"unresolved",
+        },
+      };
+      return;
+    }
 
-    if(layerKey){audit.meshesWithLayerKey++;audit.layers[layerKey]=(audit.layers[layerKey]??0)+1;}
+    if(layerKey){
+      audit.meshesWithLayerKey++;
+      audit.layers[layerKey]=(audit.layers[layerKey]??0)+1;
+      const source=layerSources.get(layerKey)??{meshCount:0,sourceIds:new Set<string>(),layerNames:new Set<string>()};
+      source.meshCount++;
+      if(sourceIdentity)source.sourceIds.add(sourceIdentity);
+      if(layerName)source.layerNames.add(layerName);
+      layerSources.set(layerKey,source);
+    }
     audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
     x.userData={
       ...data,
       aurumRhino:{
         ...existing,
-        capa:layerName||existing.capa||(layerIndex>=0?`Capa ${layerIndex+1}`:undefined),
+        capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
         colorCapa:color||existing.colorCapa||undefined,
         categoria:category,
         layerIndex:resolvedLayerIndex,
@@ -210,11 +253,22 @@ function hydrateRhinoLayerMetadata(
         rhinoMaterialIndex:attrs.materialIndex??existing.rhinoMaterialIndex??null,
         visible:x.visible!==false,
         hiddenByRhino:x.visible===false,
+        metadataResolution:"resolved",
       },
     };
   });
+  for(const [layerKey,source] of layerSources){
+    if(source.sourceIds.size>1||source.layerNames.size>1){
+      audit.duplicateLayerKeys.push({
+        layerKey,
+        meshCount:source.meshCount,
+        sourceIds:Array.from(source.sourceIds),
+        layerNames:Array.from(source.layerNames),
+      });
+    }
+  }
   object.userData={...(object.userData??{}),aurumLayerMetadataAudit:{...audit,source:"GLB node extras + source layer table"}};
-  if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes){
+  if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes||audit.duplicateLayerKeys.length>0){
     console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
   }else{
     console.info("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
