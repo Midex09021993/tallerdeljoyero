@@ -413,20 +413,38 @@ export function AurumRender() {
             // Keep the focal diamond optically consistent while orbiting and
             // at rest. Other gems retain the existing LIVE performance path.
             if (enabled && m.userData?.aurumGemFamily === "Diamante") {
+              // The focal diamond must never inherit the generic LIVE throttle.
+              // Restore each optical property independently so a material that
+              // entered this path from an older/partial runtime state cannot
+              // remain capped at 0.35 transmission or lose its dispersion.
               const ud={...(m.userData??{})};
+              let restored=false;
               if (ud.aurumLiveClearcoatStored !== undefined) {
                 m.clearcoat=Number(ud.aurumLiveClearcoatStored);
-                m.clearcoatRoughness=Number(ud.aurumLiveClearcoatRoughnessStored??0);
-                m.dispersion=Number(ud.aurumLiveDispersionStored??m.dispersion??0);
-                m.iridescence=Number(ud.aurumLiveIridescenceStored??m.iridescence??0);
-                if (ud.aurumLiveTransmissionStored !== undefined) {
-                  m.transmission=Number(ud.aurumLiveTransmissionStored);
-                }
-                delete ud.aurumLiveTransmissionStored;
                 delete ud.aurumLiveClearcoatStored;
+                restored=true;
+              }
+              if (ud.aurumLiveClearcoatRoughnessStored !== undefined) {
+                m.clearcoatRoughness=Number(ud.aurumLiveClearcoatRoughnessStored);
                 delete ud.aurumLiveClearcoatRoughnessStored;
+                restored=true;
+              }
+              if (ud.aurumLiveDispersionStored !== undefined) {
+                m.dispersion=Number(ud.aurumLiveDispersionStored);
                 delete ud.aurumLiveDispersionStored;
+                restored=true;
+              }
+              if (ud.aurumLiveIridescenceStored !== undefined) {
+                m.iridescence=Number(ud.aurumLiveIridescenceStored);
                 delete ud.aurumLiveIridescenceStored;
+                restored=true;
+              }
+              if (ud.aurumLiveTransmissionStored !== undefined) {
+                m.transmission=Number(ud.aurumLiveTransmissionStored);
+                delete ud.aurumLiveTransmissionStored;
+                restored=true;
+              }
+              if (restored) {
                 m.userData=ud;
                 m.needsUpdate=true;
               }
