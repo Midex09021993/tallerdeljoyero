@@ -151,7 +151,7 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado });
+      const { data, error } = await supabase.rpc("obtener_catalogo_publico_v2", { _slug: slugNormalizado });
       if (error) throw error;
       return (data ?? []) as CatalogoRow[];
     },
