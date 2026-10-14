@@ -302,9 +302,15 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // surface outright made the diamond nearly opaque/black. Keep enough
         // PBR energy for readable crown facets and a restrained transmission path.
         vec3 ijInternal=mix(ijAccum,ijAccum*1.12,ijFresnel);
-        float ijInternalWeight=clamp(ijReflect*0.62,0.18,0.42);
+        // Raise the internal-ray contribution enough to reveal the pavilion
+        // pattern, but retain the physical surface and its crown highlights.
+        // The lower bound avoids a washed-out PBR-only look; the upper bound
+        // prevents a dark/flat HDR map from swallowing the diamond.
+        float ijInternalWeight=clamp(ijReflect*0.96,0.30,0.56);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
-        gl_FragColor.rgb*=mix(0.92,1.0,ijGeometry);\n        ` : ``}
+        // Keep geometry shading restrained: a strong normal-based multiplier
+        // was making broad crown facets look uniformly grey.
+        gl_FragColor.rgb*=mix(0.96,1.0,ijGeometry);\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
