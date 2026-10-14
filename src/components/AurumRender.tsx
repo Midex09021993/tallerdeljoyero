@@ -29,7 +29,7 @@ import { createAurumApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
-import { ChevronDown, Expand, Gem, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
+import { ChevronDown, Download, Expand, FileJson, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
@@ -109,6 +109,8 @@ export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
@@ -824,6 +826,48 @@ export function AurumRender() {
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
         calidad:aplicarCalidadRender,
+        exportGLB:async()=>{
+          if(!modelo) throw new Error("Carga un modelo antes de exportar.");
+          const exporter=new GLTFExporter();
+          const result=await new Promise<ArrayBuffer>((resolve,reject)=>{
+            exporter.parse(modelo,(output:any)=>{
+              if(output instanceof ArrayBuffer) resolve(output);
+              else reject(new Error("El exportador no generó un GLB binario."));
+            },(error:any)=>reject(error),{binary:true,onlyVisible:true,trs:false,animations:[]});
+          });
+          const blob=new Blob([result],{type:"model/gltf-binary"});
+          const url=URL.createObjectURL(blob);
+          const link=document.createElement("a");
+          link.href=url;
+          link.download=(nombreProyecto||"aurum-modelo").trim().replace(/[^a-z0-9-_]+/gi,"-")+".glb";
+          link.click();
+          URL.revokeObjectURL(url);
+        },
+        exportPNG:()=>{
+          const canvas=renderer.domElement;
+          if(!canvas) throw new Error("No se encontró el lienzo del render.");
+          const link=document.createElement("a");
+          link.download=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-")+".png";
+          link.href=canvas.toDataURL("image/png");
+          link.click();
+        },
+        exportSceneSettings:()=>{
+          const settings={
+            format:"AURUM_SCENE_SETTINGS",
+            schemaVersion:1,
+            exportedAt:new Date().toISOString(),
+            project:{name:nombreProyecto,category:categoriaProyecto,sourceFile:archivo??null},
+            configuration:{materialId,gemaId,sceneId:escenarioId,lightingId:iluminacionId,cameraView:vista,renderQuality:renderQualityId},
+            reference:{renderer:"Aurum Render",comparisonTarget:"iJewel/WebGi",note:"GLB contiene el modelo y materiales exportables; luces, HDRI y postprocesado se describen como configuración y pueden requerir reconstrucción en otro visor."},
+          };
+          const blob=new Blob([JSON.stringify(settings,null,2)],{type:"application/json"});
+          const url=URL.createObjectURL(blob);
+          const link=document.createElement("a");
+          link.href=url;
+          link.download=(nombreProyecto||"aurum-escena").trim().replace(/[^a-z0-9-_]+/gi,"-")+".vjson";
+          link.click();
+          URL.revokeObjectURL(url);
+        },
       });
       const limpiarResaltado = () => {
         if (!resaltado) return;
@@ -1159,11 +1203,21 @@ export function AurumRender() {
             </select>
             <ChevronDown className="pointer-events-none -ml-1 size-4 text-white/50"/>
           </label>
+          <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#d4af37]/35 bg-[#d4af37]/10 px-3 text-sm font-medium text-[#f0d58b] hover:bg-[#d4af37]/20"><Download className="size-4"/> Exportar</button>
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-white/65 lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-white/80"><span className="text-lg">♙</span></div>
         </div>
       </header>
 
+      {exportOpen&&<div className="absolute right-5 top-[82px] z-[80] w-[290px] rounded-2xl border border-white/10 bg-[#171a1e]/[.98] p-4 shadow-2xl backdrop-blur-xl">
+        <div className="mb-3 flex items-center justify-between"><div><div className="text-sm font-semibold text-white">Exportación AURUM</div><div className="mt-1 text-[10px] text-white/45">Descarga para comparar con iJewel</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-white/50 hover:bg-white/10"><X className="size-4"/></button></div>
+        <div className="space-y-2">
+          <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-3 rounded-xl bg-[#7168f4] px-3 py-3 text-left text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-white/70">Geometría y materiales exportables</span></span></button>
+          <button type="button" onClick={()=>{try{apiRef.current?.exportPNG();}catch(e){setError(e instanceof Error?e.message:"No se pudo capturar el render.");}}} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-left text-sm text-white hover:bg-white/[.08]"><ImageIcon className="size-5"/><span><span className="block">Snapshot .png</span><span className="block text-[10px] text-white/45">Captura del visor actual</span></span></button>
+          <button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-left text-sm text-white hover:bg-white/[.08]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-white/45">Escena, cámara, calidad y selección</span></span></button>
+        </div>
+        <p className="mt-3 text-[10px] leading-relaxed text-white/40">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
+      </div>}
       <div className="flex min-h-0 flex-1">
         <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
           <div className="h-full overflow-y-auto">
