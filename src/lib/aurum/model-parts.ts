@@ -1,3 +1,5 @@
+import { resolveAurumLayerKey } from "./layer-identity";
+
 export type AurumModelPart = {
   id: string;
   nombre: string;
@@ -9,6 +11,7 @@ export type AurumModelPart = {
   matrixSlot?: number;
   layerIndex?: number;
   layerId?: string | number;
+  layerKey?: string;
 };
 
 function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefined {
@@ -83,7 +86,8 @@ export function getAurumModelParts(
       ? Number(meta.matrixSlot)
       : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria) : undefined);
 
-    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
+    const layerKey=resolveAurumLayerKey({layerId,layerIndex,capa:undefined,layerName:capa,layerColor:colorCapa,category:categoria,existingKey:meta?.layerKey});
+    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, capa, colorCapa, categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
 
   return result;
