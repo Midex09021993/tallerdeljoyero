@@ -379,6 +379,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [redesSociales, setRedesSociales] = useState({ instagram: "", tiktok: "", youtube: "", facebook: "", pinterest: "" });
   const [descripcion, setDescripcion] = useState("");
   const [frasePortada, setFrasePortada] = useState("");
+  const [textoSuperiorPortada, setTextoSuperiorPortada] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
@@ -398,7 +399,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, telefono_contacto, email_contacto, direccion_contacto, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales, enlaces_carrusel").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, telefono_contacto, email_contacto, direccion_contacto, descripcion, logo_url, frase_portada, texto_superior_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales, enlaces_carrusel").eq("participante_id", participanteId).maybeSingle(),
       supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
@@ -409,6 +410,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setRedesSociales({ instagram: redes.instagram ?? "", tiktok: redes.tiktok ?? "", youtube: redes.youtube ?? "", facebook: redes.facebook ?? "", pinterest: redes.pinterest ?? "" });
       setDescripcion(configResult.data?.descripcion ?? "");
       setFrasePortada(configResult.data?.frase_portada ?? "");
+      setTextoSuperiorPortada(configResult.data?.texto_superior_portada ?? "");
       // The showroom may use its own logo, independent from the workshop identity.
       setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
@@ -543,6 +545,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         slug: slugNormalizado,
         descripcion: descripcion.trim() || null,
         frase_portada: frasePortada.trim() || null,
+        texto_superior_portada: textoSuperiorPortada.trim() || null,
         whatsapp: whatsapp.trim() || null,
         telefono_contacto: telefonoContacto.trim() || null,
         email_contacto: emailContacto.trim() || null,
@@ -628,6 +631,10 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
             </div>
           </details>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Texto superior de portada
+            <input maxLength={100} value={textoSuperiorPortada} onChange={e => setTextoSuperiorPortada(e.target.value)} placeholder="SHOWROOM · SIBERIANA JOYERÍA" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" />
+            <span className="text-[11px] font-normal text-muted-foreground">Texto pequeño sobre el título principal. Déjalo vacío para ocultarlo y evitar repetir el nombre de la joyería.</span>
+          </label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Frase principal de portada
             <input maxLength={120} value={frasePortada} onChange={e => setFrasePortada(e.target.value)} placeholder="Joyas hechas para quedarse." className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" />
             <span className="text-[11px] font-normal text-muted-foreground">Se muestra en la portada pública. Si lo dejas vacío, se usa la frase predeterminada.</span>
