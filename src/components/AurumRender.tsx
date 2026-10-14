@@ -851,6 +851,35 @@ export function AurumRender() {
             if(!target||target.width!==width||target.height!==height) throw new Error("La resolución interna de captura no coincide con la solicitada.");
             const pixels=new Uint8Array(width*height*4);
             renderer.readRenderTargetPixels(target,0,0,width,height,pixels);
+            // Some post pipelines can leave readBuffer allocated but never write
+            // to it. Detect a truly empty RGBA buffer and make one isolated
+            // direct-scene fallback rather than downloading a transparent black PNG.
+            const hasVisiblePixel = () => {
+              for(let i=3;i<pixels.length;i+=4) {
+                if(pixels[i]!==0) return true;
+              }
+              return false;
+            };
+            if(!hasVisiblePixel()) {
+              const previousTarget=renderer.getRenderTarget();
+              const fallbackTarget=new THREE.WebGLRenderTarget(width,height,{
+                format:THREE.RGBAFormat,
+                type:THREE.UnsignedByteType,
+                depthBuffer:true,
+                stencilBuffer:false,
+              });
+              try {
+                renderer.setRenderTarget(fallbackTarget);
+                renderer.setClearColor(0xffffff,1);
+                renderer.clear(true,true,true);
+                renderer.render(escena,camara);
+                renderer.readRenderTargetPixels(fallbackTarget,0,0,width,height,pixels);
+              } finally {
+                renderer.setRenderTarget(previousTarget);
+                fallbackTarget.dispose();
+              }
+              if(!hasVisiblePixel()) throw new Error("La captura fotográfica y la captura directa devolvieron píxeles transparentes. No se descargó una imagen negra; revisa el estado WebGL y vuelve a intentar.");
+            }
             const output=document.createElement("canvas");
             output.width=width;
             output.height=height;
