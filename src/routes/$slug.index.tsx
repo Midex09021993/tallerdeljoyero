@@ -30,7 +30,7 @@ type CatalogoRow = {
   email_contacto?: string | null;
   direccion_contacto?: string | null;
   redes_sociales?: { instagram?: string | null; tiktok?: string | null; youtube?: string | null; facebook?: string | null; pinterest?: string | null } | null;
-  enlaces_carrusel?: { imagen_url: string; enlace_url?: string | null; texto?: string | null; nueva_pestana?: boolean }[] | null;
+  enlaces_carrusel?: { imagen_url: string; url_imagen_externa?: string | null; enlace_url?: string | null; texto?: string | null; nueva_pestana?: boolean }[] | null;
   frase_portada: string | null;
   imagenes_portada: unknown;
   intervalo_portada_segundos: number | null;
@@ -176,7 +176,7 @@ function CatalogoPublicoPage() {
       const rawCarrusel = carruselResult.error ? null : carruselResult.data;
       const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
       const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
-      const carrusel = Array.isArray(carruselData.enlaces_carrusel) ? carruselData.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)).slice(0, 10) : [];
+      const carrusel = Array.isArray(carruselData.enlaces_carrusel) ? carruselData.enlaces_carrusel.filter((slide: any) => slide && ((typeof slide.url_imagen_externa === "string" && /^https?:\/\//i.test(slide.url_imagen_externa)) || (typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)))).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
       const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};
@@ -480,11 +480,11 @@ function CatalogoPublicoPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {config.enlaces_carrusel.map((slide, index) => {
-                const content = <><img src={slide.imagen_url} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
+                const imageUrl = slide.url_imagen_externa?.trim() || slide.imagen_url;\n                const content = <><img src={imageUrl} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
                 const visible = index >= indiceCarrusel && index < indiceCarrusel + 3;
                 if (!visible) return null;
                 const className = "group relative block aspect-[16/7] overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:aspect-[16/8]";
-                return slide.enlace_url?.trim() ? <a key={slide.imagen_url} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={slide.imagen_url} className={className}>{content}</div>;
+                return slide.enlace_url?.trim() ? <a key={imageUrl} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={slide.imagen_url} className={className}>{content}</div>;
               })}
             </div>
             {config.enlaces_carrusel.length > 1 ? <div className="mt-4 flex justify-center gap-1.5">{config.enlaces_carrusel.map((slide, index) => <button key={slide.imagen_url} type="button" onClick={() => setIndiceCarrusel(index)} aria-label={"Ir a la imagen " + (index + 1)} className={"h-1.5 rounded-full transition-all " + (index === indiceCarrusel ? "w-6 bg-[#8a6b36]" : "w-1.5 bg-[#b99b6b]/45")} />)}</div> : null}
