@@ -370,7 +370,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
     if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
-    if(preset.familia==="Diamante")activateAurumDiamondMaterial(next,preset);
+    if(preset.familia==="Diamante"){
+      // Applying a gem to a MatrixGold layer must use the same dedicated
+      // spectral shader as the initial diamond preview. Do this after the
+      // source-reference metadata is attached so activation cannot be lost.
+      activateAurumDiamondMaterial(next,preset);
+    }
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     const geometry=partTarget?.geometry;
     const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
