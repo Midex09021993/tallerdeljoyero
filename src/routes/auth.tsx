@@ -511,54 +511,94 @@ function LoginPage() {
 
               {seccionPlataforma === "planes" ? (
                 <>
-                  <section className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5 sm:p-6">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Planes comerciales Aurum Lab</p>
-                    <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Empieza con lo esencial. Crece cuando tu taller lo necesite.</h3>
-                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/60">Los planes organizan las funcionalidades previstas para cada etapa del negocio. Las herramientas públicas siguen disponibles gratuitamente. Los accesos definitivos y los límites de cada plan todavía están en definición y no se aplican automáticamente.</p>
+                  <section className="relative overflow-hidden rounded-[1.6rem] border border-gold/25 bg-[#151511] p-5 shadow-[0_18px_60px_rgba(0,0,0,.22)] sm:p-7">
+                    <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-gold/[0.10] blur-3xl" />
+                    <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="max-w-3xl">
+                        <p className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.24em] text-gold"><Sparkles className="size-3.5" /> Planes comerciales · Aurum Lab</p>
+                        <h3 className="mt-3 font-display text-3xl italic leading-tight text-white sm:text-4xl">Tu taller tiene una próxima versión.</h3>
+                        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/65">Empieza con herramientas útiles. Después conecta clientes, diseño, producción y equipo en un mismo ecosistema joyero.</p>
+                      </div>
+                      <div className="relative shrink-0 rounded-xl border border-white/10 bg-black/25 px-4 py-3">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/40">Una plataforma</p>
+                        <p className="mt-1 text-sm font-semibold text-white">Cuatro etapas de crecimiento</p>
+                      </div>
+                    </div>
+                    <div className="relative mt-6 grid grid-cols-4 gap-1.5 sm:gap-2">
+                      {[
+                        { n: "01", label: "Empezar" },
+                        { n: "02", label: "Organizar" },
+                        { n: "03", label: "Producir" },
+                        { n: "04", label: "Escalar" },
+                      ].map((etapa, i) => (
+                        <div key={etapa.n} className="min-w-0">
+                          <div className={"h-1 rounded-full " + (i === 0 ? "bg-gold" : "bg-white/15")} />
+                          <p className="mt-2 text-[8px] font-bold tracking-[0.12em] text-gold/70 sm:text-[9px]">{etapa.n}</p>
+                          <p className="mt-0.5 truncate text-[10px] font-semibold text-white/70 sm:text-xs">{etapa.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="relative mt-5 border-t border-white/[0.08] pt-3 text-[10px] leading-relaxed text-white/40">Las herramientas públicas siguen siendo gratuitas. Los precios, límites y accesos de los planes de pago están en definición y todavía no se aplican automáticamente.</p>
                   </section>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-5 grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {[
                       {
                         id: "emprendedor",
+                        numero: "01",
                         nombre: "Emprendedor",
+                        etiqueta: "EMPIEZA AQUÍ",
                         precio: "Gratis",
-                        enfoque: "Empieza con herramientas técnicas y control comercial básico.",
+                        enfoque: "Lo esencial para comenzar con criterio técnico y orden comercial.",
                         items: ["Herramientas públicas para joyeros", "Calculadoras de yeso/agua y aleación de oro", "Conversor de tallas", "Clientes, proyectos y cotizaciones", "Registro básico de pedidos"],
-                        destacado: true,
+                        estilo: "starter",
                       },
                       {
                         id: "taller",
+                        numero: "02",
                         nombre: "Taller",
+                        etiqueta: "PON ORDEN",
                         precio: "Precio por definir",
-                        enfoque: "Centraliza clientes, ventas y presentación de tus joyas.",
+                        enfoque: "Centraliza la relación con tus clientes y presenta tu trabajo.",
                         items: ["Todo lo esencial de Emprendedor", "Contratos y documentos comerciales", "Ventas y seguimiento de pedidos", "Catálogo digital con imágenes y vídeos", "Mi Nube para archivos del taller", "AURUM Transfer para compartir archivos"],
+                        estilo: "standard",
                       },
                       {
                         id: "profesional",
+                        numero: "03",
                         nombre: "Profesional",
+                        etiqueta: "CONECTA TODO",
                         precio: "Precio por definir",
-                        enfoque: "Conecta diseño, cálculo técnico y producción.",
+                        enfoque: "Une diseño, herramientas técnicas y operación productiva.",
                         items: ["Funciones del plan Taller", "Visualizador y peso 3D", "AURUM Render (beta) para materiales, gemas y escenas", "Órdenes de producción, trabajos y piezas", "Inventario, materiales y compras", "Procesos especializados: casting y corte láser"],
+                        estilo: "featured",
                       },
                       {
                         id: "empresarial",
+                        numero: "04",
                         nombre: "Empresarial",
+                        etiqueta: "CRECE EN EQUIPO",
                         precio: "Precio por definir",
-                        enfoque: "Coordina equipos, áreas y sedes desde una operación central.",
+                        enfoque: "Coordina personas, áreas y sedes con una visión común.",
                         items: ["Funciones del plan Profesional", "Gestión de usuarios, roles y permisos", "Organización por áreas y sedes", "Seguimiento de producción y control de calidad", "Analítica e informes de operación", "Administración centralizada multi-sede"],
+                        estilo: "standard",
                       },
                     ].map((plan) => (
-                      <article key={plan.id} className={"flex flex-col rounded-2xl border p-4 " + (plan.destacado ? "border-gold/40 bg-gold/[0.06]" : "border-white/10 bg-white/[0.025]")}>
+                      <article key={plan.id} className={"group relative flex min-w-0 flex-col overflow-hidden rounded-[1.35rem] border p-4 transition duration-300 hover:-translate-y-1 sm:p-5 " + (plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-gold/30 bg-gradient-to-b from-[#242117] to-[#171815] hover:border-gold/55" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
+                        <div aria-hidden="true" className={"absolute inset-x-0 top-0 h-px " + (plan.estilo === "featured" || plan.estilo === "starter" ? "bg-gradient-to-r from-transparent via-gold to-transparent" : "bg-gradient-to-r from-transparent via-white/20 to-transparent")} />
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="text-base font-semibold text-white">{plan.nombre}</h4>
-                          {plan.destacado ? <span className="rounded-full border border-gold/30 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-gold">Inicial</span> : null}
+                          <span className={"font-display text-3xl italic leading-none " + (plan.estilo === "featured" || plan.estilo === "starter" ? "text-gold/75" : "text-white/20")}>{plan.numero}</span>
+                          <span className={"rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-[0.12em] " + (plan.estilo === "featured" ? "border-gold/40 bg-gold/10 text-gold" : plan.estilo === "starter" ? "border-gold/25 text-gold/80" : "border-white/10 text-white/45")}>{plan.etiqueta}</span>
                         </div>
-                        <p className="mt-2 text-sm font-semibold text-gold">{plan.precio}</p>
-                        <p className="mt-2 min-h-10 text-[11px] leading-relaxed text-white/50">{plan.enfoque}</p>
-                        <ul className="mt-4 flex-1 space-y-2">
-                          {plan.items.map((item) => <li key={item} className="flex gap-2 text-[11px] leading-relaxed text-white/70"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-gold/80" /><span>{item}</span></li>)}
+                        <h4 className="mt-4 text-lg font-semibold tracking-tight text-white">{plan.nombre}</h4>
+                        <p className={"mt-2 text-sm font-bold " + (plan.precio === "Gratis" ? "text-emerald-300" : "text-gold")}>{plan.precio}</p>
+                        <p className="mt-2 min-h-[3.2rem] text-[11px] leading-relaxed text-white/55">{plan.enfoque}</p>
+                        <div className="my-4 h-px bg-white/[0.08]" />
+                        <p className="mb-3 text-[8px] font-bold uppercase tracking-[0.18em] text-white/35">Qué reúne esta etapa</p>
+                        <ul className="flex-1 space-y-2.5">
+                          {plan.items.map((item) => <li key={item} className="flex gap-2 text-[11px] leading-relaxed text-white/75"><ShieldCheck className={"mt-0.5 size-3.5 shrink-0 " + (plan.estilo === "featured" || plan.estilo === "starter" ? "text-gold" : "text-gold/65")} /><span>{item}</span></li>)}
                         </ul>
+                        <div className={"mt-5 rounded-lg px-3 py-2 text-[9px] font-semibold leading-relaxed " + (plan.estilo === "featured" ? "bg-gold/10 text-gold/90" : "bg-white/[0.035] text-white/40")}>{plan.id === "emprendedor" ? "Empieza sin coste con las herramientas públicas." : plan.id === "taller" ? "Para ordenar la gestión del día a día." : plan.id === "profesional" ? "Para conectar el diseño con la fabricación." : "Para operaciones con varios equipos o sedes."}</div>
                       </article>
                     ))}
                   </div>
