@@ -1262,20 +1262,19 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Keep the same LIVE material/shader profile after motion; only raise
-            // raster resolution once the camera settles. This avoids a visual
-            // handoff to different transmission, dispersion and gem-shader settings.
+            // Keep interaction lightweight, then converge to the photographic
+            // preview when the camera settles. This is important for the focal
+            // diamond: the idle frame must restore authored transmission,
+            // dispersion, clearcoat, shadows and the configured composer passes.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            // The interactive preview stays on the fast path even after
-            // OrbitControls settles. Full photographic materials, shadows and
-            // post-processing are activated only inside exportPNG/capture.
-            liveFastPathRef.current = true;
+            liveFastPathRef.current = false;
             aplicarPerfilLive();
-            renderer.shadowMap.enabled = false;
-            renderer.shadowMap.needsUpdate = false;
+            renderer.shadowMap.enabled = renderQuality.shadows;
+            renderer.shadowMap.needsUpdate = true;
+            applyPostQuality?.({...renderQuality, qualityId:renderQualityId});
             invalidateRenderRef.current?.();
           },
         }
