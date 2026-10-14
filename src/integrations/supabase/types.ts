@@ -4003,6 +4003,14 @@ export type Database = {
           whatsapp: string | null
         }[]
       }
+      obtener_configuracion_portada_publica: {
+        Args: { _slug: string }
+        Returns: {
+          frase_portada: string | null
+          imagenes_portada: Json
+          intervalo_portada_segundos: number
+        }[]
+      }
       obtener_catalogo_publico: {
         Args: { _slug: string }
         Returns: {
