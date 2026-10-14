@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { getAurumModelParts } from "./model-parts";
+import { resolveAurumLayerKey } from "./layer-identity";
 
 function isRhinoObjectHidden(attributes:any): boolean {
   if (!attributes) return false;
@@ -178,7 +179,13 @@ function hydrateRhinoLayerMetadata(
     if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
     const color=colorToHex(layer?.color??layer?.Color??data.rhinoLayer?.color??data.RhinoLayer?.color??
       attrs.layerColor??attrs.LayerColor??existing.colorCapa);
-    const category=classifyRhinoLayer(layerName,color,clasificarCapa);
+    const hasResolvedLayer=Boolean(layerName||color);
+    const category=hasResolvedLayer
+      ? classifyRhinoLayer(layerName,color,clasificarCapa)
+      : (existing.categoria??classifyRhinoLayer(String(existing.capa??""),existing.colorCapa,clasificarCapa));
+    const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
+    const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
+    const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
     const matrixSlot=matrixSlotFromLayer(layerName,category)??existing.matrixSlot;
     const hasAnyLayerEvidence=!!layerName||!!color||layerIndex>=0||layerId!=null||!!existing.capa;
     if(!hasAnyLayerEvidence)return;
@@ -190,9 +197,10 @@ function hydrateRhinoLayerMetadata(
         capa:layerName||existing.capa||(layerIndex>=0?`Capa ${layerIndex+1}`:undefined),
         colorCapa:color||existing.colorCapa||undefined,
         categoria:category,
-        layerIndex:layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1),
+        layerIndex:resolvedLayerIndex,
+        layerKey,
         matrixSlot,
-        rhinoLayerId:layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null,
+        rhinoLayerId:resolvedLayerId,
         rhinoMaterialIndex:attrs.materialIndex??existing.rhinoMaterialIndex??null,
         visible:x.visible!==false,
         hiddenByRhino:x.visible===false,
