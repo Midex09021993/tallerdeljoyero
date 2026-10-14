@@ -252,44 +252,45 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
 
   const selectedMeta=selectionMeta(target);
   const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||target.userData?.attributes?.LayerName||"").trim();
+  const selectedLayerNormalized=selectedLayer.toLocaleLowerCase();
   const selectedLayerIndex=selectionLayerIndex(target);
   const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
   const selectedLayerColor=String(selectedMeta.colorCapa??target.userData?.attributes?.layerColor??target.userData?.attributes?.LayerColor??"").trim().toLowerCase();
-  // Never trust a cached layerKey over the raw source identity for matching:
-  // stale/shared keys can make separate Gem 01–04 layers receive the same stone.
-  const hasStableLayerIdentity=selectedLayerId!=null&&String(selectedLayerId).trim()!==""
-    ||selectedLayerIndex!=null
-    ||selectedLayer!=="";
-  const assignmentKey=selectedLayerId!=null&&String(selectedLayerId).trim()!==""
-    ? "rhino-id:"+String(selectedLayerId).trim()
+
+  // MatrixGold's Gem 01–04 names are the user-visible source of truth.
+  // Some 3DM/GLB metadata paths can carry a stale/shared Rhino ID, so exact
+  // layer name must win whenever present; do not let a shared ID merge layers.
+  const hasStableLayerIdentity=Boolean(selectedLayerNormalized||selectedLayerIndex!=null||(selectedLayerId!=null&&String(selectedLayerId).trim()!==""));
+  const assignmentKey=selectedLayerNormalized
+    ? "rhino-layer:"+encodeURIComponent(selectedLayerNormalized)
     : selectedLayerIndex!=null
       ? "rhino-index:"+selectedLayerIndex
-      : selectedLayer
-        ? "rhino-layer:"+encodeURIComponent(selectedLayer.toLocaleLowerCase())+"|color:"+(selectedLayerColor||"unknown")
+      : selectedLayerId!=null&&String(selectedLayerId).trim()!==""
+        ? "rhino-id:"+String(selectedLayerId).trim()
         : "mesh:"+target.uuid;
   const targets:any[]=[];
   const allGemMeshes:any[]=[];
   const sameSourceLayer=(part:any):boolean=>{
     if(!part?.isMesh)return false;
     const meta=selectionMeta(part);
-    const partLayerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
-    const partLayerIndex=selectionLayerIndex(part);
     const partLayer=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim();
+    const partLayerNormalized=partLayer.toLocaleLowerCase();
+    const partLayerIndex=selectionLayerIndex(part);
+    const partLayerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
     const partColor=String(meta.colorCapa??part.userData?.attributes?.layerColor??part.userData?.attributes?.LayerColor??"").trim().toLowerCase();
-    // Prefer one authoritative identity dimension, never OR unrelated identities.
-    if(selectedLayerId!=null&&String(selectedLayerId).trim()!=="")return partLayerId!=null&&String(partLayerId).trim()===String(selectedLayerId).trim();
+
+    // Never fall through to ID/index matching if a source layer name exists:
+    // a mismatched/missing name is safer as a non-match than recoloring other layers.
+    if(selectedLayerNormalized)return partLayerNormalized===selectedLayerNormalized;
     if(selectedLayerIndex!=null)return partLayerIndex===selectedLayerIndex;
-    if(selectedLayer){
-      const sameName=partLayer.toLocaleLowerCase()===selectedLayer.toLocaleLowerCase();
-      return sameName&&(!selectedLayerColor||!partColor||partColor===selectedLayerColor);
-    }
+    if(selectedLayerId!=null&&String(selectedLayerId).trim()!=="")return partLayerId!=null&&String(partLayerId).trim()===String(selectedLayerId).trim();
     return part.uuid===target.uuid;
   };
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const category=selectionCategory(x);
     if(category==="gema")allGemMeshes.push(x);
-    if(sameSourceLayer(x)&&category==="gema")targets.push(x);
+    if(category==="gema"&&sameSourceLayer(x))targets.push(x);
   });
   if(!targets.length){
     console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
