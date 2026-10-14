@@ -306,12 +306,14 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
       // Use the physical surface normal and view direction already present
         // in the PBR pipeline. No synthetic RGB sparkle or emissive overlay.
         vec3 aurumN=normalize(normal);
+        // vViewPosition points from the surface toward the camera. A reflected
+        // viewing ray must therefore start in the opposite direction.
         vec3 aurumV=normalize(vViewPosition);
-        vec3 aurumR=normalize(reflect(aurumV,aurumN));
+        vec3 aurumR=normalize(reflect(-aurumV,aurumN));
 
-        // A facet becomes a scintillation candidate only when its reflected
-        // direction approaches the viewer. This creates moving light/dark
-        // contrast as the jewel or camera moves.
+        // Compare the reflected incident ray against the surface-to-camera
+        // direction. Using reflect(+V,N) here reverses the ray and suppresses
+        // the facet response on crown faces that look toward the camera.
         float aurumFacing=max(dot(aurumR,aurumV),0.0);
         float aurumFlash=smoothstep(0.985,0.9995,aurumFacing)*aurumScintillationStrength;
 
