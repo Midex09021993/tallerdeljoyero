@@ -386,6 +386,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [intervaloPortada, setIntervaloPortada] = useState(5);
   const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
   const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
+  const [progresoCarrusel, setProgresoCarrusel] = useState("");
   const [urlNuevaImagenCarrusel, setUrlNuevaImagenCarrusel] = useState("");
   const [subiendoImagenes, setSubiendoImagenes] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -466,10 +467,11 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     event.target.value = "";
     if (!files.length) return;
     if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 elementos entre imágenes y videos."); return; }
-    setSubiendoCarrusel(true); setError(null);
+    setSubiendoCarrusel(true); setProgresoCarrusel(`Preparando ${files.length} archivo${files.length === 1 ? "" : "s"}…`); setError(null);
     try {
       const nuevas: { imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean; tipo_media: "imagen" | "video" }[] = [];
-      for (const file of files) {
+      for (const [indice, file] of files.entries()) {
+        setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name}`);
         const esVideo = file.type.startsWith("video/");
         if (!file.type.startsWith("image/") && !esVideo) throw new Error("Selecciona imágenes o videos compatibles.");
         if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen o video debe pesar como máximo 8 MB.");
@@ -482,7 +484,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         nuevas.push({ imagen_url: data.publicUrl, url_imagen_externa: "", enlace_url: "", texto: "", nueva_pestana: true, tipo_media: esVideo ? "video" : "imagen" });
       }
       setEnlacesCarrusel(actual => [...actual, ...nuevas].slice(0, 10));
-    } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir los archivos del carrusel."); }
+      setProgresoCarrusel(`${nuevas.length} archivo${nuevas.length === 1 ? "" : "s"} cargado${nuevas.length === 1 ? "" : "s"} correctamente.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir los archivos del carrusel."); setProgresoCarrusel(""); }
     finally { setSubiendoCarrusel(false); }
   }
   async function subirLogoShowroom(event: any) {
@@ -596,10 +599,14 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
               <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[#e7dcc8] bg-[#fffdf8] text-[#8b7755] transition-all group-open:rotate-180 group-open:border-[#c5a66c] group-open:bg-[#f8f0e1]" aria-hidden="true">⌄</span>
             </summary>
             <div className="grid gap-4 border-t border-[#eee7dc] bg-[#fdfbf7] p-4 sm:p-5">
-              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
-                <ImageIcon className="size-4" /> {subiendoCarrusel ? "Subiendo archivos…" : "Añadir imágenes o videos"}
+              <label className={`inline-flex w-fit items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${subiendoCarrusel ? "cursor-wait border-[#c5a66c] bg-[#fbf3e3] text-[#86652e]" : "cursor-pointer border-border hover:border-[#c5a66c] hover:bg-[#fbf7ef]"}`}>
+                {subiendoCarrusel ? <span className="size-4 animate-spin rounded-full border-2 border-[#c5a66c]/30 border-t-[#9a773d]" aria-hidden="true" /> : <ImageIcon className="size-4" />} {subiendoCarrusel ? "Subiendo archivos…" : "Añadir imágenes o videos"}
                 <input type="file" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
               </label>
+              {progresoCarrusel ? <div role="status" aria-live="polite" className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-xs ${subiendoCarrusel ? "border-[#e8d8b8] bg-[#fff9ed] text-[#72572d]" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+                {subiendoCarrusel ? <span className="size-2 shrink-0 animate-pulse rounded-full bg-[#b9975b]" /> : <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold">✓</span>}
+                <span className="min-w-0 break-words">{progresoCarrusel}</span>
+              </div> : null}
               <p className="text-xs text-muted-foreground">Hasta 10 elementos en total, máximo 8 MB por archivo. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
               <div className="grid gap-2 rounded-xl bg-background p-3">
                 <p className="text-xs font-semibold">O pega una URL directa de imagen o video</p>
