@@ -22,11 +22,13 @@ export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
   clearcoatRoughness: 0.01,
 });
 
-export function activateAurumDiamondMaterial<T = any>(material: T): T {
+export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Record<string, any>): T {
   if (!material) return material;
   const target = material as any;
   const existing = target.userData ?? {};
   const supplied = existing.aurumIJEWELParameters ?? {};
+  const variant = String(preset?.id ?? preset?.variante ?? "diamante");
+  const hasInclusions = Boolean(preset?.inclusions ?? preset?.inclusionDensity);
   target.userData = {
     ...existing,
     aurumIJEWELParameters: {
@@ -42,8 +44,16 @@ export function activateAurumDiamondMaterial<T = any>(material: T): T {
       version: AURUM_DIAMOND_MATERIAL_VERSION,
       status: "dedicated-shader-approximation",
       realGeometricMultiBounce: false,
+      presetId: variant,
+      variant: String(preset?.variante ?? "Natural"),
+      inclusions: hasInclusions,
+      roughness: Number(preset?.roughness ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.roughness),
+      dispersion: Number(preset?.dispersion ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.dispersion),
+      environmentIntensity: Number(preset?.envMapIntensity ?? 1.3),
+      attenuationDistance: Number(preset?.attenuationDistance ?? 100),
     },
     aurumDiamondShaderMode: "aurum-native-facet-environment-v1",
+    aurumDiamondPresetId: variant,
   };
   target.needsUpdate = true;
   return material;
