@@ -297,10 +297,14 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijFacet=clamp(.5+.5*dot(ijNormal,ijView),0.0,1.0);
         float ijGeometry=mix(1.0,ijFacet,clamp(aurumIJEWELGeometryFactor,0.0,1.0));
         float ijReflect=clamp(aurumIJEWELReflectivity,0.0,1.0);
-        // Preserve the PBR base and blend only a restrained internal-light term.
-        // transmissionParameter remains in iJewel's own semantic space.
+        // Dedicated diamond mode: transmission is disabled on the material, so
+        // the environment-ray result must drive the pixel instead of being diluted
+        // by the generic screen-space transmission color. Keep a small Fresnel
+        // contribution from the PBR surface to retain readable crown reflections.
         vec3 ijInternal=mix(ijAccum,ijAccum*1.12,ijFresnel);
-        gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*(1.0-ijReflect)+ijInternal*ijReflect,ijGeometry);\n        ` : ``}
+        float ijSurfaceWeight=clamp((1.0-ijReflect)*0.12,0.0,0.12);
+        gl_FragColor.rgb=mix(ijInternal,gl_FragColor.rgb,ijSurfaceWeight);
+        gl_FragColor.rgb*=ijGeometry;\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
