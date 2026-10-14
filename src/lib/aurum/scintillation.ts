@@ -291,6 +291,24 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
         ijDepth=exp(-max(aurumIJEWELAbsorptionFactor,0.001)*.18);
         ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*(.42*ijDepth);
+
+        // Optional third environment sample: approximate a second pavilion
+        // interaction without claiming geometric multi-bounce ray tracing.
+        // Gate it with the source-authored bounce setting and keep its energy
+        // restrained so this refinement cannot overwhelm the visible PBR facets.
+        if(aurumIJEWELRayBounces>=3.0){
+          ijDirR=reflect(ijDirR,ijNormal);
+          ijDirG=reflect(ijDirG,ijNormal);
+          ijDirB=reflect(ijDirB,ijNormal);
+          ijWorldR=inverseTransformDirection(normalize(ijDirR),viewMatrix);
+          ijWorldG=inverseTransformDirection(normalize(ijDirG),viewMatrix);
+          ijWorldB=inverseTransformDirection(normalize(ijDirB),viewMatrix);
+          ijEnvR=textureCubeUV(envMap,envMapRotation*ijWorldR,0.0).rgb;
+          ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
+          ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
+          float ijThirdBounceWeight=0.12*ijDepth;
+          ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijThirdBounceWeight;
+        }
         ijAccum*=aurumIJEWELBoostFactors;
         ijAccum=pow(max(ijAccum,vec3(0.0)),vec3(max(aurumIJEWELGammaFactor,.01)));
         float ijCosTheta=clamp(abs(dot(ijNormal,ijView)),0.0,1.0);
