@@ -969,13 +969,13 @@ export function AurumRender() {
 
         // Diagnostic snapshot of the selected mesh and all gem-layer identities.
         const sourceAttrs = obj.userData?.attributes ?? {};
-        const sourceLayerId = meta.rhinoLayerId ?? sourceAttrs.layerId ?? sourceAttrs.LayerId ?? null;
-        const sourceLayerIndex = Number.isInteger(Number(meta.layerIndex)) && Number(meta.layerIndex) >= 0
-          ? Number(meta.layerIndex)
-          : Number.isInteger(Number(sourceAttrs.layerIndex)) && Number(sourceAttrs.layerIndex) >= 0
-            ? Number(sourceAttrs.layerIndex) : null;
+        const preservedSource = obj.userData?.aurumRhinoSource ?? {};
+        const sourceLayerId = preservedSource.layerId ?? sourceAttrs.layerId ?? sourceAttrs.LayerId ?? meta.rhinoLayerId ?? null;
+        const sourceLayerIndexRaw = preservedSource.layerIndex ?? sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? obj.userData?.layerIndex ?? obj.userData?.LayerIndex ?? meta.layerIndex;
+        const sourceLayerIndex = sourceLayerIndexRaw !== null && sourceLayerIndexRaw !== undefined && sourceLayerIndexRaw !== "" && Number.isInteger(Number(sourceLayerIndexRaw)) && Number(sourceLayerIndexRaw) >= 0
+          ? Number(sourceLayerIndexRaw) : null;
         const sourceLayerKey = String(meta.layerKey ?? "");
-        const sourceLayerName = String(capa ?? sourceAttrs.layerName ?? sourceAttrs.LayerName ?? "").trim();
+        const sourceLayerName = String(preservedSource.layerName ?? sourceAttrs.layerName ?? sourceAttrs.LayerName ?? capa ?? "").trim();
         const diagnosticMeshes:any[] = [];
         modelo?.traverse((mesh:any) => {
           if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
@@ -1035,7 +1035,20 @@ export function AurumRender() {
             layerColor: meta.colorCapa ?? sourceAttrs.layerColor ?? sourceAttrs.LayerColor ?? null,
             layerId: sourceLayerId == null ? null : String(sourceLayerId), layerIndex: sourceLayerIndex,
             layerKey: meta.layerKey ?? null, matrixSlot: meta.matrixSlot ?? null,
-            metadataResolution: meta.metadataResolution ?? null, visible: obj.visible !== false,
+            metadataResolution: meta.metadataResolution ?? null,
+            preservedSource: {
+              layerIndex: preservedSource.layerIndex ?? null,
+              layerName: preservedSource.layerName ?? null,
+              layerId: preservedSource.layerId ?? null,
+              layerColor: preservedSource.layerColor ?? null,
+              rawLayerIndex: preservedSource.rawLayerIndex ?? null,
+              rawLayerName: preservedSource.rawLayerName ?? null,
+              rawLayerId: preservedSource.rawLayerId ?? null,
+              materialIndex: preservedSource.materialIndex ?? null,
+              objectId: preservedSource.objectId ?? null,
+            },
+            resolvedLayer: { layerIndex: meta.layerIndex ?? null, layerName: meta.capa ?? null, layerId: meta.rhinoLayerId ?? null, layerKey: meta.layerKey ?? null },
+            visible: obj.visible !== false,
             objectType: obj.type ?? null,
             geometry: {
               vertices: obj.geometry?.attributes?.position?.count ?? null,
@@ -1544,7 +1557,14 @@ export function AurumRender() {
               <div className="mt-2 rounded-lg border border-white/10 p-2">
                 <div className="mb-1 font-semibold text-[#d4af37]">Identidad de capa (dato clave)</div>
                 <div className="break-all"><span className="text-white/45">layerKey:</span> {String(diagnosticoSeleccion.selected.layerKey??"NO DISPONIBLE")}</div>
-                <div className="break-all"><span className="text-white/45">layerId:</span> {String(diagnosticoSeleccion.selected.layerId??"NO DISPONIBLE")} <span className="text-white/45">· layerIndex:</span> {String(diagnosticoSeleccion.selected.layerIndex??"NO DISPONIBLE")}</div>
+                <div className="break-all"><span className="text-white/45">ID capa origen:</span> {String(diagnosticoSeleccion.selected.layerId??"NO DISPONIBLE")} <span className="text-white/45">· índice origen:</span> {String(diagnosticoSeleccion.selected.layerIndex??"NO DISPONIBLE")}</div>
+                <div className="mt-1 rounded bg-white/[.04] p-1.5">
+                  <div className="font-semibold text-white/80">Origen conservado antes del GLB</div>
+                  <div className="break-all">Nombre: {String(diagnosticoSeleccion.selected.preservedSource?.layerName??"NO CAPTURADO")} · índice: {String(diagnosticoSeleccion.selected.preservedSource?.layerIndex??"NO CAPTURADO")}</div>
+                  <div className="break-all">ID: {String(diagnosticoSeleccion.selected.preservedSource?.layerId??"NO CAPTURADO")}</div>
+                  <div className="break-all">Atributos brutos: índice {String(diagnosticoSeleccion.selected.preservedSource?.rawLayerIndex??"—")} · nombre {String(diagnosticoSeleccion.selected.preservedSource?.rawLayerName??"—")} · ID {String(diagnosticoSeleccion.selected.preservedSource?.rawLayerId??"—")}</div>
+                </div>
+                <div className="mt-1 break-all text-white/45">Resolución final: {JSON.stringify(diagnosticoSeleccion.selected.resolvedLayer??{})}</div>
                 <div><span className="text-white/45">Color capa:</span> {String(diagnosticoSeleccion.selected.layerColor??"NO DISPONIBLE")} <span className="text-white/45">· Slot MatrixGold:</span> {String(diagnosticoSeleccion.selected.matrixSlot??"NO DISPONIBLE")}</div>
                 <div><span className="text-white/45">Resolución metadatos:</span> {String(diagnosticoSeleccion.selected.metadataResolution??"NO INDICADA")}</div>
                 <div><span className="text-white/45">Tipo de objeto:</span> {String(diagnosticoSeleccion.selected.objectType)} <span className="text-white/45">· Visible:</span> {String(diagnosticoSeleccion.selected.visible)}</div>
