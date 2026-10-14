@@ -1099,6 +1099,8 @@ export function AurumRender() {
           })),
           sourceRootUserDataKeys: Object.keys(modelo?.userData ?? {}),
           metadataAudit: modelo?.userData?.aurumLayerMetadataAudit ?? null,
+          instanceLayerHydration: modelo?.userData?.aurumInstanceLayerHydration ?? null,
+          selectedInstanceSource: obj.userData?.aurumRhinoInstanceSource ?? null,
           existingAssignment: relatedAssignment,
         });
         // MatrixGold drives the library: green/metal layers open Materials,
@@ -1610,9 +1612,9 @@ export function AurumRender() {
                 <summary className="cursor-pointer font-semibold text-[#d4af37]">Tabla completa de capas leída del archivo ({diagnosticoSeleccion.sourceLayerTable.length})</summary>
                 <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.sourceLayerTable,null,2)}</pre>
               </details>
-              <details className="mt-2 rounded-lg border border-white/10 p-2">
-                <summary className="cursor-pointer font-semibold text-[#d4af37]">Claves del objeto raíz / auditoría GLB</summary>
-                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify({rootUserDataKeys:diagnosticoSeleccion.sourceRootUserDataKeys,metadataAudit:diagnosticoSeleccion.metadataAudit},null,2)}</pre>
+              <details className="mt-2 rounded-lg border border-white/10 p-2" open>
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Diagnóstico de instancias Rhino / capas heredadas</summary>
+                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify({instanceLayerHydration:diagnosticoSeleccion.instanceLayerHydration,selectedInstanceSource:diagnosticoSeleccion.selectedInstanceSource,rootUserDataKeys:diagnosticoSeleccion.sourceRootUserDataKeys,metadataAudit:diagnosticoSeleccion.metadataAudit},null,2)}</pre>
               </details>
               <details className="mt-2 rounded-lg border border-white/10 p-2">
                 <summary className="cursor-pointer font-semibold text-[#d4af37]">Última asignación de gema</summary>
