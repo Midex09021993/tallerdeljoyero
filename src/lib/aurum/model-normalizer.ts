@@ -96,11 +96,12 @@ function buildRhinoLayerVisibility(layers:any[]) {
 
 function resolveRhinoLayerIndex(x:any): number {
   const candidates = [
-    x?.userData?.aurumRhino?.layerIndex,
+    x?.userData?.aurumRhinoSource?.layerIndex,
     x?.userData?.attributes?.layerIndex,
     x?.userData?.attributes?.LayerIndex,
     x?.userData?.layerIndex,
     x?.userData?.LayerIndex,
+    x?.userData?.aurumRhino?.layerIndex,
   ];
   for (const value of candidates) {
     if (value === null || value === undefined || value === "") continue;
@@ -152,7 +153,9 @@ function hydrateRhinoLayerMetadata(
   clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
 ) {
   const rootData=object?.userData??{};
-  const layers=Array.isArray(rootData.layers)?rootData.layers:
+  const sourceLayerManifest=Array.isArray(rootData.aurumRhinoSourceLayers)?rootData.aurumRhinoSourceLayers:[];
+  const layers=sourceLayerManifest.length?sourceLayerManifest:
+    Array.isArray(rootData.layers)?rootData.layers:
     Array.isArray(rootData.rhinoLayers)?rootData.rhinoLayers:[];
   const byId=new Map<string,any>();
   const byName=new Map<string,any>();
@@ -182,15 +185,16 @@ function hydrateRhinoLayerMetadata(
     const attrs=data.attributes??{};
     const existing=data.aurumRhino??{};
     const layerIndex=resolveRhinoLayerIndex(x);
-    const layerId=attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
+    const source=data.aurumRhinoSource??{};
+    const layerId=source.layerId??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
     let layer=layerIndex>=0?layers[layerIndex]:undefined;
     if(!layer&&layerId!=null)layer=byId.get(String(layerId));
-    const rawName=layer?.name??layer?.Name??data.rhinoLayer?.name??data.rhinoLayer?.Name??
+    const rawName=layer?.name??layer?.Name??source.layerName??data.rhinoLayer?.name??data.rhinoLayer?.Name??
       data.RhinoLayer?.name??data.RhinoLayer?.Name??attrs.layerName??attrs.LayerName??
       data.layerName??data.LayerName??existing.capa??"";
     const layerName=String(rawName??"").trim();
     if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
-    const color=colorToHex(layer?.color??layer?.Color??data.rhinoLayer?.color??data.RhinoLayer?.color??
+    const color=colorToHex(layer?.color??layer?.Color??source.layerColor??data.rhinoLayer?.color??data.RhinoLayer?.color??
       attrs.layerColor??attrs.LayerColor??existing.colorCapa);
     const hasResolvedLayer=Boolean(layerName||color);
     const category=hasResolvedLayer
