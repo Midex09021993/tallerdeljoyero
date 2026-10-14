@@ -140,6 +140,8 @@ export function AurumRender() {
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
+  const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
+  exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
 
   // Estado central del configurador: una única fuente de verdad.
   const {
@@ -852,12 +854,13 @@ export function AurumRender() {
           link.click();
         },
         exportSceneSettings:()=>{
+          const current=exportSettingsRef.current;
           const settings={
             format:"AURUM_SCENE_SETTINGS",
             schemaVersion:1,
             exportedAt:new Date().toISOString(),
-            project:{name:nombreProyecto,category:categoriaProyecto,sourceFile:archivo??null},
-            configuration:{materialId,gemaId,sceneId:escenarioId,lightingId:iluminacionId,cameraView:vista,renderQuality:renderQualityId},
+            project:{name:current.nombreProyecto,category:current.categoriaProyecto,sourceFile:current.archivo??null},
+            configuration:{materialId:current.materialId,gemaId:current.gemaId,sceneId:current.escenarioId,lightingId:current.iluminacionId,cameraView:current.vista,renderQuality:current.renderQualityId},
             reference:{renderer:"Aurum Render",comparisonTarget:"iJewel/WebGi",note:"GLB contiene el modelo y materiales exportables; luces, HDRI y postprocesado se describen como configuración y pueden requerir reconstrucción en otro visor."},
           };
           const blob=new Blob([JSON.stringify(settings,null,2)],{type:"application/json"});
