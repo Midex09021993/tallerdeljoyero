@@ -360,7 +360,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
         float aurumFacetFloor=${family === "Diamante" ? "0.78" : "0.992"};
-        float aurumContrast=mix(1.0,aurumFacetFloor,aurumScintillationContrast*aurumFacetContrast);
+        float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
         if(aurumPhenomenonStrength>0.0){
