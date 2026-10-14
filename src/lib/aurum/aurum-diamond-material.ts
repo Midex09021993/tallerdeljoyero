@@ -1,5 +1,3 @@
-import type { MeshPhysicalMaterial } from "three";
-
 /**
  * AURUM's dedicated diamond-material entry point.
  *
@@ -24,11 +22,12 @@ export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
   clearcoatRoughness: 0.01,
 });
 
-export function activateAurumDiamondMaterial<T extends MeshPhysicalMaterial | any>(material: T): T {
+export function activateAurumDiamondMaterial<T = any>(material: T): T {
   if (!material) return material;
-  const existing = material.userData ?? {};
+  const target = material as any;
+  const existing = target.userData ?? {};
   const supplied = existing.aurumIJEWELParameters ?? {};
-  material.userData = {
+  target.userData = {
     ...existing,
     aurumIJEWELParameters: {
       ...AURUM_DIAMOND_MATERIAL_DEFAULTS,
@@ -46,6 +45,6 @@ export function activateAurumDiamondMaterial<T extends MeshPhysicalMaterial | an
     },
     aurumDiamondShaderMode: "aurum-native-facet-environment-v1",
   };
-  material.needsUpdate = true;
+  target.needsUpdate = true;
   return material;
 }
