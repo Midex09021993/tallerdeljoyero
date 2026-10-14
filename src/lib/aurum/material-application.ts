@@ -355,7 +355,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // Rebuild from the immutable imported material captured before the
     // initial preview; never inherit the prior gemstone's optical state.
     const stableSourceMaterials=getAurumSourceMaterials(part);
-    part.material=Array.isArray(part.material)
+    part.material=Array.isArray(stableSourceMaterials)
       ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
     const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
