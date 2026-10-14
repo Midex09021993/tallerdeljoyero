@@ -379,7 +379,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // while preserving the RGB ratios that carry the subtle spectral fire.
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
         float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.0,0.0)*0.28);
-        gl_FragColor.rgb*=ijHighlightCompression;\\n        ` : ``}
+        gl_FragColor.rgb*=ijHighlightCompression;\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
