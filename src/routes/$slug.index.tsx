@@ -336,19 +336,19 @@ function CatalogoPublicoPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
-      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-3 pt-7 pb-3 backdrop-blur sm:px-8 sm:py-5">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4">
-          <div className="flex min-w-0 items-center gap-3">
+      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-3 pt-5 pb-3 backdrop-blur sm:px-8 sm:py-5">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
             {config.logo_url ? (
-              <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={config.logo_url} alt={config.nombre_publico} className="block h-auto max-h-12 w-auto max-w-[min(52vw,220px)] shrink object-contain object-left sm:max-w-[220px]" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={config.logo_url} alt={config.nombre_publico} className="block h-auto max-h-12 w-auto max-w-[min(72vw,260px)] shrink object-contain object-center sm:max-w-[220px] sm:object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
             )}
             <div className="min-w-0">
-              <p className="mt-0.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-[.12em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
+              <p className="mt-0.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-[.16em] text-[#8a6b36] sm:text-[11px] sm:tracking-[.25em]">Showroom digital</p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center justify-center gap-2">
             <button type="button" onClick={() => setCarritoAbierto(true)} className="relative inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3.5 py-2 text-xs font-semibold" aria-label={"Carrito de compras, " + cantidadCarrito + " artículos"}><ShoppingBag className="size-4" /> Carrito {cantidadCarrito > 0 ? <span className="rounded-full bg-[#8a6b36] px-1.5 py-0.5 text-[10px] text-white">{cantidadCarrito}</span> : null}</button>
             {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1DA851]"><MessageCircle className="size-3.5" /> Escríbenos por WhatsApp</a> : null}
           </div>
