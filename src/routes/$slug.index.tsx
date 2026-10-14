@@ -26,6 +26,9 @@ type CatalogoRow = {
   descripcion_publica: string | null;
   logo_url: string | null;
   whatsapp: string | null;
+  telefono_contacto?: string | null;
+  email_contacto?: string | null;
+  direccion_contacto?: string | null;
   redes_sociales?: { instagram?: string | null; tiktok?: string | null; youtube?: string | null; facebook?: string | null; pinterest?: string | null } | null;
   frase_portada: string | null;
   imagenes_portada: unknown;
@@ -153,10 +156,11 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const [catalogoResult, portadaResult, redesResult] = await Promise.all([
+      const [catalogoResult, portadaResult, redesResult, contactoResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
         supabase.rpc("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
+        supabase.rpc("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
@@ -166,6 +170,9 @@ function CatalogoPublicoPage() {
         imagenes_portada: unknown;
         intervalo_portada_segundos: number | null;
       } | undefined);
+      const rawContacto = contactoResult.error ? null : contactoResult.data;
+      const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
+      const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};
       const rawRedes = redesResult.error ? null : redesResult.data;
       const redesCandidate = Array.isArray(rawRedes) ? rawRedes[0] : rawRedes;
       let redes: CatalogoRow["redes_sociales"] | null = null;
@@ -185,6 +192,9 @@ function CatalogoPublicoPage() {
         imagenes_portada: portada?.imagenes_portada ?? [],
         intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
         redes_sociales: redes,
+        telefono_contacto: typeof contacto.telefono_contacto === "string" ? contacto.telefono_contacto : null,
+        email_contacto: typeof contacto.email_contacto === "string" ? contacto.email_contacto : null,
+        direccion_contacto: typeof contacto.direccion_contacto === "string" ? contacto.direccion_contacto : null,
       })) as CatalogoRow[];
     },
     staleTime: 0,
@@ -521,6 +531,15 @@ function CatalogoPublicoPage() {
         </section>
       ) : null}
 
+      {config.telefono_contacto || config.email_contacto || config.direccion_contacto ? (
+        <section aria-label="Contacto" className="border-t border-[#1f1b1810] bg-white/35">
+          <div className="mx-auto grid max-w-7xl gap-5 px-5 py-8 sm:grid-cols-3 sm:px-8">
+            {config.telefono_contacto ? <a href={"tel:" + config.telefono_contacto.replace(/[^+\d]/g, "")} className="group flex items-start gap-3 rounded-2xl border border-[#b99b6b]/20 bg-white/60 p-4 transition hover:border-[#b99b6b]/50 hover:shadow-[0_8px_24px_rgba(48,39,30,0.05)]"><span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#b99b6b]/35 bg-[#f8f2e7] text-[#80663c]"><MessageCircle className="size-4" /></span><span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Teléfono</span><span className="mt-1 block break-words text-sm text-[#30271e]">{config.telefono_contacto}</span></span></a> : null}
+            {config.email_contacto ? <a href={"mailto:" + config.email_contacto} className="group flex items-start gap-3 rounded-2xl border border-[#b99b6b]/20 bg-white/60 p-4 transition hover:border-[#b99b6b]/50 hover:shadow-[0_8px_24px_rgba(48,39,30,0.05)]"><span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#b99b6b]/35 bg-[#f8f2e7] text-[#80663c]"><Share2 className="size-4" /></span><span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Correo electrónico</span><span className="mt-1 block break-words text-sm text-[#30271e]">{config.email_contacto}</span></span></a> : null}
+            {config.direccion_contacto ? <a href={"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(config.direccion_contacto)} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-3 rounded-2xl border border-[#b99b6b]/20 bg-white/60 p-4 transition hover:border-[#b99b6b]/50 hover:shadow-[0_8px_24px_rgba(48,39,30,0.05)]"><span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#b99b6b]/35 bg-[#f8f2e7] text-[#80663c]"><Pin className="size-4" /></span><span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Visítanos</span><span className="mt-1 block break-words text-sm text-[#30271e]">{config.direccion_contacto}</span><span className="mt-1 block text-[10px] font-semibold text-[#8a6b36]">Ver ubicación ↗</span></span></a> : null}
+          </div>
+        </section>
+      ) : null}
       <footer className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
         <div className="flex flex-col gap-3 border-t border-[#1f1b1815] pt-6 text-xs text-[#746b62] sm:flex-row sm:items-center sm:justify-between">
           <span>© {config.nombre_publico} · Catálogo digital</span>
