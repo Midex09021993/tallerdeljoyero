@@ -32,6 +32,7 @@ type CatalogoRow = {
   redes_sociales?: { instagram?: string | null; tiktok?: string | null; youtube?: string | null; facebook?: string | null; pinterest?: string | null } | null;
   enlaces_carrusel?: { imagen_url: string; url_imagen_externa?: string | null; enlace_url?: string | null; texto?: string | null; nueva_pestana?: boolean }[] | null;
   frase_portada: string | null;
+  texto_superior_portada?: string | null;
   imagenes_portada: unknown;
   intervalo_portada_segundos: number | null;
   producto_id: string | null;
@@ -160,9 +161,10 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const [catalogoResult, portadaResult, redesResult, contactoResult, carruselResult] = await Promise.all([
+      const [catalogoResult, portadaResult, textoSuperiorResult, redesResult, contactoResult, carruselResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
+        supabase.rpc("obtener_texto_superior_portada_publica", { _slug: slugNormalizado }),
         supabase.rpc("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
@@ -175,6 +177,11 @@ function CatalogoPublicoPage() {
         imagenes_portada: unknown;
         intervalo_portada_segundos: number | null;
       } | undefined);
+      const textoSuperiorCandidate = textoSuperiorResult.error ? null : textoSuperiorResult.data;
+      const textoSuperiorRow = Array.isArray(textoSuperiorCandidate) ? textoSuperiorCandidate[0] : textoSuperiorCandidate;
+      const textoSuperiorPortada = textoSuperiorRow && typeof textoSuperiorRow === "object" && typeof (textoSuperiorRow as Record<string, unknown>).texto_superior_portada === "string"
+        ? ((textoSuperiorRow as Record<string, unknown>).texto_superior_portada as string)
+        : null;
       const rawCarrusel = carruselResult.error ? null : carruselResult.data;
       const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
       const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
@@ -198,6 +205,7 @@ function CatalogoPublicoPage() {
       return productosCatalogo.map((row) => ({
         ...row,
         frase_portada: portada?.frase_portada ?? null,
+        texto_superior_portada: textoSuperiorPortada,
         imagenes_portada: portada?.imagenes_portada ?? [],
         intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
         redes_sociales: redes,
@@ -367,7 +375,7 @@ function CatalogoPublicoPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(180,145,75,.16),transparent_38%)]" />
         <div className="mx-auto grid max-w-7xl gap-7 px-5 py-10 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-8 lg:py-24">
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#8a6b36] sm:text-[10px] sm:tracking-[.3em]">Showroom · {config.nombre_publico}</p>
+            {config.texto_superior_portada?.trim() ? <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#8a6b36] sm:text-[10px] sm:tracking-[.3em]">{config.texto_superior_portada}</p> : null}
             <h1 className="mt-3 max-w-xl break-words font-display text-4xl leading-[1.08] tracking-tight sm:mt-4 sm:text-5xl">{config.frase_portada?.trim() || "Joyas hechas para quedarse."}</h1>
             {config.descripcion_publica?.trim() ? (
               <p className="mt-5 max-w-xl font-sans text-sm leading-7 text-[#625b54] sm:text-base">{config.descripcion_publica}</p>
