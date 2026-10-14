@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X } from "lucide-react";
+import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
