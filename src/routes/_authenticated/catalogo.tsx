@@ -491,13 +491,13 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-6 py-5">
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background/70 px-3 py-3 backdrop-blur-sm sm:px-4 sm:py-5">
+      <div className="mx-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-2xl sm:max-h-[calc(100dvh-2.5rem)]">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4 sm:px-6 sm:py-5">
           <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Catálogo público</p><h2 className="mt-1 text-xl font-semibold">Configurar catálogo</h2></div>
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-muted-foreground hover:bg-surface-muted"><X className="size-5" /></button>
         </div>
-        <form onSubmit={guardar} className="grid gap-4 p-6 sm:grid-cols-2">
+        <form onSubmit={guardar} className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => { const nuevoNombre = e.target.value; setNombre(nuevoNombre); setSlug(normalizarSlugCatalogo(nuevoNombre)); }} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={normalizarSlugCatalogo(slug)} readOnly aria-readonly="true" placeholder="Se genera a partir del nombre público" className="h-11 cursor-not-allowed rounded-xl border border-border bg-surface-muted px-3 text-sm font-normal text-muted-foreground" /><span className="text-[11px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre público y no se puede editar.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
           <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
