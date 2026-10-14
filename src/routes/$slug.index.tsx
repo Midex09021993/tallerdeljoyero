@@ -336,7 +336,7 @@ function CatalogoPublicoPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
-      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-3 py-1.5 backdrop-blur sm:px-8 sm:py-5">
+      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-3 pt-2.5 pb-2.5 backdrop-blur sm:px-8 sm:py-5">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {config.logo_url ? (
