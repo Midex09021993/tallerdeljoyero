@@ -360,7 +360,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Blend the environment rays with the physical PBR surface. A bounded
         // weight preserves crown highlights and avoids a dark HDR map swallowing
         // the diamond; this remains an environment-sampling approximation.
-        float ijInternalWeight=clamp(ijReflect*1.12,0.54,0.68);
+        float ijInternalWeight=clamp(ijReflect*1.08,0.50,0.62);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
