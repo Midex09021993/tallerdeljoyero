@@ -315,17 +315,16 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float aurumFacing=max(dot(aurumR,aurumV),0.0);
         float aurumFlash=smoothstep(0.985,0.9995,aurumFacing)*aurumScintillationStrength;
 
-        // Keep the accent tied to reflected light and extremely restrained.
-        // The actual IOR, transmission, thickness and dispersion remain in
-        // MeshPhysicalMaterial and continue to determine the gemstone optics.
-        gl_FragColor.rgb += vec3(aurumFlash);
+        // Keep scintillation energy bounded: additive white flashes can clip
+        // the crown facets in bright studio environments. Modulate existing
+        // reflected energy instead of adding an unbounded white contribution.
+        gl_FragColor.rgb *= 1.0 + aurumFlash * 0.12;
 
-        float aurumFacetContrast=smoothstep(0.72,0.98,aurumFacing);
-        // Diamond facets need a little more separation in bright studio HDRs;
-        // the previous 0.8% modulation was effectively invisible on white stones.
-        // Keep colored gems unchanged and deepen only the diamond's reflected
-        // facet contrast without tinting the base color or raising exposure.
-        float aurumFacetFloor=${family === "Diamante" ? "0.92" : "0.992"};
+        float aurumFacetContrast=smoothstep(0.68,0.96,aurumFacing);
+        // Stronger diamond-only facet separation addresses the washed-out crown
+        // seen against the iJewel reference. This is contrast, not extra exposure:
+        // preserve the colored-gem response and leave PBR refraction untouched.
+        float aurumFacetFloor=${family === "Diamante" ? "0.78" : "0.992"};
         float aurumContrast=mix(1.0,aurumFacetFloor,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
