@@ -922,12 +922,10 @@ export function AurumRender() {
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
-          // iJewel LIVE is a direct WebGL path: one scene render, no Composer.
-          // This preserves the calibrated renderer tone mapping while removing
-          // the unused fullscreen post-processing chain from every interaction.
-          if (liveFastPathRef.current || measuredQualityId === "low") renderer.render(escena,camara);
-          else if (composer) composer.render();
-          else renderer.render(escena,camara);
+          // Use the interactive WebGL path at rest as well as during orbit.
+          // This avoids a visual handoff to a separate EffectComposer pipeline;
+          // keep material/shader tuning separate until the result is visually checked.
+          renderer.render(escena,camara);
           perfTick();
         },
         {
