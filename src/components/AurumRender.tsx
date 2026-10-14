@@ -828,6 +828,7 @@ export function AurumRender() {
           const oldLiveMode=liveFastPathRef.current;
           const oldClearColor=new THREE.Color();
           const oldClearAlpha=renderer.getClearAlpha();
+          const oldToneMappingExposure=renderer.toneMappingExposure;
           renderer.getClearColor(oldClearColor);
           let dataUrl="";
           try{
@@ -837,6 +838,10 @@ export function AurumRender() {
             liveFastPathRef.current=false;
             aplicarPerfilLive();
             applyPostQuality?.(renderQuality,{capture:true});
+            // Capture-only highlight protection: the live viewport keeps its
+            // calibrated exposure. Lower the beauty capture's exposure slightly
+            // to retain facet separation in bright diamond HDR reflections.
+            renderer.toneMappingExposure=oldToneMappingExposure*0.78;
             composer.renderToScreen=false;
             composer.setPixelRatio(1);
             composer.setSize(width,height);
@@ -914,6 +919,7 @@ export function AurumRender() {
             camara.aspect=oldCameraAspect;
             camara.updateProjectionMatrix();
             renderer.setClearColor(oldClearColor,oldClearAlpha);
+            renderer.toneMappingExposure=oldToneMappingExposure;
             liveFastPathRef.current=oldLiveMode;
             aplicarPerfilLive();
             applyPostQuality?.(renderQuality);
