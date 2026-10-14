@@ -290,8 +290,16 @@ function CatalogoPublicoPage() {
     ? config.imagenes_portada.filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)).slice(0, 10)
     : [], [config?.imagenes_portada]);
   useEffect(() => {
-    if (!config?.enlaces_carrusel || config.enlaces_carrusel.length <= 1) return;
-    const timer = window.setInterval(() => setIndiceCarrusel(actual => (actual + 1) % config.enlaces_carrusel!.length), 5000);
+    const track = carruselEnlacesRef.current;
+    if (!config?.enlaces_carrusel || config.enlaces_carrusel.length <= 1 || !track) return;
+    const timer = window.setInterval(() => {
+      const firstCard = track.querySelector<HTMLElement>("[data-carousel-card]");
+      const step = firstCard ? firstCard.getBoundingClientRect().width + 16 : track.clientWidth / 4;
+      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
+      if (atEnd) track.scrollTo({ left: 0, behavior: "smooth" });
+      else track.scrollBy({ left: step, behavior: "smooth" });
+      setIndiceCarrusel(actual => (actual + 1) % config.enlaces_carrusel!.length);
+    }, 4000);
     return () => window.clearInterval(timer);
   }, [config?.enlaces_carrusel]);
 
@@ -477,16 +485,16 @@ function CatalogoPublicoPage() {
           <div className="mx-auto max-w-[1600px] px-5 py-8 sm:px-8 sm:py-10">
             <div className="mb-4 flex items-end justify-between gap-3">
               <div><p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#8a6b36]">Descubre más</p><h2 className="mt-1 font-display text-2xl text-[#30271e]">Un mundo por explorar</h2></div>
-              {config.enlaces_carrusel.length > 1 ? <div className="flex gap-2"><button type="button" onClick={() => { setIndiceCarrusel(i => (i - 1 + config.enlaces_carrusel!.length) % config.enlaces_carrusel!.length); carruselEnlacesRef.current?.scrollBy({ left: -carruselEnlacesRef.current.clientWidth * 0.75, behavior: "smooth" }); }} aria-label="Imagen anterior" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronLeft className="size-4" /></button><button type="button" onClick={() => { setIndiceCarrusel(i => (i + 1) % config.enlaces_carrusel!.length); carruselEnlacesRef.current?.scrollBy({ left: carruselEnlacesRef.current.clientWidth * 0.75, behavior: "smooth" }); }} aria-label="Imagen siguiente" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronRight className="size-4" /></button></div> : null}
+              {config.enlaces_carrusel.length > 1 ? <div className="flex gap-2"><button type="button" onClick={() => { setIndiceCarrusel(i => (i - 1 + config.enlaces_carrusel!.length) % config.enlaces_carrusel!.length); carruselEnlacesRef.current?.scrollBy({ left: -(carruselEnlacesRef.current.querySelector<HTMLElement>("[data-carousel-card]")?.getBoundingClientRect().width ?? carruselEnlacesRef.current.clientWidth / 4) - 16, behavior: "smooth" }); }} aria-label="Imagen anterior" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronLeft className="size-4" /></button><button type="button" onClick={() => { setIndiceCarrusel(i => (i + 1) % config.enlaces_carrusel!.length); carruselEnlacesRef.current?.scrollBy({ left: (carruselEnlacesRef.current.querySelector<HTMLElement>("[data-carousel-card]")?.getBoundingClientRect().width ?? carruselEnlacesRef.current.clientWidth / 4) + 16, behavior: "smooth" }); }} aria-label="Imagen siguiente" className="grid size-9 place-items-center rounded-full border border-[#1f1b1820] bg-white text-[#80663c] hover:border-[#b99b6b]"><ChevronRight className="size-4" /></button></div> : null}
             </div>
-            <div ref={carruselEnlacesRef} className="mx-auto flex w-full items-stretch gap-5 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory">
+            <div ref={carruselEnlacesRef} className="mx-auto flex w-full items-stretch gap-4 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {config.enlaces_carrusel.map((slide, index) => {
                 const imageUrl = slide.url_imagen_externa?.trim() || slide.imagen_url;
                 const instagramMatch = imageUrl.match(/^https?:\/\/(?:www\.)?instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i);
                 const instagramEmbedUrl = instagramMatch ? 'https://www.instagram.com/' + instagramMatch[1] + '/' + instagramMatch[2] + '/embed' : null;
                 const content = instagramEmbedUrl ? <iframe src={instagramEmbedUrl} title={slide.texto?.trim() || "Publicación de Instagram"} loading="lazy" className="h-full w-full border-0 bg-white" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen /> : <><img src={imageUrl} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
-                const className = "group relative block aspect-[16/9] w-[88%] shrink-0 snap-center overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:w-[calc(50%-0.625rem)] lg:w-[calc(50%-0.625rem)]";
-                return slide.enlace_url?.trim() ? <a key={imageUrl} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={imageUrl} className={className}>{content}</div>;
+                const className = "group relative block aspect-[3/4] w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)]";
+                return slide.enlace_url?.trim() ? <a data-carousel-card key={imageUrl} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div data-carousel-card key={imageUrl} className={className}>{content}</div>;
               })}
             </div>
             {config.enlaces_carrusel.length > 1 ? <div className="mt-4 flex justify-center gap-1.5">{config.enlaces_carrusel.map((slide, index) => <button key={slide.imagen_url} type="button" onClick={() => { setIndiceCarrusel(index); const track = carruselEnlacesRef.current; if (track) track.scrollTo({ left: index * (track.clientWidth * 0.5 + 20), behavior: "smooth" }); }} aria-label={"Ir a la imagen " + (index + 1)} className={"h-1.5 rounded-full transition-all " + (index === indiceCarrusel ? "w-6 bg-[#8a6b36]" : "w-1.5 bg-[#b99b6b]/45")} />)}</div> : null}
