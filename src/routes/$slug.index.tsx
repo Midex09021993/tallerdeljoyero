@@ -176,7 +176,7 @@ function CatalogoPublicoPage() {
       const rawCarrusel = carruselResult.error ? null : carruselResult.data;
       const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
       const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
-      const carrusel = Array.isArray(carruselData.enlaces_carrusel) ? carruselData.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string" && /^https?:\\/\\//i.test(slide.imagen_url)).slice(0, 10) : [];
+      const carrusel = Array.isArray(carruselData.enlaces_carrusel) ? carruselData.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
       const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};
@@ -288,6 +288,12 @@ function CatalogoPublicoPage() {
   const imagenesPortada = useMemo(() => Array.isArray(config?.imagenes_portada)
     ? config.imagenes_portada.filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)).slice(0, 10)
     : [], [config?.imagenes_portada]);
+  useEffect(() => {
+    if (!config?.enlaces_carrusel || config.enlaces_carrusel.length <= 1) return;
+    const timer = window.setInterval(() => setIndiceCarrusel(actual => (actual + 1) % config.enlaces_carrusel!.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [config?.enlaces_carrusel]);
+
   useEffect(() => {
     setIndicePortada(0);
     if (imagenesPortada.length < 2) return;
@@ -475,7 +481,7 @@ function CatalogoPublicoPage() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {config.enlaces_carrusel.map((slide, index) => {
                 const content = <><img src={slide.imagen_url} alt={slide.texto?.trim() || "Descubre más de esta joyería"} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" /><span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-80" />{slide.texto?.trim() ? <span className="absolute inset-x-4 bottom-4 text-sm font-semibold text-white drop-shadow">{slide.texto}</span> : null}</>;
-                const visible = index >= indiceCarrusel && index < indiceCarrusel + (typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 1);
+                const visible = index >= indiceCarrusel && index < indiceCarrusel + 3;
                 if (!visible) return null;
                 const className = "group relative block aspect-[16/7] overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:aspect-[16/8]";
                 return slide.enlace_url?.trim() ? <a key={slide.imagen_url} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={slide.imagen_url} className={className}>{content}</div>;
