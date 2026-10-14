@@ -249,22 +249,33 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   if(selectedCategory!=="gema"&&selectedCategory!=="otro")return false;
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
+
   const selectedMeta=selectionMeta(target);
   const selectedLayer=String(selectedMeta.capa||target.userData?.attributes?.layerName||"").trim();
+  const selectedLayerIndex=selectionLayerIndex(target);
   const selectedLayerId=selectedMeta.rhinoLayerId??target.userData?.attributes?.layerId??target.userData?.attributes?.LayerId??target.userData?.layerId??target.userData?.LayerId??null;
-  const selectedLayerKey=resolveAurumLayerKey({
+  const selectedLayerKey=selectedMeta.layerKey??resolveAurumLayerKey({
     layerId:selectedLayerId,
-    layerIndex:selectionLayerIndex(target),
+    layerIndex:selectedLayerIndex,
     layerName:selectedLayer,
     layerColor:selectedMeta.colorCapa??target.userData?.attributes?.layerColor,
     category:selectedCategory,
-  })??"mesh:"+target.uuid;
-  const selectedLayerIndex=selectionLayerIndex(target);
+  });
+  // A mesh UUID is not a layer identity. When source metadata is missing,
+  // report the problem and keep the edit strictly on the clicked mesh.
+  const hasStableLayerIdentity=Boolean(selectedLayerKey&&!selectedLayerKey.startsWith("mesh:"));
+  const assignmentKey=hasStableLayerIdentity?selectedLayerKey:"mesh:"+target.uuid;
   const targets:any[]=[];
+  const allGemMeshes:any[]=[];
   modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
-    const meta=selectionMeta(x),category=selectionCategory(x);
-    if(category!==selectedCategory)return;
+    const category=selectionCategory(x);
+    if(category==="gema")allGemMeshes.push(x);
+    if(!hasStableLayerIdentity){
+      if(x.uuid===target.uuid)targets.push(x);
+      return;
+    }
+    const meta=selectionMeta(x);
     const partLayerId=meta.rhinoLayerId??x.userData?.attributes?.layerId??x.userData?.attributes?.LayerId??x.userData?.layerId??x.userData?.LayerId??null;
     const partLayer=String(meta.capa||x.userData?.attributes?.layerName||"").trim();
     const partLayerKey=meta.layerKey??resolveAurumLayerKey({
@@ -274,48 +285,61 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       layerColor:meta.colorCapa??x.userData?.attributes?.layerColor,
       category,
     });
-    // The canonical key is hydrated from source metadata and survives GLB
-    // extras. Do not group by the generic "gema" category.
-    const sameLayerIdentity=Boolean(selectedLayerKey&&partLayerKey&&selectedLayerKey===partLayerKey);
-    if(sameLayerIdentity)targets.push(x);
+    // The layer key is authoritative. Never use category equality as a substitute:
+    // it would combine distinct gemstone layers that share the generic "gema" category.
+    if(partLayerKey===selectedLayerKey)targets.push(x);
   });
-  // Fail closed: if no matching layer metadata survives conversion, modify only
-  // the clicked mesh rather than guessing from category or applying to all gems.
-  if(!targets.length)targets.push(target);
+  if(!targets.length){
+    console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
+      selectedMesh:target.name||target.uuid,
+      selectedLayer,
+      selectedLayerKey: selectedLayerKey??null,
+      reason:hasStableLayerIdentity?"No mesh matched the selected canonical layer key":"Missing stable layer identity; using clicked mesh only",
+      gemLayerMeshes:allGemMeshes.length,
+    });
+    targets.push(target);
+  }
+
   const rootUserData=modelRoot.userData??{};
   const priorAssignments=rootUserData.aurumGemLayerAssignments??{};
+  const assignment={
+    layerKey:assignmentKey,
+    layerName:selectedLayer||null,
+    layerIndex:selectedLayerIndex,
+    layerId:selectedLayerId==null?null:String(selectedLayerId),
+    gemId:String(gemConfig?.id??""),
+    gemName:String(gemConfig?.nombre??""),
+    updatedAt:Date.now(),
+    matchedMeshUuids:targets.map((part:any)=>part.uuid),
+    identityResolved:hasStableLayerIdentity,
+  };
   modelRoot.userData={
     ...rootUserData,
     aurumGemLayerAssignments:{
       ...priorAssignments,
-      [selectedLayerKey]:{
-        layerKey:selectedLayerKey,
-        layerName:selectedLayer||null,
-        layerIndex:selectedLayerIndex,
-        layerId:selectedLayerId==null?null:String(selectedLayerId),
-        gemId:String(gemConfig?.id??""),
-        gemName:String(gemConfig?.nombre??""),
-        updatedAt:Date.now(),
-        matchedMeshUuids:targets.map((part:any)=>part.uuid),
-      },
+      [assignmentKey]:assignment,
     },
   };
-  console.info("[AURUM][GEM LAYER ASSIGNMENT]", {
+  console.info("[AURUM][GEM LAYER ASSIGNMENT]",{
     selectedMesh:target.name||target.uuid,
     selectedLayer,
-    selectedLayerKey,
+    selectedLayerKey:assignmentKey,
     selectedLayerIndex,
     selectedLayerId:selectedLayerId==null?null:String(selectedLayerId),
     selectedCategory,
     gemId:String(gemConfig?.id??""),
     matchedMeshes:targets.length,
+    identityResolved:hasStableLayerIdentity,
     matches:targets.map((part:any)=>({
       mesh:part.name||part.uuid,
       layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
+      layerKey:selectionMeta(part).layerKey??null,
+      category:selectionCategory(part),
       layerIndex:selectionLayerIndex(part),
       layerId:selectionMeta(part).rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
     })),
   });
+
   const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
   const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
@@ -327,22 +351,11 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     applyAurumFamilyOpticalResponse(next,opticalProfile);
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
     attachAurumGemPhysicalModel(next,physicalModel);
-    // Apply the source iJewel material parameters BEFORE compiling the custom
-    // optical shader so they become active uniforms, not metadata-only references.
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
     if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
-    // If the loaded GLB carries an exact iJewel/WebGi DiamondMaterial rootPath,
-    // preserve and activate that authored reference instead of replacing it with
-    // a generic family preset. This is what lets DAROS-grade source materials
-    // survive the AURUM material application pipeline.
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
-    // Enable the native iJewel-inspired optical path only for diamonds. The
-    // LIVE quality controller swaps this beauty shader out during interaction.
     if(preset.familia==="Diamante")activateAurumDiamondMaterial(next,preset);
     applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
-    // Preserve authored CAD facet normals. Only fall back to flat shading when
-    // the geometry has no usable normals; the renderer's normal pipeline handles
-    // crease preservation for meshes that already carry valid facet normals.
     const geometry=partTarget?.geometry;
     const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
     next.flatShading=!hasUsableNormals;
@@ -352,13 +365,12 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     return next;
   };
   targets.forEach((part:any)=>{
-    // Rebuild from the immutable imported material captured before the
-    // initial preview; never inherit the prior gemstone's optical state.
+    const originalMaterialIsArray=Array.isArray(part.material);
     const stableSourceMaterials=getAurumSourceMaterials(part);
-    const sourceMaterialIsArray=Array.isArray(part.material);
-    part.material=sourceMaterialIsArray
+    part.material=originalMaterialIsArray
       ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
+    const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
     const activeGemId=String(gemConfig?.id??"");
     part.userData={
       ...part.userData,
@@ -372,30 +384,25 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       aurumGemThicknessMapDiagnostics:null,
       aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part),
     };
-    console.warn("[AURUM][GEM MATERIAL APPLIED]", {
+    console.warn("[AURUM][GEM MATERIAL APPLIED]",{
       mesh:part.name||part.uuid,
       selectedGem:{id:String(gemConfig?.id??""),nombre:String(gemConfig?.nombre??""),familia:String(gemConfig?.familia??""),color:String(gemConfig?.color??"")},
       material:Array.isArray(part.material)?part.material.map((m:any)=>({color:m?.color?.getHexString?.(),metalness:m?.metalness,transmission:m?.transmission,ior:m?.ior,thickness:m?.thickness})):part.material?{color:part.material.color?.getHexString?.(),metalness:part.material.metalness,transmission:part.material.transmission,ior:part.material.ior,thickness:part.material.thickness}:null
     });
-    console.warn("[AURUM][GEM GEOMETRY]", { mesh: part.name || part.uuid, diagnostics: part.userData.aurumGemGeometryDiagnostics });
-
+    console.warn("[AURUM][GEM GEOMETRY]",{mesh:part.name||part.uuid,diagnostics:part.userData.aurumGemGeometryDiagnostics});
     part.userData={...part.userData,aurumGemPhysicalModel:{...physicalModel,crystal:{...physicalModel.crystal,axisA:physicalModel.crystal.axisA.toArray(),axisB:physicalModel.crystal.axisB.toArray(),axisC:physicalModel.crystal.axisC.toArray()}}};
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
-
-    // Bake the spatial map after the selection has already been applied.
-    // A selection token prevents an older asynchronous bake from overwriting
-    // the optics of a gem selected later on the same mesh.
     const expectedMaterials=Array.isArray(part.material)?[...part.material]:[part.material];
     setTimeout(()=>{
       try{
         let root=part;
-        while(root?.parent) root=root.parent;
+        while(root?.parent)root=root.parent;
         if(root?.userData?.aurumDisposed)return;
         if(part.userData?.aurumGemApplicationToken!==applicationToken||part.userData?.aurumActiveGemId!==activeGemId)return;
         const currentMaterials=Array.isArray(part.material)?part.material:[part.material];
         if(currentMaterials.length!==expectedMaterials.length||currentMaterials.some((mat:any,index:number)=>mat!==expectedMaterials[index]))return;
-        const thicknessResolution=preset.familia==="Diamante" ? 512 : preset.familia==="Moissanita" ? 384 : 256;
+        const thicknessResolution=preset.familia==="Diamante"?512:preset.familia==="Moissanita"?384:256;
         const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
         if(!result)return;
         const materials=Array.isArray(part.material)?part.material:[part.material];
@@ -405,16 +412,19 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
           mat.thicknessMap=result.texture;
           mat.needsUpdate=true;
         });
-        part.userData={...part.userData,aurumOpticalThickness:result.baseThickness,aurumOpticalThicknessMode:"uv-ray-depth-v3",aurumGemThicknessMapDiagnostics:{hitRatio:Number(result.hitRatio.toFixed(3)),minDepth:Number(result.minDepth.toFixed(4)),maxDepth:Number(result.maxDepth.toFixed(4)),resolution:result.normalMapRes,cacheKey:result.cacheKey,method:result.method}};
-        console.warn("[AURUM][GEM THICKNESS]", { mesh:part.name||part.uuid, geometry:part.userData.aurumGemGeometryDiagnostics, thickness:part.userData.aurumOpticalThickness, map:part.userData.aurumGemThicknessMapDiagnostics });
+        part.userData={
+          ...part.userData,
+          aurumOpticalThickness:result.baseThickness,
+          aurumGemThicknessMapDiagnostics:result.diagnostics??null,
+        };
         requestRender?.();
       }catch(error){
-        console.warn("[AURUM][GEM THICKNESS] spatial bake skipped", {mesh:part.name||part.uuid,error});
+        console.warn("[AURUM][GEM THICKNESS MAP]",error);
       }
     },0);
   });
   applyGemEnvironment();
+  requestRender?.();
   return true;
 }
-
 export function clearAurumGemFromTarget(target:any){if(target)clearAurumInclusions(target);}
