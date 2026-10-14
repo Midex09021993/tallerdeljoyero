@@ -334,7 +334,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijVirtualWorldB=inverseTransformDirection(ijVirtualDirB,viewMatrix);
           vec3 ijVirtualEnvA=textureCubeUV(envMap,envMapRotation*ijVirtualWorldA,0.0).rgb;
           vec3 ijVirtualEnvB=textureCubeUV(envMap,envMapRotation*ijVirtualWorldB,0.0).rgb;
-          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.05*ijDepth);
+          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.07*ijDepth);
         }
         // The custom internal-ray samples bypass MeshPhysicalMaterial's
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
