@@ -9,7 +9,10 @@
 export const AURUM_IJEWEL_REFERENCE = {
   camera: {
     fov: 25,
-    position: [-1.2292039067094442, 9.367439285321952, 3.2772151274423926] as const,
+    // Exact camera position from the supplied iJewel scene-config VJSON.
+    // AURUM rescales only the distance after normalizing the model; the direction
+    // must remain the one authored by iJewel.
+    position: [0.05273274458480528, 2.587659202281731, 2.1286372742948023] as const,
     target: [0, 0, 0] as const,
     distance: 10,
     up: [0, 1, 0] as const,
@@ -84,8 +87,11 @@ export const AURUM_IJEWEL_REFERENCE = {
 
 export type AurumIJEWELReference = typeof AURUM_IJEWEL_REFERENCE;
 
+const ijewelCameraPosition = AURUM_IJEWEL_REFERENCE.camera.position;
+const ijewelCameraVectorLength = Math.hypot(...ijewelCameraPosition);
+
 export const AURUM_IJEWEL_CAMERA_DIRECTION = [
-  AURUM_IJEWEL_REFERENCE.camera.position[0] / AURUM_IJEWEL_REFERENCE.camera.distance,
-  AURUM_IJEWEL_REFERENCE.camera.position[1] / AURUM_IJEWEL_REFERENCE.camera.distance,
-  AURUM_IJEWEL_REFERENCE.camera.position[2] / AURUM_IJEWEL_REFERENCE.camera.distance,
+  ijewelCameraPosition[0] / ijewelCameraVectorLength,
+  ijewelCameraPosition[1] / ijewelCameraVectorLength,
+  ijewelCameraPosition[2] / ijewelCameraVectorLength,
 ] as const;
