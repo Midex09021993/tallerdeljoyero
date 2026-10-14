@@ -568,33 +568,33 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background/70 px-3 py-3 backdrop-blur-sm sm:px-4 sm:py-5">
-      <div className="mx-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-2xl sm:max-h-[calc(100dvh-2.5rem)]">
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[#17130f]/45 px-3 py-3 backdrop-blur-md sm:px-4 sm:py-5">
+      <div className="mx-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-[#c8a96b]/35 bg-[#fffdfa] shadow-[0_30px_100px_-28px_rgba(28,20,10,.55)] ring-1 ring-white/70 sm:max-h-[calc(100dvh-2.5rem)]">
         <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4 sm:px-6 sm:py-5">
           <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Catálogo público</p><h2 className="mt-1 text-xl font-semibold">Configurar catálogo</h2></div>
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-muted-foreground hover:bg-surface-muted"><X className="size-5" /></button>
         </div>
-        <form onSubmit={guardar} className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
-          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => { const nuevoNombre = e.target.value; setNombre(nuevoNombre); if (!slug.trim() || slug === normalizarSlugCatalogo(nombre)) setSlug(normalizarSlugCatalogo(nuevoNombre)); }} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-          <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(normalizarSlugCatalogo(e.target.value))} placeholder="siberiana" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[11px] font-normal text-muted-foreground">Puedes personalizar la dirección pública. Usa letras, números y guiones.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
-          <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="51987654321" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-          <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+        <form onSubmit={guardar} className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid content-start gap-5 bg-[linear-gradient(180deg,#fffdfa_0%,#ffffff_100%)] p-4 sm:grid-cols-2 sm:gap-6 sm:p-7">
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => { const nuevoNombre = e.target.value; setNombre(nuevoNombre); if (!slug.trim() || slug === normalizarSlugCatalogo(nombre)) setSlug(normalizarSlugCatalogo(nuevoNombre)); }} className="h-11 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] shadow-[0_1px_2px_rgba(32,24,12,.025)] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(normalizarSlugCatalogo(e.target.value))} placeholder="siberiana" className="h-11 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] shadow-[0_1px_2px_rgba(32,24,12,.025)] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /><span className="text-[11px] font-normal text-muted-foreground">Puedes personalizar la dirección pública. Usa letras, números y guiones.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
+          <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="51987654321" className="h-11 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] shadow-[0_1px_2px_rgba(32,24,12,.025)] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>
+          <details className="group rounded-2xl border border-[#e8e0d2] bg-white shadow-[0_2px_10px_rgba(38,29,14,.025)] transition-colors hover:border-[#d7c39c] sm:col-span-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
               <span><span className="block text-sm font-semibold">Datos de contacto</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Teléfono, correo y dirección que aparecerán en el catálogo público.</span></span>
-              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[#e7dcc8] bg-[#fffdf8] text-[#8b7755] transition-all group-open:rotate-180 group-open:border-[#c5a66c] group-open:bg-[#f8f0e1]" aria-hidden="true">⌄</span>
             </summary>
-            <div className="grid gap-3 border-t border-border p-4">
-              <label className="grid gap-1.5 text-xs font-semibold">Teléfono de contacto<input type="tel" value={telefonoContacto} onChange={e => setTelefonoContacto(e.target.value)} placeholder="+51 999 999 999" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-              <label className="grid gap-1.5 text-xs font-semibold">Correo electrónico<input type="email" value={emailContacto} onChange={e => setEmailContacto(e.target.value)} placeholder="ventas@tujoyeria.com" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-              <label className="grid gap-1.5 text-xs font-semibold">Dirección física<textarea rows={2} value={direccionContacto} onChange={e => setDireccionContacto(e.target.value)} placeholder="Dirección, distrito, ciudad" className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+            <div className="grid gap-4 border-t border-[#eee7dc] bg-[#fdfbf7] p-4 sm:p-5">
+              <label className="grid gap-1.5 text-xs font-semibold">Teléfono de contacto<input type="tel" value={telefonoContacto} onChange={e => setTelefonoContacto(e.target.value)} placeholder="+51 999 999 999" className="h-10 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>
+              <label className="grid gap-1.5 text-xs font-semibold">Correo electrónico<input type="email" value={emailContacto} onChange={e => setEmailContacto(e.target.value)} placeholder="ventas@tujoyeria.com" className="h-10 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>
+              <label className="grid gap-1.5 text-xs font-semibold">Dirección física<textarea rows={2} value={direccionContacto} onChange={e => setDireccionContacto(e.target.value)} placeholder="Dirección, distrito, ciudad" className="rounded-xl border border-[#e5dfd4] bg-white px-3.5 py-3 text-sm font-normal text-[#29251f] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>
             </div>
           </details>
-          <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+          <details className="group rounded-2xl border border-[#e8e0d2] bg-white shadow-[0_2px_10px_rgba(38,29,14,.025)] transition-colors hover:border-[#d7c39c] sm:col-span-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
               <span><span className="block text-sm font-semibold">Carrusel de imágenes y videos con enlaces</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Aparece debajo de Explora los modelos. Cada imagen o video puede dirigir a una colección, joya, WhatsApp, Maps o web externa.</span></span>
-              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[#e7dcc8] bg-[#fffdf8] text-[#8b7755] transition-all group-open:rotate-180 group-open:border-[#c5a66c] group-open:bg-[#f8f0e1]" aria-hidden="true">⌄</span>
             </summary>
-            <div className="grid gap-3 border-t border-border p-4">
+            <div className="grid gap-4 border-t border-[#eee7dc] bg-[#fdfbf7] p-4 sm:p-5">
               <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
                 <ImageIcon className="size-4" /> {subiendoCarrusel ? "Subiendo archivos…" : "Añadir imágenes o videos"}
                 <input type="file" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
@@ -620,26 +620,26 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
               {!enlacesCarrusel.length ? <p className="text-xs text-muted-foreground">Todavía no hay imágenes. Añade fotografías para crear el carrusel.</p> : null}
             </div>
           </details>
-          <details className="group rounded-2xl border border-border bg-card sm:col-span-2">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+          <details className="group rounded-2xl border border-[#e8e0d2] bg-white shadow-[0_2px_10px_rgba(38,29,14,.025)] transition-colors hover:border-[#d7c39c] sm:col-span-2">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
               <span><span className="block text-sm font-semibold">Redes sociales</span><span className="mt-1 block text-xs font-normal text-muted-foreground">Configura los perfiles que aparecerán en tu catálogo público.</span></span>
-              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[#e7dcc8] bg-[#fffdf8] text-[#8b7755] transition-all group-open:rotate-180 group-open:border-[#c5a66c] group-open:bg-[#f8f0e1]" aria-hidden="true">⌄</span>
             </summary>
-            <div className="grid gap-3 border-t border-border p-4">
+            <div className="grid gap-4 border-t border-[#eee7dc] bg-[#fdfbf7] p-4 sm:p-5">
               <p className="text-xs text-muted-foreground">Pega el enlace completo de cada perfil. Los campos vacíos no aparecerán en tu catálogo.</p>
-              {([["instagram", "Instagram", "https://instagram.com/tuusuario"], ["tiktok", "TikTok", "https://tiktok.com/@tuusuario"], ["youtube", "YouTube", "https://youtube.com/@tuusuario"], ["facebook", "Facebook", "https://facebook.com/tuusuario"], ["pinterest", "Pinterest", "https://pinterest.com/tuusuario"]] as const).map(([key, label, placeholder]) => <label key={key} className="grid gap-1.5 text-xs font-semibold">{label}<input type="url" value={redesSociales[key]} onChange={e => setRedesSociales(actual => ({ ...actual, [key]: e.target.value }))} placeholder={placeholder} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>)}
+              {([["instagram", "Instagram", "https://instagram.com/tuusuario"], ["tiktok", "TikTok", "https://tiktok.com/@tuusuario"], ["youtube", "YouTube", "https://youtube.com/@tuusuario"], ["facebook", "Facebook", "https://facebook.com/tuusuario"], ["pinterest", "Pinterest", "https://pinterest.com/tuusuario"]] as const).map(([key, label, placeholder]) => <label key={key} className="grid gap-1.5 text-xs font-semibold">{label}<input type="url" value={redesSociales[key]} onChange={e => setRedesSociales(actual => ({ ...actual, [key]: e.target.value }))} placeholder={placeholder} className="h-10 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>)}
             </div>
           </details>
-          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-[#e5dfd4] bg-white px-3.5 py-3 text-sm font-normal text-[#29251f] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Texto superior de portada
-            <input maxLength={100} value={textoSuperiorPortada} onChange={e => setTextoSuperiorPortada(e.target.value)} placeholder="SHOWROOM · SIBERIANA JOYERÍA" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" />
+            <input maxLength={100} value={textoSuperiorPortada} onChange={e => setTextoSuperiorPortada(e.target.value)} placeholder="SHOWROOM · SIBERIANA JOYERÍA" className="h-11 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] shadow-[0_1px_2px_rgba(32,24,12,.025)] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" />
             <span className="text-[11px] font-normal text-muted-foreground">Texto pequeño sobre el título principal. Déjalo vacío para ocultarlo y evitar repetir el nombre de la joyería.</span>
           </label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Frase principal de portada
-            <input maxLength={120} value={frasePortada} onChange={e => setFrasePortada(e.target.value)} placeholder="Joyas hechas para quedarse." className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" />
+            <input maxLength={120} value={frasePortada} onChange={e => setFrasePortada(e.target.value)} placeholder="Joyas hechas para quedarse." className="h-11 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] shadow-[0_1px_2px_rgba(32,24,12,.025)] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10" />
             <span className="text-[11px] font-normal text-muted-foreground">Se muestra en la portada pública. Si lo dejas vacío, se usa la frase predeterminada.</span>
           </label>
-          <section className="grid gap-3 rounded-2xl border border-border p-4 sm:col-span-2">
+          <section className="grid gap-4 rounded-2xl border border-[#e6dac5] bg-gradient-to-br from-[#fffdf8] to-[#faf5eb] p-4 sm:col-span-2 sm:p-5">
             <div><p className="text-sm font-semibold">Imágenes de portada</p><p className="mt-1 text-xs font-normal text-muted-foreground">Sube hasta 10 fotografías. Se alternarán automáticamente en la portada pública.</p></div>
             <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
               <ImageIcon className="size-4" /> {subiendoImagenes ? "Subiendo imágenes…" : "Añadir imágenes"}
@@ -653,7 +653,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
               </div>)}
             </div> : <p className="text-xs font-normal text-muted-foreground">Todavía no has añadido imágenes; se mostrará la joya destacada como hasta ahora.</p>}
             <label className="grid max-w-xs gap-1.5 text-xs font-semibold">Tiempo visible por imagen
-              <select value={intervaloPortada} onChange={e => setIntervaloPortada(Number(e.target.value))} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal">
+              <select value={intervaloPortada} onChange={e => setIntervaloPortada(Number(e.target.value))} className="h-10 rounded-xl border border-[#e5dfd4] bg-white px-3.5 text-sm font-normal text-[#29251f] outline-none transition focus:border-[#b9975b] focus:ring-4 focus:ring-[#b9975b]/10">
                 {[2,3,4,5,6,8,10,12,15,20,30].map(seconds => <option key={seconds} value={seconds}>{seconds} segundos</option>)}
               </select>
             </label>
@@ -677,7 +677,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           </div>
           <label className="flex items-center gap-3 rounded-xl border border-border p-4 sm:col-span-2"><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} /><span><b className="block text-xs">Publicar catálogo</b><span className="text-[11px] text-muted-foreground">Hace visible el enlace público.</span></span></label>
           {error ? <p className="sm:col-span-2 text-xs text-destructive">{error}</p> : null}
-          <div className="flex justify-end gap-2 sm:col-span-2"><button type="button" onClick={onClose} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold">{guardando ? "Guardando…" : "Guardar configuración"}</button></div>
+          <div className="sticky bottom-0 flex justify-end gap-2 border-t border-[#e9e0d2] bg-[#fffdfa]/95 py-4 backdrop-blur sm:col-span-2"><button type="button" onClick={onClose} className="rounded-xl border border-[#ded5c6] bg-white px-4 py-2.5 text-xs font-semibold text-[#655c4e] transition hover:bg-[#f8f4ed]">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl bg-gradient-to-r from-[#9a773d] via-[#b9975b] to-[#9a773d] px-5 py-2.5 text-xs font-semibold text-white shadow-[0_6px_16px_rgba(154,119,61,.24)] transition hover:brightness-105 disabled:opacity-60">{guardando ? "Guardando…" : "Guardar configuración"}</button></div>
         </form>
       </div>
     </div>
