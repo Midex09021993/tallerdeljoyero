@@ -406,10 +406,11 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
   if(!material)return material;
   const r=AURUM_IJEWEL_DIAMOND_REFERENCE;
   applyAurumIJEWELGemParameters(material,r);
-  // Dedicated diamond path: do not let the generic screen-space transmission
-  // dominate the result. The diamond shader evaluates its own environment rays.
-  // Other gemstone families keep their normal MeshPhysicalMaterial transmission.
-  material.transmission=0;
+  // Keep a restrained physical transmission contribution while the dedicated
+  // diamond environment-ray term adds internal contrast. Fully disabling
+  // transmission made dark HDR regions dominate and turned the stone opaque.
+  // This override is diamond-only; other gemstone families are untouched.
+  material.transmission=.22;
   material.roughness=.010;
   material.clearcoat=.26;
   material.clearcoatRoughness=.010;
