@@ -245,6 +245,14 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       ), material.ior, material.thickness,`
     );
 
+    // Optical environment samples are linear HDR values. The custom
+    // gemstone response must run BEFORE tone mapping and output color-space
+    // conversion; running it at dithering_fragment mixed linear HDR with
+    // already tone-mapped/sRGB pixels and clipped the diamond's central facets.
+    shader.fragmentShader=shader.fragmentShader.replace(
+      /#include <(tonemapping_fragment|colorspace_fragment|fog_fragment|premultiplied_alpha_fragment)>/g,
+      ""
+    );
     shader.fragmentShader=shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `
@@ -436,6 +444,10 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           float aurumFluorescence=aurumFluorescenceStrength*aurumUVFalloff;
           gl_FragColor.rgb+=aurumUVColor*aurumFluorescence;
         }
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+                #include <fog_fragment>
+                #include <premultiplied_alpha_fragment>
                 #include <dithering_fragment>
       `
     );
