@@ -468,7 +468,7 @@ export function AurumRender() {
                   // comparison; other gem families keep their existing live cap.
                   // Dispersion and clearcoat remain disabled while orbiting.
                   const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
-                  const liveTransmissionCap=m.userData?.aurumGemFamily==="Diamante" ? 0.55 : 0.35;
+                  const liveTransmissionCap=m.userData?.aurumGemFamily==="Diamante" ? 0.35 : 0.35;
                   m.transmission=Math.min(authoredTransmission,liveTransmissionCap);
                 }
                 m.needsUpdate=true;
