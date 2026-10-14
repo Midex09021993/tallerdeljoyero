@@ -336,13 +336,15 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijFacetAxis=abs(ijNormal.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
           vec3 ijFacetTangent=normalize(cross(ijNormal,ijFacetAxis));
           vec3 ijFacetBitangent=normalize(cross(ijNormal,ijFacetTangent));
-          vec3 ijVirtualDirA=normalize(ijDirG+ijFacetTangent*0.045);
-          vec3 ijVirtualDirB=normalize(ijDirG-ijFacetBitangent*0.045);
+          // Keep the wider virtual-facet sampling that the user preferred
+          // during visual review; only samples the existing gem HDRI.
+          vec3 ijVirtualDirA=normalize(ijDirG+ijFacetTangent*0.070);
+          vec3 ijVirtualDirB=normalize(ijDirG-ijFacetBitangent*0.070);
           vec3 ijVirtualWorldA=inverseTransformDirection(ijVirtualDirA,viewMatrix);
           vec3 ijVirtualWorldB=inverseTransformDirection(ijVirtualDirB,viewMatrix);
           vec3 ijVirtualEnvA=textureCubeUV(envMap,envMapRotation*ijVirtualWorldA,0.0).rgb;
           vec3 ijVirtualEnvB=textureCubeUV(envMap,envMapRotation*ijVirtualWorldB,0.0).rgb;
-          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.07*ijDepth);
+          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.10*ijDepth);
         }
         // The custom internal-ray samples bypass MeshPhysicalMaterial's
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
