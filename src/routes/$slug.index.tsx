@@ -252,7 +252,7 @@ function CatalogoPublicoPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {config.logo_url ? (
-              <img src={config.logo_url} alt={config.nombre_publico} className="max-h-12 max-w-[220px] object-contain object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img src={config.logo_url} alt={config.nombre_publico} className="block h-12 w-auto max-w-[220px] shrink-0 object-contain object-left" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
               <p className="truncate font-display text-2xl italic tracking-tight">{config.nombre_publico}</p>
             )}
