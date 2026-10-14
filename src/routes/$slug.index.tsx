@@ -118,6 +118,7 @@ function CatalogoPublicoPage() {
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
   const [indicePortada, setIndicePortada] = useState(0);
+  const [portadaVisible, setPortadaVisible] = useState(true);
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem("carrito-joyas-" + slugNormalizado);
@@ -240,7 +241,13 @@ function CatalogoPublicoPage() {
     setIndicePortada(0);
     if (imagenesPortada.length < 2) return;
     const intervalo = Math.min(30, Math.max(2, Number(config?.intervalo_portada_segundos ?? 5)));
-    const timer = window.setInterval(() => setIndicePortada(actual => (actual + 1) % imagenesPortada.length), intervalo * 1000);
+    const timer = window.setInterval(() => {
+      setPortadaVisible(false);
+      window.setTimeout(() => {
+        setIndicePortada(actual => (actual + 1) % imagenesPortada.length);
+        setPortadaVisible(true);
+      }, 280);
+    }, intervalo * 1000);
     return () => window.clearInterval(timer);
   }, [imagenesPortada, config?.intervalo_portada_segundos]);
 
@@ -311,7 +318,7 @@ function CatalogoPublicoPage() {
 
           <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-[#e9e3da] shadow-2xl">
             {imagenesPortada.length ? (
-              <img key={imagenesPortada[indicePortada]} src={imagenesPortada[indicePortada]} alt={"Imagen de portada " + (indicePortada + 1)} className="size-full object-cover transition-opacity duration-700" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img key={imagenesPortada[indicePortada]} src={imagenesPortada[indicePortada]} alt={"Imagen de portada " + (indicePortada + 1)} className={"size-full object-cover transition-opacity duration-300 " + (portadaVisible ? "opacity-100" : "opacity-0")} onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : destacado?.imagen ? (
               <img src={destacado.imagen} alt={destacado.nombre} className="size-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
