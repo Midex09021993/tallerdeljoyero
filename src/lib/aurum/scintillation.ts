@@ -37,7 +37,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
-  const contrastStrength=(family==="Diamante" ? .80 : .075)*facetContrast;
+  const contrastStrength=(family==="Diamante" ? .88 : .075)*facetContrast;
   const colorChange:any=(profile as any).colorChange;
   const oilDrop:any=(profile as any).oilDrop;
   const oilDropEnabled=Boolean(oilDrop?.enabled);
@@ -364,7 +364,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.45))*1.18+vec3(0.45),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.45))*1.26+vec3(0.45),vec3(0.0));
         // Blend the environment rays with the physical PBR surface. A bounded
         // weight preserves crown highlights and avoids a dark HDR map swallowing
         // the diamond; this remains an environment-sampling approximation.
@@ -398,7 +398,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.56" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.50" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
@@ -453,7 +453,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v10-${family}-${familyDispersionScale}-ijewel-${ijewelEnabled?1:0}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
+  material.customProgramCacheKey=()=>`aurum-scintillation-v11-${family}-${familyDispersionScale}-ijewel-${ijewelEnabled?1:0}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
 
   // Keep the complete photographic shader available for capture, but allow the
   // interactive viewer to switch to a lean native MeshPhysicalMaterial shader.
