@@ -999,6 +999,18 @@ export function AurumRender() {
             layer: meshLayerName || null, layerId: meshLayerId == null ? null : String(meshLayerId),
             layerIndex: meshLayerIndex, layerKey: meshMeta.layerKey ?? null,
             layerColor: meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null,
+            rawAttributes: {
+              layerName: meshAttrs.layerName ?? meshAttrs.LayerName ?? null,
+              layerId: meshAttrs.layerId ?? meshAttrs.LayerId ?? null,
+              layerIndex: meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? null,
+              materialIndex: meshAttrs.materialIndex ?? meshAttrs.MaterialIndex ?? null,
+              objectId: meshAttrs.id ?? meshAttrs.Id ?? null,
+              objectName: meshAttrs.name ?? meshAttrs.Name ?? null,
+              mode: meshAttrs.mode ?? meshAttrs.Mode ?? null,
+              keys: Object.keys(meshAttrs),
+            },
+            userDataKeys: Object.keys(mesh.userData ?? {}),
+            metaKeys: Object.keys(meshMeta ?? {}),
             sameSelectedLayer: sameLayer,
             vertices: mesh.geometry?.attributes?.position?.count ?? null,
             triangles: mesh.geometry?.index ? Math.floor(mesh.geometry.index.count / 3) : mesh.geometry?.attributes?.position ? Math.floor(mesh.geometry.attributes.position.count / 3) : null,
@@ -1048,6 +1060,16 @@ export function AurumRender() {
           },
           relatedGemMeshes: relatedGemMeshes.slice(0, 60),
           sameLayerMeshes: sameLayerMeshes.slice(0, 60),
+          sourceLayerTable: (Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers : []).map((layer:any,index:number) => ({
+            index,
+            name: layer?.name ?? layer?.Name ?? null,
+            id: layer?.id ?? layer?.Id ?? null,
+            color: layer?.color ? String(JSON.stringify(layer.color)) : layer?.Color ? String(JSON.stringify(layer.Color)) : null,
+            visible: layer?.visible ?? layer?.Visible ?? layer?.isVisible ?? null,
+            parentLayerId: layer?.parentLayerId ?? layer?.parentId ?? layer?.ParentLayerId ?? null,
+            keys: Object.keys(layer ?? {}),
+          })),
+          sourceRootUserDataKeys: Object.keys(modelo?.userData ?? {}),
           metadataAudit: modelo?.userData?.aurumLayerMetadataAudit ?? null,
           existingAssignment: relatedAssignment,
         });
@@ -1538,6 +1560,10 @@ export function AurumRender() {
                     <div className="break-all text-white/45">key: {String(mesh.layerKey??"—")} · {String(mesh.vertices??"?")} vértices</div>
                     <div className="break-all text-white/60">UUID: {mesh.uuid}</div>
                     <div className="break-words text-white/60">{mesh.materials.map((m:any)=>String(m.type)+(m.color?" "+m.color:"")).join(", ")||"sin material"}</div>
+                    <details className="mt-1 rounded border border-white/10 p-1.5">
+                      <summary className="cursor-pointer text-[#d4af37]">Atributos originales de esta gema</summary>
+                      <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/60">{JSON.stringify({rawAttributes:mesh.rawAttributes,userDataKeys:mesh.userDataKeys,metaKeys:mesh.metaKeys},null,2)}</pre>
+                    </details>
                   </div>)}
                 </div>
               </details>
@@ -1545,9 +1571,13 @@ export function AurumRender() {
                 <summary className="cursor-pointer font-semibold text-[#d4af37]">Atributos originales del archivo</summary>
                 <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.selected.rawAttributes,null,2)}</pre>
               </details>
+              <details className="mt-2 rounded-lg border border-white/10 p-2" open>
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Tabla completa de capas leída del archivo ({diagnosticoSeleccion.sourceLayerTable.length})</summary>
+                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.sourceLayerTable,null,2)}</pre>
+              </details>
               <details className="mt-2 rounded-lg border border-white/10 p-2">
-                <summary className="cursor-pointer font-semibold text-[#d4af37]">Auditoría de metadatos GLB</summary>
-                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.metadataAudit,null,2)}</pre>
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Claves del objeto raíz / auditoría GLB</summary>
+                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify({rootUserDataKeys:diagnosticoSeleccion.sourceRootUserDataKeys,metadataAudit:diagnosticoSeleccion.metadataAudit},null,2)}</pre>
               </details>
               <details className="mt-2 rounded-lg border border-white/10 p-2">
                 <summary className="cursor-pointer font-semibold text-[#d4af37]">Última asignación de gema</summary>
