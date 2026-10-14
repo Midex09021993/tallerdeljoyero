@@ -394,7 +394,7 @@ export function AurumRender() {
       });
       // La escena es la fuente de verdad también para la estrategia de iluminación.
       lightingController.applyPreset(photoInicial.lighting);
-      applyPostQuality?.(renderQuality);
+      applyPostQuality?.({...renderQuality, qualityId: renderQualityId});
 
       let parteActiva:any = null;
       let resaltado:any = null;
