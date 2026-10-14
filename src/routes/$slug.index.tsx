@@ -484,7 +484,7 @@ function CatalogoPublicoPage() {
                 const visible = index >= indiceCarrusel && index < indiceCarrusel + 3;
                 if (!visible) return null;
                 const className = "group relative block aspect-[16/7] overflow-hidden rounded-2xl bg-[#eee7dc] ring-1 ring-[#1f1b18]/[.06] sm:aspect-[16/8]";
-                return slide.enlace_url?.trim() ? <a key={imageUrl} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={slide.imagen_url} className={className}>{content}</div>;
+                return slide.enlace_url?.trim() ? <a key={imageUrl} href={slide.enlace_url} target={slide.nueva_pestana === false ? undefined : "_blank"} rel={slide.nueva_pestana === false ? undefined : "noopener noreferrer"} className={className}>{content}</a> : <div key={imageUrl} className={className}>{content}</div>;
               })}
             </div>
             {config.enlaces_carrusel.length > 1 ? <div className="mt-4 flex justify-center gap-1.5">{config.enlaces_carrusel.map((slide, index) => <button key={slide.imagen_url} type="button" onClick={() => setIndiceCarrusel(index)} aria-label={"Ir a la imagen " + (index + 1)} className={"h-1.5 rounded-full transition-all " + (index === indiceCarrusel ? "w-6 bg-[#8a6b36]" : "w-1.5 bg-[#b99b6b]/45")} />)}</div> : null}
