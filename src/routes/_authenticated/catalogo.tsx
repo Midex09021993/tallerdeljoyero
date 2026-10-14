@@ -383,7 +383,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
   const [intervaloPortada, setIntervaloPortada] = useState(5);
-  const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
+  const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
   const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
   const [subiendoImagenes, setSubiendoImagenes] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -412,7 +412,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
       setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
-      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false })) : []);
+      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, url_imagen_externa: typeof slide.url_imagen_externa === "string" ? slide.url_imagen_externa : "", enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false })) : []);
     });
   }, [open, initial, participanteId]);
 
@@ -456,7 +456,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 imágenes."); return; }
     setSubiendoCarrusel(true); setError(null);
     try {
-      const nuevas: { imagen_url: string; enlace_url: string; texto: string; nueva_pestana: boolean }[] = [];
+      const nuevas: { imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[] = [];
       for (const file of files) {
         if (!file.type.startsWith("image/")) throw new Error("Solo puedes subir archivos de imagen.");
         if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen debe pesar como máximo 8 MB.");
@@ -466,7 +466,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         if (uploadError) throw uploadError;
         const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
         if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de una imagen.");
-        nuevas.push({ imagen_url: data.publicUrl, enlace_url: "", texto: "", nueva_pestana: true });
+        nuevas.push({ imagen_url: data.publicUrl, url_imagen_externa: "", enlace_url: "", texto: "", nueva_pestana: true });
       }
       setEnlacesCarrusel(actual => [...actual, ...nuevas].slice(0, 10));
     } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir las imágenes del carrusel."); }
@@ -541,7 +541,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         logo_url: logoUrl,
         imagenes_portada: imagenesPortada,
         intervalo_portada_segundos: intervaloPortada,
-        enlaces_carrusel: enlacesCarrusel.map(slide => ({ ...slide, enlace_url: slide.enlace_url.trim(), texto: slide.texto.trim() })),
+        enlaces_carrusel: enlacesCarrusel.map(slide => ({ ...slide, enlace_url: slide.enlace_url.trim(), url_imagen_externa: slide.url_imagen_externa.trim(), texto: slide.texto.trim() })),
         visible
       }, { onConflict: "participante_id" });
       if (error) throw error;
@@ -591,6 +591,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                 <div className="relative"><img src={slide.imagen_url} alt={slide.texto || "Imagen del carrusel"} className="aspect-[4/3] w-full rounded-lg object-cover" /><button type="button" onClick={() => setEnlacesCarrusel(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar imagen " + (index + 1)}><X className="size-3.5" /></button></div>
                 <div className="grid gap-2">
                   <label className="grid gap-1 text-xs font-semibold">Texto opcional<input value={slide.texto} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, texto: e.target.value } : item))} placeholder="Descubre nuestra colección" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /></label>
+                  <label className="grid gap-1 text-xs font-semibold">URL directa de la imagen (opcional)<input type="url" value={slide.url_imagen_externa} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, url_imagen_externa: e.target.value } : item))} placeholder="https://sitio.com/imagen.jpg" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /><span className="text-[10px] font-normal text-muted-foreground">Usa un enlace directo al archivo de imagen, no a la página de Instagram.</span></label>
                   <label className="grid gap-1 text-xs font-semibold">Enlace de destino<input type="url" value={slide.enlace_url} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, enlace_url: e.target.value } : item))} placeholder="https://…" className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-normal" /></label>
                   <label className="flex items-center gap-2 text-xs font-normal"><input type="checkbox" checked={slide.nueva_pestana} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, nueva_pestana: e.target.checked } : item))} /> Abrir enlace en una pestaña nueva</label>
                 </div>
