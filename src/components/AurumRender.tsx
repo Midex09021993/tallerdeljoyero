@@ -463,11 +463,13 @@ export function AurumRender() {
                 m.dispersion=0;
                 m.iridescence=0;
                 if (disableGemTransmission) {
-                  // Keep a small amount of physical transmission during orbit.
-                  // Dropping to zero made the moving gem look opaque, then the
-                  // idle restore caused a visible pop when full transmission returned.
+                  // Keep a lightweight but more faithful live transmission.
+                  // The diamond gets the same moderate cap used by the recent PNG
+                  // comparison; other gem families keep their existing live cap.
+                  // Dispersion and clearcoat remain disabled while orbiting.
                   const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
-                  m.transmission=Math.min(authoredTransmission,0.35);
+                  const liveTransmissionCap=m.userData?.aurumGemFamily==="Diamante" ? 0.55 : 0.35;
+                  m.transmission=Math.min(authoredTransmission,liveTransmissionCap);
                 }
                 m.needsUpdate=true;
               }
