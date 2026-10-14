@@ -295,8 +295,8 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
       selectedMesh:target.name||target.uuid,
       selectedLayer,
-      selectedLayerKey: selectedLayerKey??null,
-      reason:hasStableLayerIdentity?"No mesh matched the selected canonical layer key":"Missing stable layer identity; using clicked mesh only",
+      selectedLayerKey: assignmentKey,
+      reason:hasStableLayerIdentity?"No mesh matched the selected raw Rhino layer identity":"Missing stable layer identity; using clicked mesh only",
       gemLayerMeshes:allGemMeshes.length,
     });
     targets.push(target);
