@@ -333,17 +333,31 @@ function CatalogoPublicoPage() {
             </div>
           </div>
 
-          <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-[24px] bg-[#e9e3da] shadow-xl sm:rounded-[28px] sm:shadow-2xl">
+          <div className="group relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-[26px] border border-white/70 bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fffdfa_54%,#eee7dc_100%)] shadow-[0_24px_70px_-30px_rgba(39,30,19,0.35)] sm:rounded-[32px]">
             {imagenesPortada.length ? (
-              <img key={imagenesPortada[indicePortada]} src={imagenesPortada[indicePortada]} alt={"Imagen de portada " + (indicePortada + 1)} className={"size-full object-cover transition-opacity duration-300 " + (portadaVisible ? "opacity-100" : "opacity-0")} onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img key={imagenesPortada[indicePortada]} src={imagenesPortada[indicePortada]} alt={"Imagen de portada " + (indicePortada + 1)} className={"size-full object-cover will-change-transform transition-[opacity,transform] duration-700 ease-in-out " + (portadaVisible ? "scale-[1.015] opacity-100" : "scale-100 opacity-0")} onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : destacado?.imagen ? (
-              <img src={destacado.imagen} alt={destacado.nombre} className="size-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+              <img src={destacado.imagen} alt={destacado.nombre} className="size-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02]" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             ) : (
               <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_35%,rgba(180,145,75,.28),transparent_55%)]">
                 <Sparkles className="size-12 text-[#8a6b36]" />
               </div>
             )}
-            {imagenesPortada.length > 1 ? <div className="absolute inset-x-0 top-0 flex justify-center gap-1.5 p-3">{imagenesPortada.map((_, i) => <button key={i} type="button" onClick={() => setIndicePortada(i)} aria-label={"Mostrar imagen " + (i + 1)} className={"h-1.5 rounded-full transition-all " + (indicePortada === i ? "w-6 bg-white" : "w-2 bg-white/60")} />)}</div> : null}
+            {imagenesPortada.length > 1 ? (
+              <>
+                <button type="button" onClick={() => { setPortadaVisible(false); window.setTimeout(() => { setIndicePortada(actual => (actual - 1 + imagenesPortada.length) % imagenesPortada.length); setPortadaVisible(true); }, 180); }} aria-label="Fotografía anterior" className="absolute left-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-white/65 text-[#30271e] opacity-100 shadow-sm backdrop-blur-md transition hover:bg-white sm:opacity-0 sm:group-hover:opacity-100">
+                  <ChevronLeft className="size-4" />
+                </button>
+                <button type="button" onClick={() => { setPortadaVisible(false); window.setTimeout(() => { setIndicePortada(actual => (actual + 1) % imagenesPortada.length); setPortadaVisible(true); }, 180); }} aria-label="Fotografía siguiente" className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-white/65 text-[#30271e] opacity-100 shadow-sm backdrop-blur-md transition hover:bg-white sm:opacity-0 sm:group-hover:opacity-100">
+                  <ChevronRight className="size-4" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/40 bg-[#211d18]/55 px-3.5 py-2 shadow-lg backdrop-blur-md">
+                  <span className="min-w-[2.7rem] text-center font-sans text-[10px] font-medium tracking-[.14em] text-white tabular-nums">{String(indicePortada + 1).padStart(2, "0")} <span className="text-white/55">/</span> {String(imagenesPortada.length).padStart(2, "0")}</span>
+                  <span className="h-3.5 w-px bg-white/30" />
+                  <div className="flex items-center gap-1.5">{imagenesPortada.map((_, i) => <button key={i} type="button" onClick={() => { setPortadaVisible(false); window.setTimeout(() => { setIndicePortada(i); setPortadaVisible(true); }, 180); }} aria-label={"Mostrar imagen " + (i + 1)} aria-current={indicePortada === i ? "true" : undefined} className={"h-1.5 rounded-full transition-all duration-500 " + (indicePortada === i ? "w-5 bg-white" : "w-1.5 bg-white/55 hover:bg-white/90")} />)}</div>
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
       </section>
