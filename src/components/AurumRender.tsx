@@ -136,6 +136,7 @@ export function AurumRender() {
   const [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string | null>(null);
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
+  const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
@@ -965,6 +966,91 @@ export function AurumRender() {
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
         setParteSeleccionadaCategoria(categoria);
+
+        // Diagnostic snapshot of the selected mesh and all gem-layer identities.
+        const sourceAttrs = obj.userData?.attributes ?? {};
+        const sourceLayerId = meta.rhinoLayerId ?? sourceAttrs.layerId ?? sourceAttrs.LayerId ?? null;
+        const sourceLayerIndex = Number.isInteger(Number(meta.layerIndex)) && Number(meta.layerIndex) >= 0
+          ? Number(meta.layerIndex)
+          : Number.isInteger(Number(sourceAttrs.layerIndex)) && Number(sourceAttrs.layerIndex) >= 0
+            ? Number(sourceAttrs.layerIndex) : null;
+        const sourceLayerKey = String(meta.layerKey ?? "");
+        const sourceLayerName = String(capa ?? sourceAttrs.layerName ?? sourceAttrs.LayerName ?? "").trim();
+        const diagnosticMeshes:any[] = [];
+        modelo?.traverse((mesh:any) => {
+          if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
+          const meshMeta = mesh.userData?.aurumRhino ?? {};
+          const meshAttrs = mesh.userData?.attributes ?? {};
+          const meshLayerName = String(meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
+          const meshLayerId = meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
+          const meshLayerIndexRaw = meshMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex;
+          const meshLayerIndex = Number.isInteger(Number(meshLayerIndexRaw)) && Number(meshLayerIndexRaw) >= 0 ? Number(meshLayerIndexRaw) : null;
+          const meshCategory = String(meshMeta.categoria ?? clasificarCapa(meshLayerName, meshMeta.colorCapa));
+          const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).filter(Boolean);
+          const sameLayer = sourceLayerName
+            ? meshLayerName.toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
+            : sourceLayerKey
+              ? String(meshMeta.layerKey ?? "") === sourceLayerKey
+              : sourceLayerId != null
+                ? String(meshLayerId ?? "") === String(sourceLayerId)
+                : sourceLayerIndex != null && meshLayerIndex === sourceLayerIndex;
+          diagnosticMeshes.push({
+            name: mesh.name || "(sin nombre)", uuid: mesh.uuid, category: meshCategory,
+            layer: meshLayerName || null, layerId: meshLayerId == null ? null : String(meshLayerId),
+            layerIndex: meshLayerIndex, layerKey: meshMeta.layerKey ?? null,
+            layerColor: meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null,
+            sameSelectedLayer: sameLayer,
+            vertices: mesh.geometry?.attributes?.position?.count ?? null,
+            triangles: mesh.geometry?.index ? Math.floor(mesh.geometry.index.count / 3) : mesh.geometry?.attributes?.position ? Math.floor(mesh.geometry.attributes.position.count / 3) : null,
+            materials: materials.map((material:any) => ({
+              name: material.name || null, type: material.type || material.constructor?.name || null,
+              color: material.color?.getHexString ? "#" + material.color.getHexString() : null,
+            })),
+          });
+        });
+        const relatedGemMeshes = diagnosticMeshes.filter((mesh:any) => mesh.category === "gema");
+        const sameLayerMeshes = diagnosticMeshes.filter((mesh:any) => mesh.sameSelectedLayer);
+        const layerAssignments = modelo?.userData?.aurumGemLayerAssignments ?? {};
+        const relatedAssignment = Object.values(layerAssignments).find((assignment:any) =>
+          String(assignment?.layerName ?? "").trim().toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
+        ) ?? null;
+        setDiagnosticoSeleccion({
+          selected: {
+            name: nombre, uuid: obj.uuid, category: categoria,
+            layer: sourceLayerName || null,
+            layerColor: meta.colorCapa ?? sourceAttrs.layerColor ?? sourceAttrs.LayerColor ?? null,
+            layerId: sourceLayerId == null ? null : String(sourceLayerId), layerIndex: sourceLayerIndex,
+            layerKey: meta.layerKey ?? null, matrixSlot: meta.matrixSlot ?? null,
+            metadataResolution: meta.metadataResolution ?? null, visible: obj.visible !== false,
+            objectType: obj.type ?? null,
+            geometry: {
+              vertices: obj.geometry?.attributes?.position?.count ?? null,
+              triangles: obj.geometry?.index ? Math.floor(obj.geometry.index.count / 3) : obj.geometry?.attributes?.position ? Math.floor(obj.geometry.attributes.position.count / 3) : null,
+              indexed: Boolean(obj.geometry?.index), normals: Boolean(obj.geometry?.attributes?.normal),
+            },
+            materials: (Array.isArray(obj.material) ? obj.material : [obj.material]).filter(Boolean).map((material:any) => ({
+              name: material.name || null, type: material.type || material.constructor?.name || null,
+              color: material.color?.getHexString ? "#" + material.color.getHexString() : null,
+              transmission: material.transmission ?? null, ior: material.ior ?? null,
+            })),
+            rawAttributes: {
+              layerName: sourceAttrs.layerName ?? sourceAttrs.LayerName ?? null,
+              layerId: sourceAttrs.layerId ?? sourceAttrs.LayerId ?? null,
+              layerIndex: sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? null,
+              materialIndex: sourceAttrs.materialIndex ?? sourceAttrs.MaterialIndex ?? null,
+              objectId: sourceAttrs.id ?? sourceAttrs.Id ?? null,
+            },
+          },
+          counts: {
+            totalMeshes: diagnosticMeshes.length, gemstoneMeshes: relatedGemMeshes.length,
+            sameLayerMeshes: sameLayerMeshes.length,
+            gemstoneMeshesOnSameLayer: sameLayerMeshes.filter((mesh:any) => mesh.category === "gema").length,
+          },
+          relatedGemMeshes: relatedGemMeshes.slice(0, 60),
+          sameLayerMeshes: sameLayerMeshes.slice(0, 60),
+          metadataAudit: modelo?.userData?.aurumLayerMetadataAudit ?? null,
+          existingAssignment: relatedAssignment,
+        });
         // MatrixGold drives the library: green/metal layers open Materials,
         // blue/gem layers open Gems automatically.
         if (categoria === "metal") {
@@ -1414,8 +1500,61 @@ export function AurumRender() {
               </div>
             </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-            {parteSeleccionada&&<div className="absolute left-5 top-5 z-20 max-w-[65%] rounded-xl border border-[#d4af37]/40 bg-black/65 px-3 py-2 text-[10px] text-white shadow-xl backdrop-blur-xl"><span className="text-[#d4af37]">Seleccionado:</span> {parteSeleccionadaNombre||"Componente"}<div className="mt-1 text-white/35">Elige un material para este componente</div></div>}
-            {archivo&&<div className="absolute left-5 top-5 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-[10px] text-white/50 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
+            {parteSeleccionada&&diagnosticoSeleccion&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[9px] uppercase tracking-[.16em] text-[#d4af37]">Diagnóstico de selección</div>
+                  <div className="break-words text-xs font-semibold text-white">{parteSeleccionadaNombre||"Componente"}</div>
+                  <div className="mt-1 break-all text-[9px] text-white/45">{diagnosticoSeleccion.selected.uuid}</div>
+                </div>
+                <button type="button" title="Cerrar diagnóstico" onClick={()=>{setParteSeleccionada(null);setDiagnosticoSeleccion(null);}} className="rounded-md px-2 py-1 text-white/60 hover:bg-white/10 hover:text-white">✕</button>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <div className="rounded-lg bg-white/[.06] p-2"><div className="text-white/45">Categoría</div><div className="font-semibold">{diagnosticoSeleccion.selected.category}</div></div>
+                <div className="rounded-lg bg-white/[.06] p-2"><div className="text-white/45">Capa</div><div className="break-words font-semibold">{diagnosticoSeleccion.selected.layer||"NO RESUELTA"}</div></div>
+                <div className="rounded-lg bg-white/[.06] p-2"><div className="text-white/45">Mallas totales / gemas</div><div className="font-semibold">{diagnosticoSeleccion.counts.totalMeshes} / {diagnosticoSeleccion.counts.gemstoneMeshes}</div></div>
+                <div className="rounded-lg bg-white/[.06] p-2"><div className="text-white/45">Gemas en esta capa</div><div className="font-semibold">{diagnosticoSeleccion.counts.gemstoneMeshesOnSameLayer}</div></div>
+              </div>
+              <div className="mt-2 rounded-lg border border-white/10 p-2">
+                <div className="mb-1 font-semibold text-[#d4af37]">Identidad de capa (dato clave)</div>
+                <div className="break-all"><span className="text-white/45">layerKey:</span> {String(diagnosticoSeleccion.selected.layerKey??"NO DISPONIBLE")}</div>
+                <div className="break-all"><span className="text-white/45">layerId:</span> {String(diagnosticoSeleccion.selected.layerId??"NO DISPONIBLE")} <span className="text-white/45">· layerIndex:</span> {String(diagnosticoSeleccion.selected.layerIndex??"NO DISPONIBLE")}</div>
+                <div><span className="text-white/45">Color capa:</span> {String(diagnosticoSeleccion.selected.layerColor??"NO DISPONIBLE")} <span className="text-white/45">· Slot MatrixGold:</span> {String(diagnosticoSeleccion.selected.matrixSlot??"NO DISPONIBLE")}</div>
+                <div><span className="text-white/45">Resolución metadatos:</span> {String(diagnosticoSeleccion.selected.metadataResolution??"NO INDICADA")}</div>
+                <div><span className="text-white/45">Tipo de objeto:</span> {String(diagnosticoSeleccion.selected.objectType)} <span className="text-white/45">· Visible:</span> {String(diagnosticoSeleccion.selected.visible)}</div>
+              </div>
+              <div className="mt-2 rounded-lg border border-white/10 p-2">
+                <div className="mb-1 font-semibold text-[#d4af37]">Geometría y material actual</div>
+                <div>Vértices: {String(diagnosticoSeleccion.selected.geometry.vertices??"—")} · Triángulos aprox.: {String(diagnosticoSeleccion.selected.geometry.triangles??"—")}</div>
+                <div>Índice de geometría: {String(diagnosticoSeleccion.selected.geometry.indexed)} · Normales: {String(diagnosticoSeleccion.selected.geometry.normals)}</div>
+                {diagnosticoSeleccion.selected.materials.map((material:any,index:number)=><div key={index} className="mt-1 break-words text-white/75">Material {index+1}: {material.type} · {material.name||"sin nombre"} · {material.color||"sin color"}{material.transmission!==null?" · transmisión "+material.transmission:""}{material.ior!==null?" · IOR "+material.ior:""}</div>)}
+              </div>
+              <details className="mt-2 rounded-lg border border-white/10 p-2" open>
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Mallas gema detectadas ({diagnosticoSeleccion.relatedGemMeshes.length}; mostrando hasta 60)</summary>
+                <div className="mt-1 space-y-1">
+                  {diagnosticoSeleccion.relatedGemMeshes.map((mesh:any,index:number)=><div key={mesh.uuid||index} className={"rounded-md p-1.5 "+(mesh.sameSelectedLayer?"bg-emerald-400/10":"bg-white/[.035]")}>
+                    <div className="break-words font-medium">{mesh.name} {mesh.sameSelectedLayer?"· MISMA CAPA":""}</div>
+                    <div className="break-all text-white/45">capa: {mesh.layer||"—"} · ID: {mesh.layerId||"—"} · índice: {String(mesh.layerIndex??"—")}</div>
+                    <div className="break-all text-white/45">key: {String(mesh.layerKey??"—")} · {String(mesh.vertices??"?")} vértices</div>
+                    <div className="break-all text-white/60">UUID: {mesh.uuid}</div>
+                    <div className="break-words text-white/60">{mesh.materials.map((m:any)=>String(m.type)+(m.color?" "+m.color:"")).join(", ")||"sin material"}</div>
+                  </div>)}
+                </div>
+              </details>
+              <details className="mt-2 rounded-lg border border-white/10 p-2">
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Atributos originales del archivo</summary>
+                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.selected.rawAttributes,null,2)}</pre>
+              </details>
+              <details className="mt-2 rounded-lg border border-white/10 p-2">
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Auditoría de metadatos GLB</summary>
+                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.metadataAudit,null,2)}</pre>
+              </details>
+              <details className="mt-2 rounded-lg border border-white/10 p-2">
+                <summary className="cursor-pointer font-semibold text-[#d4af37]">Última asignación de gema</summary>
+                <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.existingAssignment,null,2)}</pre>
+              </details>
+            </div>}
+            {archivo&&<div className="absolute right-16 top-3 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] text-white/60 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
 
             <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-[#111416]/85 px-3 py-2 shadow-2xl backdrop-blur-xl">
               <span className="px-2 text-[10px] text-white/70">◉ &nbsp;Órbita</span><span className="px-2 text-[10px] text-white/70">✋ &nbsp;Pan</span><span className="px-2 text-[10px] text-white/70">⌕ &nbsp;Zoom</span><button type="button" onClick={()=>apiRef.current?.reset()} className="px-2 text-[10px] text-white/70 hover:text-white">⌗ &nbsp;Ajustar</button>
