@@ -152,9 +152,24 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado });
-      if (error) throw error;
-      return (data ?? []) as CatalogoRow[];
+      const [catalogoResult, portadaResult] = await Promise.all([
+        supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
+        supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
+      ]);
+      if (catalogoResult.error) throw catalogoResult.error;
+      if (portadaResult.error) throw portadaResult.error;
+      const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
+      const portada = (portadaResult.data ?? [])[0] as {
+        frase_portada: string | null;
+        imagenes_portada: unknown;
+        intervalo_portada_segundos: number | null;
+      } | undefined;
+      return productosCatalogo.map((row) => ({
+        ...row,
+        frase_portada: portada?.frase_portada ?? null,
+        imagenes_portada: portada?.imagenes_portada ?? [],
+        intervalo_portada_segundos: portada?.intervalo_portada_segundos ?? 5,
+      })) as CatalogoRow[];
     },
     staleTime: 60_000,
     retry: 1,
