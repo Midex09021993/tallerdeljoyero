@@ -549,8 +549,8 @@ function LoginPage() {
                         nombre: "Emprendedor",
                         etiqueta: "EMPIEZA AQUÍ",
                         precio: "Gratis",
-                        enfoque: "Lo esencial para comenzar con criterio técnico y orden comercial.",
-                        items: ["Herramientas públicas para joyeros", "Calculadoras de yeso/agua y aleación de oro", "Conversor de tallas", "Clientes, proyectos y cotizaciones", "Registro básico de pedidos"],
+                        enfoque: "Todas las funciones de la plataforma, con límites de uso básicos.",
+                        items: ["Clientes, cotizaciones, pedidos y contratos", "Ventas y catálogo digital", "Visualizador y peso 3D y AURUM Render", "Mi Nube y AURUM Transfer", "Producción, inventario, compras y gestión de equipo", "Herramientas y calculadoras para joyeros"],
                         estilo: "starter",
                       },
                       {
