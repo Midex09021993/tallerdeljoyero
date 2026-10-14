@@ -497,7 +497,7 @@ function CatalogoPublicoPage() {
         </a>
       ) : null}
 
-      {config.redes_sociales && Object.values(config.redes_sociales).some((url) => typeof url === "string" && /^https?:\\/\\//i.test(url.trim())) ? (
+      {config.redes_sociales && Object.values(config.redes_sociales).some((url) => typeof url === "string" && /^https?:\/\//i.test(url.trim())) ? (
         <section aria-label="Redes sociales" className="border-t border-[#1f1b1810] bg-white/35">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-5 py-7 sm:flex-row sm:justify-between sm:px-8">
             <div className="text-center sm:text-left">
@@ -513,7 +513,7 @@ function CatalogoPublicoPage() {
                 ["pinterest", "Pinterest", Pin],
               ] as const).map(([key, label, Icon]) => {
                 const href = config.redes_sociales?.[key]?.trim();
-                if (!href || !/^https?:\\/\\//i.test(href)) return null;
+                if (!href || !/^https?:\/\//i.test(href)) return null;
                 return <a key={key} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="group grid size-10 place-items-center rounded-full border border-[#b99b6b]/35 bg-white text-[#80663c] shadow-[0_2px_8px_rgba(48,39,30,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#b99b6b] hover:bg-[#b99b6b] hover:text-white hover:shadow-[0_6px_18px_rgba(139,107,54,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99b6b]/60"><Icon className="size-[17px] transition-transform duration-200 group-hover:scale-110" /></a>;
               })}
             </nav>
