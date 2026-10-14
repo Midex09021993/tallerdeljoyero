@@ -71,6 +71,12 @@ export function createAurumLightingController(
         return light;
       };
       if (!lights.key) {
+        // Low-energy hemisphere fill: a gentle ambient contribution for the
+        // shadow side of gold and gemstones. Keep it subtle so it does not
+        // flatten the broad studio reflections or wash out diamond contrast.
+        lights.ambient = new THREE.HemisphereLight(0xf3f6ff, 0x6b5540, 0.12);
+        lights.ambient.name = "aurum-ambient-fill";
+        scene.add(lights.ambient);
         lights.key = mk("spot", 0xffffff, true);
         lights.fill = mk("spot", 0xffffff, false);
         lights.rim = mk("spot", 0xffffff, false);
@@ -97,6 +103,10 @@ export function createAurumLightingController(
         }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
+      if (lights.ambient) {
+        lights.ambient.visible = true;
+        lights.ambient.intensity = Math.max(0, Math.min(0.18, Number(config.ambient ?? 0.08)));
+      }
       apply(lights.fill, config.fill);
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
