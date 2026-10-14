@@ -373,6 +373,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [nombre, setNombre] = useState("");
   const [slug, setSlug] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [redesSociales, setRedesSociales] = useState({ instagram: "", tiktok: "", youtube: "", facebook: "", pinterest: "" });
   const [descripcion, setDescripcion] = useState("");
   const [frasePortada, setFrasePortada] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -391,10 +392,12 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setVisible(Boolean(initial?.visible));
     setError(null);
     void Promise.all([
-      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("catalogo_configuracion").select("whatsapp, descripcion, logo_url, frase_portada, imagenes_portada, intervalo_portada_segundos, redes_sociales").eq("participante_id", participanteId).maybeSingle(),
       supabase.from("identidades_comerciales").select("logo_url, activa").eq("participante_id", participanteId).not("logo_url", "is", null).order("activa", { ascending: false }).limit(1).maybeSingle(),
     ]).then(([configResult, identidadResult]) => {
       setWhatsapp(configResult.data?.whatsapp ?? "");
+      const redes = configResult.data?.redes_sociales && typeof configResult.data.redes_sociales === "object" ? configResult.data.redes_sociales : {};
+      setRedesSociales({ instagram: redes.instagram ?? "", tiktok: redes.tiktok ?? "", youtube: redes.youtube ?? "", facebook: redes.facebook ?? "", pinterest: redes.pinterest ?? "" });
       setDescripcion(configResult.data?.descripcion ?? "");
       setFrasePortada(configResult.data?.frase_portada ?? "");
       // The showroom may use its own logo, independent from the workshop identity.
@@ -498,6 +501,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         descripcion: descripcion.trim() || null,
         frase_portada: frasePortada.trim() || null,
         whatsapp: whatsapp.trim() || null,
+        redes_sociales: Object.fromEntries(Object.entries(redesSociales).map(([key, value]) => [key, value.trim() || null])),
         logo_url: logoUrl,
         imagenes_portada: imagenesPortada,
         intervalo_portada_segundos: intervaloPortada,
@@ -523,7 +527,11 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         <form onSubmit={guardar} className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Nombre público<input required value={nombre} onChange={e => { const nuevoNombre = e.target.value; setNombre(nuevoNombre); if (!slug.trim() || slug === normalizarSlugCatalogo(nombre)) setSlug(normalizarSlugCatalogo(nuevoNombre)); }} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={e => setSlug(normalizarSlugCatalogo(e.target.value))} placeholder="siberiana" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[11px] font-normal text-muted-foreground">Puedes personalizar la dirección pública. Usa letras, números y guiones.</span><span className="text-[11px] font-medium text-gold">URL: /{normalizarSlugCatalogo(slug) || "tu-taller"}</span></label>
-          <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+          <label className="grid gap-1.5 text-xs font-semibold">WhatsApp<input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="51987654321" className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+          <section className="grid gap-3 rounded-2xl border border-border p-4 sm:col-span-2">
+            <div><p className="text-sm font-semibold">Redes sociales</p><p className="mt-1 text-xs font-normal text-muted-foreground">Pega el enlace completo de cada perfil. Las redes vacías no aparecerán en tu catálogo público.</p></div>
+            {([["instagram", "Instagram", "https://instagram.com/tuusuario"], ["tiktok", "TikTok", "https://tiktok.com/@tuusuario"], ["youtube", "YouTube", "https://youtube.com/@tuusuario"], ["facebook", "Facebook", "https://facebook.com/tuusuario"], ["pinterest", "Pinterest", "https://pinterest.com/tuusuario"]] as const).map(([key, label, placeholder]) => <label key={key} className="grid gap-1.5 text-xs font-semibold">{label}<input type="url" value={redesSociales[key]} onChange={e => setRedesSociales(actual => ({ ...actual, [key]: e.target.value }))} placeholder={placeholder} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>)}
+          </section>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-3 text-sm font-normal" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Frase principal de portada
             <input maxLength={120} value={frasePortada} onChange={e => setFrasePortada(e.target.value)} placeholder="Joyas hechas para quedarse." className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-normal" />
