@@ -321,7 +321,12 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb += vec3(aurumFlash);
 
         float aurumFacetContrast=smoothstep(0.72,0.98,aurumFacing);
-        float aurumContrast=mix(1.0,0.992,aurumScintillationContrast*aurumFacetContrast);
+        // Diamond facets need a little more separation in bright studio HDRs;
+        // the previous 0.8% modulation was effectively invisible on white stones.
+        // Keep colored gems unchanged and deepen only the diamond's reflected
+        // facet contrast without tinting the base color or raising exposure.
+        float aurumFacetFloor=family === "Diamante" ? "0.955" : "0.992";
+        float aurumContrast=mix(1.0,aurumFacetFloor,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
         if(aurumPhenomenonStrength>0.0){
