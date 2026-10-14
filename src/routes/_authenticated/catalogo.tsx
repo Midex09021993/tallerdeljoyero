@@ -374,6 +374,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [slug, setSlug] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -384,8 +385,14 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setSlug(initial?.slug ?? "");
     setVisible(Boolean(initial?.visible));
     setError(null);
-    supabase.from("catalogo_configuracion").select("whatsapp, descripcion").eq("participante_id", participanteId).maybeSingle()
-      .then(({ data }) => { setWhatsapp(data?.whatsapp ?? ""); setDescripcion(data?.descripcion ?? ""); });
+    void Promise.all([
+      supabase.from("catalogo_configuracion").select("whatsapp, descripcion").eq("participante_id", participanteId).maybeSingle(),
+      supabase.from("identidades_comerciales").select("logo_url").eq("participante_id", participanteId).eq("activa", true).limit(1).maybeSingle(),
+    ]).then(([configResult, identidadResult]) => {
+      setWhatsapp(configResult.data?.whatsapp ?? "");
+      setDescripcion(configResult.data?.descripcion ?? "");
+      setLogoUrl(identidadResult.data?.logo_url ?? null);
+    });
   }, [open, initial, participanteId]);
 
   if (!open) return null;
@@ -403,6 +410,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         slug: slugNormalizado,
         descripcion: descripcion.trim() || null,
         whatsapp: whatsapp.trim() || null,
+        logo_url: logoUrl,
         visible
       }, { onConflict: "participante_id" });
       if (error) throw error;
