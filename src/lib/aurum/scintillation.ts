@@ -325,7 +325,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // the previous 0.8% modulation was effectively invisible on white stones.
         // Keep colored gems unchanged and deepen only the diamond's reflected
         // facet contrast without tinting the base color or raising exposure.
-        float aurumFacetFloor=family === "Diamante" ? "0.955" : "0.992";
+        float aurumFacetFloor=${family === "Diamante" ? "0.955" : "0.992"};
         float aurumContrast=mix(1.0,aurumFacetFloor,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
 
