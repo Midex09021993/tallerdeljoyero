@@ -73,13 +73,16 @@ export function getAurumModelParts(
     const meta = x.userData?.aurumRhino;
     // Resolve the first VALID index instead of trusting a non-null sentinel
     // such as -1 from partially hydrated GLB extras.
-    const indexCandidates=[meta?.layerIndex,attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex];
+    // Source object attributes and the source layer table are authoritative.
+    // aurumRhino is a hydrated/cache copy and can contain stale values from a
+    // previous import, so consult it only when no source index is available.
+    const indexCandidates=[attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex,meta?.layerIndex];
     const layerIndex=indexCandidates.map((value:any)=>value===null||value===undefined||value===""?-1:Number(value))
       .find((value:number)=>Number.isInteger(value)&&value>=0)??-1;
     const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
-    const capa = String(meta?.capa||layer?.name||attrs.layerName||attrs.LayerName||x.userData?.layerName||"").trim()||undefined;
-    const colorCapa = meta?.colorCapa||colorRhinoHex(layer?.color)||colorRhinoHex(attrs.layerColor??attrs.LayerColor);
-    const layerId = meta?.rhinoLayerId ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? layer?.id ?? layer?.Id;
+    const capa = String(layer?.name||layer?.Name||attrs.layerName||attrs.LayerName||x.userData?.layerName||meta?.capa||"").trim()||undefined;
+    const colorCapa = colorRhinoHex(layer?.color??layer?.Color)||colorRhinoHex(attrs.layerColor??attrs.LayerColor)||meta?.colorCapa;
+    const layerId = layer?.id ?? layer?.Id ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? meta?.rhinoLayerId;
     const hasLayerClassification=Boolean(layer||capa||colorCapa);
     const categoria = hasLayerClassification
       ? (layer ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa) : clasificarCapa(capa||"",colorCapa))
