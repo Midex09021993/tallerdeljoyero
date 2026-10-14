@@ -44,9 +44,9 @@ export function applyAurumIJEWELPresentationCamera(
   // excessively top-down shot. The supplied iJewel screenshot shows a gentle
   // 3/4 elevation, so preserve the VJSON FOV while calibrating the direction
   // to that photographed presentation.
-  // Exact normalized direction from the supplied WebGi VJSON camera position
-  // [-1.2292039067, 9.3674392853, 3.2772151274] looking at [0,0,0].
-  // Do not substitute a hand-tuned photographic angle in reference mode.
+  // Direction is normalized from the actual defaultCamera.position in the
+  // supplied WebGi VJSON. AURUM keeps its normalized-model distance, but does
+  // not invent a different viewing angle for reference mode.
   const direction = new THREE.Vector3(...AURUM_IJEWEL_CAMERA_DIRECTION);
   // Keep generous negative space around the product, as in the reference
   // presentation. The final viewport framing is intentionally not a tight CAD fit.
