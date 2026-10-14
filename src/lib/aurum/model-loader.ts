@@ -251,11 +251,11 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
       const used = new Set<THREE.Object3D>();
       let patchedReferences = 0;
       const closeMatrix = (a:THREE.Matrix4,b:THREE.Matrix4) =>
-        a.elements.every((value,index) => Math.abs(value-b.elements[index]) < 1e-5);
+        a.elements.every((value,index) => Math.abs(value-(b.elements[index] ?? value)) < 1e-5);
       for (const reference of references) {
         const values = reference.geometry.xform.array;
         if (!Array.isArray(values) && !ArrayBuffer.isView(values)) continue;
-        if (values.length !== 16) continue;
+        if ((values as ArrayLike<number>).length !== 16) continue;
         const expected = new THREE.Matrix4();
         expected.set(...Array.from(values as ArrayLike<number>).map(Number) as [number,number,number,number,number,number,number,number,number,number,number,number,number,number,number,number]);
         let group:THREE.Object3D | undefined;
@@ -270,7 +270,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
         const rawIndex = attrs.layerIndex ?? attrs.LayerIndex;
         const layerIndex = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
           ? Number(rawIndex) : null;
-        const sourceLayers = Array.isArray(root.userData?.layers) ? root.userData.layers : [];
+        const sourceLayers = Array.isArray(root.userData?.["layers"]) ? root.userData["layers"] as any[] : [];
         const sourceLayer = layerIndex !== null ? sourceLayers[layerIndex] : null;
         const referenceIdentity = {
           objectId: attrs.id ?? attrs.Id ?? null,
