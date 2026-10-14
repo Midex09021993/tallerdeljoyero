@@ -31,18 +31,18 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
   {
     id: "taller",
     nombre: "Taller",
-    precioEtiqueta: "S/ 1 al día · S/ 30 al mes",
+    precioEtiqueta: "S/ 29 al mes",
     estadoComercial: "pago",
-    enfoque: "Organización del taller y ampliación de la gestión comercial por S/ 30 mensuales.",
+    enfoque: "Acceso a las mismas funciones de la plataforma, con límites de uso según el plan.",
     capacidadesRelacionadas: ["Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo"],
     limitesActivos: false,
   },
   {
     id: "profesional",
     nombre: "Profesional",
-    precioEtiqueta: "S/ 29 al mes",
+    precioEtiqueta: "S/ 79 al mes",
     estadoComercial: "pago",
-    enfoque: "Flujo productivo, inventario y compras junto con la gestión comercial por S/ 29 mensuales.",
+    enfoque: "Acceso a las mismas funciones de la plataforma, con límites de uso más amplios.",
     capacidadesRelacionadas: [
       "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
       "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
@@ -52,9 +52,9 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
   {
     id: "empresarial",
     nombre: "Empresarial",
-    precioEtiqueta: "S/ 79 al mes",
-    estadoComercial: "pago",
-    enfoque: "Operación ampliada para equipos y organizaciones con necesidades multi-sede por S/ 79 mensuales.",
+    precioEtiqueta: "Precio por definir",
+    estadoComercial: "pendiente",
+    enfoque: "Acceso a las mismas funciones de la plataforma, con límites de uso para organizaciones.",
     capacidadesRelacionadas: [
       "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
       "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
