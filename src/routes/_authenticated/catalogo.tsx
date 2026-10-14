@@ -474,7 +474,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name}`);
         const esVideo = file.type.startsWith("video/");
         if (!file.type.startsWith("image/") && !esVideo) throw new Error("Selecciona imágenes o videos compatibles.");
-        if (file.size > 8 * 1024 * 1024) throw new Error("Cada imagen o video debe pesar como máximo 8 MB.");
+        const limiteBytes = (esVideo ? 50 : 15) * 1024 * 1024;
+        if (file.size > limiteBytes) throw new Error(esVideo ? "Cada video debe pesar como máximo 50 MB." : "Cada imagen debe pesar como máximo 15 MB.");
         const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || (esVideo ? "mp4" : "jpg");
         const destino = participanteId + "/carrusel-enlaces/" + crypto.randomUUID() + "." + extension;
         const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
@@ -607,7 +608,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                 {subiendoCarrusel ? <span className="size-2 shrink-0 animate-pulse rounded-full bg-[#b9975b]" /> : <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold">✓</span>}
                 <span className="min-w-0 break-words">{progresoCarrusel}</span>
               </div> : null}
-              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total, máximo 8 MB por archivo. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
+              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total. Imágenes: máximo 15 MB; videos: máximo 50 MB. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
               <div className="grid gap-2 rounded-xl bg-background p-3">
                 <p className="text-xs font-semibold">O pega una URL directa de imagen o video</p>
                 <div className="flex flex-col gap-2 sm:flex-row">
