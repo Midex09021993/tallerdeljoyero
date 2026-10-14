@@ -157,13 +157,13 @@ function CatalogoPublicoPage() {
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
-      if (portadaResult.error) throw portadaResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
-      const portada = (portadaResult.data ?? [])[0] as {
+      // Si la migración de portada aún no se ha aplicado, el catálogo existente sigue funcionando.
+      const portada = portadaResult.error ? undefined : ((portadaResult.data ?? [])[0] as {
         frase_portada: string | null;
         imagenes_portada: unknown;
         intervalo_portada_segundos: number | null;
-      } | undefined;
+      } | undefined);
       return productosCatalogo.map((row) => ({
         ...row,
         frase_portada: portada?.frase_portada ?? null,
