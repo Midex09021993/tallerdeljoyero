@@ -144,6 +144,7 @@ export function AurumRender() {
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
 
@@ -1568,8 +1569,21 @@ export function AurumRender() {
         <p className="mt-3 text-[10px] leading-relaxed text-white/40">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
       </div>}
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
-          <div className="h-full overflow-y-auto">
+        <aside className={(sidebarCollapsed?"w-[58px]":"w-[336px]")+" shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl transition-[width] duration-200 ease-out"}>
+          {sidebarCollapsed ? <nav aria-label="Herramientas de Aurum Render" className="flex h-full flex-col items-center gap-2 overflow-y-auto py-3">
+            <button type="button" title="Materiales" aria-label="Abrir Materiales" onClick={()=>{setUxSection("materiales");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-[#e3c56e]"><SlidersHorizontal className="size-5"/></button>
+            <button type="button" title="Gemas" aria-label="Abrir Gemas" onClick={()=>{setUxSection("gemas");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-sky-200"><Gem className="size-5"/></button>
+            <button type="button" title="Escenas" aria-label="Abrir Escenas" onClick={()=>{setUxSection("escena");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-white"><ImageIcon className="size-5"/></button>
+            <button type="button" title="HDR Metales y HDR Gemas" aria-label="Abrir entornos HDR" onClick={()=>setSidebarCollapsed(false)} className="grid size-10 shrink-0 place-items-center rounded-xl text-[#d4af37] transition hover:bg-white/[.08]"><Sparkles className="size-5"/></button>
+            <button type="button" title="Iluminación y render" aria-label="Abrir iluminación y render" onClick={()=>{setPanel("iluminacion");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08]"><SlidersHorizontal className="size-5"/></button>
+            <div className="mt-auto pt-3">
+              <button type="button" title="Expandir menú" aria-label="Expandir menú" onClick={()=>setSidebarCollapsed(false)} className="grid size-10 place-items-center rounded-xl border border-white/10 text-white/50 transition hover:bg-white/[.08] hover:text-white"><ChevronDown className="size-4 rotate-[-90deg]"/></button>
+            </div>
+          </nav> : <div className="h-full overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#111518]/95 px-4 py-2 backdrop-blur">
+              <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-white/40">Herramientas</span>
+              <button type="button" title="Contraer menú" aria-label="Contraer menú" onClick={()=>setSidebarCollapsed(true)} className="grid size-8 place-items-center rounded-lg text-white/50 transition hover:bg-white/[.08] hover:text-white"><ChevronDown className="size-4 rotate-90"/></button>
+            </div>
             <section className="border-b border-white/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
@@ -1643,7 +1657,7 @@ export function AurumRender() {
                 <SlidersHorizontal className="size-4 text-[#d4af37]"/>
               </button>
             </div>
-          </div>
+          </div>}
         </aside>
 
         <main className="relative min-w-0 flex-1 bg-[#090b0e]">
