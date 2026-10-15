@@ -1299,13 +1299,10 @@ export function AurumRender() {
             // causing the initial "stiff" response. Keep the already compiled diamond
             // shader/materials; the direct render path and transmission budget do the
             // interaction work without a synchronous material-profile transition.
-            renderer.shadowMap.enabled = false;
-            renderer.shadowMap.needsUpdate = false;
-            // Fade the photographic cast shadow back in after orbit instead of
-            // letting it pop from fully absent to full strength on the first idle frame.
-            if (lucesAurum.key?.shadow && "intensity" in lucesAurum.key.shadow) {
-              lucesAurum.key.shadow.intensity = 0;
-            }
+            // Keep the same static shadow map in both direct and photographic
+            // render paths. Toggling shadows off during orbit and rebuilding them
+            // on idle made the contact shadow pop/disappear between states.
+            renderer.shadowMap.enabled = !!renderQuality.shadows;
             invalidateRenderRef.current?.();
           },
           onProgressiveFrame: (frame, total) => {
@@ -1315,10 +1312,6 @@ export function AurumRender() {
             const eased = t * t * (3 - 2 * t);
             liveTransmissionScaleRef.current = startScale + (targetScale - startScale) * eased;
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
-            const shadow = lucesAurum.key?.shadow;
-            if (shadow && "intensity" in shadow) {
-              shadow.intensity = Math.max(0, Math.min(1, eased));
-            }
           },
           onEnd: () => {
             // Idle beauty path: restore the configured gem optics, transmission,
@@ -1329,9 +1322,6 @@ export function AurumRender() {
             // setPixelRatio reallocates renderer/composer targets and can hitch on the
             // very next pointer-down; quality changes still apply through the quality UI.
             liveFastPathRef.current = false;
-            if (lucesAurum.key?.shadow && "intensity" in lucesAurum.key.shadow) {
-              lucesAurum.key.shadow.intensity = 0;
-            }
             aplicarPerfilLive();
             // Begin convergence at the interaction transmission budget, then restore
             // optical framebuffer quality over the loop's bounded idle frames.
@@ -1342,7 +1332,7 @@ export function AurumRender() {
             );
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             renderer.shadowMap.enabled = renderQuality.shadows;
-            renderer.shadowMap.needsUpdate = true;
+            // Reuse the existing static shadow map; avoid a costly rebuild at idle.
             invalidateRenderRef.current?.();
           },
         }
