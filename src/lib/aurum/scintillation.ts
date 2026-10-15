@@ -415,7 +415,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.45))*1.34+vec3(0.45),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.46))*1.42+vec3(0.46),vec3(0.0));
         // Live-view anti-milky calibration: let the dedicated internal gem-HDR
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
@@ -428,7 +428,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only HDR highlight shoulder: reduce clipped white reflections
         // while preserving the RGB ratios that carry the subtle spectral fire.
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
-        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.0,0.0)*0.28);
+        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-0.82,0.0)*0.42);
         gl_FragColor.rgb*=ijHighlightCompression;
         // Selective real-time glint response for very bright diamond facets.
         // This is a lightweight shader highlight, not a screen-space bloom pass.
@@ -514,7 +514,20 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
     );
   };
 
-  material.customProgramCacheKey=()=>`aurum-scintillation-v11-${family}-${familyDispersionScale}-ijewel-${ijewelEnabled?1:0}-pleo-${pleochroismEnabled?1:0}-phen-${phenomenonEnabled?phenomenonType:"none"}-crystal-${String((physicalModel as any)?.crystal?.symmetry??"unknown")}`;
+  // Keep the cache key aligned with every compile-time shader branch.
+  // This final assignment intentionally replaces the earlier material key,
+  // so include all relevant feature flags here rather than losing them.
+  material.customProgramCacheKey=()=>[
+    "aurum-scintillation-v12",
+    family,
+    familyDispersionScale,
+    ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
+    oilDropEnabled?"oil-drop":"no-oil-drop",
+    colorChangeEnabled?"color-change":"no-color-change",
+    phenomenonEnabled?phenomenonType:"no-phenomenon",
+    pleochroismEnabled?"pleochroism":"no-pleochroism",
+    String((physicalModel as any)?.crystal?.symmetry??"unknown"),
+  ].join("-");
 
   // Keep the complete photographic shader available for capture, but allow the
   // interactive viewer to switch to a lean native MeshPhysicalMaterial shader.
