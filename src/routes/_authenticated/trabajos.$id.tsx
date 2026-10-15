@@ -283,7 +283,15 @@ function TrabajoOperativoPage() {
       }
       const { data, error } = await supabase.from("pedido_archivos").select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion").eq("pedido_id", trabajo!.pedido_id).order("created_at", { ascending: false });
       if (error) throw error;
-      return { requisitos: null, archivos: (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }> };
+      const archivos = (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }>;
+      return {
+        requisitos: null,
+        archivos: await Promise.all(archivos.map(async (archivo) => {
+          if (!archivo.url || archivo.es_enlace) return archivo;
+          const { data: firmado, error: errorFirma } = await supabase.storage.from("pedidos").createSignedUrl(archivo.url, 3600);
+          return { ...archivo, url: errorFirma ? "" : (firmado?.signedUrl ?? "") };
+        })),
+      };
     },
   });
 
