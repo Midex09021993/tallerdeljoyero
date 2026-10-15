@@ -299,7 +299,14 @@ function TrabajoOperativoPage() {
   const imagenesReferencia = useMemo(() => archivosPedido.filter((archivo) => {
     const nombre = String(archivo.nombre ?? "").toLowerCase();
     const tipo = String(archivo.tipo ?? "").toLowerCase();
-    const esImagen = tipo.startsWith("image/") || /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(nombre);
+    const grupo = String(archivo.grupo ?? "").toLowerCase();
+    const url = String(archivo.url ?? "").toLowerCase();
+    const extensionesImagen = /\.(png|jpe?g|webp|gif|avif|bmp|svg)(?:$|[?#])/i;
+    const esImagen = tipo.startsWith("image/")
+      || extensionesImagen.test(nombre)
+      || extensionesImagen.test(grupo)
+      || extensionesImagen.test(url)
+      || /\b(imagen|image|foto|fotografía|perspectiva)\b/i.test(tipo + " " + grupo);
     return esImagen && Boolean(archivo.url) && !archivo.es_enlace;
   }), [archivosPedido]);
   useEffect(() => { setIndiceImagenReferencia(0); }, [imagenesReferencia.length, id]);
