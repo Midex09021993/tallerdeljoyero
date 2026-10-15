@@ -342,7 +342,8 @@ export function AurumRender() {
         const dprInteraccion = Math.min(dprReposo, runtimeBudget.interactionPixelRatio);
         const dpr = enMovimiento ? dprInteraccion : dprReposo;
         const actual = Number(renderer.getPixelRatio?.() ?? dpr);
-        if (Math.abs(actual - dpr) < 0.015) return;
+        const composerActual = Number(composer?.getPixelRatio?.() ?? dpr);
+        if (Math.abs(actual - dpr) < 0.015 && Math.abs(composerActual - dpr) < 0.015) return;
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
         const width = nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width;
@@ -365,7 +366,7 @@ export function AurumRender() {
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
         composer?.setSize?.(nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width, nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height);
-        applyPostQuality?.({...renderQuality, pixelRatio:dprReposo, qualityId:id});
+        applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
         renderer.shadowMap.enabled = !!renderQuality.shadows;
