@@ -101,6 +101,24 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     },
   };
 
+  // Three.js caches compiled shader programs. The iJewel-inspired block is
+  // emitted conditionally, so the cache key must distinguish an activated
+  // diamond from the ordinary physical-gem shader; otherwise a cached program
+  // can make the dedicated optics appear inactive or inconsistent.
+  const priorProgramCacheKey=typeof material.customProgramCacheKey==="function"
+    ? material.customProgramCacheKey.bind(material)
+    : ()=>"";
+  material.customProgramCacheKey=()=>[
+    priorProgramCacheKey(),
+    "aurum-dynamic-scintillation-v1",
+    family,
+    ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
+    oilDropEnabled?"oil-drop":"no-oil-drop",
+    colorChangeEnabled?"color-change":"no-color-change",
+    phenomenonEnabled?"phenomenon":"no-phenomenon",
+    pleochroismEnabled?"pleochroism":"no-pleochroism",
+  ].join("|");
+
   material.onBeforeCompile=(shader:any)=>{
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
