@@ -69,13 +69,10 @@ export function createAurumGemEnvironment(
         // iJewel exposes the gem environment independently from the scene
         // environment. A very small family-specific rotation offset is applied
         // to the gem light field only; it does not alter geometry or IOR.
-        // Diamonds need a little more reflected studio energy to reveal their
-        // crown/pavilion contrast. Keep this boost isolated from colored gems
-        // and metals; it does not alter scene exposure or the material's IOR.
-        // The supplied iJewel VJSON sets the white DiamondMaterial envMapIntensity to 1.3.
-        // AURUM's diamond family baseline is 1.14; this isolated scale brings
-        // the effective intensity close to 1.30 without brightening colored gems.
-        const familyReflectionScale = family === "Diamante" ? 1.14 : 1;
+        // Live-view calibration: avoid washing out the diamond's facet contrast
+        // under bright studio HDRIs. Keep the adjustment isolated to diamond
+        // reflections; do not change renderer exposure, gem IOR or metal response.
+        const familyReflectionScale = family === "Diamante" ? 0.94 : 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
