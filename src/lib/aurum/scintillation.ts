@@ -33,7 +33,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
             : .80;
 
   const strength=family==="Diamante"
-    ? .16*brilliance
+    ? .18*brilliance
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
