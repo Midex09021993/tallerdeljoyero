@@ -17,8 +17,6 @@ export interface AurumFinalRenderOptions {
   height: number;
   samples?: number;
   bounces?: number;
-  /** Trace separate wavelength-dependent IOR passes for physically motivated diamond fire. */
-  spectralDispersion?: boolean;
   mimeType?: "image/png" | "image/jpeg" | "image/webp";
   environmentUrl?: string | null;
   environmentIntensity?: number;
@@ -33,11 +31,8 @@ export const AURUM_PT_DIAMOND_IOR = 2.417;
 const yieldFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 function convertMaterial(src: any): THREE.MeshPhysicalMaterial {
-  const diamondMeta = src?.userData?.aurumDiamondMaterial;
-  const isDiamond = src?.userData?.aurumGemFamily === "Diamante"
-    || Boolean(src?.userData?.aurumIJEWELActive && diamondMeta)
-    || src?.userData?.aurumDiamondShaderMode === "aurum-native-facet-environment-v1";
-  const isGem = isDiamond || Boolean(src?.userData?.aurumGemFamily) || Number(src?.transmission ?? 0) > 0;
+  const isGem = Boolean(src?.userData?.aurumGemFamily) || Number(src?.transmission ?? 0) > 0;
+  const isDiamond = src?.userData?.aurumGemFamily === "Diamante";
   const m = new THREE.MeshPhysicalMaterial({
     color: src?.color?.clone?.() ?? new THREE.Color(0xffffff),
     metalness: isGem ? 0 : Number(src?.metalness ?? 0),
@@ -72,7 +67,6 @@ function convertMaterial(src: any): THREE.MeshPhysicalMaterial {
 function buildIsolatedScene(model: THREE.Object3D) {
   const scene = new THREE.Scene();
   const materials: THREE.Material[] = [];
-  const diamondMaterials: THREE.MeshPhysicalMaterial[] = [];
   const cache = new Map<any, THREE.Material>();
   const root = new THREE.Group();
   model.updateMatrixWorld(true);
@@ -86,15 +80,7 @@ function buildIsolatedScene(model: THREE.Object3D) {
     const srcMats = Array.isArray(obj.material) ? obj.material : [obj.material];
     const conv = srcMats.map((s: any) => {
       let c = cache.get(s);
-      if (!c) {
-        c = convertMaterial(s);
-        cache.set(s, c);
-        materials.push(c);
-        const isDiamond = s?.userData?.aurumGemFamily === "Diamante"
-          || Boolean(s?.userData?.aurumIJEWELActive && s?.userData?.aurumDiamondMaterial)
-          || s?.userData?.aurumDiamondShaderMode === "aurum-native-facet-environment-v1";
-        if (isDiamond && (c as any).isMeshPhysicalMaterial) diamondMaterials.push(c as THREE.MeshPhysicalMaterial);
-      }
+      if (!c) { c = convertMaterial(s); cache.set(s, c); materials.push(c); }
       return c;
     });
     const mesh = new THREE.Mesh(obj.geometry, Array.isArray(obj.material) ? conv : conv[0]);
@@ -115,7 +101,7 @@ function buildIsolatedScene(model: THREE.Object3D) {
   floor.position.y = Number.isFinite(box.min.y) ? box.min.y - size * 0.0005 : 0;
   scene.add(floor);
   scene.background = new THREE.Color(0xffffff);
-  return { scene, materials, floorGeo, diamondMaterials };
+  return { scene, materials, floorGeo };
 }
 
 async function loadEquirect(url: string | null | undefined): Promise<THREE.Texture> {
@@ -177,113 +163,56 @@ export async function renderAurumPathTracedImage(
   cam.aspect = width / height;
   cam.updateProjectionMatrix();
 
-  const { scene, materials, floorGeo, diamondMaterials } = buildIsolatedScene(model);
+  const { scene, materials, floorGeo } = buildIsolatedScene(model);
   const env = await loadEquirect(opts.environmentUrl);
   scene.environment = env;
   scene.environmentIntensity = opts.environmentIntensity ?? 1;
   scene.environmentRotation.set(0, opts.environmentRotationY ?? 0, 0);
 
-  const useSpectralDispersion = opts.spectralDispersion !== false && diamondMaterials.length > 0;
-  const wavelengthPasses = useSpectralDispersion
-    ? [
-        { channel: 0, ior: 2.410 }, // long wavelengths (red)
-        { channel: 1, ior: 2.417 }, // reference green / sodium D line
-        { channel: 2, ior: 2.435 }, // short wavelengths (blue)
-      ]
-    : [{ channel: -1, ior: AURUM_PT_DIAMOND_IOR }];
-  const passCanvases: HTMLCanvasElement[] = [];
   let tracer: any = null;
   try {
     renderer.setRenderTarget(null);
     renderer.setPixelRatio(1);
     renderer.setSize(width, height, false);
-    const total = samples * wavelengthPasses.length;
-    let completed = 0;
-
-    for (let passIndex = 0; passIndex < wavelengthPasses.length; passIndex++) {
-      if (opts.signal?.aborted) throw new DOMException("cancelado", "AbortError");
-      const pass = wavelengthPasses[passIndex]!;
-      // Change IOR only on diamond materials. Metals and colored gems remain
-      // physically identical across wavelength passes, so their RGB channels
-      // recombine without a synthetic rainbow tint.
-      for (const material of diamondMaterials) {
-        Object.defineProperty(material, "ior", {
-          value: pass.ior, writable: true, configurable: true,
-        });
-        material.roughness = 0;
-        material.transmission = 1;
-        material.color.set(0xffffff);
-      }
-
-      tracer = new WebGLPathTracer(renderer);
-      tracer.renderDelay = 0;
-      tracer.minSamples = 1;
-      tracer.fadeDuration = 0;
-      tracer.rasterizeScene = false;
-      tracer.dynamicLowRes = false;
-      tracer.renderToCanvas = true;
-      tracer.bounces = Math.max(4, Math.min(20, opts.bounces ?? 12));
-      tracer.transmissiveBounces = 16;
-      tracer.multipleImportanceSampling = true;
-      tracer.tiles.set(2, 2);
-      await yieldFrame();
-      tracer.setScene(scene, cam);
-
-      let last = 0;
-      while (tracer.samples < samples) {
-        if (opts.signal?.aborted) throw new DOMException("cancelado", "AbortError");
-        tracer.renderSample();
-        const done = Math.floor(tracer.samples);
-        if (done !== last) {
-          completed += done - last;
-          last = done;
-          opts.onProgress?.(Math.min(completed, total), total);
-        }
-        await yieldFrame();
-      }
-      // Preserve each wavelength pass before disposing its accumulation.
-      tracer.renderSample();
-      const passCanvas = document.createElement("canvas");
-      passCanvas.width = width;
-      passCanvas.height = height;
-      const passContext = passCanvas.getContext("2d");
-      if (!passContext) throw new Error("No se pudo crear el lienzo de dispersión.");
-      passContext.drawImage(renderer.domElement, 0, 0, width, height);
-      passCanvases.push(passCanvas);
-      tracer.dispose();
-      tracer = null;
-    }
-
-    const out = document.createElement("canvas");
-    out.width = width;
-    out.height = height;
-    const ctx = out.getContext("2d", { willReadFrequently: true });
-    if (!ctx) throw new Error("No se pudo crear el lienzo de captura.");
-    if (passCanvases.length === 1) {
-      ctx.drawImage(passCanvases[0]!, 0, 0);
-    } else {
-      const pixels = passCanvases.map((canvas) => {
-        const passCtx = canvas.getContext("2d", { willReadFrequently: true });
-        if (!passCtx) throw new Error("No se pudo leer una pasada espectral.");
-        return passCtx.getImageData(0, 0, width, height);
-      });
-      const combined = ctx.createImageData(width, height);
-      const red = pixels[0]!.data, green = pixels[1]!.data, blue = pixels[2]!.data;
-      for (let i = 0; i < combined.data.length; i += 4) {
-        combined.data[i] = red[i]!;
-        combined.data[i + 1] = green[i + 1]!;
-        combined.data[i + 2] = blue[i + 2]!;
-        combined.data[i + 3] = 255;
-      }
-      ctx.putImageData(combined, 0, 0);
-    }
+    tracer = new WebGLPathTracer(renderer);
+    tracer.renderDelay = 0;
+    tracer.minSamples = 1;
+    tracer.fadeDuration = 0;
+    tracer.rasterizeScene = false;
+    tracer.dynamicLowRes = false;
+    tracer.renderToCanvas = true;
+    tracer.bounces = Math.max(4, Math.min(20, opts.bounces ?? 12));
+    tracer.transmissiveBounces = 16;
+    tracer.multipleImportanceSampling = true;
+    tracer.tiles.set(2, 2);
+    await yieldFrame();
+    tracer.setScene(scene, cam);
     if (opts.signal?.aborted) throw new DOMException("cancelado", "AbortError");
+
+    const total = samples;
+    let last = 0;
+    while (tracer.samples < total) {
+      if (opts.signal?.aborted) throw new DOMException("cancelado", "AbortError");
+      tracer.renderSample();
+      const done = Math.floor(tracer.samples);
+      if (done !== last) { last = done; opts.onProgress?.(Math.min(done, total), total); }
+      await yieldFrame();
+    }
+    // Draw the final accumulation to the canvas and read it in the same task
+    // (works with preserveDrawingBuffer=false).
+    tracer.renderSample();
+    const out = document.createElement("canvas");
+    out.width = width; out.height = height;
+    const ctx = out.getContext("2d");
+    if (!ctx) throw new Error("No se pudo crear el lienzo de captura.");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(renderer.domElement, 0, 0, width, height);
     const url = out.toDataURL(opts.mimeType ?? "image/png", 0.95);
     if (!url || url.length < 1000) throw new Error("El render final quedó vacío.");
     return url;
   } finally {
     try { tracer?.dispose?.(); } catch { /* ignore */ }
-    passCanvases.forEach((canvas) => { canvas.width = 1; canvas.height = 1; });
     materials.forEach((m) => m.dispose());
     floorGeo.dispose();
     env.dispose();

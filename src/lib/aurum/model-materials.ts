@@ -6,7 +6,6 @@ import {
   getAurumOpticalProfile,
 } from "../aurum-material-engine";
 import { applyAurumDynamicScintillation } from "./scintillation";
-import { activateAurumDiamondMaterial } from "./aurum-diamond-material";
 
 function getAurumCategoryDiagnostic(){
   try {
@@ -111,10 +110,11 @@ export function applyAurumInitialModelMaterials(
         applyAurumOpticalProfile(m,getAurumOpticalProfile(preset.familia));
         if (preset.familia==="Diamante") {
           applyAurumDiamondOptics(m);
-          // Use the same dedicated diamond activation as later material changes.
-          // This attaches the source-calibrated optical parameters before the shader
-          // is compiled, instead of setting only an activation flag with no metadata.
-          activateAurumDiamondMaterial(m,preset);
+          m.userData={
+            ...(m.userData??{}),
+            aurumIJEWELActive:true,
+            aurumDiamondShaderMode:"native-ijewel-approx-v1",
+          };
           applyAurumDynamicScintillation(m,getAurumOpticalProfile(preset.familia));
         }
       }

@@ -57,12 +57,7 @@ export function createAurumGemEnvironment(
       if (!x.isMesh || !x.material) return;
       const apply = (m:any) => {
         if (!m?.userData?.aurumOpticalProfile) return m;
-        const environmentPresenceChanged = Boolean(m.envMap) !== Boolean(texture);
         m.envMap = texture;
-        // Only rebuild the shader when the material switches between having and
-        // not having an environment map. Replacing one HDR texture with another
-        // keeps the same shader variant and should not interrupt camera motion.
-        if (environmentPresenceChanged) m.needsUpdate = true;
         const family = String(m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default");
         const profile = getAurumGemEnvironmentProfile(family);
         const authored = Number.isFinite(m.userData?.aurumGemBaseEnvIntensity)
@@ -104,8 +99,7 @@ export function createAurumGemEnvironment(
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
-        // envMap was already present on Aurum gem materials. Swapping its texture does not
-        // change shader defines; avoid forcing shader recompilation during HDR transitions.
+        m.needsUpdate = true;
         return m;
       };
       x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);

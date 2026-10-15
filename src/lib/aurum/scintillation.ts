@@ -33,7 +33,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
             : .80;
 
   const strength=family==="Diamante"
-    ? .18*brilliance
+    ? .16*brilliance
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
@@ -112,12 +112,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       // source DiamondMaterial refractiveIndex (2.6) from calibration metadata.
       // This does not change the physical PBR material or claim shader parity.
       shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(ijewel.refractiveIndex??2.6)))};
-      const authoredRayBounces=Math.max(1,Math.min(8,Math.floor(Number(ijewel.rayBounces??5))));
-      const runtimeRayBounces=Number(material.userData?.aurumIJEWELRayBouncesRuntime);
-      const rayBounceUniform={value:Number.isFinite(runtimeRayBounces)?Math.max(1,Math.min(authoredRayBounces,runtimeRayBounces)):authoredRayBounces};
-      shader.uniforms.aurumIJEWELRayBounces=rayBounceUniform;
-      material.userData.aurumIJEWELRayBouncesAuthored=authoredRayBounces;
-      material.userData.aurumIJEWELRayBouncesUniform=rayBounceUniform;
+      shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(ijewel.rayBounces??5))))};
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
       shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
       shader.uniforms.aurumIJEWELSQUASHFactor={value:Number(ijewel.squashFactor??.98)};
@@ -299,9 +294,6 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         vec3 ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
         vec3 ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
         ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijWeight;
-        // A single spectral environment bounce is used during orbit. Additional
-        // internal paths are enabled progressively after the camera settles.
-        if(aurumIJEWELRayBounces>=2.0){
         // One low-cost reflected internal path approximates a pavilion bounce.
         // The source mesh's facet normals still control the primary PBR result;
         // this is deliberately an approximation, not full geometric ray tracing.
@@ -319,7 +311,6 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
         ijDepth=exp(-max(aurumIJEWELAbsorptionFactor,0.001)*.12);
         ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*(.42*ijDepth);
-        }
 
         // Optional third environment sample: approximate a second pavilion
         // interaction without claiming geometric multi-bounce ray tracing.
@@ -371,13 +362,13 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijFacetBitangent=normalize(cross(ijNormal,ijFacetTangent));
           // Keep the wider virtual-facet sampling that the user preferred
           // during visual review; only samples the existing gem HDRI.
-          vec3 ijVirtualDirA=normalize(ijDirG+ijFacetTangent*0.078);
-          vec3 ijVirtualDirB=normalize(ijDirG-ijFacetBitangent*0.078);
+          vec3 ijVirtualDirA=normalize(ijDirG+ijFacetTangent*0.070);
+          vec3 ijVirtualDirB=normalize(ijDirG-ijFacetBitangent*0.070);
           vec3 ijVirtualWorldA=inverseTransformDirection(ijVirtualDirA,viewMatrix);
           vec3 ijVirtualWorldB=inverseTransformDirection(ijVirtualDirB,viewMatrix);
           vec3 ijVirtualEnvA=textureCubeUV(envMap,envMapRotation*ijVirtualWorldA,0.0).rgb;
           vec3 ijVirtualEnvB=textureCubeUV(envMap,envMapRotation*ijVirtualWorldB,0.0).rgb;
-          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.105*ijDepth);
+          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.10*ijDepth);
         }
         // The custom internal-ray samples bypass MeshPhysicalMaterial's
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
@@ -399,7 +390,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.45))*1.42+vec3(0.45),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.45))*1.34+vec3(0.45),vec3(0.0));
         // Blend the environment rays with the physical PBR surface. A bounded
         // weight preserves crown highlights and avoids a dark HDR map swallowing
         // the diamond; this remains an environment-sampling approximation.
@@ -510,54 +501,6 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   };
   material.needsUpdate=true;
   return material;
-};
-
-
-
-export type AurumDiamondBounceController = {
-  setInteractive: () => void;
-  setProgress: (progress: number) => void;
-  setBeauty: () => void;
-  count: number;
-};
-
-/**
- * Controls the number of custom diamond environment bounces through uniforms.
- * The shader variant is never recompiled at pointer-down/up; only the uniform
- * value changes. One bounce means three wavelength-separated cube lookups;
- * five authored bounces allow up to fifteen lookups for the full beauty view.
- */
-export const createAurumDiamondBounceController=(target:any):AurumDiamondBounceController=>{
-  const materials:Array<{material:any;authored:number}>=[];
-  const seen=new Set<any>();
-  target?.traverse?.((object:any)=>{
-    if(!object?.isMesh) return;
-    const list=Array.isArray(object.material)?object.material:[object.material];
-    list.forEach((material:any)=>{
-      if(!material || seen.has(material)) return;
-      seen.add(material);
-      const ud=material.userData??{};
-      if(ud.aurumGemFamily!=="Diamante" || !ud.aurumIJEWELActive) return;
-      const authored=Math.max(1,Math.min(8,Math.floor(Number(ud.aurumIJEWELParameters?.rayBounces??5))));
-      material.userData={...ud,aurumIJEWELRayBouncesAuthored:authored};
-      materials.push({material,authored});
-    });
-  });
-  const apply=(progress:number)=>{
-    const t=Math.max(0,Math.min(1,Number(progress)||0));
-    materials.forEach(({material,authored})=>{
-      const value=Math.max(1,Math.min(authored,1+Math.round((authored-1)*t)));
-      material.userData={...(material.userData??{}),aurumIJEWELRayBouncesRuntime:value};
-      const uniform=material.userData?.aurumIJEWELRayBouncesUniform;
-      if(uniform) uniform.value=value;
-    });
-  };
-  return {
-    setInteractive:()=>apply(0),
-    setProgress:(progress:number)=>apply(progress),
-    setBeauty:()=>apply(1),
-    count:materials.length,
-  };
 };
 
 export type AurumGemShaderQuality = "live"|"beauty";

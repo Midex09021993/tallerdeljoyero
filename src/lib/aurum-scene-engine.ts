@@ -21,8 +21,6 @@ export type AurumScenePreset = {
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   oscuro:{id:"oscuro",background:0x090b0e,ground:0x15181c,groundRoughness:.30,groundMetalness:.05,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.48,shadowSoftness:.72,exposure:.62,lighting:"studioHard"},
   claro:{id:"claro",background:0xf4f4f2,ground:0xe9e8e5,groundRoughness:.56,groundMetalness:.01,groundVisible:true,environmentIntensity:.62,environmentRotation:.20,shadowIntensity:.22,shadowSoftness:.94,exposure:.70,lighting:"jewelry"},
-  // Neutral premium studio sweep tuned for shaped reflections on polished metals.
-  joyeriaPremium:{id:"joyeriaPremium",background:0xf1f0ed,ground:0xe8e6e1,groundRoughness:.72,groundMetalness:.001,groundVisible:true,environmentIntensity:.56,environmentRotation:.38,shadowIntensity:.20,shadowSoftness:.97,exposure:.68,lighting:"studioSoft"},
   luxury:{id:"luxury",background:0x21150c,ground:0x20140b,groundRoughness:.34,groundMetalness:.03,groundVisible:true,environmentIntensity:.56,environmentRotation:.42,shadowIntensity:.46,shadowSoftness:.82,exposure:.57,lighting:"luxury"},
   marmol:{id:"marmol",background:0xc9c6bf,ground:0xc5c2bc,groundRoughness:.24,groundMetalness:.02,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
   transparente:{id:"transparente",background:0x000000,ground:0x15181c,groundRoughness:.30,groundMetalness:.02,groundVisible:false,environmentIntensity:.62,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},

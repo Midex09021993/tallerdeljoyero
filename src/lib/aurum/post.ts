@@ -30,7 +30,6 @@ export async function createAurumPostPipeline(
   let dofPass:any=null;
   let outputPass:any=null;
   let gradingPass:any=null;
-  let desiredTaaEnabled=false;
 
   try {
     composer=new EffectComposer(renderer);
@@ -190,7 +189,6 @@ export async function createAurumPostPipeline(
     // saved TAA beauty so neither stage is silently discarded.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     const taaEnabled=Boolean(options.capture) || (config.temporalAA!==false && config.taa!==false && !isLowQuality);
-    desiredTaaEnabled=taaEnabled;
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
@@ -304,46 +302,9 @@ export async function createAurumPostPipeline(
   };
 
   applyQuality(quality);
-  // Keep one composer and stable drawing-buffer sizes across interaction
-  // boundaries, but temporarily skip expensive screen-space effects while the
-  // camera is moving. This reduces per-frame GPU work without recompiling gem
-  // shaders or reallocating render targets (both can cause a visible hitch).
-  const interactionPassStates = new Map<any, boolean>();
-  let interactionModeActive = false;
-  const setInteractionMode=(active:boolean)=>{
-    if(active === interactionModeActive) return;
-    interactionModeActive = active;
-    if(active){
-      // Never blend samples from the previous camera pose into moving frames.
-      if(taaPass){
-        taaPass.accumulate=false;
-        taaPass.accumulateIndex=-1;
-        taaPass.enabled=false;
-      }
-      // These passes are screen-space and comparatively expensive. The baked
-      // contact shadow and main render/output passes remain untouched.
-      const motionPasses = [ssaoPass, ssrSavePass, ssrPass, ssrCompositePass, bloomPass, dofPass, lutPass];
-      interactionPassStates.clear();
-      for(const pass of motionPasses){
-        if(!pass) continue;
-        interactionPassStates.set(pass, Boolean(pass.enabled));
-        pass.enabled=false;
-      }
-      return;
-    }
-    // Restore exactly the pass state selected by the user's quality profile.
-    for(const [pass, wasEnabled] of interactionPassStates) pass.enabled=wasEnabled;
-    interactionPassStates.clear();
-    // Start a clean temporal accumulation only after OrbitControls damping ends.
-    if(taaPass){
-      taaPass.enabled=desiredTaaEnabled;
-      taaPass.accumulate=desiredTaaEnabled;
-      taaPass.accumulateIndex=-1;
-    }
-  };
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,setInteractionMode,dofPass,taaPass};
+  return {composer,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass};
 }

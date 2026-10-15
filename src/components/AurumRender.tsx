@@ -12,11 +12,11 @@ import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "../lib
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
-import { createAurumGemEnvironment, getAurumGemEnvironmentIntensity } from "../lib/aurum/gem-environment";
+import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { setAurumInclusionsVisible } from "../lib/aurum/gems";
-import { createAurumDiamondBounceController, setAurumGemShaderQuality } from "../lib/aurum/scintillation";
+import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
@@ -30,7 +30,6 @@ import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
 import { ChevronDown, Download, Expand, FileJson, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
-import { AurumEnvironmentPicker } from "./AurumEnvironmentPicker";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
@@ -143,10 +142,7 @@ export function AurumRender() {
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdriMetales"|"hdriGemas"|"">("materiales");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [hdriMetalId, setHdriMetalId] = useState("jewelry");
-  const [hdriGemId, setHdriGemId] = useState("gemNeutral");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
 
@@ -197,7 +193,7 @@ export function AurumRender() {
       // Orbit controls calibrated to the supplied iJewel VJSON reference.
       if (controles) {
         controles.enableDamping = true;
-        controles.dampingFactor = 0.14;
+        controles.dampingFactor = 0.08;
         controles.zoomSpeed = 0.15;
         controles.rotateSpeed = 2;
       }
@@ -228,7 +224,7 @@ export function AurumRender() {
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setInteractionMode } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -307,27 +303,9 @@ export function AurumRender() {
         }
       };
 
-      const aplicarHdriMetal = (key:string) => {
-        const url = AURUM_HDRI_URLS[key];
-        if (!url) return;
-        const requestId = ++hdrRequestId;
-        environmentController.load(url, requestId, () => vivo && requestId === hdrRequestId, (next) => {
-          entorno = next;
-          invalidateRenderRef.current?.();
-        });
-      };
-      const aplicarHdriGema = (key:string) => {
-        if (!AURUM_GEM_HDRI_URLS[key]) return;
-        cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
-      };
-
       // El escenario inicial selecciona su propio Environment HDRI.
 
       let modelo:any = null;
-      let diamondBounceController: ReturnType<typeof createAurumDiamondBounceController> | null = null;
-      let liveProfileMeshes:any[] = [];
-      let profileRestoreScheduled = false;
-      let profileRestoreToken = 0;
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
       let liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
@@ -338,28 +316,20 @@ export function AurumRender() {
       // resolution are updated together. EffectComposer receives the same DPR.
       composerRef.current = composer;
 
-      // Keep renderer/composer DPR stable during pointer interactions. Changing
-      // pixel ratio reallocates GPU render targets; quality changes remain explicit.
-      const escalaTransmisionInteraccion = () => Math.max(0.05, Math.min(0.15, runtimeBudget.interactionTransmissionScale));
-
       const aplicarCalidadRender = (id:AurumRenderQualityId) => {
         renderQuality = getAurumRenderQuality(id);
         measuredQualityId = id;
         // Quality is an intentional render scale. Do not clamp it to devicePixelRatio:
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
         const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-        const dprReposo = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
-        const dpr = dprReposo;
-        const transmissionScale = liveFastPathRef.current
-          ? escalaTransmisionInteraccion()
-          : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+        const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
-        composer?.setSize?.(nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width, nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height);
         applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
-        renderer.shadowMap.enabled = !!renderQuality.shadows;
+        renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
         // Existing shadow maps must be rebuilt at the selected precision.
         // create() is intentionally called only after disposing the previous maps;
         // the controller itself is idempotent and does not need the redundant call.
@@ -452,7 +422,7 @@ export function AurumRender() {
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; diamondBounceController=null; liveProfileMeshes=[]; profileRestoreToken++; profileRestoreScheduled=false; }
+      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
@@ -464,78 +434,90 @@ export function AurumRender() {
       // Clearcoat is an additional physical layer and is not required for the
       // reference metal/gem look. We disable it only in LIVE and restore the
       // authored value for CAPTURE.
-      const aplicarPerfilMaterialLiveMalla = (x:any, enabled:boolean) => {
-        if (!x?.isMesh) return;
-        const materials=Array.isArray(x.material) ? x.material : [x.material];
-        materials.forEach((m:any) => {
-          if (!m?.isMeshPhysicalMaterial) return;
-          if (enabled) {
-            if (m.userData?.aurumLiveClearcoatStored === undefined) {
-              m.userData={
-                ...(m.userData??{}),
-                aurumLiveClearcoatStored:Number(m.clearcoat??0),
-                aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
-              };
-            }
-            if (m.userData?.aurumGemFamily && m.userData?.aurumLiveTransmissionStored === undefined) {
-              m.userData={
-                ...(m.userData??{}),
-                aurumLiveTransmissionStored:Number(m.transmission??0),
-              };
-            }
-            const isDiamond=m.userData?.aurumGemFamily==="Diamante";
-            const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && !isDiamond && Number(m.transmission??0)!==0;
-            const simplifyClearcoat=!isDiamond && (Number(m.clearcoat??0)!==0 || Number(m.clearcoatRoughness??0)!==0);
-            if (simplifyClearcoat || disableGemTransmission) {
-              if (simplifyClearcoat) {
+      const aplicarPerfilMaterialLive = (target:any, enabled:boolean) => {
+        target?.traverse?.((x:any) => {
+          if (!x.isMesh) return;
+          const materials=Array.isArray(x.material) ? x.material : [x.material];
+          materials.forEach((m:any) => {
+            if (!m?.isMeshPhysicalMaterial) return;
+            // The LIVE path stays lightweight for every gemstone, including the focal diamond.
+            // Full clearcoat, dispersion, iridescence and authored transmission return only for capture.
+            if (enabled) {
+              if (m.userData?.aurumLiveClearcoatStored === undefined) {
+                m.userData={
+                  ...(m.userData??{}),
+                  aurumLiveClearcoatStored:Number(m.clearcoat??0),
+                  aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
+                };
+              }
+              // Avoid Three.js' full-screen transmission path while interacting.
+              // The native environment reflection keeps facet contrast readable;
+              // the exact authored transmission is restored for idle convergence.
+              if (m.userData?.aurumGemFamily && m.userData?.aurumLiveTransmissionStored === undefined) {
+                m.userData={
+                  ...(m.userData??{}),
+                  aurumLiveTransmissionStored:Number(m.transmission??0),
+                };
+              }
+              const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && Number(m.transmission??0)!==0;
+              if (
+                Number(m.clearcoat??0)!==0 ||
+                Number(m.clearcoatRoughness??0)!==0 ||
+                disableGemTransmission
+              ) {
                 m.clearcoat=0;
                 m.clearcoatRoughness=0;
+                // The shader-quality controller owns dispersion/iridescence
+                // storage and restoration. Keep this function limited to
+                // clearcoat and transmission so capture never loses authored fire.
+                if (disableGemTransmission) {
+                  // Keep a lightweight but more faithful live transmission.
+                  // The diamond gets the same moderate cap used by the recent PNG
+                  // comparison; other gem families keep their existing live cap.
+                  // Dispersion and clearcoat remain disabled while orbiting.
+                  const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
+                  const liveTransmissionCap=m.userData?.aurumGemFamily==="Diamante" ? 0.35 : 0.35;
+                  m.transmission=Math.min(authoredTransmission,liveTransmissionCap);
+                }
+                m.needsUpdate=true;
               }
-              if (disableGemTransmission) {
-                const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
-                m.transmission=Math.min(authoredTransmission,0.35);
+            } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
+              m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
+              m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
+              if (m.userData?.aurumLiveTransmissionStored !== undefined) {
+                m.transmission=Number(m.userData.aurumLiveTransmissionStored);
               }
               m.needsUpdate=true;
+              const next={...(m.userData??{})};
+              delete next.aurumLiveTransmissionStored;
+              delete next.aurumLiveClearcoatStored;
+              delete next.aurumLiveClearcoatRoughnessStored;
+              m.userData=next;
             }
-          } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
-            m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
-            m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
-            if (m.userData?.aurumLiveTransmissionStored !== undefined) {
-              m.transmission=Number(m.userData.aurumLiveTransmissionStored);
-            }
-            m.needsUpdate=true;
-            const next={...(m.userData??{})};
-            delete next.aurumLiveTransmissionStored;
-            delete next.aurumLiveClearcoatStored;
-            delete next.aurumLiveClearcoatRoughnessStored;
-            m.userData=next;
-          }
+          });
         });
-      };
-      const aplicarPerfilMaterialLive = (target:any, enabled:boolean) => {
-        target?.traverse?.((x:any) => aplicarPerfilMaterialLiveMalla(x, enabled));
       };
 
       const aplicarPerfilLive = () => {
         const live=liveFastPathRef.current;
         if (!modelo) {
-          renderer.shadowMap.enabled=renderQuality.shadows;
+          renderer.shadowMap.enabled=!live && renderQuality.shadows;
           return;
         }
         aplicarPerfilMaterialLive(modelo,live);
-        // Keep the dedicated diamond optical shader enabled in both live and
-        // beauty modes. The quality switch only simplifies non-diamond gems;
-        // diamond fire/dispersion must not disappear when the camera moves.
+        // LIVE uses the lean native gemstone shader; CAPTURE restores the full
+        // photographic shader. This avoids paying the custom optical layer on
+        // every interactive fragment while preserving the beauty pipeline.
         setAurumGemShaderQuality(modelo,live ? "live" : "beauty");
-        // Keep the same shadow-map policy in both live and beauty paths.
-        // Switching this off while orbiting and forcing a rebuild at idle caused
-        // the contact shadow to change/disappear across the interaction boundary.
-        renderer.shadowMap.enabled=renderQuality.shadows;
-        // Adapt transmission resolution to interaction state. Keep the diamond's
-        // optical shader, IOR and authored facet normals unchanged; reduce only the
-        // framebuffer work while orbiting, then restore configured quality at idle.
+        if (live) {
+          renderer.shadowMap.enabled=false;
+          renderer.shadowMap.needsUpdate=false;
+        } else {
+          renderer.shadowMap.enabled=renderQuality.shadows;
+          renderer.shadowMap.needsUpdate=true;
+        }
         liveTransmissionScaleRef.current=live
-          ? Math.max(runtimeBudget.interactionTransmissionScale, Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.55)
+          ? runtimeBudget.interactionTransmissionScale
           : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
@@ -693,10 +675,6 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
-        liveProfileMeshes=[];
-        modelo.traverse((x:any)=>{if(x?.isMesh)liveProfileMeshes.push(x);});
-        diamondBounceController=createAurumDiamondBounceController(modelo);
-        diamondBounceController.setInteractive();
         // LIVE MODE: procedural inclusions are intentionally hidden. They add
         // dozens of transparent draw calls and are not required for the base
         // product preview. CAPTURE enables them temporarily for the final image.
@@ -790,10 +768,9 @@ export function AurumRender() {
             // Keep the interactive preview lightweight after initial framing.
             // Full photographic post-processing is reserved for image capture.
             liveFastPathRef.current = true;
-            setInteractionMode?.(true);
             aplicarPerfilLive();
-            // Preserve the contact shadow when the loaded model settles.
-            renderer.shadowMap.enabled = !!renderQuality.shadows;
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           }
         });
@@ -806,8 +783,6 @@ export function AurumRender() {
         material:aplicarMaterial,
         gema:aplicarGema,
         escenario:aplicarEscenario,
-        hdriMetal:aplicarHdriMetal,
-        hdriGema:aplicarHdriGema,
         hdriGround:(config:any={})=>{
           if (config.enabled!==undefined) groundController.setHdriGroundEnabled(!!config.enabled);
         },
@@ -853,7 +828,7 @@ export function AurumRender() {
           try{
             const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
               width:Number(options.width)||1920,height:Number(options.height)||1080,samples:options.samples??256,mimeType:mime as any,
-              environmentUrl:gemEnvironmentUrl,environmentIntensity:getAurumGemEnvironmentIntensity("Diamante")*gemEnvironmentIntensityScale,environmentRotationY:gemEnvironmentRotation,
+              environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
               signal:options.signal,onProgress:options.onProgress,
             });
             const link=document.createElement("a");
@@ -1190,32 +1165,18 @@ export function AurumRender() {
           setUxSection("gemas");
         }
         setPanel("materiales");
-        limpiarResaltado();
-        if (obj.geometry) {
-          // BoxHelper creates a fixed 12-edge selection outline without walking every
-          // triangle to build EdgesGeometry on the main thread.
-          resaltado = new THREE.BoxHelper(obj, 0xff8a5b);
-          if (resaltado.material) {
-            resaltado.material.transparent = true;
-            resaltado.material.opacity = .95;
-            resaltado.material.depthTest = false;
-            resaltado.material.depthWrite = false;
-          }
+        limpiarResaltado();        if (obj.geometry) {
+          const edges = new THREE.EdgesGeometry(obj.geometry, 18);
+          resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
           resaltado.renderOrder = 20;
+          resaltado.position.copy(obj.getWorldPosition(new THREE.Vector3()));
+          resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
+          resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
           escena.add(resaltado);
         }
       };
-      let pointerDownPos = { x: 0, y: 0 };
-      const onPointerDown = (event: PointerEvent) => {
-        pointerDownPos = { x: event.clientX, y: event.clientY };
-      };
-      renderer.domElement.addEventListener("pointerdown", onPointerDown);
-
       const seleccionarPorClick = (event: MouseEvent) => {
         if (!modelo || cargando) return;
-        // Ignore the synthetic click emitted after camera orbit/drag.
-        const dist = Math.hypot(event.clientX - pointerDownPos.x, event.clientY - pointerDownPos.y);
-        if (dist > 5) return;
         const rect = renderer.domElement.getBoundingClientRect();
         const pointer = new THREE.Vector2(
           ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -1303,120 +1264,43 @@ export function AurumRender() {
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
-          // Temporal post-processing is not displayed on the direct interaction path.
-          // Do not advance its history every drag frame; update it only for the settled
-          // photographic pipeline, avoiding wasted TAA/temporal work during orbit.
-          if (!liveFastPathRef.current) {
-            updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
-          }
-          // Real fast path during orbit: bypass the composer entirely so disabled
-          // screen-space passes do not still incur render-target/composer overhead.
-          // The renderer keeps the same AgX tone mapping, sRGB output, exposure and
-          // shadow-map policy; the photographic composer returns only after controls
-          // settle. This avoids resizing buffers or recompiling gem shaders on drag.
-          if (liveFastPathRef.current) {
-            renderer.render(escena, camara);
-          } else if (composer) {
-            composer.render();
-          } else {
-            renderer.render(escena, camara);
-          }
+          updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
+          // Keep the direct renderer during orbit, but use the photographic
+          // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
+          // actually reach the interactive preview.
+          if (liveFastPathRef.current || !composer) renderer.render(escena,camara);
+          else composer.render();
           perfTick();
         },
         {
           progressiveFrames: 32,
           onStart: () => {
-            // Interaction path: immediately stop temporal accumulation before the
-            // first camera change. Otherwise TAA can blend the old ring pose into
-            // the new one and create the multiple translucent copies seen in orbit.
-            setInteractionMode?.(true);
+            // Interaction path: cap raster resolution and gem transmission cost.
+            // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            diamondBounceController?.setInteractive();
-            // Reduce GPU pixel workload on high-DPI displays while the user orbits.
-            // Keep EffectComposer synchronized with the renderer's drawing buffer.
-            if (renderer.getPixelRatio() > 1.0) {
-              renderer.setPixelRatio(1.0);
-              composer?.setPixelRatio?.(1.0);
-              composer?.setSize?.(
-                nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width,
-                nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height
-              );
-            }
-            viewerLoopRef.current = viewerLoop;
-            liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
-            (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
-            // Do not traverse every mesh or toggle material.needsUpdate on pointer-down.
-            // That forces shader recompilation exactly when the user starts dragging,
-            // causing the initial "stiff" response. Keep the already compiled diamond
-            // shader/materials; the direct render path and transmission budget do the
-            // interaction work without a synchronous material-profile transition.
-            // Keep the same static shadow map in both direct and photographic
-            // render paths. Toggling shadows off during orbit and rebuilding them
-            // on idle made the contact shadow pop/disappear between states.
-            renderer.shadowMap.enabled = !!renderQuality.shadows;
+            const interactionDpr = Math.max(0.75, Math.min(1, runtimeBudget.interactionPixelRatio));
+      viewerLoopRef.current = viewerLoop;
+            renderer.setPixelRatio(interactionDpr);
+            composer?.setPixelRatio?.(interactionDpr);
+            liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
+            (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
+            aplicarPerfilLive();
+            renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
           },
-          onProgressiveFrame: (frame, total) => {
-            const startScale = escalaTransmisionInteraccion();
-            const targetScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
-            const t = Math.max(0, Math.min(1, frame / Math.max(1, total)));
-            const eased = t * t * (3 - 2 * t);
-            diamondBounceController?.setProgress(eased);
-            liveTransmissionScaleRef.current = startScale + (targetScale - startScale) * eased;
-            (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
-          },
           onEnd: () => {
-            // Idle beauty path: restore the configured gem optics, transmission,
-            // dispersion, clearcoat and shadows only after OrbitControls damping
-            // has settled. The viewer loop then converges for 32 bounded frames.
-            // This is raster/post-process convergence, NOT path-tracing samples.
-            liveFastPathRef.current = false;
-            setInteractionMode?.(false);
-            // Restore the full authored diamond ray-bounce budget using uniforms only;
-            // this does not invalidate the shader program or trigger a shader rebuild.
-            diamondBounceController?.setBeauty();
-            // Restore the configured native pixel ratio for the settled beauty view.
-            const dprNativo = Math.min(window.devicePixelRatio || 1, renderQuality.pixelRatio || 1);
-            if (Math.abs(renderer.getPixelRatio() - dprNativo) > 0.015) {
-              renderer.setPixelRatio(dprNativo);
-              composer?.setPixelRatio?.(dprNativo);
-              composer?.setSize?.(
-                nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width,
-                nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height
-              );
-            }
-            liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
-            (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
-            renderer.shadowMap.enabled = renderQuality.shadows;
-            // Restore gem material profiles in small idle batches instead of traversing
-            // and invalidating every material synchronously on pointer-up.
-            if (!profileRestoreScheduled) {
-              profileRestoreScheduled = true;
-              const token = ++profileRestoreToken;
-              let cursor = 0;
-              const batchSize = Math.max(8, Math.ceil(liveProfileMeshes.length / 32));
-              const restoreBatch = () => {
-                if (!vivo || token !== profileRestoreToken || !modelo) {
-                  if (token === profileRestoreToken) profileRestoreScheduled = false;
-                  return;
-                }
-                if (liveFastPathRef.current) {
-                  requestAnimationFrame(restoreBatch);
-                  return;
-                }
-                const stop = Math.min(liveProfileMeshes.length, cursor + batchSize);
-                for (; cursor < stop; cursor++) {
-                  const mesh = liveProfileMeshes[cursor];
-                  aplicarPerfilMaterialLiveMalla(mesh, false);
-                  setAurumGemShaderQuality(mesh, "beauty");
-                }
-                if (cursor < liveProfileMeshes.length) requestAnimationFrame(restoreBatch);
-                else profileRestoreScheduled = false;
-                invalidateRenderRef.current?.();
-              };
-              requestAnimationFrame(restoreBatch);
-            }
-            // Reuse the existing static shadow map; avoid a costly rebuild at idle.
+            // Agreed behavior: interactive preview remains lightweight after
+            // orbit settles. Full photographic gem optics, transmission,
+            // dispersion, clearcoat, shadows and post-processing are capture-only.
+            // Raise resolution for a sharper live view without enabling beauty effects.
+            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+            const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            renderer.setPixelRatio(idleDpr);
+            composer?.setPixelRatio?.(idleDpr);
+            liveFastPathRef.current = true;
+            aplicarPerfilLive();
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
         }
@@ -1428,7 +1312,6 @@ export function AurumRender() {
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
-        renderer.domElement.removeEventListener("pointerdown", onPointerDown);
         disposeAurumViewer({
           node:nodo,
           renderer,
@@ -1634,28 +1517,8 @@ export function AurumRender() {
         <p className="mt-3 text-[10px] leading-relaxed text-white/40">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
       </div>}
       <div className="flex min-h-0 flex-1">
-        <aside className={(sidebarCollapsed?"w-[58px]":"w-[336px]")+" shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl transition-[width] duration-200 ease-out"}>
-          {sidebarCollapsed ? <nav aria-label="Herramientas de Aurum Render" className="flex h-full flex-col items-center gap-2 overflow-y-auto py-3">
-            <button type="button" title="Materiales" aria-label="Abrir Materiales" onClick={()=>{setUxSection("materiales");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-[#e3c56e]"><SlidersHorizontal className="size-5"/></button>
-            <button type="button" title="Gemas" aria-label="Abrir Gemas" onClick={()=>{setUxSection("gemas");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-sky-200"><Gem className="size-5"/></button>
-            <button type="button" title="Escenas" aria-label="Abrir Escenas" onClick={()=>{setUxSection("escena");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-white"><ImageIcon className="size-5"/></button>
-            <button type="button" title="HDR Metales" aria-label="Abrir HDR Metales" onClick={()=>{setUxSection("hdriMetales");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-[#d4af37] transition hover:bg-white/[.08]"><Sparkles className="size-5"/></button>
-            <button type="button" title="HDR Gemas" aria-label="Abrir HDR Gemas" onClick={()=>{setUxSection("hdriGemas");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-sky-200 transition hover:bg-white/[.08]"><Gem className="size-5"/></button>
-            <button type="button" title="Iluminación y render" aria-label="Abrir iluminación y render" onClick={()=>{setPanel("iluminacion");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08]"><SlidersHorizontal className="size-5"/></button>
-            <div className="mt-auto pt-3">
-              <button type="button" title="Expandir menú" aria-label="Expandir menú" onClick={()=>setSidebarCollapsed(false)} className="grid size-10 place-items-center rounded-xl border border-white/10 text-white/50 transition hover:bg-white/[.08] hover:text-white"><ChevronDown className="size-4 rotate-[-90deg]"/></button>
-            </div>
-          </nav> : <div className="h-full overflow-y-auto">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#111518]/95 px-4 py-2 backdrop-blur">
-              <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-white/40">{uxSection==="hdriMetales"?"HDR Metales":uxSection==="hdriGemas"?"HDR Gemas":"Herramientas"}</span>
-              <div className="flex items-center gap-1">
-                {(uxSection==="hdriMetales"||uxSection==="hdriGemas")&&<button type="button" title="Volver a herramientas" aria-label="Volver a herramientas" onClick={()=>setUxSection("materiales")} className="rounded-lg px-2 py-1.5 text-[10px] text-white/55 hover:bg-white/[.08] hover:text-white">Todas</button>}
-                <button type="button" title="Contraer menú" aria-label="Contraer menú" onClick={()=>setSidebarCollapsed(true)} className="grid size-8 place-items-center rounded-lg text-white/50 transition hover:bg-white/[.08] hover:text-white"><ChevronDown className="size-4 rotate-90"/></button>
-              </div>
-            </div>
-            {(uxSection==="hdriMetales"||uxSection==="hdriGemas") ? <div className="pb-5">
-              <AurumEnvironmentPicker apiRef={apiRef} type={uxSection==="hdriGemas"?"gemas":"metales"} selectedId={uxSection==="hdriGemas"?hdriGemId:hdriMetalId} onSelect={uxSection==="hdriGemas"?setHdriGemId:setHdriMetalId} />
-            </div> : <>
+        <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
+          <div className="h-full overflow-y-auto">
             <section className="border-b border-white/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
@@ -1728,8 +1591,7 @@ export function AurumRender() {
                 <SlidersHorizontal className="size-4 text-[#d4af37]"/>
               </button>
             </div>
-            </>}
-          </div>}
+          </div>
         </aside>
 
         <main className="relative min-w-0 flex-1 bg-[#090b0e]">

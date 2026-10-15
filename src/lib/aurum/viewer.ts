@@ -138,7 +138,7 @@ export function createAurumWebGLViewer(
   const controls = Controls ? new Controls(camera, renderer.domElement) : null;
   if (controls) {
     controls.enableDamping = true;
-    controls.dampingFactor = 0.14;
+    controls.dampingFactor = 0.07;
     controls.enablePan = true;
     controls.enableRotate = true;
     controls.autoRotate = false;
@@ -154,7 +154,7 @@ export function createAurumWebGLViewer(
 export function startAurumViewerLoop(
   viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
   render: () => void,
-  interaction?: { onStart?: () => void; onEnd?: () => void; onProgressiveFrame?: (frame: number, total: number) => void; progressiveFrames?: number }
+  interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
   // AURUM is a product configurator, not a continuously animated game scene.
   // Render only when the camera/scene actually changes. OrbitControls still
@@ -227,10 +227,6 @@ export function startAurumViewerLoop(
     const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0;
     if (shouldRender) {
       dirty = false;
-      if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) {
-        const completed = progressiveFrames - idleFramesRemaining + 1;
-        interaction?.onProgressiveFrame?.(completed, progressiveFrames);
-      }
       render();
       if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
     }
