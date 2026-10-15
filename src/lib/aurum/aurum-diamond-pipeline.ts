@@ -6,8 +6,9 @@ import * as THREE from "three";
  * This module provides the geometry-aware ray/refraction primitives and
  * explicit diagnostics used by the dedicated diamond renderer. It does not
  * claim that a MeshPhysicalMaterial shader alone traces geometric bounces.
- * The renderer must call traceDiamondRay() with a closed, consistently
- * oriented diamond mesh; incomplete/open CAD meshes are rejected by callers.
+ * The final renderer records geometry diagnostics for diamond meshes. The
+ * GPU path tracer remains responsible for per-pixel light transport; this
+ * module provides a CPU geometric ray probe, not a replacement renderer.
  */
 export const AURUM_DIAMOND_PIPELINE_VERSION = "0.1.0";
 
@@ -234,7 +235,6 @@ export function traceAurumDiamondRay(
 
 export function getAurumDiamondPipelineDiagnostics(mesh: THREE.Mesh, quality: AurumDiamondPipelineQuality = "high") {
   const geometry = mesh.geometry;
-  geometry.computeBoundingBox();
   const position = geometry.getAttribute("position");
   const index = geometry.getIndex();
   const triangleCount = Math.floor((index?.count ?? position?.count ?? 0) / 3);
@@ -245,7 +245,7 @@ export function getAurumDiamondPipelineDiagnostics(mesh: THREE.Mesh, quality: Au
     triangleCount,
     hasNormals: Boolean(geometry.getAttribute("normal")),
     hasIndex: Boolean(index),
-    boundingBoxAvailable: Boolean(geometry.boundingBox),
+    boundingBoxAvailable: Boolean(geometry.boundingBox) || Boolean(position && position.count > 0),
     maxBounces: preset.maxBounces,
     geometryMutated: false as const,
     mode: "geometry-intersection-ray-prototype" as const,
