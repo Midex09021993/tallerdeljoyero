@@ -271,7 +271,7 @@ function TrabajoOperativoPage() {
         const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", { _trabajo_id: trabajo.id });
         if (error) throw error;
         const ficha = data as { archivos?: Array<Record<string, unknown>>; requisitos?: Record<string, unknown> | null } | null;
-        const archivos = (ficha?.archivos ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean; es_enlace?: boolean }>;
+        const archivos = (ficha?.archivos ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }>;
         return {
           requisitos: ficha?.requisitos ?? null,
           archivos: await Promise.all(archivos.map(async (archivo) => {
@@ -283,7 +283,7 @@ function TrabajoOperativoPage() {
       }
       const { data, error } = await supabase.from("pedido_archivos").select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion").eq("pedido_id", trabajo!.pedido_id).order("created_at", { ascending: false });
       if (error) throw error;
-      return { requisitos: null, archivos: (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean; es_enlace?: boolean }> };
+      return { requisitos: null, archivos: (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }> };
     },
   });
 
