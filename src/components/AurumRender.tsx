@@ -1648,7 +1648,7 @@ export function AurumRender() {
                 <button type="button" onClick={()=>setHdriPanelTipo("gemas")} className={"rounded-lg px-2 py-2 text-[10px] font-semibold transition "+(hdriPanelTipo==="gemas"?"bg-white/10 text-sky-200 shadow-inner":"text-white/45 hover:text-white")}>HDR Gemas</button>
               </div>
               <div className="grid grid-cols-3 gap-2.5">
-                {Object.entries(hdriPanelTipo==="metales"?AURUM_HDRI_URLS:AURUM_GEM_HDRI_URLS).map(([id,url],index)=>{
+                {Object.entries(hdriPanelTipo==="metales"?AURUM_HDRI_URLS:AURUM_GEM_HDRI_URLS).filter(([id])=>hdriPanelTipo!=="metales"||id!=="ijewelGem").map(([id],index)=>{
                   const active=hdriPanelTipo==="metales"?hdriMetalSeleccionado===id:hdriGemaSeleccionado===id;
                   const swatches=hdriPanelTipo==="metales"
                     ? ["radial-gradient(ellipse at 30% 20%,#fff7d8 0%,#9b8d65 18%,#252a2e 43%,#e5d6ad 58%,#55565a 76%,#17191c 100%)","linear-gradient(135deg,#dce5ec,#59636d 28%,#f5f6f7 42%,#30363d 61%,#c8d0d6 80%,#22272d)","radial-gradient(ellipse at 30% 25%,#fff 0%,#b5c5d5 18%,#5a6877 38%,#e8edf1 54%,#3b4148 76%,#17191c 100%)","linear-gradient(145deg,#f6d7a1,#8a5730 28%,#fff1cc 45%,#5b3824 65%,#d9a45b 80%,#332117)","linear-gradient(135deg,#fff,#e8edf0 30%,#9ba6ae 50%,#fdfdfd 64%,#69737b 82%,#e1e7eb)","radial-gradient(ellipse at 30% 25%,#fff 0%,#d9dce0 20%,#5c626a 42%,#fafafa 60%,#4a4e54 82%,#16181b 100%)"]
