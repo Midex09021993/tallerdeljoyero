@@ -1265,7 +1265,12 @@ export function AurumRender() {
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
-          updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
+          // Temporal post-processing is not displayed on the direct interaction path.
+          // Do not advance its history every drag frame; update it only for the settled
+          // photographic pipeline, avoiding wasted TAA/temporal work during orbit.
+          if (!liveFastPathRef.current) {
+            updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
+          }
           // Keep the direct renderer during orbit, but use the photographic
           // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
           // actually reach the interactive preview.
