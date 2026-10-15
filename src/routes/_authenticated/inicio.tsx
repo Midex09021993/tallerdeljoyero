@@ -22,6 +22,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell, Panel, StatCard, useCapacidadesMenu } from "@/components/AppShell";
+import { ResumenPlanComercial } from "@/components/ResumenPlanComercial";
 import { TODAS_LAS_SEDES, SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -344,6 +345,8 @@ function Inicio() {
             />
           )}
         </section>
+
+        {sesion?.esAdmin ? <ResumenPlanComercial /> : null}
 
         <section className="rounded-2xl border border-gold/20 bg-card"><header className="flex items-center justify-between border-b p-4"><h2 className="font-semibold">🎂 Próximos cumpleaños</h2><Link to="/clientes" className="text-xs font-semibold text-gold">Ver clientes <ChevronRight className="inline size-3"/></Link></header>{cumpleanos.length?cumpleanos.map(c=><div key={c.id} className="flex items-center gap-3 border-b p-3"><Gift className="size-4 text-gold"/><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.fecha.toLocaleDateString("es-PE",{day:"2-digit",month:"short"})}</span></span><span className="text-xs font-semibold text-gold">{c.dias===0?"Hoy":`En ${c.dias} días`}</span></div>):<p className="p-4 text-sm text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>}</section>
         <section className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card sm:p-5">
