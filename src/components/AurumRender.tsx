@@ -193,7 +193,7 @@ export function AurumRender() {
       // Orbit controls calibrated to the supplied iJewel VJSON reference.
       if (controles) {
         controles.enableDamping = true;
-        controles.dampingFactor = 0.08;
+        controles.dampingFactor = 0.14;
         controles.zoomSpeed = 0.15;
         controles.rotateSpeed = 2;
       }
@@ -224,7 +224,7 @@ export function AurumRender() {
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setInteractionMode } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -766,6 +766,7 @@ export function AurumRender() {
             // Keep the interactive preview lightweight after initial framing.
             // Full photographic post-processing is reserved for image capture.
             liveFastPathRef.current = true;
+            setInteractionMode?.(true);
             aplicarPerfilLive();
             // Preserve the contact shadow when the loaded model settles.
             renderer.shadowMap.enabled = !!renderQuality.shadows;
@@ -1268,11 +1269,11 @@ export function AurumRender() {
           if (!liveFastPathRef.current) {
             updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
           }
-          // Keep the direct renderer during orbit, but use the photographic
-          // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
-          // actually reach the interactive preview.
-          if (liveFastPathRef.current || !composer) renderer.render(escena,camara);
-          else composer.render();
+          // Use one output pipeline in motion and at rest. Switching from
+          // renderer.render() to EffectComposer changed the apparent contact
+          // shadow and metal response exactly when the camera settled.
+          if (composer) composer.render();
+          else renderer.render(escena,camara);
           perfTick();
         },
         {
@@ -1319,6 +1320,7 @@ export function AurumRender() {
             // setPixelRatio reallocates renderer/composer targets and can hitch on the
             // very next pointer-down; quality changes still apply through the quality UI.
             liveFastPathRef.current = false;
+            setInteractionMode?.(false);
             aplicarPerfilLive();
             // Begin convergence at the interaction transmission budget, then restore
             // optical framebuffer quality over the loop's bounded idle frames.
