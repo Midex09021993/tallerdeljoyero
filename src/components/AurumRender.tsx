@@ -1288,11 +1288,18 @@ export function AurumRender() {
           if (!liveFastPathRef.current) {
             updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
           }
-          // Use one output pipeline in motion and at rest. Switching from
-          // renderer.render() to EffectComposer changed the apparent contact
-          // shadow and metal response exactly when the camera settled.
-          if (composer) composer.render();
-          else renderer.render(escena,camara);
+          // Real fast path during orbit: bypass the composer entirely so disabled
+          // screen-space passes do not still incur render-target/composer overhead.
+          // The renderer keeps the same AgX tone mapping, sRGB output, exposure and
+          // shadow-map policy; the photographic composer returns only after controls
+          // settle. This avoids resizing buffers or recompiling gem shaders on drag.
+          if (liveFastPathRef.current) {
+            renderer.render(escena, camara);
+          } else if (composer) {
+            composer.render();
+          } else {
+            renderer.render(escena, camara);
+          }
           perfTick();
         },
         {
