@@ -535,6 +535,11 @@ export function AppShell({
                     </section>
                   );
                 })}
+                <div className="mt-3 border-t border-border pt-3">
+                  <button type="button" onClick={() => void cerrarSesion()} className="flex min-h-11 w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger-soft">
+                    Cerrar sesión
+                  </button>
+                </div>
               </div>
             ) : null}
           </nav>
