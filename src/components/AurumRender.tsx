@@ -145,6 +145,8 @@ export function AurumRender() {
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdriMetales"|"hdriGemas"|"">("materiales");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [hdriMetalId, setHdriMetalId] = useState("jewelry");
+  const [hdriGemId, setHdriGemId] = useState("gemNeutral");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
 
@@ -1613,7 +1615,7 @@ export function AurumRender() {
               </div>
             </div>
             {(uxSection==="hdriMetales"||uxSection==="hdriGemas") ? <div className="pb-5">
-              <AurumEnvironmentPicker apiRef={apiRef} type={uxSection==="hdriGemas"?"gemas":"metales"} />
+              <AurumEnvironmentPicker apiRef={apiRef} type={uxSection==="hdriGemas"?"gemas":"metales"} selectedId={uxSection==="hdriGemas"?hdriGemId:hdriMetalId} onSelect={uxSection==="hdriGemas"?setHdriGemId:setHdriMetalId} />
             </div> : <>
             <section className="border-b border-white/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
