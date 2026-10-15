@@ -767,8 +767,8 @@ export function AurumRender() {
             // Full photographic post-processing is reserved for image capture.
             liveFastPathRef.current = true;
             aplicarPerfilLive();
-            renderer.shadowMap.enabled = false;
-            renderer.shadowMap.needsUpdate = false;
+            // Preserve the contact shadow when the loaded model settles.
+            renderer.shadowMap.enabled = !!renderQuality.shadows;
             invalidateRenderRef.current?.();
           }
         });
