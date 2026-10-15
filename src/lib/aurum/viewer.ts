@@ -227,12 +227,12 @@ export function startAurumViewerLoop(
     const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0;
     if (shouldRender) {
       dirty = false;
-      render();
       if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) {
         const completed = progressiveFrames - idleFramesRemaining + 1;
         interaction?.onProgressiveFrame?.(completed, progressiveFrames);
-        idleFramesRemaining--;
       }
+      render();
+      if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
     }
 
     // During idle convergence, request a bounded number of frames, then stop.
