@@ -829,6 +829,7 @@ export function AurumRender() {
             const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
               width:Number(options.width)||1920,height:Number(options.height)||1080,samples:options.samples??256,mimeType:mime as any,
               environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
+              gemEnvironmentUrl:gemEnvironmentUrl,
               signal:options.signal,onProgress:options.onProgress,
             });
             const link=document.createElement("a");
