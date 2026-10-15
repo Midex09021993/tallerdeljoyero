@@ -16,31 +16,31 @@ export type Database = {
     Tables: {
       aurum_plan_quotas: {
         Row: {
-          plan_id: string
-          operaciones_comerciales_mes: number
           almacenamiento_mib: number
-          usos_render_mes: number
+          operaciones_comerciales_mes: number
+          plan_id: string
           productos_catalogo_max: number
           updated_at: string
           updated_by: string | null
+          usos_render_mes: number
         }
         Insert: {
-          plan_id: string
-          operaciones_comerciales_mes: number
           almacenamiento_mib: number
-          usos_render_mes: number
+          operaciones_comerciales_mes: number
+          plan_id: string
           productos_catalogo_max?: number
           updated_at?: string
           updated_by?: string | null
+          usos_render_mes: number
         }
         Update: {
-          plan_id?: string
-          operaciones_comerciales_mes?: number
           almacenamiento_mib?: number
-          usos_render_mes?: number
+          operaciones_comerciales_mes?: number
+          plan_id?: string
           productos_catalogo_max?: number
           updated_at?: string
           updated_by?: string | null
+          usos_render_mes?: number
         }
         Relationships: []
       }
