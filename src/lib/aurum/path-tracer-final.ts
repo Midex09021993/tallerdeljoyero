@@ -21,6 +21,8 @@ export interface AurumFinalRenderOptions {
   environmentUrl?: string | null;
   environmentIntensity?: number;
   environmentRotationY?: number;
+  /** Independent HDRI for gem reflections; scene.environment remains the metal/studio HDRI. */
+  gemEnvironmentUrl?: string | null;
   signal?: AbortSignal | undefined;
   onProgress?: ((done: number, total: number) => void) | undefined;
 }
@@ -30,7 +32,7 @@ export const AURUM_PT_DIAMOND_IOR = 2.417;
 
 const yieldFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-function convertMaterial(src: any): THREE.MeshPhysicalMaterial {
+function convertMaterial(src: any, gemEnvironment?: THREE.Texture | null): THREE.MeshPhysicalMaterial {
   const isGem = Boolean(src?.userData?.aurumGemFamily) || Number(src?.transmission ?? 0) > 0;
   const isDiamond = src?.userData?.aurumGemFamily === "Diamante";
   const m = new THREE.MeshPhysicalMaterial({
@@ -48,6 +50,13 @@ function convertMaterial(src: any): THREE.MeshPhysicalMaterial {
   });
   if (src?.normalScale) m.normalScale.copy(src.normalScale);
   if (isGem) {
+    // Keep the dedicated gem environment on gem materials without replacing
+    // scene.environment, which continues to illuminate and reflect on metals.
+    if (gemEnvironment) {
+      m.envMap = gemEnvironment;
+      m.envMapIntensity = Math.max(0.55, Math.min(2.35, Number(src?.envMapIntensity ?? 1.3)));
+      if (src?.envMapRotation && m.envMapRotation) m.envMapRotation.copy(src.envMapRotation);
+    }
     // Real refraction: full transmission, per-gem IOR and absorption colour.
     m.transmission = 1;
     m.thickness = Number(src?.thickness ?? 1);
@@ -64,7 +73,7 @@ function convertMaterial(src: any): THREE.MeshPhysicalMaterial {
   return m;
 }
 
-function buildIsolatedScene(model: THREE.Object3D) {
+function buildIsolatedScene(model: THREE.Object3D, gemEnvironment?: THREE.Texture | null) {
   const scene = new THREE.Scene();
   const materials: THREE.Material[] = [];
   const cache = new Map<any, THREE.Material>();
@@ -80,7 +89,7 @@ function buildIsolatedScene(model: THREE.Object3D) {
     const srcMats = Array.isArray(obj.material) ? obj.material : [obj.material];
     const conv = srcMats.map((s: any) => {
       let c = cache.get(s);
-      if (!c) { c = convertMaterial(s); cache.set(s, c); materials.push(c); }
+      if (!c) { c = convertMaterial(s, gemEnvironment); cache.set(s, c); materials.push(c); }
       return c;
     });
     const mesh = new THREE.Mesh(obj.geometry, Array.isArray(obj.material) ? conv : conv[0]);
@@ -163,8 +172,14 @@ export async function renderAurumPathTracedImage(
   cam.aspect = width / height;
   cam.updateProjectionMatrix();
 
-  const { scene, materials, floorGeo } = buildIsolatedScene(model);
   const env = await loadEquirect(opts.environmentUrl);
+  // Load the gem HDRI separately. A failed gem-HDRI load falls back to the
+  // scene HDRI so final rendering still works instead of aborting the capture.
+  let gemEnv: THREE.Texture | null = null;
+  if (opts.gemEnvironmentUrl && opts.gemEnvironmentUrl !== opts.environmentUrl) {
+    try { gemEnv = await loadEquirect(opts.gemEnvironmentUrl); } catch { gemEnv = null; }
+  }
+  const { scene, materials, floorGeo } = buildIsolatedScene(model, gemEnv);
   scene.environment = env;
   scene.environmentIntensity = opts.environmentIntensity ?? 1;
   scene.environmentRotation.set(0, opts.environmentRotationY ?? 0, 0);
@@ -216,6 +231,7 @@ export async function renderAurumPathTracedImage(
     materials.forEach((m) => m.dispose());
     floorGeo.dispose();
     env.dispose();
+    if (gemEnv && gemEnv !== env) gemEnv.dispose();
     renderer.setRenderTarget(oldTarget);
     renderer.setPixelRatio(oldPR);
     renderer.setSize(oldSize.x, oldSize.y, false);
