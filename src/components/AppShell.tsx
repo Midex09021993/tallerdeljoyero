@@ -447,7 +447,7 @@ export function AppShell({
             <div
               className={`min-w-0 max-lg:flex-1 ${encabezadoMovilCompacto ? "max-lg:hidden" : ""}`}
             >
-              <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2">
+              <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2 max-lg:hidden">
                 {titulo}
               </h1>
               {subtitulo ? (
