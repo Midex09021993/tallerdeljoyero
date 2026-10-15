@@ -30,6 +30,7 @@ export async function createAurumPostPipeline(
   let dofPass:any=null;
   let outputPass:any=null;
   let gradingPass:any=null;
+  let desiredTaaEnabled=false;
 
   try {
     composer=new EffectComposer(renderer);
@@ -189,6 +190,7 @@ export async function createAurumPostPipeline(
     // saved TAA beauty so neither stage is silently discarded.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     const taaEnabled=Boolean(options.capture) || (config.temporalAA!==false && config.taa!==false && !isLowQuality);
+    desiredTaaEnabled=taaEnabled;
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
@@ -302,9 +304,18 @@ export async function createAurumPostPipeline(
   };
 
   applyQuality(quality);
+  // Keep the same EffectComposer path during orbit and at rest. Only temporal
+  // accumulation pauses while moving; AO, reflections, grading and the baked
+  // contact shadow remain in the same pipeline, avoiding a visual state switch.
+  const setInteractionMode=(active:boolean)=>{
+    if(!taaPass)return;
+    taaPass.enabled=active?false:desiredTaaEnabled;
+    taaPass.accumulate=!active && desiredTaaEnabled;
+    if(!active && desiredTaaEnabled) taaPass.accumulateIndex=-1;
+  };
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass};
+  return {composer,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,setInteractionMode,dofPass,taaPass};
 }
