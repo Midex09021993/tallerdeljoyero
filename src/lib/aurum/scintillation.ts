@@ -294,12 +294,16 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         vec3 ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
         vec3 ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
         ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijWeight;
-        // One low-cost reflected internal path approximates a pavilion bounce.
-        // The source mesh's facet normals still control the primary PBR result;
-        // this is deliberately an approximation, not full geometric ray tracing.
-        ijDirR=reflect(ijDirR,ijNormal);
-        ijDirG=reflect(ijDirG,ijNormal);
-        ijDirB=reflect(ijDirB,ijNormal);
+        // Approximate a pavilion bounce with a tilted internal-facet normal.
+        // Using the entry normal again repeats the same path and produces little
+        // facet separation. This tangent-space normal is a real-time approximation,
+        // not a claim of geometric multi-bounce tracing.
+        vec3 ijPavilionAxis=abs(ijNormal.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
+        vec3 ijPavilionTangent=normalize(cross(ijNormal,ijPavilionAxis));
+        vec3 ijPavilionNormal=normalize(ijNormal*0.75+ijPavilionTangent*0.66);
+        ijDirR=reflect(ijDirR,ijPavilionNormal);
+        ijDirG=reflect(ijDirG,ijPavilionNormal);
+        ijDirB=reflect(ijDirB,ijPavilionNormal);
         ijDirR=normalize(mix(ijDirR,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.08)));
         ijDirG=normalize(mix(ijDirG,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.08)));
         ijDirB=normalize(mix(ijDirB,ijNormal,clamp(1.0-aurumIJEWELSQUASHFactor,0.0,.08)));
@@ -317,9 +321,9 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Gate it with the source-authored bounce setting and keep its energy
         // restrained so this refinement cannot overwhelm the visible PBR facets.
         if(aurumIJEWELRayBounces>=3.0){
-          ijDirR=reflect(ijDirR,ijNormal);
-          ijDirG=reflect(ijDirG,ijNormal);
-          ijDirB=reflect(ijDirB,ijNormal);
+          ijDirR=reflect(ijDirR,ijPavilionNormal);
+          ijDirG=reflect(ijDirG,ijPavilionNormal);
+          ijDirB=reflect(ijDirB,ijPavilionNormal);
           ijWorldR=inverseTransformDirection(normalize(ijDirR),viewMatrix);
           ijWorldG=inverseTransformDirection(normalize(ijDirG),viewMatrix);
           ijWorldB=inverseTransformDirection(normalize(ijDirB),viewMatrix);
