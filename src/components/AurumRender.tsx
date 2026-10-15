@@ -12,7 +12,7 @@ import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "../lib
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
-import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
+import { createAurumGemEnvironment, getAurumGemEnvironmentIntensity } from "../lib/aurum/gem-environment";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { setAurumInclusionsVisible } from "../lib/aurum/gems";
@@ -827,7 +827,7 @@ export function AurumRender() {
           try{
             const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
               width:Number(options.width)||1920,height:Number(options.height)||1080,samples:options.samples??256,mimeType:mime as any,
-              environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
+              environmentUrl:gemEnvironmentUrl,environmentIntensity:getAurumGemEnvironmentIntensity("Diamante")*gemEnvironmentIntensityScale,environmentRotationY:gemEnvironmentRotation,
               signal:options.signal,onProgress:options.onProgress,
             });
             const link=document.createElement("a");
