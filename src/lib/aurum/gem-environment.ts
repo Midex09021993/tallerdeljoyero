@@ -99,7 +99,8 @@ export function createAurumGemEnvironment(
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
-        m.needsUpdate = true;
+        // envMap was already present on Aurum gem materials. Swapping its texture does not
+        // change shader defines; avoid forcing shader recompilation during HDR transitions.
         return m;
       };
       x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
