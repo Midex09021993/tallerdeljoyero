@@ -329,7 +329,7 @@ export function AurumRender() {
         applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
-        renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
+        renderer.shadowMap.enabled = !!renderQuality.shadows;
         // Existing shadow maps must be rebuilt at the selected precision.
         // create() is intentionally called only after disposing the previous maps;
         // the controller itself is idempotent and does not need the redundant call.
