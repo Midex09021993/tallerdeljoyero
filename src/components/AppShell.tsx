@@ -433,7 +433,7 @@ export function AppShell({
 
       <main
         className={`min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10 ${
-          encabezadoMovilCompacto ? "max-lg:px-3 max-lg:py-2 max-lg:pb-5" : ""
+          encabezadoMovilCompacto ? "max-lg:px-3 max-lg:pt-0 max-lg:pb-5" : ""
         }`}
       >
         <header
