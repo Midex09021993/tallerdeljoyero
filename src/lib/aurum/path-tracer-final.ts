@@ -21,8 +21,8 @@ export interface AurumFinalRenderOptions {
   environmentUrl?: string | null;
   environmentIntensity?: number;
   environmentRotationY?: number;
-  signal?: AbortSignal;
-  onProgress?: (done: number, total: number) => void;
+  signal?: AbortSignal | undefined;
+  onProgress?: ((done: number, total: number) => void) | undefined;
 }
 
 /** Real diamond IOR. Three's MeshPhysicalMaterial clamps `ior` to 2.333, so it is set as an own property read by the tracer. */
