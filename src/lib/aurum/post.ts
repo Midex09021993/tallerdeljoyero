@@ -304,23 +304,42 @@ export async function createAurumPostPipeline(
   };
 
   applyQuality(quality);
-  // Keep the same EffectComposer path during orbit and at rest. Only temporal
-  // accumulation pauses while moving; AO, reflections, grading and the baked
-  // contact shadow remain in the same pipeline, avoiding a visual state switch.
+  // Keep one composer and stable drawing-buffer sizes across interaction
+  // boundaries, but temporarily skip expensive screen-space effects while the
+  // camera is moving. This reduces per-frame GPU work without recompiling gem
+  // shaders or reallocating render targets (both can cause a visible hitch).
+  const interactionPassStates = new Map<any, boolean>();
+  let interactionModeActive = false;
   const setInteractionMode=(active:boolean)=>{
-    if(!taaPass)return;
+    if(active === interactionModeActive) return;
+    interactionModeActive = active;
     if(active){
-      // Never let temporal samples from the previous camera pose accumulate
-      // into the moving frame: that produces visible ghost copies of the ring.
-      taaPass.accumulate=false;
-      taaPass.accumulateIndex=-1;
-      taaPass.enabled=false;
+      // Never blend samples from the previous camera pose into moving frames.
+      if(taaPass){
+        taaPass.accumulate=false;
+        taaPass.accumulateIndex=-1;
+        taaPass.enabled=false;
+      }
+      // These passes are screen-space and comparatively expensive. The baked
+      // contact shadow and main render/output passes remain untouched.
+      const motionPasses = [ssaoPass, ssrSavePass, ssrPass, ssrCompositePass, bloomPass, dofPass, lutPass];
+      interactionPassStates.clear();
+      for(const pass of motionPasses){
+        if(!pass) continue;
+        interactionPassStates.set(pass, Boolean(pass.enabled));
+        pass.enabled=false;
+      }
       return;
     }
-    // Start a fresh accumulation only after OrbitControls has fully settled.
-    taaPass.enabled=desiredTaaEnabled;
-    taaPass.accumulate=desiredTaaEnabled;
-    taaPass.accumulateIndex=-1;
+    // Restore exactly the pass state selected by the user's quality profile.
+    for(const [pass, wasEnabled] of interactionPassStates) pass.enabled=wasEnabled;
+    interactionPassStates.clear();
+    // Start a clean temporal accumulation only after OrbitControls damping ends.
+    if(taaPass){
+      taaPass.enabled=desiredTaaEnabled;
+      taaPass.accumulate=desiredTaaEnabled;
+      taaPass.accumulateIndex=-1;
+    }
   };
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
