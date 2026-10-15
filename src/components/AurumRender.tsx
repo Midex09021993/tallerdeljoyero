@@ -333,17 +333,39 @@ export function AurumRender() {
       // resolution are updated together. EffectComposer receives the same DPR.
       composerRef.current = composer;
 
+      // Match the interaction budget to the actual CAD density. Resize only
+      // at interaction boundaries (never inside the frame loop), and keep the
+      // renderer and EffectComposer targets on the same DPR.
+      const aplicarDprInteraccion = (enMovimiento:boolean) => {
+        const calidadDpr = Math.max(1, Math.min(2, Number(renderQuality.pixelRatio) || 1));
+        const dprReposo = Math.min(calidadDpr, runtimeBudget.pixelRatioCap);
+        const dprInteraccion = Math.min(dprReposo, runtimeBudget.interactionPixelRatio);
+        const dpr = enMovimiento ? dprInteraccion : dprReposo;
+        const actual = Number(renderer.getPixelRatio?.() ?? dpr);
+        if (Math.abs(actual - dpr) < 0.015) return;
+        renderer.setPixelRatio(dpr);
+        composer?.setPixelRatio?.(dpr);
+        const width = nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width;
+        const height = nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height;
+        composer?.setSize?.(width, height);
+      };
+      const escalaTransmisionInteraccion = () => Math.max(0.05, Math.min(0.15, runtimeBudget.interactionTransmissionScale));
+
       const aplicarCalidadRender = (id:AurumRenderQualityId) => {
         renderQuality = getAurumRenderQuality(id);
         measuredQualityId = id;
         // Quality is an intentional render scale. Do not clamp it to devicePixelRatio:
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
         const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-        const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
-        const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        const dprReposo = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+        const dpr = liveFastPathRef.current ? Math.min(dprReposo, runtimeBudget.interactionPixelRatio) : dprReposo;
+        const transmissionScale = liveFastPathRef.current
+          ? escalaTransmisionInteraccion()
+          : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
-        applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
+        composer?.setSize?.(nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width, nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height);
+        applyPostQuality?.({...renderQuality, pixelRatio:dprReposo, qualityId:id});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
         renderer.shadowMap.enabled = !!renderQuality.shadows;
@@ -1311,15 +1333,11 @@ export function AurumRender() {
             setInteractionMode?.(true);
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            // Avoid reallocating the renderer/composer drawing buffers at pointer-down:
-            // setPixelRatio() can stall the first camera movement on dense CAD models.
-            // Keep the current DPR for immediate response and reduce only transmission
-            // work; the diamond shader, IOR and authored facet normals remain unchanged.
+            // Lower DPR and transmission cost only at the start boundary. The diamond's
+            // optical shader, IOR and CAD facet normals remain untouched.
+            aplicarDprInteraccion(true);
             viewerLoopRef.current = viewerLoop;
-            liveTransmissionScaleRef.current = Math.max(
-              runtimeBudget.interactionTransmissionScale,
-              Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40
-            );
+            liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             // Do not traverse every mesh or toggle material.needsUpdate on pointer-down.
             // That forces shader recompilation exactly when the user starts dragging,
@@ -1333,7 +1351,7 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           },
           onProgressiveFrame: (frame, total) => {
-            const startScale = Math.max(runtimeBudget.interactionTransmissionScale, Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40);
+            const startScale = escalaTransmisionInteraccion();
             const targetScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
             const t = Math.max(0, Math.min(1, frame / Math.max(1, total)));
             const eased = t * t * (3 - 2 * t);
@@ -1349,15 +1367,13 @@ export function AurumRender() {
             // setPixelRatio reallocates renderer/composer targets and can hitch on the
             // very next pointer-down; quality changes still apply through the quality UI.
             liveFastPathRef.current = false;
+            // Restore full drawing resolution once the camera has truly settled, then
+            // re-enable the photographic passes and let the bounded 32-frame recovery
+            // ramp transmission quality without changing the diamond's shader variant.
+            aplicarDprInteraccion(false);
             setInteractionMode?.(false);
             aplicarPerfilLive();
-            // Begin convergence at the interaction transmission budget, then restore
-            // optical framebuffer quality over the loop's bounded idle frames.
-            // This is progressive raster-quality recovery, not path-tracing samples.
-            liveTransmissionScaleRef.current = Math.max(
-              runtimeBudget.interactionTransmissionScale,
-              Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40
-            );
+            liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             renderer.shadowMap.enabled = renderQuality.shadows;
             // Reuse the existing static shadow map; avoid a costly rebuild at idle.
