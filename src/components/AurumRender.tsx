@@ -507,13 +507,10 @@ export function AurumRender() {
         // beauty modes. The quality switch only simplifies non-diamond gems;
         // diamond fire/dispersion must not disappear when the camera moves.
         setAurumGemShaderQuality(modelo,live ? "live" : "beauty");
-        if (live) {
-          renderer.shadowMap.enabled=false;
-          renderer.shadowMap.needsUpdate=false;
-        } else {
-          renderer.shadowMap.enabled=renderQuality.shadows;
-          renderer.shadowMap.needsUpdate=true;
-        }
+        // Keep the same shadow-map policy in both live and beauty paths.
+        // Switching this off while orbiting and forcing a rebuild at idle caused
+        // the contact shadow to change/disappear across the interaction boundary.
+        renderer.shadowMap.enabled=renderQuality.shadows;
         // Adapt transmission resolution to interaction state. Keep the diamond's
         // optical shader, IOR and authored facet normals unchanged; reduce only the
         // framebuffer work while orbiting, then restore configured quality at idle.
