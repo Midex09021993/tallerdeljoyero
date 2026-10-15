@@ -1298,6 +1298,14 @@ export function AurumRender() {
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
+          onProgressiveFrame: (frame, total) => {
+            const startScale = Math.max(runtimeBudget.interactionTransmissionScale, Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40);
+            const targetScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+            const t = Math.max(0, Math.min(1, frame / Math.max(1, total)));
+            const eased = t * t * (3 - 2 * t);
+            liveTransmissionScaleRef.current = startScale + (targetScale - startScale) * eased;
+            (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
+          },
           onEnd: () => {
             // Idle beauty path: restore the configured gem optics, transmission,
             // dispersion, clearcoat and shadows only after OrbitControls damping
@@ -1309,6 +1317,14 @@ export function AurumRender() {
             composer?.setPixelRatio?.(idleDpr);
             liveFastPathRef.current = false;
             aplicarPerfilLive();
+            // Begin convergence at the interaction transmission budget, then restore
+            // optical framebuffer quality over the loop's bounded idle frames.
+            // This is progressive raster-quality recovery, not path-tracing samples.
+            liveTransmissionScaleRef.current = Math.max(
+              runtimeBudget.interactionTransmissionScale,
+              Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40
+            );
+            (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             renderer.shadowMap.enabled = renderQuality.shadows;
             renderer.shadowMap.needsUpdate = true;
             invalidateRenderRef.current?.();
