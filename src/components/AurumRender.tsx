@@ -1289,8 +1289,13 @@ export function AurumRender() {
               Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40
             );
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
-            aplicarPerfilLive();
+            // Do not traverse every mesh or toggle material.needsUpdate on pointer-down.
+            // That forces shader recompilation exactly when the user starts dragging,
+            // causing the initial "stiff" response. Keep the already compiled diamond
+            // shader/materials; the direct render path and transmission budget do the
+            // interaction work without a synchronous material-profile transition.
             renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
