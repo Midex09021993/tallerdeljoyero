@@ -459,25 +459,23 @@ export function AurumRender() {
                   aurumLiveTransmissionStored:Number(m.transmission??0),
                 };
               }
-              const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && Number(m.transmission??0)!==0;
-              if (
-                Number(m.clearcoat??0)!==0 ||
-                Number(m.clearcoatRoughness??0)!==0 ||
-                disableGemTransmission
-              ) {
-                m.clearcoat=0;
-                m.clearcoatRoughness=0;
-                // The shader-quality controller owns dispersion/iridescence
-                // storage and restoration. Keep this function limited to
-                // clearcoat and transmission so capture never loses authored fire.
+              const isDiamond=m.userData?.aurumGemFamily==="Diamante";
+              // The diamond must keep the same optical material while orbiting
+              // and while rendering the final image. Keep its authored transmission
+              // and clearcoat; interaction quality is controlled at the renderer
+              // resolution boundary, not by changing the diamond's optical model.
+              const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && !isDiamond && Number(m.transmission??0)!==0;
+              const simplifyClearcoat=!isDiamond && (Number(m.clearcoat??0)!==0 || Number(m.clearcoatRoughness??0)!==0);
+              if (simplifyClearcoat || disableGemTransmission) {
+                if (simplifyClearcoat) {
+                  m.clearcoat=0;
+                  m.clearcoatRoughness=0;
+                }
+                // Other gemstone families retain the lightweight interaction path.
+                // Diamond transmission/clearcoat remain identical to the beauty profile.
                 if (disableGemTransmission) {
-                  // Keep a lightweight but more faithful live transmission.
-                  // The diamond gets the same moderate cap used by the recent PNG
-                  // comparison; other gem families keep their existing live cap.
-                  // Dispersion and clearcoat remain disabled while orbiting.
                   const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
-                  const liveTransmissionCap=m.userData?.aurumGemFamily==="Diamante" ? 0.35 : 0.35;
-                  m.transmission=Math.min(authoredTransmission,liveTransmissionCap);
+                  m.transmission=Math.min(authoredTransmission,0.35);
                 }
                 m.needsUpdate=true;
               }
@@ -505,9 +503,9 @@ export function AurumRender() {
           return;
         }
         aplicarPerfilMaterialLive(modelo,live);
-        // LIVE uses the lean native gemstone shader; CAPTURE restores the full
-        // photographic shader. This avoids paying the custom optical layer on
-        // every interactive fragment while preserving the beauty pipeline.
+        // Keep the dedicated diamond optical shader enabled in both live and
+        // beauty modes. The quality switch only simplifies non-diamond gems;
+        // diamond fire/dispersion must not disappear when the camera moves.
         setAurumGemShaderQuality(modelo,live ? "live" : "beauty");
         if (live) {
           renderer.shadowMap.enabled=false;
