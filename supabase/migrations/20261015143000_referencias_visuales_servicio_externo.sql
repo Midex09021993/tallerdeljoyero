@@ -1,5 +1,5 @@
--- Permite al operario del servicio externo ver las imágenes de referencia del mismo pedido.
--- Se mantiene el control de acceso: solo la cuenta participante asignada puede invocar la función.
+-- Incluye las imágenes de referencia del pedido en la ficha del servicio externo.
+-- Solo puede invocarla la cuenta del participante asignado al trabajo.
 begin;
 
 create or replace function public.obtener_ficha_servicio_externo(_trabajo_id uuid)
@@ -126,22 +126,12 @@ begin
       where pa.pedido_id = v_pedido.id
         and (
           pa.es_vigente_fabricacion = true
-          or lower(regexp_replace(pa.nombre, '^.*\\.', '')) in ('png','jpg','jpeg','webp','gif','avif','bmp','svg')
           or lower(coalesce(pa.tipo, '')) like 'image/%'
-          or lower(coalesce(pa.grupo, '')) ~ '\\.(png|jpe?g|webp|gif|avif|bmp|svg)
-        )
-    ), '[]'::jsonb)
-  );
-end;
-$$;
-
-revoke all on function public.obtener_ficha_servicio_externo(uuid) from public, anon;
-grant execute on function public.obtener_ficha_servicio_externo(uuid) to authenticated;
-
-notify pgrst, 'reload schema';
-commit;
-
           or lower(coalesce(pa.tipo, '') || ' ' || coalesce(pa.grupo, '')) ~ '(imagen|image|foto|fotografía|perspectiva)'
+          or lower(pa.nombre) like any (array[
+            '%.png', '%.jpg', '%.jpeg', '%.webp', '%.gif',
+            '%.avif', '%.bmp', '%.svg'
+          ])
         )
     ), '[]'::jsonb)
   );
