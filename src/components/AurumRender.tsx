@@ -1205,8 +1205,17 @@ export function AurumRender() {
           escena.add(resaltado);
         }
       };
+      let pointerDownPos = { x: 0, y: 0 };
+      const onPointerDown = (event: PointerEvent) => {
+        pointerDownPos = { x: event.clientX, y: event.clientY };
+      };
+      renderer.domElement.addEventListener("pointerdown", onPointerDown);
+
       const seleccionarPorClick = (event: MouseEvent) => {
         if (!modelo || cargando) return;
+        // Ignore the synthetic click emitted after camera orbit/drag.
+        const dist = Math.hypot(event.clientX - pointerDownPos.x, event.clientY - pointerDownPos.y);
+        if (dist > 5) return;
         const rect = renderer.domElement.getBoundingClientRect();
         const pointer = new THREE.Vector2(
           ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -1321,9 +1330,18 @@ export function AurumRender() {
             // first camera change. Otherwise TAA can blend the old ring pose into
             // the new one and create the multiple translucent copies seen in orbit.
             setInteractionMode?.(true);
-            // Keep the drawing buffer stable; reduce only the gem transmission budget.
             liveFastPathRef.current = true;
             diamondBounceController?.setInteractive();
+            // Reduce GPU pixel workload on high-DPI displays while the user orbits.
+            // Keep EffectComposer synchronized with the renderer's drawing buffer.
+            if (renderer.getPixelRatio() > 1.0) {
+              renderer.setPixelRatio(1.0);
+              composer?.setPixelRatio?.(1.0);
+              composer?.setSize?.(
+                nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width,
+                nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height
+              );
+            }
             viewerLoopRef.current = viewerLoop;
             liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
@@ -1352,13 +1370,21 @@ export function AurumRender() {
             // dispersion, clearcoat and shadows only after OrbitControls damping
             // has settled. The viewer loop then converges for 32 bounded frames.
             // This is raster/post-process convergence, NOT path-tracing samples.
-            // Keep the drawing-buffer size stable across interaction boundaries.
-            // setPixelRatio reallocates renderer/composer targets and can hitch on the
-            // very next pointer-down; quality changes still apply through the quality UI.
             liveFastPathRef.current = false;
-            // DPR stays unchanged. Re-enable the photographic path and progressively
-            // restore diamond internal environment samples alongside transmission quality.
             setInteractionMode?.(false);
+            // Restore the full authored diamond ray-bounce budget using uniforms only;
+            // this does not invalidate the shader program or trigger a shader rebuild.
+            diamondBounceController?.setBeauty();
+            // Restore the configured native pixel ratio for the settled beauty view.
+            const dprNativo = Math.min(window.devicePixelRatio || 1, renderQuality.pixelRatio || 1);
+            if (Math.abs(renderer.getPixelRatio() - dprNativo) > 0.015) {
+              renderer.setPixelRatio(dprNativo);
+              composer?.setPixelRatio?.(dprNativo);
+              composer?.setSize?.(
+                nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width,
+                nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height
+              );
+            }
             liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             renderer.shadowMap.enabled = renderQuality.shadows;
@@ -1402,6 +1428,7 @@ export function AurumRender() {
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        renderer.domElement.removeEventListener("pointerdown", onPointerDown);
         disposeAurumViewer({
           node:nodo,
           renderer,
