@@ -441,7 +441,7 @@ export function AppShell({
             encabezadoMovilCompacto
               ? "max-lg:sticky max-lg:top-0 max-lg:z-30 max-lg:-mx-3 max-lg:mb-2 max-lg:justify-end max-lg:bg-background/95 max-lg:px-3 max-lg:py-2 max-lg:backdrop-blur"
               : ""
-          }`}
+          } ${atrasMovil === false && !acciones ? "max-lg:hidden" : ""}`}
         >
           <div className="flex w-full items-start justify-between gap-2 lg:w-auto lg:flex-nowrap lg:justify-between lg:gap-3">
             <div
@@ -470,7 +470,7 @@ export function AppShell({
         </header>
 
         {!ocultarNavegacion && Boolean(sesion?.roles?.length) ? (
-          <nav className="sticky top-0 z-20 -mx-4 mb-4 border-y border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
+          <nav className={`sticky top-0 z-20 mb-4 border-y border-border bg-background/95 py-3 backdrop-blur lg:hidden ${encabezadoMovilCompacto ? "max-lg:-mx-3 max-lg:px-3" : "-mx-4 px-4"}`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/25 bg-gold/10 font-semibold text-gold-deep">
