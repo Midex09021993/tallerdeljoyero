@@ -814,6 +814,28 @@ export function AurumRender() {
           link.click();
           URL.revokeObjectURL(url);
         },
+        exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
+          if(!modelo) throw new Error("Carga un modelo antes del render final.");
+          const { renderAurumPathTracedImage } = await import("../lib/aurum/path-tracer-final");
+          const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
+          const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
+          const loop:any=(typeof viewerLoopRef!=="undefined")?viewerLoopRef.current:null;
+          loop?.pause?.();
+          try{
+            const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
+              width:Number(options.width)||1920,height:Number(options.height)||1080,samples:options.samples??256,mimeType:mime as any,
+              environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
+              signal:options.signal,onProgress:options.onProgress,
+            });
+            const link=document.createElement("a");
+            link.href=dataUrl;
+            link.download=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-")+"-raytrace."+(format==="jpeg"?"jpg":format);
+            link.click();
+          }finally{
+            loop?.resume?.();
+            loop?.resize?.();
+          }
+        },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp"}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           if(!composer?.readBuffer||typeof composer.render!=="function") throw new Error("El motor fotográfico no está disponible para capturar la imagen.");
