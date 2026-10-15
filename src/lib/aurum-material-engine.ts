@@ -410,8 +410,11 @@ export const applyAurumDiamondOptics=(material:any,config=AURUM_DIAMOND_OPTICAL_
   // dedicated shader handles the internal light paths. AURUM still needs a
   // small physical contribution for Three.js readability, but .22 combined
   // with the environment-ray estimate washes broad facets toward white.
-  // Keep only a restrained residual contribution; this is diamond-only.
-  material.transmission=.08;
+  // Keep a restrained live-preview contribution while restoring enough
+  // screen-space refraction for the imported brilliant-cut facets to read as
+  // transparent rather than milky/opaque. Final path tracing uses its own
+  // physically converted material and is intentionally unaffected.
+  material.transmission=.16;
   material.roughness=.010;
   material.clearcoat=.26;
   material.clearcoatRoughness=.010;
