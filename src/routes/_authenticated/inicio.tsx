@@ -610,42 +610,62 @@ function InicioPreparacion({
   }
 
   return (
-    <div className="grid gap-5 p-5 lg:grid-cols-[1fr_auto] lg:p-6">
-      <div className="space-y-2">
+    <div className="space-y-3 p-4 lg:p-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold text-muted-foreground">Preparación del taller</p>
+            <p className="shrink-0 text-xs font-bold tabular-nums">{completados}/{pasos.length} completados</p>
+          </div>
+          <div
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-label="Preparación del taller"
+            aria-valuemin={0}
+            aria-valuemax={pasos.length}
+            aria-valuenow={completados}
+          >
+            <div className="h-full rounded-full bg-success transition-all" style={{ width: `${(completados / pasos.length) * 100}%` }} />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
         {pasos.map((paso) => (
-          <div key={paso.titulo} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
+          <div key={paso.titulo} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
             {paso.listo ? (
-              <CheckCircle2 className="size-5 shrink-0 text-success" />
+              <CheckCircle2 className="size-5 shrink-0 text-success" aria-label="Completado" />
             ) : (
-              <CircleAlert className="size-5 shrink-0 text-warning" />
+              <CircleAlert className="size-5 shrink-0 text-warning" aria-label="Pendiente" />
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{paso.titulo}</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">{paso.texto}</p>
+              <p className="text-sm font-semibold leading-5">{paso.titulo}</p>
+              <p className="hidden text-[11px] leading-4 text-muted-foreground sm:block">{paso.texto}</p>
             </div>
             {!paso.listo ? (
-              <Link to={paso.destino as never} className="hidden shrink-0 text-[11px] font-bold text-gold-deep hover:underline sm:block">
-                Configurar
+              <Link to={paso.destino as never} className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-[11px] font-bold text-gold-deep hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                Configurar <ChevronRight className="size-3.5" />
               </Link>
-            ) : null}
+            ) : (
+              <span className="shrink-0 text-[10px] font-medium text-success">Listo</span>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="min-w-[260px] rounded-2xl border border-gold/20 bg-card p-5 shadow-card">
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Siguiente paso</p>
-        <h3 className="mt-2 text-lg font-semibold">{pendientes.length ? siguiente.titulo : "Todo listo"}</h3>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          {pendientes.length
-            ? siguiente.texto
-            : "La configuración base está completa. Ya puedes trabajar con pedidos reales."}
-        </p>
-        <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {completados}/{pasos.length} completados
-        </p>
+      <div className="flex flex-col gap-3 rounded-2xl border border-gold/20 bg-gold/[0.035] p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div className="min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gold-deep">Siguiente paso</p>
+          <p className="mt-1 text-sm font-semibold">{pendientes.length ? siguiente.titulo : "Todo listo"}</p>
+          <p className="mt-0.5 text-xs leading-4 text-muted-foreground">
+            {pendientes.length
+              ? siguiente.texto
+              : "La configuración base está completa. Ya puedes trabajar con pedidos reales."}
+          </p>
+        </div>
         <Link
           to={siguiente.destino as never}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground hover:shadow-raised"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground hover:shadow-raised"
         >
           {pendientes.length ? siguiente.accion : "Crear pedido"} <ChevronRight className="size-4" />
         </Link>
