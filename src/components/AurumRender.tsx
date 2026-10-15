@@ -155,6 +155,16 @@ export function AurumRender() {
   const materialActivo = useMemo(() => MATERIALES.find(m=>m.id===materialId)!, [materialId]);
   const gemaActiva = useMemo(() => GEMAS.find(g=>g.id===gemaId)!, [gemaId]);
   const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
+  const [mostrarTodosMateriales, setMostrarTodosMateriales] = useState(false);
+  const [mostrarTodasGemas, setMostrarTodasGemas] = useState(false);
+  const materialesVisibles = useMemo(() => {
+    const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "plata925_pulida", "platino_pulido"]);
+    return MATERIALES.filter((m) => mostrarTodosMateriales || principales.has(m.id) || m.id === materialId);
+  }, [mostrarTodosMateriales, materialId]);
+  const gemasVisibles = useMemo(() => {
+    const principales = new Set<GemaId>(["diamante_natural", "esmeralda_1", "rubi_natural", "zafiro_azul", "amatista_natural", "moissanita_blanca", "aguamarina_brasil", "citrino_natural", "topacio_azul"]);
+    return GEMAS.filter((g) => mostrarTodasGemas || principales.has(g.id) || g.id === gemaId);
+  }, [mostrarTodasGemas, gemaId]);
 
   useEffect(() => {
     let vivo = true;
@@ -1476,7 +1486,7 @@ export function AurumRender() {
               </button>
               {uxSection==="materiales"&&<div className="pb-5">
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
-                  {MATERIALES.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
+                  {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
                     onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
                     className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(materialId===m.id?"bg-white/[.06]":"hover:bg-white/[.04]")}>
                     <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,.35)]":"border-white/10 group-hover:border-white/30")}>
@@ -1486,6 +1496,9 @@ export function AurumRender() {
                     <span className="mt-1.5 w-full truncate text-center text-[8px] text-white/65">{m.nombre}</span>
                   </button>)}
                 </div>
+                <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-[10px] font-semibold text-white/65 transition hover:border-[#d4af37]/40 hover:text-white">
+                  {mostrarTodosMateriales ? "Mostrar menos materiales" : `Ver todos los materiales (${MATERIALES.length})`}
+                </button>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
                   <p className="truncate text-[10px] text-white/65">{materialActivo.nombre}</p>
@@ -1500,7 +1513,7 @@ export function AurumRender() {
               </button>
               {uxSection==="gemas"&&<div className="pb-5">
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
-                  {GEMAS.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
+                  {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
                     onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
                     className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(gemaId===g.id?"bg-white/[.06]":"hover:bg-white/[.04]")}>
                     <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(gemaId===g.id?"border-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,.35)]":"border-white/10 group-hover:border-white/30")}>
@@ -1510,6 +1523,9 @@ export function AurumRender() {
                     <span className="mt-1.5 w-full truncate text-center text-[8px] text-white/65">{g.nombre}</span>
                   </button>)}
                 </div>
+                <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-[10px] font-semibold text-white/65 transition hover:border-[#d4af37]/40 hover:text-white">
+                  {mostrarTodasGemas ? "Mostrar menos gemas" : `Ver todas las gemas (${GEMAS.length})`}
+                </button>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
                   <p className="truncate text-[10px] text-white/65">{gemaActiva.nombre}</p>
