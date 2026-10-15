@@ -772,11 +772,6 @@ export function AurumRender() {
             aplicarPerfilLive();
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
-            // Fade the photographic cast shadow back in after orbit instead of
-            // letting it pop from fully absent to full strength on the first idle frame.
-            if (lucesAurum.key?.shadow && "intensity" in lucesAurum.key.shadow) {
-              lucesAurum.key.shadow.intensity = 0;
-            }
             invalidateRenderRef.current?.();
           }
         });
@@ -1306,6 +1301,11 @@ export function AurumRender() {
             // interaction work without a synchronous material-profile transition.
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
+            // Fade the photographic cast shadow back in after orbit instead of
+            // letting it pop from fully absent to full strength on the first idle frame.
+            if (lucesAurum.key?.shadow && "intensity" in lucesAurum.key.shadow) {
+              lucesAurum.key.shadow.intensity = 0;
+            }
             invalidateRenderRef.current?.();
           },
           onProgressiveFrame: (frame, total) => {
