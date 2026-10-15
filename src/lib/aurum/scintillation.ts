@@ -275,9 +275,12 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // IOR (2.417): red ~2.407, green 2.417, blue ~2.451.
         // The previous narrower spread barely produced visible fire in the
         // central stone under a neutral studio environment.
-        float ijEtaR=1.0/max(ijIor-0.010,1.0001);
+        // Slightly widen visible-band separation for live diamond fire.
+        // Keep the change restrained: dispersion is an approximation in this
+        // single-pass shader, not wavelength-resolved spectral path tracing.
+        float ijEtaR=1.0/max(ijIor-0.014,1.0001);
         float ijEtaG=1.0/ijIor;
-        float ijEtaB=1.0/min(ijIor+0.034,2.65);
+        float ijEtaB=1.0/min(ijIor+0.040,2.65);
         // Preserve the last visually working direction while isolating the
         // blank-render regression from the recent view-vector change.
         vec3 ijDirR=refract(ijView,ijNormal,ijEtaR);
@@ -408,7 +411,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // while preserving the RGB ratios that carry the subtle spectral fire.
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
         float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.0,0.0)*0.28);
-        gl_FragColor.rgb*=ijHighlightCompression;\n        ` : ``}
+        gl_FragColor.rgb*=ijHighlightCompression;
+        // Selective real-time glint response for very bright diamond facets.
+        // This is a lightweight shader highlight, not a screen-space bloom pass.
+        float ijGemGlint=smoothstep(1.8,2.8,ijHighlightPeak)*clamp(ijFresnel*2.0,0.0,1.0);
+        gl_FragColor.rgb+=gl_FragColor.rgb*ijGemGlint*0.055;\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
