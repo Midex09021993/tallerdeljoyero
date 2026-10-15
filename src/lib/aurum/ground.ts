@@ -98,7 +98,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
       // Keep a subtle photographic contact shadow in every grounded product scene,
       // not only the iJewel reference preset. Transparent scenes remain shadow-free.
-      bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + shadowStrength * .48));
+      bakedShadowMaterial.opacity = Math.max(.07, Math.min(.22, .07 + shadowStrength * .30));
       bakedShadow.visible = mesh.visible && preset.groundVisible !== false && shadowStrength > .03;
       if (preset.ground != null) mesh.material.color.setHex(preset.ground);
       if (preset.groundRoughness != null) mesh.material.roughness = preset.groundRoughness;
