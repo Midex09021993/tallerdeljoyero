@@ -499,7 +499,7 @@ export function AurumRender() {
       const aplicarPerfilLive = () => {
         const live=liveFastPathRef.current;
         if (!modelo) {
-          renderer.shadowMap.enabled=!live && renderQuality.shadows;
+          renderer.shadowMap.enabled=renderQuality.shadows;
           return;
         }
         aplicarPerfilMaterialLive(modelo,live);
