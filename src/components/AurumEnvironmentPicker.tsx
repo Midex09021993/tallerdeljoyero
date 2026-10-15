@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS } from "../lib/aurum-photographic-scene-engine";
 
-type Props = { apiRef: { current: any }; initialType?: "metales" | "gemas"; onTypeChange?: (type: "metales" | "gemas") => void };
+type Props = { apiRef: { current: any }; type: "metales" | "gemas" };
 
 const metalSwatches = [
   "radial-gradient(ellipse at 30% 20%,#fff7d8 0%,#9b8d65 18%,#252a2e 43%,#e5d6ad 58%,#55565a 76%,#17191c 100%)",
@@ -21,20 +21,15 @@ const gemSwatches = [
   "radial-gradient(circle at 35% 25%,#fff 0%,#f6f7f8 16%,#c4d7ed 34%,#e9f4ff 48%,#829ab8 72%,#303d52 100%)"
 ];
 
-export function AurumEnvironmentPicker({ apiRef, initialType = "metales", onTypeChange }: Props) {
-  const [tipo, setTipoState] = useState<"metales" | "gemas">(initialType);
-  const setTipo = (next: "metales" | "gemas") => { setTipoState(next); onTypeChange?.(next); };
+export function AurumEnvironmentPicker({ apiRef, type }: Props) {
+  const tipo = type;
   const [metal, setMetal] = useState("jewelry");
   const [gema, setGema] = useState("gemNeutral");
   const resources = tipo === "metales" ? AURUM_HDRI_URLS : AURUM_GEM_HDRI_URLS;
   return <section className="border-b border-white/10 px-4 py-3">
     <div className="mb-3 flex items-center justify-between">
-      <span className="flex items-center gap-2 text-sm font-medium"><Sparkles className="size-4 text-[#d4af37]"/>Environment</span>
+      <span className="flex items-center gap-2 text-sm font-medium">{tipo==="metales"?<Sparkles className="size-4 text-[#d4af37]"/>:<span className="text-sky-200"><Sparkles className="size-4"/></span>}{tipo==="metales"?"HDR Metales":"HDR Gemas"}</span>
       <span className="text-[9px] uppercase tracking-wider text-white/30">HDRI</span>
-    </div>
-    <div className="mb-3 grid grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1">
-      <button type="button" onClick={() => setTipo("metales")} className={"rounded-lg px-2 py-2 text-[10px] font-semibold transition "+(tipo==="metales"?"bg-white/10 text-[#e3c56e] shadow-inner":"text-white/45 hover:text-white")}>HDR Metales</button>
-      <button type="button" onClick={() => setTipo("gemas")} className={"rounded-lg px-2 py-2 text-[10px] font-semibold transition "+(tipo==="gemas"?"bg-white/10 text-sky-200 shadow-inner":"text-white/45 hover:text-white")}>HDR Gemas</button>
     </div>
     <div className="grid grid-cols-3 gap-2.5">
       {Object.entries(resources).filter(([id]) => tipo !== "metales" || id !== "ijewelGem").map(([id], index) => {
