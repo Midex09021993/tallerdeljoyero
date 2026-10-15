@@ -20,6 +20,7 @@ import { renderAurumInclusions, clearAurumInclusions } from "./gems";
 import { applyAurumLatinGemProfile } from "./latin-gem-catalog";
 import { buildAurumThicknessMap } from "./thickness-map";
 import { resolveAurumGemPhysicalModel, attachAurumGemPhysicalModel } from "./gem-physical-core";
+import { getAurumDiamondPipelineDiagnostics } from "./aurum-diamond-pipeline";
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
@@ -404,6 +405,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       aurumOpticalThicknessMode:"local-bounds-v1",
       aurumGemThicknessMapDiagnostics:null,
       aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part),
+      ...(String(gemConfig?.familia??"")==="Diamante" ? { aurumDiamondPipelineDiagnostics:getAurumDiamondPipelineDiagnostics(part,"high") } : {}),
     };
     console.warn("[AURUM][GEM MATERIAL APPLIED]",{
       mesh:part.name||part.uuid,
