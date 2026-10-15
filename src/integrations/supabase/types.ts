@@ -4066,6 +4066,10 @@ export type Database = {
         Args: { _slug: string }
         Returns: Json
       }
+      obtener_ficha_servicio_externo: {
+        Args: { _trabajo_id: string }
+        Returns: Json
+      }
       obtener_redes_sociales_catalogo_publico: {
         Args: { _slug: string }
         Returns: Json
