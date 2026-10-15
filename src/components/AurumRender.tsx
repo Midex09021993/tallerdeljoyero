@@ -514,11 +514,12 @@ export function AurumRender() {
           renderer.shadowMap.enabled=renderQuality.shadows;
           renderer.shadowMap.needsUpdate=true;
         }
-        // Keep the diamond's framebuffer refraction at the configured quality
-        // during orbit as well as idle. The raster path remains direct while moving,
-        // but lowering transmission resolution here visibly softens diamond facets.
-        // Other gems still use their existing lightweight material profile.
-        liveTransmissionScaleRef.current=Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        // Adapt transmission resolution to interaction state. Keep the diamond's
+        // optical shader, IOR and authored facet normals unchanged; reduce only the
+        // framebuffer work while orbiting, then restore configured quality at idle.
+        liveTransmissionScaleRef.current=live
+          ? Math.max(runtimeBudget.interactionTransmissionScale, Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.55)
+          : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
@@ -1278,15 +1279,17 @@ export function AurumRender() {
             // Interaction path: cap raster resolution and gem transmission cost.
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            // Keep the configured pixel ratio during orbit. The direct renderer
-            // still avoids expensive post-processing while moving, but downscaling
-            // the entire drawing buffer makes the diamond visibly lose facet detail.
-            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            // Use a bounded interaction resolution so dense CAD meshes stay responsive.
+            // Never change the diamond's optical shader, IOR, or source facet normals.
+            const requestedDpr = Math.max(0.85, Math.min(1.25, renderQuality.pixelRatio));
+            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, Math.max(0.85, runtimeBudget.interactionPixelRatio));
             viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
-            liveTransmissionScaleRef.current = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+            liveTransmissionScaleRef.current = Math.max(
+              runtimeBudget.interactionTransmissionScale,
+              Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.55
+            );
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             aplicarPerfilLive();
             renderer.shadowMap.enabled = false;
