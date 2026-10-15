@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Menu, Play, Paperclip, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CircleAlert, ChevronDown, FileText, Image as ImageIcon, Link2, Menu, Play, Paperclip, Upload } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
@@ -57,6 +57,7 @@ function TrabajoOperativoPage() {
   const qc = useQueryClient();
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [archivoSeleccionado, setArchivoSeleccionado] = useState("");
+  const [indiceImagenReferencia, setIndiceImagenReferencia] = useState(0);
   const [guardandoArchivo, setGuardandoArchivo] = useState(false);
   const [subiendoEntrega, setSubiendoEntrega] = useState(false);
   const [progresoEntrega, setProgresoEntrega] = useState(0);
@@ -270,7 +271,7 @@ function TrabajoOperativoPage() {
         const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", { _trabajo_id: trabajo.id });
         if (error) throw error;
         const ficha = data as { archivos?: Array<Record<string, unknown>>; requisitos?: Record<string, unknown> | null } | null;
-        const archivos = (ficha?.archivos ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }>;
+        const archivos = (ficha?.archivos ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean; es_enlace?: boolean }>;
         return {
           requisitos: ficha?.requisitos ?? null,
           archivos: await Promise.all(archivos.map(async (archivo) => {
@@ -282,11 +283,18 @@ function TrabajoOperativoPage() {
       }
       const { data, error } = await supabase.from("pedido_archivos").select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion").eq("pedido_id", trabajo!.pedido_id).order("created_at", { ascending: false });
       if (error) throw error;
-      return { requisitos: null, archivos: (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }> };
+      return { requisitos: null, archivos: (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean; es_enlace?: boolean }> };
     },
   });
 
   const archivosPedido = fichaArchivos.archivos ?? [];
+  const imagenesReferencia = useMemo(() => archivosPedido.filter((archivo) => {
+    const nombre = String(archivo.nombre ?? "").toLowerCase();
+    const tipo = String(archivo.tipo ?? "").toLowerCase();
+    const esImagen = tipo.startsWith("image/") || /\\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(nombre);
+    return esImagen && Boolean(archivo.url) && !archivo.es_enlace;
+  }), [archivosPedido]);
+  useEffect(() => { setIndiceImagenReferencia(0); }, [imagenesReferencia.length, id]);
   const requisitosServicio = fichaArchivos.requisitos as { entrada_requerida?: string; entrada_disponible?: boolean; salida_requerida?: string; salida_disponible?: boolean; listo?: boolean; mensaje?: string } | null;
 
   const archivosVigentes = useMemo(() => archivosPedido.filter((a) => a.es_vigente_fabricacion), [archivosPedido]);
@@ -538,6 +546,19 @@ function TrabajoOperativoPage() {
             <div className="rounded-2xl border border-success/20 bg-success/[0.03] p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-wider text-success">Archivo vigente para fabricación</p><p className="mt-1 text-sm font-semibold">Diseño aprobado</p></div><span className="rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-bold text-success">{archivosVigentes.length > 0 ? "APROBADO" : "PENDIENTE"}</span></div>
               {archivosVigentes.length > 0 ? <div className="mt-3 space-y-2">{archivosVigentes.map((archivo) => <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-background p-3"><span className="min-w-0"><span className="block truncate text-sm font-semibold">{archivo.nombre}</span><span className="mt-1 block text-[10px] text-muted-foreground">Versión {archivo.version} · {archivo.grupo || "Técnico"}</span></span><span className="shrink-0 text-xs font-semibold text-success">Abrir</span></a>)}</div> : <p className="mt-3 text-sm text-muted-foreground">Aún no hay un archivo aprobado para fabricación.</p>}
             </div>
+            {imagenesReferencia.length > 0 ? <section aria-label="Imágenes de referencia" className="mt-4 overflow-hidden rounded-2xl border border-gold/15 bg-background">
+              <div className="flex items-center justify-between gap-2 px-3 py-2.5"><div className="flex min-w-0 items-center gap-2"><ImageIcon className="size-4 shrink-0 text-gold-deep" /><p className="text-xs font-semibold">Referencias visuales</p></div><span className="text-[10px] tabular-nums text-muted-foreground">{indiceImagenReferencia + 1} / {imagenesReferencia.length}</span></div>
+              <div className="group relative aspect-[4/3] max-h-[420px] overflow-hidden bg-surface-muted">
+                <a href={imagenesReferencia[indiceImagenReferencia]?.url} target="_blank" rel="noreferrer" aria-label={`Abrir imagen de referencia: ${imagenesReferencia[indiceImagenReferencia]?.nombre}`} className="absolute inset-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                  <img src={imagenesReferencia[indiceImagenReferencia]?.url} alt={imagenesReferencia[indiceImagenReferencia]?.nombre ?? "Imagen de referencia de fabricación"} className="size-full object-contain" loading="lazy" />
+                </a>
+                {imagenesReferencia.length > 1 ? <>
+                  <button type="button" aria-label="Imagen anterior" onClick={() => setIndiceImagenReferencia((actual) => (actual - 1 + imagenesReferencia.length) % imagenesReferencia.length)} className="absolute left-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-background/75 text-foreground opacity-100 shadow-sm backdrop-blur transition-opacity hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"><ArrowLeft className="size-4" /></button>
+                  <button type="button" aria-label="Imagen siguiente" onClick={() => setIndiceImagenReferencia((actual) => (actual + 1) % imagenesReferencia.length)} className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/60 bg-background/75 text-foreground opacity-100 shadow-sm backdrop-blur transition-opacity hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"><ArrowRight className="size-4" /></button>
+                </> : null}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-3 pb-3 pt-8"><p className="truncate text-xs font-medium text-white">{imagenesReferencia[indiceImagenReferencia]?.nombre}</p></div>
+              </div>
+            </section> : null}
             <div className="mt-4 space-y-2">{archivosPedido.map((archivo) => <a key={archivo.id} href={archivo.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl border border-gold/10 bg-gold/[0.018] p-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/8 text-primary"><Link2 className="size-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{archivo.nombre}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{archivo.tipo} · {archivo.grupo || "Técnico"} · v{archivo.version}</span></span><span className="text-xs font-semibold text-muted-foreground">Abrir</span></a>)}{archivosPedido.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay archivos técnicos en el pedido.</p> : null}</div>
           </div>
         </details>
