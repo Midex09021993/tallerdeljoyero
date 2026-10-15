@@ -1,35 +1,57 @@
 import type { Camera, Scene, WebGLRenderer, WebGLRenderTarget } from "three";
 
 /**
- * Minimal adapter for the capture-only WebGL path-tracing experiment.
+ * Adapter boundary for the optional, capture-only WebGL path-tracing engine.
  *
- * This module deliberately does not import or initialize a path tracer, alter
- * the live viewer, or convert Aurum materials. The caller must pass an isolated
- * capture scene whose materials are compatible with the selected path tracer.
+ * The live Aurum viewer remains the owner of the interactive renderer. Callers
+ * must provide an isolated scene and a tracer built against the same WebGL
+ * renderer; this helper never mutates live materials or replaces the viewer.
  */
 export interface AurumPathTracerAdapter {
   target: WebGLRenderTarget;
   samples: number;
-  setSceneAsync(scene: Scene, camera: Camera, options?: { onProgress?: (progress: number) => void }): Promise<void>;
+  setSceneAsync(
+    scene: Scene,
+    camera: Camera,
+    options?: { onProgress?: (progress: number) => void },
+  ): Promise<void>;
   renderSample(): void;
   reset(): void;
   dispose(): void;
 }
 
 export interface AurumPathTraceCaptureOptions {
-  /** Number of progressive samples. Keep conservative for browser memory/time. */
+  /** Progressive samples. The browser gets a frame between samples. */
   samples?: number;
   /** Output image type. PNG is lossless and recommended for comparisons. */
   mimeType?: "image/png" | "image/jpeg" | "image/webp";
   /** JPEG/WebP quality; ignored by PNG. */
   quality?: number;
+  /** Called after each sample has been rendered. */
   onProgress?: (completed: number, total: number) => void;
+  /** Optional cancellation signal; the caller retains ownership of the tracer. */
+  signal?: AbortSignal;
 }
 
+const yieldToBrowser = () =>
+  new Promise<void>((resolve) => {
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+
+const throwIfAborted = (signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw new DOMException("Aurum path-traced capture was cancelled.", "AbortError");
+  }
+};
+
 /**
- * Render a supplied, isolated scene using an already-created path tracer.
- * This helper intentionally does not change renderer, camera, scene materials,
- * or the interactive viewer. It only reads the tracer's render target.
+ * Render an isolated scene using an already-created path tracer and return a
+ * data URL. Sampling is deliberately asynchronous so a high-quality capture
+ * does not monopolize the browser's main thread for the whole render.
  */
 export async function captureAurumPathTracedScene(
   renderer: WebGLRenderer,
@@ -42,14 +64,25 @@ export async function captureAurumPathTracedScene(
   const mimeType = options.mimeType ?? "image/png";
   const quality = Math.max(0, Math.min(1, options.quality ?? 0.94));
 
-  await tracer.setSceneAsync(scene, camera);
+  if (renderer.getContext().isContextLost()) {
+    throw new Error("Aurum's WebGL context is lost; the path-traced capture cannot start.");
+  }
+
+  throwIfAborted(options.signal);
+  await tracer.setSceneAsync(scene, camera, {
+    onProgress: () => throwIfAborted(options.signal),
+  });
   tracer.reset();
 
   for (let sample = 0; sample < samples; sample += 1) {
+    throwIfAborted(options.signal);
     tracer.renderSample();
     options.onProgress?.(sample + 1, samples);
+    // Yield every sample to keep the UI responsive and allow cancellation.
+    if (sample + 1 < samples) await yieldToBrowser();
   }
 
+  throwIfAborted(options.signal);
   const target = tracer.target;
   if (!target?.width || !target?.height) {
     throw new Error("Aurum path tracer did not produce a valid render target.");
