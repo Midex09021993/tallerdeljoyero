@@ -145,7 +145,6 @@ export function AurumRender() {
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdriMetales"|"hdriGemas"|"">("materiales");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [hdriPanelTipo, setHdriPanelTipo] = useState<"metales"|"gemas">("metales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
 
