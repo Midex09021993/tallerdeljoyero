@@ -11,6 +11,7 @@
  * AURUM gem shaders (scintillation) are not used by the tracer.
  */
 import * as THREE from "three";
+import { getAurumDiamondPipelineDiagnostics } from "./aurum-diamond-pipeline";
 
 export interface AurumFinalRenderOptions {
   width: number;
@@ -95,6 +96,15 @@ function buildIsolatedScene(model: THREE.Object3D, gemEnvironment?: THREE.Textur
     const mesh = new THREE.Mesh(obj.geometry, Array.isArray(obj.material) ? conv : conv[0]);
     mesh.matrixAutoUpdate = false;
     mesh.matrix.copy(obj.matrixWorld);
+
+    // Connect the diamond geometry pipeline to the isolated final-render scene.
+    // The GPU path tracer performs per-pixel multi-bounce transport; these
+    // diagnostics confirm the exact CAD mesh is passed through unchanged.
+    const isDiamond = srcMats.some((m: any) => m?.userData?.aurumGemFamily === "Diamante");
+    if (isDiamond) {
+      mesh.userData.aurumDiamondPipelineDiagnostics = getAurumDiamondPipelineDiagnostics(obj as THREE.Mesh, "final");
+      mesh.userData.aurumDiamondPipelineVersion = mesh.userData.aurumDiamondPipelineDiagnostics.version;
+    }
     root.add(mesh);
   });
   scene.add(root);
