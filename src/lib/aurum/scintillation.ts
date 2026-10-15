@@ -106,10 +106,12 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
     if(ijewelEnabled){
-      // Use the real gemstone IOR for the rendered ray directions.
-      // The iJewel 2.6 value is retained as source-reference metadata only;
-      // applying it here made the diamond refract more strongly than diamond.
-      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(material.ior??2.417)))};
+      // Keep the two optical models separate:
+      // MeshPhysicalMaterial.ior remains the physical diamond IOR (2.417),
+      // while this custom iJewel-inspired environment-ray path consumes the
+      // source DiamondMaterial refractiveIndex (2.6) from calibration metadata.
+      // This does not change the physical PBR material or claim shader parity.
+      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(ijewel.refractiveIndex??2.6)))};
       shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(ijewel.rayBounces??5))))};
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
       shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
