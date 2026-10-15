@@ -416,6 +416,25 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
         ijInternal=max((ijInternal-vec3(0.46))*1.42+vec3(0.46),vec3(0.0));
+
+        // Internal fire from the wavelength-separated environment rays above.
+        // Use the actual R/G/B ray samples and their energy spread as a mask;
+        // do not paint a fixed rainbow texture or emit color on every facet.
+        // The Fresnel/view-angle gate keeps the fire small and concentrated
+        // near optically active facets, while preserving neutral diamond body.
+        float ijSpectralPeak=max(max(ijAccum.r,ijAccum.g),ijAccum.b);
+        float ijSpectralFloor=min(min(ijAccum.r,ijAccum.g),ijAccum.b);
+        float ijSpectralSpread=max(ijSpectralPeak-ijSpectralFloor,0.0);
+        float ijFireEnergy=smoothstep(0.055,0.22,ijSpectralSpread);
+        float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)
+          * (1.0-smoothstep(0.78,0.98,ijCosTheta));
+        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.20,0.0,0.10);
+        vec3 ijFireColor=vec3(
+          max(ijAccum.r-ijAccum.g*0.72,0.0),
+          max(ijAccum.g-max(ijAccum.r,ijAccum.b)*0.78,0.0),
+          max(ijAccum.b-ijAccum.g*0.72,0.0)
+        );
+        ijInternal+=ijFireColor*ijFireMask;
         // Live-view anti-milky calibration: let the dedicated internal gem-HDR
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
