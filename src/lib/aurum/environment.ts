@@ -1,6 +1,8 @@
 export interface AurumEnvironmentController {
   fallback: any;
   current: any;
+  /** URL of the equirect HDRI behind `current`; null when using the fallback. */
+  currentUrl: string | null;
   fromEquirectangular: (hdrTexture: any) => any;
   load: (
     url: string,
@@ -41,6 +43,7 @@ export function createAurumEnvironment(
   scene.environment = diagnosticDirectOnly ? null : fallback;
 
   let current = fallback;
+  let currentUrl: string | null = null;
   let rotation = 0;
   let intensity = 1;
   // Keep a small per-renderer PMREM cache so returning to a recent scene does
@@ -52,6 +55,9 @@ export function createAurumEnvironment(
     fallback,
     get current() {
       return current;
+    },
+    get currentUrl() {
+      return currentUrl;
     },
     fromEquirectangular(hdrTexture: any) {
       return pmrem.fromEquirectangular(hdrTexture).texture;
@@ -88,6 +94,7 @@ export function createAurumEnvironment(
       const cached = cache.get(url);
       if (cached) {
         current = cached;
+        currentUrl = url;
         scene.environment = cached;
         if (isCurrent()) onLoaded(cached);
         return;
@@ -108,6 +115,7 @@ export function createAurumEnvironment(
           }
           cache.set(url, next);
           current = next;
+          currentUrl = url;
           scene.environment = next;
           while (cache.size > MAX_CACHE) {
             const oldest = cache.keys().next().value as string | undefined;
@@ -133,6 +141,7 @@ export function createAurumEnvironment(
       for (const cached of cache.values()) cached?.dispose?.();
       cache.clear();
       current = fallback;
+      currentUrl = null;
       fallback?.dispose?.();
       pmrem.dispose?.();
     },
