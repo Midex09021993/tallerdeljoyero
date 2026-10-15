@@ -329,6 +329,28 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           float ijThirdBounceWeight=0.12*ijDepth;
           ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijThirdBounceWeight;
         }
+        // Bounces 4 and 5: low-energy, geometry-guided environment samples.
+        // These extend the source-authored bounce count without pretending to
+        // trace rays through the actual pavilion geometry. They use the existing
+        // HDRI and small facet-adjacent offsets to avoid repeating the same
+        // reflect(direction, normal) path, which would simply oscillate.
+        if(aurumIJEWELRayBounces>=4.0){
+          vec3 ijBounceAxis4=abs(ijNormal.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
+          vec3 ijBounceTangent4=normalize(cross(ijNormal,ijBounceAxis4));
+          vec3 ijBounceDir4=normalize(ijDirG+ijBounceTangent4*0.045);
+          vec3 ijBounceWorld4=inverseTransformDirection(ijBounceDir4,viewMatrix);
+          vec3 ijBounceEnv4=textureCubeUV(envMap,envMapRotation*ijBounceWorld4,0.0).rgb;
+          ijAccum+=ijBounceEnv4*(0.045*ijDepth);
+        }
+        if(aurumIJEWELRayBounces>=5.0){
+          vec3 ijBounceAxis5=abs(ijNormal.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
+          vec3 ijBounceTangent5=normalize(cross(ijNormal,ijBounceAxis5));
+          vec3 ijBounceBitangent5=normalize(cross(ijNormal,ijBounceTangent5));
+          vec3 ijBounceDir5=normalize(ijDirG-ijBounceBitangent5*0.065);
+          vec3 ijBounceWorld5=inverseTransformDirection(ijBounceDir5,viewMatrix);
+          vec3 ijBounceEnv5=textureCubeUV(envMap,envMapRotation*ijBounceWorld5,0.0).rgb;
+          ijAccum+=ijBounceEnv5*(0.0225*ijDepth);
+        }
         // Experimental virtual internal-facet reflections.
         // These are additional directional PMREM samples, not added triangles:
         // the imported CAD facets and normals remain untouched. Two nearby
