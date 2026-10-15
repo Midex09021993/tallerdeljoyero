@@ -388,7 +388,7 @@ export function GeneradorSTLIA() {
           <button type="button" onClick={() => setModo("imagen")} className={`min-h-11 rounded-lg px-3 text-sm font-semibold transition ${modo === "imagen" ? "bg-[#d8bd7b] text-[#17160f]" : "text-white/65 hover:bg-white/5"}`}>Imagen a STL</button>
           <button type="button" onClick={() => setModo("texto")} className={`min-h-11 rounded-lg px-3 text-sm font-semibold transition ${modo === "texto" ? "bg-[#d8bd7b] text-[#17160f]" : "text-white/65 hover:bg-white/5"}`}>Texto a CAD · prueba</button>
         </div>
-        {modo === "imagen" ? <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1.1fr]">
+        {modo === "imagen" ? <><div className="mt-5 grid gap-4 md:grid-cols-[1fr_1.1fr]">
           <div className="rounded-xl border border-dashed border-white/20 bg-black/20 p-4">
             <label htmlFor="stl-image" className="flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 text-center">
               {previewUrl ? <img src={previewUrl} alt="Imagen de referencia" className="max-h-56 max-w-full rounded-lg object-contain" /> : <><ImagePlus className="size-9 text-[#d8bd7b]" /><span className="font-medium">Seleccionar imagen</span><span className="text-xs text-white/45">PNG, JPG o WebP · máximo 15 MB</span></>}
@@ -415,7 +415,7 @@ export function GeneradorSTLIA() {
         </div>
         {stage === "done" && <button type="button" onClick={downloadSTL} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d8bd7b]/35 px-4 py-3 text-sm font-semibold text-[#e4ce94] transition hover:bg-[#d8bd7b]/10"><Download className="size-4" /> Descargar STL binario</button>}
         {stage === "error" && <button type="button" onClick={() => { setStage("idle"); setMessage("Corrige el problema indicado e inténtalo de nuevo."); }} className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-sm text-white/75"><RotateCcw className="size-4" /> Volver a intentar</button>}
-        </div> : <div className="mt-5 space-y-4">
+        </> : <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm leading-6 text-white/75">
             <p className="font-semibold text-[#e5ca8a]">Prueba de integración, sin simular una API</p>
             <p className="mt-1">Text-to-CAD ejecuta el motor CAD mediante un agente y un entorno compatible; no es una API pública de generación que podamos llamar directamente desde esta página. Copia la instrucción, genera el modelo con Text-to-CAD y luego importa aquí el STL real.</p>
@@ -438,7 +438,7 @@ export function GeneradorSTLIA() {
           <div role="status" aria-live="polite" className="rounded-xl border border-white/10 bg-white/[.025] p-3 text-sm text-white/65">{mensajeCAD}</div>
           <p className="text-xs leading-5 text-white/40">La generación automática dentro de Aurum requiere desplegar un servicio CAD seguro; este cambio no despliega ni llama un servicio externo.</p>
         </div>}
-        <p className="mt-4 text-xs leading-5 text-white/40">Importante: la primera descarga del modelo ronda los 485 MB. Requiere Chrome o Edge actualizado con WebGPU compatible y memoria suficiente. El STL no incorpora unidades físicas; esta reconstrucción es una referencia inicial, no CAD listo para fundición. Verifica escala, espesor, cierre de malla y engastes en tu software de modelado.</p>
+        <p className="mt-4 text-xs leading-5 text-white/40">{modo === "imagen" ? "Importante: el modo Imagen descarga aproximadamente 485 MB la primera vez y requiere Chrome o Edge con WebGPU compatible. " : "Importante: el modo Texto requiere generar el modelo mediante el agente Text-to-CAD y después importar el STL. "}El STL no garantiza que la pieza sea fabricable. Verifica escala, espesor, cierre de malla y engastes en tu software CAD antes de fabricar.</p>
       </div>
     </div>
   );
