@@ -1289,18 +1289,18 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Agreed behavior: interactive preview remains lightweight after
-            // orbit settles. Full photographic gem optics, transmission,
-            // dispersion, clearcoat, shadows and post-processing are capture-only.
-            // Raise resolution for a sharper live view without enabling beauty effects.
+            // Idle beauty path: restore the configured gem optics, transmission,
+            // dispersion, clearcoat and shadows only after OrbitControls damping
+            // has settled. The viewer loop then converges for 32 bounded frames.
+            // This is raster/post-process convergence, NOT path-tracing samples.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            liveFastPathRef.current = true;
+            liveFastPathRef.current = false;
             aplicarPerfilLive();
-            renderer.shadowMap.enabled = false;
-            renderer.shadowMap.needsUpdate = false;
+            renderer.shadowMap.enabled = renderQuality.shadows;
+            renderer.shadowMap.needsUpdate = true;
             invalidateRenderRef.current?.();
           },
         }
