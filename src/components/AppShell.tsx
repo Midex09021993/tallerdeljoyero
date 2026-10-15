@@ -28,7 +28,6 @@ import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from 
 import { supabase } from "@/integrations/supabase/client";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionProduccion";
-import { ResumenPlanComercial } from "@/components/ResumenPlanComercial";
 
 type Seccion = {
   to:
@@ -404,8 +403,6 @@ export function AppShell({
             })}
             </nav>
           </div>
-
-          <ResumenPlanComercial />
 
           <div className="shrink-0 border-t border-ink-foreground/5 p-6">
             <div className="mb-4 flex items-center gap-3">
