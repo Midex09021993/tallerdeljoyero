@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Download, ImagePlus, LoaderCircle, RotateCcw, ShieldCheck, Sparkles, Ruler } from "lucide-react";
+import { Download, ImagePlus, LoaderCircle, RotateCcw, ShieldCheck, Sparkles, Ruler, Clipboard, FileUp, ExternalLink } from "lucide-react";
 import * as ort from "onnxruntime-web/webgpu";
 import * as THREE from "three";
 import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
@@ -291,10 +291,29 @@ export function GeneradorSTLIA() {
   const [message, setMessage] = useState("La imagen se procesa en tu navegador; no se envía a un servicio de generación.");
   const [generatedSTL, setGeneratedSTL] = useState<File | null>(null);
   const [dimensionMm, setDimensionMm] = useState(25);
+  const [modo, setModo] = useState<"imagen" | "texto">("imagen");
+  const [instruccionCAD, setInstruccionCAD] = useState("Diseña un anillo de joyería en CAD, aro circular uniforme, talla interior 17.3 mm, ancho 2.0 mm, grosor mínimo 1.5 mm, con engaste central para una gema redonda de 6 mm. Geometría sólida y cerrada, sin piezas flotantes. Usa milímetros y exporta STL y STEP.");
+  const [archivoCAD, setArchivoCAD] = useState<File | null>(null);
+  const [urlCAD, setUrlCAD] = useState<string | null>(null);
+  const [mensajeCAD, setMensajeCAD] = useState("Genera el CAD con el agente Text-to-CAD y trae aquí el STL para revisarlo.");
   const busy = ["loading", "preparing", "generating", "meshing"].includes(stage);
 
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+  useEffect(() => () => { if (urlCAD) URL.revokeObjectURL(urlCAD); }, [urlCAD]);
+
+  const importarSTLCAD = (next: File | null) => {
+    if (!next) return;
+    if (!/\.stl$/i.test(next.name) && next.type !== "model/stl" && next.type !== "application/sla") { setMensajeCAD("Selecciona un archivo STL exportado desde Text-to-CAD."); return; }
+    if (next.size > 100 * 1024 * 1024) { setMensajeCAD("El STL debe pesar 100 MB o menos para esta prueba."); return; }
+    if (urlCAD) URL.revokeObjectURL(urlCAD);
+    setArchivoCAD(next); setUrlCAD(URL.createObjectURL(next)); setMensajeCAD("STL importado. Revisa escala, espesores y cierre de malla antes de fabricar.");
+  };
+
+  const copiarInstruccionCAD = async () => {
+    try { await navigator.clipboard.writeText(instruccionCAD); setMensajeCAD("Instrucción copiada. Pégala en el agente Text-to-CAD para generar el modelo."); }
+    catch { setMensajeCAD("No se pudo copiar automáticamente. Selecciona y copia el texto manualmente."); }
+  };
 
   const chooseFile = useCallback((next: File | null) => {
     if (!next) return;
@@ -363,9 +382,13 @@ export function GeneradorSTLIA() {
       <div className="rounded-2xl border border-[#d8bd7b]/25 bg-[#11120f] p-5 sm:p-7">
         <div className="flex items-start gap-3">
           <div className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/10 text-[#d8bd7b]"><Sparkles className="size-6" /></div>
-          <div><h3 className="text-xl font-semibold">Generador STL con IA</h3><p className="mt-1 text-sm leading-6 text-white/60">Reconstrucción 3D local con TripoSR y WebGPU. Sin cuenta, API de pago ni envío de tu imagen a un servidor de generación.</p></div>
+          <div><h3 className="text-xl font-semibold">Generador 3D para joyería</h3><p className="mt-1 text-sm leading-6 text-white/60">Conservamos el modo Imagen local y añadimos un flujo de prueba para Texto a CAD.</p></div>
         </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1.1fr]">
+        <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-black/20 p-1">
+          <button type="button" onClick={() => setModo("imagen")} className={`min-h-11 rounded-lg px-3 text-sm font-semibold transition ${modo === "imagen" ? "bg-[#d8bd7b] text-[#17160f]" : "text-white/65 hover:bg-white/5"}`}>Imagen a STL</button>
+          <button type="button" onClick={() => setModo("texto")} className={`min-h-11 rounded-lg px-3 text-sm font-semibold transition ${modo === "texto" ? "bg-[#d8bd7b] text-[#17160f]" : "text-white/65 hover:bg-white/5"}`}>Texto a CAD · prueba</button>
+        </div>
+        {modo === "imagen" ? <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1.1fr]">
           <div className="rounded-xl border border-dashed border-white/20 bg-black/20 p-4">
             <label htmlFor="stl-image" className="flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 text-center">
               {previewUrl ? <img src={previewUrl} alt="Imagen de referencia" className="max-h-56 max-w-full rounded-lg object-contain" /> : <><ImagePlus className="size-9 text-[#d8bd7b]" /><span className="font-medium">Seleccionar imagen</span><span className="text-xs text-white/45">PNG, JPG o WebP · máximo 15 MB</span></>}
@@ -392,6 +415,29 @@ export function GeneradorSTLIA() {
         </div>
         {stage === "done" && <button type="button" onClick={downloadSTL} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d8bd7b]/35 px-4 py-3 text-sm font-semibold text-[#e4ce94] transition hover:bg-[#d8bd7b]/10"><Download className="size-4" /> Descargar STL binario</button>}
         {stage === "error" && <button type="button" onClick={() => { setStage("idle"); setMessage("Corrige el problema indicado e inténtalo de nuevo."); }} className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-sm text-white/75"><RotateCcw className="size-4" /> Volver a intentar</button>}
+        </div> : <div className="mt-5 space-y-4">
+          <div className="rounded-xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm leading-6 text-white/75">
+            <p className="font-semibold text-[#e5ca8a]">Prueba de integración, sin simular una API</p>
+            <p className="mt-1">Text-to-CAD ejecuta el motor CAD mediante un agente y un entorno compatible; no es una API pública de generación que podamos llamar directamente desde esta página. Copia la instrucción, genera el modelo con Text-to-CAD y luego importa aquí el STL real.</p>
+          </div>
+          <label htmlFor="cad-text-prompt" className="block text-sm font-medium text-white/80">Describe la joya y sus medidas</label>
+          <textarea id="cad-text-prompt" value={instruccionCAD} onChange={(event) => setInstruccionCAD(event.target.value)} rows={6} className="w-full rounded-xl border border-white/15 bg-black/25 p-3 text-sm leading-6 text-white outline-none focus:border-[#d8bd7b]" placeholder="Describe la pieza, medidas, tolerancias y engastes..." />
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => void copiarInstruccionCAD()} disabled={!instruccionCAD.trim()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#d8bd7b] px-4 py-3 text-sm font-semibold text-[#17160f] disabled:opacity-40"><Clipboard className="size-4" /> Copiar instrucción</button>
+            <a href="https://www.texttocad.dev/" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d8bd7b]/35 px-4 py-3 text-sm font-semibold text-[#e4ce94] hover:bg-[#d8bd7b]/10"><ExternalLink className="size-4" /> Abrir Text-to-CAD</a>
+          </div>
+          <div className="rounded-xl border border-dashed border-white/20 bg-black/20 p-4">
+            <label htmlFor="cad-stl-upload" className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 text-center">
+              <FileUp className="size-8 text-[#d8bd7b]" />
+              <span className="font-medium">{archivoCAD ? archivoCAD.name : "Importar el STL generado"}</span>
+              <span className="text-xs text-white/45">STL · máximo 100 MB</span>
+            </label>
+            <input id="cad-stl-upload" type="file" accept=".stl,model/stl,application/sla" className="sr-only" onChange={(event) => importarSTLCAD(event.target.files?.[0] ?? null)} />
+          </div>
+          {urlCAD && archivoCAD ? <div className="overflow-hidden rounded-xl border border-white/10 bg-[#171815] p-2"><VisorPesoJoyeria compacto archivoInicial={archivoCAD} /></div> : <div className="rounded-xl border border-white/10 bg-[#171815] p-6 text-center text-sm text-white/45">Cuando importes el STL, aquí aparecerá el visualizador existente.</div>}
+          <div role="status" aria-live="polite" className="rounded-xl border border-white/10 bg-white/[.025] p-3 text-sm text-white/65">{mensajeCAD}</div>
+          <p className="text-xs leading-5 text-white/40">La generación automática dentro de Aurum requiere desplegar un servicio CAD seguro; este cambio no despliega ni llama un servicio externo.</p>
+        </div>}
         <p className="mt-4 text-xs leading-5 text-white/40">Importante: la primera descarga del modelo ronda los 485 MB. Requiere Chrome o Edge actualizado con WebGPU compatible y memoria suficiente. El STL no incorpora unidades físicas; esta reconstrucción es una referencia inicial, no CAD listo para fundición. Verifica escala, espesor, cierre de malla y engastes en tu software de modelado.</p>
       </div>
     </div>
