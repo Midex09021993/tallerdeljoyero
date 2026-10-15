@@ -55,11 +55,11 @@ export function ResumenPlanComercial() {
   if (resumen.isLoading) {
     return (
       <section
-        className="mx-4 mb-4 rounded-2xl border border-gold/25 bg-card p-4 text-foreground shadow-card sm:p-5"
+        className="mx-4 mb-4 rounded-2xl border border-[#dfc98f] bg-[#fffdf8] p-4 text-[#25231f] shadow-card sm:p-5"
         aria-label="Plan comercial"
         aria-live="polite"
       >
-        <p className="text-sm text-muted-foreground">Cargando información de tu plan…</p>
+        <p className="text-sm text-[#66645e]">Cargando información de tu plan…</p>
       </section>
     );
   }
@@ -67,7 +67,7 @@ export function ResumenPlanComercial() {
   if (resumen.isError || !resumen.data) {
     return (
       <section
-        className="mx-4 mb-4 rounded-2xl border border-amber-500/30 bg-card p-4 text-foreground shadow-card sm:p-5"
+        className="mx-4 mb-4 rounded-2xl border border-amber-500/30 bg-[#fffdf8] p-4 text-[#25231f] shadow-card sm:p-5"
         aria-label="Plan comercial"
         role="status"
       >
@@ -76,8 +76,8 @@ export function ResumenPlanComercial() {
             <Gauge className="size-5" />
           </span>
           <div>
-            <h2 className="text-base font-bold text-foreground">Tu plan comercial</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h2 className="text-base font-bold text-[#25231f]">Tu plan comercial</h2>
+            <p className="mt-1 text-sm text-[#66645e]">
               No se pudo cargar la información del plan. Vuelve a intentarlo más tarde.
             </p>
           </div>
@@ -94,37 +94,37 @@ export function ResumenPlanComercial() {
 
   return (
     <section
-      className="mx-4 mb-4 overflow-hidden rounded-2xl border border-gold/30 bg-card text-foreground shadow-card"
+      className="mx-4 mb-4 overflow-hidden rounded-2xl border border-[#d6b56d] bg-[#fffdf8] text-[#25231f] shadow-card"
       aria-label="Resumen del plan comercial"
     >
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold-deep">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#d6b56d] bg-[#f8efd9] text-[#946b18]">
             <Gauge className="size-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#66645e]">
               Suscripción y consumo
             </p>
-            <h2 className="mt-1 text-xl font-bold leading-tight text-foreground">
+            <h2 className="mt-1 text-xl font-bold leading-tight text-[#25231f]">
               Plan {plan?.nombre ?? "Emprendedor"}
             </h2>
-            <p className="mt-1 text-sm font-semibold text-gold-deep">{precio}</p>
+            <p className="mt-1 text-sm font-semibold text-[#946b18]">{precio}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 self-start rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-foreground sm:self-center">
-          <Sparkles className="size-3.5 text-gold-deep" />
+        <div className="flex items-center gap-2 self-start rounded-full border border-[#dfc98f] bg-[#f8efd9] px-3 py-1.5 text-xs font-semibold text-[#25231f] sm:self-center">
+          <Sparkles className="size-3.5 text-[#946b18]" />
           Plan asignado
         </div>
       </div>
 
-      <div className="border-t border-border bg-muted/30 px-4 py-4 sm:px-5">
+      <div className="border-t border-[#e5dfd2] bg-[#f5f2eb] px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Package className="size-4 text-gold-deep" />
+          <div className="flex items-center gap-2 text-sm font-medium text-[#25231f]">
+            <Package className="size-4 text-[#946b18]" />
             Productos del catálogo
           </div>
-          <span className="text-sm font-bold tabular-nums text-foreground">
+          <span className="text-sm font-bold tabular-nums text-[#25231f]">
             {productos} / {limite === null ? "Límite no disponible" : limite < 0 ? "Ilimitado" : limite}
           </span>
         </div>
@@ -143,16 +143,16 @@ export function ResumenPlanComercial() {
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">{pct}% del límite utilizado</p>
+            <p className="mt-1.5 text-xs text-[#66645e]">{pct}% del límite utilizado</p>
           </>
         ) : (
-          <p className="mt-1.5 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-xs text-[#66645e]">
             {limite === null ? "No hay un límite de catálogo configurado para este plan." : "Este plan no tiene un límite fijo de productos."}
           </p>
         )}
         <Link
           to="/catalogo"
-          className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-gold px-4 py-2 text-xs font-bold text-gold-foreground transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-[#9a741f] px-4 py-2 text-xs font-bold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           Administrar catálogo →
         </Link>
