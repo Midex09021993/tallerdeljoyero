@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS } from "../lib/aurum-photographic-scene-engine";
 
-type Props = { apiRef: { current: any } };
+type Props = { apiRef: { current: any }; initialType?: "metales" | "gemas"; onTypeChange?: (type: "metales" | "gemas") => void };
 
 const metalSwatches = [
   "radial-gradient(ellipse at 30% 20%,#fff7d8 0%,#9b8d65 18%,#252a2e 43%,#e5d6ad 58%,#55565a 76%,#17191c 100%)",
@@ -21,8 +21,9 @@ const gemSwatches = [
   "radial-gradient(circle at 35% 25%,#fff 0%,#f6f7f8 16%,#c4d7ed 34%,#e9f4ff 48%,#829ab8 72%,#303d52 100%)"
 ];
 
-export function AurumEnvironmentPicker({ apiRef }: Props) {
-  const [tipo, setTipo] = useState<"metales" | "gemas">("metales");
+export function AurumEnvironmentPicker({ apiRef, initialType = "metales", onTypeChange }: Props) {
+  const [tipo, setTipoState] = useState<"metales" | "gemas">(initialType);
+  const setTipo = (next: "metales" | "gemas") => { setTipoState(next); onTypeChange?.(next); };
   const [metal, setMetal] = useState("jewelry");
   const [gema, setGema] = useState("gemNeutral");
   const resources = tipo === "metales" ? AURUM_HDRI_URLS : AURUM_GEM_HDRI_URLS;
