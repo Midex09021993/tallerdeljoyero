@@ -99,6 +99,7 @@ function OperarioPage() {
       titulo="Mi trabajo"
       subtitulo="Tu trabajo de hoy"
       atrasMovil={false}
+      encabezadoMovilCompacto
     >
       <div className="space-y-5">
         <section className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Resumen de trabajo">
