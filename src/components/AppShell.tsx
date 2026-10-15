@@ -488,13 +488,12 @@ export function AppShell({
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen((open) => !open)}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold shadow-card"
+                  className="inline-flex size-11 items-center justify-center rounded-xl border border-border bg-card p-0 shadow-card"
                   aria-expanded={mobileMenuOpen}
                   aria-controls="navegacion-movil-modulos"
                   aria-label={mobileMenuOpen ? "Cerrar menú de módulos" : "Abrir menú de módulos"}
                 >
-                  {mobileMenuOpen ? <X className="size-4" aria-hidden="true" /> : <Menu className="size-4" aria-hidden="true" />}
-                  {mobileMenuOpen ? "Cerrar" : "Módulos"}
+                  {mobileMenuOpen ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
                 </button>
                 <button
                   type="button"
