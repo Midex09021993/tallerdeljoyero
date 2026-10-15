@@ -1359,7 +1359,7 @@ export function AurumRender() {
             // DPR stays unchanged. Re-enable the photographic path and progressively
             // restore diamond internal environment samples alongside transmission quality.
             setInteractionMode?.(false);
-            liveTransmissionScaleRef.current = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+            liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             renderer.shadowMap.enabled = renderQuality.shadows;
             // Restore gem material profiles in small idle batches instead of traversing
@@ -1371,7 +1371,7 @@ export function AurumRender() {
               const batchSize = Math.max(8, Math.ceil(liveProfileMeshes.length / 32));
               const restoreBatch = () => {
                 if (!vivo || token !== profileRestoreToken || !modelo) {
-                  profileRestoreScheduled = false;
+                  if (token === profileRestoreToken) profileRestoreScheduled = false;
                   return;
                 }
                 if (liveFastPathRef.current) {
