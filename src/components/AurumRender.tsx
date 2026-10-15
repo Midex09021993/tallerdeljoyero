@@ -145,6 +145,7 @@ export function AurumRender() {
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [hdriPanelTipo, setHdriPanelTipo] = useState<"metales"|"gemas">("metales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
 
@@ -1574,7 +1575,8 @@ export function AurumRender() {
             <button type="button" title="Materiales" aria-label="Abrir Materiales" onClick={()=>{setUxSection("materiales");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-[#e3c56e]"><SlidersHorizontal className="size-5"/></button>
             <button type="button" title="Gemas" aria-label="Abrir Gemas" onClick={()=>{setUxSection("gemas");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-sky-200"><Gem className="size-5"/></button>
             <button type="button" title="Escenas" aria-label="Abrir Escenas" onClick={()=>{setUxSection("escena");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08] hover:text-white"><ImageIcon className="size-5"/></button>
-            <button type="button" title="HDR Metales y HDR Gemas" aria-label="Abrir entornos HDR" onClick={()=>setSidebarCollapsed(false)} className="grid size-10 shrink-0 place-items-center rounded-xl text-[#d4af37] transition hover:bg-white/[.08]"><Sparkles className="size-5"/></button>
+            <button type="button" title="HDR Metales" aria-label="Abrir HDR Metales" onClick={()=>{setHdriPanelTipo("metales");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-[#d4af37] transition hover:bg-white/[.08]"><Sparkles className="size-5"/></button>
+            <button type="button" title="HDR Gemas" aria-label="Abrir HDR Gemas" onClick={()=>{setHdriPanelTipo("gemas");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-sky-200 transition hover:bg-white/[.08]"><Gem className="size-5"/></button>
             <button type="button" title="Iluminación y render" aria-label="Abrir iluminación y render" onClick={()=>{setPanel("iluminacion");setSidebarCollapsed(false)}} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/65 transition hover:bg-white/[.08]"><SlidersHorizontal className="size-5"/></button>
             <div className="mt-auto pt-3">
               <button type="button" title="Expandir menú" aria-label="Expandir menú" onClick={()=>setSidebarCollapsed(false)} className="grid size-10 place-items-center rounded-xl border border-white/10 text-white/50 transition hover:bg-white/[.08] hover:text-white"><ChevronDown className="size-4 rotate-[-90deg]"/></button>
@@ -1650,7 +1652,7 @@ export function AurumRender() {
                 </button>)}
               </div>}
             </section>
-            <AurumEnvironmentPicker apiRef={apiRef} />
+            <AurumEnvironmentPicker apiRef={apiRef} initialType={hdriPanelTipo} onTypeChange={setHdriPanelTipo} />
             <div className="px-5 pb-6">
               <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-3 py-3 text-left hover:border-[#d4af37]/40">
                 <span><span className="block text-[9px] uppercase tracking-[.16em] text-white/35">Más control</span><span className="mt-1 block text-xs text-white/75">Iluminación y render</span></span>
