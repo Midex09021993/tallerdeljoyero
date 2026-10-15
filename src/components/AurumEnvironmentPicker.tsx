@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS } from "../lib/aurum-photographic-scene-engine";
 
-type Props = { apiRef: { current: any }; type: "metales" | "gemas" };
+type Props = { apiRef: { current: any }; type: "metales" | "gemas"; selectedId: string; onSelect: (id: string) => void };
 
 const metalSwatches = [
   "radial-gradient(ellipse at 30% 20%,#fff7d8 0%,#9b8d65 18%,#252a2e 43%,#e5d6ad 58%,#55565a 76%,#17191c 100%)",
@@ -21,10 +20,8 @@ const gemSwatches = [
   "radial-gradient(circle at 35% 25%,#fff 0%,#f6f7f8 16%,#c4d7ed 34%,#e9f4ff 48%,#829ab8 72%,#303d52 100%)"
 ];
 
-export function AurumEnvironmentPicker({ apiRef, type }: Props) {
+export function AurumEnvironmentPicker({ apiRef, type, selectedId, onSelect }: Props) {
   const tipo = type;
-  const [metal, setMetal] = useState("jewelry");
-  const [gema, setGema] = useState("gemNeutral");
   const resources = tipo === "metales" ? AURUM_HDRI_URLS : AURUM_GEM_HDRI_URLS;
   return <section className="border-b border-white/10 px-4 py-3">
     <div className="mb-3 flex items-center justify-between">
@@ -33,11 +30,12 @@ export function AurumEnvironmentPicker({ apiRef, type }: Props) {
     </div>
     <div className="grid grid-cols-3 gap-2.5">
       {Object.entries(resources).filter(([id]) => tipo !== "metales" || id !== "ijewelGem").map(([id], index) => {
-        const active = tipo === "metales" ? metal === id : gema === id;
+        const active = selectedId === id;
         const background = (tipo === "metales" ? metalSwatches : gemSwatches)[index % 6];
         return <button key={id} type="button" title={id} aria-label={(tipo==="metales"?"HDR metal ":"HDR gema ")+id} onClick={() => {
-          if (tipo === "metales") { setMetal(id); apiRef.current?.hdriMetal?.(id); }
-          else { setGema(id); apiRef.current?.hdriGema?.(id); }
+          if (tipo === "metales") apiRef.current?.hdriMetal?.(id);
+          else apiRef.current?.hdriGema?.(id);
+          onSelect(id);
         }} className={"group min-w-0 rounded-xl p-1.5 text-center transition "+(active?"bg-white/[.075]":"hover:bg-white/[.04]")}>
           <span className={"relative mx-auto grid aspect-square w-full max-w-[72px] place-items-center overflow-hidden rounded-full border-2 transition "+(active?(tipo==="metales"?"border-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,.25)]":"border-sky-300 shadow-[0_0_15px_rgba(125,211,252,.22)]"):"border-white/10 group-hover:border-white/30")}>
             <span className="absolute inset-0" style={{background}}/>
