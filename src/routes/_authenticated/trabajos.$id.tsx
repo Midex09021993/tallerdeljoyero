@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Play, Paperclip, Upload } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, ChevronDown, FileText, Link2, Menu, Play, Paperclip, Upload } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
@@ -443,6 +443,15 @@ function TrabajoOperativoPage() {
           {errorAccion ? <p className="mt-3 text-xs text-danger">{errorAccion}</p> : null}
         </section>
 
+        <details className="group overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold-deep"><Menu className="size-5" aria-hidden="true" /></span>
+              <span className="min-w-0"><span className="block text-sm font-bold">Secciones de la ficha</span><span className="mt-0.5 block text-xs font-normal text-muted-foreground">Instrucciones, archivos, materiales y seguimiento</span></span>
+            </span>
+            <ChevronDown className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="space-y-3 border-t border-border p-3 sm:p-4">
         <details className="group overflow-hidden rounded-2xl border border-gold/10 bg-card shadow-raised">
           <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">1</span><span className="text-sm font-bold">Identificación del trabajo</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-border p-5"><dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -565,6 +574,9 @@ function TrabajoOperativoPage() {
           <summary className="flex cursor-pointer list-none items-center justify-between bg-gold/[0.035] px-5 py-4 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-gold/10 text-xs font-bold text-gold-deep">10</span><span className="text-sm font-bold">Incidencias</span></span><ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
           <div className="border-t border-border p-5"><div className="space-y-3">{incidencias.map((item) => <div key={item.id} className="rounded-xl border border-gold/10 bg-gold/[0.018] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-semibold">{item.tipo}</p><p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.descripcion}</p></div><span className="rounded-full bg-gold/[0.06] px-2.5 py-1 text-[10px] font-semibold uppercase">{item.estado}</span></div>{item.resolucion ? <p className="mt-3 rounded-xl bg-success-soft p-3 text-xs text-success">Resolución: {item.resolucion}</p> : null}</div>)}{incidencias.length === 0 ? <p className="text-sm text-muted-foreground">No hay incidencias registradas.</p> : null}</div>
             {activo ? <div className="mt-4 rounded-2xl border border-warning/20 bg-warning-soft/40 p-4"><p className="text-xs font-semibold">¿Hay algo que impida continuar?</p><div className="mt-3 grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_auto]"><select value={incidencia.tipo} onChange={(e) => setIncidencia((v) => ({ ...v, tipo: e.target.value }))} className="min-h-10 rounded-xl border border-gold/10 bg-gold/[0.018] px-3 text-sm"><option value="general">General</option><option value="material">Material</option><option value="diseño">Diseño</option><option value="máquina">Máquina</option><option value="cliente">Cliente</option></select><input value={incidencia.descripcion} onChange={(e) => setIncidencia((v) => ({ ...v, descripcion: e.target.value }))} placeholder="Describe brevemente el problema…" className="min-h-10 rounded-xl border border-gold/10 bg-gold/[0.018] px-3 text-sm" /><button type="button" disabled={!incidencia.descripcion.trim() || reportandoIncidencia} onClick={() => void reportarIncidencia()} className="rounded-xl bg-warning px-4 py-2.5 text-xs font-semibold text-warning-foreground disabled:opacity-50">{reportandoIncidencia ? "Enviando…" : "Reportar"}</button></div></div> : null}
+          </div>
+        </details>
+
           </div>
         </details>
 
