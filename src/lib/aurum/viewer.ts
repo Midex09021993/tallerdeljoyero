@@ -138,7 +138,7 @@ export function createAurumWebGLViewer(
   const controls = Controls ? new Controls(camera, renderer.domElement) : null;
   if (controls) {
     controls.enableDamping = true;
-    controls.dampingFactor = 0.10;
+    controls.dampingFactor = 0.14;
     controls.enablePan = true;
     controls.enableRotate = true;
     controls.autoRotate = false;
