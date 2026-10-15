@@ -1279,7 +1279,10 @@ export function AurumRender() {
         {
           progressiveFrames: 32,
           onStart: () => {
-            // Interaction path: cap raster resolution and gem transmission cost.
+            // Interaction path: immediately stop temporal accumulation before the
+            // first camera change. Otherwise TAA can blend the old ring pose into
+            // the new one and create the multiple translucent copies seen in orbit.
+            setInteractionMode?.(true);
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
             // Avoid reallocating the renderer/composer drawing buffers at pointer-down:
