@@ -391,10 +391,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
         ijInternal=max((ijInternal-vec3(0.45))*1.34+vec3(0.45),vec3(0.0));
-        // Blend the environment rays with the physical PBR surface. A bounded
-        // weight preserves crown highlights and avoids a dark HDR map swallowing
-        // the diamond; this remains an environment-sampling approximation.
-        float ijInternalWeight=clamp(ijReflect*0.84,0.36,0.48);
+        // Live-view anti-milky calibration: let the dedicated internal gem-HDR
+        // estimate carry more of the final diamond color while retaining a
+        // controlled share of the physical PBR/Fresnel surface for highlights.
+        // This is still an environment-sampling approximation, not geometric tracing.
+        float ijInternalWeight=clamp(ijReflect*0.84,0.62,0.72);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
