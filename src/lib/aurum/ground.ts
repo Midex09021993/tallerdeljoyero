@@ -39,7 +39,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   }
   const bakedShadowTexture=new THREE.DataTexture(shadowData,shadowSize,shadowSize,THREE.RGBAFormat,THREE.UnsignedByteType);
   bakedShadowTexture.colorSpace=THREE.NoColorSpace; bakedShadowTexture.minFilter=THREE.LinearFilter; bakedShadowTexture.magFilter=THREE.LinearFilter; bakedShadowTexture.needsUpdate=true;
-  const bakedShadowMaterial = new THREE.MeshBasicMaterial({map:bakedShadowTexture,color:0x000000,transparent:true,opacity:.26,depthWrite:false,depthTest:true,toneMapped:false});
+  const bakedShadowMaterial = new THREE.MeshBasicMaterial({map:bakedShadowTexture,color:0x000000,transparent:true,opacity:.26,depthWrite:false,depthTest:false,toneMapped:false});
   const bakedShadow = new THREE.Mesh(new THREE.PlaneGeometry(1,1),bakedShadowMaterial);
   bakedShadow.rotation.x = -Math.PI / 2;
   bakedShadow.renderOrder = -0.5;
