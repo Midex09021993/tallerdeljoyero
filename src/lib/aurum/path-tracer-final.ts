@@ -168,6 +168,7 @@ export async function renderAurumPathTracedImage(
   renderer.getSize(oldSize);
   const oldPR = renderer.getPixelRatio();
   const oldTarget = renderer.getRenderTarget();
+  const oldToneMappingExposure = renderer.toneMappingExposure;
   const cam = camera.clone();
   cam.aspect = width / height;
   cam.updateProjectionMatrix();
@@ -189,6 +190,9 @@ export async function renderAurumPathTracedImage(
     renderer.setRenderTarget(null);
     renderer.setPixelRatio(1);
     renderer.setSize(width, height, false);
+    // Lovable's controlled test: reduce highlight clipping in the final capture
+    // only. The interactive viewer and its exposure remain unchanged.
+    renderer.toneMappingExposure = oldToneMappingExposure * 0.78;
     tracer = new WebGLPathTracer(renderer);
     tracer.renderDelay = 0;
     tracer.minSamples = 1;
@@ -235,5 +239,6 @@ export async function renderAurumPathTracedImage(
     renderer.setRenderTarget(oldTarget);
     renderer.setPixelRatio(oldPR);
     renderer.setSize(oldSize.x, oldSize.y, false);
+    renderer.toneMappingExposure = oldToneMappingExposure;
   }
 }
