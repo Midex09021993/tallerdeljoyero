@@ -495,13 +495,6 @@ export function AppShell({
                 >
                   {mobileMenuOpen ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void cerrarSesion()}
-                  className="min-h-11 rounded-xl border border-danger/25 bg-danger-soft px-3 text-xs font-semibold text-danger"
-                >
-                  Salir
-                </button>
               </div>
             </div>
 
