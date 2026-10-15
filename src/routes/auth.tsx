@@ -192,7 +192,6 @@ function LoginPage() {
           <a onClick={() => setMenuMovilAbierto(false)} href="/herramientas-publicas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Grid2X2 className="size-4 text-gold" /> Herramientas gratuitas</a>
           <a onClick={() => setMenuMovilAbierto(false)} href="/tienda" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><ShoppingBag className="size-4 text-gold" /> Tienda de insumos</a>
           <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Conocer Aurum Lab</button>
-          <a onClick={() => setMenuMovilAbierto(false)} href="#login" className="flex items-center gap-3 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-ink"><LockKeyhole className="size-4" /> Iniciar sesión</a>
         </nav> : null}
       </header>
 
