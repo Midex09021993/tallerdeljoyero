@@ -185,7 +185,8 @@ export async function renderAurumPathTracedImage(
     tracer.transmissiveBounces = 16;
     tracer.multipleImportanceSampling = true;
     tracer.tiles.set(2, 2);
-    await tracer.setSceneAsync(scene, cam);
+    await yieldFrame();
+    tracer.setScene(scene, cam);
     if (opts.signal?.aborted) throw new DOMException("cancelado", "AbortError");
 
     const total = samples;
