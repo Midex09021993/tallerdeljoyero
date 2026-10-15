@@ -1,11 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Gauge } from "lucide-react";
+import { Gauge, Package, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { obtenerPlanComercial } from "@/lib/planes-comerciales";
 import { useSesion } from "@/lib/auth";
 
-type Cuota = { plan_id: string; productos_catalogo_max: number; operaciones_comerciales_mes: number; almacenamiento_mib: number; usos_render_mes: number };
+type Cuota = {
+  plan_id: string;
+  productos_catalogo_max: number;
+  operaciones_comerciales_mes: number;
+  almacenamiento_mib: number;
+  usos_render_mes: number;
+};
 
 function porcentaje(usado: number, limite: number) {
   return limite < 0 ? 0 : Math.min(100, Math.round((usado / Math.max(1, limite)) * 100));
@@ -24,11 +30,19 @@ export function ResumenPlanComercial() {
         .eq("id", participanteId!)
         .maybeSingle();
       if (participanteError) throw participanteError;
+
       const metadata = participante?.metadata as Record<string, unknown> | null;
       const planId = obtenerPlanComercial(metadata?.["plan_comercial"])?.id ?? "emprendedor";
       const [{ data: cuota, error: cuotaError }, { count, error: countError }] = await Promise.all([
-        supabase.from("aurum_plan_quotas").select("plan_id,productos_catalogo_max,operaciones_comerciales_mes,almacenamiento_mib,usos_render_mes").eq("plan_id", planId).maybeSingle(),
-        supabase.from("catalogo_productos").select("id", { count: "exact", head: true }).eq("participante_id", participanteId!),
+        supabase
+          .from("aurum_plan_quotas")
+          .select("plan_id,productos_catalogo_max,operaciones_comerciales_mes,almacenamiento_mib,usos_render_mes")
+          .eq("plan_id", planId)
+          .maybeSingle(),
+        supabase
+          .from("catalogo_productos")
+          .select("id", { count: "exact", head: true })
+          .eq("participante_id", participanteId!),
       ]);
       if (cuotaError) throw cuotaError;
       if (countError) throw countError;
@@ -36,25 +50,113 @@ export function ResumenPlanComercial() {
     },
   });
 
-  if (!sesion?.esAdmin || !participanteId || resumen.isLoading || resumen.isError || !resumen.data?.cuota) return null;
+  if (!sesion?.esAdmin || !participanteId) return null;
+
+  if (resumen.isLoading) {
+    return (
+      <section
+        className="mx-4 mb-4 rounded-2xl border border-gold/25 bg-card p-4 text-foreground shadow-card sm:p-5"
+        aria-label="Plan comercial"
+        aria-live="polite"
+      >
+        <p className="text-sm text-muted-foreground">Cargando información de tu plan…</p>
+      </section>
+    );
+  }
+
+  if (resumen.isError || !resumen.data) {
+    return (
+      <section
+        className="mx-4 mb-4 rounded-2xl border border-amber-500/30 bg-card p-4 text-foreground shadow-card sm:p-5"
+        aria-label="Plan comercial"
+        role="status"
+      >
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-700">
+            <Gauge className="size-5" />
+          </span>
+          <div>
+            <h2 className="text-base font-bold text-foreground">Tu plan comercial</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              No se pudo cargar la información del plan. Vuelve a intentarlo más tarde.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const { planId, cuota, productos } = resumen.data;
-  const limite = cuota.productos_catalogo_max;
-  const pct = porcentaje(productos, limite);
   const plan = obtenerPlanComercial(planId);
+  const limite = cuota?.productos_catalogo_max ?? null;
+  const pct = limite === null ? 0 : porcentaje(productos, limite);
+  const precio = plan?.precioEtiqueta ?? "Consultar plan";
 
   return (
-    <section className="mx-4 mb-4 rounded-xl border border-ink-foreground/10 bg-ink-foreground/[0.04] p-3 text-ink-foreground" aria-label="Uso del plan comercial">
-      <div className="mb-2 flex items-center gap-2">
-        <Gauge className="size-4 text-gold" />
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-foreground/60">Tu plan</p>
+    <section
+      className="mx-4 mb-4 overflow-hidden rounded-2xl border border-gold/30 bg-card text-foreground shadow-card"
+      aria-label="Resumen del plan comercial"
+    >
+      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold-deep">
+            <Gauge className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              Suscripción y consumo
+            </p>
+            <h2 className="mt-1 text-xl font-bold leading-tight text-foreground">
+              Plan {plan?.nombre ?? "Emprendedor"}
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-gold-deep">{precio}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 self-start rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-foreground sm:self-center">
+          <Sparkles className="size-3.5 text-gold-deep" />
+          Plan asignado
+        </div>
       </div>
-      <p className="text-sm font-semibold">{plan?.nombre ?? "Emprendedor"}</p>
-      <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
-        <span className="text-ink-foreground/60">Productos del catálogo</span>
-        <span className="font-medium tabular-nums">{productos} / {limite < 0 ? "∞" : limite}</span>
+
+      <div className="border-t border-border bg-muted/30 px-4 py-4 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Package className="size-4 text-gold-deep" />
+            Productos del catálogo
+          </div>
+          <span className="text-sm font-bold tabular-nums text-foreground">
+            {productos} / {limite === null ? "Límite no disponible" : limite < 0 ? "Ilimitado" : limite}
+          </span>
+        </div>
+        {limite !== null && limite >= 0 ? (
+          <>
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-border"
+              role="progressbar"
+              aria-label="Uso del límite de productos"
+              aria-valuemin={0}
+              aria-valuemax={limite || 1}
+              aria-valuenow={productos}
+            >
+              <div
+                className={`h-full rounded-full transition-all ${pct >= 90 ? "bg-amber-500" : "bg-gold"}`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">{pct}% del límite utilizado</p>
+          </>
+        ) : (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {limite === null ? "No hay un límite de catálogo configurado para este plan." : "Este plan no tiene un límite fijo de productos."}
+          </p>
+        )}
+        <Link
+          to="/catalogo"
+          className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-gold px-4 py-2 text-xs font-bold text-gold-foreground transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Administrar catálogo →
+        </Link>
       </div>
-      {limite >= 0 ? <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink-foreground/10"><div className={`h-full rounded-full ${pct >= 90 ? "bg-amber-400" : "bg-gold"}`} style={{ width: `${pct}%` }} /></div> : null}
-      <Link to="/catalogo" className="mt-3 block text-[11px] font-medium text-gold-bright hover:underline">Administrar catálogo →</Link>
     </section>
   );
 }
