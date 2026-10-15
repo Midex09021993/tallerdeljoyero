@@ -169,8 +169,15 @@ export function createAurumLightingController(
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
+        // Keep the reference environment clean, but retain restrained vertical
+        // strips and edge/kicker sources so polished silver has dark-to-bright
+        // reflection bands instead of reading as uniformly neutral steel.
         if (lights.softbox) lights.softbox.visible = true;
         if (lights.front) lights.front.visible = true;
+        if (lights.strip) lights.strip.visible = true;
+        if (lights.kicker) lights.kicker.visible = true;
+        if (lights.edgeLeft) lights.edgeLeft.visible = true;
+        if (lights.edgeRight) lights.edgeRight.visible = true;
       }
     },
     update(patch) {
