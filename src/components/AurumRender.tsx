@@ -514,9 +514,11 @@ export function AurumRender() {
           renderer.shadowMap.enabled=renderQuality.shadows;
           renderer.shadowMap.needsUpdate=true;
         }
-        liveTransmissionScaleRef.current=live
-          ? runtimeBudget.interactionTransmissionScale
-          : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        // Keep the diamond's framebuffer refraction at the configured quality
+        // during orbit as well as idle. The raster path remains direct while moving,
+        // but lowering transmission resolution here visibly softens diamond facets.
+        // Other gems still use their existing lightweight material profile.
+        liveTransmissionScaleRef.current=Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
@@ -1276,12 +1278,16 @@ export function AurumRender() {
             // Interaction path: cap raster resolution and gem transmission cost.
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            const interactionDpr = Math.max(0.75, Math.min(1, runtimeBudget.interactionPixelRatio));
-      viewerLoopRef.current = viewerLoop;
+            // Keep the configured pixel ratio during orbit. The direct renderer
+            // still avoids expensive post-processing while moving, but downscaling
+            // the entire drawing buffer makes the diamond visibly lose facet detail.
+            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
-            liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
-            (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
+            liveTransmissionScaleRef.current = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+            (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             aplicarPerfilLive();
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
