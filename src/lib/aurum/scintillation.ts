@@ -366,11 +366,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.45))*1.26+vec3(0.45),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.45))*1.34+vec3(0.45),vec3(0.0));
         // Blend the environment rays with the physical PBR surface. A bounded
         // weight preserves crown highlights and avoids a dark HDR map swallowing
         // the diamond; this remains an environment-sampling approximation.
-        float ijInternalWeight=clamp(ijReflect*0.82,0.34,0.46);
+        float ijInternalWeight=clamp(ijReflect*0.84,0.36,0.48);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
