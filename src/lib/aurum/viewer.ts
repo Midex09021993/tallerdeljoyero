@@ -154,7 +154,7 @@ export function createAurumWebGLViewer(
 export function startAurumViewerLoop(
   viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
   render: () => void,
-  interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
+  interaction?: { onStart?: () => void; onEnd?: () => void; onProgressiveFrame?: (frame: number, total: number) => void; progressiveFrames?: number }
 ) {
   // AURUM is a product configurator, not a continuously animated game scene.
   // Render only when the camera/scene actually changes. OrbitControls still
@@ -228,7 +228,11 @@ export function startAurumViewerLoop(
     if (shouldRender) {
       dirty = false;
       render();
-      if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
+      if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) {
+        const completed = progressiveFrames - idleFramesRemaining + 1;
+        interaction?.onProgressiveFrame?.(completed, progressiveFrames);
+        idleFramesRemaining--;
+      }
     }
 
     // During idle convergence, request a bounded number of frames, then stop.
