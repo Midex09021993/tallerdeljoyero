@@ -309,9 +309,18 @@ export async function createAurumPostPipeline(
   // contact shadow remain in the same pipeline, avoiding a visual state switch.
   const setInteractionMode=(active:boolean)=>{
     if(!taaPass)return;
-    taaPass.enabled=active?false:desiredTaaEnabled;
-    taaPass.accumulate=!active && desiredTaaEnabled;
-    if(!active && desiredTaaEnabled) taaPass.accumulateIndex=-1;
+    if(active){
+      // Never let temporal samples from the previous camera pose accumulate
+      // into the moving frame: that produces visible ghost copies of the ring.
+      taaPass.accumulate=false;
+      taaPass.accumulateIndex=-1;
+      taaPass.enabled=false;
+      return;
+    }
+    // Start a fresh accumulation only after OrbitControls has fully settled.
+    taaPass.enabled=desiredTaaEnabled;
+    taaPass.accumulate=desiredTaaEnabled;
+    taaPass.accumulateIndex=-1;
   };
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
