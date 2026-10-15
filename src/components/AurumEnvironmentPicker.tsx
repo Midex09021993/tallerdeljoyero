@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS } from "../lib/aurum-photographic-scene-engine";
 
