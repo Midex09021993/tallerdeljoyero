@@ -16,7 +16,7 @@ import { createAurumGemEnvironment, getAurumGemEnvironmentIntensity } from "../l
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { setAurumInclusionsVisible } from "../lib/aurum/gems";
-import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
+import { createAurumDiamondBounceController, setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
@@ -324,6 +324,7 @@ export function AurumRender() {
       // El escenario inicial selecciona su propio Environment HDRI.
 
       let modelo:any = null;
+      let diamondBounceController: ReturnType<typeof createAurumDiamondBounceController> | null = null;
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
       let liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
@@ -334,23 +335,8 @@ export function AurumRender() {
       // resolution are updated together. EffectComposer receives the same DPR.
       composerRef.current = composer;
 
-      // Match the interaction budget to the actual CAD density. Resize only
-      // at interaction boundaries (never inside the frame loop), and keep the
-      // renderer and EffectComposer targets on the same DPR.
-      const aplicarDprInteraccion = (enMovimiento:boolean) => {
-        const calidadDpr = Math.max(1, Math.min(2, Number(renderQuality.pixelRatio) || 1));
-        const dprReposo = Math.min(calidadDpr, runtimeBudget.pixelRatioCap);
-        const dprInteraccion = Math.min(dprReposo, runtimeBudget.interactionPixelRatio);
-        const dpr = enMovimiento ? dprInteraccion : dprReposo;
-        const actual = Number(renderer.getPixelRatio?.() ?? dpr);
-        const composerActual = Number(composer?.getPixelRatio?.() ?? dpr);
-        if (Math.abs(actual - dpr) < 0.015 && Math.abs(composerActual - dpr) < 0.015) return;
-        renderer.setPixelRatio(dpr);
-        composer?.setPixelRatio?.(dpr);
-        const width = nodo.clientWidth || renderer.domElement.clientWidth || renderer.domElement.width;
-        const height = nodo.clientHeight || renderer.domElement.clientHeight || renderer.domElement.height;
-        composer?.setSize?.(width, height);
-      };
+      // Keep renderer/composer DPR stable during pointer interactions. Changing
+      // pixel ratio reallocates GPU render targets; quality changes remain explicit.
       const escalaTransmisionInteraccion = () => Math.max(0.05, Math.min(0.15, runtimeBudget.interactionTransmissionScale));
 
       const aplicarCalidadRender = (id:AurumRenderQualityId) => {
@@ -463,7 +449,7 @@ export function AurumRender() {
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
+      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; diamondBounceController=null; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
@@ -714,6 +700,8 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
+        diamondBounceController=createAurumDiamondBounceController(modelo);
+        diamondBounceController.setInteractive();
         // LIVE MODE: procedural inclusions are intentionally hidden. They add
         // dozens of transparent draw calls and are not required for the base
         // product preview. CAPTURE enables them temporarily for the final image.
@@ -1207,13 +1195,18 @@ export function AurumRender() {
           setUxSection("gemas");
         }
         setPanel("materiales");
-        limpiarResaltado();        if (obj.geometry) {
-          const edges = new THREE.EdgesGeometry(obj.geometry, 18);
-          resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
+        limpiarResaltado();
+        if (obj.geometry) {
+          // BoxHelper creates a fixed 12-edge selection outline without walking every
+          // triangle to build EdgesGeometry on the main thread.
+          resaltado = new THREE.BoxHelper(obj, 0xff8a5b);
+          if (resaltado.material) {
+            resaltado.material.transparent = true;
+            resaltado.material.opacity = .95;
+            resaltado.material.depthTest = false;
+            resaltado.material.depthWrite = false;
+          }
           resaltado.renderOrder = 20;
-          resaltado.position.copy(obj.getWorldPosition(new THREE.Vector3()));
-          resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
-          resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
           escena.add(resaltado);
         }
       };
@@ -1333,11 +1326,9 @@ export function AurumRender() {
             // first camera change. Otherwise TAA can blend the old ring pose into
             // the new one and create the multiple translucent copies seen in orbit.
             setInteractionMode?.(true);
-            // These changes happen only at interaction boundaries, never per frame.
+            // Keep the drawing buffer stable; reduce only the gem transmission budget.
             liveFastPathRef.current = true;
-            // Lower DPR and transmission cost only at the start boundary. The diamond's
-            // optical shader, IOR and CAD facet normals remain untouched.
-            aplicarDprInteraccion(true);
+            diamondBounceController?.setInteractive();
             viewerLoopRef.current = viewerLoop;
             liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
@@ -1357,6 +1348,7 @@ export function AurumRender() {
             const targetScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
             const t = Math.max(0, Math.min(1, frame / Math.max(1, total)));
             const eased = t * t * (3 - 2 * t);
+            diamondBounceController?.setProgress(eased);
             liveTransmissionScaleRef.current = startScale + (targetScale - startScale) * eased;
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
           },
@@ -1369,10 +1361,8 @@ export function AurumRender() {
             // setPixelRatio reallocates renderer/composer targets and can hitch on the
             // very next pointer-down; quality changes still apply through the quality UI.
             liveFastPathRef.current = false;
-            // Restore full drawing resolution once the camera has truly settled, then
-            // re-enable the photographic passes and let the bounded 32-frame recovery
-            // ramp transmission quality without changing the diamond's shader variant.
-            aplicarDprInteraccion(false);
+            // DPR stays unchanged. Re-enable the photographic path and progressively
+            // restore diamond internal environment samples alongside transmission quality.
             setInteractionMode?.(false);
             aplicarPerfilLive();
             liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
