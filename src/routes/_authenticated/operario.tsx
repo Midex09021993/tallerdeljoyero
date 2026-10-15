@@ -96,7 +96,7 @@ function OperarioPage() {
 
   return (
     <AppShell
-      titulo={`Hola ${nombre}`}
+      titulo="Mi trabajo"
       subtitulo="Tu trabajo de hoy"
       atrasMovil={false}
     >
