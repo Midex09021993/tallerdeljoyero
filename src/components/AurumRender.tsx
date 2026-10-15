@@ -113,6 +113,10 @@ export function AurumRender() {
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
   const invalidateRenderRef = useRef<(() => void) | null>(null);
+  const viewerLoopRef = useRef<any>(null);
+  const [ptSamples, setPtSamples] = useState("256");
+  const [ptProgress, setPtProgress] = useState<string|null>(null);
+  const ptAbortRef = useRef<AbortController|null>(null);
   const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
@@ -814,6 +818,28 @@ export function AurumRender() {
           link.click();
           URL.revokeObjectURL(url);
         },
+        exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
+          if(!modelo) throw new Error("Carga un modelo antes del render final.");
+          const { renderAurumPathTracedImage } = await import("../lib/aurum/path-tracer-final");
+          const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
+          const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
+          const loop:any=viewerLoopRef.current;
+          loop?.pause?.();
+          try{
+            const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
+              width:Number(options.width)||1920,height:Number(options.height)||1080,samples:options.samples??256,mimeType:mime as any,
+              environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
+              signal:options.signal,onProgress:options.onProgress,
+            });
+            const link=document.createElement("a");
+            link.href=dataUrl;
+            link.download=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-")+"-raytrace."+(format==="jpeg"?"jpg":format);
+            link.click();
+          }finally{
+            loop?.resume?.();
+            loop?.resize?.();
+          }
+        },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp"}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           if(!composer?.readBuffer||typeof composer.render!=="function") throw new Error("El motor fotográfico no está disponible para capturar la imagen.");
@@ -1253,6 +1279,7 @@ export function AurumRender() {
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
             const interactionDpr = Math.max(0.75, Math.min(1, runtimeBudget.interactionPixelRatio));
+      viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
@@ -1317,6 +1344,8 @@ export function AurumRender() {
       frameRef.current=null;
     }
     apiRef.current=null;
+    viewerLoopRef.current=null;
+    ptAbortRef.current?.abort();
     composerRef.current=null;
     cleanup();
   };
@@ -1471,6 +1500,17 @@ export function AurumRender() {
             </label>
             <div className="mt-2 text-[10px] leading-relaxed text-white/35">La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco.</div>
             <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Descargar {snapshotFormat.toUpperCase()} · {snapshotWidth||"1920"} × {snapshotHeight||"1080"}</button>
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#d4af37]">Render final · Ray tracing real</div>
+              <div className="mb-2 text-[10px] leading-relaxed text-white/40">Trazado de rayos progresivo: refracción y reflejos internos reales en gemas. Más lento; la dispersión de color aún no se traza.</div>
+              <label className="block text-[10px] text-white/55">Muestras
+                <select value={ptSamples} disabled={!!ptProgress} onChange={e=>setPtSamples(e.target.value)} className="mt-1 w-full rounded-lg border border-white/15 bg-[#111518] px-2 py-2 text-xs text-white outline-none">
+                  <option value="64">64 · borrador</option><option value="256">256 · alta</option><option value="1024">1024 · máxima</option>
+                </select>
+              </label>
+              {ptProgress?<button type="button" onClick={()=>ptAbortRef.current?.abort()} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 px-3 py-2.5 text-xs font-semibold text-white">Cancelar · {ptProgress}</button>
+              :<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{const ac=new AbortController();ptAbortRef.current=ac;setPtProgress("preparando…");setError(null);try{await apiRef.current?.exportPathTraced({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,samples:Number(ptSamples),signal:ac.signal,onProgress:(d:number,t:number)=>setPtProgress(d+" / "+t)});}catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message+" Se mantiene el render actual.":"No se pudo completar el render final.");}finally{ptAbortRef.current=null;setPtProgress(null);}}} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Render final con ray tracing</button>}
+            </div>
           </div>}
           <button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-left text-sm text-white hover:bg-white/[.08]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-white/45">Escena, cámara, calidad y selección</span></span></button>
         </div>
