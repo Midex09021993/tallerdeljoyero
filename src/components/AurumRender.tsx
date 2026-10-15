@@ -772,6 +772,11 @@ export function AurumRender() {
             aplicarPerfilLive();
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
+            // Fade the photographic cast shadow back in after orbit instead of
+            // letting it pop from fully absent to full strength on the first idle frame.
+            if (lucesAurum.key?.shadow && "intensity" in lucesAurum.key.shadow) {
+              lucesAurum.key.shadow.intensity = 0;
+            }
             invalidateRenderRef.current?.();
           }
         });
@@ -1310,17 +1315,23 @@ export function AurumRender() {
             const eased = t * t * (3 - 2 * t);
             liveTransmissionScaleRef.current = startScale + (targetScale - startScale) * eased;
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
+            const shadow = lucesAurum.key?.shadow;
+            if (shadow && "intensity" in shadow) {
+              shadow.intensity = Math.max(0, Math.min(1, eased));
+            }
           },
           onEnd: () => {
             // Idle beauty path: restore the configured gem optics, transmission,
             // dispersion, clearcoat and shadows only after OrbitControls damping
             // has settled. The viewer loop then converges for 32 bounded frames.
             // This is raster/post-process convergence, NOT path-tracing samples.
-            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
-            renderer.setPixelRatio(idleDpr);
-            composer?.setPixelRatio?.(idleDpr);
+            // Keep the drawing-buffer size stable across interaction boundaries.
+            // setPixelRatio reallocates renderer/composer targets and can hitch on the
+            // very next pointer-down; quality changes still apply through the quality UI.
             liveFastPathRef.current = false;
+            if (lucesAurum.key?.shadow && "intensity" in lucesAurum.key.shadow) {
+              lucesAurum.key.shadow.intensity = 0;
+            }
             aplicarPerfilLive();
             // Begin convergence at the interaction transmission budget, then restore
             // optical framebuffer quality over the loop's bounded idle frames.
