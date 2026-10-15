@@ -325,6 +325,9 @@ export function AurumRender() {
 
       let modelo:any = null;
       let diamondBounceController: ReturnType<typeof createAurumDiamondBounceController> | null = null;
+      let liveProfileMeshes:any[] = [];
+      let profileRestoreScheduled = false;
+      let profileRestoreToken = 0;
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
       let liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
@@ -346,7 +349,7 @@ export function AurumRender() {
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
         const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
         const dprReposo = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
-        const dpr = liveFastPathRef.current ? Math.min(dprReposo, runtimeBudget.interactionPixelRatio) : dprReposo;
+        const dpr = dprReposo;
         const transmissionScale = liveFastPathRef.current
           ? escalaTransmisionInteraccion()
           : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
@@ -449,7 +452,7 @@ export function AurumRender() {
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; diamondBounceController=null; }
+      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; diamondBounceController=null; liveProfileMeshes=[]; profileRestoreToken++; profileRestoreScheduled=false; }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
@@ -461,66 +464,56 @@ export function AurumRender() {
       // Clearcoat is an additional physical layer and is not required for the
       // reference metal/gem look. We disable it only in LIVE and restore the
       // authored value for CAPTURE.
-      const aplicarPerfilMaterialLive = (target:any, enabled:boolean) => {
-        target?.traverse?.((x:any) => {
-          if (!x.isMesh) return;
-          const materials=Array.isArray(x.material) ? x.material : [x.material];
-          materials.forEach((m:any) => {
-            if (!m?.isMeshPhysicalMaterial) return;
-            // The LIVE path stays lightweight for every gemstone, including the focal diamond.
-            // Full clearcoat, dispersion, iridescence and authored transmission return only for capture.
-            if (enabled) {
-              if (m.userData?.aurumLiveClearcoatStored === undefined) {
-                m.userData={
-                  ...(m.userData??{}),
-                  aurumLiveClearcoatStored:Number(m.clearcoat??0),
-                  aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
-                };
+      const aplicarPerfilMaterialLiveMalla = (x:any, enabled:boolean) => {
+        if (!x?.isMesh) return;
+        const materials=Array.isArray(x.material) ? x.material : [x.material];
+        materials.forEach((m:any) => {
+          if (!m?.isMeshPhysicalMaterial) return;
+          if (enabled) {
+            if (m.userData?.aurumLiveClearcoatStored === undefined) {
+              m.userData={
+                ...(m.userData??{}),
+                aurumLiveClearcoatStored:Number(m.clearcoat??0),
+                aurumLiveClearcoatRoughnessStored:Number(m.clearcoatRoughness??0),
+              };
+            }
+            if (m.userData?.aurumGemFamily && m.userData?.aurumLiveTransmissionStored === undefined) {
+              m.userData={
+                ...(m.userData??{}),
+                aurumLiveTransmissionStored:Number(m.transmission??0),
+              };
+            }
+            const isDiamond=m.userData?.aurumGemFamily==="Diamante";
+            const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && !isDiamond && Number(m.transmission??0)!==0;
+            const simplifyClearcoat=!isDiamond && (Number(m.clearcoat??0)!==0 || Number(m.clearcoatRoughness??0)!==0);
+            if (simplifyClearcoat || disableGemTransmission) {
+              if (simplifyClearcoat) {
+                m.clearcoat=0;
+                m.clearcoatRoughness=0;
               }
-              // Avoid Three.js' full-screen transmission path while interacting.
-              // The native environment reflection keeps facet contrast readable;
-              // the exact authored transmission is restored for idle convergence.
-              if (m.userData?.aurumGemFamily && m.userData?.aurumLiveTransmissionStored === undefined) {
-                m.userData={
-                  ...(m.userData??{}),
-                  aurumLiveTransmissionStored:Number(m.transmission??0),
-                };
-              }
-              const isDiamond=m.userData?.aurumGemFamily==="Diamante";
-              // The diamond must keep the same optical material while orbiting
-              // and while rendering the final image. Keep its authored transmission
-              // and clearcoat; interaction quality is controlled at the renderer
-              // resolution boundary, not by changing the diamond's optical model.
-              const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && !isDiamond && Number(m.transmission??0)!==0;
-              const simplifyClearcoat=!isDiamond && (Number(m.clearcoat??0)!==0 || Number(m.clearcoatRoughness??0)!==0);
-              if (simplifyClearcoat || disableGemTransmission) {
-                if (simplifyClearcoat) {
-                  m.clearcoat=0;
-                  m.clearcoatRoughness=0;
-                }
-                // Other gemstone families retain the lightweight interaction path.
-                // Diamond transmission/clearcoat remain identical to the beauty profile.
-                if (disableGemTransmission) {
-                  const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
-                  m.transmission=Math.min(authoredTransmission,0.35);
-                }
-                m.needsUpdate=true;
-              }
-            } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
-              m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
-              m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
-              if (m.userData?.aurumLiveTransmissionStored !== undefined) {
-                m.transmission=Number(m.userData.aurumLiveTransmissionStored);
+              if (disableGemTransmission) {
+                const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
+                m.transmission=Math.min(authoredTransmission,0.35);
               }
               m.needsUpdate=true;
-              const next={...(m.userData??{})};
-              delete next.aurumLiveTransmissionStored;
-              delete next.aurumLiveClearcoatStored;
-              delete next.aurumLiveClearcoatRoughnessStored;
-              m.userData=next;
             }
-          });
+          } else if (m.userData?.aurumLiveClearcoatStored !== undefined) {
+            m.clearcoat=Number(m.userData.aurumLiveClearcoatStored);
+            m.clearcoatRoughness=Number(m.userData.aurumLiveClearcoatRoughnessStored??0);
+            if (m.userData?.aurumLiveTransmissionStored !== undefined) {
+              m.transmission=Number(m.userData.aurumLiveTransmissionStored);
+            }
+            m.needsUpdate=true;
+            const next={...(m.userData??{})};
+            delete next.aurumLiveTransmissionStored;
+            delete next.aurumLiveClearcoatStored;
+            delete next.aurumLiveClearcoatRoughnessStored;
+            m.userData=next;
+          }
         });
+      };
+      const aplicarPerfilMaterialLive = (target:any, enabled:boolean) => {
+        target?.traverse?.((x:any) => aplicarPerfilMaterialLiveMalla(x, enabled));
       };
 
       const aplicarPerfilLive = () => {
@@ -700,6 +693,8 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
+        liveProfileMeshes=[];
+        modelo.traverse((x:any)=>{if(x?.isMesh)liveProfileMeshes.push(x);});
         diamondBounceController=createAurumDiamondBounceController(modelo);
         diamondBounceController.setInteractive();
         // LIVE MODE: procedural inclusions are intentionally hidden. They add
@@ -1364,10 +1359,37 @@ export function AurumRender() {
             // DPR stays unchanged. Re-enable the photographic path and progressively
             // restore diamond internal environment samples alongside transmission quality.
             setInteractionMode?.(false);
-            aplicarPerfilLive();
-            liveTransmissionScaleRef.current = escalaTransmisionInteraccion();
+            liveTransmissionScaleRef.current = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             renderer.shadowMap.enabled = renderQuality.shadows;
+            // Restore gem material profiles in small idle batches instead of traversing
+            // and invalidating every material synchronously on pointer-up.
+            if (!profileRestoreScheduled) {
+              profileRestoreScheduled = true;
+              const token = ++profileRestoreToken;
+              let cursor = 0;
+              const batchSize = Math.max(8, Math.ceil(liveProfileMeshes.length / 32));
+              const restoreBatch = () => {
+                if (!vivo || token !== profileRestoreToken || !modelo) {
+                  profileRestoreScheduled = false;
+                  return;
+                }
+                if (liveFastPathRef.current) {
+                  requestAnimationFrame(restoreBatch);
+                  return;
+                }
+                const stop = Math.min(liveProfileMeshes.length, cursor + batchSize);
+                for (; cursor < stop; cursor++) {
+                  const mesh = liveProfileMeshes[cursor];
+                  aplicarPerfilMaterialLiveMalla(mesh, false);
+                  setAurumGemShaderQuality(mesh, "beauty");
+                }
+                if (cursor < liveProfileMeshes.length) requestAnimationFrame(restoreBatch);
+                else profileRestoreScheduled = false;
+                invalidateRenderRef.current?.();
+              };
+              requestAnimationFrame(restoreBatch);
+            }
             // Reuse the existing static shadow map; avoid a costly rebuild at idle.
             invalidateRenderRef.current?.();
           },
