@@ -291,7 +291,7 @@ function TrabajoOperativoPage() {
   const imagenesReferencia = useMemo(() => archivosPedido.filter((archivo) => {
     const nombre = String(archivo.nombre ?? "").toLowerCase();
     const tipo = String(archivo.tipo ?? "").toLowerCase();
-    const esImagen = tipo.startsWith("image/") || /\\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(nombre);
+    const esImagen = tipo.startsWith("image/") || /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(nombre);
     return esImagen && Boolean(archivo.url) && !archivo.es_enlace;
   }), [archivosPedido]);
   useEffect(() => { setIndiceImagenReferencia(0); }, [imagenesReferencia.length, id]);
