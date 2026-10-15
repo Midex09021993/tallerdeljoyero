@@ -1279,16 +1279,14 @@ export function AurumRender() {
             // Interaction path: cap raster resolution and gem transmission cost.
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            // Use a bounded interaction resolution so dense CAD meshes stay responsive.
-            // Never change the diamond's optical shader, IOR, or source facet normals.
-            const requestedDpr = Math.max(0.85, Math.min(1.25, renderQuality.pixelRatio));
-            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, Math.max(0.85, runtimeBudget.interactionPixelRatio));
+            // Avoid reallocating the renderer/composer drawing buffers at pointer-down:
+            // setPixelRatio() can stall the first camera movement on dense CAD models.
+            // Keep the current DPR for immediate response and reduce only transmission
+            // work; the diamond shader, IOR and authored facet normals remain unchanged.
             viewerLoopRef.current = viewerLoop;
-            renderer.setPixelRatio(interactionDpr);
-            composer?.setPixelRatio?.(interactionDpr);
             liveTransmissionScaleRef.current = Math.max(
               runtimeBudget.interactionTransmissionScale,
-              Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.55
+              Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap) * 0.40
             );
             (renderer as any).transmissionResolutionScale = liveTransmissionScaleRef.current;
             aplicarPerfilLive();
