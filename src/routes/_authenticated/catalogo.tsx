@@ -400,6 +400,23 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Mantener la página de fondo inmóvil mientras se edita la configuración del catálogo.
+  useEffect(() => {
+    if (!open) return;
+    const overflowAnterior = document.body.style.overflow;
+    const htmlOverflowAnterior = document.documentElement.style.overflow;
+    const anchoBarra = window.innerWidth - document.documentElement.clientWidth;
+    const paddingDerechoAnterior = document.body.style.paddingRight;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    if (anchoBarra > 0) document.body.style.paddingRight = `${anchoBarra}px`;
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.documentElement.style.overflow = htmlOverflowAnterior;
+      document.body.style.paddingRight = paddingDerechoAnterior;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     setNombre(initial?.nombre_publico ?? "");
@@ -430,8 +447,12 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   if (!open) return null;
 
   async function subirImagenesPortada(event: any) {
-    const files = Array.from(event.target.files ?? []) as File[];
-    event.target.value = "";
+    const input = event.currentTarget as HTMLInputElement;
+    const formulario = input.closest("form");
+    const files = Array.from(input.files ?? []) as File[];
+    input.value = "";
+    // Evita que el foco del input oculto haga saltar el scroll al terminar el selector.
+    input.blur();
     if (!files.length) return;
     if (imagenesPortada.length + files.length > 10) {
       setError("Puedes tener como máximo 10 imágenes de portada. Quita alguna antes de subir más.");
@@ -452,7 +473,12 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de una imagen.");
         nuevas.push(data.publicUrl);
       }
+      const scrollFormulario = formulario?.scrollTop ?? 0;
       setImagenesPortada(actual => [...actual, ...nuevas].slice(0, 10));
+      // La cuadrícula crece al añadir miniaturas: conservar la posición dentro del formulario.
+      window.requestAnimationFrame(() => {
+        if (formulario instanceof HTMLElement) formulario.scrollTop = scrollFormulario;
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudieron subir las imágenes.");
     } finally {
