@@ -112,7 +112,7 @@ export function createAurumEnvironment(
         return;
       }
 
-      const Loader = /\\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
+      const Loader = /\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
       console.info("[AURUM][HDR METAL][LOAD START]", {
         requestId,
         url,
