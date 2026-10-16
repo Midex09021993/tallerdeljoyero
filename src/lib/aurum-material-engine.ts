@@ -174,6 +174,26 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     aurumMetalBaseEnvMapIntensity:material.envMapIntensity,
     aurumMetalSurfaceRoughness:material.roughness,
     aurumMetalCalibrationMode:useCatalogCalibration?"catalog-reference":"aurum-render-default",
+    aurumMetalEffectiveOptics:{
+      mode:useCatalogCalibration?"catalog-reference":"aurum-render-default",
+      requested:{
+        color:preset.color,
+        metalness:preset.metalness,
+        roughness:baseRoughness,
+        envMapIntensity:preset.envMapIntensity,
+        clearcoat:preset.clearcoat??0,
+      },
+      effective:{
+        color:material.color?.getHex?.()??preset.color,
+        metalness:material.metalness,
+        roughness:material.roughness,
+        envMapIntensity:material.envMapIntensity,
+        clearcoat:material.clearcoat,
+        clearcoatRoughness:material.clearcoatRoughness,
+        anisotropy:material.anisotropy,
+      },
+      reflectionProfileEnvironmentIntensity:response.environmentIntensity,
+    },
   };
   material.needsUpdate=true;
   return material;
