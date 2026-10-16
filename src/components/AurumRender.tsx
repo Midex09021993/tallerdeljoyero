@@ -162,14 +162,18 @@ export function AurumRender() {
   const [bibliotecaTipo, setBibliotecaTipo] = useState<"metales"|"gemas">("metales");
   const [mostrarTodosMateriales, setMostrarTodosMateriales] = useState(false);
   const [mostrarTodasGemas, setMostrarTodasGemas] = useState(false);
+  const [busquedaMateriales, setBusquedaMateriales] = useState("");
+  const [busquedaGemas, setBusquedaGemas] = useState("");
   const materialesVisibles = useMemo(() => {
     const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "plata925_pulida", "platino_pulido"]);
-    return MATERIALES.filter((m) => mostrarTodosMateriales || principales.has(m.id) || m.id === materialId);
-  }, [mostrarTodosMateriales, materialId]);
+    const termino = busquedaMateriales.trim().toLocaleLowerCase("es");
+    return MATERIALES.filter((m) => (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId) && (!termino || (m.nombre+" "+m.id).toLocaleLowerCase("es").includes(termino)));
+  }, [mostrarTodosMateriales, materialId, busquedaMateriales]);
   const gemasVisibles = useMemo(() => {
     const principales = new Set<GemaId>(["diamante_natural", "esmeralda_1", "rubi_natural", "zafiro_azul", "amatista_natural", "moissanita_blanca", "aguamarina_brasil", "citrino_natural", "topacio_azul"]);
-    return GEMAS.filter((g) => mostrarTodasGemas || principales.has(g.id) || g.id === gemaId);
-  }, [mostrarTodasGemas, gemaId]);
+    const termino = busquedaGemas.trim().toLocaleLowerCase("es");
+    return GEMAS.filter((g) => (mostrarTodasGemas || principales.has(g.id) || g.id === gemaId) && (!termino || (g.nombre+" "+g.id).toLocaleLowerCase("es").includes(termino)));
+  }, [mostrarTodasGemas, gemaId, busquedaGemas]);
 
   useEffect(() => {
     let vivo = true;
@@ -1612,6 +1616,7 @@ export function AurumRender() {
                 <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{MATERIALES.length}</span>
               </button>
               {uxSection==="materiales"&&<div className="pb-5">
+                <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><ImageIcon className="size-3.5 shrink-0"/><input value={busquedaMateriales} onChange={e=>{setBusquedaMateriales(e.target.value);if(e.target.value.trim())setMostrarTodosMateriales(true);}} placeholder="Buscar material o acabado…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
                     onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
@@ -1639,6 +1644,7 @@ export function AurumRender() {
                 <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{GEMAS.length}</span>
               </button>
               {uxSection==="gemas"&&<div className="pb-5">
+                <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><Gem className="size-3.5 shrink-0"/><input value={busquedaGemas} onChange={e=>{setBusquedaGemas(e.target.value);if(e.target.value.trim())setMostrarTodasGemas(true);}} placeholder="Buscar gema por nombre…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
                     onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
