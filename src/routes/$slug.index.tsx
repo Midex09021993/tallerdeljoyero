@@ -465,7 +465,6 @@ function CatalogoPublicoPage() {
                 <div className="px-0.5 pt-4">
                   <p className="text-[9px] font-semibold uppercase tracking-[.18em] text-[#8a6b36]">{producto.categoria}</p>
                   <Link to="/$slug/$producto" params={{ slug: slugNormalizado, producto: producto.slug }} className="mt-1.5 block text-[17px] font-medium leading-snug tracking-[-.02em] text-[#29231d] transition-colors hover:text-[#8a6b36]">{producto.nombre}</Link>
-                  {producto.descripcion?.trim() ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-[#746b62]">{producto.descripcion}</p> : null}
                   <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#1f1b18]/[.09] pt-3">
                     {producto.mostrarPrecio ? <span className="text-sm font-semibold tracking-tight">{formatPrice(producto.precioDesde, producto.moneda)}</span> : <span className="text-xs text-[#746b62]">Precio a consultar</span>}
                     <div className="flex shrink-0 items-center gap-2">
