@@ -29,7 +29,7 @@ const addEmeraldInclusions=(THREE:any,target:any,config:any,size:any)=>{
   // emerald reads as a natural internal garden rather than surface scratches.
   for(let i=0;i<count;i++){
     const points:any[]=[];
-    const start=new THREE.Vector3((rnd()-.5)*size.x*.62,(rnd()-.5)*size.y*.62,(rnd()-.5)*size.z*.62);
+    const start=new THREE.Vector3((rnd()-.5)*size.x*.38,(rnd()-.5)*size.y*.38,(rnd()-.5)*size.z*.38);
     const dir=new THREE.Vector3(rnd()-.5,rnd()-.5,rnd()-.5).normalize();
     const length=Math.min(size.x,size.y,size.z)*(.12+rnd()*.28);
     const steps=3+Math.floor(rnd()*4);
@@ -63,7 +63,7 @@ const addEmeraldInclusions=(THREE:any,target:any,config:any,size:any)=>{
   // emeralds, so these are intentionally rare and low contrast.
   const fluidCount=Math.max(1,Math.round(1+strength*4));
   for(let i=0;i<fluidCount;i++){
-    const base=new THREE.Vector3((rnd()-.5)*size.x*.48,(rnd()-.5)*size.y*.48,(rnd()-.5)*size.z*.48);
+    const base=new THREE.Vector3((rnd()-.5)*size.x*.30,(rnd()-.5)*size.y*.30,(rnd()-.5)*size.z*.30);
     const pocketSize=Math.min(size.x,size.y,size.z)*(.012+rnd()*.018);
     const pocket=new THREE.Mesh(new THREE.SphereGeometry(pocketSize,10,6),new THREE.MeshPhysicalMaterial({color:0x9bb5a7,roughness:.08,transmission:.55,transparent:true,opacity:.08+strength*.06,depthWrite:false,envMapIntensity:.55}));
     pocket.position.copy(base); pocket.scale.set(1.5,.65,.8);
