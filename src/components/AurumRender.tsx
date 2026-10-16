@@ -956,7 +956,10 @@ export function AurumRender() {
             renderer.setClearColor(0xffffff,1);
             // A few beauty passes let temporal anti-aliasing settle without
             // running the full interactive progressive loop indefinitely.
-            const captureFrames=(composer.passes??[]).some((pass:any)=>pass?.enabled&&pass.constructor?.name==="TAARenderPass")?4:1;
+            const taaCapturePass=(composer.passes??[]).find((pass:any)=>pass?.enabled&&pass.constructor?.name==="TAARenderPass");
+            // TAARenderPass needs 2^sampleLevel frames to accumulate its jitter sequence.
+            // Four frames leave most of the high-resolution capture under-sampled.
+            const captureFrames=taaCapturePass?Math.max(4,Math.min(32,2**Math.max(0,Number(taaCapturePass.sampleLevel??2)))):1;
             for(let frame=0;frame<captureFrames;frame++) composer.render();
             const target=composer.readBuffer;
             if(!target||target.width!==width||target.height!==height) throw new Error("La resolución interna de captura no coincide con la solicitada.");
