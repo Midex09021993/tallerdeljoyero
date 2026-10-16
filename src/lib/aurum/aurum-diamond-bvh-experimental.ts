@@ -89,7 +89,7 @@ export function prepareAurumDiamondBvhExperiment(
     environmentMap: options.environmentMap,
     bvh,
     ior: 2.417,
-    dispersion: Math.max(0, Math.min(0.02, options.dispersion ?? 0.005)),
+    dispersion: Math.max(0, Math.min(0.02, options.dispersion ?? 0.006)),
     environmentIntensity: Math.max(0, Math.min(2.5, options.environmentIntensity ?? 1.14)),
     rayBounces,
     facetSharpness: 1,
