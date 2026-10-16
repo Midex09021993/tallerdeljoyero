@@ -177,6 +177,10 @@ export async function createAurumPostPipeline(
     composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
+  const diagnosticMode = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("aurumDiag")
+    : null;
+  let lastDiagnosticSignature = "";
   const applyQuality=(next:any, options:{capture?:boolean}={})=>{
     if(!composer) return;
     const q=next||{};
@@ -278,6 +282,38 @@ export async function createAurumPostPipeline(
         Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
         Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
       );
+    }
+    if(diagnosticMode === "environment") {
+      const state = {
+        qualityId,
+        pixelRatio: Number(q?.pixelRatio ?? 1.5),
+        capture: Boolean(options.capture),
+        toneMapping: renderer.toneMapping ?? null,
+        toneMappingExposure: renderer.toneMappingExposure ?? null,
+        requested: {
+          ssao: Boolean(config.ssao),
+          bloom: Boolean(config.bloom),
+          ssr: Boolean(config.ssr),
+          taa: Boolean(config.taa),
+          gradeEnabled: Boolean(config.gradeEnabled),
+          gradeContrast: Number(config.gradeContrast ?? 1),
+          gradeSaturation: Number(config.gradeSaturation ?? 1),
+        },
+        activePasses: {
+          taa: Boolean(taaPass?.enabled),
+          ssr: Boolean(ssrPass?.enabled),
+          ssao: Boolean(ssaoPass?.enabled),
+          bloom: Boolean(bloomPass?.enabled),
+          lut: Boolean(lutPass?.enabled),
+          grading: Boolean(gradingPass?.enabled),
+          vignette: Boolean(vignettePass?.enabled),
+        },
+      };
+      const signature = JSON.stringify(state);
+      if (signature !== lastDiagnosticSignature) {
+        lastDiagnosticSignature = signature;
+        console.info("[AURUM][POST][DIAGNOSTIC]", state);
+      }
     }
   };
 
