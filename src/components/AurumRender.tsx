@@ -1526,7 +1526,7 @@ export function AurumRender() {
     </div>
   );
   return (<>
-    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#090b0e] text-white">
+    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#eeede8] text-white">
       <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-black/10 bg-[#f7f6f2]/95 px-5 text-[#242424] shadow-sm backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
@@ -1588,8 +1588,8 @@ export function AurumRender() {
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-[#77756f]">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
       </div>}
-      <div className="flex min-h-0 flex-1">
-        <aside className="w-[336px] shrink-0 border-r border-black/10 bg-[#f7f6f2] text-[#292824] shadow-[8px_0_24px_rgba(30,28,20,.04)]">
+      <div className="flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3">
+        <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
@@ -1807,7 +1807,7 @@ export function AurumRender() {
             {lightingOpen && lightingPanel}
           </div>
         </main>
-        <aside className="hidden w-[260px] shrink-0 border-l border-black/10 bg-[#f7f6f2] text-[#292824] xl:block">
+        <aside className="hidden w-[260px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)] xl:block">
           <div className="h-full overflow-y-auto">
             <div className="border-b border-black/10 px-4 py-5">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Inspector</div>
