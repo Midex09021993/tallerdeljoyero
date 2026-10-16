@@ -54,10 +54,9 @@ export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
     scale=.70;
     family="green-gold";
   }else if(r>b*1.28 && g>b*1.10){
-    // Yellow gold: moderate the environment without changing the alloy color.
-    // This avoids the extreme white/black reflection contrast seen on small,
-    // highly curved ornamental parts while keeping polished metal readable.
-    scale=.62;
+    // Yellow gold: preserve stronger studio-HDR reflections for crisp polished
+    // highlights while avoiding the overly broad response of the previous tuning.
+    scale=.70;
     family="yellow-gold";
   }else if(r>b*1.18 && g>b*1.04 && r-g<75){
     scale=.60;
@@ -122,14 +121,13 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
 
   const response=getAurumMetalReflectionResponse(preset);
 
-  // Keep authored finish categories, but give polished yellow gold a slightly
-  // broader micro-surface response than the previous .12 setting. This is still
-  // a polished metal; it only reduces clipped highlights on small ornamental faces.
+  // Keep authored finish categories. Polished yellow gold gets only a modest
+  // roughness increase so studio reflections remain defined rather than hazy.
   const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
   const finishId=String(preset.id??"").toLowerCase();
   const isPolishedPreciousMetal=/(pulid[oa]|polished|rodinad[oa])/.test(finishId);
   const calibratedRoughness=response.family==="yellow-gold"
-    ? Math.max(.075,Math.min(.55,baseRoughness*1.33))
+    ? Math.max(.075,Math.min(.55,baseRoughness*1.12))
     : baseRoughness;
   // Preserve the preset's polished finish instead of imposing the previous .11
   // roughness floor on every white metal. A lower floor reduces the broad, hazy
