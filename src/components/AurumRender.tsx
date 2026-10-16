@@ -323,18 +323,21 @@ export function AurumRender() {
       const asegurarDiamanteBvh = async () => {
         if (!vivo || !modelo || diamondBvhRuntime || diamondBvhRuntimePending) return;
         diamondBvhRuntimePending = true;
+        const requestedEnvironmentUrl = gemEnvironmentUrl;
+        let environmentChangedWhileLoading = false;
         try {
           const runtime = await createAurumDiamondBvhRuntime({
             THREE,
             RGBELoader,
             EXRLoader,
-            url: gemEnvironmentUrl,
+            url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
             onError: (error) => console.warn("[AURUM][DIAMOND BVH] Se conserva el shader anterior para esta malla:", error),
           });
-          if (!vivo) {
+          if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
             runtime.dispose();
+            environmentChangedWhileLoading = vivo && requestedEnvironmentUrl !== gemEnvironmentUrl;
             return;
           }
           diamondBvhRuntime = runtime;
@@ -347,6 +350,7 @@ export function AurumRender() {
           console.warn("[AURUM][DIAMOND BVH] No se pudo activar; se conserva el render anterior:", error);
         } finally {
           diamondBvhRuntimePending = false;
+          if (environmentChangedWhileLoading) void asegurarDiamanteBvh();
         }
       };
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
