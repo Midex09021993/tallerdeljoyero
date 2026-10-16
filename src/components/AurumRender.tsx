@@ -1530,8 +1530,8 @@ export function AurumRender() {
       <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-white/10 bg-[#101316]/96 px-5 backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
-            <div className="font-display text-[25px] tracking-[.22em] text-[#e5c77a]">AURUM</div>
-            <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-white/35">Render profesional para joyería · AURUM LIVE 2026-09-17</div>
+            <div className="font-display text-[23px] font-semibold tracking-[.16em] text-[#e5c77a]">AURUM <span className="tracking-normal text-white/90">RENDER</span></div>
+            <div className="mt-1 text-[10px] tracking-[.06em] text-white/50">Estudio profesional de joyería</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1591,6 +1591,20 @@ export function AurumRender() {
       <div className="flex min-h-0 flex-1">
         <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
           <div className="h-full overflow-y-auto">
+            <section className="border-b border-white/10 bg-white/[.025] px-5 py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-white/45">Proyecto</div>
+                <span className="rounded-full border border-white/10 px-2 py-1 text-[9px] text-white/45">AURUM STUDIO</span>
+              </div>
+              <label className="mb-3 block text-[10px] font-medium text-white/55">Nombre del proyecto
+                <input value={nombreProyecto} onChange={e=>setNombreProyecto(e.target.value)} maxLength={100} placeholder="Nombre de tu diseño" className="mt-1.5 h-10 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/10"/>
+              </label>
+              <label className="block text-[10px] font-medium text-white/55">Tipo de joya
+                <select value={categoriaProyecto} onChange={e=>setCategoriaProyecto(e.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-white/10 bg-[#171a1e] px-3 text-sm text-white outline-none transition focus:border-[#d4af37]/60">
+                  {["Anillo","Collar","Dije","Aretes","Pulsera","Brazalete","Broche","Otro"].map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
+              </label>
+            </section>
             <section className="border-b border-white/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
