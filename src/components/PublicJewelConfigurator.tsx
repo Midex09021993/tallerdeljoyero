@@ -85,7 +85,7 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
             ? new THREE.MeshPhysicalMaterial({ color: 0xeaf4ff, metalness: 0, roughness: 0.08, transmission: 0.18, thickness: 0.7, ior: 2, clearcoat: 1, clearcoatRoughness: 0.05, side: THREE.DoubleSide })
             : esMetal(object)
               ? new THREE.MeshStandardMaterial({ color: 0xd5a63d, metalness: 0.78, roughness: 0.24, side: THREE.DoubleSide })
-              : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.25, roughness: 0.34, side: THREE.DoubleSide }));
+              : material?.isMaterial ? material.clone() : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.25, roughness: 0.34, side: THREE.DoubleSide }));
         });
         if (meshCount === 0) throw new Error("El archivo 3DM no contiene geometría visible compatible para el visor.");
         model.updateMatrixWorld(true);
