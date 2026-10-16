@@ -643,6 +643,39 @@ export function AurumRender() {
           photo.gemEnvironmentIntensity
         );
         calibrarReflejosMetalEscena(photo);
+        const metalReflectionAudit:any[]=[];
+        if(modelo) modelo.traverse((x:any)=>{
+          if(!x.isMesh||!x.material)return;
+          const list=Array.isArray(x.material)?x.material:[x.material];
+          for(const m of list){
+            if(!m?.userData?.aurumMetalRenderProfile)continue;
+            metalReflectionAudit.push({
+              mesh:x.name||x.uuid,
+              material:m.name||null,
+              baseEnvironmentIntensity:m.userData?.aurumMetalBaseEnvMapIntensity??null,
+              finalEnvironmentIntensity:m.envMapIntensity??null,
+              roughness:m.roughness??null,
+              referenceKey:m.userData?.aurumIJEWELMetalReference?.sourceRootPath??null,
+            });
+          }
+        });
+        console.info("[AURUM][METAL REFLECTION STATE]",{
+          sceneId:id,
+          sceneEnvironmentKey:photo.environmentKey,
+          activeMetalHdri,
+          activeUrl:environmentController.currentUrl,
+          fallback:environmentController.currentUrl===null,
+          environmentIntensity:environmentController.intensity,
+          environmentRotationRadians:environmentController.rotation,
+          sceneEnvironmentIntensity:photo.environmentIntensity,
+          sceneEnvironmentRotation:photo.environmentRotation,
+          metalEnvironmentScale:photo.metalEnvironmentScale,
+          highlightProtection:photo.highlightProtection,
+          exposure:renderer.toneMappingExposure,
+          toneMapping:renderer.toneMapping,
+          metalMaterialCount:metalReflectionAudit.length,
+          metalMaterials:metalReflectionAudit.slice(0,12),
+        });
         // Scene, lighting and post are one photographic preset. This prevents
         // the previous behavior where changing only the background left the
         // same reflection rig and color response on every material.
