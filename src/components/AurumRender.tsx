@@ -656,7 +656,14 @@ export function AurumRender() {
             if (!m?.userData?.aurumMetalRenderProfile) return m;
             const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
             if (!Number.isFinite(base)) return m;
-            m.envMapIntensity=base*photo.metalEnvironmentScale*photo.highlightProtection;
+            // The URL calibration mode is a controlled comparison against
+            // the selected catalog preset. Do not re-scale its authored HDR
+            // intensity when a photographic scene is applied; normal rendering
+            // keeps the existing scene-specific reflection response.
+            const catalogCalibration=m.userData?.aurumMetalCalibrationMode==="catalog-reference";
+            m.envMapIntensity=catalogCalibration
+              ? base
+              : base*photo.metalEnvironmentScale*photo.highlightProtection;
             m.needsUpdate=true;
             return m;
           };
