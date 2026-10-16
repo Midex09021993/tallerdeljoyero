@@ -95,6 +95,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       const family = materials.length > 0 && materials.every((material) => getGemFamily(material) === getGemFamily(materials[0])) ? getGemFamily(materials[0]) : "";
       const isParaibaCatalogId = /^turmalina_paraiba(?:_|$)/.test(activeGemId);
       const isTargetFamily = materials.length > 0 && materials.every((material) => targetFamilies.includes(getGemFamily(material)) || (isParaibaCatalogId && getGemFamily(material) === "turmalina"));
+      if (!isTargetFamily) {
         if (materials.some((material) => targetFamilies.includes(getGemFamily(material)))) {
           options.onError?.(
             new Error("[AURUM BVH] Malla con materiales mixtos omitida para proteger metales y otras gemas."),
