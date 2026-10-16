@@ -304,6 +304,11 @@ export function AurumRender() {
       const cargarHDRI = (environmentKey:string) => {
         const requestId = ++hdrRequestId;
         const url = getAurumHdriUrl(environmentKey);
+        console.info("[AURUM][HDR METAL][REQUEST]", {
+          perfil: environmentKey,
+          urlSolicitada: url,
+          requestId,
+        });
         environmentController.load(
           url,
           requestId,
