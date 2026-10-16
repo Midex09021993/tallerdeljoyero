@@ -147,24 +147,9 @@ export function AurumRender() {
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
   const actualizarPoster = () => {
-    if (!archivo) { setError("Carga una joya antes de actualizar el póster."); return; }
-    try {
-      apiRef.current?.exportPNG({
-        width: 640,
-        height: 480,
-        format: "jpeg",
-        onCapture: (cover: string) => {
-          if (!cover || cover.length < 1000) { setError("La captura está vacía. Inténtalo de nuevo."); return; }
-          setPresentationCover(cover);
-          // El póster es una vista previa temporal de esta sesión; no persistir al recargar.
-          setPresentationVisible(true);
-          if (presentationTimerRef.current) clearTimeout(presentationTimerRef.current);
-          presentationTimerRef.current = setTimeout(() => setPresentationVisible(false), 1800);
-        },
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo generar el póster.");
-    }
+    // Fail safely until a truly isolated/off-screen capture path is available.
+    // Never invoke the live viewer's photographic export from this UI action.
+    setError("La actualización del póster está pausada temporalmente para proteger el visor. No se ha realizado ninguna captura.");
   };
 
   // Estado central del configurador: una única fuente de verdad.
