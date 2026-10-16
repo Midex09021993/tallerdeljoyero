@@ -3,7 +3,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
-import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl } from "../lib/aurum-photographic-scene-engine";
+import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -103,6 +103,8 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 export function AurumRender() {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
+  const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
+  const [gemHdriId, setGemHdriId] = useState("ijewelGem");
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
@@ -264,6 +266,8 @@ export function AurumRender() {
         invalidateRenderRef.current?.();
       };
       let gemEnvironmentRequestId = 0;
+      let metalHdriOverride: string | null = null;
+      let gemHdriOverride: string | null = null;
       const cargarEntornoGema = (key="gemNeutral", rotation=.54, intensityScale=.98) => {
         gemEnvironmentUrl = getAurumGemHdriUrl(key);
         gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
@@ -622,10 +626,14 @@ export function AurumRender() {
         liveFastPathRef.current = true;
         const preset = sceneController.apply(id);
         const photo = getAurumPhotographicProfile(id);
-        // Change the optical environment for gemstones together with the scene.
-        // This prevents the metal HDR from becoming the only reflection source.
+        const activeMetalHdri = metalHdriOverride ?? photo.environmentKey;
+        const activeGemHdri = gemHdriOverride ?? photo.gemEnvironmentKey;
+        setMetalHdriId(activeMetalHdri);
+        setGemHdriId(activeGemHdri);
+        // Keep metal and gemstone HDR controls independent from the scene preset.
+        cargarHDRI(activeMetalHdri);
         cargarEntornoGema(
-          photo.gemEnvironmentKey,
+          activeGemHdri,
           photo.gemEnvironmentRotation,
           photo.gemEnvironmentIntensity
         );
@@ -852,6 +860,18 @@ export function AurumRender() {
           if (config.enabled!==undefined) groundController.setHdriGroundEnabled(!!config.enabled);
         },
         iluminacion:aplicarIluminacion,
+        metalHdri:(key:string)=>{
+          if (!(key in AURUM_HDRI_URLS)) return;
+          metalHdriOverride = key;
+          setMetalHdriId(key);
+          cargarHDRI(key);
+        },
+        gemHdri:(key:string)=>{
+          if (!(key in AURUM_GEM_HDRI_URLS)) return;
+          gemHdriOverride = key;
+          setGemHdriId(key);
+          cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
+        },
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
@@ -1537,7 +1557,7 @@ export function AurumRender() {
 
   const hexColor = (c:number) => "#" + c.toString(16).padStart(6, "0");
   const lightingPanel=(
-    <div style={{position:"absolute",right:84,top:72,zIndex:40,width:270,maxHeight:"calc(100% - 88px)",overflowY:"auto",padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
+    <div style={{position:"absolute",right:84,top:72,zIndex:40,width:290,maxHeight:"calc(100% - 88px)",overflowY:"auto",padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
         <div style={{fontWeight:700,fontSize:14}}>AURUM LIGHTING STUDIO</div>
         <button type="button" aria-label="Cerrar" onClick={()=>setLightingOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer"}}><X className="size-4"/></button>
@@ -1550,6 +1570,20 @@ export function AurumRender() {
       <label style={{display:"block",fontSize:11}}>Rim intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Gem Light <input type="checkbox" checked={lightingStudio.gem.enabled} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,enabled:e.target.checked}})}/></label>
       <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
+      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,.12)"}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#d4af37",marginBottom:8}}>ENTORNOS HDR</div>
+        <label style={{display:"block",fontSize:11,marginBottom:9}}>HDR de metales
+          <select value={metalHdriId} onChange={e=>apiRef.current?.metalHdri(e.target.value)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
+            {Object.keys(AURUM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelMetal:"iJewel · Metal 010",studioSoft:"Estudio suave",studioHard:"Estudio contrastado",jewelry:"Estudio joyería",luxury:"Estudio lujo",monochrome:"Monocromo",warm:"Cálido",white:"Estudio blanco"} as Record<string,string>)[key]??key}</option>)}
+          </select>
+        </label>
+        <label style={{display:"block",fontSize:11}}>HDR de gemas
+          <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
+            {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"iJewel · Gemas 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
+          </select>
+        </label>
+        <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:8}}>Los entornos de metal y gemas se controlan por separado. Los perfiles iJewel siguen disponibles como referencia.</p>
+      </div>
     </div>
   );
   return (<>
