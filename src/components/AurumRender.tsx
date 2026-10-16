@@ -1615,10 +1615,6 @@ export function AurumRender() {
             </div>
             <section className="px-4 py-1">
               {uxSection==="materiales"&&<div className="pb-5">
-                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
-                <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{MATERIALES.length}</span>
-              </button>
-              {uxSection==="materiales"&&<div className="pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><ImageIcon className="size-3.5 shrink-0"/><input value={busquedaMateriales} onChange={e=>{setBusquedaMateriales(e.target.value);if(e.target.value.trim())setMostrarTodosMateriales(true);}} placeholder="Buscar material o acabado…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
