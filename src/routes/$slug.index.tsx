@@ -416,7 +416,7 @@ function CatalogoPublicoPage() {
         </div>
       </section>
 
-      <section id="coleccion" className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+      <section id="coleccion" className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8">
         {colecciones.length ? (
           <div className="mb-5 flex flex-wrap gap-2">
             {colecciones.map(([collectionSlug, collectionName]) => (
