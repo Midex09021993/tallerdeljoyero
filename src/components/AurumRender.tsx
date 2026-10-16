@@ -925,6 +925,36 @@ export function AurumRender() {
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           if(!composer?.readBuffer||typeof composer.render!=="function") throw new Error("El motor fotográfico no está disponible para capturar la imagen.");
+          // Poster capture is read-only: reuse the last live composer frame.
+          // Never pause the viewer, render again, resize it, or mutate camera/materials.
+          if(options.onCapture){
+            const target=composer.readBuffer;
+            const width=Number(target?.width)||0;
+            const height=Number(target?.height)||0;
+            if(width<2||height<2) throw new Error("El visor todavía no tiene un fotograma disponible para el póster.");
+            const pixels=new Uint8Array(width*height*4);
+            renderer.readRenderTargetPixels(target,0,0,width,height,pixels);
+            const frame=document.createElement("canvas");
+            frame.width=width; frame.height=height;
+            const frameContext=frame.getContext("2d");
+            if(!frameContext) throw new Error("No se pudo preparar la miniatura del póster.");
+            const image=frameContext.createImageData(width,height);
+            const rowSize=width*4;
+            for(let y=0;y<height;y++) image.data.set(pixels.subarray((height-1-y)*rowSize,(height-y)*rowSize),y*rowSize);
+            frameContext.putImageData(image,0,0);
+            const thumb=document.createElement("canvas");
+            const thumbWidth=Math.max(1,Math.min(640,Math.round(Number(options.width)||640)));
+            const thumbHeight=Math.max(1,Math.round(thumbWidth*height/width));
+            thumb.width=thumbWidth; thumb.height=thumbHeight;
+            const thumbContext=thumb.getContext("2d");
+            if(!thumbContext) throw new Error("No se pudo preparar la miniatura del póster.");
+            thumbContext.drawImage(frame,0,0,thumbWidth,thumbHeight);
+            const mime=options.format==="png"?"image/png":options.format==="webp"?"image/webp":"image/jpeg";
+            const cover=thumb.toDataURL(mime,0.88);
+            if(!cover||cover.length<1000) throw new Error("El fotograma del visor está vacío; no se actualizó el póster.");
+            options.onCapture(cover);
+            return;
+          }
           const width=Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
           const height=Math.max(320,Math.min(4096,Math.round(Number(options.height)||2160)));
           if(width*height>12_000_000) throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
@@ -1068,10 +1098,6 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
             captureLoop?.resume?.();
             captureLoop?.resize?.();
-          }
-          if(options.onCapture){
-            options.onCapture(dataUrl);
-            return;
           }
           const link=document.createElement("a");
           const baseName=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-");
