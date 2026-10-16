@@ -1572,8 +1572,6 @@ export function AurumRender() {
             </select>
             <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
           </label>
-          <button type="button" disabled={!archivo} title="Actualizar póster de esta sesión" onClick={actualizarPoster} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.08] bg-white/85 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#92743b]/40 disabled:cursor-not-allowed disabled:opacity-40"><ImageIcon className="size-4"/> Actualizar póster</button>
-            <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#92743b]/25 bg-[#92743b]/[.08] px-3 text-sm font-medium text-[#795e2e] shadow-sm transition hover:border-[#92743b]/45 hover:bg-[#92743b]/[.13]"><Download className="size-4"/> Exportar</button>
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
         </div>
