@@ -177,9 +177,15 @@ export async function createAurumPostPipeline(
     composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null;
   }
 
-  const diagnosticMode = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("aurumDiag")
+  const diagnosticParams = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search)
     : null;
+  const diagnosticMode = diagnosticParams?.get("aurumDiag") ?? null;
+  // Controlled A/B switch: only available in environment diagnostic mode.
+  // Normal Aurum Render behavior is unchanged unless aurumDiag=environment
+  // and aurumSSR=off are both explicitly present in the URL.
+  const diagnosticDisableSSR = diagnosticMode === "environment"
+    && diagnosticParams?.get("aurumSSR") === "off";
   let lastDiagnosticSignature = "";
   let lastKnownQualityId = "";
   const applyQuality=(next:any, options:{capture?:boolean}={})=>{
@@ -205,7 +211,7 @@ export async function createAurumPostPipeline(
     const taaEnabled=Boolean(options.capture) || (config.temporalAA!==false && config.taa!==false && !isLowQuality);
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
-    const ssrEnabled=Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
+    const ssrEnabled=!diagnosticDisableSSR && Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
     if(taaPass){
       taaPass.enabled=taaEnabled;
@@ -324,6 +330,7 @@ export async function createAurumPostPipeline(
           ssrCompositeIntensity: Number(ssrCompositePass?.uniforms?.intensity?.value ?? 0),
           ssrCompositeHasBeauty: Boolean(ssrCompositePass?.uniforms?.tBeauty?.value),
           ssrSelectedMeshCount: Array.isArray(ssrPass?.selects) ? ssrPass.selects.length : null,
+          ssrDiagnosticOverride: diagnosticDisableSSR ? "forced-off" : "default",
           ssaoKernelRadius: Number(ssaoPass?.kernelRadius ?? 0),
           ssaoClamp: Number(ssaoPass?.aoClamp ?? 0),
           ssaoMaxDistance: Number(ssaoPass?.maxDistance ?? 0),
