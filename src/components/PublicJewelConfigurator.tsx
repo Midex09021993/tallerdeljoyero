@@ -76,9 +76,10 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
         const rim = new THREE.DirectionalLight(0xffffff, 2.2); rim.position.set(-5, 3, -4); scene.add(rim);
         let meshCount = 0;
         model.traverse((object: any) => {
-          // Rhino files can preserve hidden layer/object flags; the public preview must show the published jewel.
-          object.visible = true;
+          // Respetar la visibilidad original del 3DM: forzar todas las capas visibles
+          // expone guías y geometría auxiliar que distorsionan el encuadre.
           if (!object.isMesh || !object.geometry) return;
+          if (!object.visible) return;
           meshCount++;
           const original = Array.isArray(object.material) ? object.material : [object.material];
           object.material = original.map((material: any) => esGema(object)
@@ -87,10 +88,15 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
               ? new THREE.MeshStandardMaterial({ color: 0xd5a63d, metalness: 0.78, roughness: 0.24, side: THREE.DoubleSide })
               : material?.isMaterial ? material.clone() : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.25, roughness: 0.34, side: THREE.DoubleSide }));
         });
-        if (meshCount === 0) throw new Error("El archivo 3DM no contiene geometría visible compatible para el visor.");
+        if (meshCount === 0) throw new Error("El archivo 3DM no contiene mallas visibles para el visor 3D. Revisa las capas y la geometría del archivo.");
         model.updateMatrixWorld(true);
-        const bounds = new THREE.Box3().setFromObject(model);
-        if (bounds.isEmpty()) throw new Error("No pudimos calcular el tamaño de la joya dentro del archivo 3DM.");
+        // Encadrar solo las mallas visibles; las curvas y guías CAD no deben alejar la cámara.
+        const bounds = new THREE.Box3();
+        model.traverse((object: any) => {
+          if (!object.isMesh || !object.geometry || !object.visible) return;
+          bounds.expandByObject(object);
+        });
+        if (bounds.isEmpty()) throw new Error("No pudimos calcular el tamaño de las mallas visibles de la joya.");
         const center = bounds.getCenter(new THREE.Vector3());
         model.position.sub(center);
         model.updateMatrixWorld(true);
