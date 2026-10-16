@@ -297,25 +297,41 @@ function MiNubePage() {
         .filter((entrada) => !entrada.id && !entrada.metadata)
         .map((entrada) => entrada.name)
         .filter(Boolean);
-      const resultados = await Promise.all(
-        nombresCarpetas.map(async (nombreCarpeta) => {
-          const data = await listarStorage(`${raiz}/${nombreCarpeta}`, `carpeta "${nombreCarpeta}"`);
-          return (data ?? [])
-            .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
-            .map((entrada): ArchivoNube => {
-              const nombre = entrada.name;
-              return {
-                nombre,
-                ruta: `${raiz}/${nombreCarpeta}/${nombre}`,
-                carpeta: nombreCarpeta,
-                bytes: Number(entrada.metadata?.size ?? 0),
-                actualizado: entrada.updated_at ?? entrada.created_at ?? null,
-                categoria: clasificarArchivo(nombreVisible(nombre)),
-                origen: "supabase",
-              };
-            });
-        }),
-      );
+      const resultados: ArchivoNube[][] = [];
+      const carpetasConError: string[] = [];
+      // No disparar una consulta simultánea por cada proyecto: limitar la carga y
+      // aislar una carpeta problemática para que no bloquee toda la biblioteca.
+      for (let inicio = 0; inicio < nombresCarpetas.length; inicio += 2) {
+        const lote = nombresCarpetas.slice(inicio, inicio + 2);
+        const respuestas = await Promise.all(lote.map(async (nombreCarpeta) => {
+          try {
+            const data = await listarStorage(`${raiz}/${nombreCarpeta}`, `carpeta "${nombreCarpeta}"`);
+            return (data ?? [])
+              .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
+              .map((entrada): ArchivoNube => {
+                const nombre = entrada.name;
+                return {
+                  nombre,
+                  ruta: `${raiz}/${nombreCarpeta}/${nombre}`,
+                  carpeta: nombreCarpeta,
+                  bytes: Number(entrada.metadata?.size ?? 0),
+                  actualizado: entrada.updated_at ?? entrada.created_at ?? null,
+                  categoria: clasificarArchivo(nombreVisible(nombre)),
+                  origen: "supabase" as const,
+                };
+              });
+          } catch (folderCause) {
+            const detalle = folderCause instanceof Error ? folderCause.message : "Error desconocido";
+            carpetasConError.push(nombreCarpeta);
+            console.warn(`[Mi Nube] No se pudo consultar la carpeta "${nombreCarpeta}".`, detalle);
+            return [];
+          }
+        }));
+        resultados.push(...respuestas);
+      }
+      if (carpetasConError.length) {
+        setError(`No se pudieron consultar ${carpetasConError.length} carpeta(s) de Supabase Storage: ${carpetasConError.join(", ")}. El resto de la biblioteca se ha cargado; vuelve a comprobar más tarde.`);
+      }
       const archivosPlanos = resultados.flat();
       const archivosConVistas = await Promise.all(
         archivosPlanos.map(async (archivo) => {
