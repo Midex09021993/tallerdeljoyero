@@ -1540,7 +1540,7 @@ export function AurumRender() {
             <button type="button" title="Zoom" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><Maximize2 className="size-[18px]"/></button>
             <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><Expand className="size-[18px]"/></button>
           </div>
-          <label className="flex h-11 items-center gap-2 rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824]">
+          <label className="flex h-10 items-center gap-2 rounded-xl border border-black/[.08] bg-white/85 px-3 text-sm text-[#292824] shadow-sm transition hover:border-black/15 focus-within:ring-2 focus-within:ring-[#92743b]/15">
             <Gem className="size-4 text-[#55534d]"/>
             <select value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="bg-transparent outline-none">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
@@ -1548,7 +1548,7 @@ export function AurumRender() {
             </select>
             <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
           </label>
-          <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#92743b]/30 bg-[#92743b]/10 px-3 text-sm font-medium text-[#795e2e] hover:bg-[#92743b]/15"><Download className="size-4"/> Exportar</button>
+          <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#92743b]/25 bg-[#92743b]/[.08] px-3 text-sm font-medium text-[#795e2e] shadow-sm transition hover:border-[#92743b]/45 hover:bg-[#92743b]/[.13]"><Download className="size-4"/> Exportar</button>
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
         </div>
@@ -1783,16 +1783,16 @@ export function AurumRender() {
             </div>}
             {archivo&&<div className="absolute right-16 top-3 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] text-white/60 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
 
-            <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-[#111416]/85 px-3 py-2 shadow-2xl backdrop-blur-xl">
+            <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/15 bg-[#202124]/80 px-3 py-2 shadow-lg backdrop-blur-2xl">
               <span className="px-2 text-[10px] text-white/70">◉ &nbsp;Órbita</span><span className="px-2 text-[10px] text-white/70">✋ &nbsp;Pan</span><span className="px-2 text-[10px] text-white/70">⌕ &nbsp;Zoom</span><button type="button" onClick={()=>apiRef.current?.reset()} className="px-2 text-[10px] text-white/70 hover:text-white">⌗ &nbsp;Ajustar</button>
             </div>
-            <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/10 bg-white/65 p-1 text-black/55 backdrop-blur">
+            <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
               <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
               <button type="button" onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Expand className="size-3.5"/></button>
             </div>
 
             <div className="absolute right-5 top-1/2 z-30 -translate-y-1/2">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-[#d4af37]/75 bg-white/90 p-1.5 shadow-[0_0_10px_rgba(212,175,55,.5),0_12px_35px_rgba(0,0,0,.18)]">
+              <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/[.08] bg-white/90 p-1.5 shadow-[0_8px_28px_rgba(0,0,0,.12)] backdrop-blur-2xl">
                 <button type="button" title="Calidad de render" onClick={()=>setQualityOpen(v=>!v)} className={"grid size-10 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-black/5")}><Sparkles className="size-[18px]"/></button>
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><RotateCcw className="size-[18px]"/></button>
                 <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><Expand className="size-[18px]"/></button>
@@ -1800,8 +1800,8 @@ export function AurumRender() {
               </div>
             </div>
 
-            {qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-xl border border-[#d4af37]/50 bg-[#111416]/96 p-2 text-white shadow-2xl backdrop-blur-xl">
-              <div className="px-2 pb-2 text-[8px] font-semibold uppercase tracking-[.18em] text-white/35">Calidad de render</div>
+            {qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-2 text-[#292824] shadow-xl backdrop-blur-2xl">
+              <div className="px-2 pb-2 text-[9px] font-semibold uppercase tracking-[.16em] text-[#858178]">Calidad de render</div>
               {([["low","Baja","Vista rápida"],["high","Alta","Producción"],["ultra","Ultra","Máximo detalle"]] as const).map(([id,nombre,desc])=><button key={id} type="button" onClick={()=>cambiarCalidad(id)} className={"mb-1 w-full rounded-lg border px-2.5 py-2 text-left "+(renderQualityId===id?"border-[#d4af37]/60 bg-[#d4af37]/10":"border-white/10 bg-white/[.03]")}><span className="block text-[10px] font-semibold">{nombre}</span><span className="text-[8px] text-white/40">{desc}</span></button>)}
             </div>}
             {lightingOpen && lightingPanel}
