@@ -333,7 +333,7 @@ export function AurumRender() {
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            targetFamilies: ["Diamante", "Esmeralda", "Rubí", "Rubi"],
+            targetFamilies: ["Diamante", "Esmeralda", "Rubí", "Rubi", "Zafiro", "Sapphire"],
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
