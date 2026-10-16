@@ -128,19 +128,42 @@ export function applyAurumInitialModelMaterials(
       // transparent meshes during every model load is unnecessary for LIVE.
       options.applyGemEnvironment();
     }else if(meta?.categoria==="metal"){
-      // First-load presentation is intentionally uniform: every metal layer starts
-      // with the same silver preset. Layer/slot mapping remains available for edits.
-      const initialMetalId = options.initialMetalId ?? "plata925_pulida";
-      const metal=options.metals.find((m:any)=>m.id===initialMetalId) ?? options.metals.find((m:any)=>m.id==="plata925_pulida") ?? options.metals[0];
-      if(!metal) return;
-      const mat=x.material?.clone ? x.material.clone() : new THREE.MeshPhysicalMaterial();
-      options.configureMetal(mat,metal);
-      const envScale = options.presentation?.metalEnvironmentScale ?? 1;
-      const coatScale = options.presentation?.metalClearcoatScale ?? 1;
-      if (Number.isFinite(envScale)) mat.envMapIntensity = Math.max(0, (mat.envMapIntensity ?? 1) * envScale);
-      if (Number.isFinite(coatScale)) mat.clearcoat = Math.max(0, (mat.clearcoat ?? 0) * coatScale);
-      mat.needsUpdate = true;
-      x.material=mat;
+      // Keep recognized imported iJewel/MatrixGold alloy assignments separate.
+      // Only source-material names that explicitly identify green gold or white
+      // gold override the uniform first-load silver fallback.
+      const sourceMaterials=Array.isArray(x.material)?x.material:[x.material];
+      const resolveInitialMetal=(source:any)=>{
+        const sourceName=String(source?.name??"").toLowerCase();
+        const sourceId=sourceName.includes("greengold")||sourceName.includes("green_gold")||sourceName.includes("green gold")
+          ? "oro18_verde"
+          : sourceName.includes("whitegold")||sourceName.includes("white_gold")||sourceName.includes("white gold")
+            ? "oro18b_pulido"
+            : options.initialMetalId ?? "plata925_pulida";
+        return options.metals.find((m:any)=>m.id===sourceId)
+          ?? options.metals.find((m:any)=>m.id===(options.initialMetalId ?? "plata925_pulida"))
+          ?? options.metals.find((m:any)=>m.id==="plata925_pulida")
+          ?? options.metals[0];
+      };
+      const configureSourceMaterial=(source:any)=>{
+        const metal=resolveInitialMetal(source);
+        if(!metal)return source?.clone?source.clone():new THREE.MeshPhysicalMaterial();
+        const mat=source?.clone?source.clone():new THREE.MeshPhysicalMaterial();
+        options.configureMetal(mat,metal);
+        const envScale=options.presentation?.metalEnvironmentScale??1;
+        const coatScale=options.presentation?.metalClearcoatScale??1;
+        if(Number.isFinite(envScale))mat.envMapIntensity=Math.max(0,(mat.envMapIntensity??1)*envScale);
+        if(Number.isFinite(coatScale))mat.clearcoat=Math.max(0,(mat.clearcoat??0)*coatScale);
+        mat.userData={
+          ...(mat.userData??{}),
+          aurumSourceMetalMaterial:String(source?.name??""),
+          aurumInitialMetalProfile:String(metal.id),
+        };
+        mat.needsUpdate=true;
+        return mat;
+      };
+      x.material=Array.isArray(x.material)
+        ? sourceMaterials.map(configureSourceMaterial)
+        : configureSourceMaterial(x.material);
     }else{
       // Neutral placeholder for all remaining layers (purple, cream, yellow,
       // decorative objects, etc.). It is deliberately NOT a gemstone.
