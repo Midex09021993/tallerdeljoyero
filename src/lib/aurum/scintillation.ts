@@ -443,7 +443,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
         // This is still an environment-sampling approximation, not geometric tracing.
-        float ijInternalWeight=clamp(ijReflect*0.84,0.62,0.72);
+        float ijInternalWeight=clamp(ijReflect*0.87,0.64,0.74);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
