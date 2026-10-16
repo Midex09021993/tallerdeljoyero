@@ -488,7 +488,10 @@ export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
     : id.includes("blackrhodium")||id.includes("rodio-negro") ? "blackRhodium"
     : null;
   const ref:any=key?AURUM_IJEWEL_METAL_REFERENCES[key as keyof typeof AURUM_IJEWEL_METAL_REFERENCES]:null;
-  if(!ref)return material;
+  if(!ref){
+    console.warn("[AURUM][METAL REFERENCE RESOLUTION]",{materialId:String(materialId??""),normalizedId:id,resolvedKey:key,matched:false});
+    return material;
+  }
   material.color?.setRGB(ref.baseColorFactor[0],ref.baseColorFactor[1],ref.baseColorFactor[2]);
   material.metalness=ref.metalness??1;
   material.roughness=ref.roughness;
@@ -498,6 +501,19 @@ export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
   material.clearcoatRoughness=0;
   material.userData={...(material.userData??{}),aurumIJEWELMetalReference:{...ref,materialId,source:"DAROS (1).glb",renderer:"iJewel/WebGi"},aurumMetalBaseEnvMapIntensity:ref.environmentIntensity};
   material.needsUpdate=true;
+  console.info("[AURUM][METAL REFERENCE RESOLUTION]",{
+    materialId:String(materialId??""),
+    normalizedId:id,
+    resolvedKey:key,
+    matched:true,
+    sourceRootPath:ref.sourceRootPath,
+    baseColorFactor:ref.baseColorFactor,
+    roughness:ref.roughness,
+    environmentIntensity:ref.environmentIntensity,
+    finalColor:material.color?.getHexString?.()??null,
+    finalRoughness:material.roughness??null,
+    finalEnvironmentIntensity:material.envMapIntensity??null,
+  });
   return material;
 };
 
