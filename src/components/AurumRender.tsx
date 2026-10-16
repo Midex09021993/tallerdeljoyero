@@ -948,7 +948,8 @@ export function AurumRender() {
             // Isolated PNG test: the live viewer is visibly brighter than the
             // exported beauty. Lift exposure only for the capture, without changing
             // the live renderer or any authored metal/gem material profiles.
-            renderer.toneMappingExposure=Math.min(1.0,oldToneMappingExposure*1.18);
+            renderer.outputColorSpace=THREE.SRGBColorSpace;
+            renderer.toneMappingExposure=Math.min(1.08,oldToneMappingExposure*1.30);
             composer.renderToScreen=false;
             composer.setPixelRatio(1);
             composer.setSize(width,height);
@@ -1029,6 +1030,7 @@ export function AurumRender() {
             camara.aspect=oldCameraAspect;
             camara.updateProjectionMatrix();
             renderer.setClearColor(oldClearColor,oldClearAlpha);
+            renderer.outputColorSpace=THREE.SRGBColorSpace;
             renderer.toneMappingExposure=oldToneMappingExposure;
             captureTransmissionRestore.forEach(({material,transmission})=>{
               material.transmission=transmission;
