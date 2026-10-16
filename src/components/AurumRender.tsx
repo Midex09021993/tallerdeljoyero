@@ -1713,7 +1713,7 @@ export function AurumRender() {
               </div>
             </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-            {parteSeleccionada&&diagnosticoSeleccion&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
+            {false&&parteSeleccionada&&diagnosticoSeleccion&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[9px] uppercase tracking-[.16em] text-[#d4af37]">Diagnóstico de selección</div>
