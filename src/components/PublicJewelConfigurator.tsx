@@ -74,25 +74,41 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
         scene.add(new THREE.HemisphereLight(0xffffff, 0x8c8173, 2.1));
         const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(4, 6, 7); scene.add(key);
         const rim = new THREE.DirectionalLight(0xffffff, 2.2); rim.position.set(-5, 3, -4); scene.add(rim);
+        let meshCount = 0;
         model.traverse((object: any) => {
+          // Rhino files can preserve hidden layer/object flags; the public preview must show the published jewel.
+          object.visible = true;
           if (!object.isMesh || !object.geometry) return;
+          meshCount++;
           const original = Array.isArray(object.material) ? object.material : [object.material];
           object.material = original.map((material: any) => esGema(object)
             ? new THREE.MeshPhysicalMaterial({ color: 0xeaf4ff, metalness: 0, roughness: 0.08, transmission: 0.18, thickness: 0.7, ior: 2, clearcoat: 1, clearcoatRoughness: 0.05, side: THREE.DoubleSide })
             : esMetal(object)
-              ? new THREE.MeshStandardMaterial({ color: 0xd5a63d, metalness: 0.92, roughness: 0.2, side: THREE.DoubleSide })
-              : material?.isMaterial ? material.clone() : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.55, roughness: 0.32, side: THREE.DoubleSide }));
+              ? new THREE.MeshStandardMaterial({ color: 0xd5a63d, metalness: 0.78, roughness: 0.24, side: THREE.DoubleSide })
+              : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.25, roughness: 0.34, side: THREE.DoubleSide }));
         });
+        if (meshCount === 0) throw new Error("El archivo 3DM no contiene geometría visible compatible para el visor.");
         model.updateMatrixWorld(true);
-        const bounds = new THREE.Box3().setFromObject(model), size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z, 0.001);
-        model.position.sub(center); scene.add(model);
-        camera.position.set(maxDim * 1.7, maxDim * 1.1, maxDim * 2.2);
-        camera.near = Math.max(maxDim / 1000, 0.001); camera.far = maxDim * 100; camera.updateProjectionMatrix();
+        const bounds = new THREE.Box3().setFromObject(model);
+        if (bounds.isEmpty()) throw new Error("No pudimos calcular el tamaño de la joya dentro del archivo 3DM.");
+        const center = bounds.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+        model.updateMatrixWorld(true);
+        const centeredBounds = new THREE.Box3().setFromObject(model);
+        const sphere = centeredBounds.getBoundingSphere(new THREE.Sphere());
+        const radius = Math.max(sphere.radius, 0.001);
+        scene.add(model);
+        camera.fov = 35;
+        const distance = (radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.25;
+        camera.position.copy(new THREE.Vector3(1, 0.65, 1).normalize().multiplyScalar(distance));
+        camera.near = Math.max(radius / 100, 0.001);
+        camera.far = Math.max(distance + radius * 20, 100);
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
         const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
         controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.06;
-        controls.minDistance = maxDim * 0.7; controls.maxDistance = maxDim * 8; controls.target.set(0, 0, 0); controls.update();
+        controls.minDistance = radius * 0.6; controls.maxDistance = radius * 12; controls.target.set(0, 0, 0); controls.update();
         modelRef.current = model;
         observer = new ResizeObserver(() => {
           if (!host || !camera || !renderer) return;
