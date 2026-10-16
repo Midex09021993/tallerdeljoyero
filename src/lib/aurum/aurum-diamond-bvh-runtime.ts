@@ -120,7 +120,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isMoissanite = family === "moissanita" || family === "moissanite";
       try {
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
-          transmission: family === "diamante" ? 0 : isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : isBlueTopaz ? 0.92 : isMoissanite ? 0.96 : 0.88,
+          transmission: isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0,
           environmentMap,
           camera: options.camera,
           quality: options.quality ?? "interactive",
