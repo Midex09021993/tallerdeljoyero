@@ -738,9 +738,9 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           </label>
           <section className="grid gap-4 rounded-2xl border border-[#e6dac5] bg-gradient-to-br from-[#fffdf8] to-[#faf5eb] p-4 sm:col-span-2 sm:p-5">
             <div><p className="text-sm font-semibold">Imágenes de portada</p><p className="mt-1 text-xs font-normal text-muted-foreground">Sube hasta 10 fotografías. Se alternarán automáticamente en la portada pública.</p></div>
-            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
+            <label className="relative inline-flex w-fit cursor-pointer items-center gap-2 overflow-hidden rounded-xl border border-border px-3 py-2.5 text-xs font-semibold">
               <ImageIcon className="size-4" /> {subiendoImagenes ? "Subiendo imágenes…" : "Añadir imágenes"}
-              <input type="file" accept="image/*" multiple disabled={subiendoImagenes || imagenesPortada.length >= 10} onChange={subirImagenesPortada} className="sr-only" />
+              <input type="file" accept="image/*" multiple disabled={subiendoImagenes || imagenesPortada.length >= 10} onChange={subirImagenesPortada} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
             </label>
             {imagenesPortada.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               {imagenesPortada.map((url: string, index: number) => <div key={url} className="relative overflow-hidden rounded-xl border border-border">
