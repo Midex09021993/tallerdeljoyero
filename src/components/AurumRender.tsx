@@ -626,7 +626,7 @@ export function AurumRender() {
         });
         console.info("[AURUM][METAL POST-APPLY STATE]",{
           requestedProfile:String(m?.id??""),
-          label:String(m?.nombre??m?.name??""),
+          label:String(m?.nombre??""),
           materialCount:materialPostApplyAudit.length,
           materials:materialPostApplyAudit.slice(0,12),
         });
