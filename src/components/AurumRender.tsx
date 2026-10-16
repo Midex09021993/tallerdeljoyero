@@ -244,7 +244,7 @@ export function AurumRender() {
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader, EXRLoader);
       let entornoGema:any = null;
       let gemEnvironmentUrl = getAurumGemHdriUrl("gemNeutral");
-      let gemEnvironmentRotation = .28;
+      let gemEnvironmentRotation = .54;
       let gemEnvironmentIntensityScale = .98;
       const aplicarEntornoGema = () => {
         if (!modelo || !entornoGema) return;
@@ -255,9 +255,9 @@ export function AurumRender() {
         invalidateRenderRef.current?.();
       };
       let gemEnvironmentRequestId = 0;
-      const cargarEntornoGema = (key="gemNeutral", rotation=.28, intensityScale=.98) => {
+      const cargarEntornoGema = (key="gemNeutral", rotation=.54, intensityScale=.98) => {
         gemEnvironmentUrl = getAurumGemHdriUrl(key);
-        gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .28;
+        gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
         const requestId = ++gemEnvironmentRequestId;
         gemEnvironmentController.load(
@@ -284,7 +284,7 @@ export function AurumRender() {
       // Precarga el GemEnvironment una sola vez. El modelo se engancha
       // cuando termina de cargar; así las gemas no quedan negras por falta de
       // environment en el primer frame.
-      cargarEntornoGema("gemNeutral", .28, .98);
+      cargarEntornoGema("gemNeutral", .54, .98);
 
       let hdrRequestId = 0;
       const cargarHDRI = (id:IluminacionId | EscenarioId) => {
