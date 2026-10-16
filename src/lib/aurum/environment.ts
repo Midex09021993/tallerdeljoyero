@@ -87,6 +87,12 @@ export function createAurumEnvironment(
       if (diagnosticDirectOnly || diagnosticNeutral) {
         if (diagnosticDirectOnly) scene.environment = null;
         else scene.environment = fallback;
+        console.info("[AURUM][HDR METAL][DIAGNOSTIC MODE]", {
+          requestId,
+          mode: diagnosticMode,
+          urlIgnored: url,
+          environmentInstalled: scene.environment === fallback,
+        });
         onLoaded(fallback);
         return;
       }
@@ -96,13 +102,25 @@ export function createAurumEnvironment(
         current = cached;
         currentUrl = url;
         scene.environment = cached;
+        console.info("[AURUM][HDR METAL][CACHE HIT]", {
+          requestId,
+          url,
+          urlActive: currentUrl,
+          environmentInstalled: scene.environment === cached,
+        });
         if (isCurrent()) onLoaded(cached);
         return;
       }
 
-      const Loader = /\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
+      const Loader = /\\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
+      console.info("[AURUM][HDR METAL][LOAD START]", {
+        requestId,
+        url,
+        loader: Loader === EXRLoader ? "EXRLoader" : "RGBELoader",
+      });
       new Loader().load(url, (hdrTexture: any) => {
         if (!isCurrent()) {
+          console.warn("[AURUM][HDR METAL][STALE RESPONSE]", { requestId, url });
           hdrTexture.dispose?.();
           return;
         }
@@ -110,6 +128,7 @@ export function createAurumEnvironment(
           const next = pmrem.fromEquirectangular(hdrTexture).texture;
           hdrTexture.dispose?.();
           if (!isCurrent()) {
+            console.warn("[AURUM][HDR METAL][STALE CONVERSION]", { requestId, url });
             next.dispose?.();
             return;
           }
@@ -124,12 +143,32 @@ export function createAurumEnvironment(
             cache.delete(oldest);
             if (oldTexture && oldTexture !== current) oldTexture.dispose?.();
           }
+          console.info("[AURUM][HDR METAL][ACTIVE]", {
+            requestId,
+            urlRequested: url,
+            urlActive: currentUrl,
+            responseTextureConverted: true,
+            environmentInstalled: scene.environment === next,
+            currentMatchesInstalledEnvironment: current === scene.environment,
+            textureUuid: next.uuid ?? null,
+          });
           onLoaded(next);
-        } catch {
+        } catch (error) {
           hdrTexture.dispose?.();
+          console.error("[AURUM][HDR METAL][CONVERSION ERROR]", {
+            requestId,
+            url,
+            error,
+          });
           onError?.();
         }
-      }, undefined, () => {
+      }, undefined, (error: any) => {
+        console.error("[AURUM][HDR METAL][NETWORK ERROR]", {
+          requestId,
+          url,
+          loader: Loader === EXRLoader ? "EXRLoader" : "RGBELoader",
+          error,
+        });
         // RoomEnvironment permanece como fallback silencioso cuando falla la red.
         onError?.();
       });
