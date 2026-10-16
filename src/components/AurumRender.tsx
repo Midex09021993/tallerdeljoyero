@@ -1605,8 +1605,8 @@ export function AurumRender() {
                 </select>
               </label>
             </section>
-            <section className="border-b border-black/10 px-5 py-2">
-              <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
+            <section className="border-b border-black/[.07] px-4 py-1">
+              <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[14px] font-semibold tracking-[-.01em] transition-colors hover:bg-black/[.025]">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
                 <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{MATERIALES.length}</span>
               </button>
@@ -1619,7 +1619,7 @@ export function AurumRender() {
                       <span className="size-10 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
                         style={{background:`radial-gradient(circle at 32% 27%,rgba(255,255,255,.78) 0 6%,rgba(255,255,255,.18) 17%,transparent 34%),linear-gradient(145deg,rgba(255,255,255,.42),transparent 34%),${hexColor(m.color)}`}}/>
                     </span>
-                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-[#292824]/70">{m.nombre}</span>
+                    <span className="mt-2 w-full truncate text-center text-[10px] leading-tight text-[#55534d]">{m.nombre}</span>
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
