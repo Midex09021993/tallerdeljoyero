@@ -214,11 +214,11 @@ function MiNubePage() {
   }, []);
   const [mensajeNas, setMensajeNas] = useState("Comprobando conexión segura…");
   const [errorListadoNas, setErrorListadoNas] = useState<string | null>(null);
-  const comprobarNas = useCallback(async () => {
+  const comprobarNas = useCallback(async (): Promise<EstadoNas> => {
     if (!participanteId || !usuarioId) {
       setEstadoNas("unknown");
       setMensajeNas("Inicia sesión con un taller activo");
-      return;
+      return "unknown";
     }
     try {
       const { data, error } = await supabase.functions.invoke("nextcloud-status", { body: {} });
@@ -227,9 +227,11 @@ function MiNubePage() {
       if (estado && ["online", "offline", "misconfigured", "not_configured", "unknown"].includes(estado)) {
         setEstadoNas(estado);
         setMensajeNas(typeof data?.message === "string" ? data.message : "Estado actualizado");
+        return estado;
       } else {
         setEstadoNas("unknown");
         setMensajeNas("No se pudo confirmar el estado");
+        return "unknown";
       }
     } catch (cause) {
       setEstadoNas("unknown");
@@ -248,6 +250,7 @@ function MiNubePage() {
       const detalleSeguro = detalle.replace(/https?:\/\/\S+/gi, "[servidor]").replace(/[\r\n]+/g, " ").slice(0, 140);
       setMensajeNas(`No se pudo consultar el estado${codigoHttp ? ` (HTTP ${codigoHttp})` : ""}: ${detalleSeguro}`);
       console.warn("[Mi Nube] Falló la comprobación de Mi NAS.", { status: codigoHttp, error: detalleSeguro });
+      return "offline";
     }
   }, [participanteId, usuarioId]);
 
@@ -262,6 +265,7 @@ function MiNubePage() {
     return () => window.clearInterval(intervalo);
   }, [comprobarNas, nasPausado]);
 
+  // Carga exclusiva de Supabase Storage. No consulta ni depende del estado del NAS.
   const cargarBiblioteca = useCallback(async () => {
     if (!participanteId || !usuarioId) {
       setCarpetas([]);
@@ -270,11 +274,8 @@ function MiNubePage() {
     }
     setCargando(true);
     setError(null);
-    setErrorListadoNas(null);
     try {
       const raiz = `${participanteId}/${usuarioId}`;
-      // Reintentar una sola vez los timeouts transitorios de Storage y señalar exactamente
-      // qué consulta falla, sin confundirlo con el estado del NAS.
       const listarStorage = async (ruta: string, etapa: string) => {
         let ultimoError: Error | null = null;
         for (let intento = 0; intento < 2; intento++) {
@@ -291,16 +292,15 @@ function MiNubePage() {
         }
         throw new Error(`Supabase Storage · ${etapa}: ${ultimoError?.message ?? "No se pudo listar la carpeta."}`);
       };
-      const entradas = await listarStorage(raiz, "carpeta raíz");
 
+      const entradas = await listarStorage(raiz, "carpeta raíz");
       const nombresCarpetas = (entradas ?? [])
         .filter((entrada) => !entrada.id && !entrada.metadata)
         .map((entrada) => entrada.name)
         .filter(Boolean);
       const resultados: ArchivoNube[][] = [];
       const carpetasConError: string[] = [];
-      // No disparar una consulta simultánea por cada proyecto: limitar la carga y
-      // aislar una carpeta problemática para que no bloquee toda la biblioteca.
+      // Limitar concurrencia para que una biblioteca grande no sature Storage.
       for (let inicio = 0; inicio < nombresCarpetas.length; inicio += 2) {
         const lote = nombresCarpetas.slice(inicio, inicio + 2);
         const respuestas = await Promise.all(lote.map(async (nombreCarpeta) => {
@@ -317,7 +317,7 @@ function MiNubePage() {
                   bytes: Number(entrada.metadata?.size ?? 0),
                   actualizado: entrada.updated_at ?? entrada.created_at ?? null,
                   categoria: clasificarArchivo(nombreVisible(nombre)),
-                  origen: "supabase" as const,
+                  origen: "supabase",
                 };
               });
           } catch (folderCause) {
@@ -329,51 +329,71 @@ function MiNubePage() {
         }));
         resultados.push(...respuestas);
       }
+
+      const archivosPlanos = resultados.flat();
+      const archivosConVistas = await Promise.all(archivosPlanos.map(async (archivo) => {
+        if (archivo.categoria !== "fotos") return archivo;
+        try {
+          const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
+          if (signedError) console.warn("[Mi Nube] No se pudo generar vista previa.", archivo.nombre, signedError.message);
+          return { ...archivo, urlVista: data?.signedUrl ?? null };
+        } catch (previewCause) {
+          console.warn("[Mi Nube] Falló una vista previa; se conserva el archivo en el listado.", archivo.nombre, previewCause);
+          return { ...archivo, urlVista: null };
+        }
+      }));
+
+      setArchivos((actuales) => {
+        const combinados = [...archivosConVistas, ...actuales.filter((archivo) => archivo.origen === "nas")];
+        setCarpetas([...new Set(combinados.map((archivo) => archivo.carpeta))]);
+        return combinados;
+      });
       if (carpetasConError.length) {
         setError(`No se pudieron consultar ${carpetasConError.length} carpeta(s) de Supabase Storage: ${carpetasConError.join(", ")}. El resto de la biblioteca se ha cargado; vuelve a comprobar más tarde.`);
       }
-      const archivosPlanos = resultados.flat();
-      const archivosConVistas = await Promise.all(
-        archivosPlanos.map(async (archivo) => {
-          if (archivo.categoria !== "fotos") return archivo;
-          const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
-          return { ...archivo, urlVista: data?.signedUrl ?? null };
-        }),
-      );
-      let archivosNas: ArchivoNube[] = [];
-      let carpetasNas: string[] = [];
-      // El NAS es opcional: sus fallos nunca deben activar el error general de Supabase Storage.
-      if (estadoNas === "online" && !nasPausado) {
-        try {
-          const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
-          if (nasError) {
-            setErrorListadoNas(nasError.message || "No se pudo consultar el NAS.");
-            console.warn("[Mi Nube] Falló el listado opcional del NAS.", nasError.message);
-          } else if (Array.isArray(nasData?.files)) {
-            archivosNas = nasData.files.map((item: { name: string; folder: string; bytes: number; updated: string | null }): ArchivoNube => ({
-              nombre: item.name,
-              ruta: `${item.folder}/${item.name}`,
-              carpeta: item.folder,
-              bytes: Number(item.bytes ?? 0),
-              actualizado: item.updated && Number.isFinite(Date.parse(item.updated)) ? new Date(item.updated).toISOString() : null,
-              categoria: "videos",
-              origen: "nas",
-            }));
-            carpetasNas = [...new Set(archivosNas.map((archivo) => archivo.carpeta))];
-          }
-        } catch (nasCause) {
-          const mensajeNasError = nasCause instanceof Error ? nasCause.message : "No se pudo consultar el NAS.";
-          setErrorListadoNas(mensajeNasError);
-          console.warn("[Mi Nube] Falló la conexión opcional con el NAS.", mensajeNasError);
-        }
-      }
-      setCarpetas([...new Set([...nombresCarpetas, ...carpetasNas])]);
-      setArchivos([...archivosConVistas, ...archivosNas]);
     } catch (cause) {
-      const mensaje = cause instanceof Error ? cause.message : "No se pudo cargar la biblioteca.";
+      const mensaje = cause instanceof Error ? cause.message : "No se pudo cargar la biblioteca de Supabase Storage.";
       setError(mensaje);
+      console.error("[Mi Nube] Falló la carga de Supabase Storage.", mensaje);
     } finally {
       setCargando(false);
+    }
+  }, [participanteId, usuarioId]);
+
+  // Consulta Nextcloud por separado: su disponibilidad no dispara ni bloquea el listado web.
+  const cargarArchivosNas = useCallback(async () => {
+    if (!participanteId || !usuarioId) return;
+    if (nasPausado || estadoNas !== "online") {
+      setErrorListadoNas(null);
+      setArchivos((actuales) => actuales.filter((archivo) => archivo.origen !== "nas"));
+      return;
+    }
+    try {
+      const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
+        body: { action: "list", participantId },
+      });
+      if (nasError) throw new Error(nasError.message || "No se pudo consultar el NAS.");
+      if (nasData?.error) throw new Error(String(nasData.error));
+      if (!Array.isArray(nasData?.files)) throw new Error("Nextcloud devolvió una respuesta de archivos no válida.");
+      const archivosNas: ArchivoNube[] = nasData.files.map((item: { name: string; folder: string; bytes: number; updated: string | null }): ArchivoNube => ({
+        nombre: item.name,
+        ruta: `${item.folder}/${item.name}`,
+        carpeta: item.folder,
+        bytes: Number(item.bytes ?? 0),
+        actualizado: item.updated && Number.isFinite(Date.parse(item.updated)) ? new Date(item.updated).toISOString() : null,
+        categoria: "videos",
+        origen: "nas",
+      }));
+      setErrorListadoNas(null);
+      setArchivos((actuales) => {
+        const combinados = [...actuales.filter((archivo) => archivo.origen !== "nas"), ...archivosNas];
+        setCarpetas([...new Set(combinados.map((archivo) => archivo.carpeta))]);
+        return combinados;
+      });
+    } catch (nasCause) {
+      const mensajeNasError = nasCause instanceof Error ? nasCause.message : "No se pudo consultar el NAS.";
+      setErrorListadoNas(mensajeNasError);
+      console.warn("[Mi Nube] Falló el listado opcional del NAS.", mensajeNasError);
     }
   }, [participanteId, usuarioId, estadoNas, nasPausado]);
 
@@ -413,6 +433,10 @@ function MiNubePage() {
   useEffect(() => {
     void cargarBiblioteca();
   }, [cargarBiblioteca]);
+
+  useEffect(() => {
+    void cargarArchivosNas();
+  }, [cargarArchivosNas]);
 
   const anadirImagenAlCatalogo = async (
     archivo: ArchivoNube | null,
@@ -621,9 +645,18 @@ function MiNubePage() {
       toast.error("Selecciona al menos un archivo.");
       return;
     }
-    if (nasPausado && seleccionados.some((archivo) => clasificarArchivo(archivo.name) === "videos")) {
-      toast.error("La conexión con el NAS está pausada. Reconéctala desde Mi NAS antes de subir vídeos.");
+    const contieneVideos = seleccionados.some((archivo) => clasificarArchivo(archivo.name) === "videos");
+    if (contieneVideos && nasPausado) {
+      toast.error("La conexión con el NAS está pausada. Reconéctala desde Mi NAS antes de subir vídeos. Los demás archivos no dependen del NAS.");
       return;
+    }
+    if (contieneVideos) {
+      setMensajeNas("Comprobando el NAS antes de subir vídeos…");
+      const estadoActual = await comprobarNas();
+      if (estadoActual !== "online") {
+        toast.error(`No se inició la subida de vídeos porque el NAS no está disponible (${estadoActual}). Los archivos que usan Supabase siguen siendo independientes.`);
+        return;
+      }
     }
     if (seleccionados.length > MAX_FILES_PER_BATCH) {
       toast.error(`Puedes subir hasta ${MAX_FILES_PER_BATCH} archivos por lote.`);
