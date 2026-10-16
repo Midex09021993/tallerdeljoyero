@@ -241,6 +241,38 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);applied++;
     }
   });
+  if(applied>0){
+    const activeMaterials=Array.isArray(activePart.material)?activePart.material:[activePart.material];
+    console.info("[AURUM][METAL MATERIAL AUDIT]",{
+      mesh:activePart.name||activePart.uuid,
+      requestedProfile:{
+        id:String(materialConfig?.id??""),
+        label:String(materialConfig?.nombre??materialConfig?.name??""),
+        color:materialConfig?.color??null,
+        metalness:materialConfig?.metalness??null,
+        roughness:materialConfig?.roughness??null,
+        envMapIntensity:materialConfig?.envMapIntensity??null,
+      },
+      appliedCount:applied,
+      materials:activeMaterials.filter(Boolean).map((m:any)=>({
+        name:m.name??null,
+        colorHex:m.color?.getHexString?.()??null,
+        colorLinear:m.color?{r:Number(m.color.r.toFixed(5)),g:Number(m.color.g.toFixed(5)),b:Number(m.color.b.toFixed(5))}:null,
+        metalness:m.metalness??null,
+        roughness:m.roughness??null,
+        envMapIntensity:m.envMapIntensity??null,
+        ior:m.ior??null,
+        clearcoat:m.clearcoat??null,
+        clearcoatRoughness:m.clearcoatRoughness??null,
+        hasRoughnessMap:!!m.roughnessMap,
+        roughnessMapName:m.roughnessMap?.name||null,
+        roughnessMapType:m.roughnessMap?.type??null,
+        renderProfile:m.userData?.aurumMetalRenderProfile??null,
+        iJewelReference:m.userData?.aurumIJEWELMetalReference??null,
+        baseEnvironmentIntensity:m.userData?.aurumMetalBaseEnvMapIntensity??null,
+      })),
+    });
+  }
   return applied>0;
 }
 
