@@ -945,9 +945,10 @@ export function AurumRender() {
                 }
               });
             });
-            // Keep the original calibrated exposure; the live viewer and
-            // other gemstone families retain their existing optical settings.
-            renderer.toneMappingExposure=oldToneMappingExposure;
+            // Isolated PNG test: the live viewer is visibly brighter than the
+            // exported beauty. Lift exposure only for the capture, without changing
+            // the live renderer or any authored metal/gem material profiles.
+            renderer.toneMappingExposure=Math.min(1.0,oldToneMappingExposure*1.18);
             composer.renderToScreen=false;
             composer.setPixelRatio(1);
             composer.setSize(width,height);
