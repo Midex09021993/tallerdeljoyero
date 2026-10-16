@@ -6,6 +6,8 @@ export function createAurumApi(options:any){
     escenario: options.escenario,
     hdriGround: options.hdriGround,
     iluminacion: options.iluminacion,
+    metalHdri: options.metalHdri,
+    gemHdri: options.gemHdri,
     sceneStudio: options.sceneStudio,
     reset: options.reset,
     autoRotar: options.autoRotar,
