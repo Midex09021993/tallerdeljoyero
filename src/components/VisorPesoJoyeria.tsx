@@ -423,7 +423,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
       <div className="relative overflow-hidden rounded-3xl border border-border bg-viewer shadow-card">
         <div
           ref={contenedor}
-          className={compacto ? "h-96 w-full" : "h-[480px] w-full sm:h-[600px]"}
+          className={compacto ? "h-[480px] w-full" : "h-[560px] w-full sm:h-[680px]"}
         />
         {!nombreArchivo && !cargando ? (
           <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-viewer-foreground/50">
