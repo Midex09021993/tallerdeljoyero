@@ -24,6 +24,8 @@ export interface AurumFinalRenderOptions {
   environmentRotationY?: number;
   /** Independent HDRI for gem reflections; scene.environment remains the metal/studio HDRI. */
   gemEnvironmentUrl?: string | null;
+  /** Reuse the live studio lights in the isolated final-render scene. */
+  studioScene?: THREE.Scene | null;
   signal?: AbortSignal | undefined;
   onProgress?: ((done: number, total: number) => void) | undefined;
 }
@@ -74,7 +76,7 @@ function convertMaterial(src: any, gemEnvironment?: THREE.Texture | null): THREE
   return m;
 }
 
-function buildIsolatedScene(model: THREE.Object3D, gemEnvironment?: THREE.Texture | null) {
+function buildIsolatedScene(model: THREE.Object3D, gemEnvironment?: THREE.Texture | null, studioScene?: THREE.Scene | null) {
   const scene = new THREE.Scene();
   const materials: THREE.Material[] = [];
   const cache = new Map<any, THREE.Material>();
@@ -108,6 +110,35 @@ function buildIsolatedScene(model: THREE.Object3D, gemEnvironment?: THREE.Textur
     root.add(mesh);
   });
   scene.add(root);
+
+  // The isolated tracer scene previously copied only the model and HDRI.
+  // Reuse the live viewer's lights so polished metals and small stones retain
+  // the studio highlights they have in the real-time preview.
+  if (studioScene) {
+    studioScene.updateMatrixWorld(true);
+    studioScene.traverse((source: any) => {
+      if (!source?.isLight || source.visible === false) return;
+      const light = source.clone();
+      const worldPosition = new THREE.Vector3();
+      const worldQuaternion = new THREE.Quaternion();
+      const worldScale = new THREE.Vector3();
+      source.matrixWorld.decompose(worldPosition, worldQuaternion, worldScale);
+      light.position.copy(worldPosition);
+      light.quaternion.copy(worldQuaternion);
+      light.scale.copy(worldScale);
+      light.matrixAutoUpdate = true;
+      light.updateMatrix();
+      scene.add(light);
+
+      if (source.target?.isObject3D && light.target?.isObject3D) {
+        source.target.updateMatrixWorld(true);
+        source.target.getWorldPosition(worldPosition);
+        light.target.position.copy(worldPosition);
+        light.target.updateMatrixWorld(true);
+        scene.add(light.target);
+      }
+    });
+  }
 
   // White studio floor so the tracer produces real contact shadows/bounce.
   const box = new THREE.Box3().setFromObject(root);
@@ -189,7 +220,7 @@ export async function renderAurumPathTracedImage(
   if (opts.gemEnvironmentUrl && opts.gemEnvironmentUrl !== opts.environmentUrl) {
     try { gemEnv = await loadEquirect(opts.gemEnvironmentUrl); } catch { gemEnv = null; }
   }
-  const { scene, materials, floorGeo } = buildIsolatedScene(model, gemEnv);
+  const { scene, materials, floorGeo } = buildIsolatedScene(model, gemEnv, opts.studioScene);
   scene.environment = env;
   scene.environmentIntensity = opts.environmentIntensity ?? 1;
   scene.environmentRotation.set(0, opts.environmentRotationY ?? 0, 0);
