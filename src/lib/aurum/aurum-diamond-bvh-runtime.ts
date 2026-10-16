@@ -104,17 +104,18 @@ export async function createAurumDiamondBvhRuntime(options: {
 
       const isEmerald = family === "esmeralda";
       const isRuby = family === "rubí" || family === "rubi";
+      const isSapphire = family === "zafiro" || family === "sapphire";
       try {
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           environmentMap,
           camera: options.camera,
           quality: options.quality ?? "interactive",
-          environmentIntensity: isEmerald ? 0.92 : isRuby ? 1.0 : 1.14,
-          dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : 0.006,
-          ior: isEmerald ? 1.58 : isRuby ? 1.762 : 2.417,
-          absorption: isEmerald ? 1.65 : isRuby ? 1.15 : 1,
-          color: isEmerald ? 0x075b3d : isRuby ? 0x9b001b : 0xffffff,
-          reflectivity: isEmerald ? 0.34 : isRuby ? 0.38 : 0.46,
+          environmentIntensity: isEmerald ? 0.92 : isRuby ? 1.0 : isSapphire ? 1.0 : 1.14,
+          dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : 0.006,
+          ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : 2.417,
+          absorption: isEmerald ? 1.65 : isRuby ? 1.15 : isSapphire ? 1.05 : 1,
+          color: isEmerald ? 0x075b3d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : 0xffffff,
+          reflectivity: isEmerald ? 0.34 : isRuby ? 0.38 : isSapphire ? 0.38 : 0.46,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
