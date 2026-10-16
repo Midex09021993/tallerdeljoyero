@@ -109,9 +109,12 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isAquamarine = family === "aguamarina" || family === "aquamarine";
       const isCitrine = family === "citrino" || family === "citrine";
       const topazColor = Number(currentMaterial?.color?.getHex?.() ?? 0);
-      const isBlueTopaz = family === "topacio azul" || family === "topacio_azul" || family === "blue topaz" || family === "bluetopaz" || (family === "topacio" && ((topazColor & 0x0000ff) > ((topazColor >> 16) & 0xff) * 1.15));
-      const isImperialTopaz = family === "topacio imperial" || family === "topacio_imperial" || (family === "topacio" && !isBlueTopaz);
-      const isParaibaTourmaline = family === "turmalina paraíba" || family === "turmalina paraiba" || family === "turmalina_paraiba" || family === "paraiba tourmaline" || family === "paraiba";
+      // Catalog identity is more reliable than hue: topaz variants share "Topacio",
+      // while Paraiba is catalogued under the broader "Turmalina" family.
+      const activeGemId = String(mesh.userData?.aurumActiveGemId ?? "").toLocaleLowerCase();
+      const isBlueTopaz = activeGemId.includes("topacio_azul") || activeGemId.includes("blue_topaz") || family === "topacio azul" || family === "topacio_azul" || family === "blue topaz" || family === "bluetopaz" || (family === "topacio" && !activeGemId.includes("topacio_imperial") && ((topazColor & 0x0000ff) > ((topazColor >> 16) & 0xff) * 1.15));
+      const isImperialTopaz = activeGemId.includes("topacio_imperial") || family === "topacio imperial" || family === "topacio_imperial" || (family === "topacio" && !isBlueTopaz);
+      const isParaibaTourmaline = activeGemId.includes("turmalina_paraiba") || family === "turmalina paraíba" || family === "turmalina paraiba" || family === "turmalina_paraiba" || family === "paraiba tourmaline" || family === "paraiba";
       const isTanzanite = family === "tanzanita" || family === "tanzanite";
       const isMoissanite = family === "moissanita" || family === "moissanite";
       try {
