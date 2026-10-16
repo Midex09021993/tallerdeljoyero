@@ -140,6 +140,9 @@ function MiNubePage() {
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
+  useEffect(() => {
+    setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
+  }, [archivos]);
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
   const [colaLocal, setColaLocal] = useState<ArchivoEnCola[]>([]);
   const [guardandoCola, setGuardandoCola] = useState(false);
@@ -343,11 +346,10 @@ function MiNubePage() {
         }
       }));
 
-      setArchivos((actuales) => {
-        const combinados = [...archivosConVistas, ...actuales.filter((archivo) => archivo.origen === "nas")];
-        setCarpetas([...new Set(combinados.map((archivo) => archivo.carpeta))]);
-        return combinados;
-      });
+      setArchivos((actuales) => [
+        ...archivosConVistas,
+        ...actuales.filter((archivo) => archivo.origen === "nas"),
+      ]);
       if (carpetasConError.length) {
         setError(`No se pudieron consultar ${carpetasConError.length} carpeta(s) de Supabase Storage: ${carpetasConError.join(", ")}. El resto de la biblioteca se ha cargado; vuelve a comprobar más tarde.`);
       }
@@ -385,11 +387,10 @@ function MiNubePage() {
         origen: "nas",
       }));
       setErrorListadoNas(null);
-      setArchivos((actuales) => {
-        const combinados = [...actuales.filter((archivo) => archivo.origen !== "nas"), ...archivosNas];
-        setCarpetas([...new Set(combinados.map((archivo) => archivo.carpeta))]);
-        return combinados;
-      });
+      setArchivos((actuales) => [
+        ...actuales.filter((archivo) => archivo.origen !== "nas"),
+        ...archivosNas,
+      ]);
     } catch (nasCause) {
       const mensajeNasError = nasCause instanceof Error ? nasCause.message : "No se pudo consultar el NAS.";
       setErrorListadoNas(mensajeNasError);
