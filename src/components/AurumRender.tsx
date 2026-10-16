@@ -905,6 +905,10 @@ export function AurumRender() {
           if(width*height>12_000_000) throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
           const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
+          // Prevent the live RAF loop from rendering into the same WebGL context
+          // while the high-resolution off-screen capture is being assembled.
+          const captureLoop:any=viewerLoopRef.current;
+          captureLoop?.pause?.();
           const oldSize=new THREE.Vector2();
           renderer.getSize(oldSize);
           const oldCameraAspect=camara.aspect;
@@ -1031,6 +1035,8 @@ export function AurumRender() {
             applyPostQuality?.(renderQuality);
             renderer.shadowMap.needsUpdate=true;
             invalidateRenderRef.current?.();
+            captureLoop?.resume?.();
+            captureLoop?.resize?.();
           }
           const link=document.createElement("a");
           const baseName=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-");
