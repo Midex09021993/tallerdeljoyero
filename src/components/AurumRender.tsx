@@ -925,37 +925,21 @@ export function AurumRender() {
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           if(!composer?.readBuffer||typeof composer.render!=="function") throw new Error("El motor fotográfico no está disponible para capturar la imagen.");
-          // Poster capture is read-only: reuse the last live composer frame.
-          // Never pause the viewer, render again, resize it, or mutate camera/materials.
+          // Poster capture is read-only: copy the currently displayed viewer canvas.
+          // Do not invoke the photo renderer, resize WebGL, or change camera/materials.
           if(options.onCapture){
-            const target=composer.readBuffer;
-            const width=Number(target?.width)||0;
-            const height=Number(target?.height)||0;
-            if(width<2||height<2) throw new Error("El visor todavía no tiene un fotograma disponible para el póster.");
-            const pixels=new Uint8Array(width*height*4);
-            renderer.readRenderTargetPixels(target,0,0,width,height,pixels);
-            const frame=document.createElement("canvas");
-            frame.width=width; frame.height=height;
-            const frameContext=frame.getContext("2d");
-            if(!frameContext) throw new Error("No se pudo preparar la miniatura del póster.");
-            const image=frameContext.createImageData(width,height);
-            if(pixels.length!==image.data.length) throw new Error("El tamaño del fotograma del visor no coincide con su búfer.");
-            image.data.set(pixels);
-            frameContext.putImageData(image,0,0);
+            const liveCanvas=visorRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+            if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) throw new Error("El visor todavía no tiene una imagen disponible para el póster.");
             const thumb=document.createElement("canvas");
             const thumbWidth=Math.max(1,Math.min(640,Math.round(Number(options.width)||640)));
-            const thumbHeight=Math.max(1,Math.round(thumbWidth*height/width));
+            const thumbHeight=Math.max(1,Math.round(thumbWidth*liveCanvas.height/liveCanvas.width));
             thumb.width=thumbWidth; thumb.height=thumbHeight;
-            const thumbContext=thumb.getContext("2d");
-            if(!thumbContext) throw new Error("No se pudo preparar la miniatura del póster.");
-            // WebGL pixel buffers start at the bottom row; flip only the
-            // off-screen thumbnail canvas, never the live viewer.
-            thumbContext.translate(0,thumbHeight);
-            thumbContext.scale(1,-1);
-            thumbContext.drawImage(frame,0,0,thumbWidth,thumbHeight);
+            const ctx=thumb.getContext("2d");
+            if(!ctx) throw new Error("No se pudo preparar la miniatura del póster.");
+            ctx.drawImage(liveCanvas,0,0,thumbWidth,thumbHeight);
             const mime=options.format==="png"?"image/png":options.format==="webp"?"image/webp":"image/jpeg";
             const cover=thumb.toDataURL(mime,0.88);
-            if(!cover||cover.length<1000) throw new Error("El fotograma del visor está vacío; no se actualizó el póster.");
+            if(!cover||cover.length<1000) throw new Error("La imagen del visor está vacía; no se actualizó el póster.");
             options.onCapture(cover);
             return;
           }
