@@ -147,28 +147,24 @@ export function AurumRender() {
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
   const actualizarPoster = () => {
+    if (!archivo) { setError("Carga una joya antes de actualizar el póster."); return; }
     try {
-      const canvas = visorRef.current?.querySelector("canvas");
-      if (!archivo) throw new Error("Carga una joya antes de actualizar el póster.");
-      if (!canvas || canvas.width < 2 || canvas.height < 2) throw new Error("El visor todavía no está listo para capturar el póster.");
-      const thumb = document.createElement("canvas");
-      const maxWidth = 640;
-      const scale = Math.min(1, maxWidth / canvas.width);
-      thumb.width = Math.max(1, Math.round(canvas.width * scale));
-      thumb.height = Math.max(1, Math.round(canvas.height * scale));
-      const ctx = thumb.getContext("2d");
-      if (!ctx) throw new Error("No se pudo preparar la miniatura.");
-      ctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
-      const cover = thumb.toDataURL("image/jpeg", 0.84);
-      if (!cover || cover.length < 1000) throw new Error("La captura está vacía. Inténtalo de nuevo.");
-      setPresentationCover(cover);
-      try { window.localStorage.setItem("aurum-render-poster-thumbnail", cover); }
-      catch { setError("Póster actualizado en pantalla, pero el navegador no permitió guardarlo para la próxima sesión."); }
-      setPresentationVisible(true);
-      if (presentationTimerRef.current) clearTimeout(presentationTimerRef.current);
-      presentationTimerRef.current = setTimeout(() => setPresentationVisible(false), 1800);
+      apiRef.current?.exportPNG({
+        width: 640,
+        height: 480,
+        format: "jpeg",
+        onCapture: (cover: string) => {
+          if (!cover || cover.length < 1000) { setError("La captura está vacía. Inténtalo de nuevo."); return; }
+          setPresentationCover(cover);
+          try { window.localStorage.setItem("aurum-render-poster-thumbnail", cover); }
+          catch { setError("Póster actualizado en pantalla, pero el navegador no permitió guardarlo para la próxima sesión."); }
+          setPresentationVisible(true);
+          if (presentationTimerRef.current) clearTimeout(presentationTimerRef.current);
+          presentationTimerRef.current = setTimeout(() => setPresentationVisible(false), 1800);
+        },
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo actualizar el póster.");
+      setError(e instanceof Error ? e.message : "No se pudo generar el póster.");
     }
   };
 
@@ -926,7 +922,7 @@ export function AurumRender() {
             loop?.resize?.();
           }
         },
-        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp"}={})=>{
+        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           if(!composer?.readBuffer||typeof composer.render!=="function") throw new Error("El motor fotográfico no está disponible para capturar la imagen.");
           const width=Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
@@ -1072,6 +1068,10 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
             captureLoop?.resume?.();
             captureLoop?.resize?.();
+          }
+          if(options.onCapture){
+            options.onCapture(dataUrl);
+            return;
           }
           const link=document.createElement("a");
           const baseName=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-");
