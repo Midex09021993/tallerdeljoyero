@@ -267,6 +267,17 @@ export function AurumRender() {
           (next) => {
             entornoGema = next;
             aplicarEntornoGema();
+
+            // The BVH material owns a raw HDR texture separate from the
+            // standard gem environment. Rebuild it after the selected gem HDRI
+            // changes so diamonds do not keep reflecting the previous scene.
+            if (diamondBvhRuntime) {
+              diamondBvhRuntime.dispose();
+              diamondBvhRuntime = null;
+            }
+            if (modelo) {
+              void asegurarDiamanteBvh();
+            }
           }
         );
       };
