@@ -391,6 +391,19 @@ export function AurumRender() {
         const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
         const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
         const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumDiag") === "environment") {
+          console.info("[AURUM][QUALITY][DIAGNOSTIC]", {
+            selectedQuality: id,
+            triangleCount: runtimeBudget.triangleCount,
+            budgetTier: runtimeBudget.tier,
+            requestedPixelRatio: requestedDpr,
+            pixelRatioCap: runtimeBudget.pixelRatioCap,
+            effectivePixelRatio: dpr,
+            requestedTransmissionScale: renderQuality.transmissionScale,
+            transmissionScaleCap: runtimeBudget.transmissionScaleCap,
+            effectiveTransmissionScale: transmissionScale,
+          });
+        }
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
         applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
