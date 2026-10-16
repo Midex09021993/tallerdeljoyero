@@ -30,6 +30,10 @@ export type AurumDiamondBvhSetupOptions = {
   environmentIntensity?: number;
   dispersion?: number;
   environmentRotationRadians?: number;
+  ior?: number;
+  absorption?: number;
+  color?: THREE.ColorRepresentation;
+  reflectivity?: number;
 };
 
 export type AurumDiamondBvhSetup = {
@@ -88,12 +92,14 @@ export function prepareAurumDiamondBvhExperiment(
   const material = api.createDiamondMaterial({
     environmentMap: options.environmentMap,
     bvh,
-    ior: 2.417,
+    ior: Math.max(1, options.ior ?? 2.417),
     dispersion: Math.max(0, Math.min(0.02, options.dispersion ?? 0.006)),
     environmentIntensity: Math.max(0, Math.min(2.5, options.environmentIntensity ?? 1.14)),
     rayBounces,
     facetSharpness: 1,
-    reflectivity: 0.46,
+    reflectivity: Math.max(0, Math.min(1, options.reflectivity ?? 0.46)),
+    color: options.color ?? 0xffffff,
+    absorption: Math.max(0, options.absorption ?? 1),
     transmission: 0,
     gamma: 1.09,
   });
@@ -118,7 +124,7 @@ export function prepareAurumDiamondBvhExperiment(
     },
     diagnostics: {
       triangleCount,
-      ior: 2.417,
+      ior: Math.max(1, options.ior ?? 2.417),
       rayBounces,
       geometryMutated: false,
       rendererRequired: "WebGL2",
