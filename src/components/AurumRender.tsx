@@ -1619,7 +1619,7 @@ export function AurumRender() {
                       <span className="size-10 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
                         style={{background:`radial-gradient(circle at 32% 27%,rgba(255,255,255,.78) 0 6%,rgba(255,255,255,.18) 17%,transparent 34%),linear-gradient(145deg,rgba(255,255,255,.42),transparent 34%),${hexColor(m.color)}`}}/>
                     </span>
-                    <span className="mt-1.5 w-full truncate text-center text-[8px] text-white/65">{m.nombre}</span>
+                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-white/70">{m.nombre}</span>
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-[10px] font-semibold text-white/65 transition hover:border-[#d4af37]/40 hover:text-white">
@@ -1646,7 +1646,7 @@ export function AurumRender() {
                       <span className="relative size-10 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
                         style={{background:`radial-gradient(circle at 30% 24%,rgba(255,255,255,.82) 0 5%,rgba(255,255,255,.18) 12%,transparent 28%),conic-gradient(from 20deg,rgba(255,255,255,.28),transparent 12%,rgba(0,0,0,.18) 25%,rgba(255,255,255,.22) 38%,transparent 52%,rgba(0,0,0,.2) 67%,rgba(255,255,255,.24) 82%,transparent),${hexColor(g.color)}`}}/>
                     </span>
-                    <span className="mt-1.5 w-full truncate text-center text-[8px] text-white/65">{g.nombre}</span>
+                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-white/70">{g.nombre}</span>
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-[10px] font-semibold text-white/65 transition hover:border-[#d4af37]/40 hover:text-white">
