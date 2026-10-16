@@ -484,7 +484,7 @@ export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
     : id.includes("platinum")||id.includes("platino") ? "platinum"
     : id.includes("silver")||id.includes("plata") ? "silver"
     : id.includes("warmgold")||id.includes("oro-calido") ? "warmGold"
-    : id.includes("yellowgold")||id.includes("oro-amarillo") ? "yellowGold"
+    : id.includes("yellowgold")||id.includes("oro-amarillo")||id.includes("oro18a_pulido") ? "yellowGold"
     : id.includes("blackrhodium")||id.includes("rodio-negro") ? "blackRhodium"
     : null;
   const ref:any=key?AURUM_IJEWEL_METAL_REFERENCES[key as keyof typeof AURUM_IJEWEL_METAL_REFERENCES]:null;
