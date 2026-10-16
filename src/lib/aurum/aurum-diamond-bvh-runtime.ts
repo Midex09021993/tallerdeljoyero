@@ -91,7 +91,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       // unrelated CAD groups as diamond. Leave those meshes on the proven
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
       const targetFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
-      const family = materials.length === 1 ? getGemFamily(materials[0]) : "";
+      const family = materials.length > 0 && materials.every((material) => getGemFamily(material) === getGemFamily(materials[0])) ? getGemFamily(materials[0]) : "";
       const isTargetFamily = materials.length > 0 && materials.every((material) => targetFamilies.includes(getGemFamily(material)));
       if (!isTargetFamily) {
         if (materials.some((material) => targetFamilies.includes(getGemFamily(material)))) {
