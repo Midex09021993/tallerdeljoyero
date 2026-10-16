@@ -387,6 +387,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
   const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
   const [progresoCarrusel, setProgresoCarrusel] = useState("");
+  const [progresoCarruselPorcentaje, setProgresoCarruselPorcentaje] = useState(0);
   const [urlNuevaImagenCarrusel, setUrlNuevaImagenCarrusel] = useState("");
   const [subiendoImagenes, setSubiendoImagenes] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -467,27 +468,71 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     event.target.value = "";
     if (!files.length) return;
     if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 elementos entre imágenes y videos."); return; }
-    setSubiendoCarrusel(true); setProgresoCarrusel(`Preparando ${files.length} archivo${files.length === 1 ? "" : "s"}…`); setError(null);
+    const totalBytes = files.reduce((total, file) => total + file.size, 0);
+    let bytesCompletados = 0;
+    setSubiendoCarrusel(true);
+    setProgresoCarruselPorcentaje(0);
+    setProgresoCarrusel(`Preparando ${files.length} archivo${files.length === 1 ? "" : "s"}…`);
+    setError(null);
     try {
       const nuevas: { imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean; tipo_media: "imagen" | "video" }[] = [];
       for (const [indice, file] of files.entries()) {
-        setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name}`);
+        setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name} · 0%`);
         const esVideo = file.type.startsWith("video/");
         if (!file.type.startsWith("image/") && !esVideo) throw new Error("Selecciona imágenes o videos compatibles.");
         const limiteBytes = (esVideo ? 50 : 15) * 1024 * 1024;
         if (file.size > limiteBytes) throw new Error(esVideo ? "Cada video debe pesar como máximo 50 MB." : "Cada imagen debe pesar como máximo 15 MB.");
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) throw new Error("Tu sesión ha caducado. Inicia sesión de nuevo para subir archivos.");
+        const supabaseUrl = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL;
+        const publishableKey = (import.meta.env as { VITE_SUPABASE_PUBLISHABLE_KEY?: string }).VITE_SUPABASE_PUBLISHABLE_KEY;
+        if (!supabaseUrl || !publishableKey) throw new Error("Falta la configuración de Supabase para subir el archivo.");
         const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || (esVideo ? "mp4" : "jpg");
         const destino = participanteId + "/carrusel-enlaces/" + crypto.randomUUID() + "." + extension;
-        const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: file.type });
-        if (uploadError) throw uploadError;
+        const endpoint = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/catalogo-joyas/${destino.split("/").map(encodeURIComponent).join("/")}`;
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", endpoint);
+          xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+          xhr.setRequestHeader("apikey", publishableKey);
+          xhr.setRequestHeader("Content-Type", file.type || (esVideo ? "video/mp4" : "application/octet-stream"));
+          xhr.setRequestHeader("x-upsert", "false");
+          xhr.upload.onprogress = (progressEvent) => {
+            if (!progressEvent.lengthComputable) return;
+            const loaded = Math.min(progressEvent.loaded, file.size);
+            const percentFile = file.size ? Math.round((loaded / file.size) * 100) : 100;
+            const percentTotal = totalBytes ? Math.min(99, Math.round(((bytesCompletados + loaded) / totalBytes) * 100)) : 0;
+            setProgresoCarruselPorcentaje(percentTotal);
+            setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name} · ${percentFile}% (${etiquetaTamano(loaded)} de ${etiquetaTamano(file.size)})`);
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else {
+              let message = `Supabase Storage respondió con el estado ${xhr.status}.`;
+              try { const body = JSON.parse(xhr.responseText); if (typeof body?.message === "string") message = body.message; else if (typeof body?.error === "string") message = body.error; } catch { /* Mantener el mensaje HTTP si la respuesta no es JSON. */ }
+              reject(new Error(message));
+            }
+          };
+          xhr.onerror = () => reject(new Error("No se pudo conectar con Supabase Storage durante la subida."));
+          xhr.onabort = () => reject(new Error("La subida se interrumpió antes de terminar."));
+          xhr.send(file);
+        });
+        bytesCompletados += file.size;
+        setProgresoCarruselPorcentaje(totalBytes ? Math.round((bytesCompletados / totalBytes) * 100) : 100);
         const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
         if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública del archivo.");
         nuevas.push({ imagen_url: data.publicUrl, url_imagen_externa: "", enlace_url: "", texto: "", nueva_pestana: true, tipo_media: esVideo ? "video" : "imagen" });
       }
       setEnlacesCarrusel(actual => [...actual, ...nuevas].slice(0, 10));
+      setProgresoCarruselPorcentaje(100);
       setProgresoCarrusel(`${nuevas.length} archivo${nuevas.length === 1 ? "" : "s"} cargado${nuevas.length === 1 ? "" : "s"} correctamente.`);
-    } catch (e) { setError(e instanceof Error ? e.message : "No se pudieron subir los archivos del carrusel."); setProgresoCarrusel(""); }
-    finally { setSubiendoCarrusel(false); }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudieron subir los archivos del carrusel.");
+      setProgresoCarrusel("");
+      setProgresoCarruselPorcentaje(0);
+    } finally { setSubiendoCarrusel(false); }
   }
   async function subirLogoShowroom(event: any) {
     const file = (event.target.files?.[0] ?? null) as File | null;
@@ -604,9 +649,20 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                 {subiendoCarrusel ? <span className="size-4 animate-spin rounded-full border-2 border-[#c5a66c]/30 border-t-[#9a773d]" aria-hidden="true" /> : <ImageIcon className="size-4" />} {subiendoCarrusel ? "Subiendo archivos…" : "Añadir imágenes o videos"}
                 <input type="file" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
               </label>
-              {progresoCarrusel ? <div role="status" aria-live="polite" className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-xs ${subiendoCarrusel ? "border-[#e8d8b8] bg-[#fff9ed] text-[#72572d]" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
-                {subiendoCarrusel ? <span className="size-2 shrink-0 animate-pulse rounded-full bg-[#b9975b]" /> : <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold">✓</span>}
-                <span className="min-w-0 break-words">{progresoCarrusel}</span>
+              {progresoCarrusel ? <div role="status" aria-live="polite" className={`space-y-2 rounded-xl border px-3 py-3 text-xs ${subiendoCarrusel ? "border-[#e8d8b8] bg-[#fff9ed] text-[#72572d]" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+                <div className="flex items-start gap-3">
+                  {subiendoCarrusel ? <span className="mt-0.5 size-2 shrink-0 animate-pulse rounded-full bg-[#b9975b]" /> : <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold">✓</span>}
+                  <span className="min-w-0 flex-1 break-words">{progresoCarrusel}</span>
+                  {subiendoCarrusel ? <span className="shrink-0 font-semibold tabular-nums">{progresoCarruselPorcentaje}%</span> : null}
+                </div>
+                {subiendoCarrusel ? <div
+                  className="h-2.5 w-full overflow-hidden rounded-full bg-[#eadfca]"
+                  role="progressbar"
+                  aria-label="Progreso de subida de imágenes y videos"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progresoCarruselPorcentaje}
+                ><div className="h-full rounded-full bg-[#b9975b] transition-[width] duration-150 ease-out" style={{ width: `${progresoCarruselPorcentaje}%` }} /></div> : null}
               </div> : null}
               <p className="text-xs text-muted-foreground">Hasta 10 elementos en total. Imágenes: máximo 15 MB; videos: máximo 50 MB. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
               <div className="grid gap-2 rounded-xl bg-background p-3">
