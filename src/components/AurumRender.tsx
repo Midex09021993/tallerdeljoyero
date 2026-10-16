@@ -13,6 +13,7 @@ import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
+import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { setAurumInclusionsVisible } from "../lib/aurum/gems";
@@ -306,6 +307,37 @@ export function AurumRender() {
       // El escenario inicial selecciona su propio Environment HDRI.
 
       let modelo:any = null;
+      let diamondBvhRuntime: AurumDiamondBvhRuntime | null = null;
+      let diamondBvhRuntimePending = false;
+      const asegurarDiamanteBvh = async () => {
+        if (!vivo || !modelo || diamondBvhRuntime || diamondBvhRuntimePending) return;
+        diamondBvhRuntimePending = true;
+        try {
+          const runtime = await createAurumDiamondBvhRuntime({
+            THREE,
+            RGBELoader,
+            EXRLoader,
+            url: gemEnvironmentUrl,
+            camera: camara,
+            quality: "interactive",
+            onError: (error) => console.warn("[AURUM][DIAMOND BVH] Se conserva el shader anterior para esta malla:", error),
+          });
+          if (!vivo) {
+            runtime.dispose();
+            return;
+          }
+          diamondBvhRuntime = runtime;
+          runtime.refresh(modelo);
+          const diagnostics = runtime.diagnostics();
+          console.info("[AURUM][DIAMOND BVH]", diagnostics);
+          invalidateRenderRef.current?.();
+        } catch (error) {
+          // Safe fallback: current MeshPhysicalMaterial + AURUM scintillation remain active.
+          console.warn("[AURUM][DIAMOND BVH] No se pudo activar; se conserva el render anterior:", error);
+        } finally {
+          diamondBvhRuntimePending = false;
+        }
+      };
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
       let liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
@@ -525,6 +557,11 @@ export function AurumRender() {
       const aplicarGema = (g:GemaConfig, objetivo?:any) => {
         const target=objetivo||parteActiva;
         applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.());
+        if (String(g?.familia ?? "").toLocaleLowerCase() === "diamante") {
+          void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
+        } else {
+          diamondBvhRuntime?.refresh(modelo);
+        }
         aplicarPerfilLive();
         invalidateRenderRef.current?.();
       };
@@ -675,6 +712,9 @@ export function AurumRender() {
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
         });
         modelo=interno;
+        // Opt-in experimental per-pixel BVH ray tracing for diamond meshes only.
+        // The helper leaves every other gem and every metal on the existing pipeline.
+        void asegurarDiamanteBvh();
         // LIVE MODE: procedural inclusions are intentionally hidden. They add
         // dozens of transparent draw calls and are not required for the base
         // product preview. CAPTURE enables them temporarily for the final image.
@@ -1265,6 +1305,7 @@ export function AurumRender() {
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
+          diamondBvhRuntime?.update();
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
           // Keep the direct renderer during orbit, but use the photographic
           // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
@@ -1313,6 +1354,8 @@ export function AurumRender() {
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        diamondBvhRuntime?.dispose();
+        diamondBvhRuntime = null;
         disposeAurumViewer({
           node:nodo,
           renderer,
