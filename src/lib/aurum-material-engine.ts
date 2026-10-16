@@ -200,7 +200,7 @@ export const AURUM_GEM_PRESETS:Record<string,AurumGemPreset>={
   diamante_inclusiones:{id:"diamante_inclusiones",familia:"Diamante",variante:"Con inclusiones",color:0xf8f8f8,transmission:1,ior:2.417,roughness:.018,envMapIntensity:1.3,attenuationColor:0xf5f5f5,attenuationDistance:65,dispersion:.01,iridescence:.04,thicknessScale:1,inclusions:true,inclusionDensity:.18,inclusionType:"crystal"},
   esmeralda_1:{id:"esmeralda_1",familia:"Esmeralda",variante:"Calidad 1",color:0x22dfa3,transmission:.94,ior:1.58,roughness:.018,envMapIntensity:1.00,attenuationColor:0x087f45,attenuationDistance:18,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   esmeralda_2:{id:"esmeralda_2",familia:"Esmeralda",variante:"Calidad 2",color:0x0a6b3b,transmission:.88,ior:1.577,roughness:.022,envMapIntensity:1.55,attenuationColor:0x075d34,attenuationDistance:12,dispersion:.012,iridescence:0,thicknessScale:1.05,inclusions:true,inclusionDensity:.10,inclusionType:"fingerprint"},
-  esmeralda_3:{id:"esmeralda_3",familia:"Calidad 3",variante:"Natural",color:0x064d2f,transmission:.80,ior:1.577,roughness:.028,envMapIntensity:1.45,attenuationColor:0x043d25,attenuationDistance:8,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.22,inclusionType:"fingerprint"},
+  esmeralda_3:{id:"esmeralda_3",familia:"Esmeralda",variante:"Natural",color:0x064d2f,transmission:.80,ior:1.577,roughness:.028,envMapIntensity:1.45,attenuationColor:0x043d25,attenuationDistance:8,dispersion:.012,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.22,inclusionType:"fingerprint"},
   rubi:{id:"rubi",familia:"Rubí",variante:"Natural",color:0x9f1239,transmission:.93,ior:1.762,roughness:.018,envMapIntensity:1.65,attenuationColor:0x8f1239,attenuationDistance:16,dispersion:.014,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   rubi_sangre_pichon:{id:"rubi_sangre_pichon",familia:"Rubí",variante:"Sangre de pichón",color:0x8f0d28,transmission:.91,ior:1.762,roughness:.016,envMapIntensity:1.7,attenuationColor:0x78091f,attenuationDistance:13,dispersion:.014,iridescence:0,thicknessScale:1.05,inclusions:false,inclusionDensity:0,inclusionType:"none"},
   rubi_inclusiones:{id:"rubi_inclusiones",familia:"Rubí",variante:"Con inclusiones",color:0x7f1233,transmission:.84,ior:1.762,roughness:.025,envMapIntensity:1.5,attenuationColor:0x650c28,attenuationDistance:9,dispersion:.014,iridescence:0,thicknessScale:1.08,inclusions:true,inclusionDensity:.20,inclusionType:"silk"},
@@ -377,7 +377,21 @@ export const AURUM_IJEWEL_EMERALD_REFERENCE = {
 export const applyAurumReferenceGemOptics=(material:any,family:string)=>{
   if(!material)return material;
   if(family!=="Esmeralda")return material;
-  return applyAurumIJEWELGemParameters(material,AURUM_IJEWEL_EMERALD_REFERENCE);
+
+  // Keep iJewel's emerald reference as calibration metadata without replacing
+  // the selected AURUM emerald hue or its calibrated environment intensity.
+  // The source .dmat color is a different emerald preset, not a universal tint.
+  const authoredColor=material.color?.clone?.();
+  const authoredEnvironmentIntensity=Number(material.envMapIntensity??1);
+  applyAurumIJEWELGemParameters(material,AURUM_IJEWEL_EMERALD_REFERENCE);
+  if(authoredColor)material.color.copy(authoredColor);
+  material.envMapIntensity=authoredEnvironmentIntensity;
+  material.userData={
+    ...(material.userData??{}),
+    aurumEmeraldReferenceAppearancePreserved:true,
+  };
+  material.needsUpdate=true;
+  return material;
 };
 
 export type AurumDiamondOpticalConfig = {refractionStrength:number;dispersionStrength:number;internalReflection:number;brilliance:number;fire:number;facetContrast:number;environmentBoost:number};
