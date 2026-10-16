@@ -59,10 +59,18 @@ export function useNuevaVersion(puedeRecargar = true, intervaloMs = 120_000): bo
   useEffect(() => {
     if (!nueva || !puedeRecargar || typeof window === "undefined") return;
     // La versión nueva se aplica en un punto seguro; no interrumpir subidas activas.
-    const id = window.setTimeout(() => {
-      if (document.visibilityState === "visible") window.location.reload();
-    }, 800);
-    return () => window.clearTimeout(id);
+    let id = 0;
+    const recargarSiVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      window.clearTimeout(id);
+      id = window.setTimeout(() => window.location.reload(), 800);
+    };
+    recargarSiVisible();
+    document.addEventListener("visibilitychange", recargarSiVisible);
+    return () => {
+      window.clearTimeout(id);
+      document.removeEventListener("visibilitychange", recargarSiVisible);
+    };
   }, [nueva, puedeRecargar]);
 
   return nueva;
