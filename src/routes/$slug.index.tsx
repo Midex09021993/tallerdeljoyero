@@ -416,7 +416,7 @@ function CatalogoPublicoPage() {
         </div>
       </section>
 
-      <section id="coleccion" className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8">
+      <section id="coleccion" className="mx-auto max-w-[1600px] px-5 py-10 sm:px-8">
         {colecciones.length ? (
           <div className="mb-5 flex flex-wrap gap-2">
             {colecciones.map(([collectionSlug, collectionName]) => (
@@ -443,7 +443,7 @@ function CatalogoPublicoPage() {
         </div>
 
         {productosFiltrados.length ? (
-          <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
             {productosFiltrados.map((producto) => (
               <article key={producto.id} className="group min-w-0">
                 <Link
@@ -453,7 +453,7 @@ function CatalogoPublicoPage() {
                   className="relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-white ring-1 ring-[#1f1b18]/[0.06] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_-28px_rgba(31,27,24,.38)]"
                 >
                   {producto.imagen ? (
-                    <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={producto.imagen} alt={producto.nombre} loading="lazy" className="size-full scale-[1.22] object-contain p-1 transition-transform duration-500 group-hover:scale-[1.28] sm:p-2" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+                    <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={producto.imagen} alt={producto.nombre} loading="lazy" className="size-full scale-[1.4] object-contain p-0 transition-transform duration-500 group-hover:scale-[1.46] sm:p-1" onError={(event) => { event.currentTarget.style.display = "none"; }} />
                   ) : (
                     <div className="grid size-full place-items-center"><Box className="size-10 text-[#b19a70]" /></div>
                   )}
