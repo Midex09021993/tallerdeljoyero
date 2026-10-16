@@ -106,6 +106,12 @@ export function createAurumEnvironment(
           requestId,
           url,
           urlActive: currentUrl,
+          rotationRadians: rotation,
+          controllerIntensity: intensity,
+          sceneEnvironmentIntensity: Number.isFinite(Number(scene.environmentIntensity)) ? Number(scene.environmentIntensity) : null,
+          sceneEnvironmentRotation: scene.environmentRotation
+            ? { x: Number(scene.environmentRotation.x ?? 0), y: Number(scene.environmentRotation.y ?? 0), z: Number(scene.environmentRotation.z ?? 0) }
+            : null,
           environmentInstalled: scene.environment === cached,
         });
         if (isCurrent()) onLoaded(cached);
@@ -148,6 +154,12 @@ export function createAurumEnvironment(
             urlRequested: url,
             urlActive: currentUrl,
             responseTextureConverted: true,
+            rotationRadians: rotation,
+            controllerIntensity: intensity,
+            sceneEnvironmentIntensity: Number.isFinite(Number(scene.environmentIntensity)) ? Number(scene.environmentIntensity) : null,
+            sceneEnvironmentRotation: scene.environmentRotation
+              ? { x: Number(scene.environmentRotation.x ?? 0), y: Number(scene.environmentRotation.y ?? 0), z: Number(scene.environmentRotation.z ?? 0) }
+              : null,
             environmentInstalled: scene.environment === next,
             currentMatchesInstalledEnvironment: current === scene.environment,
             textureUuid: next.uuid ?? null,
