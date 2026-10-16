@@ -369,8 +369,11 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
     attachAurumGemPhysicalModel(next,physicalModel);
     if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
-    if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
+    // Apply the emerald reference calibration last: a matching source .dmat
+    // can otherwise overwrite the selected catalog hue and environment level.
+    // Keep the diamond path and its ordering unchanged.
+    if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
     if(preset.familia==="Diamante"){
       // Applying a gem to a MatrixGold layer must use the same dedicated
       // spectral shader as the initial diamond preview. Do this after the
