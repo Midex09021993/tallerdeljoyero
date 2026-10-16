@@ -606,6 +606,30 @@ export function AurumRender() {
           return;
         }
         applyAurumMaterialToModel(modelo, parteActiva, m, material);
+        const materialPostApplyAudit:any[]=[];
+        modelo.traverse((x:any)=>{
+          if(!x.isMesh||!x.material)return;
+          const list=Array.isArray(x.material)?x.material:[x.material];
+          for(const mat of list){
+            if(!mat?.userData?.aurumMetalRenderProfile)continue;
+            materialPostApplyAudit.push({
+              mesh:x.name||x.uuid,
+              material:mat.name||null,
+              profileId:mat.userData?.aurumIJEWELMetalReference?.materialId??null,
+              referenceSource:mat.userData?.aurumIJEWELMetalReference?.sourceRootPath??null,
+              baseEnvironmentIntensity:mat.userData?.aurumMetalBaseEnvMapIntensity??null,
+              finalEnvironmentIntensity:mat.envMapIntensity??null,
+              roughness:mat.roughness??null,
+              colorHex:mat.color?.getHexString?.()??null,
+            });
+          }
+        });
+        console.info("[AURUM][METAL POST-APPLY STATE]",{
+          requestedProfile:String(m?.id??""),
+          label:String(m?.nombre??m?.name??""),
+          materialCount:materialPostApplyAudit.length,
+          materials:materialPostApplyAudit.slice(0,12),
+        });
         aplicarPerfilLive();
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
