@@ -134,7 +134,7 @@ export function AurumRender() {
   categoriaProyectoRef.current = categoriaProyecto;
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
-  const [presentationCover, setPresentationCover] = useState<string | null>(null);
+  const [presentationCover, setPresentationCover] = useState<string | null>(() => { try { return typeof window !== "undefined" ? window.localStorage.getItem("aurum-render-poster-thumbnail") : null; } catch { return null; } });
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [parteSeleccionada, setParteSeleccionada] = useState<string | null>(null);
@@ -146,6 +146,31 @@ export function AurumRender() {
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
+  const actualizarPoster = () => {
+    try {
+      const canvas = visorRef.current?.querySelector("canvas");
+      if (!archivo) throw new Error("Carga una joya antes de actualizar el póster.");
+      if (!canvas || canvas.width < 2 || canvas.height < 2) throw new Error("El visor todavía no está listo para capturar el póster.");
+      const thumb = document.createElement("canvas");
+      const maxWidth = 640;
+      const scale = Math.min(1, maxWidth / canvas.width);
+      thumb.width = Math.max(1, Math.round(canvas.width * scale));
+      thumb.height = Math.max(1, Math.round(canvas.height * scale));
+      const ctx = thumb.getContext("2d");
+      if (!ctx) throw new Error("No se pudo preparar la miniatura.");
+      ctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
+      const cover = thumb.toDataURL("image/jpeg", 0.84);
+      if (!cover || cover.length < 1000) throw new Error("La captura está vacía. Inténtalo de nuevo.");
+      setPresentationCover(cover);
+      try { window.localStorage.setItem("aurum-render-poster-thumbnail", cover); }
+      catch { setError("Póster actualizado en pantalla, pero el navegador no permitió guardarlo para la próxima sesión."); }
+      setPresentationVisible(true);
+      if (presentationTimerRef.current) clearTimeout(presentationTimerRef.current);
+      presentationTimerRef.current = setTimeout(() => setPresentationVisible(false), 1800);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo actualizar el póster.");
+    }
+  };
 
   // Estado central del configurador: una única fuente de verdad.
   const {
@@ -1552,7 +1577,7 @@ export function AurumRender() {
             </select>
             <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
           </label>
-          <button type="button" disabled={!archivo} title="Actualizar póster de esta sesión" onClick={()=>{try{const canvas=visorRef.current?.querySelector("canvas");if(!canvas)throw new Error("El visor todavía no está listo para capturar el póster.");const cover=canvas.toDataURL("image/png");if(!cover||cover.length<1000)throw new Error("La captura del visor está vacía. Inténtalo de nuevo.");setPresentationCover(cover);setPresentationVisible(true);if(presentationTimerRef.current)clearTimeout(presentationTimerRef.current);presentationTimerRef.current=setTimeout(()=>setPresentationVisible(false),1800);}catch(e){setError(e instanceof Error?e.message:"No se pudo actualizar el póster.");}}} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.08] bg-white/85 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#92743b]/40 disabled:cursor-not-allowed disabled:opacity-40"><ImageIcon className="size-4"/> Actualizar póster</button>
+          <button type="button" disabled={!archivo} title="Actualizar póster de esta sesión" onClick={actualizarPoster} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.08] bg-white/85 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#92743b]/40 disabled:cursor-not-allowed disabled:opacity-40"><ImageIcon className="size-4"/> Actualizar póster</button>
             <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#92743b]/25 bg-[#92743b]/[.08] px-3 text-sm font-medium text-[#795e2e] shadow-sm transition hover:border-[#92743b]/45 hover:bg-[#92743b]/[.13]"><Download className="size-4"/> Exportar</button>
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
@@ -1812,7 +1837,7 @@ export function AurumRender() {
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#e8e7e3]">
                   {presentationCover ? <img src={presentationCover} alt="Póster actual del proyecto" className="h-full w-full object-cover"/> : <div className="flex h-full flex-col items-center justify-center gap-2 text-[#96938a]"><ImageIcon className="size-6"/><span className="text-[10px]">Sin póster todavía</span></div>}
                 </div>
-                <button type="button" disabled={!archivo} onClick={()=>{try{const canvas=visorRef.current?.querySelector("canvas");if(!canvas)throw new Error("Carga una joya y espera a que el visor esté listo.");const cover=canvas.toDataURL("image/png");if(!cover||cover.length<1000)throw new Error("La captura está vacía. Inténtalo de nuevo.");setPresentationCover(cover);setPresentationVisible(true);if(presentationTimerRef.current)clearTimeout(presentationTimerRef.current);presentationTimerRef.current=setTimeout(()=>setPresentationVisible(false),1800);}catch(e){setError(e instanceof Error?e.message:"No se pudo actualizar el póster.");}}} className="flex h-9 w-full items-center justify-center gap-2 border-t border-black/[.06] text-[11px] font-medium text-[#795e2e] transition hover:bg-[#92743b]/[.06] disabled:cursor-not-allowed disabled:opacity-40"><ImageIcon className="size-3.5"/> Actualizar póster</button>
+                <button type="button" disabled={!archivo} onClick={actualizarPoster} className="flex h-9 w-full items-center justify-center gap-2 border-t border-black/[.06] text-[11px] font-medium text-[#795e2e] transition hover:bg-[#92743b]/[.06] disabled:cursor-not-allowed disabled:opacity-40"><ImageIcon className="size-3.5"/> Actualizar póster</button>
               </div>
             </section>
             <section className="border-b border-black/10 p-4">
