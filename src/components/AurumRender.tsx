@@ -1807,6 +1807,15 @@ export function AurumRender() {
               <p className="mt-1 text-xs leading-relaxed text-[#77756f]">Controla la presentación sin perder de vista tu joya.</p>
             </div>
             <section className="border-b border-black/10 p-4">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Póster del proyecto</div>
+              <div className="overflow-hidden rounded-xl border border-black/[.08] bg-white">
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#e8e7e3]">
+                  {presentationCover ? <img src={presentationCover} alt="Póster actual del proyecto" className="h-full w-full object-cover"/> : <div className="flex h-full flex-col items-center justify-center gap-2 text-[#96938a]"><ImageIcon className="size-6"/><span className="text-[10px]">Sin póster todavía</span></div>}
+                </div>
+                <button type="button" disabled={!archivo} onClick={()=>{try{const canvas=visorRef.current?.querySelector("canvas");if(!canvas)throw new Error("Carga una joya y espera a que el visor esté listo.");const cover=canvas.toDataURL("image/png");if(!cover||cover.length<1000)throw new Error("La captura está vacía. Inténtalo de nuevo.");setPresentationCover(cover);setPresentationVisible(true);if(presentationTimerRef.current)clearTimeout(presentationTimerRef.current);presentationTimerRef.current=setTimeout(()=>setPresentationVisible(false),1800);}catch(e){setError(e instanceof Error?e.message:"No se pudo actualizar el póster.");}}} className="flex h-9 w-full items-center justify-center gap-2 border-t border-black/[.06] text-[11px] font-medium text-[#795e2e] transition hover:bg-[#92743b]/[.06] disabled:cursor-not-allowed disabled:opacity-40"><ImageIcon className="size-3.5"/> Actualizar póster</button>
+              </div>
+            </section>
+            <section className="border-b border-black/10 p-4">
               <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Escena activa</div>
               <label className="block text-xs font-medium text-[#55534d]">Ambiente
                 <select value={escenarioId} onChange={e=>setEscenarioId(e.target.value as EscenarioId)} className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none focus:border-[#92743b]/60">
