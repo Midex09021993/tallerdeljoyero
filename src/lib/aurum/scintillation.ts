@@ -426,8 +426,12 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijSpectralFloor=min(min(ijAccum.r,ijAccum.g),ijAccum.b);
         float ijSpectralSpread=max(ijSpectralPeak-ijSpectralFloor,0.0);
         float ijFireEnergy=smoothstep(0.055,0.22,ijSpectralSpread);
-        float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)
-          * (1.0-smoothstep(0.78,0.98,ijCosTheta));
+        // Keep a restrained spectral-fire contribution on face-on crown facets.
+        // The previous view-angle gate suppressed fire almost entirely when
+        // ijCosTheta approached 1.0, which explains the grey top-view result.
+        // Grazing facets retain the full response; face-on facets receive 55%.
+        float ijFaceOnFire=mix(0.55,1.0,1.0-smoothstep(0.78,0.98,ijCosTheta));
+        float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)*ijFaceOnFire;
         float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.20,0.0,0.10);
         vec3 ijFireColor=vec3(
           max(ijAccum.r-ijAccum.g*0.72,0.0),
