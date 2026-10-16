@@ -34,6 +34,8 @@ export type AurumDiamondBvhSetupOptions = {
   absorption?: number;
   color?: THREE.ColorRepresentation;
   reflectivity?: number;
+  /** Optical transmission for non-diamond gemstone experiments; diamond stays at 0 by default. */
+  transmission?: number;
 };
 
 export type AurumDiamondBvhSetup = {
@@ -100,7 +102,7 @@ export function prepareAurumDiamondBvhExperiment(
     reflectivity: Math.max(0, Math.min(1, options.reflectivity ?? 0.46)),
     color: options.color ?? 0xffffff,
     absorption: Math.max(0, options.absorption ?? 1),
-    transmission: 0,
+    transmission: Math.max(0, Math.min(1, options.transmission ?? 0)),
     gamma: 1.09,
   });
 
