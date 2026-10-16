@@ -224,6 +224,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
   applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
   let applied=0;
+  const auditedMaterials:any[]=[];
   model.traverse((x:any)=>{
     if(!x.isMesh)return;
     const category=selectionCategory(x);
@@ -238,11 +239,13 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
     if(shouldApply){
       const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
-      x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);applied++;
+      x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);
+      const finalMaterials=Array.isArray(x.material)?x.material:[x.material];
+      auditedMaterials.push(...finalMaterials.filter(Boolean).map((m:any)=>({mesh:x.name||x.uuid,material:m})));
+      applied++;
     }
   });
   if(applied>0){
-    const activeMaterials=Array.isArray(activePart.material)?activePart.material:[activePart.material];
     console.info("[AURUM][METAL MATERIAL AUDIT]",{
       mesh:activePart.name||activePart.uuid,
       requestedProfile:{
@@ -254,7 +257,8 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
         envMapIntensity:materialConfig?.envMapIntensity??null,
       },
       appliedCount:applied,
-      materials:activeMaterials.filter(Boolean).map((m:any)=>({
+      materials:auditedMaterials.map(({mesh,m}:any)=>({
+        mesh,
         name:m.name??null,
         colorHex:m.color?.getHexString?.()??null,
         colorLinear:m.color?{r:Number(m.color.r.toFixed(5)),g:Number(m.color.g.toFixed(5)),b:Number(m.color.b.toFixed(5))}:null,
