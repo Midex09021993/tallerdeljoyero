@@ -1807,6 +1807,51 @@ export function AurumRender() {
             {lightingOpen && lightingPanel}
           </div>
         </main>
+        <aside className="hidden w-[260px] shrink-0 border-l border-black/10 bg-[#f7f6f2] text-[#292824] xl:block">
+          <div className="h-full overflow-y-auto">
+            <div className="border-b border-black/10 px-4 py-5">
+              <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Inspector</div>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight">Ajustes de estudio</h2>
+              <p className="mt-1 text-xs leading-relaxed text-[#77756f]">Controla la presentación sin perder de vista tu joya.</p>
+            </div>
+            <section className="border-b border-black/10 p-4">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Escena activa</div>
+              <label className="block text-xs font-medium text-[#55534d]">Ambiente
+                <select value={escenarioId} onChange={e=>setEscenarioId(e.target.value as EscenarioId)} className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none focus:border-[#92743b]/60">
+                  {ESCENARIOS.map(e=><option key={e.id} value={e.id}>{e.nombre}</option>)}
+                </select>
+              </label>
+              <label className="mt-3 block text-xs font-medium text-[#55534d]">Vista de cámara
+                <select value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none focus:border-[#92743b]/60">
+                  {VISTAS.map(v=><option key={v.id} value={v.id}>{v.nombre}</option>)}
+                </select>
+              </label>
+            </section>
+            <section className="border-b border-black/10 p-4">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Renderizado</div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {([["low","Baja"],["high","Alta"],["ultra","Ultra"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={renderQualityId===id} onClick={()=>cambiarCalidad(id)} className={"rounded-lg border px-1 py-2 text-xs font-semibold transition "+(renderQualityId===id?"border-[#92743b]/60 bg-[#92743b]/10 text-[#795e2e]":"border-black/10 bg-white text-[#66645e] hover:border-[#92743b]/40")}>{label}</button>)}
+              </div>
+              <p className="mt-2 text-[10px] leading-relaxed text-[#858178]">Ultra puede exigir más memoria y potencia gráfica.</p>
+            </section>
+            <section className="p-4">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Herramientas</div>
+              <button type="button" onClick={()=>setLightingOpen(true)} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-white p-3 text-left transition hover:border-[#92743b]/45 hover:bg-[#fbfaf7]">
+                <span className="grid size-9 place-items-center rounded-lg bg-[#92743b]/10 text-[#92743b]"><SlidersHorizontal className="size-4"/></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">Iluminación</span><span className="mt-0.5 block text-[10px] text-[#858178]">Key · Fill · Rim · Gem</span></span>
+                <ChevronDown className="size-4 -rotate-90 text-[#99968d]"/>
+              </button>
+              <button type="button" onClick={()=>apiRef.current?.reset()} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-black/10 bg-white p-3 text-left transition hover:border-[#92743b]/45 hover:bg-[#fbfaf7]">
+                <span className="grid size-9 place-items-center rounded-lg bg-black/[.035] text-[#55534d]"><RotateCcw className="size-4"/></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">Restablecer vista</span><span className="mt-0.5 block text-[10px] text-[#858178]">Volver al encuadre inicial</span></span>
+              </button>
+              <button type="button" onClick={()=>setExportOpen(true)} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-[#92743b]/25 bg-[#92743b]/[.06] p-3 text-left transition hover:bg-[#92743b]/10">
+                <span className="grid size-9 place-items-center rounded-lg bg-[#92743b]/10 text-[#92743b]"><Download className="size-4"/></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">Exportar diseño</span><span className="mt-0.5 block text-[10px] text-[#858178]">Imagen, modelo o configuración</span></span>
+              </button>
+            </section>
+          </div>
+        </aside>
       </div>
     </div>
   </>);
