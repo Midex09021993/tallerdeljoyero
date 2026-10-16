@@ -193,6 +193,7 @@ function MiNubePage() {
   const [progreso, setProgreso] = useState(0);
   const [estadoSubida, setEstadoSubida] = useState("Preparando subida…");
   const [error, setError] = useState<string | null>(null);
+  const [errorSubida, setErrorSubida] = useState<string | null>(null);
   const [proyectoParaCompartir, setProyectoParaCompartir] = useState<string | null>(null);
   const [opcionesCompartir, setOpcionesCompartir] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
   const [talleresDisponibles, setTalleresDisponibles] = useState<TallerCompartir[]>([]);
@@ -363,9 +364,9 @@ function MiNubePage() {
   }, [participanteId, usuarioId]);
 
   // Consulta Nextcloud por separado: su disponibilidad no dispara ni bloquea el listado web.
-  const cargarArchivosNas = useCallback(async () => {
+  const cargarArchivosNas = useCallback(async (forzarTrasComprobacion = false) => {
     if (!participanteId || !usuarioId) return;
-    if (nasPausado || estadoNas !== "online") {
+    if (nasPausado || (!forzarTrasComprobacion && estadoNas !== "online")) {
       setErrorListadoNas(null);
       setArchivos((actuales) => actuales.filter((archivo) => archivo.origen !== "nas"));
       return;
@@ -687,14 +688,16 @@ function MiNubePage() {
     setSubiendo(true);
     setProgreso(0);
     setEstadoSubida("Preparando subida…");
-    setError(null);
+    setErrorSubida(null);
     let completados = 0;
+    let almacenamientoEnProceso: "nas" | "supabase" = "supabase";
     try {
       for (const file of seleccionados) {
         const nombre = nombreSeguro(file.name);
         if (!nombre) throw new Error(`El nombre de “${file.name}” no es válido.`);
         const ruta = `${participanteId}/${usuarioId}/${carpetaSegura}/${Date.now()}-${nombre}`;
         if (clasificarArchivo(nombre) === "videos") {
+          almacenamientoEnProceso = "nas";
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           if (sessionError || !sessionData.session?.access_token) throw new Error("Tu sesión caducó. Vuelve a entrar e inténtalo de nuevo.");
           const uploadId = crypto.randomUUID();
@@ -751,6 +754,7 @@ function MiNubePage() {
             throw new Error(`El vídeo se envió, pero no pudimos confirmar que esté guardado en el NAS tras ${intentosVerificacion} comprobaciones. No lo damos por guardado.${detalle}`);
           }
         } else {
+          almacenamientoEnProceso = "supabase";
           await subirConProgreso({
             bucket: BUCKET,
             ruta,
@@ -779,7 +783,13 @@ function MiNubePage() {
       toast.success(`${completados} archivo(s) guardados en Mi Nube.`);
     } catch (cause) {
       const mensaje = cause instanceof Error ? cause.message : "No se pudieron subir los archivos.";
-      setError(mensaje);
+      if (almacenamientoEnProceso === "nas") {
+        setErrorListadoNas(mensaje);
+        console.warn("[Mi Nube] Falló una operación de subida al NAS.", mensaje);
+      } else {
+        setErrorSubida(mensaje);
+        console.warn("[Mi Nube] Falló una subida a Supabase Storage.", mensaje);
+      }
       toast.error(mensaje);
     } finally {
       setSubiendo(false);
@@ -1122,6 +1132,17 @@ function MiNubePage() {
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">{nasPausado ? "Conexión pausada desde Mi Nube; el NAS físico sigue encendido." : errorListadoNas ? "No verificado: falló la consulta al NAS." : estadoNas === "online" ? "Videos confirmados por el listado del NAS." : "No se pudo confirmar el contenido del NAS en este momento."}</p>
               {errorListadoNas && <p className="mt-1 text-[10px] text-destructive">{errorListadoNas}</p>}
+              <button
+                type="button"
+                disabled={subiendo || nasPausado}
+                onClick={() => void (async () => {
+                  const estado = await comprobarNas();
+                  if (estado === "online" && !nasPausado) await cargarArchivosNas(true);
+                })()}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-semibold hover:border-gold/50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw className="size-3" /> Comprobar NAS
+              </button>
             </div>
           </div>
           {error && <p className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"><AlertCircle className="mt-0.5 size-3.5 shrink-0" /> No se pudo completar la comprobación: {error}</p>}
@@ -1273,7 +1294,7 @@ function MiNubePage() {
               </div>
             </div>
           )}
-          {error && <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger-soft p-3 text-xs text-danger">{error}</p>}
+          {errorSubida && <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger-soft p-3 text-xs text-danger">{errorSubida}</p>}
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
