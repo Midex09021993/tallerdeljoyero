@@ -172,12 +172,12 @@ export function AurumRender() {
   const materialesVisibles = useMemo(() => {
     const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "plata925_pulida", "platino_pulido"]);
     const termino = busquedaMateriales.trim().toLocaleLowerCase("es");
-    return MATERIALES.filter((m) => (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId) && (!termino || (m.nombre+" "+m.id).toLocaleLowerCase("es").includes(termino)));
+    return MATERIALES.filter((m) => (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId) && (!termino || (m.nombre+" "+m.id).toLocaleLowerCase("es").includes(termino))).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
   }, [mostrarTodosMateriales, materialId, busquedaMateriales]);
   const gemasVisibles = useMemo(() => {
     const principales = new Set<GemaId>(["diamante_natural", "esmeralda_1", "rubi_natural", "zafiro_azul", "amatista_natural", "moissanita_blanca", "aguamarina_brasil", "citrino_natural", "topacio_azul"]);
     const termino = busquedaGemas.trim().toLocaleLowerCase("es");
-    return GEMAS.filter((g) => (mostrarTodasGemas || principales.has(g.id) || g.id === gemaId) && (!termino || (g.nombre+" "+g.id).toLocaleLowerCase("es").includes(termino)));
+    return GEMAS.filter((g) => (mostrarTodasGemas || principales.has(g.id) || g.id === gemaId) && (!termino || (g.nombre+" "+g.id).toLocaleLowerCase("es").includes(termino))).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
   }, [mostrarTodasGemas, gemaId, busquedaGemas]);
 
   useEffect(() => {
@@ -1644,7 +1644,7 @@ export function AurumRender() {
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
-                  {mostrarTodosMateriales ? "Mostrar menos materiales" : `Ver todos los materiales (${MATERIALES.length})`}
+                  {mostrarTodosMateriales ? "Mostrar menos materiales" : `Ver más materiales (${MATERIALES.length})`}
                 </button>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-black/[.02] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
@@ -1665,7 +1665,7 @@ export function AurumRender() {
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
-                  {mostrarTodasGemas ? "Mostrar menos gemas" : `Ver todas las gemas (${GEMAS.length})`}
+                  {mostrarTodasGemas ? "Mostrar menos gemas" : `Ver más gemas (${GEMAS.length})`}
                 </button>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-black/[.02] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
