@@ -17,13 +17,13 @@ export type AurumDiamondBvhRuntime = {
   diagnostics: () => { activeMeshes: number; triangleCount: number; enabled: boolean };
 };
 
-const isDiamondMaterial = (material: any) =>
+const getGemFamily = (material: any) =>
   String(
     material?.userData?.aurumGemFamily ??
     material?.userData?.aurumOpticalProfile?.familia ??
     material?.userData?.aurumRuntimeGemOptics?.family ??
     "",
-  ).toLocaleLowerCase() === "diamante";
+  ).toLocaleLowerCase();
 
 /**
  * Experimental, opt-in-by-call BVH runtime. The caller controls when it is
@@ -37,6 +37,7 @@ export async function createAurumDiamondBvhRuntime(options: {
   url: string;
   camera: THREE.Camera;
   quality?: "interactive" | "high" | "final";
+  targetFamilies?: string[];
   onError?: (error: unknown) => void;
 }): Promise<AurumDiamondBvhRuntime> {
   const THREE_NS = options.THREE;
@@ -89,22 +90,30 @@ export async function createAurumDiamondBvhRuntime(options: {
       // material array (diamond + metal/other gem), because that would repaint
       // unrelated CAD groups as diamond. Leave those meshes on the proven
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
-      if (!materials.length || !materials.every(isDiamondMaterial)) {
-        if (materials.some(isDiamondMaterial)) {
+      const targetFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
+      const family = materials.length === 1 ? getGemFamily(materials[0]) : "";
+      const isTargetFamily = materials.length > 0 && materials.every((material) => targetFamilies.includes(getGemFamily(material)));
+      if (!isTargetFamily) {
+        if (materials.some((material) => targetFamilies.includes(getGemFamily(material)))) {
           options.onError?.(
-            new Error("[AURUM diamond BVH] Malla con materiales mixtos omitida para proteger metales y otras gemas."),
+            new Error("[AURUM BVH] Malla con materiales mixtos omitida para proteger metales y otras gemas."),
           );
         }
         return;
       }
 
+      const isEmerald = family === "esmeralda";
       try {
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           environmentMap,
           camera: options.camera,
           quality: options.quality ?? "interactive",
-          environmentIntensity: 1.14,
-          dispersion: 0.006,
+          environmentIntensity: isEmerald ? 0.92 : 1.14,
+          dispersion: isEmerald ? 0.0005 : 0.006,
+          ior: isEmerald ? 1.58 : 2.417,
+          absorption: isEmerald ? 1.65 : 1,
+          color: isEmerald ? 0x075b3d : 0xffffff,
+          reflectivity: isEmerald ? 0.34 : 0.46,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
