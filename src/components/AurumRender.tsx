@@ -1535,22 +1535,22 @@ export function AurumRender() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.055] p-1">
-            <button type="button" title="Restablecer vista" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white md:flex"><RotateCcw className="size-[18px]"/></button>
-            <button type="button" title="Zoom" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white md:flex"><Maximize2 className="size-[18px]"/></button>
-            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 hover:bg-white/10 hover:text-white md:flex"><Expand className="size-[18px]"/></button>
+          <div className="relative flex items-center gap-1 rounded-xl border border-black/10 bg-black/[.025] p-1">
+            <button type="button" title="Restablecer vista" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><RotateCcw className="size-[18px]"/></button>
+            <button type="button" title="Zoom" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><Maximize2 className="size-[18px]"/></button>
+            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><Expand className="size-[18px]"/></button>
           </div>
-          <label className="flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.07] px-3 text-sm text-white/85">
-            <Gem className="size-4 text-white/80"/>
+          <label className="flex h-11 items-center gap-2 rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824]">
+            <Gem className="size-4 text-[#55534d]"/>
             <select value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="bg-transparent outline-none">
-              <option className="bg-[#111416]" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
-              {VISTAS.slice(1).map(v=><option className="bg-[#111416]" key={v.id} value={v.id}>{v.nombre}</option>)}
+              <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
+              {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
-            <ChevronDown className="pointer-events-none -ml-1 size-4 text-white/50"/>
+            <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
           </label>
-          <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#d4af37]/35 bg-[#d4af37]/10 px-3 text-sm font-medium text-[#f0d58b] hover:bg-[#d4af37]/20"><Download className="size-4"/> Exportar</button>
-          <div className="hidden text-[11px] uppercase tracking-[.12em] text-white/65 lg:block">Taller del Joyero</div>
-          <div className="grid size-10 place-items-center rounded-full border border-white/10 text-white/80"><span className="text-lg">♙</span></div>
+          <button type="button" onClick={()=>setExportOpen(v=>!v)} className="flex h-10 items-center gap-2 rounded-xl border border-[#92743b]/30 bg-[#92743b]/10 px-3 text-sm font-medium text-[#795e2e] hover:bg-[#92743b]/15"><Download className="size-4"/> Exportar</button>
+          <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
+          <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
         </div>
       </header>
 
