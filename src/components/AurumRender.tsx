@@ -633,6 +633,11 @@ export function AurumRender() {
               baseEnvironmentIntensity:mat.userData?.aurumMetalBaseEnvMapIntensity??null,
               finalEnvironmentIntensity:mat.envMapIntensity??null,
               roughness:mat.roughness??null,
+              metalness:mat.metalness??null,
+              clearcoat:mat.clearcoat??null,
+              clearcoatRoughness:mat.clearcoatRoughness??null,
+              calibrationMode:mat.userData?.aurumMetalCalibrationMode??"unknown",
+              effectiveOptics:mat.userData?.aurumMetalEffectiveOptics??null,
               colorHex:mat.color?.getHexString?.()??null,
             });
           }
@@ -699,6 +704,11 @@ export function AurumRender() {
               baseEnvironmentIntensity:m.userData?.aurumMetalBaseEnvMapIntensity??null,
               finalEnvironmentIntensity:m.envMapIntensity??null,
               roughness:m.roughness??null,
+              metalness:m.metalness??null,
+              clearcoat:m.clearcoat??null,
+              clearcoatRoughness:m.clearcoatRoughness??null,
+              calibrationMode:m.userData?.aurumMetalCalibrationMode??"unknown",
+              colorHex:m.color?.getHexString?.()??null,
               referenceKey:m.userData?.aurumIJEWELMetalReference?.sourceRootPath??null,
             });
           }
