@@ -181,10 +181,15 @@ export async function createAurumPostPipeline(
     ? new URLSearchParams(window.location.search).get("aurumDiag")
     : null;
   let lastDiagnosticSignature = "";
+  let lastKnownQualityId = "";
   const applyQuality=(next:any, options:{capture?:boolean}={})=>{
     if(!composer) return;
     const q=next||{};
-    const qualityId=String(q?.qualityId??"");
+    const incomingQualityId=String(q?.qualityId??"");
+    if(incomingQualityId) lastKnownQualityId=incomingQualityId;
+    // Some scene/profile updates re-apply the render-quality object without
+    // its UI ID. Preserve the last selected ID for correct pass gating/diagnostics.
+    const qualityId=incomingQualityId || lastKnownQualityId;
     // The environment diagnostic deliberately enables the high-quality passes
     // so we can inspect the photographic pipeline even when the adaptive
     // runtime budget reports an empty quality ID / pixel ratio near 1.0.
