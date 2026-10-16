@@ -105,6 +105,7 @@ export function AurumRender() {
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("ijewelGem");
+  const [fondoId, setFondoId] = useState("escena");
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
@@ -871,6 +872,11 @@ export function AurumRender() {
           setGemHdriId(key);
           cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
         },
+        fondo:(key:string)=>{
+          setFondoId(key);
+          sceneController.setBackground(key);
+          invalidateRenderRef.current?.();
+        },
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
@@ -1582,6 +1588,31 @@ export function AurumRender() {
           </select>
         </label>
         <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:8}}>Los entornos de metal y gemas se controlan por separado. Los perfiles iJewel siguen disponibles como referencia.</p>
+      </div>
+      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,.12)"}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#d4af37",marginBottom:8}}>FONDO</div>
+        <label style={{display:"block",fontSize:11}}>Fondo de presentación
+          <select value={fondoId} onChange={e=>apiRef.current?.fondo(e.target.value)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
+            <option value="escena">Según la escena</option>
+            <option value="blanco">Blanco puro</option>
+            <option value="marfil">Marfil cálido</option>
+            <option value="grisClaro">Gris claro</option>
+            <option value="grisMedio">Gris medio</option>
+            <option value="grisOscuro">Gris oscuro</option>
+            <option value="negro">Negro</option>
+            <option value="transparente">Transparente</option>
+          </select>
+        </label>
+        <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:7}}>El fondo cambia sin alterar el HDR ni el material seleccionado.</p>
+      </div>
+      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,.12)"}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#d4af37",marginBottom:8}}>ESCENAS</div>
+        <label style={{display:"block",fontSize:11}}>Perfil de escena
+          <select value={escenarioId} onChange={e=>setEscenarioId(e.target.value as EscenarioId)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
+            {ESCENARIOS.map(e=><option key={e.id} value={e.id}>{e.nombre}</option>)}
+          </select>
+        </label>
+        <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:7}}>La escena controla el ambiente fotográfico, las luces y el postprocesado. El fondo manual se conserva.</p>
       </div>
     </div>
   );
