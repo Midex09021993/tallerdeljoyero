@@ -1610,8 +1610,11 @@ export function AurumRender() {
                 </select>
               </label>
             </section>
-            <section className="border-b border-black/[.07] px-4 py-1">
-              <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[14px] font-semibold tracking-[-.01em] transition-colors hover:bg-black/[.025]">
+            <div className="mx-4 mt-3 mb-2 grid grid-cols-3 rounded-xl border border-black/[.07] bg-[#eeede8] p-1" role="tablist" aria-label="Biblioteca de joyería">
+              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
+            </div>
+            <section className="px-4 py-1">
+              {uxSection==="materiales"&&<div className="pb-5">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
                 <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{MATERIALES.length}</span>
               </button>
@@ -1636,13 +1639,6 @@ export function AurumRender() {
                   <p className="truncate text-[10px] text-[#55534d]">{materialActivo.nombre}</p>
                 </div>
               </div>}
-            </section>
-
-            <section className="border-b border-black/[.07] px-4 py-1">
-              <button type="button" onClick={()=>setUxSection(uxSection==="gemas"?"":"gemas")} className="flex w-full items-center justify-between rounded-xl py-4 px-2 text-left text-[14px] font-semibold tracking-[-.01em] transition-colors hover:bg-black/[.025]">
-                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="gemas"?"rotate-0":"-rotate-90")}/><span>Gemas</span></span>
-                <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{GEMAS.length}</span>
-              </button>
               {uxSection==="gemas"&&<div className="pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><Gem className="size-3.5 shrink-0"/><input value={busquedaGemas} onChange={e=>{setBusquedaGemas(e.target.value);if(e.target.value.trim())setMostrarTodasGemas(true);}} placeholder="Buscar gema por nombre…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
@@ -1664,13 +1660,6 @@ export function AurumRender() {
                   <p className="truncate text-[10px] text-[#55534d]">{gemaActiva.nombre}</p>
                 </div>
               </div>}
-            </section>
-
-            <section className="border-b border-black/10 px-5 py-2">
-              <button type="button" onClick={()=>setUxSection(uxSection==="escena"?"":"escena")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
-                <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="escena"?"rotate-0":"-rotate-90")}/><span>Escenas</span></span>
-                <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{ESCENARIOS.length}</span>
-              </button>
               {uxSection==="escena"&&<div className="grid grid-cols-3 gap-3 pb-5">
                 {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
                   <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-black/15")}><span className={"block h-full w-full "+e.clase}/></span>
