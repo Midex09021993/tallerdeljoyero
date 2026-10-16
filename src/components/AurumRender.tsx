@@ -107,8 +107,8 @@ export function AurumRender() {
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
-  const [snapshotWidth, setSnapshotWidth] = useState("1920");
-  const [snapshotHeight, setSnapshotHeight] = useState("1080");
+  const [snapshotWidth, setSnapshotWidth] = useState("2560");
+  const [snapshotHeight, setSnapshotHeight] = useState("1440");
   const [snapshotFormat, setSnapshotFormat] = useState<"png"|"jpeg"|"webp">("png");
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
   const composerRef = useRef<any>(null);
@@ -883,7 +883,7 @@ export function AurumRender() {
           loop?.pause?.();
           try{
             const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
-              width:Number(options.width)||1920,height:Number(options.height)||1080,samples:options.samples??256,mimeType:mime as any,
+              width:Number(options.width)||2560,height:Number(options.height)||1440,samples:options.samples??256,mimeType:mime as any,
               environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
               gemEnvironmentUrl:gemEnvironmentUrl,studioScene:escena,
               signal:options.signal,onProgress:options.onProgress,
@@ -1565,7 +1565,7 @@ export function AurumRender() {
               </select>
             </label>
             <div className="mt-2 text-[10px] leading-relaxed text-white/35">La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco.</div>
-            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Descargar {snapshotFormat.toUpperCase()} · {snapshotWidth||"1920"} × {snapshotHeight||"1080"}</button>
+            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Descargar {snapshotFormat.toUpperCase()} · {snapshotWidth||"2560"} × {snapshotHeight||"1440"}</button>
             <div className="mt-3 border-t border-white/10 pt-3">
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#d4af37]">Render final · Ray tracing real</div>
               <div className="mb-2 text-[10px] leading-relaxed text-white/40">Trazado de rayos progresivo: refracción y reflejos internos reales en gemas. Más lento; la dispersión de color aún no se traza.</div>
