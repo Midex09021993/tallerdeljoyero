@@ -146,7 +146,7 @@ export function AurumRender() {
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdr"|"fondos">("materiales");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdrMetales"|"hdrGemas"|"fondos">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
   const actualizarPoster = () => {
@@ -1652,7 +1652,7 @@ export function AurumRender() {
               </label>
             </section>
             <div className="mx-4 mt-3 mb-2 grid grid-cols-3 gap-1 rounded-xl border border-black/[.07] bg-[#eeede8] p-1" role="tablist" aria-label="Biblioteca de joyería">
-              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length},{id:"hdr",label:"Entornos HDR",count:2},{id:"fondos",label:"Fondos",count:8}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
+              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length},{id:"hdrMetales",label:"HDR Metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",count:Object.keys(AURUM_GEM_HDRI_URLS).length},{id:"fondos",label:"Fondos",count:8}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
             </div>
             <section className="px-4 py-1">
               {uxSection==="materiales"&&<div className="pb-5">
@@ -1703,20 +1703,23 @@ export function AurumRender() {
                   <span className="mt-2 block text-[10px]">{e.nombre}</span>
                 </button>)}
               </div>}
-              {uxSection==="hdr"&&<div className="space-y-4 pb-5">
+              {uxSection==="hdrMetales"&&<div className="space-y-4 pb-5">
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
-                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">HDR de metales</div>
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Entorno HDR de metales</div>
                   <select value={metalHdriId} onChange={e=>apiRef.current?.metalHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
                     {Object.keys(AURUM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelMetal:"iJewel · Metal 010",studioSoft:"Estudio suave",studioHard:"Estudio contrastado",jewelry:"Estudio joyería",luxury:"Estudio lujo",monochrome:"Monocromo",warm:"Cálido",white:"Estudio blanco"} as Record<string,string>)[key]??key}</option>)}
                   </select>
+                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla los reflejos del oro, plata y demás metales sin cambiar el HDR de las gemas.</p>
                 </div>
+              </div>}
+              {uxSection==="hdrGemas"&&<div className="space-y-4 pb-5">
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
-                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">HDR de gemas</div>
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Entorno HDR de gemas</div>
                   <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
                     {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"iJewel · Gemas 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
                   </select>
+                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla el entorno óptico de las piedras sin cambiar el HDR de los metales.</p>
                 </div>
-                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Los entornos HDR son independientes del material y del fondo. Los perfiles iJewel se mantienen como referencia.</p>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
