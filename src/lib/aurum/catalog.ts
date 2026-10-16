@@ -204,6 +204,8 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"oro24_pulido", grupo:"Especiales", nombre:"Oro 24K Pulido", color:0xe9bb3f, metalness:1, roughness:.075, envMapIntensity:2.35, clearcoat:.20 },
   { id:"oro18_champan", grupo:"Especiales", nombre:"Oro Champán", color:0xd6b875, metalness:1, roughness:.12, envMapIntensity:2.05, clearcoat:.16 },
   { id:"oro18_verde", grupo:"Especiales", nombre:"Oro Verde", color:0xb5b66f, metalness:1, roughness:.13, envMapIntensity:1.98, clearcoat:.15 },
+  // Perfil experimental 58: apariencia amarilla de referencia al combinar visualmente oro verde y oro blanco pulido. Conserva los perfiles base sin modificarlos.
+  { id:"oro18_verde_blanco_ijewel", grupo:"Especiales", nombre:"Oro Verde + Blanco · Referencia iJewel", color:0xc9a34a, metalness:1, roughness:.10, envMapIntensity:1.95, clearcoat:.14, anisotropy:.045 },
   { id:"paladio_pulido", grupo:"Especiales", nombre:"Paladio Pulido", color:0xd1d5d9, metalness:1, roughness:.085, envMapIntensity:2.05, clearcoat:.18 },
   { id:"rodio_negro", grupo:"Especiales", nombre:"Rodio Negro", color:0x2b3035, metalness:1, roughness:.13, envMapIntensity:1.62, clearcoat:.16 },
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
