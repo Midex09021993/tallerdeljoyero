@@ -134,7 +134,7 @@ export function AurumRender() {
   categoriaProyectoRef.current = categoriaProyecto;
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
-  const [presentationCover, setPresentationCover] = useState<string | null>(() => { try { return typeof window !== "undefined" ? window.localStorage.getItem("aurum-render-poster-thumbnail") : null; } catch { return null; } });
+  const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [parteSeleccionada, setParteSeleccionada] = useState<string | null>(null);
@@ -156,8 +156,7 @@ export function AurumRender() {
         onCapture: (cover: string) => {
           if (!cover || cover.length < 1000) { setError("La captura está vacía. Inténtalo de nuevo."); return; }
           setPresentationCover(cover);
-          try { window.localStorage.setItem("aurum-render-poster-thumbnail", cover); }
-          catch { setError("Póster actualizado en pantalla, pero el navegador no permitió guardarlo para la próxima sesión."); }
+          // El póster es una vista previa temporal de esta sesión; no persistir al recargar.
           setPresentationVisible(true);
           if (presentationTimerRef.current) clearTimeout(presentationTimerRef.current);
           presentationTimerRef.current = setTimeout(() => setPresentationVisible(false), 1800);
