@@ -46,7 +46,7 @@ export type AurumDiamondBvhSetup = {
 };
 
 const QUALITY_BOUNCES = {
-  interactive: 2,
+  interactive: 3,
   high: 3,
   final: 5,
 } as const;
