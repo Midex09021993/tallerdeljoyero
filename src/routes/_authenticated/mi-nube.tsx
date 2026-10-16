@@ -373,7 +373,7 @@ function MiNubePage() {
     }
     try {
       const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
-        body: { action: "list", participantId },
+        body: { action: "list", participantId: participanteId },
       });
       if (nasError) throw new Error(nasError.message || "No se pudo consultar el NAS.");
       if (nasData?.error) throw new Error(String(nasData.error));
