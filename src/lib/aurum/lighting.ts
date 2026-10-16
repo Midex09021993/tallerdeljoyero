@@ -124,6 +124,26 @@ export function createAurumLightingController(
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
+        console.info("[AURUM][LIGHTING][DIAGNOSTIC]", {
+          mode: diagnosticMode,
+          rig: activeRigId,
+          environmentUuid: scene.environment?.uuid ?? null,
+          environmentPresent: Boolean(scene.environment),
+          lights: Object.entries(lights).map(([name, light]: any) => ({
+            name,
+            type: light?.type ?? light?.constructor?.name ?? "unknown",
+            visible: Boolean(light?.visible),
+            intensity: Number.isFinite(Number(light?.intensity)) ? Number(light.intensity) : null,
+          })),
+          allSceneLights: scene.children
+            .filter((child: any) => child?.isLight)
+            .map((light: any) => ({
+              name: light.name || "(unnamed)",
+              type: light.type ?? light.constructor?.name ?? "unknown",
+              visible: Boolean(light.visible),
+              intensity: Number.isFinite(Number(light.intensity)) ? Number(light.intensity) : null,
+            })),
+        });
       }
     },
     applyPreset(id) {
