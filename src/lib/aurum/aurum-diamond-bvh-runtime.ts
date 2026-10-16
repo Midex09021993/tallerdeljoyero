@@ -104,7 +104,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           camera: options.camera,
           quality: options.quality ?? "interactive",
           environmentIntensity: 1.14,
-          dispersion: 0.005,
+          dispersion: 0.006,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
