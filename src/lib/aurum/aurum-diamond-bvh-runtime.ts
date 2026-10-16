@@ -85,7 +85,18 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (existing) releaseEntry(mesh, false);
 
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      if (!materials.some(isDiamondMaterial)) return;
+      // A BVH material is assigned at mesh level. Never replace a mixed
+      // material array (diamond + metal/other gem), because that would repaint
+      // unrelated CAD groups as diamond. Leave those meshes on the proven
+      // MeshPhysicalMaterial pipeline until per-group BVH support is available.
+      if (!materials.length || !materials.every(isDiamondMaterial)) {
+        if (materials.some(isDiamondMaterial)) {
+          options.onError?.(
+            new Error("[AURUM diamond BVH] Malla con materiales mixtos omitida para proteger metales y otras gemas."),
+          );
+        }
+        return;
+      }
 
       try {
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
