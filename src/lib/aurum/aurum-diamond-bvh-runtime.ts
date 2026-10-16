@@ -108,19 +108,21 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isAmethyst = family === "amatista" || family === "amethyst";
       const isAquamarine = family === "aguamarina" || family === "aquamarine";
       const isCitrine = family === "citrino" || family === "citrine";
-      const isBlueTopaz = family === "topacio" || family === "topacio azul" || family === "topacio_azul" || family === "blue topaz" || family === "bluetopaz";
+      const topazColor = Number(currentMaterial?.color?.getHex?.() ?? 0);
+      const isBlueTopaz = family === "topacio azul" || family === "topacio_azul" || family === "blue topaz" || family === "bluetopaz" || (family === "topacio" && ((topazColor & 0x0000ff) > ((topazColor >> 16) & 0xff) * 1.15));
+      const isImperialTopaz = family === "topacio imperial" || family === "topacio_imperial" || (family === "topacio" && !isBlueTopaz);
       const isMoissanite = family === "moissanita" || family === "moissanite";
       try {
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           environmentMap,
           camera: options.camera,
           quality: options.quality ?? "interactive",
-          environmentIntensity: isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isMoissanite ? 1.35 : 1.14,
-          dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : isAquamarine ? 0.0002 : isCitrine ? 0.0002 : isBlueTopaz ? 0.0002 : isMoissanite ? 0.009 : 0.006,
-          ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine ? 1.54 : isBlueTopaz ? 1.63 : isMoissanite ? 2.65 : 2.417,
-          absorption: isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isMoissanite ? 0.18 : 1,
-          color: isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isMoissanite ? 0xf4f8ff : 0xffffff,
-          reflectivity: isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isMoissanite ? 0.48 : 0.46,
+          environmentIntensity: isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isMoissanite ? 1.35 : 1.14,
+          dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : isAquamarine ? 0.0002 : isCitrine ? 0.0002 : isBlueTopaz ? 0.0002 : isImperialTopaz ? 0.0002 : isMoissanite ? 0.009 : 0.006,
+          ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine ? 1.54 : isBlueTopaz ? 1.63 : isImperialTopaz ? 1.63 : isMoissanite ? 2.65 : 2.417,
+          absorption: isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isMoissanite ? 0.18 : 1,
+          color: isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? 0xd79b4b : isMoissanite ? 0xf4f8ff : 0xffffff,
+          reflectivity: isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isMoissanite ? 0.48 : 0.46,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
