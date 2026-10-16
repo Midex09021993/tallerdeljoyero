@@ -939,8 +939,8 @@ export function AurumRender() {
             const frameContext=frame.getContext("2d");
             if(!frameContext) throw new Error("No se pudo preparar la miniatura del póster.");
             const image=frameContext.createImageData(width,height);
-            const rowSize=width*4;
-            for(let y=0;y<height;y++) image.data.set(pixels.subarray((height-1-y)*rowSize,(height-y)*rowSize),y*rowSize);
+            if(pixels.length!==image.data.length) throw new Error("El tamaño del fotograma del visor no coincide con su búfer.");
+            image.data.set(pixels);
             frameContext.putImageData(image,0,0);
             const thumb=document.createElement("canvas");
             const thumbWidth=Math.max(1,Math.min(640,Math.round(Number(options.width)||640)));
@@ -948,6 +948,10 @@ export function AurumRender() {
             thumb.width=thumbWidth; thumb.height=thumbHeight;
             const thumbContext=thumb.getContext("2d");
             if(!thumbContext) throw new Error("No se pudo preparar la miniatura del póster.");
+            // WebGL pixel buffers start at the bottom row; flip only the
+            // off-screen thumbnail canvas, never the live viewer.
+            thumbContext.translate(0,thumbHeight);
+            thumbContext.scale(1,-1);
             thumbContext.drawImage(frame,0,0,thumbWidth,thumbHeight);
             const mime=options.format==="png"?"image/png":options.format==="webp"?"image/webp":"image/jpeg";
             const cover=thumb.toDataURL(mime,0.88);
