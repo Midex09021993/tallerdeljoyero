@@ -47,7 +47,7 @@ export async function createAurumDiamondBvhRuntime(options: {
   const environmentMap = await new Promise<THREE.Texture>((resolve, reject) => {
     new Loader().load(
       options.url,
-      (texture) => {
+      (texture: THREE.Texture) => {
         texture.mapping = THREE_NS.EquirectangularReflectionMapping;
         texture.colorSpace = THREE_NS.LinearSRGBColorSpace;
         texture.needsUpdate = true;
@@ -76,7 +76,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     const found = new Set<THREE.Mesh>();
     model.traverse((object) => {
       const mesh = object as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.geometry || mesh.userData?.aurumInternalInclusion) return;
+      if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
       const existing = entries.get(mesh);
       const currentMaterial = mesh.material as any;
       if (existing && currentMaterial === existing.experimentalMaterial) {
@@ -90,7 +90,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       // material array (diamond + metal/other gem), because that would repaint
       // unrelated CAD groups as diamond. Leave those meshes on the proven
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
-      const activeGemId = String(mesh.userData?.aurumActiveGemId ?? "").toLocaleLowerCase();
+      const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
       const targetFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
       const family = materials.length > 0 && materials.every((material) => getGemFamily(material) === getGemFamily(materials[0])) ? getGemFamily(materials[0]) : "";
       const isParaibaCatalogId = /^turmalina_paraiba(?:_|$)/.test(activeGemId);
