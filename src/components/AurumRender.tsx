@@ -306,7 +306,21 @@ export function AurumRender() {
           () => vivo && requestId === hdrRequestId,
           (next) => {
             entorno = next;
+            console.info("[Aurum Render][HDR metal] Carga completada", {
+              perfil: id,
+              urlSolicitada: url,
+              urlActiva: environmentController.currentUrl,
+              usandoFallback: environmentController.currentUrl === null,
+            });
             invalidateRenderRef.current?.();
+          },
+          () => {
+            console.warn("[Aurum Render][HDR metal] No se pudo cargar el HDR solicitado; se mantiene el entorno disponible", {
+              perfil: id,
+              urlSolicitada: url,
+              urlActiva: environmentController.currentUrl,
+              usandoFallback: environmentController.currentUrl === null,
+            });
           }
         );
 
