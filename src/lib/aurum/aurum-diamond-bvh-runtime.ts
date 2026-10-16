@@ -32,8 +32,8 @@ const isDiamondMaterial = (material: any) =>
  */
 export async function createAurumDiamondBvhRuntime(options: {
   THREE: typeof THREE;
-  RGBELoader: new () => { load: (url: string, onLoad: (texture: THREE.Texture) => void, onProgress?: unknown, onError?: (error: unknown) => void) => unknown };
-  EXRLoader?: new () => { load: (url: string, onLoad: (texture: THREE.Texture) => void, onProgress?: unknown, onError?: (error: unknown) => void) => unknown };
+  RGBELoader: new () => { load: (...args: any[]) => unknown };
+  EXRLoader?: new () => { load: (...args: any[]) => unknown };
   url: string;
   camera: THREE.Camera;
   quality?: "interactive" | "high" | "final";
