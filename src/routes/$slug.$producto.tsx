@@ -181,7 +181,7 @@ export function CatalogoProductoPublicoPage() {
           <PublicJewelConfigurator slug={slug} producto={productoSlug} />
         </div>
 
-        <div className="self-center">
+        <div className="self-start">
           <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">{item.codigo} · {item.categoria}</p>
           <h1 className="mt-2 font-display text-5xl tracking-tight">{item.nombre}</h1>
           <p className="mt-5 text-sm leading-7 text-[#625b54]">{item.descripcion_producto || "Consulta al taller para conocer los detalles de esta pieza."}</p>
