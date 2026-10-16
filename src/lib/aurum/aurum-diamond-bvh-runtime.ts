@@ -1,0 +1,140 @@
+import * as THREE from "three";
+import {
+  prepareAurumDiamondBvhExperiment,
+  type AurumDiamondBvhApi,
+} from "./aurum-diamond-bvh-experimental";
+
+type RecordEntry = {
+  originalMaterial: THREE.Material | THREE.Material[];
+  experimentalMaterial: THREE.Material;
+  dispose: () => void;
+};
+
+export type AurumDiamondBvhRuntime = {
+  refresh: (model: THREE.Object3D | null | undefined) => void;
+  update: () => void;
+  dispose: () => void;
+  diagnostics: () => { activeMeshes: number; triangleCount: number; enabled: boolean };
+};
+
+const isDiamondMaterial = (material: any) =>
+  String(
+    material?.userData?.aurumGemFamily ??
+    material?.userData?.aurumOpticalProfile?.familia ??
+    material?.userData?.aurumRuntimeGemOptics?.family ??
+    "",
+  ).toLocaleLowerCase() === "diamante";
+
+/**
+ * Experimental, opt-in-by-call BVH runtime. The caller controls when it is
+ * created; the existing material pipeline remains the fallback. Geometry and
+ * original materials are retained and restored on teardown.
+ */
+export async function createAurumDiamondBvhRuntime(options: {
+  THREE: typeof THREE;
+  RGBELoader: new () => { load: (url: string, onLoad: (texture: THREE.Texture) => void, onProgress?: unknown, onError?: (error: unknown) => void) => unknown };
+  EXRLoader?: new () => { load: (url: string, onLoad: (texture: THREE.Texture) => void, onProgress?: unknown, onError?: (error: unknown) => void) => unknown };
+  url: string;
+  camera: THREE.Camera;
+  quality?: "interactive" | "high" | "final";
+  onError?: (error: unknown) => void;
+}): Promise<AurumDiamondBvhRuntime> {
+  const THREE_NS = options.THREE;
+  const packageApi = await import("realistic-diamond-shader") as unknown as AurumDiamondBvhApi;
+  const isExr = /\.exr(?:$|[?#])/i.test(options.url);
+  const Loader = isExr && options.EXRLoader ? options.EXRLoader : options.RGBELoader;
+  const environmentMap = await new Promise<THREE.Texture>((resolve, reject) => {
+    new Loader().load(
+      options.url,
+      (texture) => {
+        texture.mapping = THREE_NS.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE_NS.LinearSRGBColorSpace;
+        texture.needsUpdate = true;
+        resolve(texture);
+      },
+      undefined,
+      reject,
+    );
+  });
+
+  const entries = new Map<THREE.Mesh, RecordEntry>();
+  let disposed = false;
+
+  const releaseEntry = (mesh: THREE.Mesh, restore: boolean) => {
+    const entry = entries.get(mesh);
+    if (!entry) return;
+    if (restore && mesh.material === entry.experimentalMaterial) {
+      mesh.material = entry.originalMaterial;
+    }
+    entry.dispose();
+    entries.delete(mesh);
+  };
+
+  const refresh = (model: THREE.Object3D | null | undefined) => {
+    if (!model || disposed) return;
+    const found = new Set<THREE.Mesh>();
+    model.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry || mesh.userData?.aurumInternalInclusion) return;
+      const existing = entries.get(mesh);
+      const currentMaterial = mesh.material as any;
+      if (existing && currentMaterial === existing.experimentalMaterial) {
+        found.add(mesh);
+        return;
+      }
+      if (existing) releaseEntry(mesh, false);
+
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      if (!materials.some(isDiamondMaterial)) return;
+
+      try {
+        const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
+          environmentMap,
+          camera: options.camera,
+          quality: options.quality ?? "interactive",
+          environmentIntensity: 1.14,
+          dispersion: 0.004,
+          environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
+        });
+        entries.set(mesh, {
+          originalMaterial: mesh.material,
+          experimentalMaterial: prepared.material,
+          dispose: prepared.dispose,
+        });
+        mesh.material = prepared.material;
+        found.add(mesh);
+      } catch (error) {
+        // Keep the current physical/scintillation material if BVH setup fails.
+        options.onError?.(error);
+      }
+    });
+
+    for (const mesh of [...entries.keys()]) {
+      if (!found.has(mesh)) releaseEntry(mesh, mesh.material === entries.get(mesh)?.experimentalMaterial);
+    }
+  };
+
+  return {
+    refresh,
+    update() {
+      if (disposed) return;
+      for (const entry of entries.values()) {
+        packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
+      }
+    },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      for (const mesh of [...entries.keys()]) releaseEntry(mesh, true);
+      environmentMap.dispose();
+    },
+    diagnostics() {
+      let triangleCount = 0;
+      for (const mesh of entries.keys()) {
+        const geometry = mesh.geometry;
+        triangleCount += Math.floor((geometry.getIndex()?.count ?? geometry.getAttribute("position")?.count ?? 0) / 3);
+      }
+      return { activeMeshes: entries.size, triangleCount, enabled: entries.size > 0 };
+    },
+  };
+}
