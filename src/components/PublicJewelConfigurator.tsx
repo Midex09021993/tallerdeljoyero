@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Box, RotateCcw } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
+import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "@/lib/aurum-material-engine";
+import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
+import { createAurumWebGLViewer } from "@/lib/aurum/viewer";
 
 type Props = { slug: string; producto: string };
 const metales = [
@@ -36,6 +39,8 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante");
   const [status, setStatus] = useState("Preparando modelo 3D…");
+  const materialIds: Record<string, string> = { "oro-amarillo": "oro18a_pulido", "oro-blanco": "oro18b_rodinado", "oro-rosa": "oro18r_pulido", plata: "plata925_pulida" };
+  const gemIds: Record<string, string> = { diamante: "diamante_natural", esmeralda: "esmeralda_1", rubi: "rubi_natural", zafiro: "zafiro_azul", amatista: "amatista_natural" };
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -61,14 +66,17 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
         model = await new Promise<THREE.Object3D>((resolve, reject) => loader.parse(buffer, resolve, reject));
         if (disposed) return;
 
-        scene = new THREE.Scene(); scene.background = new THREE.Color("#f2eee7");
-        camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100000);
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "low-power" });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        const { scene: aurumScene, camera: aurumCamera, renderer: aurumRenderer, controls: aurumControls } = createAurumWebGLViewer(THREE, host, {
+          pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+          maxDistance: 100,
+          controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
+        });
+        // Reutiliza el núcleo de visor y controles de AURUM RENDER en el catálogo público.
+        scene = aurumScene; camera = aurumCamera; renderer = aurumRenderer; controls = aurumControls;
+        scene.background = new THREE.Color("#f2eee7");
         renderer.setSize(host.clientWidth, host.clientHeight);
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1;
+        renderer.toneMappingExposure = 0.82;
+        if (controls) { controls.enableDamping = true; controls.dampingFactor = 0.08; controls.zoomSpeed = 0.15; controls.rotateSpeed = 2; controls.enablePan = false; }
         host.replaceChildren(renderer.domElement);
         Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block", touchAction: "none" });
         scene.add(new THREE.HemisphereLight(0xffffff, 0x8c8173, 2.1));
@@ -82,11 +90,21 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
           if (!object.visible) return;
           meshCount++;
           const original = Array.isArray(object.material) ? object.material : [object.material];
-          object.material = original.map((material: any) => esGema(object)
-            ? new THREE.MeshPhysicalMaterial({ color: 0xeaf4ff, metalness: 0, roughness: 0.08, transmission: 0.18, thickness: 0.7, ior: 2, clearcoat: 1, clearcoatRoughness: 0.05, side: THREE.DoubleSide })
-            : esMetal(object)
-              ? new THREE.MeshStandardMaterial({ color: 0xd5a63d, metalness: 0.78, roughness: 0.24, side: THREE.DoubleSide })
-              : material?.isMaterial ? material.clone() : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.25, roughness: 0.34, side: THREE.DoubleSide }));
+          object.material = original.map((material: any) => {
+            if (esGema(object)) {
+              const target = material?.isMaterial ? material.clone() : new THREE.MeshPhysicalMaterial({ side: THREE.DoubleSide });
+              const preset = GEMAS.find((item) => item.id === gemIds[gemaId]) ?? GEMAS[0];
+              applyAurumGem(target, gemPresetFromConfig(preset), 0.7);
+              return target;
+            }
+            if (esMetal(object)) {
+              const target = material?.isMaterial ? material.clone() : new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });
+              const preset = MATERIALES.find((item) => item.id === materialIds[metalId]) ?? MATERIALES[0];
+              applyAurumMetal(target, metalPresetFromConfig(preset));
+              return target;
+            }
+            return material?.isMaterial ? material.clone() : new THREE.MeshStandardMaterial({ color: 0xb7b0a5, metalness: 0.25, roughness: 0.34, side: THREE.DoubleSide });
+          });
         });
         if (meshCount === 0) throw new Error("El archivo 3DM no contiene mallas visibles para el visor 3D. Revisa las capas y la geometría del archivo.");
         model.updateMatrixWorld(true);
@@ -143,18 +161,13 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
   useEffect(() => {
     const model = modelRef.current;
     if (!model) return;
-    const metal = metales.find((item) => item.id === metalId) ?? metales[0];
-    const gem = gemas.find((item) => item.id === gemaId) ?? gemas[0];
+    const metalPreset = MATERIALES.find((item) => item.id === materialIds[metalId]) ?? MATERIALES[0];
+    const gemPreset = GEMAS.find((item) => item.id === gemIds[gemaId]) ?? GEMAS[0];
     model.traverse((object: any) => {
       if (!object.isMesh) return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
-      if (esMetal(object)) materials.forEach((material: any) => {
-        if (material?.color) material.color.setHex(metal.color);
-        if ("metalness" in material) material.metalness = metal.metalness;
-        if ("roughness" in material) material.roughness = metal.roughness;
-        material.needsUpdate = true;
-      });
-      if (esGema(object)) materials.forEach((material: any) => { if (material?.color) material.color.setHex(gem.color); material.needsUpdate = true; });
+      if (esMetal(object)) materials.forEach((material: any) => applyAurumMetal(material, metalPresetFromConfig(metalPreset)));
+      if (esGema(object)) materials.forEach((material: any) => applyAurumGem(material, gemPresetFromConfig(gemPreset), 0.7));
     });
   }, [metalId, gemaId, ready]);
 
