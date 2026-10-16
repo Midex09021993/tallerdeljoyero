@@ -257,7 +257,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
         envMapIntensity:materialConfig?.envMapIntensity??null,
       },
       appliedCount:applied,
-      materials:auditedMaterials.map(({mesh,m}:any)=>({
+      materials:auditedMaterials.map(({mesh,material:m}:any)=>({
         mesh,
         name:m.name??null,
         colorHex:m.color?.getHexString?.()??null,
