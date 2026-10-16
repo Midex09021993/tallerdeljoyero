@@ -1614,8 +1614,8 @@ export function AurumRender() {
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
                     onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
-                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(materialId===m.id?"bg-black/[.045]":"hover:bg-black/[.025]")}>
-                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-white/30")}>
+                    className={"group relative flex flex-col items-center rounded-2xl border p-2 transition-all duration-200 "+(materialId===m.id?"border-[#92743b]/35 bg-white shadow-[0_3px_12px_rgba(50,42,20,.07)]":"border-transparent hover:border-black/[.07] hover:bg-white/70")}>
+                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-black/20")}>
                       <span className="size-10 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
                         style={{background:`radial-gradient(circle at 32% 27%,rgba(255,255,255,.78) 0 6%,rgba(255,255,255,.18) 17%,transparent 34%),linear-gradient(145deg,rgba(255,255,255,.42),transparent 34%),${hexColor(m.color)}`}}/>
                     </span>
@@ -1632,8 +1632,8 @@ export function AurumRender() {
               </div>}
             </section>
 
-            <section className="border-b border-black/10 px-5 py-2">
-              <button type="button" onClick={()=>setUxSection(uxSection==="gemas"?"":"gemas")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
+            <section className="border-b border-black/[.07] px-4 py-1">
+              <button type="button" onClick={()=>setUxSection(uxSection==="gemas"?"":"gemas")} className="flex w-full items-center justify-between rounded-xl py-4 px-2 text-left text-[14px] font-semibold tracking-[-.01em] transition-colors hover:bg-black/[.025]">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="gemas"?"rotate-0":"-rotate-90")}/><span>Gemas</span></span>
                 <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{GEMAS.length}</span>
               </button>
@@ -1641,7 +1641,7 @@ export function AurumRender() {
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
                     onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
-                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(gemaId===g.id?"bg-black/[.045]":"hover:bg-black/[.025]")}>
+                    className={"group relative flex flex-col items-center rounded-2xl border p-2 transition-all duration-200 "+(gemaId===g.id?"border-[#92743b]/35 bg-white shadow-[0_3px_12px_rgba(50,42,20,.07)]":"border-transparent hover:border-black/[.07] hover:bg-white/70")}>
                     <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(gemaId===g.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-white/30")}>
                       <span className="relative size-10 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
                         style={{background:`radial-gradient(circle at 30% 24%,rgba(255,255,255,.82) 0 5%,rgba(255,255,255,.18) 12%,transparent 28%),conic-gradient(from 20deg,rgba(255,255,255,.28),transparent 12%,rgba(0,0,0,.18) 25%,rgba(255,255,255,.22) 38%,transparent 52%,rgba(0,0,0,.2) 67%,rgba(255,255,255,.24) 82%,transparent),${hexColor(g.color)}`}}/>
