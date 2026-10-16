@@ -333,7 +333,8 @@ export function AurumRender() {
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            onError: (error) => console.warn("[AURUM][DIAMOND BVH] Se conserva el shader anterior para esta malla:", error),
+            targetFamilies: ["Diamante", "Esmeralda"],
+            onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
             runtime.dispose();
@@ -343,7 +344,7 @@ export function AurumRender() {
           diamondBvhRuntime = runtime;
           runtime.refresh(modelo);
           const diagnostics = runtime.diagnostics();
-          console.info("[AURUM][DIAMOND BVH]", diagnostics);
+          console.info("[AURUM][GEM BVH]", diagnostics);
           invalidateRenderRef.current?.();
         } catch (error) {
           // Safe fallback: current MeshPhysicalMaterial + AURUM scintillation remain active.
