@@ -106,17 +106,18 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
       const isAmethyst = family === "amatista" || family === "amethyst";
+      const isAquamarine = family === "aguamarina" || family === "aquamarine";
       try {
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           environmentMap,
           camera: options.camera,
           quality: options.quality ?? "interactive",
-          environmentIntensity: isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : 1.14,
-          dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : 0.006,
-          ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : 2.417,
-          absorption: isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : 1,
-          color: isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : 0xffffff,
-          reflectivity: isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : 0.46,
+          environmentIntensity: isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : 1.14,
+          dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : isAquamarine ? 0.0002 : 0.006,
+          ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : 2.417,
+          absorption: isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : 1,
+          color: isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : 0xffffff,
+          reflectivity: isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : 0.46,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
