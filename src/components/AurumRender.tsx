@@ -1527,11 +1527,11 @@ export function AurumRender() {
   );
   return (<>
     <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#090b0e] text-white">
-      <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-white/10 bg-[#101316]/96 px-5 backdrop-blur-xl">
+      <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-black/10 bg-[#f7f6f2]/95 px-5 text-[#242424] shadow-sm backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
-            <div className="font-display text-[23px] font-semibold tracking-[.16em] text-[#e5c77a]">AURUM <span className="tracking-normal text-white/90">RENDER</span></div>
-            <div className="mt-1 text-[10px] tracking-[.06em] text-white/50">Estudio profesional de joyería</div>
+            <div className="font-display text-[23px] font-semibold tracking-[.16em] text-[#92743b]">AURUM <span className="tracking-normal text-[#292824]">RENDER</span></div>
+            <div className="mt-1 text-[10px] tracking-[.06em] text-[#77756f]">Estudio profesional de joyería</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1589,92 +1589,92 @@ export function AurumRender() {
         <p className="mt-3 text-[10px] leading-relaxed text-white/40">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
       </div>}
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[336px] shrink-0 border-r border-white/10 bg-[#111518] shadow-2xl">
+        <aside className="w-[336px] shrink-0 border-r border-black/10 bg-[#f7f6f2] text-[#292824] shadow-[8px_0_24px_rgba(30,28,20,.04)]">
           <div className="h-full overflow-y-auto">
-            <section className="border-b border-white/10 bg-white/[.025] px-5 py-4">
+            <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
-                <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-white/45">Proyecto</div>
-                <span className="rounded-full border border-white/10 px-2 py-1 text-[9px] text-white/45">AURUM STUDIO</span>
+                <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#77756f]">Proyecto</div>
+                <span className="rounded-full border border-black/10 px-2 py-1 text-[9px] text-[#77756f]">AURUM STUDIO</span>
               </div>
-              <label className="mb-3 block text-[10px] font-medium text-white/55">Nombre del proyecto
-                <input value={nombreProyecto} onChange={e=>setNombreProyecto(e.target.value)} maxLength={100} placeholder="Nombre de tu diseño" className="mt-1.5 h-10 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/10"/>
+              <label className="mb-3 block text-[10px] font-medium text-[#66645e]">Nombre del proyecto
+                <input value={nombreProyecto} onChange={e=>setNombreProyecto(e.target.value)} maxLength={100} placeholder="Nombre de tu diseño" className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none transition placeholder:text-[#99968d] focus:border-[#92743b]/65 focus:ring-2 focus:ring-[#92743b]/10"/>
               </label>
-              <label className="block text-[10px] font-medium text-white/55">Tipo de joya
-                <select value={categoriaProyecto} onChange={e=>setCategoriaProyecto(e.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-white/10 bg-[#171a1e] px-3 text-sm text-white outline-none transition focus:border-[#d4af37]/60">
+              <label className="block text-[10px] font-medium text-[#66645e]">Tipo de joya
+                <select value={categoriaProyecto} onChange={e=>setCategoriaProyecto(e.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none transition focus:border-[#92743b]/65">
                   {["Anillo","Collar","Dije","Aretes","Pulsera","Brazalete","Broche","Otro"].map(c=><option key={c} value={c}>{c}</option>)}
                 </select>
               </label>
             </section>
-            <section className="border-b border-white/10 px-5 py-2">
+            <section className="border-b border-black/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="materiales"?"": "materiales")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="materiales"?"rotate-0":"-rotate-90")}/><span>Materiales</span></span>
-                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{MATERIALES.length}</span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{MATERIALES.length}</span>
               </button>
               {uxSection==="materiales"&&<div className="pb-5">
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
                     onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
-                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(materialId===m.id?"bg-white/[.06]":"hover:bg-white/[.04]")}>
-                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,.35)]":"border-white/10 group-hover:border-white/30")}>
+                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(materialId===m.id?"bg-black/[.045]":"hover:bg-black/[.025]")}>
+                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-white/30")}>
                       <span className="size-10 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
                         style={{background:`radial-gradient(circle at 32% 27%,rgba(255,255,255,.78) 0 6%,rgba(255,255,255,.18) 17%,transparent 34%),linear-gradient(145deg,rgba(255,255,255,.42),transparent 34%),${hexColor(m.color)}`}}/>
                     </span>
-                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-white/70">{m.nombre}</span>
+                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-[#292824]/70">{m.nombre}</span>
                   </button>)}
                 </div>
-                <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-[10px] font-semibold text-white/65 transition hover:border-[#d4af37]/40 hover:text-white">
+                <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
                   {mostrarTodosMateriales ? "Mostrar menos materiales" : `Ver todos los materiales (${MATERIALES.length})`}
                 </button>
-                <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
-                  <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
-                  <p className="truncate text-[10px] text-white/65">{materialActivo.nombre}</p>
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-black/[.02] p-2">
+                  <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
+                  <p className="truncate text-[10px] text-[#55534d]">{materialActivo.nombre}</p>
                 </div>
               </div>}
             </section>
 
-            <section className="border-b border-white/10 px-5 py-2">
+            <section className="border-b border-black/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="gemas"?"":"gemas")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="gemas"?"rotate-0":"-rotate-90")}/><span>Gemas</span></span>
-                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{GEMAS.length}</span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{GEMAS.length}</span>
               </button>
               {uxSection==="gemas"&&<div className="pb-5">
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
                     onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
-                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(gemaId===g.id?"bg-white/[.06]":"hover:bg-white/[.04]")}>
-                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(gemaId===g.id?"border-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,.35)]":"border-white/10 group-hover:border-white/30")}>
+                    className={"group relative flex flex-col items-center rounded-xl p-1.5 transition "+(gemaId===g.id?"bg-black/[.045]":"hover:bg-black/[.025]")}>
+                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(gemaId===g.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-white/30")}>
                       <span className="relative size-10 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
                         style={{background:`radial-gradient(circle at 30% 24%,rgba(255,255,255,.82) 0 5%,rgba(255,255,255,.18) 12%,transparent 28%),conic-gradient(from 20deg,rgba(255,255,255,.28),transparent 12%,rgba(0,0,0,.18) 25%,rgba(255,255,255,.22) 38%,transparent 52%,rgba(0,0,0,.2) 67%,rgba(255,255,255,.24) 82%,transparent),${hexColor(g.color)}`}}/>
                     </span>
-                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-white/70">{g.nombre}</span>
+                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-[#292824]/70">{g.nombre}</span>
                   </button>)}
                 </div>
-                <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-[10px] font-semibold text-white/65 transition hover:border-[#d4af37]/40 hover:text-white">
+                <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
                   {mostrarTodasGemas ? "Mostrar menos gemas" : `Ver todas las gemas (${GEMAS.length})`}
                 </button>
-                <div className="mt-2 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] p-2">
-                  <span className="size-8 shrink-0 rounded-full border border-white/20 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
-                  <p className="truncate text-[10px] text-white/65">{gemaActiva.nombre}</p>
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-black/[.02] p-2">
+                  <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
+                  <p className="truncate text-[10px] text-[#55534d]">{gemaActiva.nombre}</p>
                 </div>
               </div>}
             </section>
 
-            <section className="border-b border-white/10 px-5 py-2">
+            <section className="border-b border-black/10 px-5 py-2">
               <button type="button" onClick={()=>setUxSection(uxSection==="escena"?"":"escena")} className="flex w-full items-center justify-between py-4 text-left text-[15px] font-medium">
                 <span className="flex items-center gap-2"><ChevronDown className={"size-4 transition-transform "+(uxSection==="escena"?"rotate-0":"-rotate-90")}/><span>Escenas</span></span>
-                <span className="text-[9px] uppercase tracking-[.14em] text-white/25">{ESCENARIOS.length}</span>
+                <span className="text-[9px] uppercase tracking-[.14em] text-[#99968d]">{ESCENARIOS.length}</span>
               </button>
               {uxSection==="escena"&&<div className="grid grid-cols-3 gap-3 pb-5">
-                {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-white":"text-white/75")}>
-                  <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-white/20")}><span className={"block h-full w-full "+e.clase}/></span>
+                {ESCENARIOS.map(e=><button key={e.id} type="button" onClick={()=>{setEscenarioId(e.id)}} className={"group text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
+                  <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-black/15")}><span className={"block h-full w-full "+e.clase}/></span>
                   <span className="mt-2 block text-[10px]">{e.nombre}</span>
                 </button>)}
               </div>}
             </section>
             <div className="px-5 pb-6">
-              <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-3 py-3 text-left hover:border-[#d4af37]/40">
-                <span><span className="block text-[9px] uppercase tracking-[.16em] text-white/35">Más control</span><span className="mt-1 block text-xs text-white/75">Iluminación y render</span></span>
-                <SlidersHorizontal className="size-4 text-[#d4af37]"/>
+              <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left hover:border-[#92743b]/45">
+                <span><span className="block text-[9px] uppercase tracking-[.16em] text-[#858178]">Más control</span><span className="mt-1 block text-xs text-[#45433e]">Iluminación y render</span></span>
+                <SlidersHorizontal className="size-4 text-[#92743b]"/>
               </button>
             </div>
           </div>
