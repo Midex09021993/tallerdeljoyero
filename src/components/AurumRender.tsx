@@ -434,7 +434,7 @@ export function AurumRender() {
         renderer,
         groundController,
         environmentController,
-        (id: string) => cargarHDRI(id as EscenarioId),
+        (id: string) => cargarHDRI(metalHdriOverride ?? id),
         nodo
       );
       // Aplicar el preset inicial mediante la única fuente de verdad de escena.
@@ -631,7 +631,6 @@ export function AurumRender() {
         setMetalHdriId(activeMetalHdri);
         setGemHdriId(activeGemHdri);
         // Keep metal and gemstone HDR controls independent from the scene preset.
-        cargarHDRI(activeMetalHdri);
         cargarEntornoGema(
           activeGemHdri,
           photo.gemEnvironmentRotation,
