@@ -296,10 +296,9 @@ export function AurumRender() {
       cargarEntornoGema("gemNeutral", .54, .98);
 
       let hdrRequestId = 0;
-      const cargarHDRI = (id:IluminacionId | EscenarioId) => {
+      const cargarHDRI = (environmentKey:string) => {
         const requestId = ++hdrRequestId;
-        const photo = getAurumPhotographicProfile(id as string);
-        const url = getAurumHdriUrl(photo.environmentKey);
+        const url = getAurumHdriUrl(environmentKey);
         environmentController.load(
           url,
           requestId,
@@ -307,7 +306,7 @@ export function AurumRender() {
           (next) => {
             entorno = next;
             console.info("[Aurum Render][HDR metal] Carga completada", {
-              perfil: id,
+              perfil: environmentKey,
               urlSolicitada: url,
               urlActiva: environmentController.currentUrl,
               usandoFallback: environmentController.currentUrl === null,
@@ -316,26 +315,13 @@ export function AurumRender() {
           },
           () => {
             console.warn("[Aurum Render][HDR metal] No se pudo cargar el HDR solicitado; se mantiene el entorno disponible", {
-              perfil: id,
+              perfil: environmentKey,
               urlSolicitada: url,
               urlActiva: environmentController.currentUrl,
               usandoFallback: environmentController.currentUrl === null,
             });
           }
         );
-
-        // The iJewel reference profile has its own gem HDRI, independent from
-        // the scene/metal environment. Other profiles retain their existing
-        // gem environment unless they explicitly change it here.
-        if (id === "ijewelReference" && (
-          gemEnvironmentUrl !== getAurumGemHdriUrl(photo.gemEnvironmentKey)
-        )) {
-          cargarEntornoGema(
-            photo.gemEnvironmentKey,
-            photo.gemEnvironmentRotation,
-            photo.gemEnvironmentIntensity
-          );
-        }
       };
 
       // El escenario inicial selecciona su propio Environment HDRI.
