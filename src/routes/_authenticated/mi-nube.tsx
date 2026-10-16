@@ -273,10 +273,25 @@ function MiNubePage() {
     setErrorListadoNas(null);
     try {
       const raiz = `${participanteId}/${usuarioId}`;
-      const { data: entradas, error: errorRaiz } = await supabase.storage
-        .from(BUCKET)
-        .list(raiz, { limit: 1000, sortBy: { column: "name", order: "asc" } });
-      if (errorRaiz) throw errorRaiz;
+      // Reintentar una sola vez los timeouts transitorios de Storage y señalar exactamente
+      // qué consulta falla, sin confundirlo con el estado del NAS.
+      const listarStorage = async (ruta: string, etapa: string) => {
+        let ultimoError: Error | null = null;
+        for (let intento = 0; intento < 2; intento++) {
+          const { data, error: errorLista } = await supabase.storage
+            .from(BUCKET)
+            .list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+          if (!errorLista) return data ?? [];
+          ultimoError = new Error(errorLista.message);
+          if (intento === 0 && /timeout|timed out|temporar|fetch/i.test(errorLista.message)) {
+            await new Promise((resolve) => window.setTimeout(resolve, 700));
+            continue;
+          }
+          break;
+        }
+        throw new Error(`Supabase Storage · ${etapa}: ${ultimoError?.message ?? "No se pudo listar la carpeta."}`);
+      };
+      const entradas = await listarStorage(raiz, "carpeta raíz");
 
       const nombresCarpetas = (entradas ?? [])
         .filter((entrada) => !entrada.id && !entrada.metadata)
@@ -284,13 +299,7 @@ function MiNubePage() {
         .filter(Boolean);
       const resultados = await Promise.all(
         nombresCarpetas.map(async (nombreCarpeta) => {
-          const { data, error: errorLista } = await supabase.storage
-            .from(BUCKET)
-            .list(`${raiz}/${nombreCarpeta}`, {
-              limit: 1000,
-              sortBy: { column: "name", order: "desc" },
-            });
-          if (errorLista) throw errorLista;
+          const data = await listarStorage(`${raiz}/${nombreCarpeta}`, `carpeta "${nombreCarpeta}"`);
           return (data ?? [])
             .filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")))
             .map((entrada): ArchivoNube => {
