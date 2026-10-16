@@ -72,16 +72,18 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
           controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
         });
         // Reutiliza el núcleo de visor y controles de AURUM RENDER en el catálogo público.
+        // Usa las referencias locales no nulas devueltas por el constructor; las variables
+        // opcionales externas se reservan para resize, render loop y cleanup.
         scene = aurumScene; camera = aurumCamera; renderer = aurumRenderer; controls = aurumControls;
-        scene.background = new THREE.Color("#f2eee7");
-        renderer.setSize(host.clientWidth, host.clientHeight);
-        renderer.toneMappingExposure = 0.82;
-        if (controls) { controls.enableDamping = true; controls.dampingFactor = 0.08; controls.zoomSpeed = 0.15; controls.rotateSpeed = 2; controls.enablePan = false; }
-        host.replaceChildren(renderer.domElement);
-        Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block", touchAction: "none" });
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x8c8173, 2.1));
-        const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(4, 6, 7); scene.add(key);
-        const rim = new THREE.DirectionalLight(0xffffff, 2.2); rim.position.set(-5, 3, -4); scene.add(rim);
+        aurumScene.background = new THREE.Color("#f2eee7");
+        aurumRenderer.setSize(host.clientWidth, host.clientHeight);
+        aurumRenderer.toneMappingExposure = 0.82;
+        if (aurumControls) { aurumControls.enableDamping = true; aurumControls.dampingFactor = 0.08; aurumControls.zoomSpeed = 0.15; aurumControls.rotateSpeed = 2; aurumControls.enablePan = false; }
+        host.replaceChildren(aurumRenderer.domElement);
+        Object.assign(aurumRenderer.domElement.style, { width: "100%", height: "100%", display: "block", touchAction: "none" });
+        aurumScene.add(new THREE.HemisphereLight(0xffffff, 0x8c8173, 2.1));
+        const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(4, 6, 7); aurumScene.add(key);
+        const rim = new THREE.DirectionalLight(0xffffff, 2.2); rim.position.set(-5, 3, -4); aurumScene.add(rim);
         let meshCount = 0;
         model.traverse((object: any) => {
           // Respetar la visibilidad original del 3DM: forzar todas las capas visibles
@@ -121,16 +123,16 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
         const centeredBounds = new THREE.Box3().setFromObject(model);
         const sphere = centeredBounds.getBoundingSphere(new THREE.Sphere());
         const radius = Math.max(sphere.radius, 0.001);
-        scene.add(model);
-        camera.fov = 35;
-        const distance = (radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.25;
-        camera.position.copy(new THREE.Vector3(1, 0.65, 1).normalize().multiplyScalar(distance));
-        camera.near = Math.max(radius / 100, 0.001);
-        camera.far = Math.max(distance + radius * 20, 100);
-        camera.lookAt(0, 0, 0);
-        camera.updateProjectionMatrix();
+        aurumScene.add(model);
+        aurumCamera.fov = 35;
+        const distance = (radius / Math.sin(THREE.MathUtils.degToRad(aurumCamera.fov / 2))) * 1.25;
+        aurumCamera.position.copy(new THREE.Vector3(1, 0.65, 1).normalize().multiplyScalar(distance));
+        aurumCamera.near = Math.max(radius / 100, 0.001);
+        aurumCamera.far = Math.max(distance + radius * 20, 100);
+        aurumCamera.lookAt(0, 0, 0);
+        aurumCamera.updateProjectionMatrix();
         const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
-        controls = new OrbitControls(camera, renderer.domElement);
+        controls = new OrbitControls(aurumCamera, aurumRenderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.06;
         controls.minDistance = radius * 0.6; controls.maxDistance = radius * 12; controls.target.set(0, 0, 0); controls.update();
         modelRef.current = model;
