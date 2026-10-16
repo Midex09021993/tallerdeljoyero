@@ -318,6 +318,19 @@ export async function createAurumPostPipeline(
           grading: Boolean(gradingPass?.enabled),
           vignette: Boolean(vignettePass?.enabled),
         },
+        reflectionPipeline: {
+          ssrOpacity: Number(ssrPass?.opacity ?? 0),
+          ssrResolutionScale: Number(ssrPass?.resolutionScale ?? 0),
+          ssrCompositeIntensity: Number(ssrCompositePass?.uniforms?.intensity?.value ?? 0),
+          ssrCompositeHasBeauty: Boolean(ssrCompositePass?.uniforms?.tBeauty?.value),
+          ssrSelectedMeshCount: Array.isArray(ssrPass?.selects) ? ssrPass.selects.length : null,
+          ssaoKernelRadius: Number(ssaoPass?.kernelRadius ?? 0),
+          ssaoClamp: Number(ssaoPass?.aoClamp ?? 0),
+          ssaoMaxDistance: Number(ssaoPass?.maxDistance ?? 0),
+          bloomStrength: Number(bloomPass?.strength ?? 0),
+          bloomThreshold: Number(bloomPass?.threshold ?? 0),
+          bloomRadius: Number(bloomPass?.radius ?? 0),
+        },
       };
       const signature = JSON.stringify(state);
       if (signature !== lastDiagnosticSignature) {
