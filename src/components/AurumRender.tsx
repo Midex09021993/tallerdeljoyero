@@ -1564,11 +1564,6 @@ export function AurumRender() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative flex items-center gap-1 rounded-xl border border-black/10 bg-black/[.025] p-1">
-            <button type="button" title="Restablecer vista" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><RotateCcw className="size-[18px]"/></button>
-            <button type="button" title="Zoom" onClick={()=>apiRef.current?.reset()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><Maximize2 className="size-[18px]"/></button>
-            <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#55534d] hover:bg-black/[.06] hover:text-[#171714] md:flex"><Expand className="size-[18px]"/></button>
-          </div>
           <label className="flex h-10 items-center gap-2 rounded-xl border border-black/[.08] bg-white/85 px-3 text-sm text-[#292824] shadow-sm transition hover:border-black/15 focus-within:ring-2 focus-within:ring-[#92743b]/15">
             <Gem className="size-4 text-[#55534d]"/>
             <select value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="bg-transparent outline-none">
