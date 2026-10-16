@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 /**
- * Detecta una publicación nueva comparando el entrypoint de la página abierta
- * con el entrypoint del HTML publicado. Nunca recarga automáticamente.
+ * Detecta publicaciones nuevas comparando el entrypoint cargado con el HTML publicado.
+ * Recarga automáticamente solo cuando la pantalla permite hacerlo sin interrumpir una subida.
  */
 function entradaDesdeHtml(html: string): string {
   const etiquetas = html.match(/<script\b[^>]*>/gi) ?? [];
@@ -18,7 +18,7 @@ function entradaActual(): string {
   return document.querySelector<HTMLScriptElement>('script[type="module"][src]')?.getAttribute("src") ?? "";
 }
 
-export function useNuevaVersion(intervaloMs = 120_000): boolean {
+export function useNuevaVersion(puedeRecargar = true, intervaloMs = 120_000): boolean {
   const [nueva, setNueva] = useState(false);
 
   useEffect(() => {
@@ -55,6 +55,15 @@ export function useNuevaVersion(intervaloMs = 120_000): boolean {
       document.removeEventListener("visibilitychange", alVolver);
     };
   }, [intervaloMs]);
+
+  useEffect(() => {
+    if (!nueva || !puedeRecargar || typeof window === "undefined") return;
+    // La versión nueva se aplica en un punto seguro; no interrumpir subidas activas.
+    const id = window.setTimeout(() => {
+      if (document.visibilityState === "visible") window.location.reload();
+    }, 800);
+    return () => window.clearTimeout(id);
+  }, [nueva, puedeRecargar]);
 
   return nueva;
 }
