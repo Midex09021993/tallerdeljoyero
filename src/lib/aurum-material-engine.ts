@@ -486,39 +486,40 @@ export const applyAurumReferenceMetalOptics=(material:any,materialId:string)=>{
     : id.includes("redgold")||id.includes("oro-rojo") ? "redGold"
     : id.includes("rosegold")||id.includes("oro-rosa") ? "roseGold"
     : id.includes("greygold")||id.includes("graygold")||id.includes("oro-gris") ? "greyGold"
-    : id.includes("greengold")||id.includes("oro-verde") ? "greenGold"
+    : id.includes("greengold")||id.includes("oro-verde")||id.includes("oro18_verde") ? "greenGold"
     : id.includes("platinum")||id.includes("platino") ? "platinum"
     : id.includes("silver")||id.includes("plata") ? "silver"
-    : id.includes("warmgold")||id.includes("oro-calido") ? "warmGold"
+    : id.includes("warmgold")||id.includes("oro-calido")||id.includes("oro18_calido") ? "warmGold"
     : id.includes("yellowgold")||id.includes("oro-amarillo")||id.includes("oro18a_pulido")||id.includes("oro18a-pulido")||id.includes("oro18a pulido")||rawId.includes("oro18a_pulido") ? "yellowGold"
-    : id.includes("blackrhodium")||id.includes("rodio-negro") ? "blackRhodium"
+    : id.includes("blackrhodium")||id.includes("rodio-negro")||id.includes("rodio_negro") ? "blackRhodium"
     : null;
   const ref:any=key?AURUM_IJEWEL_METAL_REFERENCES[key as keyof typeof AURUM_IJEWEL_METAL_REFERENCES]:null;
   if(!ref){
     console.warn("[AURUM][METAL REFERENCE RESOLUTION]",{materialId:String(materialId??""),normalizedId:id,resolvedKey:key,matched:false});
     return material;
   }
-  material.color?.setRGB(ref.baseColorFactor[0],ref.baseColorFactor[1],ref.baseColorFactor[2]);
-  material.metalness=ref.metalness??1;
-  material.roughness=ref.roughness;
-  material.ior=ref.ior;
-  material.envMapIntensity=ref.environmentIntensity;
-  material.clearcoat=0;
-  material.clearcoatRoughness=0;
-  material.userData={...(material.userData??{}),aurumIJEWELMetalReference:{...ref,materialId,source:"DAROS (1).glb",renderer:"iJewel/WebGi"},aurumMetalBaseEnvMapIntensity:ref.environmentIntensity};
-  material.needsUpdate=true;
+
+  // iJewel values are calibration metadata, not the active AURUM preset.
+  // Do not overwrite the selected catalog's color, roughness, metalness,
+  // environment intensity or clearcoat: doing so silently cancels user tuning.
+  const reference={...ref,materialId,source:"DAROS (1).glb",renderer:"iJewel/WebGi"};
+  material.userData={
+    ...(material.userData??{}),
+    aurumIJEWELMetalReference:reference,
+  };
   console.info("[AURUM][METAL REFERENCE RESOLUTION]",{
     materialId:String(materialId??""),
     normalizedId:id,
     resolvedKey:key,
     matched:true,
     sourceRootPath:ref.sourceRootPath,
-    baseColorFactor:ref.baseColorFactor,
-    roughness:ref.roughness,
-    environmentIntensity:ref.environmentIntensity,
-    finalColor:material.color?.getHexString?.()??null,
-    finalRoughness:material.roughness??null,
-    finalEnvironmentIntensity:material.envMapIntensity??null,
+    referenceBaseColorFactor:ref.baseColorFactor,
+    referenceRoughness:ref.roughness,
+    referenceEnvironmentIntensity:ref.environmentIntensity,
+    activeColor:material.color?.getHexString?.()??null,
+    activeRoughness:material.roughness??null,
+    activeEnvironmentIntensity:material.envMapIntensity??null,
+    referenceOnly:true,
   });
   return material;
 };
