@@ -114,8 +114,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : 0.006,
           ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : 2.417,
           absorption: isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 1.05 : 1,
-          color: isEmerald ? 0x067044 : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : 0xffffff,
-          reflectivity: isEmerald ? 0.30 : isRuby ? 0.38 : isSapphire ? 0.38 : 0.46,
+          color: isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : 0xffffff,
+          reflectivity: isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : 0.46,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
