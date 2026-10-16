@@ -36,6 +36,12 @@ type ProductoRow = {
 type ColeccionRow = {
   producto_id: string; coleccion_id: string; coleccion: { nombre: string } | null;
 };
+function formatBytesUpload(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function formatPrice(value: number | null, moneda: string | null) {
   if (value === null || value === undefined) return null;
   return new Intl.NumberFormat("es-PE", {
@@ -505,7 +511,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
             const percentFile = file.size ? Math.round((loaded / file.size) * 100) : 100;
             const percentTotal = totalBytes ? Math.min(99, Math.round(((bytesCompletados + loaded) / totalBytes) * 100)) : 0;
             setProgresoCarruselPorcentaje(percentTotal);
-            setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name} · ${percentFile}% (${etiquetaTamano(loaded)} de ${etiquetaTamano(file.size)})`);
+            setProgresoCarrusel(`Subiendo ${indice + 1} de ${files.length}: ${file.name} · ${percentFile}% (${formatBytesUpload(loaded)} de ${formatBytesUpload(file.size)})`);
           };
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve();
