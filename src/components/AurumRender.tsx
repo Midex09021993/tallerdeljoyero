@@ -146,7 +146,7 @@ export function AurumRender() {
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"">("materiales");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdr"|"fondos">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
   const actualizarPoster = () => {
@@ -1575,45 +1575,6 @@ export function AurumRender() {
       <label style={{display:"block",fontSize:11}}>Rim intensity<input style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Gem Light <input type="checkbox" checked={lightingStudio.gem.enabled} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,enabled:e.target.checked}})}/></label>
       <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
-      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,.12)"}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#d4af37",marginBottom:8}}>ENTORNOS HDR</div>
-        <label style={{display:"block",fontSize:11,marginBottom:9}}>HDR de metales
-          <select value={metalHdriId} onChange={e=>apiRef.current?.metalHdri(e.target.value)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
-            {Object.keys(AURUM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelMetal:"iJewel · Metal 010",studioSoft:"Estudio suave",studioHard:"Estudio contrastado",jewelry:"Estudio joyería",luxury:"Estudio lujo",monochrome:"Monocromo",warm:"Cálido",white:"Estudio blanco"} as Record<string,string>)[key]??key}</option>)}
-          </select>
-        </label>
-        <label style={{display:"block",fontSize:11}}>HDR de gemas
-          <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
-            {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"iJewel · Gemas 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
-          </select>
-        </label>
-        <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:8}}>Los entornos de metal y gemas se controlan por separado. Los perfiles iJewel siguen disponibles como referencia.</p>
-      </div>
-      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,.12)"}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#d4af37",marginBottom:8}}>FONDO</div>
-        <label style={{display:"block",fontSize:11}}>Fondo de presentación
-          <select value={fondoId} onChange={e=>apiRef.current?.fondo(e.target.value)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
-            <option value="escena">Según la escena</option>
-            <option value="blanco">Blanco puro</option>
-            <option value="marfil">Marfil cálido</option>
-            <option value="grisClaro">Gris claro</option>
-            <option value="grisMedio">Gris medio</option>
-            <option value="grisOscuro">Gris oscuro</option>
-            <option value="negro">Negro</option>
-            <option value="transparente">Transparente</option>
-          </select>
-        </label>
-        <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:7}}>El fondo cambia sin alterar el HDR ni el material seleccionado.</p>
-      </div>
-      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid rgba(255,255,255,.12)"}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#d4af37",marginBottom:8}}>ESCENAS</div>
-        <label style={{display:"block",fontSize:11}}>Perfil de escena
-          <select value={escenarioId} onChange={e=>setEscenarioId(e.target.value as EscenarioId)} style={{display:"block",width:"100%",marginTop:5,padding:"7px 8px",borderRadius:7,background:"#202329",color:"#fff",border:"1px solid rgba(255,255,255,.15)"}}>
-            {ESCENARIOS.map(e=><option key={e.id} value={e.id}>{e.nombre}</option>)}
-          </select>
-        </label>
-        <p style={{fontSize:9,lineHeight:1.45,color:"rgba(255,255,255,.48)",marginTop:7}}>La escena controla el ambiente fotográfico, las luces y el postprocesado. El fondo manual se conserva.</p>
-      </div>
     </div>
   );
   return (<>
@@ -1690,8 +1651,8 @@ export function AurumRender() {
                 </select>
               </label>
             </section>
-            <div className="mx-4 mt-3 mb-2 grid grid-cols-3 rounded-xl border border-black/[.07] bg-[#eeede8] p-1" role="tablist" aria-label="Biblioteca de joyería">
-              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
+            <div className="mx-4 mt-3 mb-2 grid grid-cols-3 gap-1 rounded-xl border border-black/[.07] bg-[#eeede8] p-1" role="tablist" aria-label="Biblioteca de joyería">
+              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length},{id:"hdr",label:"Entornos HDR",count:2},{id:"fondos",label:"Fondos",count:8}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
             </div>
             <section className="px-4 py-1">
               {uxSection==="materiales"&&<div className="pb-5">
@@ -1741,6 +1702,26 @@ export function AurumRender() {
                   <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#34c7ff] shadow-[0_0_18px_rgba(52,199,255,.12)]":"border-transparent group-hover:border-black/15")}><span className={"block h-full w-full "+e.clase}/></span>
                   <span className="mt-2 block text-[10px]">{e.nombre}</span>
                 </button>)}
+              {uxSection==="hdr"&&<div className="space-y-4 pb-5">
+                <div className="rounded-xl border border-black/[.07] bg-white p-3">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">HDR de metales</div>
+                  <select value={metalHdriId} onChange={e=>apiRef.current?.metalHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
+                    {Object.keys(AURUM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelMetal:"iJewel · Metal 010",studioSoft:"Estudio suave",studioHard:"Estudio contrastado",jewelry:"Estudio joyería",luxury:"Estudio lujo",monochrome:"Monocromo",warm:"Cálido",white:"Estudio blanco"} as Record<string,string>)[key]??key}</option>)}
+                  </select>
+                </div>
+                <div className="rounded-xl border border-black/[.07] bg-white p-3">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">HDR de gemas</div>
+                  <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
+                    {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"iJewel · Gemas 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
+                  </select>
+                </div>
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Los entornos HDR son independientes del material y del fondo. Los perfiles iJewel se mantienen como referencia.</p>
+              </div>}
+              {uxSection==="fondos"&&<div className="space-y-3 pb-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
+                {[{id:"escena",label:"Según la escena",swatch:"linear-gradient(135deg,#fff,#e9e7df)"},{id:"blanco",label:"Blanco puro",swatch:"#ffffff"},{id:"marfil",label:"Marfil cálido",swatch:"#f4f1e9"},{id:"grisClaro",label:"Gris claro",swatch:"#e7e7e4"},{id:"grisMedio",label:"Gris medio",swatch:"#a6a6a3"},{id:"grisOscuro",label:"Gris oscuro",swatch:"#303236"},{id:"negro",label:"Negro",swatch:"#090b0e"},{id:"transparente",label:"Transparente",swatch:"linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%)"}].map(bg=><button key={bg.id} type="button" onClick={()=>apiRef.current?.fondo(bg.id)} className={"flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition "+(fondoId===bg.id?"border-[#92743b]/50 bg-white shadow-sm":"border-black/[.07] bg-white/60 hover:bg-white")}><span className="size-8 shrink-0 rounded-lg border border-black/10" style={{background:bg.swatch}}/><span className="flex-1 text-xs text-[#45433e]">{bg.label}</span>{fondoId===bg.id&&<span className="text-xs font-semibold text-[#92743b]">✓</span>}</button>)}
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cambiar el fondo no modifica los HDR ni los perfiles de materiales.</p>
+              </div>}
               </div>}
             </section>
             <div className="px-5 pb-6">
