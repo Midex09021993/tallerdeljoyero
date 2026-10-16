@@ -43,10 +43,17 @@ export const AURUM_MATERIAL_ENGINE_VERSION="1.4.1";
 export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   const r=(preset.color>>16)&255, g=(preset.color>>8)&255, b=preset.color&255;
   const max=Math.max(r,g,b), min=Math.min(r,g,b), avg=(r+g+b)/3;
+  const presetId=String(preset.id??"").toLowerCase();
   let scale=.72;
   let family="neutral";
 
-  if(r>b*1.28 && g>b*1.10){
+  // Green gold has a deliberately olive alloy color. Classify it by its catalog
+  // identity before the broad RGB test, otherwise it is incorrectly treated as
+  // yellow gold and receives the yellow-gold roughness adjustment below.
+  if(presetId.includes("verde") || presetId.includes("green-gold")){
+    scale=.70;
+    family="green-gold";
+  }else if(r>b*1.28 && g>b*1.10){
     // Yellow gold: moderate the environment without changing the alloy color.
     // This avoids the extreme white/black reflection contrast seen on small,
     // highly curved ornamental parts while keeping polished metal readable.
