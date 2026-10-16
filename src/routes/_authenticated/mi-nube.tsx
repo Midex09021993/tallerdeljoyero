@@ -252,10 +252,15 @@ function MiNubePage() {
   }, [participanteId, usuarioId]);
 
   useEffect(() => {
+    // Si el usuario pausa el NAS o el equipo está apagado, no mantener sondeos en segundo plano.
+    if (nasPausado) {
+      setMensajeNas("Conexión pausada manualmente.");
+      return;
+    }
     void comprobarNas();
     const intervalo = window.setInterval(() => void comprobarNas(), 60_000);
     return () => window.clearInterval(intervalo);
-  }, [comprobarNas]);
+  }, [comprobarNas, nasPausado]);
 
   const cargarBiblioteca = useCallback(async () => {
     if (!participanteId || !usuarioId) {
@@ -312,22 +317,29 @@ function MiNubePage() {
       );
       let archivosNas: ArchivoNube[] = [];
       let carpetasNas: string[] = [];
+      // El NAS es opcional: sus fallos nunca deben activar el error general de Supabase Storage.
       if (estadoNas === "online" && !nasPausado) {
-        const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
-        if (nasError) {
-          console.warn("[Mi Nube] No se pudieron listar los vídeos del NAS.", nasError);
-          setErrorListadoNas(nasError.message || "No se pudo consultar el NAS.");
-        } else if (Array.isArray(nasData?.files)) {
-          archivosNas = nasData.files.map((item: { name: string; folder: string; bytes: number; updated: string | null }): ArchivoNube => ({
-            nombre: item.name,
-            ruta: `${item.folder}/${item.name}`,
-            carpeta: item.folder,
-            bytes: Number(item.bytes ?? 0),
-            actualizado: item.updated ? new Date(item.updated).toISOString() : null,
-            categoria: "videos",
-            origen: "nas",
-          }));
-          carpetasNas = [...new Set(archivosNas.map((archivo) => archivo.carpeta))];
+        try {
+          const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", { body: { action: "list", participantId: participanteId } });
+          if (nasError) {
+            setErrorListadoNas(nasError.message || "No se pudo consultar el NAS.");
+            console.warn("[Mi Nube] Falló el listado opcional del NAS.", nasError.message);
+          } else if (Array.isArray(nasData?.files)) {
+            archivosNas = nasData.files.map((item: { name: string; folder: string; bytes: number; updated: string | null }): ArchivoNube => ({
+              nombre: item.name,
+              ruta: `${item.folder}/${item.name}`,
+              carpeta: item.folder,
+              bytes: Number(item.bytes ?? 0),
+              actualizado: item.updated && Number.isFinite(Date.parse(item.updated)) ? new Date(item.updated).toISOString() : null,
+              categoria: "videos",
+              origen: "nas",
+            }));
+            carpetasNas = [...new Set(archivosNas.map((archivo) => archivo.carpeta))];
+          }
+        } catch (nasCause) {
+          const mensajeNasError = nasCause instanceof Error ? nasCause.message : "No se pudo consultar el NAS.";
+          setErrorListadoNas(mensajeNasError);
+          console.warn("[Mi Nube] Falló la conexión opcional con el NAS.", mensajeNasError);
         }
       }
       setCarpetas([...new Set([...nombresCarpetas, ...carpetasNas])]);
