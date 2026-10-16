@@ -185,7 +185,12 @@ export async function createAurumPostPipeline(
     if(!composer) return;
     const q=next||{};
     const qualityId=String(q?.qualityId??"");
-    const high=qualityId==="high" || qualityId==="ultra" || q.pixelRatio>=1.4;
+    // The environment diagnostic deliberately enables the high-quality passes
+    // so we can inspect the photographic pipeline even when the adaptive
+    // runtime budget reports an empty quality ID / pixel ratio near 1.0.
+    // This override is URL-opt-in only; normal rendering keeps its quality gates.
+    const diagnosticHigh = diagnosticMode === "environment";
+    const high=diagnosticHigh || qualityId==="high" || qualityId==="ultra" || q.pixelRatio>=1.4;
     const ultra=qualityId==="ultra" || q.pixelRatio>=1.55;
 
     // iJewel VJSON explicitly enables progressive jitter + TAA. In Three r185,
