@@ -21,7 +21,7 @@ export type MaterialId =
   | "oro22a_pulido" | "oro22a_satinado" | "oro22a_mate"
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
   | "platino_pulido" | "platino_mate"
-  | "oro24_pulido" | "oro18_champan" | "oro18_verde"
+  | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18a_verde_experimental"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference";
@@ -204,6 +204,8 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"oro24_pulido", grupo:"Especiales", nombre:"Oro 24K Pulido", color:0xe9bb3f, metalness:1, roughness:.075, envMapIntensity:2.35, clearcoat:.20 },
   { id:"oro18_champan", grupo:"Especiales", nombre:"Oro Champán", color:0xd6b875, metalness:1, roughness:.12, envMapIntensity:2.05, clearcoat:.16 },
   { id:"oro18_verde", grupo:"Especiales", nombre:"Oro Verde", color:0xb5b66f, metalness:1, roughness:.13, envMapIntensity:1.98, clearcoat:.15 },
+  // Perfil experimental para comparar un amarillo cálido con matiz oliva; no sustituye al oro amarillo ni al oro verde del catálogo.
+  { id:"oro18a_verde_experimental", grupo:"Especiales", nombre:"Oro Amarillo-Verde · Experimental", color:0xc6b35e, metalness:1, roughness:.10, envMapIntensity:1.90, clearcoat:.15, anisotropy:.04 },
   { id:"paladio_pulido", grupo:"Especiales", nombre:"Paladio Pulido", color:0xd1d5d9, metalness:1, roughness:.085, envMapIntensity:2.05, clearcoat:.18 },
   { id:"rodio_negro", grupo:"Especiales", nombre:"Rodio Negro", color:0x2b3035, metalness:1, roughness:.13, envMapIntensity:1.62, clearcoat:.16 },
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
