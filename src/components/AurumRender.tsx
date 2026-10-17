@@ -1820,16 +1820,43 @@ export function AurumRender() {
                   <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla el entorno óptico de las piedras sin cambiar el HDR de los metales.</p>
                 </div>
               </div>}
-              {uxSection==="ambientes"&&<div className="space-y-3 pb-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">10 plantillas de ambiente</div>
-                <p className="text-[10px] leading-relaxed text-[#77756f]">Plantillas recuperadas de tus VJSON. Aplican el HDR y la rotación originales al entorno óptico de las gemas; el HDR de metales y el fondo permanecen independientes.</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group rounded-xl border p-2 text-left transition "+(ambienteId===preset.id?"border-[#92743b]/60 bg-[#92743b]/[.08] shadow-sm":"border-black/[.07] bg-white/70 hover:border-[#92743b]/35 hover:bg-white")}>
-                    <span className={"mb-2 flex aspect-[1.35] items-center justify-center overflow-hidden rounded-lg border "+(ambienteId===preset.id?"border-[#92743b]/25 bg-[#e8e0cf]":"border-black/[.06] bg-[#eeede8]")}><ImageIcon className={"size-5 "+(ambienteId===preset.id?"text-[#92743b]":"text-[#aaa59a]")}/></span>
-                    <span className="block text-[11px] font-medium text-[#292824]">{preset.name}</span>
-                    <span className="mt-0.5 block text-[9px] text-[#858178]">HDR · rotación original</span>
-                    {ambienteId===preset.id&&<span className="mt-1 block text-[9px] font-semibold text-[#92743b]">Activo ✓</span>}
-                  </button>)}
+              {uxSection==="ambientes"&&<div className="pb-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes de iluminación</div>
+                    <p className="mt-1 text-[10px] text-[#77756f]">Selecciona el reflejo que quieres probar en tus gemas.</p>
+                  </div>
+                  <span className="rounded-full border border-[#92743b]/20 bg-white px-2 py-1 text-[9px] font-semibold text-[#92743b]">10 HDR</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.values(AURUM_AMBIENT_PRESETS).map((preset,index)=>{
+                    const looks=[
+                      "radial-gradient(ellipse at 30% 24%,#fff9df 0 8%,transparent 32%),linear-gradient(125deg,#d9d1b7 0%,#f7f5ed 34%,#77766d 58%,#f3e5bd 78%,#343630 100%)",
+                      "radial-gradient(ellipse at 70% 22%,#ffffff 0 7%,transparent 30%),linear-gradient(135deg,#f4f4f1 0%,#aeb6bd 30%,#f9fafb 47%,#5d6670 69%,#e3e7e8 100%)",
+                      "radial-gradient(ellipse at 24% 30%,#fff4d9 0 9%,transparent 31%),linear-gradient(115deg,#3c454b 0%,#d8d5c9 25%,#f9f6e9 43%,#4e555b 64%,#b5a47e 100%)",
+                      "radial-gradient(ellipse at 72% 25%,#ffffff 0 8%,transparent 30%),linear-gradient(135deg,#d5d9dc 0%,#f9faf9 25%,#747f8a 50%,#e8e9e6 72%,#353c43 100%)",
+                      "radial-gradient(ellipse at 30% 20%,#fff2c6 0 8%,transparent 30%),linear-gradient(125deg,#4d3b2b 0%,#c8a96c 25%,#fff0c9 43%,#5d5040 66%,#d8d0bb 100%)",
+                      "radial-gradient(ellipse at 60% 18%,#ffffff 0 7%,transparent 30%),linear-gradient(120deg,#f0eee6 0%,#8b939a 27%,#ffffff 45%,#59636d 69%,#d3d5d4 100%)",
+                      "radial-gradient(ellipse at 24% 22%,#fff9e8 0 8%,transparent 30%),linear-gradient(130deg,#3e4146 0%,#aeb4b8 25%,#f8f6ee 45%,#737a80 68%,#c6b58d 100%)",
+                      "radial-gradient(ellipse at 75% 20%,#fff3d5 0 8%,transparent 31%),linear-gradient(130deg,#8d7150 0%,#f6e3b5 27%,#fffdf5 45%,#4d4b46 68%,#b3a28a 100%)",
+                      "radial-gradient(ellipse at 32% 22%,#ffffff 0 8%,transparent 30%),linear-gradient(130deg,#d9dedf 0%,#ffffff 26%,#7e878d 48%,#f3f3ef 70%,#454b50 100%)",
+                      "radial-gradient(ellipse at 72% 24%,#fff3c9 0 8%,transparent 30%),linear-gradient(130deg,#514637 0%,#dfc58b 25%,#fff8e8 44%,#565b5e 68%,#e4dfd0 100%)"
+                    ];
+                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                      <span className={"relative mb-1.5 block aspect-[1.12] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
+                        <span className="absolute inset-0" style={{background:looks[index]}}/>
+                        <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"/>
+                        <span className="absolute left-1.5 top-1.5 rounded-md border border-white/35 bg-black/25 px-1.5 py-0.5 text-[8px] font-semibold text-white">HDR</span>
+                        {ambienteId===preset.id&&<span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-[#92743b] text-[9px] text-white">✓</span>}
+                        <span className="absolute inset-x-0 bottom-1.5 text-[9px] font-medium tracking-wide text-white drop-shadow">{String(index+1).padStart(2,"0")}</span>
+                      </span>
+                      <span className="block truncate text-[10px]">{preset.name}</span>
+                    </button>;
+                  })}
+                </div>
+                <div className="mt-3 rounded-lg border border-black/[.07] bg-white/70 p-2.5">
+                  <div className="text-[10px] font-semibold text-[#292824]">{ambienteId?AURUM_AMBIENT_PRESETS[ambienteId]?.name:"Ningún ambiente seleccionado"}</div>
+                  <p className="mt-1 text-[9px] leading-relaxed text-[#77756f]">Estas miniaturas son referencias visuales de los estilos de iluminación, no capturas de los HDR originales. El HDR de metales y el fondo se mantienen independientes.</p>
                 </div>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
