@@ -971,14 +971,16 @@ export function AurumRender() {
           const preset=AURUM_AMBIENT_PRESETS[key];
           if (!preset) return;
           setAmbienteId(key);
-          // Un ambiente es un rig HDR compartido: debe reflejarse tanto en
-          // los metales como en las gemas. Los selectores HDR independientes
-          // siguen disponibles para ajustes manuales posteriores.
-          // Metal reflections need a gentler contribution than gemstone optics:
-          // the VJSON HDRs contain high-contrast dark bands that can turn gold
-          // olive/black if used at full strength. Keep the same environment and
-          // orientation, but blend it into the metal at a conservative intensity.
-          cargarHDRI(key,preset.url,preset.rotation,Math.min(preset.intensity*0.32,0.38));
+          // The supplied VJSON environments are gem-optimized HDRs with strong
+          // black flags. Do not feed those maps into gold: they crush metal shadows.
+          // Keep the gem HDR and rotation faithful to the VJSON, while selecting a
+          // jewelry/studio HDR from Aurum's metal library for a controlled gold look.
+          const metalProfiles:Record<string,string>={
+            ambiente01:"studioSoft",ambiente02:"jewelry",ambiente03:"studioHard",
+            ambiente04:"white",ambiente05:"warm",ambiente06:"luxury",
+            ambiente07:"studioHard",ambiente08:"warm",ambiente09:"jewelry",ambiente10:"luxury",
+          };
+          cargarHDRI(metalProfiles[key]??"studioSoft",undefined,preset.rotation,1);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
         },
         fondo:(key:string)=>{
