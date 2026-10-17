@@ -105,7 +105,7 @@ function fechaHoyPeru() {
 
 function fechaVencimientoPorDefecto() {
   const [anio, mes, dia] = fechaHoyPeru().split("-").map(Number);
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia + 7));
+  const fecha = new Date(Date.UTC(anio ?? 2000, (mes ?? 1) - 1, (dia ?? 1) + 7));
   return fecha.toISOString().slice(0, 10);
 }
 
