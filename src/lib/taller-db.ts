@@ -1831,9 +1831,10 @@ export function useEnviarAArea() {
 export function useSedes() {
   return useQuery({
     // La clave se conserva para compatibilidad con componentes existentes.
-    // La fuente real ya es Ecosistema.
+    // Las altas, ediciones y bajas de participantes invalidan esta caché.
+    // Cinco minutos reducen recargas al cambiar entre pantallas que comparten el selector.
     queryKey: ["sedes"],
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<Sede[]> => {
       const { data, error } = await supabase
         .from("ecosistema_participantes")
