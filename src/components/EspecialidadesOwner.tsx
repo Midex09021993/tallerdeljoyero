@@ -40,11 +40,12 @@ export function EspecialidadesOwner() {
     },
   });
   const { data: participantes = [] } = useQuery({
-    queryKey: ["ecosistema-participantes", "selector-especialidades"],
+    // Comparte la caché del directorio del dueño para evitar una petición duplicada.
+    queryKey: ["ecosistema-participantes"],
     // Las mutaciones del catálogo invalidan el prefijo ecosistema-participantes.
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("ecosistema_participantes").select("id,nombre,razon_social,sede_id").order("nombre");
+      const { data, error } = await supabase.from("ecosistema_participantes").select("id,tipo_participante,nombre,razon_social,email,telefono,ciudad,descripcion,estado,notas_owner,sede_id,metadata").order("nombre");
       if (error) throw error;
       return (data ?? []) as Participante[];
     },
