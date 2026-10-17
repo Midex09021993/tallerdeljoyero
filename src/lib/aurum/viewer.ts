@@ -1,13 +1,12 @@
-import type { Box3, Camera, Light, LightShadow, Material, Object3D, PerspectiveCamera, Scene, Texture, Vector3, WebGLRenderer } from "three";
+import type { Box3, Camera, Light, LightShadow, Object3D, PerspectiveCamera, Scene, Texture, Vector3, WebGLRenderer } from "three";
+import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "./camera";
 
-type AurumRuntimeLight = Light & { distance?: number; shadow?: LightShadow; target?: Object3D };
+type AurumRuntimeLight = Light & { distance?: number; castShadow?: boolean; shadow?: LightShadow; target?: Object3D };
 type AurumRenderer = WebGLRenderer & { renderLists?: { dispose?: () => void } };
 type AurumDisposable = { dispose?: () => void };
 type AurumComposer = AurumDisposable & { setSize?: (width:number,height:number)=>void };
-type AurumControls = { target: Vector3; update: () => boolean | void; dispose?: () => void; addEventListener?: (type:string, listener:EventListener)=>void; removeEventListener?: (type:string, listener:EventListener)=>void; enableDamping?:boolean; dampingFactor?:number; enablePan?:boolean; enableRotate?:boolean; autoRotate?:boolean; autoRotateSpeed?:number; minDistance?:number; maxDistance?:number; zoomSpeed?:number; rotateSpeed?:number };
-type AurumComposer = AurumDisposable & { setSize?: (width:number,height:number)=>void };
-type AurumControls = { target: Vector3; update: () => boolean | void; dispose?: () => void; addEventListener?: (type:string, listener:EventListener)=>void; removeEventListener?: (type:string, listener:EventListener)=>void; enableDamping?:boolean; dampingFactor?:number; enablePan?:boolean; enableRotate?:boolean; autoRotate?:boolean; autoRotateSpeed?:number; minDistance?:number; maxDistance?:number; zoomSpeed?:number; rotateSpeed?:number };
+type AurumControls = OrbitControls;
 type AurumGroundController = AurumDisposable & { positionUnderModel: (bounds: Box3) => void; positionBakedShadow?: (bounds: Box3) => void };
 type AurumRuntimeCamera = Camera & { near?: number; far?: number; left?: number; right?: number; top?: number; bottom?: number; updateProjectionMatrix?: () => void };
 
@@ -129,7 +128,7 @@ export function disposeAurumViewer(viewer: {
 export function createAurumWebGLViewer(
   THREE: typeof import("three"),
   nodo: HTMLElement,
-  options: { pixelRatio?: number; maxDistance?: number; controlsClass?: new (camera: PerspectiveCamera, domElement: HTMLElement) => AurumControls } = {}
+  options: { pixelRatio?: number; maxDistance?: number; controlsClass?: new (camera: PerspectiveCamera, domElement: HTMLElement) => OrbitControls } = {}
 ) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 1, 0.001, 1000);

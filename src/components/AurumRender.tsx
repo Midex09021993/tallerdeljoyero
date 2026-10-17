@@ -976,7 +976,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       const camaraVista=(id:VistaId)=>{
-        if (controles) applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+        if (controles) if (controles) applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
         // The public configurator has a much shorter viewport than the editor.
         // Keep the entire jewel visible after view presets are applied as well
         // as after the initial model framing.

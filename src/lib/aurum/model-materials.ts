@@ -52,7 +52,7 @@ type AurumGemChoice = { id: string; familia?: string };
 type AurumMetalChoice = { id: string };
 type AurumMeshObject = THREE.Object3D & { isMesh?: boolean; material: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
 
-export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMetal extends AurumMetalChoice, TPreset extends { familia?: string }>(
+export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMetal extends AurumMetalChoice, TPreset extends { familia: string }>(
   model:THREE.Object3D,
   options:{
     gems:TGem[];
