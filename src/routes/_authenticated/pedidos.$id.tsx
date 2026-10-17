@@ -99,16 +99,23 @@ function PedidoDetalle() {
     enabled: Boolean(sesion?.esAdmin && trabajos.length > 0),
     queryFn: async () => {
       if (!sesion?.esAdmin || trabajos.length === 0) return {};
+      const areas = [...new Set(trabajos.map((trabajo) => String(trabajo.area || "").trim()).filter(Boolean))];
       const resultados = await Promise.all(
-        trabajos.map(async (trabajo) => {
+        areas.map(async (area) => {
           const { data, error } = await supabase.rpc("listar_participantes_servicio", {
-            _area: String(trabajo.area || "").trim(),
+            _area: area,
           });
           if (error) throw error;
-          return [trabajo.id, data ?? []] as const;
+          return [area, data ?? []] as const;
         }),
       );
-      return Object.fromEntries(resultados);
+      const participantesPorArea = new Map(resultados);
+      return Object.fromEntries(
+        trabajos.map((trabajo) => [
+          trabajo.id,
+          participantesPorArea.get(String(trabajo.area || "").trim()) ?? [],
+        ]),
+      );
     },
   });
 
