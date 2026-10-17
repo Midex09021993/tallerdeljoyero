@@ -1159,7 +1159,19 @@ export function AurumRender() {
             if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
             }
-            renderer.render(escena,camara);
+            if(composer && applyPostQuality){
+              // Capture-only photographic pass: enable temporal AA and size the
+              // composer to the supersampled target, not the small viewer CSS box.
+              applyPostQuality({...renderQuality,pixelRatio:1,qualityId:"ultra"},{capture:true,width:renderWidth,height:renderHeight});
+              // TAA converges across jittered samples. Keep this work exclusive
+              // to export so camera movement remains on the fast direct path.
+              for(let sample=0;sample<32;sample++){
+                diamondBvhRuntime?.update();
+                composer.render();
+              }
+            }else{
+              renderer.render(escena,camara);
+            }
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
               requestedOutput: { width, height },
               internalRender: { width: renderer.domElement.width, height: renderer.domElement.height },
@@ -1191,6 +1203,9 @@ export function AurumRender() {
             renderer.setPixelRatio(originalPixelRatio);
             (renderer as any).transmissionResolutionScale=originalTransmissionResolutionScale;
             renderer.setSize(originalCssWidth,originalCssHeight,false);
+            if(composer && applyPostQuality){
+              applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
+            }
             if(typeof originalAspect==="number") {
               camara.aspect=originalAspect;
               camara.updateProjectionMatrix?.();
