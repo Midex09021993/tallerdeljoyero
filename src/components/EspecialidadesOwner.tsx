@@ -32,6 +32,7 @@ export function EspecialidadesOwner() {
 
   const { data: especialidades = [], isLoading } = useQuery({
     queryKey: ["ecosistema-especialidades"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("especialidades").select("*").order("categoria").order("nombre");
       if (error) throw error;
@@ -40,6 +41,7 @@ export function EspecialidadesOwner() {
   });
   const { data: participantes = [] } = useQuery({
     queryKey: ["ecosistema-participantes"],
+    staleTime: 15_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("ecosistema_participantes").select("id,nombre,razon_social,sede_id").order("nombre");
       if (error) throw error;
@@ -133,6 +135,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
   const fuenteKey = participante.sede_id ? "sede" : "participante";
   const { data: actuales = [], isLoading } = useQuery({
     queryKey: ["participante-especialidades", participante.id, fuenteKey],
+    staleTime: 15_000,
     queryFn: async () => {
       if (participante.sede_id) {
         const { data, error } = await supabase
