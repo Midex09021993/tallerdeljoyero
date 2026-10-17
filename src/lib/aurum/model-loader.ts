@@ -4,7 +4,7 @@ import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
-type RhinoLayer = { [key: string]: unknown; id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; color?: unknown; Color?: unknown; mode?: unknown; Mode?: unknown; objectMode?: unknown; ObjectMode?: unknown; visible?: unknown; Visible?: unknown; isVisible?: unknown; visibility?: unknown; visibilityMode?: unknown; VisibilityMode?: unknown; parentLayerId?: unknown; parentId?: unknown; parentLayerID?: unknown; ParentLayerId?: unknown; };
+type RhinoLayer = { [key: string]: unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; color?: unknown; Color?: unknown; mode?: unknown; Mode?: unknown; objectMode?: unknown; ObjectMode?: unknown; visible?: unknown; Visible?: unknown; isVisible?: unknown; visibility?: unknown; visibilityMode?: unknown; VisibilityMode?: unknown; parentLayerId?: unknown; parentId?: unknown; parentLayerID?: unknown; ParentLayerId?: unknown; };
 type RhinoObject = THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isLineSegments?: boolean; isPoints?: boolean; geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
 type RhinoGeometryData = { objects?: Array<{ objectType?: string; geometry?: { xform?: { array?: unknown } }; attributes?: Record<string, unknown> }> };
 
@@ -124,12 +124,12 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
   object.traverse((node) => {
       const x = node as RhinoObject;
     if (!x.isMesh) return;
-    const attrs = x.userData?.attributes || {};
+    const attrs = x.userData?.["attributes"] || {};
     const index = resolveLayerIndex(x);
     let layerVisible = true;
     if (index >= 0) layerVisible = effectiveVisible(index);
     else {
-      const layerName = String(x.userData?.attributes?.layerName ?? x.userData?.layerName ?? "").trim().toLowerCase();
+      const layerName = String(x.userData?.["attributes"]?.layerName ?? x.userData?.["layerName"] ?? "").trim().toLowerCase();
       if (layerName && byName.has(layerName)) layerVisible = effectiveVisible(layers.indexOf(byName.get(layerName)));
     }
     const objectVisible = !isRhinoObjectHiddenForExport(attrs);
@@ -232,7 +232,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     const suspiciousMeshes: Array<Record<string, unknown>> = [];
     object.traverse((x: any) => {
       if (!x.isMesh) return;
-      const diagnostic = x.userData?.aurumNormalDiagnostics;
+      const diagnostic = x.userData?.["aurumNormalDiagnostics"];
       if (diagnostic?.valid && Number(diagnostic.suspiciousRatio) >= 0.12) {
         suspiciousMeshes.push({
           mesh: String(x.name || x.uuid),
@@ -378,17 +378,17 @@ export async function convertAurumToGlb(
   object.traverse((node) => {
     const x = node as RhinoObject;
     if (!x?.isMesh) return;
-    const attrs = x.userData?.attributes ?? {};
-    const rawIndex = attrs["layerIndex"] ?? attrs["LayerIndex"] ?? x.userData?.layerIndex ?? x.userData?.LayerIndex;
+    const attrs = x.userData?.["attributes"] ?? {};
+    const rawIndex = attrs["layerIndex"] ?? attrs["LayerIndex"] ?? x.userData?.["layerIndex"] ?? x.userData?.["LayerIndex"];
     const index = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
       ? Number(rawIndex) : null;
-    const sourceLayer = index !== null ? sourceLayers[index] : null;
+    const sourceLayer = index !== null ? sourceLayers[index] ?? null : null;
     x.userData = {
       ...(x.userData ?? {}),
       aurumRhinoSource: {
         layerIndex: index,
-        layerId: sourceLayer?.id ?? sourceLayer?.Id ?? attrs["layerId"] ?? attrs["LayerId"] ?? x.userData?.layerId ?? x.userData?.LayerId ?? null,
-        layerName: sourceLayer?.name ?? sourceLayer?.Name ?? attrs["layerName"] ?? attrs["LayerName"] ?? x.userData?.layerName ?? x.userData?.LayerName ?? null,
+        layerId: sourceLayer?.id ?? sourceLayer?.Id ?? attrs["layerId"] ?? attrs["LayerId"] ?? x.userData?.["layerId"] ?? x.userData?.["LayerId"] ?? null,
+        layerName: sourceLayer?.name ?? sourceLayer?.Name ?? attrs["layerName"] ?? attrs["LayerName"] ?? x.userData?.["layerName"] ?? x.userData?.["LayerName"] ?? null,
         layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? attrs.layerColor ?? attrs.LayerColor ?? null,
         materialIndex: attrs.materialIndex ?? attrs.MaterialIndex ?? null,
         objectId: attrs["id"] ?? attrs["Id"] ?? null,
@@ -410,12 +410,12 @@ export async function convertAurumToGlb(
       x.userData = {
         ...(x.userData ?? {}),
         aurumRhino: {
-          ...(x.userData?.aurumRhino ?? {}),
+          ...(x.userData?.["aurumRhino"] ?? {}),
           capa: part.capa,
           colorCapa: part.colorCapa,
           categoria: part.categoria,
           layerIndex: part.layerIndex ?? -1,
-          rhinoLayerId: part.layerId ?? x.userData?.aurumRhino?.rhinoLayerId ?? null,
+          rhinoLayerId: part.layerId ?? x.userData?.["aurumRhino"]?.rhinoLayerId ?? null,
           matrixSlot: part.matrixSlot,
           layerKey: part.layerKey,
         },

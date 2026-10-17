@@ -6,6 +6,8 @@ type AurumRenderer = WebGLRenderer & { renderLists?: { dispose?: () => void } };
 type AurumDisposable = { dispose?: () => void };
 type AurumComposer = AurumDisposable & { setSize?: (width:number,height:number)=>void };
 type AurumControls = { target: Vector3; update: () => boolean | void; dispose?: () => void; addEventListener?: (type:string, listener:EventListener)=>void; removeEventListener?: (type:string, listener:EventListener)=>void; enableDamping?:boolean; dampingFactor?:number; enablePan?:boolean; enableRotate?:boolean; autoRotate?:boolean; autoRotateSpeed?:number; minDistance?:number; maxDistance?:number; zoomSpeed?:number; rotateSpeed?:number };
+type AurumComposer = AurumDisposable & { setSize?: (width:number,height:number)=>void };
+type AurumControls = { target: Vector3; update: () => boolean | void; dispose?: () => void; addEventListener?: (type:string, listener:EventListener)=>void; removeEventListener?: (type:string, listener:EventListener)=>void; enableDamping?:boolean; dampingFactor?:number; enablePan?:boolean; enableRotate?:boolean; autoRotate?:boolean; autoRotateSpeed?:number; minDistance?:number; maxDistance?:number; zoomSpeed?:number; rotateSpeed?:number };
 type AurumGroundController = AurumDisposable & { positionUnderModel: (bounds: Box3) => void; positionBakedShadow?: (bounds: Box3) => void };
 type AurumRuntimeCamera = Camera & { near?: number; far?: number; left?: number; right?: number; top?: number; bottom?: number; updateProjectionMatrix?: () => void };
 
@@ -163,7 +165,7 @@ export function createAurumWebGLViewer(
 }
 
 export function startAurumViewerLoop(
-  viewer: { node: HTMLElement; camera: PerspectiveCamera; renderer: AurumRenderer; composer?: AurumDisposable; ssaoPass?: { setSize?: (width:number,height:number)=>void }; controls?: AurumControls | null },
+  viewer: { node: HTMLElement; camera: PerspectiveCamera; renderer: AurumRenderer; composer?: AurumComposer; ssaoPass?: { setSize?: (width:number,height:number)=>void }; controls?: AurumControls | null },
   render: () => void,
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
