@@ -525,9 +525,10 @@ const CAMPOS_PEDIDO_SELECTOR =
 
 export function usePedidosSelector() {
   return useQuery({
-    // La clave comparte el prefijo de pedidos para recibir sus invalidaciones.
+    // Comparte el prefijo de pedidos para recibir invalidaciones de mutaciones.
+    // Dos minutos evitan recargas repetidas al alternar entre bandejas y selectores.
     queryKey: ["pedidos", "selector"],
-    staleTime: 60_000,
+    staleTime: 120_000,
     queryFn: async (): Promise<PedidoSelector[]> => {
       const { data, error } = await supabase
         .from("pedidos")
