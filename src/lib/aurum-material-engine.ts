@@ -122,11 +122,15 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   const response=getAurumMetalReflectionResponse(preset);
   // Diagnostic-only comparison mode: preserve the selected catalog's calibrated
   // optical values without changing the normal renderer path.
+  // User-approved premium metal calibration is now the default renderer behavior.
+  // Keep the URL flags backward-compatible for diagnostics, but do not require
+  // query parameters to activate the calibrated optical values.
   const diagnosticParams=typeof window!=="undefined"
     ? new URLSearchParams(window.location.search)
     : null;
-  const useCatalogCalibration=diagnosticParams?.get("aurumDiag")==="environment"
-    && diagnosticParams?.get("aurumMetalCalibrated")==="on";
+  const useCatalogCalibration=diagnosticParams?.get("aurumMetalCalibrated")==="off"
+    ? false
+    : true;
 
   // Keep authored finish categories. Polished yellow gold gets only a modest
   // roughness increase so studio reflections remain defined rather than hazy.
