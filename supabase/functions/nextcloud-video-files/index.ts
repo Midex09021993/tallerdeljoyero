@@ -188,7 +188,43 @@ Deno.serve(async (req) => {
         return json({ error: `Nextcloud no pudo finalizar el vídeo (HTTP ${status}).` }, 502);
       }
       await moved.body?.cancel();
-      return json({ ok: true, folder, name: filename, bytes: totalBytes });
+
+      // Verificar el archivo final directamente: listar todas las carpetas
+      // para confirmar un solo vídeo genera muchas peticiones WebDAV innecesarias.
+      // PROPFIND sobre la ruta exacta confirma que existe y que su tamaño coincide.
+      let verifiedBytes: number | null = null;
+      let lastStatus = 0;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, attempt * 300));
+        const verification = await fetch(destination, {
+          method: "PROPFIND",
+          headers: {
+            Authorization: auth,
+            Depth: "0",
+            "Content-Type": "application/xml; charset=utf-8",
+          },
+          body: `<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:getcontentlength/></d:prop></d:propfind>`,
+          redirect: "error",
+        });
+        lastStatus = verification.status;
+        if (verification.status === 207 || verification.status === 200) {
+          const xml = await verification.text();
+          const blocks = xml.match(/<(?:[A-Za-z0-9_-]+:)?response\\b[\\s\\S]*?<\\/(?:[A-Za-z0-9_-]+:)?response\\s*>/gi) ?? [];
+          const actual = blocks.map((block) => Number(xmlValue(block, "getcontentlength"))).find(Number.isFinite);
+          if (actual !== undefined) verifiedBytes = actual;
+          if (verifiedBytes === totalBytes) break;
+        } else {
+          await verification.body?.cancel();
+        }
+      }
+      if (verifiedBytes !== totalBytes) {
+        return json({
+          error: verifiedBytes === null
+            ? `Nextcloud recibió el vídeo, pero no pudo verificar su tamaño (HTTP ${lastStatus}).`
+            : `El tamaño verificado del vídeo (${verifiedBytes} bytes) no coincide con el enviado (${totalBytes} bytes).`,
+        }, 502);
+      }
+      return json({ ok: true, verified: true, folder, name: filename, bytes: verifiedBytes });
     }
     if (action === "delete") {
       const folder = safeSegment(typeof body.folder === "string" ? body.folder : "");
