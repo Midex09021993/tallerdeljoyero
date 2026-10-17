@@ -526,6 +526,7 @@ const CAMPOS_PEDIDO_SELECTOR =
 export function usePedidosSelector() {
   return useQuery({
     queryKey: ["pedidos-selector"],
+    staleTime: 15_000,
     queryFn: async (): Promise<PedidoSelector[]> => {
       const { data, error } = await supabase
         .from("pedidos")
@@ -563,6 +564,7 @@ export function usePedidosSelector() {
 export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
+    staleTime: 15_000,
     queryFn: async (): Promise<Pedido[]> => {
       // La tabla pedidos es la fuente principal de esta bandeja.
       // Los datos comerciales son enriquecimiento opcional: un problema de RLS,
