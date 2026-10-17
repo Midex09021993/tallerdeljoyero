@@ -8,8 +8,8 @@ export function captureAurumSourceMaterials(mesh: Mesh): Material[] {
   const existing = sourceMaterialsByMesh.get(mesh);
   if (existing) return existing;
   const wasArray = Array.isArray(mesh.material);
-  const materials = (wasArray ? mesh.material : [mesh.material])
-    .map((material) => material?.clone ? material.clone() : material);
+  const sourceMaterials: Material[] = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const materials = sourceMaterials.map((material) => material.clone ? material.clone() : material);
   sourceMaterialsByMesh.set(mesh, materials);
   sourceMaterialArrayShapeByMesh.set(mesh, wasArray);
   return materials;

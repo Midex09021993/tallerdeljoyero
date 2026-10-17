@@ -63,7 +63,7 @@ export const disposeAurumThicknessCacheForTarget=(target:THREE.Object3D | null |
     const geometry=(item as ThicknessTarget).geometry;
     if(geometry?.uuid)identities.add(String(geometry.uuid));
   };
-  collect(target);
+  if (target) collect(target);
   target?.traverse((child)=>collect(child));
   if(!identities.size)return;
   for(const [key,result] of AURUM_THICKNESS_CACHE){
@@ -178,8 +178,9 @@ export const buildAurumThicknessMap=(target:ThicknessTarget,thicknessScale=1,siz
   }
   const positions:Array<THREE.Vector3>=Array.from({length:position.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(position,i));
   const normals:Array<THREE.Vector3>=Array.from({length:position.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(normal,i).normalize());
-  const triangles:Tri[]=geometry.index
-    ? Array.from({length:Math.floor(geometry.index.count/3)},(_,i)=>[geometry.index.getX(i*3),geometry.index.getX(i*3+1),geometry.index.getX(i*3+2)])
+  const index = geometry.index;
+  const triangles:Tri[]=index
+    ? Array.from({length:Math.floor(index.count/3)},(_,i)=>[index.getX(i*3),index.getX(i*3+1),index.getX(i*3+2)])
     : Array.from({length:Math.floor(position.count/3)},(_,i)=>[i*3,i*3+1,i*3+2]);
   // Spatial thickness baking is intentionally skipped for very dense gems.
   // The scalar local-bounds thickness remains active, so a large CAD stone never
