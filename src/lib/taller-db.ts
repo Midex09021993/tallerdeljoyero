@@ -1882,6 +1882,7 @@ export function useUsuarios() {
 export function useInventario() {
   return useQuery({
     queryKey: ["inventario"],
+    staleTime: 15_000,
     queryFn: async (): Promise<Material[]> => {
       const { data, error } = await supabase
         .from("inventario")
@@ -2164,6 +2165,7 @@ export function useBorrarMaterial() {
 export function useMovimientosInventario() {
   return useQuery({
     queryKey: ["inventario-movimientos"],
+    staleTime: 15_000,
     queryFn: async (): Promise<MovimientoInventario[]> => {
       const { data, error } = await supabase
         .from("inventario_movimientos")
