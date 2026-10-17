@@ -423,6 +423,9 @@ export type Database = {
           id?: string
           imagen_principal_url?: string | null
           medidas?: string | null
+          modalidad_talla?: string | null
+          sistema_tallas?: string | null
+          tallas_disponibles?: string | null
           metal_principal?: string | null
           moneda?: string
           mostrar_ficha_tecnica?: boolean
