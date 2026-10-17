@@ -106,6 +106,7 @@ export function AurumRender() {
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("ijewelGem");
   const [ambienteId, setAmbienteId] = useState<string|null>(null);
+  const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("escena");
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -971,17 +972,26 @@ export function AurumRender() {
           const preset=AURUM_AMBIENT_PRESETS[key];
           if (!preset) return;
           setAmbienteId(key);
-          // The supplied VJSON environments are gem-optimized HDRs with strong
-          // black flags. Do not feed those maps into gold: they crush metal shadows.
-          // Keep the gem HDR and rotation faithful to the VJSON, while selecting a
-          // jewelry/studio HDR from Aurum's metal library for a controlled gold look.
-          const metalProfiles:Record<string,string>={
-            ambiente01:"studioSoft",ambiente02:"jewelry",ambiente03:"studioHard",
-            ambiente04:"white",ambiente05:"warm",ambiente06:"luxury",
-            ambiente07:"studioHard",ambiente08:"warm",ambiente09:"jewelry",ambiente10:"luxury",
-          };
-          cargarHDRI(metalProfiles[key]??"studioSoft",undefined,preset.rotation,1);
+          // Keep the metal studio reflection stable to avoid abrupt hue/contrast
+          // jumps. The selected VJSON HDR and its rotation remain dedicated to gems.
+          cargarHDRI("studioSoft",undefined,0,1);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
+        },
+        influenciaMetalAmbiente:(percent:number)=>{
+          const scale=Math.max(0,Math.min(1.5,(Number.isFinite(percent)?percent:45)/100));
+          if (!modelo) return;
+          modelo.traverse((x:any)=>{
+            if(!x.isMesh||!x.material)return;
+            const adjust=(m:any)=>{
+              if(!m?.userData?.aurumMetalRenderProfile)return m;
+              const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
+              if(Number.isFinite(base)) m.envMapIntensity=base*scale;
+              m.needsUpdate=true;
+              return m;
+            };
+            x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
+          });
+          invalidateRenderRef.current?.();
         },
         fondo:(key:string)=>{
           setFondoId(key);
@@ -1865,6 +1875,14 @@ export function AurumRender() {
                       <span className="block truncate text-[10px]">{preset.name}</span>
                     </button>;
                   })}
+                </div>
+                <div className="mt-3 rounded-xl border border-black/[.07] bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="aurum-ambient-metal-influence" className="text-[10px] font-semibold text-[#292824]">Influencia del ambiente en metales</label>
+                    <span className="text-[10px] font-semibold tabular-nums text-[#92743b]">{ambienteMetalInfluence}%</span>
+                  </div>
+                  <input id="aurum-ambient-metal-influence" type="range" min="0" max="100" step="5" value={ambienteMetalInfluence} onChange={e=>{const value=Number(e.target.value);setAmbienteMetalInfluence(value);apiRef.current?.influenciaMetalAmbiente(value);}} className="mt-2 w-full accent-[#92743b]"/>
+                  <div className="mt-1 flex justify-between text-[9px] text-[#77756f]"><span>Reflejo suave</span><span>Reflejo intenso</span></div>
                 </div>
                 <div className="mt-3 rounded-lg border border-black/[.07] bg-white/70 p-2.5">
                   <div className="text-[10px] font-semibold text-[#292824]">{ambienteId?AURUM_AMBIENT_PRESETS[ambienteId]?.name:"Ningún ambiente seleccionado"}</div>
