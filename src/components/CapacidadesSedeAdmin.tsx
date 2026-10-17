@@ -90,13 +90,24 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
     const idsSubtaller = new Set(especialidades.filter((e) => SUBCAPACIDADES_TALLER.includes(e.nombre as (typeof SUBCAPACIDADES_TALLER)[number])).map((e) => e.id));
     if (activo) {
       if (especialidad === "Taller") {
-        setSeleccionadas(ids.filter((x) => x !== id && !idsSubtaller.has(x)));
+        const siguientes = ids.filter((x) => x !== id && !idsSubtaller.has(x));
+        setSeleccionadas(siguientes);
+        setModalidades({ ...estadoModalidades, produccion_activa: siguientes.some((x) => {
+          const nombre = especialidades.find((e) => e.id === x)?.nombre;
+          return CAPACIDADES_PRODUCCION.includes(nombre as (typeof CAPACIDADES_PRODUCCION)[number]);
+        }) });
         return;
       }
       const taller = especialidades.find((e) => e.nombre === "Taller");
       if (taller && !ids.includes(taller.id) && idsSubtaller.has(id)) return;
     }
-    setSeleccionadas(activo ? ids.filter((x) => x !== id) : [...ids, id]);
+    const siguientes = activo ? ids.filter((x) => x !== id) : [...ids, id];
+    setSeleccionadas(siguientes);
+    const tieneProduccionInterna = siguientes.some((x) => {
+      const nombre = especialidades.find((e) => e.id === x)?.nombre;
+      return CAPACIDADES_PRODUCCION.includes(nombre as (typeof CAPACIDADES_PRODUCCION)[number]);
+    });
+    setModalidades({ ...estadoModalidades, produccion_activa: tieneProduccionInterna });
   }
 
   async function guardar() {
@@ -173,8 +184,8 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Modalidades de trabajo</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-4">
-            <input type="checkbox" checked={estadoModalidades.produccion_activa} disabled={guardando || loadingModalidades} onChange={(e) => setModalidades({ ...estadoModalidades, produccion_activa: e.target.checked })} />
-            <span className="min-w-0"><span className="block text-sm font-semibold">Producción</span><span className="mt-1 block text-xs text-muted-foreground">Activa las áreas productivas del taller. Las capacidades seleccionadas debajo determinan qué procesos son internos.</span></span>
+            <input type="checkbox" checked={estadoModalidades.produccion_activa} disabled />
+            <span className="min-w-0"><span className="block text-sm font-semibold">Producción</span><span className="mt-1 block text-xs text-muted-foreground">Se activa automáticamente al seleccionar una capacidad productiva interna y se desactiva al quitar la última.</span></span>
             <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase text-muted-foreground">{estadoModalidades.produccion_activa ? "Activa" : "Inactiva"}</span>
           </label>
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-4">
