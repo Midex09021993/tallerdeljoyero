@@ -72,14 +72,16 @@ function ClientesPage() {
     // Con una sede concreta, solo aceptamos contactos cuyo sede_id Y participante_id
     // correspondan a esa misma sede. Esto evita mostrar asociaciones cruzadas.
     let participanteIdsPermitidos: string[] | null = null;
+    let participantesSedeCache: Array<{ id: string; nombre: string; sede_id: string | null }> = [];
     if (esDueno && sedeContextoId) {
       const { data: participantesSede, error: participantesSedeError } = await supabase
         .from("ecosistema_participantes")
-        .select("id")
+        .select("id,nombre,sede_id")
         .eq("sede_id", sedeContextoId)
         .eq("estado", "activo");
       if (participantesSedeError) throw participantesSedeError;
-      participanteIdsPermitidos = [...new Set((participantesSede ?? []).map((p) => p.id))];
+      participantesSedeCache = (participantesSede ?? []) as typeof participantesSedeCache;
+      participanteIdsPermitidos = [...new Set(participantesSedeCache.map((p) => p.id))];
       if (participanteIdsPermitidos.length === 0) {
         if (cargaId === cargaClientesRef.current) {
           setClientes([]);
@@ -104,12 +106,18 @@ function ClientesPage() {
     if (clientesError) throw clientesError;
 
     const participanteIds = [...new Set((clientesData ?? []).map((cliente) => cliente.participante_id).filter((id): id is string => Boolean(id)))];
-    const { data: participantesData, error: participantesError } = participanteIds.length
-      ? await supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
+    // Si ya consultamos los participantes activos de la sede seleccionada,
+    // reutilizamos esos registros para nombres y validación de sede.
+    const idsParticipantesPendientes = participanteIds.filter(
+      (id) => !participantesSedeCache.some((participante) => participante.id === id),
+    );
+    const { data: participantesData, error: participantesError } = idsParticipantesPendientes.length
+      ? await supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", idsParticipantesPendientes)
       : { data: [], error: null };
     if (participantesError) throw participantesError;
-    const participanteNombrePorId = new Map((participantesData ?? []).map((p) => [p.id, p.nombre]));
-    const sedePorParticipante = new Map((participantesData ?? []).map((p) => [p.id, p.sede_id]));
+    const participantesResolucion = [...participantesSedeCache, ...(participantesData ?? [])];
+    const participanteNombrePorId = new Map(participantesResolucion.map((p) => [p.id, p.nombre]));
+    const sedePorParticipante = new Map(participantesResolucion.map((p) => [p.id, p.sede_id]));
     const clientesConSede = (clientesData ?? [])
       .filter((cliente) => !esDueno || !sedeContextoId || sedePorParticipante.get(cliente.participante_id ?? "") === sedeContextoId)
       .map((cliente) => ({
