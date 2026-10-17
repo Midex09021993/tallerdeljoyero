@@ -12,8 +12,8 @@ type Cuenta={id:string;user_id:string;relacion:"principal"|"miembro"|"contacto";
 export function VincularCuentaParticipante({participanteId,participanteNombre,onClose}:Props){
  const qc=useQueryClient(); const [userId,setUserId]=useState("");
  const [relacion,setRelacion]=useState<Cuenta["relacion"]>("principal"); const [saving,setSaving]=useState(false);
- const {data:perfiles=[],isLoading}=useQuery({queryKey:["ecosistema-perfiles"],queryFn:async()=>{const {data,error}=await supabase.from("profiles").select("id,nombre,dni,telefono").order("nombre");if(error)throw error;return(data??[]) as Perfil[]}});
- const {data:cuentas=[]}=useQuery({queryKey:["participante-cuentas",participanteId],queryFn:async()=>{const {data,error}=await supabase.from("participante_cuentas").select("id,user_id,relacion,estado").eq("participante_id",participanteId);if(error)throw error;return(data??[]) as Cuenta[]}});
+ const {data:perfiles=[],isLoading}=useQuery({queryKey:["ecosistema-perfiles"],staleTime:60_000,queryFn:async()=>{const {data,error}=await supabase.from("profiles").select("id,nombre,dni,telefono").order("nombre");if(error)throw error;return(data??[]) as Perfil[]}});
+ const {data:cuentas=[]}=useQuery({queryKey:["participante-cuentas",participanteId],staleTime:15_000,enabled:Boolean(participanteId),queryFn:async()=>{const {data,error}=await supabase.from("participante_cuentas").select("id,user_id,relacion,estado").eq("participante_id",participanteId);if(error)throw error;return(data??[]) as Cuenta[]}});
  const vinculados=new Set(cuentas.map(c=>c.user_id));
  const disponibles=perfiles.filter(p=>!vinculados.has(p.id));
  async function vincular(){if(!userId){toast.error("Selecciona una cuenta");return}setSaving(true);try{const {error}=await supabase.from("participante_cuentas").insert({participante_id:participanteId,user_id:userId,relacion,estado:"activo"});if(error)throw error;toast.success("Cuenta vinculada");setUserId("");await qc.invalidateQueries({queryKey:["participante-cuentas",participanteId]})}catch(e){toast.error(e instanceof Error?e.message:"No se pudo vincular")}finally{setSaving(false)}}
