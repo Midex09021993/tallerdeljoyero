@@ -213,7 +213,13 @@ const selectionLayerIndex=(part:any):number|null=>{
 };
 
 export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any,applyAll=false) {
-  if (!model || !activePart?.isMesh) return false;
+  if (!model) return false;
+  if (!activePart?.isMesh && applyAll) {
+    model.traverse((part:any) => {
+      if (!activePart && part?.isMesh && (selectionCategory(part)==="metal" || selectionCategory(part)==="otro")) activePart=part;
+    });
+  }
+  if (!activePart?.isMesh) return false;
   const selectedMeta=selectionMeta(activePart);
   const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
   const selectedLayerIndex=selectionLayerIndex(activePart);
