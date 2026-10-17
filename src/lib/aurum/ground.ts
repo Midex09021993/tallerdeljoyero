@@ -2,6 +2,7 @@ export interface AurumGroundController {
   mesh: any;
   hdriGround?: any;
   setVisible: (visible: boolean) => void;
+  setBakedShadowVisible: (visible: boolean) => void;
   setHdriGroundTexture: (texture:any) => void;
   setHdriGroundEnabled: (enabled:boolean) => void;
   updateFromPreset: (preset: any) => void;
@@ -28,6 +29,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
 
   let hdriGround:any = null;
   let hdriGroundTexture:any = null;
+  let bakedShadowUserVisible = true;
   let hdriGroundEnabled = false;
   const shadowSize=128;
   const shadowData=new Uint8Array(shadowSize*shadowSize*4);
@@ -73,6 +75,10 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     mesh,
     get hdriGround() { return hdriGround; },
     setVisible(visible) { mesh.visible = visible; },
+    setBakedShadowVisible(visible) {
+      bakedShadowUserVisible = visible;
+      bakedShadow.visible = visible && mesh.visible;
+    },
     setHdriGroundTexture(texture) {
       hdriGroundTexture = texture;
       updateHdriGround();
@@ -90,7 +96,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       bakedShadow.position.set(center.x, mesh.position.y + .002, center.z);
       const sx=Math.max(size.x*1.12,.12), sz=Math.max(size.z*1.12,.12);
       bakedShadow.scale.set(sx,sz,1);
-      bakedShadow.visible = mesh.visible && size.x > .001 && size.z > .001;
+      bakedShadow.visible = bakedShadowUserVisible && mesh.visible && size.x > .001 && size.z > .001;
     },
     updateFromPreset(preset) {
       if (!preset) return;
@@ -99,7 +105,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       // Keep a subtle photographic contact shadow in every grounded product scene,
       // not only the iJewel reference preset. Transparent scenes remain shadow-free.
       bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + shadowStrength * .48));
-      bakedShadow.visible = mesh.visible && preset.groundVisible !== false && shadowStrength > .03;
+      bakedShadow.visible = bakedShadowUserVisible && mesh.visible && preset.groundVisible !== false && shadowStrength > .03;
       if (preset.ground != null) mesh.material.color.setHex(preset.ground);
       if (preset.groundRoughness != null) mesh.material.roughness = preset.groundRoughness;
       if (preset.groundMetalness != null) mesh.material.metalness = preset.groundMetalness;
