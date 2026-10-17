@@ -1568,7 +1568,10 @@ export function AurumRender() {
             // Diagnostic-only pass: preserve the current diamond appearance and
             // rendering path while measuring the settled preview before changing it.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            // First A/B test without TAA: increase only the settled raster resolution.
+            // Keep Low unchanged and respect the geometry-based GPU budget.
+            const idleTargetDpr = measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.5);
+            const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
             liveFastPathRef.current = true;
