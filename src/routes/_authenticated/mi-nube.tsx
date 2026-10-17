@@ -647,40 +647,50 @@ function MiNubePage() {
 
   useEffect(() => { void cargarCompartidas(); }, [cargarCompartidas]);
 
+  const cargasArchivosCompartidos = useRef(new Map<string, Promise<ArchivoNube[]>>());
+
   const cargarArchivosCarpetaRecibida = useCallback(async (id: string): Promise<ArchivoNube[]> => {
     const carpetaActual = carpetasRecibidas.find((carpeta) => carpeta.id === id);
     if (!carpetaActual) return [];
     if (carpetaActual.archivosCargados) return carpetaActual.archivos;
-    if (carpetaActual.cargandoArchivos) return [];
-    setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: true } : carpeta));
-    try {
-      const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(carpetaActual.ruta, {
-        limit: 1000, sortBy: { column: "name", order: "asc" },
-      });
-      if (listaError) throw listaError;
-      const archivos = (entradas ?? [])
-        .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
-        .map((e): ArchivoNube => ({
-          nombre: e.name, ruta: `${carpetaActual.ruta}/${e.name}`, carpeta: carpetaActual.nombre,
-          bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
-          categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
-        }));
-      const primeraFoto = archivos.find((archivo) => archivo.categoria === "fotos");
-      let portada: string | null = null;
-      if (primeraFoto) {
-        const { data: urlFirmada, error: errorFirma } = await supabase.storage.from(BUCKET).createSignedUrl(primeraFoto.ruta, 60);
-        if (errorFirma) console.warn("[Mi Nube] No se pudo firmar la portada compartida.", errorFirma.message);
-        else portada = urlFirmada?.signedUrl ?? null;
+    const cargaExistente = cargasArchivosCompartidos.current.get(id);
+    if (cargaExistente) return cargaExistente;
+
+    const carga = Promise.resolve().then(async (): Promise<ArchivoNube[]> => {
+      setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: true } : carpeta));
+      try {
+        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(carpetaActual.ruta, {
+          limit: 1000, sortBy: { column: "name", order: "asc" },
+        });
+        if (listaError) throw listaError;
+        const archivos = (entradas ?? [])
+          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
+          .map((e): ArchivoNube => ({
+            nombre: e.name, ruta: `${carpetaActual.ruta}/${e.name}`, carpeta: carpetaActual.nombre,
+            bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
+            categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
+          }));
+        const primeraFoto = archivos.find((archivo) => archivo.categoria === "fotos");
+        let portada: string | null = null;
+        if (primeraFoto) {
+          const { data: urlFirmada, error: errorFirma } = await supabase.storage.from(BUCKET).createSignedUrl(primeraFoto.ruta, 60);
+          if (errorFirma) console.warn("[Mi Nube] No se pudo firmar la portada compartida.", errorFirma.message);
+          else portada = urlFirmada?.signedUrl ?? null;
+        }
+        setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id
+          ? { ...carpeta, archivos, portada, archivosCargados: true, cargandoArchivos: false }
+          : carpeta));
+        return archivos;
+      } catch (cause) {
+        setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: false } : carpeta));
+        toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar los archivos de esta carpeta compartida.");
+        return [];
+      } finally {
+        cargasArchivosCompartidos.current.delete(id);
       }
-      setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id
-        ? { ...carpeta, archivos, portada, archivosCargados: true, cargandoArchivos: false }
-        : carpeta));
-      return archivos;
-    } catch (cause) {
-      setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: false } : carpeta));
-      toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar los archivos de esta carpeta compartida.");
-      return [];
-    }
+    });
+    cargasArchivosCompartidos.current.set(id, carga);
+    return carga;
   }, [carpetasRecibidas]);
 
   const prepararFichaCompartida = async (recibida: CarpetaRecibida) => {
