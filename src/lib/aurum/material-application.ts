@@ -212,7 +212,7 @@ const selectionLayerIndex=(part:any):number|null=>{
   return null;
 };
 
-export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any,applyToAllMatchingMetals=false) {
+export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any) {
   if (!model || !activePart?.isMesh) return false;
   const selectedMeta=selectionMeta(activePart);
   const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
@@ -220,7 +220,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   const selectedCategory=selectionCategory(activePart);
   const selectedLayerId=selectedMeta.rhinoLayerId??activePart?.userData?.attributes?.layerId??activePart?.userData?.attributes?.LayerId??activePart?.userData?.layerId??activePart?.userData?.LayerId??null;
   const selectedLayerKey=resolveAurumLayerKey({layerId:selectedLayerId,layerIndex:selectedLayerIndex,layerName:selectedLayer,layerColor:selectedMeta.colorCapa,category:selectedCategory,existingKey:selectedMeta.layerKey});
-  if(selectedCategory!=="metal"&&selectedCategory!=="otro"&&!applyToAllMatchingMetals) return false;
+  if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
   applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
   let applied=0;
@@ -236,7 +236,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const partLayerKey=meta.layerKey??resolveAurumLayerKey({layerId:partLayerId,layerIndex:partLayerIndex,layerName:meta.capa,layerColor:meta.colorCapa,category,existingKey:meta.layerKey});
     const sameLayerIdentity=Boolean(selectedLayerKey&&partLayerKey&&selectedLayerKey===partLayerKey);
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
-    const shouldApply=x.uuid===activePart.uuid||(applyToAllMatchingMetals&&category==="metal")||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
+    const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
     if(shouldApply){
       const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);
@@ -280,10 +280,10 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyToAllMatchingGems=false) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
-  if(selectedCategory!=="gema"&&!applyToAllMatchingGems)return false;
+  if(selectedCategory!=="gema")return false;
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
@@ -327,7 +327,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const category=selectionCategory(x);
     if(category==="gema")allGemMeshes.push(x);
-    if(category==="gema"&&(applyToAllMatchingGems||sameSourceLayer(x)))targets.push(x);
+    if(category==="gema"&&sameSourceLayer(x))targets.push(x);
   });
   if(!targets.length){
     console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
