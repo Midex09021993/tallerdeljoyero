@@ -1120,11 +1120,12 @@ export function AurumRender() {
           if(!isPoster && width*height>12_000_000) {
             throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
           }
-          // Render the diamond slightly above the requested output resolution,
-          // then downsample once into the final image. This improves facet-edge
-          // coverage without changing the delivered PNG dimensions. Keep the
-          // temporary WebGL buffer under the same 12 MP memory budget.
-          const renderScale=isPoster?1:Math.min(1.25,Math.sqrt(12_000_000/(width*height)));
+          // PNG capture gets a dedicated supersampling budget: render the
+          // faceted diamond above output resolution, then downsample exactly once.
+          // Keep the delivered file capped at 12 MP, but allow the temporary
+          // WebGL buffer up to 16 MP so small facet edges receive more samples.
+          // This affects only still PNG/JPEG/WebP capture, never live orbiting.
+          const renderScale=isPoster?1:Math.min(1.4,Math.sqrt(16_000_000/(width*height)));
           const renderWidth=Math.max(width,Math.floor(width*renderScale));
           const renderHeight=Math.max(height,Math.floor(height*renderScale));
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
