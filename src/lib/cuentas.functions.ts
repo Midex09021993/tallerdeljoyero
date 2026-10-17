@@ -3,6 +3,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type SupabaseAdminClient = typeof import("@/integrations/supabase/client.server").supabaseAdmin;
+type PerfilUsuarioRow = { activo?: boolean | null; usuario?: string | null };
+type ParticipanteCuentaRow = { participante_id: string | null };
+
 
 /** Resuelve el correo de Auth a partir del nombre de usuario visible en el login. */
 export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
@@ -27,7 +31,7 @@ export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
     // ilike puede interpretar % y _ como comodines; validar igualdad literal y
     // sin distinguir mayúsculas antes de aceptar una sola cuenta activa.
     const usuarioNormalizado = usuario.toLocaleLowerCase();
-    const coincidencias = (perfilesUsuario ?? []).filter((perfil: any) =>
+    const coincidencias = (perfilesUsuario ?? []).filter((perfil: PerfilUsuarioRow) =>
       perfil.activo !== false &&
       typeof perfil.usuario === "string" &&
       perfil.usuario.trim().toLocaleLowerCase() === usuarioNormalizado
@@ -87,7 +91,7 @@ type NuevoUsuario = {
   acceso_hasta?: string | null;
 };
 
-async function resolverParticipantePorSede(supabaseAdmin: any, sedeId: string | null, participanteId: string | null = null) {
+async function resolverParticipantePorSede(supabaseAdmin: SupabaseAdminClient, sedeId: string | null, participanteId: string | null = null) {
   if (!sedeId && !participanteId) return null;
   let query = supabaseAdmin
     .from("ecosistema_participantes")
@@ -100,7 +104,7 @@ async function resolverParticipantePorSede(supabaseAdmin: any, sedeId: string | 
 }
 
 async function usuarioComparteParticipante(
-  supabaseAdmin: any,
+  supabaseAdmin: SupabaseAdminClient,
   actorUserId: string,
   targetUserId: string,
 ) {
@@ -116,12 +120,12 @@ async function usuarioComparteParticipante(
       .eq("user_id", targetUserId)
       .eq("estado", "activo"),
   ]);
-  const propios = new Set((actor ?? []).map((x: any) => x.participante_id));
-  return (target ?? []).some((x: any) => propios.has(x.participante_id));
+  const propios = new Set((actor ?? []).map((x: ParticipanteCuentaRow) => x.participante_id));
+  return (target ?? []).some((x: ParticipanteCuentaRow) => propios.has(x.participante_id));
 }
 
 async function asegurarCuentaParticipantePrincipal(
-  supabaseAdmin: any,
+  supabaseAdmin: SupabaseAdminClient,
   userId: string,
   participanteId: string,
 ) {
@@ -227,7 +231,7 @@ export const registrarTaller = createServerFn({ method: "POST" })
       .limit(10);
     if (usuariosExistentesError) throw new Error("No se pudo comprobar la disponibilidad del usuario.");
     const nombreNormalizado = nombre.toLocaleLowerCase();
-    if ((usuariosExistentes ?? []).some((perfil: any) =>
+    if ((usuariosExistentes ?? []).some((perfil: PerfilUsuarioRow) =>
       perfil.activo !== false &&
       typeof perfil.usuario === "string" &&
       perfil.usuario.trim().toLocaleLowerCase() === nombreNormalizado
@@ -857,7 +861,7 @@ export const crearUsuario = createServerFn({ method: "POST" })
         .select("participante_id")
         .eq("user_id", context.userId)
         .eq("estado", "activo");
-      if (!(misCuentas ?? []).some((c: any) => c.participante_id === participanteDestino.id)) {
+      if (!(misCuentas ?? []).some((c: ParticipanteCuentaRow) => c.participante_id === participanteDestino.id)) {
         throw new Error("No puedes crear usuarios fuera de tu taller");
       }
     }
@@ -1044,7 +1048,7 @@ export const actualizarUsuario = createServerFn({ method: "POST" })
         .select("participante_id")
         .eq("user_id", context.userId)
         .eq("estado", "activo");
-      if (misCuentasError || !(misCuentas ?? []).some((cuenta: any) => cuenta.participante_id === participanteDestino.id)) {
+      if (misCuentasError || !(misCuentas ?? []).some((cuenta: ParticipanteCuentaRow) => cuenta.participante_id === participanteDestino.id)) {
         return { ok: false, error: "No puedes asignar usuarios fuera de tu taller" };
       }
     }

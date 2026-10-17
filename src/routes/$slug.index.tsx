@@ -161,13 +161,14 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
+      const rpcPublico = supabase.rpc as unknown as (functionName: string, args: { _slug: string }) => Promise<{ data: unknown; error: { message: string } | null }>;
       const [catalogoResult, portadaResult, textoSuperiorResult, redesResult, contactoResult, carruselResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
-        (supabase.rpc as any)("obtener_texto_superior_portada_publica", { _slug: slugNormalizado }),
-        (supabase.rpc as any)("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
-        (supabase.rpc as any)("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
-        (supabase.rpc as any)("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
+        rpcPublico("obtener_texto_superior_portada_publica", { _slug: slugNormalizado }),
+        rpcPublico("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
+        rpcPublico("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
+        rpcPublico("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
@@ -185,7 +186,12 @@ function CatalogoPublicoPage() {
       const rawCarrusel = carruselResult.error ? null : carruselResult.data;
       const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
       const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
-      const carrusel = Array.isArray(carruselData['enlaces_carrusel']) ? carruselData['enlaces_carrusel'].filter((slide: any) => slide && ((typeof slide.url_imagen_externa === "string" && /^https?:\/\//i.test(slide.url_imagen_externa)) || (typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)))).slice(0, 10) : [];
+      const carrusel = Array.isArray(carruselData['enlaces_carrusel']) ? carruselData['enlaces_carrusel'].filter((slide: unknown) => {
+        if (!slide || typeof slide !== "object" || Array.isArray(slide)) return false;
+        const item = slide as Record<string, unknown>;
+        return (typeof item.url_imagen_externa === "string" && /^https?:\/\//i.test(item.url_imagen_externa)) ||
+          (typeof item.imagen_url === "string" && /^https?:\/\//i.test(item.imagen_url));
+      }).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
       const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};

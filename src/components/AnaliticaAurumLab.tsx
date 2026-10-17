@@ -3,6 +3,10 @@ import { Eye, MousePointerClick, MessageCircle, Send, Sparkles, Users, Wrench } 
 import { supabase } from "@/integrations/supabase/client";
 import { Panel } from "@/components/AppShell";
 
+type AnalyticsRpcClient = {
+  rpc: (functionName: string, args: { _dias: number }) => Promise<{ data: unknown; error: { message: string } | null }>;
+};
+
 type AnalyticsSummary = {
   dias: number;
   desde: string;
@@ -44,7 +48,7 @@ export function AnaliticaAurumLab() {
   const { data, isLoading, error, refetch, isFetching } = useQuery<AnalyticsSummary>({
     queryKey: ["analitica-aurum-lab", 30],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("obtener_analitica_aurum_lab", { _dias: 30 });
+      const { data, error } = await (supabase as unknown as AnalyticsRpcClient).rpc("obtener_analitica_aurum_lab", { _dias: 30 });
       if (error) throw new Error(error.message);
       return data as AnalyticsSummary;
     },

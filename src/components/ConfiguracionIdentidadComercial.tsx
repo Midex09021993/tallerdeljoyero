@@ -12,7 +12,7 @@ type Identidad = {
   direccion: string | null; ciudad: string | null; sitio_web: string | null; color_principal: string | null;
   pie_documento: string | null; pais_codigo: string; pais_nombre: string; moneda_codigo: string; moneda_simbolo: string;
   impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean;
-  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, any> | null;
+  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, unknown> | null;
 };
 
 type CuentaBancaria = { banco: string; tipo: string; moneda: string; cuenta: string; cci: string; titular: string; activa: boolean };
@@ -21,13 +21,14 @@ type ConfigCotizacion = { introduccion: string; terminos: string[]; atendido_por
 
 const DEFAULT_COTIZACION: ConfigCotizacion = { introduccion: "Es grato dirigirnos a usted, con la finalidad de remitir la siguiente cotización.", terminos: ["Precios y condiciones sujetos a la vigencia indicada en la cotización.", "La fecha de entrega será coordinada según disponibilidad y alcance del servicio.", "La forma de pago y cualquier condición especial se detallan en la propuesta comercial."], atendido_por: "", responsable_cargo: "", firma_nombre: "", firma_cargo: "", mostrar_bancos: true, cuentas_bancarias: [] };
 
-function obtenerConfigCotizacion(metadata: Record<string, any> | null | undefined): ConfigCotizacion {
+function obtenerConfigCotizacion(metadata: Record<string, unknown> | null | undefined): ConfigCotizacion {
   const raw = metadata?.["cotizacion"];
+  const rawRecord = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
   return {
     ...DEFAULT_COTIZACION,
-    ...(raw && typeof raw === "object" ? raw : {}),
-    terminos: Array.isArray(raw?.terminos) ? raw.terminos : DEFAULT_COTIZACION.terminos,
-    cuentas_bancarias: Array.isArray(raw?.cuentas_bancarias) ? raw.cuentas_bancarias : [],
+    ...rawRecord,
+    terminos: Array.isArray(rawRecord["terminos"]) ? rawRecord["terminos"] as string[] : DEFAULT_COTIZACION.terminos,
+    cuentas_bancarias: Array.isArray(rawRecord["cuentas_bancarias"]) ? rawRecord["cuentas_bancarias"] as CuentaBancaria[] : [],
   };
 }
 
