@@ -847,7 +847,7 @@ export function AurumRender() {
           applyGemEnvironment:aplicarEntornoGema,
           initialMetalId:"plata950_pulida",
           initialGemId:"diamante_natural",
-          presentation:{metalEnvironmentScale:1,metalClearcoatScale:.9},
+          presentation:{metalEnvironmentScale:1,metalClearcoatScale:1},
         });
         modelo=interno;
         // Opt-in experimental per-pixel BVH ray tracing for diamond meshes only.

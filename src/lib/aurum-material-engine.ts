@@ -167,9 +167,9 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     aurumMetalRenderProfile:response,
     aurumMetalBaseEnvMapIntensity:material.envMapIntensity,
     aurumMetalSurfaceRoughness:material.roughness,
-    aurumMetalCalibrationMode:useAurumRenderCalibration?"aurum-render-default":"catalog-reference",
+    aurumMetalCalibrationMode:useAurumRenderCalibration?"legacy-attenuated":"catalog-reference",
     aurumMetalEffectiveOptics:{
-      mode:useAurumRenderCalibration?"aurum-render-default":"catalog-reference",
+      mode:useAurumRenderCalibration?"legacy-attenuated":"catalog-reference",
       requested:{
         color:preset.color,
         metalness:preset.metalness,
