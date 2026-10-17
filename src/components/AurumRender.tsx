@@ -1002,19 +1002,25 @@ export function AurumRender() {
           invalidateRenderRef.current?.();
         },
         influenciaMetalAmbiente:(percent:number)=>{
-          // Keep a minimum reflection contribution so a metallic material does
-          // not lose all studio reflections and look like a flat gray base color
-          // when the user moves the environment influence to 0%.
           const value=Math.max(0,Math.min(100,Number.isFinite(percent)?percent:45));
-          const scale=0.25+(value/100)*0.75;
-          if (!modelo) return;
+          // Use a controllable 0–100% scale. A zero setting is a true zero
+          // contribution from this calibration control; the selected HDR itself
+          // remains loaded and can still affect other renderer paths.
+          const scale=value/100;
+          if (!modelo) {
+            console.warn("[AURUM][AMBIENT METAL] No hay modelo cargado para aplicar el control.");
+            return;
+          }
+          let adjusted=0;
           modelo.traverse((x:any)=>{
-            if(!x.isMesh||!x.material)return;
+            if(!x.isMesh||!x.material||x.userData?.aurumInternalInclusion)return;
             const adjust=(m:any)=>{
-              if(!m || m.userData?.aurumOpticalProfile) return m;
+              if(!m || m.userData?.aurumOpticalProfile || m.userData?.aurumGemPhysicalModel) return m;
+              const materialName=String(m.name??"").toLowerCase();
               const isAurumMetal=Boolean(m.userData?.aurumMetalRenderProfile);
               const isPbrMetal=Number(m.metalness)>=0.5;
-              if(!isAurumMetal&&!isPbrMetal)return m;
+              const looksLikeMetal=/gold|oro|metal|silver|platinum|white.?gold|yellow.?gold|greengold|whitegold/i.test(materialName);
+              if(!isAurumMetal&&!isPbrMetal&&!looksLikeMetal)return m;
               if(!Number.isFinite(m.userData.aurumAmbientBaseEnvMapIntensity)){
                 const authored=Number(m.userData.aurumMetalBaseEnvMapIntensity);
                 m.userData.aurumAmbientBaseEnvMapIntensity=Number.isFinite(authored)
@@ -1024,10 +1030,12 @@ export function AurumRender() {
               const base=Number(m.userData.aurumAmbientBaseEnvMapIntensity);
               m.envMapIntensity=base*scale;
               m.userData.aurumAmbientInfluence=value;
+              adjusted++;
               return m;
             };
             x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
           });
+          console.info("[AURUM][AMBIENT METAL] Influencia aplicada", {percent:value,scale,materialsAdjusted:adjusted});
           invalidateRenderRef.current?.();
         },
         fondo:(key:string)=>{
