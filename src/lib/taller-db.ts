@@ -910,7 +910,6 @@ export function useContratos(incluirFinanzas = true) {
   return useQuery({
     queryKey: ["contratos", incluirFinanzas],
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato[]> => {
       const { data, error } = await supabase
         .from("contratos")
@@ -1022,7 +1021,6 @@ export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | nul
   return useQuery({
     queryKey: ["contrato_pagos", contrato?.id, contrato?.numero],
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
     queryFn: async (): Promise<PagoContrato[]> => {
       if (!contrato) return [];
       const selector = esUuid(contrato.id) ? "contrato_id" : "contrato_numero";
@@ -1054,7 +1052,6 @@ export function usePagosContratos(
   return useQuery({
     queryKey: ["contrato_pagos", ids.slice().sort(), numeros.slice().sort()],
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
     queryFn: async (): Promise<PagoContrato[]> => {
       if (ids.length === 0 && numeros.length === 0) return [];
       const consultas = await Promise.all([
@@ -1264,7 +1261,6 @@ export function useContrato(id: string, habilitado = true) {
   return useQuery({
     queryKey: ["contrato", id],
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato | null> => {
       const selector = esUuid(id) ? "id" : "numero";
       let { data, error } = await supabase
