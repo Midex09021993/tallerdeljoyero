@@ -125,8 +125,10 @@ export function useTrabajosDelOperario() {
   const query = useQuery({
     queryKey: ["trabajos-operario", sesion?.user.id],
     enabled,
-    refetchInterval: enabled ? 15000 : false,
-    refetchOnMount: "always",
+    staleTime: 60_000,
+    refetchInterval: enabled ? 120_000 : false,
+    refetchIntervalInBackground: false,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     queryFn: async () => {
