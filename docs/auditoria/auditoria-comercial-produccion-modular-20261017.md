@@ -44,6 +44,19 @@ La RPC canónica devuelve JSON con `pedido_id`, y la pantalla de detalle de coti
 
 **Pendiente de validación:** confirmar que la definición instalada en Supabase coincide con la migración canónica actual y que las reglas de acceso reales coinciden con el flujo de usuario previsto.
 
+### H2 — La pantalla de cotización permite entrar a Ventas, pero la conversión está reservada a administración
+
+Evidencia contrastada:
+- `src/routes/_authenticated/cotizaciones.$id.tsx` permite acceder a la pantalla a `esAdmin` o a quien tenga el área `Área ventas`.
+- En la misma pantalla, `convertirAPedido()` retorna sin hacer nada si `!sesion?.esAdmin`; el botón “Crear pedido” también depende de ese control.
+- La RPC `convertir_cotizacion_a_pedido(uuid)` en la migración canónica `20261009100000_p0_consolidar_capacidades_y_comercial.sql` valida únicamente `es_admin(auth.uid())`.
+- La RPC de conversión con contrato opcional tiene la misma restricción.
+- La función `private.usuario_puede_ventas(uid, sede)` define un alcance diferente: dueño, o gerente con acceso a esa sede y el área de ventas.
+
+**Impacto:** un usuario de Ventas autorizado a consultar/gestionar una cotización puede abrir su detalle, pero no convertirla en pedido desde ese flujo. La base de datos también rechazaría la conversión aunque se llamara directamente.
+
+**Decisión pendiente antes de corregir:** confirmar si la conversión aprobada corresponde solo a administración o también al equipo comercial autorizado del mismo taller. No ampliar permisos de forma implícita. Si se habilita para Ventas, frontend y ambas RPC deben aplicar la misma autorización acotada a la sede/participante de la cotización, y se deben probar intentos cruzados entre talleres.
+
 ### H2 — La autorización de conversión es más restrictiva que la gestión comercial general
 La RPC de conversión y el botón correspondiente comprueban `es_admin`. Otras políticas históricas permiten determinadas operaciones a usuarios del área de ventas de su sede.
 
