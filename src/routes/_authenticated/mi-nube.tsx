@@ -169,6 +169,7 @@ function MiNubePage() {
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
   const cargaBibliotecaEnCurso = useRef(false);
+  const cargaBibliotecaPendiente = useRef(false);
   useEffect(() => {
     setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
   }, [archivos]);
@@ -299,7 +300,10 @@ function MiNubePage() {
 
   // Carga exclusiva de Supabase Storage. No consulta ni depende del estado del NAS.
   const cargarBiblioteca = useCallback(async () => {
-    if (cargaBibliotecaEnCurso.current) return;
+    if (cargaBibliotecaEnCurso.current) {
+      cargaBibliotecaPendiente.current = true;
+      return;
+    }
     if (!participanteId || !usuarioId) {
       setCarpetas([]);
       setArchivos([]);
@@ -410,6 +414,10 @@ function MiNubePage() {
     } finally {
       cargaBibliotecaEnCurso.current = false;
       setCargando(false);
+      if (cargaBibliotecaPendiente.current) {
+        cargaBibliotecaPendiente.current = false;
+        window.setTimeout(() => { void cargarBiblioteca(); }, 0);
+      }
     }
   }, [participanteId, usuarioId]);
 
