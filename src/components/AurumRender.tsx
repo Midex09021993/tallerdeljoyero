@@ -544,10 +544,14 @@ export function AurumRender() {
                 };
               }
               const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && Number(m.transmission??0)!==0;
+              // Official metal profile: metals keep their validated clearcoat in LIVE.
+              // Only gemstones use the lightweight live clearcoat/transmission path.
+              const isGem=Boolean(m.userData?.aurumGemFamily);
               if (
+                isGem && (
                 Number(m.clearcoat??0)!==0 ||
                 Number(m.clearcoatRoughness??0)!==0 ||
-                disableGemTransmission
+                disableGemTransmission)
               ) {
                 m.clearcoat=0;
                 m.clearcoatRoughness=0;
