@@ -95,7 +95,7 @@ function FichaProyecto({ portada, nombre, children }: { portada: string | null; 
 type Categoria = "fotos" | "videos" | "documentos" | "modelos-3d" | "otros";
 type CarpetaCompartida = { id: string; propietario_participante_id: string; propietario_usuario_id: string; carpeta: string; destinatario_participante_id: string; created_at: string; destinatario_nombre?: string };
 type TallerCompartir = { id: string; nombre: string; ciudad: string | null };
-type CarpetaRecibida = { id: string; nombre: string; propietarioNombre: string; archivos: ArchivoNube[]; portada: string | null };
+type CarpetaRecibida = { id: string; nombre: string; propietarioNombre: string; ruta: string; archivos: ArchivoNube[]; portada: string | null; archivosCargados: boolean; cargandoArchivos: boolean };
 type ArchivoNube = {
   nombre: string;
   ruta: string;
@@ -618,67 +618,19 @@ function MiNubePage() {
           }
         }
       }
+      // Solo cargar metadatos de las carpetas compartidas al entrar en Mi Nube.
+      // El contenido de Storage y las URLs firmadas se solicitan al abrir cada carpeta.
       const recibidasNormalizadas = (recibidas ?? []) as CarpetaCompartida[];
-      const cargarCarpetaRecibida = async (share: CarpetaCompartida) => {
-        const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
-        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
-        if (listaError) throw listaError;
-        // Storage puede devolver metadata nula para objetos heredados; no descartarlos
-        // solo por ese motivo. Las entradas que son subcarpetas no tienen extensión
-        // de archivo y se excluyen de esta vista de proyecto.
-        const base = (entradas ?? [])
-          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
-          .map((e): ArchivoNube => ({
-            nombre: e.name, ruta: `${ruta}/${e.name}`, carpeta: share.carpeta,
-            bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
-            categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
-          }));
-        // No firmar URLs dentro de cada carpeta: se agrupan en una sola
-        // solicitud después de listar las carpetas recibidas.
-        const primeraFoto = base.find((archivo) => archivo.categoria === "fotos");
-        return {
-          id: share.id,
-          nombre: share.carpeta,
-          propietarioNombre: nombresPropietarios.get(share.propietario_participante_id) ?? "Taller del ecosistema",
-          archivos: base,
-          portada: null,
-          rutaPortada: primeraFoto?.ruta ?? null,
-        };
-      };
-      // Limitar a cuatro carpetas simultáneas evita ráfagas de solicitudes a
-      // Storage cuando el usuario recibe muchos proyectos compartidos.
-      const carpetas: Awaited<ReturnType<typeof cargarCarpetaRecibida>>[] = [];
-      const concurrenciaMaxima = 4;
-      for (let i = 0; i < recibidasNormalizadas.length; i += concurrenciaMaxima) {
-        const lote = recibidasNormalizadas.slice(i, i + concurrenciaMaxima);
-        carpetas.push(...await Promise.all(lote.map(cargarCarpetaRecibida)));
-      }
-      // Supabase permite firmar varias rutas en una petición. Agrupar las
-      // portadas evita una llamada por cada carpeta compartida.
-      const rutasPortada = carpetas
-        .map((carpeta) => (carpeta as typeof carpeta & { rutaPortada?: string | null }).rutaPortada)
-        .filter((ruta): ruta is string => Boolean(ruta));
-      const urlPorRuta = new Map<string, string>();
-      if (rutasPortada.length > 0) {
-        const { data: urlsFirmadas, error: errorFirmas } = await supabase.storage
-          .from(BUCKET)
-          .createSignedUrls(rutasPortada, 60);
-        if (errorFirmas) {
-          console.warn("[Mi Nube] No se pudieron firmar algunas portadas compartidas.", errorFirmas.message);
-        } else {
-          for (const urlFirmada of urlsFirmadas ?? []) {
-            if (urlFirmada.path && urlFirmada.signedUrl) urlPorRuta.set(urlFirmada.path, urlFirmada.signedUrl);
-          }
-        }
-      }
-      setCarpetasRecibidas(carpetas.map((carpeta) => {
-        const rutaPortada = (carpeta as typeof carpeta & { rutaPortada?: string | null }).rutaPortada;
-        const archivos = carpeta.archivos.map((archivo) => {
-          const urlVista = rutaPortada === archivo.ruta ? urlPorRuta.get(archivo.ruta) ?? null : undefined;
-          return urlVista ? { ...archivo, urlVista } : archivo;
-        });
-        return { ...carpeta, archivos, portada: rutaPortada ? urlPorRuta.get(rutaPortada) ?? null : null };
-      }));
+      setCarpetasRecibidas(recibidasNormalizadas.map((share) => ({
+        id: share.id,
+        nombre: share.carpeta,
+        propietarioNombre: nombresPropietarios.get(share.propietario_participante_id) ?? "Taller del ecosistema",
+        ruta: `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`,
+        archivos: [],
+        portada: null,
+        archivosCargados: false,
+        cargandoArchivos: false,
+      })));
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar las carpetas compartidas.");
     } finally {
@@ -692,6 +644,71 @@ function MiNubePage() {
   }, [participanteId, usuarioId]);
 
   useEffect(() => { void cargarCompartidas(); }, [cargarCompartidas]);
+
+  const cargarArchivosCarpetaRecibida = useCallback(async (id: string) => {
+    const carpetaActual = carpetasRecibidas.find((carpeta) => carpeta.id === id);
+    if (!carpetaActual || carpetaActual.archivosCargados || carpetaActual.cargandoArchivos) return;
+    setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: true } : carpeta));
+    try {
+      const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(carpetaActual.ruta, {
+        limit: 1000, sortBy: { column: "name", order: "asc" },
+      });
+      if (listaError) throw listaError;
+      const archivos = (entradas ?? [])
+        .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
+        .map((e): ArchivoNube => ({
+          nombre: e.name, ruta: `${carpetaActual.ruta}/${e.name}`, carpeta: carpetaActual.nombre,
+          bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
+          categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
+        }));
+      const primeraFoto = archivos.find((archivo) => archivo.categoria === "fotos");
+      let portada: string | null = null;
+      if (primeraFoto) {
+        const { data: urlFirmada, error: errorFirma } = await supabase.storage.from(BUCKET).createSignedUrl(primeraFoto.ruta, 60);
+        if (errorFirma) console.warn("[Mi Nube] No se pudo firmar la portada compartida.", errorFirma.message);
+        else portada = urlFirmada?.signedUrl ?? null;
+      }
+      setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id
+        ? { ...carpeta, archivos, portada, archivosCargados: true, cargandoArchivos: false }
+        : carpeta));
+    } catch (cause) {
+      setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: false } : carpeta));
+      toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar los archivos de esta carpeta compartida.");
+    }
+  }, [carpetasRecibidas]);
+
+  const prepararFichaCompartida = async (recibida: CarpetaRecibida) => {
+    let carpeta = recibida;
+    if (!carpeta.archivosCargados) {
+      await cargarArchivosCarpetaRecibida(recibida.id);
+      // La actualización de estado es asíncrona; obtener el contenido directamente
+      // evita depender de un render adicional antes de preparar la ficha.
+      try {
+        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(recibida.ruta, {
+          limit: 1000, sortBy: { column: "name", order: "asc" },
+        });
+        if (listaError) throw listaError;
+        const archivos = (entradas ?? [])
+          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
+          .map((e): ArchivoNube => ({
+            nombre: e.name, ruta: `${recibida.ruta}/${e.name}`, carpeta: recibida.nombre,
+            bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
+            categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
+          }));
+        carpeta = { ...recibida, archivos, archivosCargados: true };
+      } catch (cause) {
+        toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar los archivos compartidos.");
+        return;
+      }
+    }
+    await anadirImagenAlCatalogo(
+      carpeta.archivos.find((item) => item.categoria === "fotos") ?? null,
+      { nombre: carpeta.nombre, archivos: carpeta.archivos },
+      carpeta.archivos.find((item) => item.categoria === "documentos" && item.nombre.toLowerCase().endsWith(".pdf")) ?? null,
+    );
+  };
+
+
 
   const abrirCompartirEcosistema = async (proyecto: { nombre: string }) => {
     setProyectoParaCompartir(proyecto.nombre);
@@ -1559,15 +1576,15 @@ function MiNubePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{recibida.nombre}</h4>
-                        <p className="mt-1 text-[11px] text-muted-foreground">{recibida.archivos.length} archivos <span className="px-1 text-border">·</span> Compartida por {recibida.propietarioNombre}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{recibida.archivosCargados ? `${recibida.archivos.length} archivos` : "Contenido bajo demanda"} <span className="px-1 text-border">·</span> Compartida por {recibida.propietarioNombre}</p>
                       </div>
                       <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Compartida</span>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {tipos.map((tipo) => <span key={tipo} className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">{tipo}</span>)}
                     </div>
-                    <button type="button" disabled={anadiendoCatalogo === recibida.nombre} onClick={() => void anadirImagenAlCatalogo(recibida.archivos.find((item) => item.categoria === "fotos") ?? null, { nombre: recibida.nombre, archivos: recibida.archivos }, recibida.archivos.find((item) => item.categoria === "documentos" && item.nombre.toLowerCase().endsWith(".pdf")) ?? null)} className="w-full rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">{anadiendoCatalogo === recibida.nombre ? "Preparando ficha…" : "Crear ficha para mi catálogo"}</button>
-                    <button type="button" onClick={() => setProyectoAbierto(proyectoAbierto === "compartida:" + recibida.id ? null : "compartida:" + recibida.id)} className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40">{proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}</button>
+                    <button type="button" disabled={anadiendoCatalogo === recibida.nombre || recibida.cargandoArchivos} onClick={() => void prepararFichaCompartida(recibida)} className="w-full rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">{anadiendoCatalogo === recibida.nombre ? "Preparando ficha…" : "Crear ficha para mi catálogo"}</button>
+                    <button type="button" disabled={recibida.cargandoArchivos} onClick={() => { const abierto = proyectoAbierto === "compartida:" + recibida.id; setProyectoAbierto(abierto ? null : "compartida:" + recibida.id); if (!abierto) void cargarArchivosCarpetaRecibida(recibida.id); }} className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40 disabled:opacity-50">{recibida.cargandoArchivos ? "Cargando archivos…" : proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : recibida.archivosCargados ? "Ver archivos del proyecto" : "Cargar y ver archivos"}</button>
                     {proyectoAbierto === "compartida:" + recibida.id && (
                       <div className="space-y-2 border-t border-border pt-3">
                         <div className="grid gap-2 sm:grid-cols-2">
