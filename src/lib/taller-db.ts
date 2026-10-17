@@ -1831,7 +1831,7 @@ export function useSedes() {
     // La clave se conserva para compatibilidad con componentes existentes.
     // La fuente real ya es Ecosistema.
     queryKey: ["sedes"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<Sede[]> => {
       const { data, error } = await supabase
         .from("ecosistema_participantes")
