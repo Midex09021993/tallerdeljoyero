@@ -273,24 +273,42 @@ function TrabajoOperativoPage() {
         if (error) throw error;
         const ficha = data as { archivos?: Array<Record<string, unknown>>; requisitos?: Record<string, unknown> | null } | null;
         const archivos = (ficha?.archivos ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }>;
+        const rutasParaFirmar = [...new Set(archivos.filter((archivo) => archivo.url && !archivo.es_enlace).map((archivo) => archivo.url))];
+        const urlsFirmadas = new Map<string, string>();
+        if (rutasParaFirmar.length) {
+          const { data: firmados, error: errorFirmas } = await supabase.storage.from("pedidos").createSignedUrls(rutasParaFirmar, 3600);
+          if (!errorFirmas) {
+            for (const firmado of firmados ?? []) {
+              if (firmado.path && firmado.signedUrl && !firmado.error) urlsFirmadas.set(firmado.path, firmado.signedUrl);
+            }
+          }
+        }
         return {
           requisitos: ficha?.requisitos ?? null,
-          archivos: await Promise.all(archivos.map(async (archivo) => {
-            if (!archivo.url || archivo.es_enlace) return archivo;
-            const { data: firmado } = await supabase.storage.from("pedidos").createSignedUrl(archivo.url, 3600);
-            return { ...archivo, url: firmado?.signedUrl ?? "" };
+          archivos: archivos.map((archivo) => ({
+            ...archivo,
+            url: !archivo.url || archivo.es_enlace ? archivo.url : urlsFirmadas.get(archivo.url) ?? "",
           })),
         };
       }
       const { data, error } = await supabase.from("pedido_archivos").select("id, nombre, tipo, url, es_enlace, grupo, version, es_vigente_fabricacion").eq("pedido_id", trabajo!.pedido_id).order("created_at", { ascending: false });
       if (error) throw error;
       const archivos = (data ?? []) as Array<{ id: string; nombre: string; tipo: string; url: string; es_enlace: boolean; grupo: string; version: number; es_vigente_fabricacion: boolean }>;
+      const rutasParaFirmar = [...new Set(archivos.filter((archivo) => archivo.url && !archivo.es_enlace).map((archivo) => archivo.url))];
+      const urlsFirmadas = new Map<string, string>();
+      if (rutasParaFirmar.length) {
+        const { data: firmados, error: errorFirmas } = await supabase.storage.from("pedidos").createSignedUrls(rutasParaFirmar, 3600);
+        if (!errorFirmas) {
+          for (const firmado of firmados ?? []) {
+            if (firmado.path && firmado.signedUrl && !firmado.error) urlsFirmadas.set(firmado.path, firmado.signedUrl);
+          }
+        }
+      }
       return {
         requisitos: null,
-        archivos: await Promise.all(archivos.map(async (archivo) => {
-          if (!archivo.url || archivo.es_enlace) return archivo;
-          const { data: firmado, error: errorFirma } = await supabase.storage.from("pedidos").createSignedUrl(archivo.url, 3600);
-          return { ...archivo, url: errorFirma ? "" : (firmado?.signedUrl ?? "") };
+        archivos: archivos.map((archivo) => ({
+          ...archivo,
+          url: !archivo.url || archivo.es_enlace ? archivo.url : urlsFirmadas.get(archivo.url) ?? "",
         })),
       };
     },
