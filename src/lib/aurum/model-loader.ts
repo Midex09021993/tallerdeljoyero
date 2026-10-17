@@ -4,7 +4,7 @@ import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
-type RhinoLayer = Record<string, unknown>;
+type RhinoLayer = { [key: string]: unknown; id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; color?: unknown; Color?: unknown; mode?: unknown; Mode?: unknown; objectMode?: unknown; ObjectMode?: unknown; visible?: unknown; Visible?: unknown; isVisible?: unknown; visibility?: unknown; visibilityMode?: unknown; VisibilityMode?: unknown; parentLayerId?: unknown; parentId?: unknown; parentLayerID?: unknown; ParentLayerId?: unknown; };
 type RhinoObject = THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isLineSegments?: boolean; isPoints?: boolean; geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
 type RhinoGeometryData = { objects?: Array<{ objectType?: string; geometry?: { xform?: { array?: unknown } }; attributes?: Record<string, unknown> }> };
 
@@ -23,13 +23,13 @@ function getAurumNormalExperimentMode(): AurumNormalMode {
 }
 
 function getAurumMeshFamily(x: RhinoObject): "metal" | "gema" | "otro" {
-  const layer = x?.userData?.aurumRhino ?? {};
+  const layer = x?.userData?.["aurumRhino"] ?? {};
   const text = [
     x?.name,
     layer?.capa,
-    x?.userData?.attributes?.layerName,
+    x?.userData?.["attributes"]?.layerName,
     x?.userData?.attributes?.LayerName,
-    ...(Array.isArray(x?.material) ? x.material : [x?.material]).map((m: THREE.Material) => m?.name),
+    ...(Array.isArray(x?.material) ? x.material : [x?.material]).map((m: THREE.Material | undefined) => m?.name),
   ].map((v: unknown) => String(v ?? "").toLowerCase()).join(" ");
   if (layer?.categoria === "gema" || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(text)) return "gema";
   if (layer?.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(text)) return "metal";
@@ -117,7 +117,7 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     cache.set(index, true); return true;
   };
   const resolveLayerIndex = (x: RhinoObject) => {
-    const candidates = [x?.userData?.attributes?.layerIndex, x?.userData?.attributes?.LayerIndex, x?.userData?.layerIndex, x?.userData?.LayerIndex];
+    const candidates = [x?.userData?.attributes?.layerIndex, x?.userData?.attributes?.LayerIndex, x?.userData?.["layerIndex"], x?.userData?.["LayerIndex"]];
     for (const value of candidates) { const n = Number(value); if (Number.isInteger(n) && n >= 0) return n; }
     return -1;
   };
@@ -155,7 +155,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     if (objectIndex > 0 && objectIndex % 32 === 0) {
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
     }
-    const x = queuedObjects[objectIndex];
+    const x = queuedObjects[objectIndex]!;
 
     if (x !== object && (x.isLine || x.isLineSegments || x.isPoints)) { removeQueue.push(x); if (x.isPoints) pointObjectsRemoved++; else lineObjectsRemoved++; continue; }
     if (!x.isMesh || !x.geometry) continue;
@@ -271,15 +271,17 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
       const references = (Array.isArray(data?.objects) ? data.objects : []).filter((item) =>
         item?.objectType === "InstanceReference" && item?.geometry?.xform?.array
       );
-      const instanceGroups = root.children.filter((child) =>
-        !child.isMesh && !child.isLine && !child.isPoints && child.children?.length
-      );
+      const instanceGroups = root.children.filter((child) => {
+        const runtimeChild = child as RhinoObject;
+        return !runtimeChild.isMesh && !runtimeChild.isLine && !runtimeChild.isPoints && runtimeChild.children?.length;
+      });
       const used = new Set<THREE.Object3D>();
       let patchedReferences = 0;
       const closeMatrix = (a:THREE.Matrix4,b:THREE.Matrix4) =>
         a.elements.every((value,index) => Math.abs(value-(b.elements[index] ?? value)) < 1e-5);
       for (const reference of references) {
-        const values = reference.geometry.xform.array;
+        const values = reference.geometry?.xform?.array;
+        if (values === undefined || values === null) continue;
         if (!Array.isArray(values) && !ArrayBuffer.isView(values)) continue;
         if ((values as ArrayLike<number>).length !== 16) continue;
         const expected = new THREE.Matrix4();
@@ -293,19 +295,19 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
         if (!group) continue;
         used.add(group);
         const attrs = reference.attributes ?? {};
-        const rawIndex = attrs.layerIndex ?? attrs.LayerIndex;
+        const rawIndex = attrs["layerIndex"] ?? attrs["LayerIndex"];
         const layerIndex = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
           ? Number(rawIndex) : null;
         const sourceLayers = Array.isArray(root.userData?.["layers"]) ? root.userData["layers"] as RhinoLayer[] : [];
         const sourceLayer = layerIndex !== null ? sourceLayers[layerIndex] : null;
         const referenceIdentity = {
-          objectId: attrs.id ?? attrs.Id ?? null,
-          objectName: attrs.name ?? attrs.Name ?? null,
+          objectId: attrs["id"] ?? attrs["Id"] ?? null,
+          objectName: attrs["name"] ?? attrs["Name"] ?? null,
           layerIndex,
           layerId: sourceLayer?.id ?? sourceLayer?.Id ?? null,
           layerName: sourceLayer?.name ?? sourceLayer?.Name ?? null,
           layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? null,
-          materialSource: attrs.materialSource ?? null,
+          materialSource: attrs["materialSource"] ?? null,
         };
         group.userData = { ...group.userData, aurumRhinoInstanceReference: referenceIdentity };
         group.traverse((node) => {
@@ -324,8 +326,8 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
               ...definitionAttributes,
               definitionLayerIndex: definitionAttributes.layerIndex ?? definitionAttributes.LayerIndex ?? null,
               layerIndex,
-              instanceReferenceId: attrs.id ?? attrs.Id ?? null,
-              instanceReferenceName: attrs.name ?? attrs.Name ?? null,
+              instanceReferenceId: attrs["id"] ?? attrs["Id"] ?? null,
+              instanceReferenceName: attrs["name"] ?? attrs["Name"] ?? null,
             },
           };
         });
@@ -377,7 +379,7 @@ export async function convertAurumToGlb(
     const x = node as RhinoObject;
     if (!x?.isMesh) return;
     const attrs = x.userData?.attributes ?? {};
-    const rawIndex = attrs.layerIndex ?? attrs.LayerIndex ?? x.userData?.layerIndex ?? x.userData?.LayerIndex;
+    const rawIndex = attrs["layerIndex"] ?? attrs["LayerIndex"] ?? x.userData?.layerIndex ?? x.userData?.LayerIndex;
     const index = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
       ? Number(rawIndex) : null;
     const sourceLayer = index !== null ? sourceLayers[index] : null;
@@ -385,15 +387,15 @@ export async function convertAurumToGlb(
       ...(x.userData ?? {}),
       aurumRhinoSource: {
         layerIndex: index,
-        layerId: sourceLayer?.id ?? sourceLayer?.Id ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? null,
-        layerName: sourceLayer?.name ?? sourceLayer?.Name ?? attrs.layerName ?? attrs.LayerName ?? x.userData?.layerName ?? x.userData?.LayerName ?? null,
+        layerId: sourceLayer?.id ?? sourceLayer?.Id ?? attrs["layerId"] ?? attrs["LayerId"] ?? x.userData?.layerId ?? x.userData?.LayerId ?? null,
+        layerName: sourceLayer?.name ?? sourceLayer?.Name ?? attrs["layerName"] ?? attrs["LayerName"] ?? x.userData?.layerName ?? x.userData?.LayerName ?? null,
         layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? attrs.layerColor ?? attrs.LayerColor ?? null,
         materialIndex: attrs.materialIndex ?? attrs.MaterialIndex ?? null,
-        objectId: attrs.id ?? attrs.Id ?? null,
+        objectId: attrs["id"] ?? attrs["Id"] ?? null,
         objectName: x.name ?? null,
         rawLayerIndex: rawIndex ?? null,
-        rawLayerName: attrs.layerName ?? attrs.LayerName ?? null,
-        rawLayerId: attrs.layerId ?? attrs.LayerId ?? null,
+        rawLayerName: attrs["layerName"] ?? attrs["LayerName"] ?? null,
+        rawLayerId: attrs["layerId"] ?? attrs["LayerId"] ?? null,
       },
     };
   });

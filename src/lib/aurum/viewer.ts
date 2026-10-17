@@ -4,12 +4,14 @@ import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "./came
 type AurumRuntimeLight = Light & { distance?: number; shadow?: LightShadow; target?: Object3D };
 type AurumRenderer = WebGLRenderer & { renderLists?: { dispose?: () => void } };
 type AurumDisposable = { dispose?: () => void };
+type AurumComposer = AurumDisposable & { setSize?: (width:number,height:number)=>void };
+type AurumControls = { target: Vector3; update: () => boolean | void; dispose?: () => void; addEventListener?: (type:string, listener:EventListener)=>void; removeEventListener?: (type:string, listener:EventListener)=>void; enableDamping?:boolean; dampingFactor?:number; enablePan?:boolean; enableRotate?:boolean; autoRotate?:boolean; autoRotateSpeed?:number; minDistance?:number; maxDistance?:number; zoomSpeed?:number; rotateSpeed?:number };
 type AurumGroundController = AurumDisposable & { positionUnderModel: (bounds: Box3) => void; positionBakedShadow?: (bounds: Box3) => void };
 type AurumRuntimeCamera = Camera & { near?: number; far?: number; left?: number; right?: number; top?: number; bottom?: number; updateProjectionMatrix?: () => void };
 
 export interface AurumViewerFrame {
   camera: PerspectiveCamera;
-  controls: { target: Vector3; update: () => void };
+  controls: AurumControls | null;
   lights: Record<string, AurumRuntimeLight>;
   groundController: AurumGroundController;
   scene: Scene;
@@ -21,6 +23,8 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
+  const controls = viewer.controls;
+  if (!controls) return;
   const wasPrepared = !!model.userData?.["aurumInitialFrameApplied"];
 
   if (!wasPrepared) {
@@ -52,7 +56,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     }
     applyScene(sceneId);
     model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
-    if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+    if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
 
     // AurumRender actualiza el estado de vista al cargar. Ese estado puede
     // intentar aplicar "perspectiva" inmediatamente después del encuadre.
@@ -76,7 +80,7 @@ export function resizeAurumViewer(viewer: {
   node: { clientWidth: number; clientHeight: number };
   camera: PerspectiveCamera;
   renderer: AurumRenderer;
-  composer?: { setSize?: (width:number,height:number)=>void };
+  composer?: AurumComposer;
   ssaoPass?: { setSize?: (width:number,height:number)=>void };
 }) {
   const w = viewer.node.clientWidth || 900;
@@ -91,7 +95,7 @@ export function resizeAurumViewer(viewer: {
 export function disposeAurumViewer(viewer: {
   node: HTMLElement;
   renderer: AurumRenderer;
-  controls?: AurumDisposable;
+  controls?: AurumControls;
   observer?: { disconnect: () => void };
   clickHandler?: (event: MouseEvent) => void;
   groundController?: AurumDisposable;
@@ -101,7 +105,7 @@ export function disposeAurumViewer(viewer: {
   gemEnvironment?: Texture;
   hdriGroundTexture?: Texture;
   clearSelection?: () => void;
-  composer?: AurumDisposable;
+  composer?: AurumComposer;
 }) {
   viewer.observer?.disconnect();
   if (viewer.clickHandler) viewer.renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
@@ -123,7 +127,7 @@ export function disposeAurumViewer(viewer: {
 export function createAurumWebGLViewer(
   THREE: typeof import("three"),
   nodo: HTMLElement,
-  options: { pixelRatio?: number; maxDistance?: number; controlsClass?: new (camera: PerspectiveCamera, domElement: HTMLElement) => { target: Vector3; update: () => void; dispose?: () => void; [key: string]: unknown } } = {}
+  options: { pixelRatio?: number; maxDistance?: number; controlsClass?: new (camera: PerspectiveCamera, domElement: HTMLElement) => AurumControls } = {}
 ) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 1, 0.001, 1000);
@@ -159,7 +163,7 @@ export function createAurumWebGLViewer(
 }
 
 export function startAurumViewerLoop(
-  viewer: { node: HTMLElement; camera: PerspectiveCamera; renderer: AurumRenderer; composer?: AurumDisposable; ssaoPass?: { setSize?: (width:number,height:number)=>void }; controls?: AurumDisposable },
+  viewer: { node: HTMLElement; camera: PerspectiveCamera; renderer: AurumRenderer; composer?: AurumDisposable; ssaoPass?: { setSize?: (width:number,height:number)=>void }; controls?: AurumControls | null },
   render: () => void,
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {

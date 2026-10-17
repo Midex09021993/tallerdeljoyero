@@ -976,7 +976,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       const camaraVista=(id:VistaId)=>{
-        applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+        if (controles) applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
         // The public configurator has a much shorter viewport than the editor.
         // Keep the entire jewel visible after view presets are applied as well
         // as after the initial model framing.
@@ -1105,8 +1105,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           invalidateRenderRef.current?.();
         },
         sceneStudio:(_patch:any)=>{},
-        reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
-        autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
+        reset:()=>{ if (controles) controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
+        autoRotar:(activo:boolean)=>{ if (!controles) return; controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
         seleccionarParte:(id:string)=>{

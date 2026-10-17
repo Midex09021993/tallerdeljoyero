@@ -52,7 +52,7 @@ type AurumGemChoice = { id: string; familia?: string };
 type AurumMetalChoice = { id: string };
 type AurumMeshObject = THREE.Object3D & { isMesh?: boolean; material: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
 
-export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMetal extends AurumMetalChoice, TPreset>(
+export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMetal extends AurumMetalChoice, TPreset extends { familia?: string }>(
   model:THREE.Object3D,
   options:{
     gems:TGem[];
@@ -73,7 +73,7 @@ export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMe
   model.traverse((node)=>{
     const x = node as AurumMeshObject;
     if(!x.isMesh) return;
-    const meta=x.userData?.aurumRhino;
+    const meta=x.userData?.["aurumRhino"];
     const category=meta?.categoria ?? "otro";
     // Gem transmission already performs an expensive optical pass. Gems do not
     // need to cast a second shadow pass in the live viewer.
@@ -101,10 +101,10 @@ export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMe
       // First-load presentation: only the four MatrixGold gem layers receive
       // the default diamond preview. "Other" layers never enter this branch.
       const layerKey=String(meta?.layerKey??"");
-      const savedAssignments=model.userData?.aurumGemLayerAssignments??{};
+      const savedAssignments=model.userData?.["aurumGemLayerAssignments"]??{};
       const assignedGemId=String(savedAssignments[layerKey]?.gemId??options.initialGemByLayer?.[layerKey]??meta?.gemId??"");
       const initialGemId=assignedGemId||options.initialGemId||"diamante_natural";
-      const gem=options.gems.find((g)=>g.id===initialGemId)??options.gems.find((g:any)=>g.id==="diamante_natural")??options.gems[0];
+      const gem=options.gems.find((g)=>g.id===initialGemId)??options.gems.find((g)=>g.id==="diamante_natural")??options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
@@ -147,18 +147,18 @@ export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMe
         const rhino=meshMeta?.aurumRhino??{};
         const sourceLabel=[
           source?.name,
-          sourceMeta?.name,
-          sourceMeta?.materialName,
-          sourceMeta?.sourceRootPath,
-          sourceMeta?.sourceFile,
-          sourceMeta?.originalMaterialName,
+          sourceMeta?.["name"],
+          sourceMeta?.["materialName"],
+          sourceMeta?.["sourceRootPath"],
+          sourceMeta?.["sourceFile"],
+          sourceMeta?.["originalMaterialName"],
           mesh?.name,
           rhino?.capa,
           rhino?.layerName,
-          attributes?.layerName,
-          attributes?.LayerName,
-          meshMeta?.layerName,
-          meshMeta?.LayerName,
+          attributes?.["layerName"],
+          attributes?.["LayerName"],
+          meshMeta?.["layerName"],
+          meshMeta?.["LayerName"],
         ].filter((value): value is string => typeof value==="string"&&Boolean(value.trim()))
           .join(" ")
           .toLowerCase()
@@ -171,8 +171,8 @@ export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMe
             ? "oro18b_pulido"
             : options.initialMetalId ?? "plata925_pulida";
         return options.metals.find((m)=>m.id===sourceId)
-          ?? options.metals.find((m:any)=>m.id===(options.initialMetalId ?? "plata925_pulida"))
-          ?? options.metals.find((m:any)=>m.id==="plata925_pulida")
+          ?? options.metals.find((m)=>m.id===(options.initialMetalId ?? "plata925_pulida"))
+          ?? options.metals.find((m)=>m.id==="plata925_pulida")
           ?? options.metals[0];
       };
       const configureSourceMaterial=(source:THREE.Material)=>{

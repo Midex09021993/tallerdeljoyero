@@ -13,13 +13,13 @@ type AurumInclusionPoint = ReturnType<typeof generateAurumInclusionPoints>[numbe
 
 export const clearAurumInclusions=(target:Object3D)=>{
   const remove:Object3D[]=[];
-  target.traverse((child)=>{if(child.userData?.aurumInternalInclusion)remove.push(child);});
-  remove.forEach((child)=>{child.parent?.remove(child);const renderable=child as Object3D & {geometry?:{dispose?:()=>void};material?:{dispose?:()=>void};};renderable.geometry?.dispose?.();renderable.material?.dispose?.();});
+  target.traverse((child)=>{if(child.userData?.["aurumInternalInclusion"])remove.push(child);});
+  remove.forEach((child:Object3D)=>{child.parent?.remove(child);const renderable=child as Object3D & {geometry?:{dispose?:()=>void};material?:{dispose?:()=>void};};renderable.geometry?.dispose?.();renderable.material?.dispose?.();});
 };
 
 export const setAurumInclusionsVisible=(target:Object3D,visible:boolean)=>{
   target.traverse((child)=>{
-    if(child.userData?.aurumInternalInclusion) child.visible=visible;
+    if(child.userData?.["aurumInternalInclusion"]) child.visible=visible;
   });
 };
 
@@ -55,7 +55,8 @@ const addEmeraldInclusions=(THREE:typeof import("three"),target:Object3D,config:
     if(rnd()<.30+strength*.25){
       const crystalSize=Math.min(size.x,size.y,size.z)*(.006+rnd()*.012);
       const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(crystalSize,0),new THREE.MeshPhysicalMaterial({color:rnd()<.65?0x7f8a79:0x3f4d42,roughness:.30,transmission:.18,transparent:true,opacity:.16+strength*.12,depthWrite:false,envMapIntensity:.45}));
-      crystal.position.copy(points[Math.floor(rnd()*points.length)]);
+      const inclusionPoint = points[Math.floor(rnd()*points.length)];
+      if (inclusionPoint) crystal.position.copy(inclusionPoint);
       crystal.rotation.set(rnd()*3,rnd()*3,rnd()*3);
       crystal.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-crystal"};
       target.add(crystal);
