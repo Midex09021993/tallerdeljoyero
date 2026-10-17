@@ -1,26 +1,27 @@
 import * as THREE from "three";
+type RhinoLayer = { [key:string]:unknown; id?:unknown; Id?:unknown; name?:unknown; Name?:unknown; color?:unknown; Color?:unknown; mode?:unknown; Mode?:unknown; objectMode?:unknown; ObjectMode?:unknown; visible?:unknown; Visible?:unknown; isVisible?:unknown; visibility?:unknown; visibilityMode?:unknown; VisibilityMode?:unknown; parentLayerId?:unknown; parentId?:unknown; parentLayerID?:unknown; ParentLayerId?:unknown; };
 import { getAurumModelParts } from "./model-parts";
 import { resolveAurumLayerKey } from "./layer-identity";
 
-function isRhinoObjectHidden(attributes:any): boolean {
+function isRhinoObjectHidden(attributes:Record<string,unknown> | null | undefined): boolean {
   if (!attributes) return false;
 
   // Rhino/rhino3dm puede exponer la visibilidad con nombres distintos según
   // la versión del loader. Tratamos explícitamente todos los estados ocultos.
-  const mode = attributes.mode ?? attributes.Mode ?? attributes.objectMode ?? attributes.ObjectMode;
+  const mode = attributes["mode"] ?? attributes["Mode"] ?? attributes["objectMode"] ?? attributes["ObjectMode"];
   const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
-  return attributes.visible === false
-    || attributes.Visible === false
-    || attributes.isVisible === false
+  return attributes["visible"] === false
+    || attributes["Visible"] === false
+    || attributes["isVisible"] === false
     || mode === 1
     || modeText === "hidden"
     || modeText === "hidden_object"
     || modeText === "hiddenobject";
 }
 
-function buildRhinoLayerVisibility(layers:any[]) {
-  const byId = new Map<string, any>();
-  const byName = new Map<string, any>();
+function buildRhinoLayerVisibility(layers:RhinoLayer[]) {
+  const byId = new Map<string, RhinoLayer>();
+  const byName = new Map<string, RhinoLayer>();
   for (const layer of layers) {
     const id = layer?.id ?? layer?.Id;
     if (id != null) byId.set(String(id), layer);
@@ -30,7 +31,7 @@ function buildRhinoLayerVisibility(layers:any[]) {
 
   const cache = new Map<number, boolean>();
 
-  const layerIsDirectlyVisible = (layer:any): boolean => {
+  const layerIsDirectlyVisible = (layer:RhinoLayer | undefined): boolean => {
     if (!layer) return true;
     const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
     const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
@@ -94,14 +95,14 @@ function buildRhinoLayerVisibility(layers:any[]) {
   };
 }
 
-function resolveRhinoLayerIndex(x:any): number {
+function resolveRhinoLayerIndex(x:THREE.Object3D): number {
   const candidates = [
-    x?.userData?.aurumRhinoSource?.layerIndex,
-    x?.userData?.attributes?.layerIndex,
+    x?.userData?.["aurumRhinoSource"]?.layerIndex,
+    x?.userData?.["attributes"]?.layerIndex,
     x?.userData?.attributes?.LayerIndex,
-    x?.userData?.layerIndex,
-    x?.userData?.LayerIndex,
-    x?.userData?.aurumRhino?.layerIndex,
+    x?.userData?.["layerIndex"],
+    x?.userData?.["LayerIndex"],
+    x?.userData?.["aurumRhino"]?.layerIndex,
   ];
   for (const value of candidates) {
     if (value === null || value === undefined || value === "") continue;
@@ -111,19 +112,20 @@ function resolveRhinoLayerIndex(x:any): number {
   return -1;
 }
 
-function colorToHex(color:any): string | undefined {
+function colorToHex(color:unknown): string | undefined {
   if (typeof color === "string") {
     const match = color.match(/^#?([0-9a-f]{6})$/i);
     return match?.[1] ? "#" + match[1].toLowerCase() : undefined;
   }
-  let channels:any[] | undefined;
+  let channels:unknown[] | undefined;
   if (Array.isArray(color) && color.length >= 3) channels = color.slice(0,3);
-  else if (color && typeof color === "object") {
-    if (color.r !== undefined || color.R !== undefined) channels = [color.r ?? color.R, color.g ?? color.G, color.b ?? color.B];
-    else if (color.red !== undefined || color.Red !== undefined) channels = [color.red ?? color.Red, color.green ?? color.Green, color.blue ?? color.Blue];
+  else if (color && typeof color === "object" && !Array.isArray(color)) {
+    const rgb = color as Record<string, unknown>;
+    if (rgb["r"] !== undefined || rgb["R"] !== undefined) channels = [rgb["r"] ?? rgb["R"], rgb["g"] ?? rgb["G"], rgb["b"] ?? rgb["B"]];
+    else if (rgb["red"] !== undefined || rgb["Red"] !== undefined) channels = [rgb["red"] ?? rgb["Red"], rgb["green"] ?? rgb["Green"], rgb["blue"] ?? rgb["Blue"]];
   }
-  if (!channels || !channels.every((v:any) => Number.isFinite(Number(v)))) return undefined;
-  let rgb = channels.map((v:any) => Number(v));
+  if (!channels || !channels.every((v) => Number.isFinite(Number(v)))) return undefined;
+  let rgb = channels.map((v) => Number(v));
   // Some exporters expose normalized 0..1 RGB; Rhino layer colors are commonly 0..255.
   if (Math.max(...rgb) <= 1) rgb = rgb.map(v => v * 255);
   return "#" + rgb.map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("");
@@ -149,17 +151,18 @@ function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro",_colorCa
  * Never pair source and exported meshes by traversal order: GLTF export may reorder nodes.
  */
 function hydrateRhinoLayerMetadata(
-  object:any,
+  object:THREE.Object3D,
   clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
 ) {
-  const rootData=object?.userData??{};
-  const sourceLayerManifest=Array.isArray(rootData.aurumRhinoSourceLayers)?rootData.aurumRhinoSourceLayers:[];
-  const layers=sourceLayerManifest.length?sourceLayerManifest:
-    Array.isArray(rootData.layers)?rootData.layers:
-    Array.isArray(rootData.rhinoLayers)?rootData.rhinoLayers:[];
-  const byId=new Map<string,any>();
-  const byName=new Map<string,any>();
-  layers.forEach((layer:any,index:number)=>{
+  const rootData=object.userData as Record<string, unknown>;
+  const rawManifest=rootData["aurumRhinoSourceLayers"];
+  const sourceLayerManifest:RhinoLayer[]=Array.isArray(rawManifest)?rawManifest as RhinoLayer[]:[];
+  const layers:RhinoLayer[]=sourceLayerManifest.length?sourceLayerManifest:
+    Array.isArray(rootData["layers"])?rootData["layers"] as RhinoLayer[]:
+    Array.isArray(rootData["rhinoLayers"])?rootData["rhinoLayers"] as RhinoLayer[]:[];
+  const byId=new Map<string,RhinoLayer>();
+  const byName=new Map<string,RhinoLayer>();
+  layers.forEach((layer,index:number)=>{
     const id=layer?.id??layer?.Id;
     if(id!=null)byId.set(String(id),layer);
     const name=String(layer?.name??layer?.Name??"").trim().toLowerCase();
@@ -178,8 +181,9 @@ function hydrateRhinoLayerMetadata(
     layers:{} as Record<string,number>,
   };
   const layerSources=new Map<string,{meshCount:number;sourceIds:Set<string>;layerNames:Set<string>}>();
-  object?.traverse?.((x:any)=>{
-    if(!x?.isMesh)return;
+  object.traverse((node)=>{
+    const x = node as THREE.Mesh;
+    if(!x.isMesh)return;
     audit.meshes++;
     const data=x.userData??{};
     const attrs=data.attributes??{};

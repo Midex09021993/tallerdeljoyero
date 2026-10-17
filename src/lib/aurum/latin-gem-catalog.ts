@@ -1,13 +1,14 @@
 import * as THREE from "three";
+import type { Object3D } from "three";
 import { GEMAS, type GemaConfig } from "./catalog";
 import { clearAurumInclusions } from "./gems";
 
-const add=(target:any,mesh:any,type:string)=>{mesh.userData={...(mesh.userData??{}),aurumInternalInclusion:true,aurumInclusionType:type};target.add(mesh);};
+const add=(target:Object3D,mesh:Object3D,type:string)=>{mesh.userData={...(mesh.userData??{}),aurumInternalInclusion:true,aurumInclusionType:type};target.add(mesh);};
 const rng=(seed:number)=>{let s=seed>>>0;return()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};};
-const sizeOf=(target:any)=>new THREE.Box3().setFromObject(target).getSize(new THREE.Vector3());
+const sizeOf=(target:Object3D)=>new THREE.Box3().setFromObject(target).getSize(new THREE.Vector3());
 const pos=(r:()=>number,s:THREE.Vector3,k=.7)=>new THREE.Vector3((r()-.5)*s.x*k,(r()-.5)*s.y*k,(r()-.5)*s.z*k);
 
-const colombia=(target:any,s:THREE.Vector3,r:()=>number,d:number)=>{
+const colombia=(target:Object3D,s:THREE.Vector3,r:()=>number,d:number)=>{
   const m=Math.min(s.x,s.y,s.z);
   for(let i=0;i<10+Math.round(d*12);i++){
     const base=pos(r,s,.58),dir=new THREE.Vector3((r()-.5)*.18,(r()-.5)*.18,1).normalize(),len=m*(.14+r()*.26);
@@ -23,16 +24,16 @@ const colombia=(target:any,s:THREE.Vector3,r:()=>number,d:number)=>{
   if(d>.55){const pts:THREE.Vector3[]=[],c=pos(r,s,.35),rad=m*.018,len=m*.25;for(let i=0;i<14;i++){const t=i/13,a=t*Math.PI*3.2;pts.push(c.clone().add(new THREE.Vector3(Math.cos(a)*rad,Math.sin(a)*rad,(t-.5)*len)));}const curve=new THREE.CatmullRomCurve3(pts);add(target,new THREE.Mesh(new THREE.TubeGeometry(curve,28,m*.0018,4,false),new THREE.MeshPhysicalMaterial({color:0xd2d6d0,roughness:.5,transparent:true,opacity:.12,depthWrite:false})),"colombia-helical-inclusion");}
 };
 
-const brasilEmerald=(target:any,s:THREE.Vector3,r:()=>number,d:number)=>{
+const brasilEmerald=(target:Object3D,s:THREE.Vector3,r:()=>number,d:number)=>{
   const m=Math.min(s.x,s.y,s.z);
   for(let i=0;i<12+Math.round(d*16);i++){const base=pos(r,s,.62),h=m*(.09+r()*.22),geo=new THREE.CapsuleGeometry(m*.0018,m*.0018+h,3,5),mesh=new THREE.Mesh(geo,new THREE.MeshPhysicalMaterial({color:0xa8b7ad,roughness:.5,transmission:.16,transparent:true,opacity:.04+d*.035,depthWrite:false,envMapIntensity:.25}));mesh.position.copy(base);mesh.rotation.set((r()-.5)*.15,(r()-.5)*.15,r()*Math.PI);add(target,mesh,"brasil-rain-tube");}
   for(let i=0;i<3+Math.round(d*4);i++){const q=m*(.008+r()*.014),mesh=new THREE.Mesh(new THREE.BoxGeometry(q*1.4,q,q*.85),new THREE.MeshPhysicalMaterial({color:0x9ba89f,roughness:.32,transmission:.18,transparent:true,opacity:.12+d*.08,depthWrite:false,envMapIntensity:.38}));mesh.position.copy(pos(r,s,.45));mesh.rotation.set(r()*2,r()*2,r()*2);add(target,mesh,"brasil-blocky-fluid");}
   for(let i=0;i<2+Math.round(d*2);i++){const q=m*(.006+r()*.009),mesh=new THREE.Mesh(new THREE.OctahedronGeometry(q,0),new THREE.MeshPhysicalMaterial({color:r()<.5?0x756d63:0x5d5145,roughness:.28,transparent:true,opacity:.2,depthWrite:false,envMapIntensity:.42}));mesh.position.copy(pos(r,s,.48));mesh.rotation.set(r()*3,r()*3,r()*3);add(target,mesh,"brasil-mineral-crystal");}
 };
 
-const paraiba=(target:any,s:THREE.Vector3,r:()=>number,d:number,copper=false)=>{const m=Math.min(s.x,s.y,s.z),axis=new THREE.Vector3(0,0,1);for(let i=0;i<18+Math.round(d*18);i++){const line=new THREE.Mesh(new THREE.CylinderGeometry(m*.0012,m*.0012,m*(.12+r()*.28),5),new THREE.MeshPhysicalMaterial({color:copper?0xb88745:0x91c6bd,metalness:copper?.55:.05,roughness:copper?.18:.34,transparent:true,opacity:copper?.16:.075,depthWrite:false,envMapIntensity:copper?.9:.45}));line.position.set((r()-.5)*s.x*.72,(r()-.5)*s.y*.72,(r()-.5)*s.z*.55);line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis);add(target,line,copper?"paraiba-copper-platelet":"paraiba-growth-tube");}};
-const rutilo=(target:any,s:THREE.Vector3,r:()=>number,d:number)=>{const m=Math.min(s.x,s.y,s.z);for(let i=0;i<9+Math.round(d*15);i++){const start=pos(r,s,.7),dir=new THREE.Vector3((r()-.5)*.5,(r()-.5)*.5,1).normalize(),len=m*(.15+r()*.35),a=start.clone().sub(dir.clone().multiplyScalar(len*.5)),b=start.clone().add(dir.clone().multiplyScalar(len*.5));const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(a,b),1,m*.0022,4,false),new THREE.MeshPhysicalMaterial({color:0xb06b2c,metalness:.15,roughness:.3,transparent:true,opacity:.16+d*.06,depthWrite:false,envMapIntensity:.6}));add(target,mesh,"quartz-rutile-needle");}};
-const ametrino=(target:any,s:THREE.Vector3)=>{const g=new THREE.Group();g.userData={aurumInternalInclusion:true,aurumInclusionType:"ametrine-sector-zoning"};const a=new THREE.Mesh(new THREE.BoxGeometry(s.x*.92,s.y*.92,s.z*.46),new THREE.MeshPhysicalMaterial({color:0x7046aa,roughness:.03,transmission:.22,transparent:true,opacity:.34,depthWrite:false,envMapIntensity:1}));a.position.z=-s.z*.23;g.add(a);const b=new THREE.Mesh(new THREE.BoxGeometry(s.x*.92,s.y*.92,s.z*.46),new THREE.MeshPhysicalMaterial({color:0xd79b32,roughness:.03,transmission:.22,transparent:true,opacity:.30,depthWrite:false,envMapIntensity:1}));b.position.z=s.z*.23;g.add(b);target.add(g);};
+const paraiba=(target:Object3D,s:THREE.Vector3,r:()=>number,d:number,copper=false)=>{const m=Math.min(s.x,s.y,s.z),axis=new THREE.Vector3(0,0,1);for(let i=0;i<18+Math.round(d*18);i++){const line=new THREE.Mesh(new THREE.CylinderGeometry(m*.0012,m*.0012,m*(.12+r()*.28),5),new THREE.MeshPhysicalMaterial({color:copper?0xb88745:0x91c6bd,metalness:copper?.55:.05,roughness:copper?.18:.34,transparent:true,opacity:copper?.16:.075,depthWrite:false,envMapIntensity:copper?.9:.45}));line.position.set((r()-.5)*s.x*.72,(r()-.5)*s.y*.72,(r()-.5)*s.z*.55);line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis);add(target,line,copper?"paraiba-copper-platelet":"paraiba-growth-tube");}};
+const rutilo=(target:Object3D,s:THREE.Vector3,r:()=>number,d:number)=>{const m=Math.min(s.x,s.y,s.z);for(let i=0;i<9+Math.round(d*15);i++){const start=pos(r,s,.7),dir=new THREE.Vector3((r()-.5)*.5,(r()-.5)*.5,1).normalize(),len=m*(.15+r()*.35),a=start.clone().sub(dir.clone().multiplyScalar(len*.5)),b=start.clone().add(dir.clone().multiplyScalar(len*.5));const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(a,b),1,m*.0022,4,false),new THREE.MeshPhysicalMaterial({color:0xb06b2c,metalness:.15,roughness:.3,transparent:true,opacity:.16+d*.06,depthWrite:false,envMapIntensity:.6}));add(target,mesh,"quartz-rutile-needle");}};
+const ametrino=(target:Object3D,s:THREE.Vector3)=>{const g=new THREE.Group();g.userData={aurumInternalInclusion:true,aurumInclusionType:"ametrine-sector-zoning"};const a=new THREE.Mesh(new THREE.BoxGeometry(s.x*.92,s.y*.92,s.z*.46),new THREE.MeshPhysicalMaterial({color:0x7046aa,roughness:.03,transmission:.22,transparent:true,opacity:.34,depthWrite:false,envMapIntensity:1}));a.position.z=-s.z*.23;g.add(a);const b=new THREE.Mesh(new THREE.BoxGeometry(s.x*.92,s.y*.92,s.z*.46),new THREE.MeshPhysicalMaterial({color:0xd79b32,roughness:.03,transmission:.22,transparent:true,opacity:.30,depthWrite:false,envMapIntensity:1}));b.position.z=s.z*.23;g.add(b);target.add(g);};
 
 /**
  * Common-opal microstructure proxy.
@@ -42,7 +43,7 @@ const ametrino=(target:any,s:THREE.Vector3)=>{const g=new THREE.Group();g.userDa
  * the 35 inclusions into one InstancedMesh to avoid 35 extra draw calls and
  * 35 MeshPhysicalMaterial instances.
  */
-const opal=(target:any,s:THREE.Vector3,r:()=>number,color:number)=>{
+const opal=(target:Object3D,s:THREE.Vector3,r:()=>number,color:number)=>{
   const m=Math.min(s.x,s.y,s.z);
   const count=35;
   const geometry=new THREE.SphereGeometry(m*.0025,5,4);
@@ -62,7 +63,7 @@ const opal=(target:any,s:THREE.Vector3,r:()=>number,color:number)=>{
   add(target,instances,"opal-silica-microstructure");
 };
 
-const rodocrosita=(target:any,s:THREE.Vector3)=>{const g=new THREE.Group();g.userData={aurumInternalInclusion:true,aurumInclusionType:"rodocrosita-growth"};for(let i=0;i<3;i++){const beam=new THREE.Mesh(new THREE.BoxGeometry(s.x*.06,s.y*.92,Math.min(s.x,s.y,s.z)*.018),new THREE.MeshPhysicalMaterial({color:0xead0d0,roughness:.38,transparent:true,opacity:.22,depthWrite:false}));beam.rotation.z=i*Math.PI*2/3;g.add(beam);}target.add(g);};
+const rodocrosita=(target:Object3D,s:THREE.Vector3)=>{const g=new THREE.Group();g.userData={aurumInternalInclusion:true,aurumInclusionType:"rodocrosita-growth"};for(let i=0;i<3;i++){const beam=new THREE.Mesh(new THREE.BoxGeometry(s.x*.06,s.y*.92,Math.min(s.x,s.y,s.z)*.018),new THREE.MeshPhysicalMaterial({color:0xead0d0,roughness:.38,transparent:true,opacity:.22,depthWrite:false}));beam.rotation.z=i*Math.PI*2/3;g.add(beam);}target.add(g);};
 
 export const LATIN_GEMAS:GemaConfig[]=[
 {id:"esmeralda_colombia_muzo" as any,familia:"Esmeralda",nombre:"Esmeralda Colombiana · Muzo",color:0x087b4a,transmission:.83,ior:1.58,roughness:.032,envMapIntensity:4.2,attenuationColor:0x075a36,attenuationDistance:1.8,dispersion:.08,iridescence:.008,inclusionStyle:"velos",inclusionStrength:.30,origen:"Colombia",perfilInterno:"colombia_jardin",notaGemologica:"Perfil visual inspirado en inclusiones multifásicas, tubos de crecimiento y jardin de Muzo."},
@@ -85,5 +86,5 @@ export const LATIN_GEMAS:GemaConfig[]=[
 
 for(const g of LATIN_GEMAS) if(!GEMAS.some(x=>x.id===g.id)) GEMAS.push(g);
 
-export const applyAurumLatinGemProfile=(target:any,g:any)=>{const profile=String(g?.perfilInterno??"");if(!profile)return false;clearAurumInclusions(target);const s=sizeOf(target),r=rng(9173+String(g?.id??"").length*97),d=Math.max(.05,Math.min(1,Number(g?.inclusionStrength??.15)));
+export const applyAurumLatinGemProfile=(target:Object3D,g:GemaConfig & { perfilInterno?:string; inclusionStrength?:number })=>{const profile=String(g?.perfilInterno??"");if(!profile)return false;clearAurumInclusions(target);const s=sizeOf(target),r=rng(9173+String(g?.id??"").length*97),d=Math.max(.05,Math.min(1,Number(g?.inclusionStrength??.15)));
  if(profile==="colombia_jardin"){colombia(target,s,r,d);return true;}if(profile==="brasil_jardin"){brasilEmerald(target,s,r,d);return true;}if(profile==="paraiba_acicular"){paraiba(target,s,r,d,false);return true;}if(profile==="paraiba_chatoyancy"){paraiba(target,s,r,d,true);return true;}if(profile==="cuarzo_rutilado"){rutilo(target,s,r,d);return true;}if(profile==="ametrino_zonificado"){ametrino(target,s);return true;}if(profile==="opal_microestructura"){opal(target,s,r,Number(g?.color??0xd0a0a0));return true;}if(profile==="crisocola_calcedonia"){opal(target,s,r,0x39a6a2);return true;}if(profile==="rodocrosita_crecimiento"){rodocrosita(target,s);return true;}return false;};
