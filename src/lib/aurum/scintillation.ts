@@ -613,5 +613,5 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
 export const setAurumUVMode=(target:any,mode:0|1|2=0)=>{
   const apply=(material:any)=>{ if(!material) return; material.userData={...(material.userData??{}),aurumUVMode:mode}; material.needsUpdate=true; };
   if(target?.isMaterial) apply(target);
-  else target?.traverse?.((o:any)=>{ if(o.material) Array.isArray(o.material)?o.material.forEach(apply):apply(o.material); });
+  else target?.traverse?.((o:any)=>{ if(o.material) { if(Array.isArray(o.material)) o.material.forEach(apply); else apply(o.material); } });
 };
