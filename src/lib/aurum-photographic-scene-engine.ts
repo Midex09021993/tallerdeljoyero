@@ -52,6 +52,22 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_URLS["gemDiamond"]!;
 
+/** Plantillas extraídas de los diez VJSON recibidos. Los VJSON referencian
+ * estos HDR externos; las imágenes HDR no están embebidas en los archivos. */
+export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number}>={
+  ambiente01:{id:"ambiente01",name:"Ambiente 01",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-001.exr",rotation:0,intensity:1},
+  ambiente02:{id:"ambiente02",name:"Ambiente 02",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:0,intensity:1},
+  ambiente03:{id:"ambiente03",name:"Ambiente 03",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",rotation:1.615631142852238,intensity:1},
+  ambiente04:{id:"ambiente04",name:"Ambiente 04",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-004.exr",rotation:1.615631142852238,intensity:1},
+  ambiente05:{id:"ambiente05",name:"Ambiente 05",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-005.exr",rotation:1.615631142852238,intensity:1},
+  ambiente06:{id:"ambiente06",name:"Ambiente 06",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:1.615631142852238,intensity:1},
+  ambiente07:{id:"ambiente07",name:"Ambiente 07",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-004.exr",rotation:2.1541748571363173,intensity:1},
+  ambiente08:{id:"ambiente08",name:"Ambiente 08",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:2.1541748571363173,intensity:1},
+  ambiente09:{id:"ambiente09",name:"Ambiente 09",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-001.exr",rotation:2.1541748571363173,intensity:1},
+  ambiente10:{id:"ambiente10",name:"Ambiente 10",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",rotation:2.1541748571363173,intensity:1},
+};
+
+
 const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=>({ssao,ssaoIntensity,bloom:false,bloomIntensity:.012,bloomThreshold:1.8,lut:true,lutIntensity,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004,vignette:true,vignetteDarkness:.035,...extra});
 
 export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>={
