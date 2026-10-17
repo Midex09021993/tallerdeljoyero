@@ -139,11 +139,22 @@ function PedidoTecnicoRecibido({
   const archivosConUrl = useQuery({
     queryKey: ["ficha-tecnica-archivos-recibidos", primerServicioId, archivos.map((a) => a.id).join("|")],
     enabled: archivos.length > 0,
-    queryFn: async () => Promise.all(archivos.map(async (archivo) => {
-      if (!archivo.url || archivo.es_enlace) return archivo;
-      const { data } = await supabase.storage.from("pedidos").createSignedUrl(archivo.url, 3600);
-      return { ...archivo, url: data?.signedUrl ?? "" };
-    })),
+    queryFn: async () => {
+      const rutasParaFirmar = [...new Set(archivos.filter((archivo) => archivo.url && !archivo.es_enlace).map((archivo) => archivo.url))];
+      const urlsFirmadas = new Map<string, string>();
+      if (rutasParaFirmar.length) {
+        const { data: firmados, error: errorFirmas } = await supabase.storage.from("pedidos").createSignedUrls(rutasParaFirmar, 3600);
+        if (!errorFirmas) {
+          for (const firmado of firmados ?? []) {
+            if (firmado.path && firmado.signedUrl && !firmado.error) urlsFirmadas.set(firmado.path, firmado.signedUrl);
+          }
+        }
+      }
+      return archivos.map((archivo) => ({
+        ...archivo,
+        url: !archivo.url || archivo.es_enlace ? archivo.url : urlsFirmadas.get(archivo.url) ?? "",
+      }));
+    },
     staleTime: 50 * 60 * 1000,
   });
 
