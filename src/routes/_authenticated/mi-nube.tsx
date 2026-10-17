@@ -473,7 +473,7 @@ function MiNubePage() {
     void (async () => {
       try {
         const { data, error: importError } = await supabase.functions.invoke("aurum-transfer-import", {
-          body: { token: importTransfer },
+          body: { token: importTransfer, participantId },
         });
         if (importError) throw importError;
         if (data?.error) throw new Error(data.error);
