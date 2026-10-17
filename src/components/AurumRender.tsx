@@ -981,33 +981,9 @@ export function AurumRender() {
           const preset=AURUM_AMBIENT_PRESETS[key];
           if (!preset) return;
           setAmbienteId(key);
-          // Keep the metal studio reflection stable to avoid abrupt hue/contrast
-          // jumps. The selected VJSON HDR and its rotation remain dedicated to gems.
-          cargarHDRI("studioSoft",undefined,0,1);
+          // These ten presets are for gemstones only. Leave the metal HDR,
+          // metal envMapIntensity, material color and roughness untouched.
           cargarEntornoGema(key,preset.rotation,preset.intensity);
-          const initialScale=0.25+(Math.max(0,Math.min(100,ambienteMetalInfluence))/100)*0.75;
-          if(modelo) modelo.traverse((x:any)=>{
-            if(!x.isMesh||!x.material)return;
-            const adjust=(m:any)=>{
-              if(!m || m.userData?.aurumOpticalProfile) return m;
-              const isAurumMetal=Boolean(m.userData?.aurumMetalRenderProfile);
-              const isPbrMetal=Number(m.metalness)>=0.5;
-              if(!isAurumMetal&&!isPbrMetal)return m;
-              // Capture the unscaled intensity once, even for imported GLB
-              // materials that do not carry Aurum's custom metal marker.
-              if(!Number.isFinite(m.userData.aurumAmbientBaseEnvMapIntensity)){
-                const authored=Number(m.userData.aurumMetalBaseEnvMapIntensity);
-                m.userData.aurumAmbientBaseEnvMapIntensity=Number.isFinite(authored)
-                  ? authored
-                  : (Number.isFinite(m.envMapIntensity)?m.envMapIntensity:1);
-              }
-              const base=Number(m.userData.aurumAmbientBaseEnvMapIntensity);
-              m.envMapIntensity=base*initialScale;
-              m.userData.aurumAmbientInfluence=ambienteMetalInfluence;
-              return m;
-            };
-            x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
-          });
           invalidateRenderRef.current?.();
         },
         influenciaMetalAmbiente:(percent:number)=>{
@@ -1930,12 +1906,8 @@ export function AurumRender() {
                   })}
                 </div>
                 <div className="mt-3 rounded-xl border border-black/[.07] bg-white p-3">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="aurum-ambient-metal-influence" className="text-[10px] font-semibold text-[#292824]">Influencia del ambiente en metales</label>
-                    <span className="text-[10px] font-semibold tabular-nums text-[#92743b]">{ambienteMetalInfluence}%</span>
-                  </div>
-                  <input id="aurum-ambient-metal-influence" type="range" min="0" max="100" step="5" value={ambienteMetalInfluence} onChange={e=>{const value=Number(e.target.value);setAmbienteMetalInfluence(value);apiRef.current?.influenciaMetalAmbiente(value);}} className="mt-2 w-full accent-[#92743b]"/>
-                  <div className="mt-1 flex justify-between text-[9px] text-[#77756f]"><span>Reflejo suave</span><span>Reflejo intenso</span></div>
+                  <div className="text-[10px] font-semibold text-[#292824]">HDR exclusivo para gemas</div>
+                  <p className="mt-1 text-[9px] leading-relaxed text-[#77756f]">Los ambientes seleccionados modifican las piedras. Los metales conservan su propio HDR y calibración.</p>
                 </div>
                 <div className="mt-3 rounded-lg border border-black/[.07] bg-white/70 p-2.5">
                   <div className="text-[10px] font-semibold text-[#292824]">{ambienteId?AURUM_AMBIENT_PRESETS[ambienteId]?.name:"Ningún ambiente seleccionado"}</div>
