@@ -102,7 +102,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
           done(texture);
         };
         const loadHdr = (url: string, done: (texture: THREE.Texture) => void) => {
-          if (/\\.exr(?:$|[?#])/i.test(url)) {
+          if (/\.exr(?:$|[?#])/i.test(url)) {
             new EXRLoader().load(url, (texture) => acceptHdr(texture, done), undefined, () => {});
           } else {
             new RGBELoader().load(url, (texture) => acceptHdr(texture, done), undefined, () => {});
