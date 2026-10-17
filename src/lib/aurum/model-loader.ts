@@ -136,7 +136,8 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
 export async function preprocessAurumModel(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
   const experimentMode = getAurumNormalExperimentMode();
-  let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRepaired = 0, windingFacesFlipped = 0, normalsRecomputedForTest = 0, creasedNormalsForTest = 0;
+  let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRecomputedForTest = 0, creasedNormalsForTest = 0;
+  const normalsRepaired = 0, windingFacesFlipped = 0;
   let lineObjectsRemoved = 0, pointObjectsRemoved = 0, meshesWithoutNormals = 0, meshesWithSuspiciousNormals = 0, repeatedGeometryRefs = 0, meshesWithBoundaryEdges = 0, meshesWithNonManifoldEdges = 0, meshesWithDegenerateTriangles = 0;
   const geometryRefs = new Map<any, number>(), removeQueue: any[] = [];
   const queuedObjects: any[] = [];
