@@ -337,7 +337,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         if (sufijo > 10000) throw new Error("No se pudo generar una URL única para esta joya.");
       }
 
-      const codigo = producto?.codigo ?? form.codigo.trim() || `JOY-${slug.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24)}`;
+      const codigo = producto?.codigo ?? (form.codigo.trim() || `JOY-${slug.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24)}`);
       const payload = {
         codigo,
         participante_id: participanteId,
