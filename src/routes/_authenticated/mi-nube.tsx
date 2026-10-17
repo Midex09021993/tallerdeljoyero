@@ -48,6 +48,34 @@ export const Route = createFileRoute("/_authenticated/mi-nube")({
 const BUCKET = "mi-nube";
 const MAX_FILES_PER_BATCH = 30;
 
+/** Reduce el peso de imágenes de catálogo sin alterar el archivo privado original. */
+async function optimizarImagenCatalogo(blob: Blob): Promise<Blob> {
+  if (!/^image\/(jpeg|png|webp)$/i.test(blob.type) || blob.size < 400 * 1024) return blob;
+  if (typeof createImageBitmap !== "function") return blob;
+  let bitmap: ImageBitmap | null = null;
+  try {
+    bitmap = await createImageBitmap(blob);
+    const maxDimension = 2000;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return blob;
+    context.drawImage(bitmap, 0, 0, width, height);
+    const optimizada = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
+    return optimizada && optimizada.size < blob.size ? optimizada : blob;
+  } catch {
+    // La optimización es opcional: si el navegador no puede procesar la imagen,
+    // conservar la subida original en lugar de bloquear el flujo del catálogo.
+    return blob;
+  } finally {
+    bitmap?.close();
+  }
+}
+
 /** Marco visual compartido para que las fichas propias y recibidas evolucionen juntas. */
 function FichaProyecto({ portada, nombre, children }: { portada: string | null; nombre: string; children: ReactNode }) {
   return (
@@ -456,9 +484,12 @@ function MiNubePage() {
         if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo leer la imagen original.");
         const response = await fetch(signed.signedUrl);
         if (!response.ok) throw new Error("No se pudo descargar la imagen desde Mi Nube.");
-        const blob = await response.blob();
-        const destino = participanteId + "/mi-nube/" + crypto.randomUUID() + "-" + nombreSeguro(nombreVisible(imagen.nombre));
-        const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+        const blobOriginal = await response.blob();
+        const blob = await optimizarImagenCatalogo(blobOriginal);
+        const extension = blob.type === "image/webp" ? ".webp" : "";
+        const nombreBase = nombreSeguro(nombreVisible(imagen.nombre)).replace(/\.[^.]+$/, "");
+        const destino = participanteId + "/mi-nube/" + crypto.randomUUID() + "-" + nombreBase + (extension || "." + (imagen.nombre.split(".").pop() || "jpg"));
+        const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/jpeg", cacheControl: "31536000", upsert: false });
         if (uploadError) throw uploadError;
         const { data: publicData } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
         if (!publicData?.publicUrl) throw new Error("No se pudo obtener la imagen para el catálogo.");
