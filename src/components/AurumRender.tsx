@@ -1565,10 +1565,8 @@ export function AurumRender() {
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Agreed behavior: interactive preview remains lightweight after
-            // orbit settles. Full photographic gem optics, transmission,
-            // dispersion, clearcoat, shadows and post-processing are capture-only.
-            // Raise resolution for a sharper live view without enabling beauty effects.
+            // Diagnostic-only pass: preserve the current diamond appearance and
+            // rendering path while measuring the settled preview before changing it.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
@@ -1577,6 +1575,39 @@ export function AurumRender() {
             aplicarPerfilLive();
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
+            console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
+              renderQuality: measuredQualityId,
+              runtimeBudget: {
+                triangles: runtimeBudget.triangleCount,
+                tier: runtimeBudget.tier,
+                pixelRatioCap: runtimeBudget.pixelRatioCap,
+                interactionPixelRatio: runtimeBudget.interactionPixelRatio,
+              },
+              renderer: {
+                pixelRatio: renderer.getPixelRatio(),
+                canvasWidth: renderer.domElement.width,
+                canvasHeight: renderer.domElement.height,
+                transmissionResolutionScale: (renderer as any).transmissionResolutionScale,
+              },
+              liveFastPath: liveFastPathRef.current,
+              composer: {
+                available: Boolean(composer),
+                passes: (composer as any)?.passes?.map((pass: any) => ({
+                  name: pass?.constructor?.name ?? "unknown",
+                  enabled: pass?.enabled !== false,
+                  accumulate: pass?.accumulate,
+                  sampleLevel: pass?.sampleLevel,
+                  accumulateIndex: pass?.accumulateIndex,
+                })) ?? [],
+              },
+              diamondBvh: diamondBvhRuntime?.diagnostics() ?? {
+                activeMeshes: 0,
+                triangleCount: 0,
+                diamondMeshes: 0,
+                diamondTriangleCount: 0,
+                enabled: false,
+              },
+            });
             invalidateRenderRef.current?.();
           },
         }
