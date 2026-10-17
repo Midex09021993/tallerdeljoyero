@@ -564,7 +564,7 @@ export function usePedidosSelector() {
 export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<Pedido[]> => {
       // La tabla pedidos es la fuente principal de esta bandeja.
       // Los datos comerciales son enriquecimiento opcional: un problema de RLS,
@@ -1898,7 +1898,7 @@ export function useUsuarios() {
 export function useInventario() {
   return useQuery({
     queryKey: ["inventario"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<Material[]> => {
       const { data, error } = await supabase
         .from("inventario")
@@ -1960,7 +1960,7 @@ export type Gasto = {
 export function useGastos() {
   return useQuery({
     queryKey: ["gastos"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<Gasto[]> => {
       const { data, error } = await supabase
         .from("gastos")
@@ -2184,7 +2184,7 @@ export function useBorrarMaterial() {
 export function useMovimientosInventario() {
   return useQuery({
     queryKey: ["inventario-movimientos"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<MovimientoInventario[]> => {
       const { data, error } = await supabase
         .from("inventario_movimientos")
@@ -2389,7 +2389,7 @@ const CAMPOS_INVENTARIO_REAL =
 export function useInventarioReal() {
   return useQuery({
     queryKey: ["inventario-real"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<MaterialInventarioReal[]> => {
       const [{ data, error }, { data: asignaciones, error: areasError }] = await Promise.all([
         supabase.from("inventario").select(CAMPOS_INVENTARIO_REAL).eq("activo", true).order("material"),
@@ -2552,7 +2552,7 @@ export function useRegistrarMovimientoReal() {
 export function useMovimientosInventarioReal() {
   return useQuery({
     queryKey: ["inventario-movimientos-real"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<MovimientoInventarioReal[]> => {
       const { data, error } = await supabase
         .from("inventario_movimientos")
@@ -2583,7 +2583,7 @@ export function useMovimientosInventarioReal() {
 export function useInventarioJoyas() {
   return useQuery({
     queryKey: ["inventario-joyas"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async (): Promise<JoyaInventario[]> => {
       const { data, error } = await supabase
         .from("inventario_joyas")
