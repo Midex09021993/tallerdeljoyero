@@ -1574,8 +1574,27 @@ export function AurumRender() {
             const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
+            // Controlled TAA trial: only anti-alias the settled preview.
+            // Keep all other post effects disabled so this test isolates TAA.
+            const idlePasses = ((composer as any)?.passes ?? []) as any[];
+            const idleRenderPass = idlePasses.find((pass) => pass?.constructor?.name === "RenderPass");
+            const idleTaaPass = idlePasses.find((pass) => pass?.constructor?.name === "TAARenderPass");
+            const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
+            const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass);
+            idlePasses.forEach((pass) => {
+              pass.enabled = pass === idleRenderPass || pass === idleTaaPass || pass === idleOutputPass;
+            });
+            if (idleTaaAvailable) {
+              idleTaaPass.enabled = true;
+              idleTaaPass.accumulate = true;
+              idleTaaPass.sampleLevel = 4;
+              idleTaaPass.accumulateIndex = -1;
+            }
             liveFastPathRef.current = true;
             aplicarPerfilLive();
+            // Keep the lightweight diamond material and transmission budget;
+            // only the settled raster path switches to RenderPass + TAA + OutputPass.
+            liveFastPathRef.current = !idleTaaAvailable;
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
