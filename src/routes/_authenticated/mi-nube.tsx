@@ -645,9 +645,11 @@ function MiNubePage() {
 
   useEffect(() => { void cargarCompartidas(); }, [cargarCompartidas]);
 
-  const cargarArchivosCarpetaRecibida = useCallback(async (id: string) => {
+  const cargarArchivosCarpetaRecibida = useCallback(async (id: string): Promise<ArchivoNube[]> => {
     const carpetaActual = carpetasRecibidas.find((carpeta) => carpeta.id === id);
-    if (!carpetaActual || carpetaActual.archivosCargados || carpetaActual.cargandoArchivos) return;
+    if (!carpetaActual) return [];
+    if (carpetaActual.archivosCargados) return carpetaActual.archivos;
+    if (carpetaActual.cargandoArchivos) return [];
     setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: true } : carpeta));
     try {
       const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(carpetaActual.ruta, {
@@ -671,35 +673,20 @@ function MiNubePage() {
       setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id
         ? { ...carpeta, archivos, portada, archivosCargados: true, cargandoArchivos: false }
         : carpeta));
+      return archivos;
     } catch (cause) {
       setCarpetasRecibidas((actuales) => actuales.map((carpeta) => carpeta.id === id ? { ...carpeta, cargandoArchivos: false } : carpeta));
       toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar los archivos de esta carpeta compartida.");
+      return [];
     }
   }, [carpetasRecibidas]);
 
   const prepararFichaCompartida = async (recibida: CarpetaRecibida) => {
     let carpeta = recibida;
     if (!carpeta.archivosCargados) {
-      await cargarArchivosCarpetaRecibida(recibida.id);
-      // La actualización de estado es asíncrona; obtener el contenido directamente
-      // evita depender de un render adicional antes de preparar la ficha.
-      try {
-        const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(recibida.ruta, {
-          limit: 1000, sortBy: { column: "name", order: "asc" },
-        });
-        if (listaError) throw listaError;
-        const archivos = (entradas ?? [])
-          .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
-          .map((e): ArchivoNube => ({
-            nombre: e.name, ruta: `${recibida.ruta}/${e.name}`, carpeta: recibida.nombre,
-            bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
-            categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
-          }));
-        carpeta = { ...recibida, archivos, archivosCargados: true };
-      } catch (cause) {
-        toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar los archivos compartidos.");
-        return;
-      }
+      const archivos = await cargarArchivosCarpetaRecibida(recibida.id);
+      if (archivos.length === 0) return;
+      carpeta = { ...recibida, archivos, archivosCargados: true };
     }
     await anadirImagenAlCatalogo(
       carpeta.archivos.find((item) => item.categoria === "fotos") ?? null,
