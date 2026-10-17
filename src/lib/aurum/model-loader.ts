@@ -4,6 +4,9 @@ import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
+type RhinoLayer = Record<string, unknown>;
+type RhinoObject = THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isLineSegments?: boolean; isPoints?: boolean; geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
+type RhinoGeometryData = { objects?: Array<{ objectType?: string; geometry?: { xform?: { array?: unknown } }; attributes?: Record<string, unknown> }> };
 
 function getAurumNormalExperimentMode(): AurumNormalMode {
   try {
@@ -19,21 +22,21 @@ function getAurumNormalExperimentMode(): AurumNormalMode {
   return "authored";
 }
 
-function getAurumMeshFamily(x: any): "metal" | "gema" | "otro" {
+function getAurumMeshFamily(x: RhinoObject): "metal" | "gema" | "otro" {
   const layer = x?.userData?.aurumRhino ?? {};
   const text = [
     x?.name,
     layer?.capa,
     x?.userData?.attributes?.layerName,
     x?.userData?.attributes?.LayerName,
-    ...(Array.isArray(x?.material) ? x.material : [x?.material]).map((m: any) => m?.name),
-  ].map((v: any) => String(v ?? "").toLowerCase()).join(" ");
+    ...(Array.isArray(x?.material) ? x.material : [x?.material]).map((m: THREE.Material) => m?.name),
+  ].map((v: unknown) => String(v ?? "").toLowerCase()).join(" ");
   if (layer?.categoria === "gema" || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(text)) return "gema";
   if (layer?.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(text)) return "metal";
   return "otro";
 }
 
-function isLikelyGem(x: any) {
+function isLikelyGem(x: RhinoObject) {
   return getAurumMeshFamily(x) === "gema";
 }
 
@@ -66,7 +69,7 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
   return { valid: true, suspiciousRatio: comparable ? suspicious / comparable : 0, vertices: position.count };
 }
 
-function isRhinoObjectHiddenForExport(attributes: any): boolean {
+function isRhinoObjectHiddenForExport(attributes: Record<string, unknown> | null | undefined): boolean {
   if (!attributes) return false;
   const mode = attributes.mode ?? attributes.Mode ?? attributes.objectMode ?? attributes.ObjectMode;
   const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
@@ -75,9 +78,10 @@ function isRhinoObjectHiddenForExport(attributes: any): boolean {
 }
 
 function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
-  const layers = Array.isArray((object as any)?.userData?.layers) ? (object as any).userData.layers : [];
+  const rawLayers = object.userData?.["layers"];
+  const layers: RhinoLayer[] = Array.isArray(rawLayers) ? rawLayers : [];
   if (!layers.length) return;
-  const byId = new Map<string, any>(), byName = new Map<string, any>();
+  const byId = new Map<string, RhinoLayer>(), byName = new Map<string, RhinoLayer>();
   for (const layer of layers) {
     const id = layer?.id ?? layer?.Id;
     if (id != null) byId.set(String(id), layer);
@@ -85,7 +89,7 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     if (name) byName.set(name, layer);
   }
   const cache = new Map<number, boolean>();
-  const directVisible = (layer: any) => {
+  const directVisible = (layer: RhinoLayer | undefined) => {
     if (!layer) return true;
     const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
     const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
@@ -112,12 +116,13 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     }
     cache.set(index, true); return true;
   };
-  const resolveLayerIndex = (x: any) => {
+  const resolveLayerIndex = (x: RhinoObject) => {
     const candidates = [x?.userData?.attributes?.layerIndex, x?.userData?.attributes?.LayerIndex, x?.userData?.layerIndex, x?.userData?.LayerIndex];
     for (const value of candidates) { const n = Number(value); if (Number.isInteger(n) && n >= 0) return n; }
     return -1;
   };
-  object.traverse((x: any) => {
+  object.traverse((node) => {
+      const x = node as RhinoObject;
     if (!x.isMesh) return;
     const attrs = x.userData?.attributes || {};
     const index = resolveLayerIndex(x);
@@ -141,9 +146,9 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
   let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRecomputedForTest = 0, creasedNormalsForTest = 0;
   const normalsRepaired = 0, windingFacesFlipped = 0;
   let lineObjectsRemoved = 0, pointObjectsRemoved = 0, meshesWithoutNormals = 0, meshesWithSuspiciousNormals = 0, repeatedGeometryRefs = 0, meshesWithBoundaryEdges = 0, meshesWithNonManifoldEdges = 0, meshesWithDegenerateTriangles = 0;
-  const geometryRefs = new Map<any, number>(), removeQueue: any[] = [];
-  const queuedObjects: any[] = [];
-  object.traverse((x: any) => queuedObjects.push(x));
+  const geometryRefs = new Map<THREE.BufferGeometry, number>(), removeQueue: THREE.Object3D[] = [];
+  const queuedObjects: RhinoObject[] = [];
+  object.traverse((node) => queuedObjects.push(node as RhinoObject));
   for (let objectIndex = 0; objectIndex < queuedObjects.length; objectIndex++) {
     // Yield between small batches so large CAD assemblies do not monopolize
     // the main thread for the entire preprocessing pass.
@@ -221,10 +226,10 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     x.receiveShadow = true;
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
   }
-  removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
+  removeQueue.forEach((x) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
   object.userData = { ...object.userData, aurumPreprocess: { version: 9, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, metalNormalsExperimentOnly: experimentMode === "crease-metal" || experimentMode === "recompute-metal", creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
   if (experimentMode === "diagnostic") {
-    const suspiciousMeshes: any[] = [];
+    const suspiciousMeshes: Array<Record<string, unknown>> = [];
     object.traverse((x: any) => {
       if (!x.isMesh) return;
       const diagnostic = x.userData?.aurumNormalDiagnostics;
@@ -235,7 +240,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
           vertices: diagnostic.vertices,
           suspiciousNormalRatio: Number(Number(diagnostic.suspiciousRatio).toFixed(3)),
           triangles: x.geometry?.index ? Math.floor(x.geometry.index.count / 3) : Math.floor((x.geometry?.attributes?.position?.count ?? 0) / 3),
-          material: Array.isArray(x.material) ? x.material.map((m: any) => m?.name || m?.type) : (x.material?.name || x.material?.type || null),
+          material: Array.isArray(x.material) ? x.material.map((m: THREE.Material) => m?.name || m?.type) : (x.material?.name || x.material?.type || null),
         });
       }
     });
@@ -252,7 +257,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
   if (ext === "3dm") {
     const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
-    const loader:any = new Rhino3dmLoader();
+    const loader = new Rhino3dmLoader() as InstanceType<typeof Rhino3dmLoader> & { _createGeometry: (data: RhinoGeometryData) => THREE.Object3D };
     loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
     // Rhino3dmLoader expands block instances by cloning definition meshes, but
     // its stock implementation drops the InstanceReference's own attributes.
@@ -261,12 +266,12 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // source InstanceReference transform and carry the reference layer onto the
     // cloned meshes before the GLB metadata snapshot is taken.
     const createGeometry = loader._createGeometry.bind(loader);
-    loader._createGeometry = (data:any) => {
+    loader._createGeometry = (data:RhinoGeometryData) => {
       const root:THREE.Object3D = createGeometry(data);
-      const references = (Array.isArray(data?.objects) ? data.objects : []).filter((item:any) =>
+      const references = (Array.isArray(data?.objects) ? data.objects : []).filter((item) =>
         item?.objectType === "InstanceReference" && item?.geometry?.xform?.array
       );
-      const instanceGroups = root.children.filter((child:any) =>
+      const instanceGroups = root.children.filter((child) =>
         !child.isMesh && !child.isLine && !child.isPoints && child.children?.length
       );
       const used = new Set<THREE.Object3D>();
@@ -291,7 +296,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
         const rawIndex = attrs.layerIndex ?? attrs.LayerIndex;
         const layerIndex = rawIndex !== null && rawIndex !== undefined && rawIndex !== "" && Number.isInteger(Number(rawIndex)) && Number(rawIndex) >= 0
           ? Number(rawIndex) : null;
-        const sourceLayers = Array.isArray(root.userData?.["layers"]) ? root.userData["layers"] as any[] : [];
+        const sourceLayers = Array.isArray(root.userData?.["layers"]) ? root.userData["layers"] as RhinoLayer[] : [];
         const sourceLayer = layerIndex !== null ? sourceLayers[layerIndex] : null;
         const referenceIdentity = {
           objectId: attrs.id ?? attrs.Id ?? null,
@@ -303,7 +308,8 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
           materialSource: attrs.materialSource ?? null,
         };
         group.userData = { ...group.userData, aurumRhinoInstanceReference: referenceIdentity };
-        group.traverse((child:any) => {
+        group.traverse((node) => {
+          const child = node as RhinoObject;
           if (!child.isMesh) return;
           const definitionAttributes = child.userData?.attributes ?? {};
           child.userData = {
@@ -341,26 +347,25 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // preventing mobile/low-core devices from spawning excessive workers.
     const cores = typeof navigator !== "undefined" ? Number(navigator.hardwareConcurrency || 2) : 2;
     loader.setWorkerLimit(Math.max(1, Math.min(4, Math.floor(cores / 2) || 1)));
-    return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject));
+    return await new Promise<THREE.Object3D>((resolve, reject) => loader.parse(buffer, resolve, reject));
   }
   throw new Error("Formato no compatible.");
 }
 
 export async function convertAurumToGlb(
   object: THREE.Object3D,
-  colorRhinoHex?: (color:any) => string | undefined,
+  colorRhinoHex?: (color:unknown) => string | undefined,
   clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro"
 ) {
   // Preserve the original Rhino layer table and each mesh's own source
   // attributes as explicit GLB extras. Do not rely on traversal order or on
   // reconstructed metadata after GLTFExporter/GLTFLoader round-tripping.
-  const sourceLayers = Array.isArray((object as any)?.userData?.layers)
-    ? (object as any).userData.layers
-    : Array.isArray((object as any)?.userData?.rhinoLayers)
-      ? (object as any).userData.rhinoLayers : [];
-  (object as any).userData = {
-    ...((object as any).userData ?? {}),
-    aurumRhinoSourceLayers: sourceLayers.map((layer:any,index:number) => ({
+  const rawLayers = object.userData?.["layers"];
+  const rawRhinoLayers = object.userData?.["rhinoLayers"];
+  const sourceLayers: RhinoLayer[] = Array.isArray(rawLayers) ? rawLayers : Array.isArray(rawRhinoLayers) ? rawRhinoLayers : [];
+  object.userData = {
+    ...(object.userData ?? {}),
+    aurumRhinoSourceLayers: sourceLayers.map((layer,index:number) => ({
       index,
       id: layer?.id ?? layer?.Id ?? null,
       name: layer?.name ?? layer?.Name ?? null,
@@ -368,7 +373,8 @@ export async function convertAurumToGlb(
       parentLayerId: layer?.parentLayerId ?? layer?.parentId ?? layer?.ParentLayerId ?? null,
     })),
   };
-  object.traverse((x:any) => {
+  object.traverse((node) => {
+    const x = node as RhinoObject;
     if (!x?.isMesh) return;
     const attrs = x.userData?.attributes ?? {};
     const rawIndex = attrs.layerIndex ?? attrs.LayerIndex ?? x.userData?.layerIndex ?? x.userData?.LayerIndex;
@@ -393,11 +399,11 @@ export async function convertAurumToGlb(
   });
   if (colorRhinoHex && clasificarCapa) {
     const parts = getAurumModelParts(object, colorRhinoHex, clasificarCapa);
-    const byId = new Map<string, any>();
-    parts.filter((part:any) => part.tipo === "malla").forEach((part:any) => byId.set(part.id, part));
+    const byId = new Map<string, (typeof parts)[number]>();
+    parts.filter((part) => part.tipo === "malla").forEach((part) => byId.set(part.id, part));
     object.traverse((x:any) => {
       if (!x.isMesh) return;
-      const part:any = byId.get(x.uuid);
+      const part = byId.get(x.uuid);
       if (!part) return;
       x.userData = {
         ...(x.userData ?? {}),

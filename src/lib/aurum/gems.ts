@@ -3,27 +3,23 @@
  * The renderer keeps inclusions inside the stone volume and uses family-specific
  * structures for natural emeralds instead of generic floating particles.
  */
-import * as THREE from "three";
-import type { Object3D, Vector3 } from "three";
 import { createAurumInclusionConfig, generateAurumInclusionPoints, getAurumGemPreset } from "../aurum-material-engine";
 
-export type AurumGemInclusionInput = { id:string; inclusionStrength?:number; inclusionStyle?:string; fenomenoOptico?: "chatoyancy" | "asterism" | "schiller" | "peristerescence" | "iridescence" | "orient"; familia?: string; };
-type AurumInclusionConfig = ReturnType<typeof createAurumInclusionConfig>;
-type AurumInclusionPoint = ReturnType<typeof generateAurumInclusionPoints>[number];
+export type AurumGemInclusionInput = { id:string; inclusionStrength?:number; inclusionStyle?:string; };
 
-export const clearAurumInclusions=(target:Object3D)=>{
-  const remove:Object3D[]=[];
-  target.traverse((child)=>{if(child.userData?.aurumInternalInclusion)remove.push(child);});
-  remove.forEach((child)=>{child.parent?.remove(child);const renderable=child as Object3D & {geometry?:{dispose?:()=>void};material?:{dispose?:()=>void};};renderable.geometry?.dispose?.();renderable.material?.dispose?.();});
+export const clearAurumInclusions=(target:any)=>{
+  const remove:any[]=[];
+  target?.traverse?.((child:any)=>{if(child.userData?.aurumInternalInclusion)remove.push(child);});
+  remove.forEach(child=>{child.parent?.remove(child);child.geometry?.dispose?.();child.material?.dispose?.();});
 };
 
 export const setAurumInclusionsVisible=(target:any,visible:boolean)=>{
-  target.traverse((child)=>{
+  target?.traverse?.((child:any)=>{
     if(child.userData?.aurumInternalInclusion) child.visible=visible;
   });
 };
 
-const addEmeraldInclusions=(THREE:typeof import("three"),target:any,config:AurumInclusionConfig,size:Vector3)=>{
+const addEmeraldInclusions=(THREE:any,target:any,config:any,size:any)=>{
   let s=(config.seed>>>0)||1;
   const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density));
@@ -32,7 +28,7 @@ const addEmeraldInclusions=(THREE:typeof import("three"),target:any,config:Aurum
   // Jardin: irregular translucent branching structures kept sparse so the
   // emerald reads as a natural internal garden rather than surface scratches.
   for(let i=0;i<count;i++){
-    const points:Vector3[]=[];
+    const points:any[]=[];
     const start=new THREE.Vector3((rnd()-.5)*size.x*.38,(rnd()-.5)*size.y*.38,(rnd()-.5)*size.z*.38);
     const dir=new THREE.Vector3(rnd()-.5,rnd()-.5,rnd()-.5).normalize();
     const length=Math.min(size.x,size.y,size.z)*(.12+rnd()*.28);
@@ -205,7 +201,7 @@ const addPhenomenalNeedles=(THREE:any,target:any,config:any,size:any,phenomenon:
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(14,Math.round(14+strength*30));
   const crystal=target?.userData?.aurumGemPhysicalModel?.crystal;
-  const axes=[crystal?.axisA,crystal?.axisB,crystal?.axisC].map((a)=>Array.isArray(a)?new THREE.Vector3().fromArray(a as number[]):null);
+  const axes=[crystal?.axisA,crystal?.axisB,crystal?.axisC].map((a:any)=>Array.isArray(a)?new THREE.Vector3().fromArray(a):null);
   const addSet=(angle:number,spread:number,axisIndex=0)=>{for(let i=0;i<count;i++){
     const n=new THREE.Mesh(new THREE.CylinderGeometry(scale*.0008,scale*.0014,scale*(.18+rnd()*.34),5),new THREE.MeshPhysicalMaterial({color:host==="esmeralda"?0x8ba58f:0x887b69,roughness:.22,transmission:.06,transparent:true,opacity:.04+strength*.05,depthWrite:false,envMapIntensity:.38}));
     n.position.set((rnd()-.5)*size.x*.48,(rnd()-.5)*size.y*.48,(rnd()-.5)*size.z*.48);
@@ -273,7 +269,7 @@ const addMorganiteInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInput,seed=9173,providedPreset?:ReturnType<typeof getAurumGemPreset>)=>{
+export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInput,seed=9173,providedPreset?:any)=>{
   clearAurumInclusions(target);
   const preset=providedPreset ?? getAurumGemPreset(g.id);
   const config=createAurumInclusionConfig(preset,seed);
@@ -305,7 +301,7 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
     addAlexandriteInclusions(THREE,target,config,size);
     return;
   }
-  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && g.fenomenoOptico){
+  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && (g as any).fenomenoOptico){
     addChrysoberylPhenomenalInclusions(THREE,target,config,size,(g as any).fenomenoOptico);
     return;
   }
@@ -317,7 +313,7 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   if((g as any).fenomenoOptico){
     const phenomenon=(g as any).fenomenoOptico;
     if(phenomenon==="chatoyancy" || phenomenon==="asterism"){
-      addPhenomenalNeedles(THREE,target,config,size,phenomenon,String(g.familia??"gem"));
+      addPhenomenalNeedles(THREE,target,config,size,phenomenon,String((g as any).familia??"gem"));
     } else if(phenomenon==="schiller" || phenomenon==="peristerescence" || phenomenon==="iridescence" || phenomenon==="orient"){
       addPhenomenalPlates(THREE,target,config,size,phenomenon);
     }
@@ -325,9 +321,9 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
   }
 
   const points=generateAurumInclusionPoints(config,56);
-  points.forEach((p:AurumInclusionPoint)=>{
+  points.forEach((p:any)=>{
     const material=new THREE.MeshPhysicalMaterial({color:config.color,metalness:0,roughness:config.type==="silk"?.34:.22,transmission:config.type==="crystal"?.48:.10,transparent:true,opacity:p.opacity,depthWrite:false,envMapIntensity:.75});
-    let geometry:THREE.BufferGeometry;
+    let geometry:any;
     if(config.type==="needle"||config.type==="silk")geometry=new THREE.CylinderGeometry(p.size*.16,p.size*.16,p.size*3.2,5);
     else if(config.type==="feather"||config.type==="veil")geometry=new THREE.TetrahedronGeometry(p.size*1.6,0);
     else geometry=new THREE.IcosahedronGeometry(p.size,1);
