@@ -1109,6 +1109,7 @@ export function AurumRender() {
           const originalCssWidth=originalBufferWidth/originalPixelRatio;
           const originalCssHeight=originalBufferHeight/originalPixelRatio;
           const originalAspect=camara.aspect;
+          const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
           const width=isPoster
             ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
             : Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
@@ -1132,6 +1133,10 @@ export function AurumRender() {
             // scaling the live canvas to 4K enlarges pixels without adding detail.
             // Keep camera, materials, lights, HDRs and the active live render path.
             renderer.setPixelRatio(1);
+            // Gems can inherit a low transmission buffer scale from the live
+            // interaction budget. Restore full-resolution refraction only for
+            // this isolated capture, without changing the interactive preview.
+            (renderer as any).transmissionResolutionScale=1;
             renderer.setSize(width,height,false);
             if(typeof camara.aspect==="number") {
               camara.aspect=width/height;
@@ -1153,6 +1158,7 @@ export function AurumRender() {
             // Restore the interactive viewport immediately, including DPR and
             // camera projection, even if capture or encoding fails.
             renderer.setPixelRatio(originalPixelRatio);
+            (renderer as any).transmissionResolutionScale=originalTransmissionResolutionScale;
             renderer.setSize(originalCssWidth,originalCssHeight,false);
             if(typeof originalAspect==="number") {
               camara.aspect=originalAspect;
