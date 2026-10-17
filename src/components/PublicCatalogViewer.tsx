@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { createAurumWebGLViewer, startAurumViewerLoop, disposeAurumViewer } from "@/lib/aurum/viewer";
 import { parseAurumInput, preprocessAurumModel } from "@/lib/aurum/model-loader";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "@/lib/aurum-material-engine";
@@ -96,7 +97,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const metalUrl = getAurumHdriUrl("ijewelMetal");
         const gemUrl = getAurumGemHdriUrl("ijewelGem");
         const loadHdr = (url: string, done: (texture: THREE.Texture) => void) => {
-          new RGBELoader().load(url, (texture) => {
+          const Loader = /\\.exr(?:$|[?#])/i.test(url) ? EXRLoader : RGBELoader;
+          new Loader().load(url, (texture: THREE.Texture) => {
             if (cancelled) { texture.dispose(); return; }
             texture.mapping = THREE.EquirectangularReflectionMapping;
             done(texture);
