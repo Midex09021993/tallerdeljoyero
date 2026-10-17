@@ -81,7 +81,7 @@ export function createAurumGemEnvironment(
         const nativeIJEWELRotation = Number(m.userData?.["aurumIJEWELParameters"]?.environmentRotationOffset);
         const oriented = Number(m.userData?.["aurumIJEWELParameters"]?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();
-        if (oriented && m.getWorldQuaternion) worldEuler.setFromQuaternion(m.getWorldQuaternion(new THREE.Quaternion()), "YXZ");
+        if (oriented && x.getWorldQuaternion) worldEuler.setFromQuaternion(x.getWorldQuaternion(new THREE.Quaternion()), "YXZ");
         const orientedCompensation = oriented ? -worldEuler.y : 0;
         const effectiveRotation = rotation + (Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset) + orientedCompensation;
 

@@ -1,7 +1,7 @@
 import type { Euler, Scene, Texture, WebGLRenderer } from "three";
 type AurumScene = Scene & { environmentIntensity?: number; environmentRotation?: Euler };
 type EnvironmentLoaderConstructor = new () => { load: (url:string, onLoad:(texture:Texture)=>void, onProgress?:undefined, onError?:(error:unknown)=>void) => unknown };
-type RoomEnvironmentConstructor = new () => { dispose?: () => void };
+type RoomEnvironmentConstructor = new () => Scene & { dispose?: () => void };
 
 export interface AurumEnvironmentController {
   fallback: Texture;
