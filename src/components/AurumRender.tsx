@@ -971,17 +971,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gema:aplicarGema,
         materialCatalogo:(m:MaterialConfig)=>{
           if(!modelo)return;
-          const visited=new Set<string>();
-          modelo.traverse((x:any)=>{
-            if(!x.isMesh||x.userData?.aurumInternalInclusion||String(x.userData?.aurumRhino?.categoria ?? "").toLowerCase()!=="metal")return;
-            const meta=x.userData?.aurumRhino??{};
-            const attrs=x.userData?.attributes??{};
-            const layer=String(meta.capa??attrs.layerName??attrs.LayerName??"").trim().toLocaleLowerCase();
-            const key=layer||String(meta.layerKey??x.uuid);
-            if(visited.has(key))return;
-            visited.add(key);
-            aplicarMaterial(m,x);
-          });
+          aplicarMaterial(m,true);
           invalidateRenderRef.current?.();
         },
         gemaCatalogo:(g:GemaConfig)=>{
