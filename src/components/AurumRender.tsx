@@ -1098,168 +1098,50 @@ export function AurumRender() {
         },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
-          if(!composer?.readBuffer||typeof composer.render!=="function") throw new Error("El motor fotográfico no está disponible para capturar la imagen.");
-          // Poster capture is read-only: copy the currently displayed viewer canvas.
-          // Do not invoke the photo renderer, resize WebGL, or change camera/materials.
-          if(options.onCapture){
-            const liveCanvas=visorRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
-            if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) throw new Error("El visor todavía no tiene una imagen disponible para el póster.");
-            const thumb=document.createElement("canvas");
-            const thumbWidth=Math.max(1,Math.min(640,Math.round(Number(options.width)||640)));
-            const thumbHeight=Math.max(1,Math.round(thumbWidth*liveCanvas.height/liveCanvas.width));
-            thumb.width=thumbWidth; thumb.height=thumbHeight;
-            const ctx=thumb.getContext("2d");
-            if(!ctx) throw new Error("No se pudo preparar la miniatura del póster.");
-            ctx.drawImage(liveCanvas,0,0,thumbWidth,thumbHeight);
-            const mime=options.format==="png"?"image/png":options.format==="webp"?"image/webp":"image/jpeg";
-            const cover=thumb.toDataURL(mime,0.88);
-            if(!cover||cover.length<1000) throw new Error("La imagen del visor está vacía; no se actualizó el póster.");
-            options.onCapture(cover);
-            return;
+          // Faithful viewer capture: copy the canvas currently shown to the user.
+          // Do not switch render modes, run the photographic composer, alter exposure,
+          // change gemstone transmission, resize WebGL, or mutate the camera/materials.
+          const liveCanvas=visorRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+          if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
+            throw new Error("El visor todavía no tiene una imagen disponible para capturar.");
           }
-          const width=Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
-          const height=Math.max(320,Math.min(4096,Math.round(Number(options.height)||2160)));
-          if(width*height>12_000_000) throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
+          const isPoster=Boolean(options.onCapture);
+          const width=isPoster
+            ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
+            : Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
+          const requestedHeight=Math.max(320,Math.min(4096,Math.round(Number(options.height)||2160)));
+          const height=isPoster
+            ? Math.max(1,Math.round(width*liveCanvas.height/liveCanvas.width))
+            : requestedHeight;
+          if(!isPoster && width*height>12_000_000) {
+            throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
+          }
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
           const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
-          // Prevent the live RAF loop from rendering into the same WebGL context
-          // while the high-resolution off-screen capture is being assembled.
-          const captureLoop:any=viewerLoopRef.current;
-          captureLoop?.pause?.();
-          const oldSize=new THREE.Vector2();
-          renderer.getSize(oldSize);
-          const oldCameraAspect=camara.aspect;
-          const oldComposerPixelRatio=Number(composer.getPixelRatio?.()??1);
-          const oldRenderToScreen=composer.renderToScreen;
-          const oldLiveMode=liveFastPathRef.current;
-          const oldClearColor=new THREE.Color();
-          const oldClearAlpha=renderer.getClearAlpha();
-          const oldToneMappingExposure=renderer.toneMappingExposure;
-          renderer.getClearColor(oldClearColor);
-          let dataUrl="";
-          const captureTransmissionRestore:Array<{material:any;transmission:number}>=[];
-          try{
-            // Use the full photographic post pipeline, but render off-screen.
-            // Reading EffectComposer's final buffer avoids the cleared WebGL
-            // default framebuffer that caused black downloads with preserveDrawingBuffer=false.
-            liveFastPathRef.current=false;
-            aplicarPerfilLive();
-            applyPostQuality?.(renderQuality,{capture:true});
-            // CAPTURE restores authored transmission for all gems, while the
-            // live viewer deliberately caps it to retain readable facets.
-            // For diamonds only, use a moderate capture value so the PNG keeps
-            // internal reflections instead of washing through the pavilion.
-            modelo?.traverse?.((object:any)=>{
-              if(!object?.isMesh||!object.material)return;
-              const materials=Array.isArray(object.material)?object.material:[object.material];
-              materials.forEach((material:any)=>{
-                if(material?.userData?.aurumGemFamily!=="Diamante")return;
-                const transmission=Number(material.transmission??0);
-                if(transmission>0.55){
-                  captureTransmissionRestore.push({material,transmission});
-                  material.transmission=0.55;
-                  material.needsUpdate=true;
-                }
-              });
-            });
-            // Isolated PNG test: the live viewer is visibly brighter than the
-            // exported beauty. Lift exposure only for the capture, without changing
-            // the live renderer or any authored metal/gem material profiles.
-            renderer.outputColorSpace=THREE.SRGBColorSpace;
-            renderer.toneMappingExposure=Math.min(1.08,oldToneMappingExposure*1.30);
-            composer.renderToScreen=false;
-            composer.setPixelRatio(1);
-            composer.setSize(width,height);
-            camara.aspect=width/height;
-            camara.updateProjectionMatrix();
-            renderer.setClearColor(0xffffff,1);
-            // A few beauty passes let temporal anti-aliasing settle without
-            // running the full interactive progressive loop indefinitely.
-            const taaCapturePass=(composer.passes??[]).find((pass:any)=>pass?.enabled&&pass.constructor?.name==="TAARenderPass");
-            // TAARenderPass needs 2^sampleLevel frames to accumulate its jitter sequence.
-            // Four frames leave most of the high-resolution capture under-sampled.
-            const captureFrames=taaCapturePass?Math.max(4,Math.min(32,2**Math.max(0,Number(taaCapturePass.sampleLevel??2)))):1;
-            for(let frame=0;frame<captureFrames;frame++) composer.render();
-            const target=composer.readBuffer;
-            if(!target||target.width!==width||target.height!==height) throw new Error("La resolución interna de captura no coincide con la solicitada.");
-            const pixels=new Uint8Array(width*height*4);
-            renderer.readRenderTargetPixels(target,0,0,width,height,pixels);
-            // Some post pipelines can leave readBuffer allocated but never write
-            // to it. Detect a truly empty RGBA buffer and make one isolated
-            // direct-scene fallback rather than downloading a transparent black PNG.
-            const hasVisiblePixel = () => {
-              for(let i=3;i<pixels.length;i+=4) {
-                if(pixels[i]!==0) return true;
-              }
-              return false;
-            };
-            if(!hasVisiblePixel()) {
-              const previousTarget=renderer.getRenderTarget();
-              const fallbackTarget=new THREE.WebGLRenderTarget(width,height,{
-                format:THREE.RGBAFormat,
-                type:THREE.UnsignedByteType,
-                depthBuffer:true,
-                stencilBuffer:false,
-              });
-              try {
-                renderer.setRenderTarget(fallbackTarget);
-                renderer.setClearColor(0xffffff,1);
-                renderer.clear(true,true,true);
-                renderer.render(escena,camara);
-                renderer.readRenderTargetPixels(fallbackTarget,0,0,width,height,pixels);
-              } finally {
-                renderer.setRenderTarget(previousTarget);
-                fallbackTarget.dispose();
-              }
-              if(!hasVisiblePixel()) throw new Error("La captura fotográfica y la captura directa devolvieron píxeles transparentes. No se descargó una imagen negra; revisa el estado WebGL y vuelve a intentar.");
-            }
-            const output=document.createElement("canvas");
-            output.width=width;
-            output.height=height;
-            const context=output.getContext("2d");
-            if(!context) throw new Error("No se pudo preparar la imagen de salida.");
-            const image=context.createImageData(width,height);
-            const rowSize=width*4;
-            // WebGL pixels start at bottom-left; Canvas ImageData starts top-left.
-            for(let y=0;y<height;y++){
-              const sourceOffset=(height-1-y)*rowSize;
-              image.data.set(pixels.subarray(sourceOffset,sourceOffset+rowSize),y*rowSize);
-            }
-            context.putImageData(image,0,0);
-            if(format!=="png"){
-              const flattened=document.createElement("canvas");
-              flattened.width=width;
-              flattened.height=height;
-              const flatContext=flattened.getContext("2d");
-              if(!flatContext) throw new Error("No se pudo preparar el formato de imagen.");
-              flatContext.fillStyle="#ffffff";
-              flatContext.fillRect(0,0,width,height);
-              flatContext.drawImage(output,0,0);
-              dataUrl=flattened.toDataURL(mime,0.94);
-            }else{
-              dataUrl=output.toDataURL(mime);
-            }
-            if(!dataUrl||dataUrl.length<1000) throw new Error("La captura está vacía. Inténtalo de nuevo con el visor estable.");
-          }finally{
-            composer.renderToScreen=oldRenderToScreen;
-            composer.setPixelRatio(oldComposerPixelRatio);
-            composer.setSize(oldSize.x,oldSize.y);
-            camara.aspect=oldCameraAspect;
-            camara.updateProjectionMatrix();
-            renderer.setClearColor(oldClearColor,oldClearAlpha);
-            renderer.outputColorSpace=THREE.SRGBColorSpace;
-            renderer.toneMappingExposure=oldToneMappingExposure;
-            captureTransmissionRestore.forEach(({material,transmission})=>{
-              material.transmission=transmission;
-              material.needsUpdate=true;
-            });
-            liveFastPathRef.current=oldLiveMode;
-            aplicarPerfilLive();
-            applyPostQuality?.(renderQuality);
-            renderer.shadowMap.needsUpdate=true;
-            invalidateRenderRef.current?.();
-            captureLoop?.resume?.();
-            captureLoop?.resize?.();
+          const output=document.createElement("canvas");
+          output.width=width;
+          output.height=height;
+          const context=output.getContext("2d");
+          if(!context) throw new Error("No se pudo preparar la imagen de salida.");
+          // Preserve the viewer's exact aspect ratio and appearance. If the requested
+          // output ratio differs, keep the image undistorted on a white studio canvas.
+          context.fillStyle="#ffffff";
+          context.fillRect(0,0,width,height);
+          const scale=Math.min(width/liveCanvas.width,height/liveCanvas.height);
+          const drawWidth=Math.round(liveCanvas.width*scale);
+          const drawHeight=Math.round(liveCanvas.height*scale);
+          const drawX=Math.round((width-drawWidth)/2);
+          const drawY=Math.round((height-drawHeight)/2);
+          context.imageSmoothingEnabled=true;
+          context.imageSmoothingQuality="high";
+          context.drawImage(liveCanvas,drawX,drawY,drawWidth,drawHeight);
+          const dataUrl=output.toDataURL(mime,0.94);
+          if(!dataUrl||dataUrl.length<1000) {
+            throw new Error("La captura del visor está vacía. Espera a que termine de dibujarse y vuelve a intentar.");
+          }
+          if(options.onCapture) {
+            options.onCapture(dataUrl);
+            return;
           }
           const link=document.createElement("a");
           const baseName=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-");
