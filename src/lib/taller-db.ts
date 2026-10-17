@@ -575,6 +575,13 @@ export function usePedidos() {
       let pedidosData: Array<Record<string, unknown>> | null = null;
       let pedidosError: { message?: string; code?: string; details?: string } | null = null;
 
+      // El enriquecimiento comercial es independiente de la consulta principal;
+      // iniciar ambas al mismo tiempo reduce la latencia total de la bandeja.
+      const comercialesPromise = supabase
+        .from("pedido_comercial")
+        .select(CAMPOS_PEDIDO_COMERCIAL)
+        .then((resultado) => resultado);
+
       const principal = await supabase
         .from("pedidos")
         .select(CAMPOS_PEDIDO_BASE)
@@ -600,9 +607,7 @@ export function usePedidos() {
         }
       }
 
-      const { data: comercialesData, error: comercialesError } = await supabase
-        .from("pedido_comercial")
-        .select(CAMPOS_PEDIDO_COMERCIAL);
+      const { data: comercialesData, error: comercialesError } = await comercialesPromise;
 
       if (comercialesError && !esErrorCampoFaltante(comercialesError)) {
         console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
