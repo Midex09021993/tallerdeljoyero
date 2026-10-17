@@ -525,8 +525,9 @@ const CAMPOS_PEDIDO_SELECTOR =
 
 export function usePedidosSelector() {
   return useQuery({
-    queryKey: ["pedidos-selector"],
-    staleTime: 15_000,
+    // La clave comparte el prefijo de pedidos para recibir sus invalidaciones.
+    queryKey: ["pedidos", "selector"],
+    staleTime: 60_000,
     queryFn: async (): Promise<PedidoSelector[]> => {
       const { data, error } = await supabase
         .from("pedidos")
