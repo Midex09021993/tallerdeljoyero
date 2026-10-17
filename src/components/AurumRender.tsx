@@ -1142,6 +1142,15 @@ export function AurumRender() {
               camara.aspect=width/height;
               camara.updateProjectionMatrix?.();
             }
+            // The BVH shader has its own ray-bounce budget, independent of
+            // transmissionResolutionScale. Raise diamond-only bounces for a
+            // full-size still capture, refresh camera uniforms, then restore
+            // the interactive budget in finally so orbit performance is unchanged.
+            if(!isPoster) diamondBvhRuntime?.setDiamondQuality("final");
+            diamondBvhRuntime?.update();
+            if(renderer.domElement.width!==width || renderer.domElement.height!==height) {
+              throw new Error("El canvas WebGL no alcanzó la resolución solicitada para la captura.");
+            }
             renderer.render(escena,camara);
             context.fillStyle="#ffffff";
             context.fillRect(0,0,width,height);
@@ -1155,6 +1164,10 @@ export function AurumRender() {
             context.drawImage(renderer.domElement,drawX,drawY,drawWidth,drawHeight);
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
+            // Restore the interactive diamond ray budget before returning to
+            // the live viewport, including when capture or encoding fails.
+            if(!isPoster) diamondBvhRuntime?.setDiamondQuality("interactive");
+            diamondBvhRuntime?.update();
             // Restore the interactive viewport immediately, including DPR and
             // camera projection, even if capture or encoding fails.
             renderer.setPixelRatio(originalPixelRatio);
