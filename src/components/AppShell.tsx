@@ -125,13 +125,22 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
   return useQuery({
     queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
-    // La configuración se invalida al guardar capacidades; evita refetches al navegar entre módulos.
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
     enabled: Boolean(sesion?.esAdmin),
     queryFn: async () => {
-      const { data, error } = await supabase
+      const sedeObjetivo = esDueno && sedeFiltro !== TODAS_LAS_SEDES
+        ? sedeFiltro
+        : !esDueno
+          ? sesion?.sede?.id ?? null
+          : null;
+
+      // Consulta solo las capacidades de la sede activa; el dueño en vista global conserva todas.
+      const consulta = supabase
         .from("sede_especialidades")
         .select("sede_id, especialidades!inner(nombre)");
+      const { data, error } = sedeObjetivo
+        ? await consulta.eq("sede_id", sedeObjetivo)
+        : await consulta;
       if (error) throw error;
 
       const filas = (data ?? []) as Array<{
@@ -139,14 +148,7 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
         especialidades: { nombre: string } | { nombre: string }[] | null;
       }>;
 
-      const sedeObjetivo = esDueno && sedeFiltro !== TODAS_LAS_SEDES
-        ? sedeFiltro
-        : !esDueno
-          ? sesion?.sede?.id ?? null
-          : null;
-
       const nombres = filas
-        .filter((fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo)
         .flatMap((fila) => {
           if (!fila.especialidades) return [];
           return Array.isArray(fila.especialidades)
