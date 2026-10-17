@@ -16,16 +16,6 @@ export const Route = createFileRoute("/_authenticated/compras")({
 function ComprasPage() {
   const { data: sesion } = useSesion();
 
-  if (sesion && !sesion.esAdmin) {
-    return (
-      <AppShell titulo="Compras" subtitulo="Acceso restringido">
-        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-card">
-          <p className="text-base font-semibold">Compras restringidas</p>
-          <p className="mt-2 text-sm text-muted-foreground">Este módulo está reservado para administración y gestión.</p>
-        </div>
-      </AppShell>
-    );
-  }
   const qc = useQueryClient();
   const [proveedor, setProveedor] = useState("");
   const [notas, setNotas] = useState("");
@@ -34,7 +24,7 @@ function ComprasPage() {
 
   const { data: compras = [] } = useQuery({
     queryKey: ["compras", sesion?.participante?.id],
-    enabled: Boolean(sesion?.participante?.id),
+    enabled: Boolean(sesion?.participante?.id && sesion?.esAdmin),
     queryFn: async () => {
       const sedeId = sesion!.participante!.sede_id;
       const base = supabase.from("compras").select("id,numero,proveedor_nombre,estado,fecha_emision,total,moneda,notas");
@@ -88,6 +78,17 @@ function ComprasPage() {
     if (error) toast.error(error.message);
     else { toast.success("Compra recibida: entrada registrada en Kardex"); await qc.invalidateQueries({ queryKey: ["compras", sesion?.sede?.id] }); await qc.invalidateQueries({ queryKey: ["inventario-real", sesion?.sede?.id] }); }
   };
+
+  if (sesion && !sesion.esAdmin) {
+    return (
+      <AppShell titulo="Compras" subtitulo="Acceso restringido">
+        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+          <p className="text-base font-semibold">Compras restringidas</p>
+          <p className="mt-2 text-sm text-muted-foreground">Este módulo está reservado para administración y gestión.</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   return <AppShell titulo="Compras" subtitulo="Abastecimiento, recepción y costo histórico de materiales">
     <div className="space-y-6">
