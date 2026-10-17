@@ -108,6 +108,7 @@ function PedidoTecnicoRecibido({
 }) {
   const servicios = grupo ?? [];
   const primero = servicios[0];
+  if (!primero) return null;
 
   const { data: ficha, isLoading: cargandoFicha } = useQuery({
     queryKey: ["ficha-tecnica-pedido-recibido", primero?.id],
@@ -181,24 +182,24 @@ function PedidoTecnicoRecibido({
           <div className="rounded-xl border border-border bg-surface-muted/20 p-4">
             <div className="mb-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ficha técnica completa</p>
-              <p className="mt-1 text-sm font-semibold">{campo(pedido.pieza ?? primero.pieza) || "Pieza sin nombre"}</p>
+              <p className="mt-1 text-sm font-semibold">{campo(pedido["pieza"] ?? primero.pieza) || "Pieza sin nombre"}</p>
             </div>
 
             <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["Referencia", pedido.referencia],
-                ["Pieza", pedido.pieza],
-                ["Trabajo", pedido.trabajo],
-                ["Material", pedido.material],
-                ["Talla", pedido.talla],
-                ["Piedras", pedido.piedras],
-                ["Peso estimado", pedido.peso_estimado],
-                ["Cantidad", pedido.cantidad_piezas],
-                ["Fecha de ingreso", pedido.fecha_ingreso],
-                ["Fecha de entrega", pedido.fecha_entrega],
-                ["Origen", pedido.origen],
-                ["Área actual", pedido.area_actual],
-                ["Área desde", pedido.area_desde],
+                ["Referencia", pedido["referencia"]],
+                ["Pieza", pedido["pieza"]],
+                ["Trabajo", pedido["trabajo"]],
+                ["Material", pedido["material"]],
+                ["Talla", pedido["talla"]],
+                ["Piedras", pedido["piedras"]],
+                ["Peso estimado", pedido["peso_estimado"]],
+                ["Cantidad", pedido["cantidad_piezas"]],
+                ["Fecha de ingreso", pedido["fecha_ingreso"]],
+                ["Fecha de entrega", pedido["fecha_entrega"]],
+                ["Origen", pedido["origen"]],
+                ["Área actual", pedido["area_actual"]],
+                ["Área desde", pedido["area_desde"]],
               ].map(([etiqueta, valor]) => (
                 <div key={String(etiqueta)} className="min-w-0 rounded-lg border border-border bg-card p-3">
                   <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
@@ -207,29 +208,29 @@ function PedidoTecnicoRecibido({
               ))}
             </div>
 
-            {pedido.ruta ? (
+            {pedido["ruta"] ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Ruta de fabricación</p>
-                <p className="mt-1 text-xs font-medium">{campo(pedido.ruta)}</p>
+                <p className="mt-1 text-xs font-medium">{campo(pedido["ruta"])}</p>
               </div>
             ) : null}
 
-            {(pedido.corte_texto || pedido.corte_tipografia || pedido.corte_ubicacion || pedido.corte_observaciones) ? (
+            {Boolean(pedido["corte_texto"] || pedido["corte_tipografia"] || pedido["corte_ubicacion"] || pedido["corte_observaciones"]) ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Especificaciones de corte</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  <p className="text-xs"><span className="text-muted-foreground">Texto:</span> {campo(pedido.corte_texto)}</p>
-                  <p className="text-xs"><span className="text-muted-foreground">Tipografía:</span> {campo(pedido.corte_tipografia)}</p>
-                  <p className="text-xs"><span className="text-muted-foreground">Ubicación:</span> {campo(pedido.corte_ubicacion)}</p>
-                  <p className="text-xs"><span className="text-muted-foreground">Observaciones:</span> {campo(pedido.corte_observaciones)}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Texto:</span> {campo(pedido["corte_texto"])}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Tipografía:</span> {campo(pedido["corte_tipografia"])}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Ubicación:</span> {campo(pedido["corte_ubicacion"])}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Observaciones:</span> {campo(pedido["corte_observaciones"])}</p>
                 </div>
               </div>
             ) : null}
 
-            {pedido.notas ? (
+            {pedido["notas"] ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Notas técnicas</p>
-                <p className="mt-1 whitespace-pre-wrap text-xs">{String(pedido.notas)}</p>
+                <p className="mt-1 whitespace-pre-wrap text-xs">{String(pedido["notas"])}</p>
               </div>
             ) : null}
 
