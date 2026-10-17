@@ -4,6 +4,19 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
 
+type ServicioExternoEnviado = {
+  id: string;
+  estado: string;
+  titulo: string | null;
+  pieza: string | null;
+  destino_participante_nombre: string | null;
+  referencia_pedido: string | null;
+  area: string;
+  fecha_planificada: string | null;
+  responsable_nombre: string | null;
+  cantidad_piezas: number | null;
+};
+
 function estadoLabel(estado: string) {
   if (estado === "en_proceso") return "En proceso";
   if (estado === "bloqueado") return "Bloqueado";
@@ -23,7 +36,11 @@ export function ServiciosExternosEnviadosAdmin({ sedeId }: { sedeId: string | nu
   const { data: servicios = [], isLoading, error } = useQuery({
     queryKey: ["servicios-externos-enviados-admin", sedeId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("listar_servicios_externos_enviados", {
+      const rpcListar = supabase.rpc as unknown as (
+        nombre: string,
+        args: { _sede_id: string | null },
+      ) => Promise<{ data: ServicioExternoEnviado[] | null; error: Error | null }>;
+      const { data, error } = await rpcListar("listar_servicios_externos_enviados", {
         _sede_id: sedeId,
       });
       if (error) throw error;
@@ -31,7 +48,7 @@ export function ServiciosExternosEnviadosAdmin({ sedeId }: { sedeId: string | nu
     },
   });
 
-  const pendientes = servicios.filter((s: any) => ["pendiente", "en_proceso", "bloqueado"].includes(s.estado)).length;
+  const pendientes = servicios.filter((s: ServicioExternoEnviado) => ["pendiente", "en_proceso", "bloqueado"].includes(s.estado)).length;
   const completados = servicios.filter((s: any) => s.estado === "completado").length;
   const bloqueados = servicios.filter((s: any) => s.estado === "bloqueado").length;
 
@@ -81,7 +98,7 @@ export function ServiciosExternosEnviadosAdmin({ sedeId }: { sedeId: string | nu
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {servicios.map((servicio: any) => (
+            {servicios.map((servicio: ServicioExternoEnviado) => (
               <Link
                 key={servicio.id}
                 to="/trabajos/$id"
