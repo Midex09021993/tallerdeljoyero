@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {useEffect,useState,type FormEvent} from "react";
 import {Cake,Save,MessageCircle} from "lucide-react";
 import {toast} from "sonner";
