@@ -1,4 +1,3 @@
-// @ts-nocheck -- tipos generados desfasados respecto al esquema real
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
