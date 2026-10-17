@@ -1124,7 +1124,7 @@ export function AurumRender() {
           // then downsample once into the final image. This improves facet-edge
           // coverage without changing the delivered PNG dimensions. Keep the
           // temporary WebGL buffer under the same 12 MP memory budget.
-          const renderScale=isPoster?1:Math.min(1.1,Math.sqrt(12_000_000/(width*height)));
+          const renderScale=isPoster?1:Math.min(1.25,Math.sqrt(12_000_000/(width*height)));
           const renderWidth=Math.max(width,Math.floor(width*renderScale));
           const renderHeight=Math.max(height,Math.floor(height*renderScale));
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
