@@ -193,7 +193,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(() => {
     let vivo = true;
     let cleanup = () => {};
-    let frame = 0;
+    const frame = 0;
     (async () => {
       const THREE = await import("three");
             const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
@@ -383,7 +383,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
       };
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
-      let liveGeometryPreparing=false;
+      const liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
 
@@ -1200,7 +1200,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
-          let capturePassStates: Array<{pass:any;enabled:boolean}> = [];
+          const capturePassStates: Array<{pass:any;enabled:boolean}> = [];
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
