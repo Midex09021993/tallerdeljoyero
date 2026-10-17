@@ -189,8 +189,8 @@ function CatalogoPublicoPage() {
       const carrusel = Array.isArray(carruselData['enlaces_carrusel']) ? carruselData['enlaces_carrusel'].filter((slide: unknown) => {
         if (!slide || typeof slide !== "object" || Array.isArray(slide)) return false;
         const item = slide as Record<string, unknown>;
-        return (typeof item.url_imagen_externa === "string" && /^https?:\/\//i.test(item.url_imagen_externa)) ||
-          (typeof item.imagen_url === "string" && /^https?:\/\//i.test(item.imagen_url));
+        return (typeof item["url_imagen_externa"] === "string" && /^https?:\/\//i.test(item["url_imagen_externa"])) ||
+          (typeof item["imagen_url"] === "string" && /^https?:\/\//i.test(item["imagen_url"]));
       }).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import type { Json } from "@/integrations/supabase/types";
 
 type Participante = { id: string; nombre: string; ciudad: string | null; sede_id: string | null };
 type Identidad = {
@@ -12,7 +13,7 @@ type Identidad = {
   direccion: string | null; ciudad: string | null; sitio_web: string | null; color_principal: string | null;
   pie_documento: string | null; pais_codigo: string; pais_nombre: string; moneda_codigo: string; moneda_simbolo: string;
   impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean;
-  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, unknown> | null;
+  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Json | null;
 };
 
 type CuentaBancaria = { banco: string; tipo: string; moneda: string; cuenta: string; cci: string; titular: string; activa: boolean };
@@ -21,9 +22,9 @@ type ConfigCotizacion = { introduccion: string; terminos: string[]; atendido_por
 
 const DEFAULT_COTIZACION: ConfigCotizacion = { introduccion: "Es grato dirigirnos a usted, con la finalidad de remitir la siguiente cotización.", terminos: ["Precios y condiciones sujetos a la vigencia indicada en la cotización.", "La fecha de entrega será coordinada según disponibilidad y alcance del servicio.", "La forma de pago y cualquier condición especial se detallan en la propuesta comercial."], atendido_por: "", responsable_cargo: "", firma_nombre: "", firma_cargo: "", mostrar_bancos: true, cuentas_bancarias: [] };
 
-function obtenerConfigCotizacion(metadata: Record<string, unknown> | null | undefined): ConfigCotizacion {
-  const raw = metadata?.["cotizacion"];
-  const rawRecord = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+function obtenerConfigCotizacion(metadata: Json | null | undefined): ConfigCotizacion {
+  const raw = metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata["cotizacion"] : undefined;
+  const rawRecord = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, Json | undefined> : {};
   return {
     ...DEFAULT_COTIZACION,
     ...rawRecord,
@@ -32,6 +33,12 @@ function obtenerConfigCotizacion(metadata: Record<string, unknown> | null | unde
   };
 }
 
+function metadataConCotizacion(metadata: Json | null | undefined, cotizacion: ConfigCotizacion): Json {
+  const registro = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? metadata as { [key: string]: Json | undefined }
+    : {};
+  return { ...registro, cotizacion: cotizacion as unknown as Json };
+}
 
 const PRESETS: Record<string, Partial<Identidad>> = {
   AR: { pais_codigo: "AR", pais_nombre: "Argentina", moneda_codigo: "ARS", moneda_simbolo: "$", impuesto_activo: true, impuesto_nombre: "IVA", impuesto_tasa: 21, impuesto_incluido: false, identificador_fiscal_label: "CUIT", zona_horaria: "America/Argentina/Buenos_Aires" },
@@ -154,7 +161,7 @@ function nuevo(participante: Participante): Omit<Identidad, "id"> {
     sede_id: participante.sede_id, participante_id: participante.id, nombre_comercial: participante.nombre, razon_social: "", ruc: "", rnp_bienes: "", rpp_servicios: "", logo_url: "", email: "",
     telefono: "", whatsapp: "", direccion: "", ciudad: "", sitio_web: "", color_principal: "#B58A3A", pie_documento: "",
     pais_codigo: "PE", pais_nombre: "Perú", moneda_codigo: "PEN", moneda_simbolo: "S/", impuesto_activo: true,
-    impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima", metadata: { cotizacion: DEFAULT_COTIZACION },
+    impuesto_nombre: "IGV", impuesto_tasa: 18, impuesto_incluido: false, identificador_fiscal_label: "RUC", zona_horaria: "America/Lima", metadata: metadataConCotizacion(null, DEFAULT_COTIZACION),
   };
 }
 
@@ -403,7 +410,7 @@ export function ConfiguracionIdentidadComercial() {
       moneda_simbolo: form.moneda_simbolo.trim(), impuesto_activo: Boolean(form.impuesto_activo), impuesto_nombre: form.impuesto_nombre.trim(),
       impuesto_tasa: tasa, impuesto_incluido: Boolean(form.impuesto_incluido), identificador_fiscal_label: form.identificador_fiscal_label.trim(),
       zona_horaria: form.zona_horaria.trim(),
-      metadata: { ...(form.metadata ?? {}), cotizacion: obtenerConfigCotizacion(form.metadata) },
+      metadata: metadataConCotizacion(form.metadata, obtenerConfigCotizacion(form.metadata)),
     };
     const { error } = await supabase.from("identidades_comerciales").update(payload).eq("id", form.id);
     if (error) toast.error(error.message);
@@ -516,7 +523,7 @@ export function ConfiguracionIdentidadComercial() {
 
 function CotizacionConfigEditor({ form, campo }: { form: Identidad; campo: <K extends keyof Identidad>(key: K, value: Identidad[K]) => void }) {
   const config = obtenerConfigCotizacion(form.metadata);
-  const actualizar = (cambios: Partial<ConfigCotizacion>) => campo("metadata", { ...(form.metadata ?? {}), cotizacion: { ...config, ...cambios } });
+  const actualizar = (cambios: Partial<ConfigCotizacion>) => campo("metadata", metadataConCotizacion(form.metadata, { ...config, ...cambios }));
   const actualizarTermino = (index: number, value: string) => actualizar({ terminos: config.terminos.map((x, i) => i === index ? value : x) });
   const actualizarCuenta = (index: number, cambios: Partial<CuentaBancaria>) => actualizar({ cuentas_bancarias: config.cuentas_bancarias.map((x, i) => i === index ? { ...x, ...cambios } : x) });
   return <Panel titulo="Configuración de cotizaciones">
