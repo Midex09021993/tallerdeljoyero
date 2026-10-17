@@ -362,8 +362,12 @@ function MiNubePage() {
       }
 
       const archivosPlanos = resultados.flat();
+      // Solo se necesita una portada por carpeta; firmar cada foto genera
+      // solicitudes innecesarias en bibliotecas con muchas imágenes.
+      const primeraFotoPorCarpeta = new Set<string>();
       const archivosConVistas = await Promise.all(archivosPlanos.map(async (archivo) => {
-        if (archivo.categoria !== "fotos") return archivo;
+        if (archivo.categoria !== "fotos" || primeraFotoPorCarpeta.has(archivo.carpeta)) return archivo;
+        primeraFotoPorCarpeta.add(archivo.carpeta);
         try {
           const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
           if (signedError) console.warn("[Mi Nube] No se pudo generar vista previa.", archivo.nombre, signedError.message);
@@ -574,8 +578,10 @@ function MiNubePage() {
             bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
             categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
           }));
+        // La ficha compartida también necesita una sola portada, no URL firmada por foto.
+        const primeraFoto = base.find((archivo) => archivo.categoria === "fotos");
         const conVistas = await Promise.all(base.map(async (archivo) => {
-          if (archivo.categoria !== "fotos") return archivo;
+          if (archivo !== primeraFoto) return archivo;
           const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60);
           return { ...archivo, urlVista: data?.signedUrl ?? null };
         }));
