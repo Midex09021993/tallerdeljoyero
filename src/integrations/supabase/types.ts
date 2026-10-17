@@ -14,45 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      mensajes_automaticos_taller: {
-        Row: {
-          actualizado_por: string | null
-          created_at: string
-          mensaje_cumpleanos: string
-          participante_id: string
-          updated_at: string
-        }
-        Insert: {
-          actualizado_por?: string | null
-          created_at?: string
-          mensaje_cumpleanos?: string
-          participante_id: string
-          updated_at?: string
-        }
-        Update: {
-          actualizado_por?: string | null
-          created_at?: string
-          mensaje_cumpleanos?: string
-          participante_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mensajes_automaticos_taller_actualizado_por_fkey"
-            columns: ["actualizado_por"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mensajes_automaticos_taller_participante_id_fkey"
-            columns: ["participante_id"]
-            isOneToOne: true
-            referencedRelation: "ecosistema_participantes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       aurum_plan_quotas: {
         Row: {
           almacenamiento_mib: number
@@ -351,9 +312,6 @@ export type Database = {
           id: string
           imagen_principal_url: string | null
           medidas: string | null
-          modalidad_talla: string | null
-          sistema_tallas: string | null
-          tallas_disponibles: string | null
           metal_principal: string | null
           moneda: string
           mostrar_ficha_tecnica: boolean
@@ -387,9 +345,6 @@ export type Database = {
           id?: string
           imagen_principal_url?: string | null
           medidas?: string | null
-          modalidad_talla?: string | null
-          sistema_tallas?: string | null
-          tallas_disponibles?: string | null
           metal_principal?: string | null
           moneda?: string
           mostrar_ficha_tecnica?: boolean
@@ -423,9 +378,6 @@ export type Database = {
           id?: string
           imagen_principal_url?: string | null
           medidas?: string | null
-          modalidad_talla?: string | null
-          sistema_tallas?: string | null
-          tallas_disponibles?: string | null
           metal_principal?: string | null
           moneda?: string
           mostrar_ficha_tecnica?: boolean
