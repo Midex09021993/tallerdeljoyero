@@ -123,6 +123,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // Diagnostic-only comparison mode: preserve the selected catalog's calibrated
   // optical values without changing the normal renderer path.
   // User-approved premium metal calibration is now the default renderer behavior.
+  // Re-deploy trigger: keep this default explicit in the production build.
   // Keep the URL flags backward-compatible for diagnostics, but do not require
   // query parameters to activate the calibrated optical values.
   const diagnosticParams=typeof window!=="undefined"
