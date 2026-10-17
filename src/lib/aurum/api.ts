@@ -9,18 +9,19 @@ export type AurumApi = ReturnType<typeof createAurumApi>;
  * It deliberately excludes file cleanup, selection internals, fullscreen,
  * quality controls and all export operations.
  */
+type AurumApiCallable = (...args: unknown[]) => unknown;
 export type AurumCatalogApi = {
-  cargar?: (...args: any[]) => any;
-  material?: (...args: any[]) => any;
-  gema?: (...args: any[]) => any;
-  materialCatalogo?: (...args: any[]) => any;
-  gemaCatalogo?: (...args: any[]) => any;
-  escenario?: (...args: any[]) => any;
-  metalHdri?: (...args: any[]) => any;
-  gemHdri?: (...args: any[]) => any;
-  fondo?: (...args: any[]) => any;
-  vista?: (...args: any[]) => any;
-  reset?: (...args: any[]) => any;
+  cargar?: AurumApiCallable;
+  material?: AurumApiCallable;
+  gema?: AurumApiCallable;
+  materialCatalogo?: AurumApiCallable;
+  gemaCatalogo?: AurumApiCallable;
+  escenario?: AurumApiCallable;
+  metalHdri?: AurumApiCallable;
+  gemHdri?: AurumApiCallable;
+  fondo?: AurumApiCallable;
+  vista?: AurumApiCallable;
+  reset?: AurumApiCallable;
 };
 
 const CATALOG_API_METHODS = [
@@ -42,13 +43,13 @@ export function createAurumCatalogApi(api: Partial<AurumApi>): AurumCatalogApi {
   for (const method of CATALOG_API_METHODS) {
     const candidate = (api as Record<string, unknown>)[method];
     if (typeof candidate === "function") {
-      publicApi[method] = (...args: any[]) => candidate(...args);
+      publicApi[method] = (...args: unknown[]) => (candidate as AurumApiCallable)(...args);
     }
   }
   return Object.freeze(publicApi);
 }
 
-export function createAurumApi(options:any){
+export function createAurumApi<T extends Record<string, unknown>>(options:T){
   return {
     cargar: options.cargar,
     material: options.material,

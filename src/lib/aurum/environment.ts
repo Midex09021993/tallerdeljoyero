@@ -1,30 +1,35 @@
+import type { Euler, Scene, Texture, WebGLRenderer } from "three";
+type AurumScene = Scene & { environmentIntensity?: number; environmentRotation?: Euler };
+type EnvironmentLoaderConstructor = new () => { load: (url:string, onLoad:(texture:Texture)=>void, onProgress?:undefined, onError?:(error:unknown)=>void) => unknown };
+type RoomEnvironmentConstructor = new () => { dispose?: () => void };
+
 export interface AurumEnvironmentController {
-  fallback: any;
-  current: any;
+  fallback: Texture;
+  current: Texture;
   /** URL of the equirect HDRI behind `current`; null when using the fallback. */
   currentUrl: string | null;
-  fromEquirectangular: (hdrTexture: any) => any;
+  fromEquirectangular: (hdrTexture: Texture) => Texture;
   load: (
     url: string,
     requestId: number,
     isCurrent: () => boolean,
-    onLoaded: (texture: any) => void,
+    onLoaded: (texture: Texture) => void,
     onError?: () => void
   ) => void;
   rotation: number;
   intensity: number;
   setRotation: (radians: number) => void;
   setIntensity: (value: number) => void;
-  dispose: (extraTexture?: any) => void;
+  dispose: (extraTexture?: Texture) => void;
 }
 
 export function createAurumEnvironment(
-  renderer: any,
-  scene: any,
-  THREE: any,
-  RoomEnvironment: any,
-  RGBELoader: any,
-  EXRLoader?: any
+  renderer: WebGLRenderer,
+  scene: AurumScene,
+  THREE: typeof import("three"),
+  RoomEnvironment: RoomEnvironmentConstructor,
+  RGBELoader: EnvironmentLoaderConstructor,
+  EXRLoader?: EnvironmentLoaderConstructor
 ): AurumEnvironmentController {
   const pmrem = new THREE.PMREMGenerator(renderer);
   pmrem.compileEquirectangularShader();
@@ -48,7 +53,7 @@ export function createAurumEnvironment(
   let intensity = 1;
   // Keep a small per-renderer PMREM cache so returning to a recent scene does
   // not redownload/re-prefilter the same HDRI on every switch.
-  const cache = new Map<string, any>();
+  const cache = new Map<string, Texture>();
   const MAX_CACHE = 3;
 
   return {
@@ -59,7 +64,7 @@ export function createAurumEnvironment(
     get currentUrl() {
       return currentUrl;
     },
-    fromEquirectangular(hdrTexture: any) {
+    fromEquirectangular(hdrTexture: Texture) {
       return pmrem.fromEquirectangular(hdrTexture).texture;
     },
     get rotation() { return rotation; },
@@ -124,7 +129,7 @@ export function createAurumEnvironment(
         url,
         loader: Loader === EXRLoader ? "EXRLoader" : "RGBELoader",
       });
-      new Loader().load(url, (hdrTexture: any) => {
+      new Loader().load(url, (hdrTexture: Texture) => {
         if (!isCurrent()) {
           console.warn("[AURUM][HDR METAL][STALE RESPONSE]", { requestId, url });
           hdrTexture.dispose?.();
@@ -174,7 +179,7 @@ export function createAurumEnvironment(
           });
           onError?.();
         }
-      }, undefined, (error: any) => {
+      }, undefined, (error: unknown) => {
         console.error("[AURUM][HDR METAL][NETWORK ERROR]", {
           requestId,
           url,
@@ -185,7 +190,7 @@ export function createAurumEnvironment(
         onError?.();
       });
     },
-    dispose(extraTexture?: any) {
+    dispose(extraTexture?: Texture) {
       if (extraTexture && extraTexture !== current && extraTexture !== fallback && !Array.from(cache.values()).includes(extraTexture)) {
         extraTexture.dispose?.();
       }

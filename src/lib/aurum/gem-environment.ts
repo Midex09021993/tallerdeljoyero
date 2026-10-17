@@ -1,3 +1,5 @@
+import type { Euler, Material, Mesh, MeshPhysicalMaterial, Object3D, Texture } from "three";
+import type { AurumEnvironmentController } from "./environment";
 import * as THREE from "three";
 export const AURUM_GEM_ENVIRONMENT_PROFILES: Record<string, { intensity:number; rotationOffset:number; }> = {
   // The gem environment is intentionally independent from the metal environment.
@@ -23,28 +25,28 @@ export interface AurumGemEnvironmentController {
     url:string,
     requestId:number,
     isCurrent:()=>boolean,
-    onLoaded:(texture:any)=>void
+    onLoaded:(texture:Texture)=>void
   )=>void;
   applyToModel: (
-    model:any,
-    texture:any,
+    model:Object3D,
+    texture:Texture,
     options?:{rotation?:number; intensityScale?:number}
   )=>void;
-  dispose: (texture?:any)=>void;
+  dispose: (texture?:Texture)=>void;
 }
 
 export function createAurumGemEnvironment(
-  environmentController:any,
-  RGBELoader:any,
-  EXRLoader?:any
+  environmentController:Pick<AurumEnvironmentController,"fromEquirectangular">,
+  RGBELoader:new()=>{load:(url:string,onLoad:(texture:Texture)=>void,onProgress?:undefined,onError?:(error:unknown)=>void)=>unknown},
+  EXRLoader?:new()=>{load:(url:string,onLoad:(texture:Texture)=>void,onProgress?:undefined,onError?:(error:unknown)=>void)=>unknown}
 ): AurumGemEnvironmentController {
-  let current:any = null;
-  const cache = new Map<string, any>();
+  let current:Texture | null = null;
+  const cache = new Map<string, Texture>();
   const MAX_CACHE = 2;
 
   const applyToModel = (
-    model:any,
-    texture:any,
+    model:Object3D,
+    texture:Texture,
     options:{rotation?:number; intensityScale?:number} = {}
   ) => {
     if (!model || !texture) return;
@@ -53,17 +55,19 @@ export function createAurumGemEnvironment(
       ? Math.max(.75, Math.min(1.35, Number(options.intensityScale)))
       : 1;
 
-    model.traverse((x:any) => {
+    model.traverse((node) => {
+      const x = node as Mesh;
       if (!x.isMesh || !x.material) return;
-      const apply = (m:any) => {
-        if (!m?.userData?.aurumOpticalProfile) return m;
+      const apply = (material:Material) => {
+        const m = material as MeshPhysicalMaterial & { envMapRotation?: Euler };
+        if (!m.userData?.["aurumOpticalProfile"]) return m;
         m.envMap = texture;
-        const family = String(m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default");
+        const family = String(m.userData?.["aurumGemFamily"] ?? m.userData?.["aurumOpticalProfile"]?.familia ?? "default");
         const profile = getAurumGemEnvironmentProfile(family);
-        const authored = Number.isFinite(m.userData?.aurumGemBaseEnvIntensity)
-          ? m.userData.aurumGemBaseEnvIntensity
-          : (Number.isFinite(m.userData?.aurumGemEnvIntensity)
-            ? m.userData.aurumGemEnvIntensity
+        const authored = Number.isFinite(m.userData?.["aurumGemBaseEnvIntensity"])
+          ? m.userData["aurumGemBaseEnvIntensity"]
+          : (Number.isFinite(m.userData?.["aurumGemEnvIntensity"])
+            ? m.userData["aurumGemEnvIntensity"]
             : profile.intensity);
 
         // iJewel exposes the gem environment independently from the scene
@@ -74,8 +78,8 @@ export function createAurumGemEnvironment(
         // reflections; do not change renderer exposure, gem IOR or metal response.
         const familyReflectionScale = family === "Diamante" ? 0.94 : 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
-        const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
-        const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
+        const nativeIJEWELRotation = Number(m.userData?.["aurumIJEWELParameters"]?.environmentRotationOffset);
+        const oriented = Number(m.userData?.["aurumIJEWELParameters"]?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();
         if (oriented && m.getWorldQuaternion) worldEuler.setFromQuaternion(m.getWorldQuaternion(new THREE.Quaternion()), "YXZ");
         const orientedCompensation = oriented ? -worldEuler.y : 0;
@@ -113,7 +117,7 @@ export function createAurumGemEnvironment(
       }
 
       const Loader = /\.exr(?:$|[?#])/i.test(url) && EXRLoader ? EXRLoader : RGBELoader;
-      new Loader().load(url, (hdrTexture:any) => {
+      new Loader().load(url, (hdrTexture:Texture) => {
         if (!isCurrent()) {
           hdrTexture.dispose?.();
           return;
@@ -139,12 +143,12 @@ export function createAurumGemEnvironment(
           hdrTexture.dispose?.();
           console.warn("[Aurum Render] No se pudo procesar el HDR de gemas:", url, error);
         }
-      }, undefined, (error:any) => {
+      }, undefined, (error:unknown) => {
         console.warn("[Aurum Render] No se pudo cargar el HDR de gemas; se conservará el entorno anterior:", url, error);
       });
     },
     applyToModel,
-    dispose(texture?:any) {
+    dispose(texture?:Texture) {
       if (texture) {
         for (const [url, cached] of cache) {
           if (cached === texture) cache.delete(url);
