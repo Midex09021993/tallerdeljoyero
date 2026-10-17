@@ -7,12 +7,16 @@ import {
 type RecordEntry = {
   originalMaterial: THREE.Material | THREE.Material[];
   experimentalMaterial: THREE.Material;
+  family: string;
+  setQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
 };
 
 export type AurumDiamondBvhRuntime = {
   refresh: (model: THREE.Object3D | null | undefined) => void;
   update: () => void;
+  /** Temporarily raise diamond-only ray bounces for a still capture. */
+  setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
   diagnostics: () => { activeMeshes: number; triangleCount: number; enabled: boolean };
 };
@@ -135,6 +139,15 @@ export async function createAurumDiamondBvhRuntime(options: {
         entries.set(mesh, {
           originalMaterial: mesh.material,
           experimentalMaterial: prepared.material,
+          family,
+          setQuality: (quality) => {
+            if (family !== "diamante" || !packageApi.setDiamondOptions) return;
+            // Higher bounce counts are needed only for a still image; keep the
+            // interactive budget low to avoid adding cost to orbiting.
+            packageApi.setDiamondOptions(prepared.material, {
+              rayBounces: quality === "final" ? 5 : 3,
+            });
+          },
           dispose: prepared.dispose,
         });
         mesh.material = prepared.material;
@@ -157,6 +170,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       for (const entry of entries.values()) {
         packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
       }
+    },
+    setDiamondQuality(quality) {
+      if (disposed) return;
+      for (const entry of entries.values()) entry.setQuality(quality);
     },
     dispose() {
       if (disposed) return;
