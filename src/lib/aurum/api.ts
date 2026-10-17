@@ -9,6 +9,7 @@ export function createAurumApi(options:any){
     metalHdri: options.metalHdri,
     gemHdri: options.gemHdri,
     ambiente: options.ambiente,
+    influenciaMetalAmbiente: options.influenciaMetalAmbiente,
     fondo: options.fondo,
     sceneStudio: options.sceneStudio,
     reset: options.reset,
