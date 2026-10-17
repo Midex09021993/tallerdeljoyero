@@ -930,7 +930,8 @@ export function AurumRender({ compact = false, initialModelUrl = null, initialMo
         });
         applyPostQuality?.(renderQuality);
         encuadrar();
-        setVista("frontal");
+        const vistaInicial = compact ? "perspectiva" : "frontal";
+        setVista(vistaInicial);
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
         // Si todavía está en red, su callback lo aplicará al terminar.
         if (entornoGema) aplicarEntornoGema();
@@ -945,11 +946,11 @@ export function AurumRender({ compact = false, initialModelUrl = null, initialMo
         // La cámara iJewel de distancia fija dejaba pequeños los modelos Rhino
         // cuyos límites/unidades no coinciden con el modelo de referencia.
         encuadrar();
-        camaraVista("frontal");
-        setVista("frontal");
+        camaraVista(vistaInicial);
+        setVista(vistaInicial);
         requestAnimationFrame(() => {
           if (modelo) {
-            camaraVista("frontal");
+            camaraVista(vistaInicial);
             // Keep the interactive preview lightweight after initial framing.
             // Full photographic post-processing is reserved for image capture.
             liveFastPathRef.current = true;
