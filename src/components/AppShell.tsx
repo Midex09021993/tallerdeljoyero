@@ -169,20 +169,22 @@ export function useModalidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
     staleTime: 60_000,
     enabled: Boolean(sesion?.esAdmin || sesion?.sede?.id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sede_modalidades")
-        .select("sede_id,produccion_activa,servicios_externos_activos");
-      if (error) throw error;
-
       const sedeObjetivo = esDueno && sedeFiltro !== TODAS_LAS_SEDES
         ? sedeFiltro
         : !esDueno
           ? sesion?.sede?.id ?? null
           : null;
 
-      const filas = (data ?? []).filter(
-        (fila) => !sedeObjetivo || fila.sede_id === sedeObjetivo,
-      );
+      // Filtra en Supabase para una sede concreta; la vista global del dueño conserva todas.
+      const consulta = supabase
+        .from("sede_modalidades")
+        .select("sede_id,produccion_activa,servicios_externos_activos");
+      const { data, error } = sedeObjetivo
+        ? await consulta.eq("sede_id", sedeObjetivo)
+        : await consulta;
+      if (error) throw error;
+
+      const filas = data ?? [];
 
       return {
         produccionActiva: filas.some((fila) => fila.produccion_activa),
