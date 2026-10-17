@@ -145,7 +145,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             // Higher bounce counts are needed only for a still image; keep the
             // interactive budget low to avoid adding cost to orbiting.
             packageApi.setDiamondOptions(prepared.material, {
-              rayBounces: quality === "final" ? 5 : 3,
+              rayBounces: quality === "final" ? 8 : 3,
             });
           },
           dispose: prepared.dispose,
