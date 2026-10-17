@@ -159,7 +159,9 @@ function CatalogoPage() {
     try {
       if (navigator.share) await navigator.share({ title: producto.nombre, text: producto.nombre + " · " + (catalogoConfig.nombre_publico ?? "Catálogo"), url });
       else await navigator.clipboard.writeText(url);
-    } catch {}
+    } catch {
+      // Sharing may be dismissed or unavailable; do not interrupt catalog browsing.
+    }
   };
   const { data: catalogoConfig } = useQuery({
     queryKey: ["catalogo-config-publico", sesion?.participante?.id],
