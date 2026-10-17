@@ -261,7 +261,7 @@ export async function createAurumPostPipeline(
       bloomPass.radius=Math.max(0,Math.min(1,Number(config.bloomRadius??.35)));
     }
     if(gradingPass){
-      gradingPass.enabled=Boolean(config.gradeEnabled);
+      gradingPass.enabled=!Boolean(options.capture) && Boolean(config.gradeEnabled);
       gradingPass.uniforms.contrast.value=Math.max(.5,Math.min(1.8,Number(config.gradeContrast??1)));
       gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
