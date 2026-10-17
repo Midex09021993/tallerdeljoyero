@@ -1498,6 +1498,8 @@ export function useCrearPedido() {
     onSuccess: (pedido) => {
       void qc.invalidateQueries({ queryKey: ["pedidos"] });
       void qc.invalidateQueries({ queryKey: ["contratos"] });
+      // Crear un pedido directo puede registrar un anticipo en contrato_pagos.
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
       if (pedido) void notificarNuevoPedidoADueno(pedido);
     },
   });
