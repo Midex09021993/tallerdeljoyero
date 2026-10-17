@@ -336,7 +336,7 @@ function Inicio() {
             </div>
           ) : (
             <InicioPreparacion
-              preparacion={preparacion ?? null}
+              preparacion={preparacion ?? undefined}
               cargando={cargandoPreparacion}
               tienePedido={pedidosSede.length > 0}
               destinoGestion="/gestion"
