@@ -670,9 +670,18 @@ export function AurumRender() {
             // intensity when a photographic scene is applied; normal rendering
             // keeps the existing scene-specific reflection response.
             const catalogCalibration=m.userData?.aurumMetalCalibrationMode==="catalog-reference";
-            m.envMapIntensity=catalogCalibration
-              ? base
-              : base*photo.metalEnvironmentScale*photo.highlightProtection;
+            const ambientInfluence=Number(m.userData?.aurumAmbientInfluence);
+            // The user's Ambientes slider has priority over scene presets.
+            // Keep a non-zero floor because metallic PBR surfaces need
+            // environment reflections to retain a convincing metal appearance.
+            const ambientScale=Number.isFinite(ambientInfluence)
+              ? 0.25+(Math.max(0,Math.min(100,ambientInfluence))/100)*0.75
+              : null;
+            m.envMapIntensity=ambientScale!==null
+              ? base*ambientScale
+              : catalogCalibration
+                ? base
+                : base*photo.metalEnvironmentScale*photo.highlightProtection;
             m.needsUpdate=true;
             return m;
           };
@@ -1003,10 +1012,9 @@ export function AurumRender() {
         },
         influenciaMetalAmbiente:(percent:number)=>{
           const value=Math.max(0,Math.min(100,Number.isFinite(percent)?percent:45));
-          // Use a controllable 0–100% scale. A zero setting is a true zero
-          // contribution from this calibration control; the selected HDR itself
-          // remains loaded and can still affect other renderer paths.
-          const scale=value/100;
+          // Keep enough environment contribution for metallic PBR to remain
+          // visually metallic; the slider adjusts between 25% and 100%.
+          const scale=0.25+(value/100)*0.75;
           if (!modelo) {
             console.warn("[AURUM][AMBIENT METAL] No hay modelo cargado para aplicar el control.");
             return;
