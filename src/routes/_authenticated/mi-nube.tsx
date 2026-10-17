@@ -584,7 +584,8 @@ function MiNubePage() {
           }
         }
       }
-      const carpetas = await Promise.all(((recibidas ?? []) as CarpetaCompartida[]).map(async (share) => {
+      const recibidasNormalizadas = (recibidas ?? []) as CarpetaCompartida[];
+      const cargarCarpetaRecibida = async (share: CarpetaCompartida) => {
         const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
         const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
         if (listaError) throw listaError;
@@ -613,7 +614,15 @@ function MiNubePage() {
           archivos: conVistas,
           portada: imagenPortada,
         };
-      }));
+      };
+      // Limitar a cuatro carpetas simultáneas evita ráfagas de solicitudes a
+      // Storage cuando el usuario recibe muchos proyectos compartidos.
+      const carpetas: Awaited<ReturnType<typeof cargarCarpetaRecibida>>[] = [];
+      const concurrenciaMaxima = 4;
+      for (let i = 0; i < recibidasNormalizadas.length; i += concurrenciaMaxima) {
+        const lote = recibidasNormalizadas.slice(i, i + concurrenciaMaxima);
+        carpetas.push(...await Promise.all(lote.map(cargarCarpetaRecibida)));
+      }
       setCarpetasRecibidas(carpetas);
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar las carpetas compartidas.");
