@@ -57,6 +57,7 @@ export function usePedidosDeArea(area: string) {
       const { data, error } = await supabase
         .from("pedidos")
         .select(CAMPOS_PEDIDO_OPERATIVO)
+        .eq("estado", "En Producción")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((pedido) => {
