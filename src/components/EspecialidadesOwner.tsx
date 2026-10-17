@@ -159,6 +159,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
   });
   const { data: catalogo = [] } = useQuery({
     queryKey: ["ecosistema-especialidades"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");
       if (error) throw error;
