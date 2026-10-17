@@ -1799,7 +1799,7 @@ export function AurumRender() {
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Entorno HDR de metales</div>
                   <select value={metalHdriId} onChange={e=>apiRef.current?.metalHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
-                    {Object.keys(AURUM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelMetal:"iJewel · Metal 010",studioSoft:"Estudio suave",studioHard:"Estudio contrastado",jewelry:"Estudio joyería",luxury:"Estudio lujo",monochrome:"Monocromo",warm:"Cálido",white:"Estudio blanco"} as Record<string,string>)[key]??key}</option>)}
+                    {Object.keys(AURUM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelMetal:"Referencia Metales · Perfil 010",studioSoft:"Estudio suave",studioHard:"Estudio contrastado",jewelry:"Estudio joyería",luxury:"Estudio lujo",monochrome:"Monocromo",warm:"Cálido",white:"Estudio blanco"} as Record<string,string>)[key]??key}</option>)}
                   </select>
                   <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla los reflejos del oro, plata y demás metales sin cambiar el HDR de las gemas.</p>
                 </div>
@@ -1808,7 +1808,7 @@ export function AurumRender() {
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Entorno HDR de gemas</div>
                   <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
-                    {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"iJewel · Gemas 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
+                    {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"Referencia Gemas · Perfil 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
                   </select>
                   <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla el entorno óptico de las piedras sin cambiar el HDR de los metales.</p>
                 </div>
