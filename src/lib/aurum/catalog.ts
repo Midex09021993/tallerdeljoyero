@@ -21,7 +21,7 @@ export type MaterialId =
   | "oro22a_pulido" | "oro22a_satinado" | "oro22a_mate"
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
   | "platino_pulido" | "platino_mate"
-  | "oro24_pulido" | "oro18_champan" | "oro18_verde"
+  | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference";
