@@ -100,7 +100,9 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
   </button>;
 };
 
-export function AurumRender() {
+type AurumRenderProps = { compact?: boolean; initialModelUrl?: string | null; initialModelName?: string; selectedMaterialId?: string; selectedGemId?: string };
+
+export function AurumRender({ compact = false, initialModelUrl = null, initialModelName = "Modelo 3D", selectedMaterialId, selectedGemId }: AurumRenderProps = {}) {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
@@ -1782,6 +1784,37 @@ export function AurumRender() {
     };
   }, [cargarArchivo]);
 
+  useEffect(() => { if (selectedMaterialId && MATERIALES.some(m => m.id === selectedMaterialId)) setMaterialId(selectedMaterialId as MaterialId); }, [selectedMaterialId]);
+  useEffect(() => { if (selectedGemId && GEMAS.some(g => g.id === selectedGemId)) setGemaId(selectedGemId as GemaId); }, [selectedGemId]);
+  useEffect(() => {
+    if (!initialModelUrl) return;
+    let cancelled = false;
+    let timer: number | undefined;
+    let attempts = 0;
+    const loadRemoteModel = async () => {
+      if (cancelled) return;
+      if (typeof apiRef.current?.cargar !== "function") {
+        if (attempts++ >= 80) { setError("Aurum Render no terminó de inicializarse para cargar el modelo del catálogo."); return; }
+        timer = window.setTimeout(loadRemoteModel, 250);
+        return;
+      }
+      try {
+        setCargando(true); setError(null); setPaso("Cargando modelo del catálogo…");
+        const response = await fetch(initialModelUrl);
+        if (!response.ok) throw new Error("No se pudo descargar el 3DM del catálogo.");
+        const blob = await response.blob();
+        if (cancelled) return;
+        await cargarArchivo(new File([blob], initialModelName || "modelo.3dm", { type: blob.type || "application/octet-stream" }));
+      } catch (cause) {
+        if (!cancelled) setError(cause instanceof Error ? cause.message : "No se pudo cargar el modelo del catálogo.");
+      } finally {
+        if (!cancelled) { setCargando(false); setPaso(null); }
+      }
+    };
+    void loadRemoteModel();
+    return () => { cancelled = true; if (timer !== undefined) window.clearTimeout(timer); };
+  }, [initialModelUrl, initialModelName, cargarArchivo]);
+
   const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setFormatoInterno(null);setPaso(null);if(fileRef.current)fileRef.current.value=""};
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
     apiRef.current?.calidad(id);
@@ -1805,6 +1838,7 @@ export function AurumRender() {
       <label style={{display:"block",fontSize:11}}>Gem intensity<input style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
     </div>
   );
+  if (compact) return <div className="relative h-full min-h-[280px] w-full overflow-hidden bg-[#f7f6f2]"><div ref={visorRef} className="absolute inset-0" />{(cargando || (!archivo && !error)) && <div className="absolute inset-0 z-20 grid place-items-center bg-[#f7f6f2]/90 p-5 text-center"><div><div className="mx-auto size-7 animate-spin rounded-full border-2 border-black/10 border-t-[#b99642]" /><p className="mt-3 text-xs text-[#625b54]">{paso || "Preparando Aurum Render…"}</p></div></div>}{error && <div className="absolute inset-x-3 bottom-3 z-30 rounded-xl border border-red-300 bg-white/95 px-3 py-2 text-xs text-red-800">{error}</div>}</div>;
   return (<>
     <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#eeede8] text-white">
       <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-black/10 bg-[#f7f6f2]/95 px-5 text-[#242424] shadow-sm backdrop-blur-xl">
