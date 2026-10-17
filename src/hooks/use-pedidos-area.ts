@@ -53,6 +53,7 @@ export function usePedidosDeArea(area: string) {
 
   const query = useQuery({
     queryKey: ["pedidos-area-operativa", area, sesion?.user.id, esDueno ? sedeFiltro : sesion?.participante?.sede_id],
+    staleTime: 15_000,
     queryFn: async (): Promise<PedidoOperativo[]> => {
       const { data, error } = await supabase
         .from("pedidos")
