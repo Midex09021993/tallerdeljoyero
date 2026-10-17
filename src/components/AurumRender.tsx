@@ -111,7 +111,6 @@ export function AurumRender() {
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
-  const [pngProgress, setPngProgress] = useState<{ stage: string; percent: number } | null>(null);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [snapshotWidth, setSnapshotWidth] = useState("3840");
   const [snapshotHeight, setSnapshotHeight] = useState("2160");
@@ -1097,11 +1096,7 @@ export function AurumRender() {
             loop?.resize?.();
           }
         },
-        exportPNG:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void;onProgress?:(stage:string,percent:number)=>void}={})=>{
-          const reportProgress=(stage:string,percent:number)=>options.onProgress?.(stage,Math.max(0,Math.min(100,Math.round(percent))));
-          reportProgress("Preparando escena",4);
-          // Let React/browser paint the loading state before resizing WebGL buffers.
-          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
           if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
@@ -1145,10 +1140,6 @@ export function AurumRender() {
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
-          reportProgress("Renderizando imagen",10);
-          // Paint the status once before the synchronous high-resolution render.
-          // Do not yield between TAA samples: live resize/render callbacks can corrupt the capture.
-          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
@@ -1198,12 +1189,10 @@ export function AurumRender() {
               }
               // TAA converges across a fresh 32-sample sequence. This work is
               // exclusive to export; camera movement keeps the fast live path.
-              reportProgress("Renderizando imagen",10);
               for(let sample=0;sample<32;sample++){
                 diamondBvhRuntime?.update();
                 composer.render();
               }
-              reportProgress("Renderizando imagen",82);
             }else{
               renderer.render(escena,camara);
             }
@@ -1228,7 +1217,6 @@ export function AurumRender() {
                 enabled: false,
               },
             });
-            reportProgress("Preparando imagen final",85);
             context.fillStyle="#ffffff";
             context.fillRect(0,0,width,height);
             context.imageSmoothingEnabled=true;
@@ -1236,7 +1224,6 @@ export function AurumRender() {
             // Downsample only once. The output canvas preserves the exact
             // requested file dimensions while benefiting from extra facet samples.
             context.drawImage(renderer.domElement,0,0,width,height);
-            reportProgress("Generando archivo",92);
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
             // Restore the interactive diamond budget after the still capture,
@@ -1272,7 +1259,6 @@ export function AurumRender() {
           link.download=baseName+"-"+width+"x"+height+"."+format;
           link.href=dataUrl;
           link.click();
-          reportProgress("Descarga iniciada",100);
         },
         exportSceneSettings:()=>{
           const current=exportSettingsRef.current;
@@ -1789,8 +1775,8 @@ export function AurumRender() {
               </select>
             </label>
             <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco.</div>
-            <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);setPngProgress({stage:"Preparando escena",percent:2});setError(null);try{await apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,onProgress:(stage:string,percent:number)=>setPngProgress({stage,percent})});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);setPngProgress(null);}}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
-            {exportBusy&&pngProgress&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">{pngProgress.stage}</span><span className="tabular-nums text-[#7168f4]">{pngProgress.percent}%</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full rounded-full bg-[#7168f4] transition-[width] duration-150" style={{width:`${pngProgress.percent}%`}}/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La imagen se está renderizando a alta resolución. Mantén esta ventana abierta.</p></div>}
+            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);setError(null);window.setTimeout(()=>{try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}},50);}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
+            {exportBusy&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">Renderizando imagen de alta resolución</span><icon className="size-4 animate-spin" /><span className="text-[#7168f4]">En proceso</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full w-1/3 rounded-full bg-[#7168f4]"/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La captura está procesando las facetas del diamante. La interfaz puede quedar temporalmente ocupada.</p></div>}
             <div className="mt-3 border-t border-black/10 pt-3">
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Render final · Ray tracing real</div>
               <div className="mb-2 text-[10px] leading-relaxed text-[#77756f]">Trazado de rayos progresivo: refracción y reflejos internos reales en gemas. Más lento; la dispersión de color aún no se traza.</div>
