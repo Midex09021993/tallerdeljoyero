@@ -99,12 +99,12 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
         <div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Experiencia interactiva</p><h2 className="mt-1 font-display text-2xl">Configura tu joya en 3D</h2></div>
         <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante"); }} className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3 py-2 text-xs font-semibold"><RotateCcw className="size-3.5" /> Restablecer</button>
       </div>
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_240px]">
-        <div className="relative min-h-[320px] bg-[#f7f6f2] sm:min-h-[440px]">
+      <div className="isolate grid lg:grid-cols-[minmax(0,1fr)_240px]">
+        <div className="relative z-0 min-h-[320px] overflow-hidden bg-[#f7f6f2] sm:min-h-[440px]">
           {modelUrl && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
           {(!modelUrl || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center " + (loadedModelUrl === modelUrl && !loadError && !status ? "pointer-events-none opacity-0" : "bg-[#f7f6f2]/90")}><p className="max-w-sm text-sm text-[#625b54]">{loadError || status || "Preparando visor 3D…"}</p></div>}
         </div>
-        <aside className="border-t border-[#1f1b1810] p-4 lg:border-l lg:border-t-0">
+        <aside className="relative z-10 border-t border-[#1f1b1810] bg-white/90 p-4 lg:border-l lg:border-t-0">
           <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#8a6b36]">Metal</p>
           <div className="mt-2 grid grid-cols-2 gap-2">{metales.map((metal) => <button key={metal.id} type="button" aria-pressed={metalId === metal.id} onClick={() => setMetalId(metal.id)} className={"rounded-xl border p-2 text-left text-[11px] " + (metalId === metal.id ? "border-[#8a6b36] bg-[#f5eee0]" : "border-[#1f1b1818]")}><span className="mb-1 block size-5 rounded-full border border-black/10" style={{ backgroundColor: "#" + metal.color.toString(16).padStart(6,"0") }} />{metal.label}</button>)}</div>
           <p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-[#8a6b36]">Piedra</p>
