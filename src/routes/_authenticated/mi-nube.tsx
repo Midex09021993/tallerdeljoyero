@@ -227,7 +227,7 @@ function MiNubePage() {
   const [proyectoParaCompartir, setProyectoParaCompartir] = useState<string | null>(null);
   const [opcionesCompartir, setOpcionesCompartir] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
   const [talleresDisponibles, setTalleresDisponibles] = useState<TallerCompartir[]>([]);
-  const [talleresDisponiblesCargados, setTalleresDisponiblesCargados] = useState(false);
+  const [talleresDisponiblesParaParticipante, setTalleresDisponiblesParaParticipante] = useState<string | null>(null);
   const cargaTalleresEnCurso = useRef(false);
   const [tallerDestino, setTallerDestino] = useState("");
   const [cargandoTalleres, setCargandoTalleres] = useState(false);
@@ -702,17 +702,24 @@ function MiNubePage() {
   const abrirCompartirEcosistema = async (proyecto: { nombre: string }) => {
     setProyectoParaCompartir(proyecto.nombre);
     setTallerDestino("");
-    // El directorio es estable durante esta sesión: reutilizarlo al abrir
-    // otros proyectos evita repetir la RPC sin alterar la validación al compartir.
-    if (talleresDisponiblesCargados) return;
+    if (!participanteId || !usuarioId) {
+      toast.error("No se encontró tu taller activo.");
+      return;
+    }
+    // Reutilizar el directorio solo para el taller que lo cargó. Si cambia
+    // el taller activo, volver a consultar para no mostrar destinatarios obsoletos.
+    if (talleresDisponiblesParaParticipante === participanteId) return;
     if (cargaTalleresEnCurso.current) return;
     cargaTalleresEnCurso.current = true;
     setCargandoTalleres(true);
+    const participanteConsultado = participanteId;
     try {
       const { data, error } = await (supabase as any).rpc("listar_talleres_para_compartir_mi_nube");
       if (error) throw error;
-      setTalleresDisponibles((data ?? []) as TallerCompartir[]);
-      setTalleresDisponiblesCargados(true);
+      if (participanteId === participanteConsultado) {
+        setTalleresDisponibles((data ?? []) as TallerCompartir[]);
+        setTalleresDisponiblesParaParticipante(participanteConsultado);
+      }
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudo cargar el directorio de talleres.");
     } finally {
