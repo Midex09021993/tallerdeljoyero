@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect,useMemo,useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Cake,CalendarDays,Gift,ChevronLeft,ChevronRight,MessageCircle } from "lucide-react";
