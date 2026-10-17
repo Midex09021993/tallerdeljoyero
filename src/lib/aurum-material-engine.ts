@@ -257,11 +257,11 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
   // Pale champagne yellow with a subtle rosy undertone, closer to the iJewel reference.
   // Slightly rosier champagne gold; preserve a yellow-gold identity rather than rose gold.
   // Tiny yellow bias to match the iJewel reference while retaining pale champagne warmth.
-  const yellowGold=new THREE.Color(0xd7b477);
+  const yellowGold=new THREE.Color(0xd6b16f);
   // Keep a restrained green/white alloy undertone while matching the stronger
   // warm-yellow reference seen in iJewel. This adjusts only this preset's base
   // color; roughness, metalness, environment intensity and all other profiles stay intact.
-  const blendedColor=yellowGold.lerp(greenColor,.05);
+  const blendedColor=yellowGold.lerp(greenColor,.03);
   return {
     id:"oro18_verde_blanco_ijewel",
     color:blendedColor.getHex(),
