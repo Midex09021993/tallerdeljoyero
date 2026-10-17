@@ -125,6 +125,7 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
   return useQuery({
     queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
+    staleTime: 60_000,
     enabled: Boolean(sesion?.esAdmin),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -162,6 +163,7 @@ export function useModalidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
   return useQuery({
     queryKey: ["menu-modalidades", esDueno, sedeFiltro, sesion?.sede?.id],
+    staleTime: 60_000,
     enabled: Boolean(sesion?.esAdmin || sesion?.sede?.id),
     queryFn: async () => {
       const { data, error } = await supabase
