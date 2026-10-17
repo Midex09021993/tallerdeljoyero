@@ -2369,6 +2369,7 @@ const CAMPOS_INVENTARIO_REAL =
 export function useInventarioReal() {
   return useQuery({
     queryKey: ["inventario-real"],
+    staleTime: 15_000,
     queryFn: async (): Promise<MaterialInventarioReal[]> => {
       const [{ data, error }, { data: asignaciones, error: areasError }] = await Promise.all([
         supabase.from("inventario").select(CAMPOS_INVENTARIO_REAL).eq("activo", true).order("material"),
@@ -2452,6 +2453,7 @@ export function useCrearMaterialReal() {
       void qc.invalidateQueries({ queryKey: ["inventario-real"] });
       void qc.invalidateQueries({ queryKey: ["inventario"] });
       void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos-real"] });
     },
   });
 }
@@ -2522,6 +2524,7 @@ export function useRegistrarMovimientoReal() {
       void qc.invalidateQueries({ queryKey: ["inventario-real"] });
       void qc.invalidateQueries({ queryKey: ["inventario"] });
       void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos-real"] });
     },
   });
 }
@@ -2529,6 +2532,7 @@ export function useRegistrarMovimientoReal() {
 export function useMovimientosInventarioReal() {
   return useQuery({
     queryKey: ["inventario-movimientos-real"],
+    staleTime: 15_000,
     queryFn: async (): Promise<MovimientoInventarioReal[]> => {
       const { data, error } = await supabase
         .from("inventario_movimientos")
@@ -2559,6 +2563,7 @@ export function useMovimientosInventarioReal() {
 export function useInventarioJoyas() {
   return useQuery({
     queryKey: ["inventario-joyas"],
+    staleTime: 15_000,
     queryFn: async (): Promise<JoyaInventario[]> => {
       const { data, error } = await supabase
         .from("inventario_joyas")
