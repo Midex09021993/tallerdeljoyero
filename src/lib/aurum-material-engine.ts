@@ -253,8 +253,8 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
       clearcoat:m.clearcoat,anisotropy:m.anisotropy,anisotropyRotation:m.anisotropyRotation
     };
   }
-  const green={color:0xb5b66f,metalness:1,roughness:.09,envMapIntensity:2.00,clearcoat:.15,anisotropy:0};
-  const white={color:0xdce1e5,metalness:1,roughness:.08,envMapIntensity:1.90,clearcoat:.15,anisotropy:.05};
+  const green={color:0xb5b66f,metalness:1,roughness:.13,envMapIntensity:1.98,clearcoat:.15,anisotropy:0};
+  const white={color:0xdce1e5,metalness:1,roughness:.11,envMapIntensity:1.80,clearcoat:.15,anisotropy:.05};
   // The target reference is a warm 18K yellow gold. Retain both source profiles'
   // polished optical response, but bias the alloy color toward yellow so the
   // white-gold component does not wash the result into silver/olive.
@@ -262,11 +262,11 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
   const greenColor=new THREE.Color(green.color);
   const whiteColor=new THREE.Color(white.color);
   greenColor.lerp(whiteColor,mix);
-  const yellowGold=new THREE.Color(0xe0b443);
-  // Calibrated toward the supplied GLB screenshot: warmer, more saturated
-  // yellow-gold body color, with only a restrained green/white alloy undertone.
+  const yellowGold=new THREE.Color(0xd8ad4c);
+  // Restore the earlier premium-looking calibration: a softer, less saturated
+  // yellow-gold tone with a subtle green/white alloy undertone.
   // This remains a visual PBR approximation; studio reflections still depend on the HDR.
-  const blendedColor=yellowGold.lerp(greenColor,.05);
+  const blendedColor=yellowGold.lerp(greenColor,.12);
   return {
     id:"oro18_verde_blanco_ijewel",
     color:blendedColor.getHex(),
