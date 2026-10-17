@@ -13,6 +13,10 @@ type Cuota = {
   usos_render_mes: number;
 };
 
+// Ocultación temporal de la tarjeta para las cuentas existentes.
+// No modifica planes, cuotas ni permisos; se puede reactivar cambiando esta constante.
+const MOSTRAR_RESUMEN_PLAN_COMERCIAL = false;
+
 function porcentaje(usado: number, limite: number) {
   return limite < 0 ? 0 : Math.min(100, Math.round((usado / Math.max(1, limite)) * 100));
 }
@@ -22,7 +26,7 @@ export function ResumenPlanComercial() {
   const participanteId = sesion?.participante?.id ?? null;
   const resumen = useQuery({
     queryKey: ["resumen-plan-comercial", participanteId],
-    enabled: Boolean(participanteId && sesion?.esAdmin),
+    enabled: MOSTRAR_RESUMEN_PLAN_COMERCIAL && Boolean(participanteId && sesion?.esAdmin),
     queryFn: async () => {
       const { data: participante, error: participanteError } = await supabase
         .from("ecosistema_participantes")
@@ -50,7 +54,7 @@ export function ResumenPlanComercial() {
     },
   });
 
-  if (!sesion?.esAdmin || !participanteId) return null;
+  if (!MOSTRAR_RESUMEN_PLAN_COMERCIAL || !sesion?.esAdmin || !participanteId) return null;
 
   if (resumen.isLoading) {
     return (
