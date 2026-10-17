@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState, type FormEvent } from "react";
 import { FileText, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
