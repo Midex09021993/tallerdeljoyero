@@ -976,6 +976,19 @@ export function AurumRender() {
           // jumps. The selected VJSON HDR and its rotation remain dedicated to gems.
           cargarHDRI("studioSoft",undefined,0,1);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
+          const initialScale=ambienteMetalInfluence/100;
+          if(modelo) modelo.traverse((x:any)=>{
+            if(!x.isMesh||!x.material)return;
+            const adjust=(m:any)=>{
+              if(!m?.userData?.aurumMetalRenderProfile)return m;
+              const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
+              if(Number.isFinite(base))m.envMapIntensity=base*initialScale;
+              m.needsUpdate=true;
+              return m;
+            };
+            x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
+          });
+          invalidateRenderRef.current?.();
         },
         influenciaMetalAmbiente:(percent:number)=>{
           const scale=Math.max(0,Math.min(1.5,(Number.isFinite(percent)?percent:45)/100));
