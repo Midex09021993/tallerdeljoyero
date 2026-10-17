@@ -1172,6 +1172,7 @@ export function AurumRender() {
             }
             let captureComposerBuffer: { width: number; height: number } | null = null;
             let captureTaaPass: any = null;
+            let capturePassStates: Array<{pass:any;enabled:boolean}> = [];
             if(composer && applyPostQuality){
               // Capture-only photographic pass: enable temporal AA and size the
               // composer to the supersampled target, not the small viewer CSS box.
@@ -1183,6 +1184,15 @@ export function AurumRender() {
                 throw new Error("El búfer interno del compositor no coincide con la resolución de captura solicitada.");
               }
               captureTaaPass = composer.passes?.find((pass:any)=>pass && "sampleLevel" in pass && "accumulateIndex" in pass && "accumulate" in pass) ?? null;
+              // Keep the PNG beauty aligned with the direct live viewer. The still
+              // capture needs temporal AA, but must not add AO, bloom, LUT, grading,
+              // depth-of-field or vignette that can change polished-metal appearance.
+              capturePassStates = (composer.passes ?? []).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
+              for(const pass of composer.passes ?? []){
+                const passName=String(pass?.constructor?.name ?? "");
+                const keepForCapture=passName==="RenderPass" || pass===captureTaaPass || passName==="OutputPass";
+                if("enabled" in (pass ?? {})) pass.enabled=keepForCapture;
+              }
               if(captureTaaPass){
                 // A previous viewer frame may have left TAA halfway through its
                 // accumulation sequence. Every still capture must start clean.
@@ -1239,6 +1249,11 @@ export function AurumRender() {
             renderer.setSize(originalCssWidth,originalCssHeight,false);
             if(composer && applyPostQuality){
               applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
+            }
+            // Restore every post-process pass to its pre-capture state, including
+            // error/early-exit cases, so the interactive engine is left unchanged.
+            for(const state of capturePassStates){
+              if(state.pass && "enabled" in state.pass) state.pass.enabled=state.enabled;
             }
             if(typeof originalAspect==="number") {
               camara.aspect=originalAspect;
