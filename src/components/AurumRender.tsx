@@ -974,7 +974,11 @@ export function AurumRender() {
           // Un ambiente es un rig HDR compartido: debe reflejarse tanto en
           // los metales como en las gemas. Los selectores HDR independientes
           // siguen disponibles para ajustes manuales posteriores.
-          cargarHDRI(key,preset.url,preset.rotation,preset.intensity);
+          // Metal reflections need a gentler contribution than gemstone optics:
+          // the VJSON HDRs contain high-contrast dark bands that can turn gold
+          // olive/black if used at full strength. Keep the same environment and
+          // orientation, but blend it into the metal at a conservative intensity.
+          cargarHDRI(key,preset.url,preset.rotation,Math.min(preset.intensity*0.32,0.38));
           cargarEntornoGema(key,preset.rotation,preset.intensity);
         },
         fondo:(key:string)=>{
