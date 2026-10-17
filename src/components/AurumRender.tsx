@@ -980,10 +980,21 @@ export function AurumRender() {
           if(modelo) modelo.traverse((x:any)=>{
             if(!x.isMesh||!x.material)return;
             const adjust=(m:any)=>{
-              if(!m?.userData?.aurumMetalRenderProfile)return m;
-              const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
-              if(Number.isFinite(base))m.envMapIntensity=base*initialScale;
-              m.needsUpdate=true;
+              if(!m || m.userData?.aurumOpticalProfile) return m;
+              const isAurumMetal=Boolean(m.userData?.aurumMetalRenderProfile);
+              const isPbrMetal=Number(m.metalness)>=0.5;
+              if(!isAurumMetal&&!isPbrMetal)return m;
+              // Capture the unscaled intensity once, even for imported GLB
+              // materials that do not carry Aurum's custom metal marker.
+              if(!Number.isFinite(m.userData.aurumAmbientBaseEnvMapIntensity)){
+                const authored=Number(m.userData.aurumMetalBaseEnvMapIntensity);
+                m.userData.aurumAmbientBaseEnvMapIntensity=Number.isFinite(authored)
+                  ? authored
+                  : (Number.isFinite(m.envMapIntensity)?m.envMapIntensity:1);
+              }
+              const base=Number(m.userData.aurumAmbientBaseEnvMapIntensity);
+              m.envMapIntensity=base*initialScale;
+              m.userData.aurumAmbientInfluence=ambienteMetalInfluence;
               return m;
             };
             x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
@@ -996,10 +1007,19 @@ export function AurumRender() {
           modelo.traverse((x:any)=>{
             if(!x.isMesh||!x.material)return;
             const adjust=(m:any)=>{
-              if(!m?.userData?.aurumMetalRenderProfile)return m;
-              const base=Number(m.userData.aurumMetalBaseEnvMapIntensity);
-              if(Number.isFinite(base)) m.envMapIntensity=base*scale;
-              m.needsUpdate=true;
+              if(!m || m.userData?.aurumOpticalProfile) return m;
+              const isAurumMetal=Boolean(m.userData?.aurumMetalRenderProfile);
+              const isPbrMetal=Number(m.metalness)>=0.5;
+              if(!isAurumMetal&&!isPbrMetal)return m;
+              if(!Number.isFinite(m.userData.aurumAmbientBaseEnvMapIntensity)){
+                const authored=Number(m.userData.aurumMetalBaseEnvMapIntensity);
+                m.userData.aurumAmbientBaseEnvMapIntensity=Number.isFinite(authored)
+                  ? authored
+                  : (Number.isFinite(m.envMapIntensity)?m.envMapIntensity:1);
+              }
+              const base=Number(m.userData.aurumAmbientBaseEnvMapIntensity);
+              m.envMapIntensity=base*scale;
+              m.userData.aurumAmbientInfluence=percent;
               return m;
             };
             x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
