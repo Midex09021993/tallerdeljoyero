@@ -67,8 +67,9 @@ export function CatalogoColeccionesDialog({
 
     const next: Record<string, Set<string>> = {};
     for (const row of relationRows) {
-      if (!next[row.coleccion_id]) next[row.coleccion_id] = new Set();
-      next[row.coleccion_id].add(row.producto_id);
+      const asignados = next[row.coleccion_id] ?? new Set<string>();
+      asignados.add(row.producto_id);
+      next[row.coleccion_id] = asignados;
     }
     setColecciones((data ?? []) as Coleccion[]);
     setAsignaciones(next);
