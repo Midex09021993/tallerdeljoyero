@@ -1120,6 +1120,13 @@ export function AurumRender() {
           if(!isPoster && width*height>12_000_000) {
             throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
           }
+          // Render the diamond slightly above the requested output resolution,
+          // then downsample once into the final image. This improves facet-edge
+          // coverage without changing the delivered PNG dimensions. Keep the
+          // temporary WebGL buffer under the same 12 MP memory budget.
+          const renderScale=isPoster?1:Math.min(1.1,Math.sqrt(12_000_000/(width*height)));
+          const renderWidth=Math.max(width,Math.floor(width*renderScale));
+          const renderHeight=Math.max(height,Math.floor(height*renderScale));
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
           const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
           const output=document.createElement("canvas");
@@ -1129,17 +1136,17 @@ export function AurumRender() {
           if(!context) throw new Error("No se pudo preparar la imagen de salida.");
           let dataUrl="";
           try {
-            // Render the scene itself at the requested output dimensions. Merely
-            // scaling the live canvas to 4K enlarges pixels without adding detail.
-            // Keep camera, materials, lights, HDRs and the active live render path.
+            // Render slightly above the requested dimensions for spatial
+            // supersampling; the final file still uses exactly width x height.
+            // Camera, materials, lights and both independent HDR environments stay unchanged.
             renderer.setPixelRatio(1);
             // Gems can inherit a low transmission buffer scale from the live
             // interaction budget. Restore full-resolution refraction only for
             // this isolated capture, without changing the interactive preview.
             (renderer as any).transmissionResolutionScale=1;
-            renderer.setSize(width,height,false);
+            renderer.setSize(renderWidth,renderHeight,false);
             if(typeof camara.aspect==="number") {
-              camara.aspect=width/height;
+              camara.aspect=renderWidth/renderHeight;
               camara.updateProjectionMatrix?.();
             }
             // The BVH shader has its own ray-bounce budget, independent of
@@ -1148,20 +1155,17 @@ export function AurumRender() {
             // the interactive budget in finally so orbit performance is unchanged.
             if(!isPoster) diamondBvhRuntime?.setDiamondQuality("final");
             diamondBvhRuntime?.update();
-            if(renderer.domElement.width!==width || renderer.domElement.height!==height) {
-              throw new Error("El canvas WebGL no alcanzó la resolución solicitada para la captura.");
+            if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
+              throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
             }
             renderer.render(escena,camara);
             context.fillStyle="#ffffff";
             context.fillRect(0,0,width,height);
-            const scale=Math.min(width/renderer.domElement.width,height/renderer.domElement.height);
-            const drawWidth=Math.round(renderer.domElement.width*scale);
-            const drawHeight=Math.round(renderer.domElement.height*scale);
-            const drawX=Math.round((width-drawWidth)/2);
-            const drawY=Math.round((height-drawHeight)/2);
             context.imageSmoothingEnabled=true;
             context.imageSmoothingQuality="high";
-            context.drawImage(renderer.domElement,drawX,drawY,drawWidth,drawHeight);
+            // Downsample only once. The output canvas preserves the exact
+            // requested file dimensions while benefiting from extra facet samples.
+            context.drawImage(renderer.domElement,0,0,width,height);
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
             // Restore the interactive diamond ray budget before returning to
