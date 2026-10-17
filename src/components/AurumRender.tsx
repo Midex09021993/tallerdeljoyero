@@ -1179,6 +1179,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
+          let capturePassStates: Array<{pass:any;enabled:boolean}> = [];
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
