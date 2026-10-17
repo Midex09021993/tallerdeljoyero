@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import type { Object3D } from "three";
 
 export type AurumLiveGeometryReport = {
@@ -13,10 +14,11 @@ export type AurumLiveGeometryReport = {
  * UI for several seconds on dense CAD meshes. Keep authored geometry intact;
  * performance is managed by the stable LIVE render budget instead.
  */
-const countTriangles=(root:any)=>{
+const countTriangles=(root:Object3D)=>{
   let triangles=0;
-  root?.traverse?.((object:any)=>{
-    if(!object?.isMesh || !object.geometry || object.userData?.aurumInternalInclusion) return;
+  root.traverse((node)=>{
+    const object = node as THREE.Mesh;
+    if(!object.isMesh || !object.geometry || object.userData?.["aurumInternalInclusion"]) return;
     const index=object.geometry.getIndex?.();
     const position=object.geometry.getAttribute?.("position");
     triangles+=Math.floor(Number(index?.count ?? position?.count ?? 0)/3);
@@ -38,24 +40,25 @@ export async function prepareAurumLiveGeometry(
 }
 
 /** Geometry is unchanged between LIVE and CAPTURE. */
-export function setAurumLiveGeometryQuality(_root:any,_quality:"live"|"beauty"){}
+export function setAurumLiveGeometryQuality(_root:Object3D,_quality:"live"|"beauty"){}
 
-export function disposeAurumLiveGeometry(root:any){
-  root?.traverse?.((object:any)=>{
-    const live=object?.userData?.aurumLiveGeometry;
+export function disposeAurumLiveGeometry(root:Object3D){
+  root.traverse((node)=>{
+    const object = node as THREE.Object3D;
+    const live=object.userData?.["aurumLiveGeometry"];
     if(live?.dispose) live.dispose();
     if(object?.userData){
       const next={...object.userData};
-      delete next.aurumLiveGeometry;
-      delete next.aurumLiveGeometrySource;
-      delete next.aurumLiveGeometryError;
+      delete next["aurumLiveGeometry"];
+      delete next["aurumLiveGeometrySource"];
+      delete next["aurumLiveGeometryError"];
       object.userData=next;
     }
   });
-  if(root?.userData){
+  if(root.userData){
     const next={...root.userData};
-    delete next.aurumLiveGeometryReady;
-    delete next.aurumLiveGeometryTriangles;
+    delete next["aurumLiveGeometryReady"];
+    delete next["aurumLiveGeometryTriangles"];
     root.userData=next;
   }
 }
