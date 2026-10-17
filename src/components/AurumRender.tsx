@@ -973,7 +973,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(!modelo)return;
           const visited=new Set<string>();
           modelo.traverse((x:any)=>{
-            if(!x.isMesh||x.userData?.aurumInternalInclusion||selectionCategory(x)!=="metal")return;
+            if(!x.isMesh||x.userData?.aurumInternalInclusion||String(x.userData?.aurumRhino?.categoria ?? "").toLowerCase()!=="metal")return;
             const meta=x.userData?.aurumRhino??{};
             const attrs=x.userData?.attributes??{};
             const layer=String(meta.capa??attrs.layerName??attrs.LayerName??"").trim().toLocaleLowerCase();
@@ -988,7 +988,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(!modelo)return;
           const visited=new Set<string>();
           modelo.traverse((x:any)=>{
-            if(!x.isMesh||x.userData?.aurumInternalInclusion||selectionCategory(x)!=="gema")return;
+            if(!x.isMesh||x.userData?.aurumInternalInclusion||String(x.userData?.aurumRhino?.categoria ?? "").toLowerCase()!=="gema")return;
             const meta=x.userData?.aurumRhino??{};
             const attrs=x.userData?.attributes??{};
             const layer=String(meta.capa??attrs.layerName??attrs.LayerName??"").trim().toLocaleLowerCase();
