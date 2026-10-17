@@ -1869,8 +1869,10 @@ export type Usuario = {
 
 export function useUsuarios() {
   return useQuery({
-    queryKey: ["usuarios"],
-    staleTime: 15_000,
+    // Separa la exportación basada en Supabase del listado servido por la API.
+    // Las invalidaciones con el prefijo ["usuarios"] siguen actualizando ambas.
+    queryKey: ["usuarios", "respaldo"],
+    staleTime: 60_000,
     queryFn: async (): Promise<Usuario[]> => {
       const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
         supabase
