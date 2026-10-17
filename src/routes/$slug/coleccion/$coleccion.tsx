@@ -42,15 +42,16 @@ function ColeccionPublicaPage() {
   const catalogoSlug = slug.trim().toLowerCase();
   const coleccionSlug = coleccion.trim().toLowerCase();
 
-  const { data: rows = [], isLoading, error } = useQuery({
-    queryKey: ["catalogo-coleccion-publica", catalogoSlug, coleccionSlug],
+  const { data: catalogoRows = [], isLoading, error } = useQuery({
+    queryKey: ["portal-publico-productos", catalogoSlug],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("obtener_catalogo_publico", { _slug: catalogoSlug });
       if (error) throw error;
-      return ((data ?? []) as Row[]).filter((row) => row.coleccion_slug?.toLowerCase() === coleccionSlug);
+      return (data ?? []) as Row[];
     },
     staleTime: 60_000,
   });
+  const rows = catalogoRows.filter((row) => row.coleccion_slug?.toLowerCase() === coleccionSlug);
 
   if (isLoading) return <Estado titulo="Cargando colección…" texto="Estamos preparando el escaparate." />;
   if (error || !rows.length) return <Estado titulo="Colección no disponible" texto="La colección no existe, está oculta o todavía no tiene modelos publicados." />;
