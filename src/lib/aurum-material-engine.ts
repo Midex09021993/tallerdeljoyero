@@ -227,6 +227,26 @@ export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)
  * chemistry. Keep the source profiles untouched.
  */
 export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
+  // Comparative profile grounded in the supplied GLB's source material factors:
+  // green gold [0.5583404, 0.4178851, 0.1778884], white gold
+  // [0.5394795, 0.5394795, 0.5457245]. Both source PMAT references specify
+  // roughness 0 and IOR 1.5; their environment intensities are 0.8 and 1.0.
+  // Average the source linear RGB factors directly, without a yellow-gold bias.
+  if(String(m?.id??"")==="oro18_verde_blanco_glb"){
+    const greenSource=new THREE.Color().setRGB(0.5583403896257968,0.4178850708380236,0.17788841597328695,THREE.LinearSRGBColorSpace);
+    const whiteSource=new THREE.Color().setRGB(0.5394794890033748,0.5394794890033748,0.5457244613615395,THREE.LinearSRGBColorSpace);
+    greenSource.lerp(whiteSource,.5);
+    return {
+      id:"oro18_verde_blanco_glb",
+      color:greenSource.getHex(),
+      metalness:1,
+      roughness:0,
+      envMapIntensity:.9,
+      clearcoat:0,
+      anisotropy:0,
+      anisotropyRotation:0,
+    };
+  }
   if(String(m?.id??"")!=="oro18_verde_blanco_ijewel"){
     return {
       id:m.id,color:m.color,metalness:m.metalness,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
