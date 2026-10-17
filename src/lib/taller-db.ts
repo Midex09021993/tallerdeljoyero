@@ -625,17 +625,23 @@ export function usePedidos() {
             .filter((id): id is string => typeof id === "string" && id.length > 0),
         ),
       ];
-      const { data: participantesData, error: participantesError } = participanteIds.length
-        ? await supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
-        : { data: [], error: null };
+      // Ambos directorios dependen de los pedidos cargados, pero no entre sí.
+      // Consultarlos en paralelo evita sumar una ida y vuelta de red al tiempo de carga.
+      const [
+        { data: participantesData, error: participantesError },
+        { data: sedesData, error: sedesError },
+      ] = await Promise.all([
+        participanteIds.length
+          ? supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
+          : Promise.resolve({ data: [], error: null }),
+        sedeIds.length
+          ? supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
 
       if (participantesError) {
         console.warn("[Pedidos] No se pudo cargar el nombre del participante; se usa la sede como respaldo.", participantesError);
       }
-
-      const { data: sedesData, error: sedesError } = sedeIds.length
-        ? await supabase.from("sedes").select("id,nombre").in("id", sedeIds)
-        : { data: [], error: null };
 
       if (sedesError) {
         console.warn("[Pedidos] No se pudo cargar el nombre de la sede.", sedesError);
