@@ -80,7 +80,14 @@ Deno.serve(async (req) => {
       return json({ error: "Mi Nube admite hasta 500 MB por archivo. Esta transferencia contiene un archivo que supera ese límite." }, 413);
     }
 
-    const participantId = participantIds[0];
+    // Si la cuenta pertenece a varios talleres, nunca elegir uno implícitamente.
+    // La interfaz envía el taller activo; se conserva compatibilidad para cuentas con uno solo.
+    const requestedParticipantId = typeof body.participantId === "string" ? body.participantId.trim() : "";
+    const participantId = requestedParticipantId || (participantIds.length === 1 ? participantIds[0] : "");
+    if (!participantId || !participantIds.includes(participantId)) {
+      return json({ error: "Selecciona un taller activo al que tengas acceso para guardar estos archivos." }, 403);
+    }
+
     const { data: participant, error: participantError } = await admin
       .from("ecosistema_participantes")
       .select("id")
