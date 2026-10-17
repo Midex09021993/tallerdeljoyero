@@ -120,33 +120,29 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   material.metalness=preset.metalness;
 
   const response=getAurumMetalReflectionResponse(preset);
-  // Diagnostic-only comparison mode: preserve the selected catalog's calibrated
-  // optical values without changing the normal renderer path.
-  // User-approved premium metal calibration is now the default renderer behavior.
-  // Re-deploy trigger: keep this default explicit in the production build.
-  // Keep the URL flags backward-compatible for diagnostics, but do not require
-  // query parameters to activate the calibrated optical values.
+  // Default = user-approved official calibration (catalog optics, no URL flag).
   const diagnosticParams=typeof window!=="undefined"
     ? new URLSearchParams(window.location.search)
     : null;
   // Official profile = values validated with ?aurumMetalCalibrated=on
   // (catalog optics unchanged). "?aurumMetalCalibrated=legacy" restores the
   // previous attenuated response for A/B diagnostics only.
-  const useAurumRenderCalibration=diagnosticParams?.get("aurumMetalCalibrated")==="legacy";
+  const isLegacyDiagnostic=diagnosticParams?.get("aurumMetalCalibrated")==="legacy";
+  const calibrationMode=isLegacyDiagnostic?"legacy-attenuated":"catalog-reference";
 
   const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
   const calibratedRoughness=response.family==="yellow-gold"
     ? Math.max(.075,Math.min(.55,baseRoughness*1.12))
     : baseRoughness;
-  material.roughness=useAurumRenderCalibration
+  material.roughness=isLegacyDiagnostic
     ? Math.max(.065,Math.min(.55,calibratedRoughness))
     : baseRoughness;
 
-  material.envMapIntensity=useAurumRenderCalibration
+  material.envMapIntensity=isLegacyDiagnostic
     ? response.environmentIntensity
     : Number(preset.envMapIntensity);
 
-  material.clearcoat=useAurumRenderCalibration
+  material.clearcoat=isLegacyDiagnostic
     ? Math.max(.025,Math.min(.055,Number(preset.clearcoat??0)*.10+.015))
     : Number(preset.clearcoat??0);
   material.clearcoatRoughness=Math.max(.025,Math.min(.12,material.roughness*.7));
@@ -167,9 +163,9 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     aurumMetalRenderProfile:response,
     aurumMetalBaseEnvMapIntensity:material.envMapIntensity,
     aurumMetalSurfaceRoughness:material.roughness,
-    aurumMetalCalibrationMode:useAurumRenderCalibration?"legacy-attenuated":"catalog-reference",
+    aurumMetalCalibrationMode:calibrationMode,
     aurumMetalEffectiveOptics:{
-      mode:useAurumRenderCalibration?"legacy-attenuated":"catalog-reference",
+      mode:calibrationMode,
       requested:{
         color:preset.color,
         metalness:preset.metalness,
