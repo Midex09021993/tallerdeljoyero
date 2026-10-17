@@ -2249,6 +2249,7 @@ export type ArchivoPedido = {
 export function useArchivosPedidos() {
   return useQuery({
     queryKey: ["archivos-pedidos"],
+    staleTime: 15_000,
     queryFn: async (): Promise<ArchivoPedido[]> => {
       const { data, error } = await supabase
         .from("pedido_archivos")
