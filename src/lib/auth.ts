@@ -204,7 +204,7 @@ export function useSincronizarSesion() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") { qc.clear(); return; }
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         void qc.invalidateQueries({ queryKey: ["sesion"] });
       }
     });
