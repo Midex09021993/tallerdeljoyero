@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
         lastStatus = verification.status;
         if (verification.status === 207 || verification.status === 200) {
           const xml = await verification.text();
-          const blocks = xml.match(/<(?:[A-Za-z0-9_-]+:)?response\\b[\\s\\S]*?<\\/(?:[A-Za-z0-9_-]+:)?response\\s*>/gi) ?? [];
+          const blocks = xml.match(/<(?:[A-Za-z0-9_-]+:)?response\b[\s\S]*?<\/(?:[A-Za-z0-9_-]+:)?response\s*>/gi) ?? [];
           const actual = blocks.map((block) => Number(xmlValue(block, "getcontentlength"))).find(Number.isFinite);
           if (actual !== undefined) verifiedBytes = actual;
           if (verifiedBytes === totalBytes) break;
