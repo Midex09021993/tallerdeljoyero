@@ -129,7 +129,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   const diagnosticParams=typeof window!=="undefined"
     ? new URLSearchParams(window.location.search)
     : null;
-  const useCatalogCalibration=diagnosticParams?.get("aurumMetalCalibrated")==="off"
+  const useAurumRenderCalibration=diagnosticParams?.get("aurumMetalCalibrated")==="off"
     ? false
     : true;
 
@@ -145,19 +145,19 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // roughness floor on every white metal. A lower floor reduces the broad, hazy
   // reflection that can read as surface grain, while leaving authored satin/matte
   // values untouched and retaining a small physically plausible microfacet spread.
-  material.roughness=useCatalogCalibration
+  material.roughness=!useAurumRenderCalibration
     ? baseRoughness
     : isPolishedPreciousMetal
       ? Math.max(.065,Math.min(.55,calibratedRoughness))
       : calibratedRoughness;
 
-  material.envMapIntensity=useCatalogCalibration
+  material.envMapIntensity=!useAurumRenderCalibration
     ? Number(preset.envMapIntensity)
     : response.environmentIntensity;
 
   // Normal rendering retains the existing metal response. The explicit
   // diagnostic comparison mode uses the catalog clearcoat value unchanged.
-  material.clearcoat=useCatalogCalibration
+  material.clearcoat=!useAurumRenderCalibration
     ? Number(preset.clearcoat??0)
     : Math.max(.025,Math.min(.055,preset.clearcoat*.10+.015));
   material.clearcoatRoughness=Math.max(.025,Math.min(.12,material.roughness*.7));
@@ -178,9 +178,9 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     aurumMetalRenderProfile:response,
     aurumMetalBaseEnvMapIntensity:material.envMapIntensity,
     aurumMetalSurfaceRoughness:material.roughness,
-    aurumMetalCalibrationMode:useCatalogCalibration?"catalog-reference":"aurum-render-default",
+    aurumMetalCalibrationMode:useAurumRenderCalibration?"aurum-render-default":"catalog-reference",
     aurumMetalEffectiveOptics:{
-      mode:useCatalogCalibration?"catalog-reference":"aurum-render-default",
+      mode:useAurumRenderCalibration?"aurum-render-default":"catalog-reference",
       requested:{
         color:preset.color,
         metalness:preset.metalness,
