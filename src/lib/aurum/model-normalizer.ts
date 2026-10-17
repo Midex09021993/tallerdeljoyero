@@ -99,7 +99,7 @@ function resolveRhinoLayerIndex(x:THREE.Object3D): number {
   const candidates = [
     x?.userData?.["aurumRhinoSource"]?.layerIndex,
     x?.userData?.["attributes"]?.layerIndex,
-    x?.userData?.attributes?.LayerIndex,
+    x?.userData?.["attributes"]?.LayerIndex,
     x?.userData?.["layerIndex"],
     x?.userData?.["LayerIndex"],
     x?.userData?.["aurumRhino"]?.layerIndex,
@@ -186,29 +186,29 @@ function hydrateRhinoLayerMetadata(
     if(!x.isMesh)return;
     audit.meshes++;
     const data=x.userData??{};
-    const attrs=data.attributes??{};
-    const existing=data.aurumRhino??{};
+    const attrs=data["attributes"]??{};
+    const existing=data["aurumRhino"]??{};
     const layerIndex=resolveRhinoLayerIndex(x);
-    const source=data.aurumRhinoSource??{};
-    const layerId=source.layerId??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
+    const source=data["aurumRhinoSource"]??{};
+    const layerId=source["layerId"]??attrs["layerId"]??attrs["LayerId"]??data["layerId"]??data["LayerId"]??existing["rhinoLayerId"];
     let layer=layerIndex>=0?layers[layerIndex]:undefined;
     if(!layer&&layerId!=null)layer=byId.get(String(layerId));
-    const rawName=layer?.name??layer?.Name??source.layerName??data.rhinoLayer?.name??data.rhinoLayer?.Name??
-      data.RhinoLayer?.name??data.RhinoLayer?.Name??attrs.layerName??attrs.LayerName??
-      data.layerName??data.LayerName??existing.capa??"";
+    const rawName=layer?.name??layer?.Name??source["layerName"]??data["rhinoLayer"]?.name??data["rhinoLayer"]?.Name??
+      data["RhinoLayer"]?.name??data["RhinoLayer"]?.Name??attrs["layerName"]??attrs["LayerName"]??
+      data["layerName"]??data["LayerName"]??existing["capa"]??"";
     const layerName=String(rawName??"").trim();
     if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
-    const color=colorToHex(layer?.color??layer?.Color??source.layerColor??data.rhinoLayer?.color??data.RhinoLayer?.color??
-      attrs.layerColor??attrs.LayerColor??existing.colorCapa);
+    const color=colorToHex(layer?.color??layer?.Color??source["layerColor"]??data["rhinoLayer"]?.color??data["RhinoLayer"]?.color??
+      attrs["layerColor"]??attrs["LayerColor"]??existing["colorCapa"]);
     const hasResolvedLayer=Boolean(layerName||color);
     const category=hasResolvedLayer
       ? classifyRhinoLayer(layerName,color,clasificarCapa)
-      : (existing.categoria??classifyRhinoLayer(String(existing.capa??""),existing.colorCapa,clasificarCapa));
-    const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
-    const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
-    const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
-    const matrixSlot=matrixSlotFromLayer(layerName,category,color)??existing.matrixSlot;
-    const hasAnyLayerEvidence=Boolean(layerName||color||layerIndex>=0||layerId!=null||existing.capa||existing.layerKey);
+      : (existing["categoria"]??classifyRhinoLayer(String(existing["capa"]??""),existing["colorCapa"],clasificarCapa));
+    const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing["layerIndex"])&&existing["layerIndex"]>=0?existing["layerIndex"]:-1);
+    const resolvedLayerId=layer?.id??layer?.Id??layerId??existing["rhinoLayerId"]??null;
+    const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing["capa"],layerColor:color||existing["colorCapa"],category,existingKey:existing["layerKey"]});
+    const matrixSlot=matrixSlotFromLayer(layerName,category,color)??existing["matrixSlot"];
+    const hasAnyLayerEvidence=Boolean(layerName||color||layerIndex>=0||layerId!=null||existing["capa"]||existing["layerKey"]);
     const sourceIdentity=resolvedLayerId!=null
       ? "id:"+String(resolvedLayerId)
       : resolvedLayerIndex>=0
@@ -224,8 +224,8 @@ function hydrateRhinoLayerMetadata(
         ...data,
         aurumRhino:{
           ...existing,
-          capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
-          colorCapa:color||existing.colorCapa||undefined,
+          capa:layerName||existing["capa"]||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
+          colorCapa:color||existing["colorCapa"]||undefined,
           categoria:category,
           layerIndex:resolvedLayerIndex,
           layerKey:layerKey??null,
@@ -241,9 +241,9 @@ function hydrateRhinoLayerMetadata(
       audit.meshesWithLayerKey++;
       audit.layers[layerKey]=(audit.layers[layerKey]??0)+1;
       const source=layerSources.get(layerKey)??{meshCount:0,sourceIds:new Set<string>(),layerNames:new Set<string>()};
-      source.meshCount++;
-      if(sourceIdentity)source.sourceIds.add(sourceIdentity);
-      if(layerName)source.layerNames.add(layerName);
+      source["meshCount"]++;
+      if(sourceIdentity)source["sourceIds"].add(sourceIdentity);
+      if(layerName)source["layerNames"].add(layerName);
       layerSources.set(layerKey,source);
     }
     audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
@@ -251,14 +251,14 @@ function hydrateRhinoLayerMetadata(
       ...data,
       aurumRhino:{
         ...existing,
-        capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
-        colorCapa:color||existing.colorCapa||undefined,
+        capa:layerName||existing["capa"]||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
+        colorCapa:color||existing["colorCapa"]||undefined,
         categoria:category,
         layerIndex:resolvedLayerIndex,
         layerKey,
         matrixSlot,
         rhinoLayerId:resolvedLayerId,
-        rhinoMaterialIndex:attrs.materialIndex??existing.rhinoMaterialIndex??null,
+        rhinoMaterialIndex:attrs["materialIndex"]??existing["rhinoMaterialIndex"]??null,
         visible:x.visible!==false,
         hiddenByRhino:x.visible===false,
         metadataResolution:"resolved",
@@ -266,20 +266,20 @@ function hydrateRhinoLayerMetadata(
     };
   });
   for(const [layerKey,source] of layerSources){
-    if(source.sourceIds.size>1||source.layerNames.size>1){
+    if(source["sourceIds"].size>1||source["layerNames"].size>1){
       audit.duplicateLayerKeys.push({
         layerKey,
-        meshCount:source.meshCount,
-        sourceIds:Array.from(source.sourceIds),
-        layerNames:Array.from(source.layerNames),
+        meshCount:source["meshCount"],
+        sourceIds:Array.from(source["sourceIds"]),
+        layerNames:Array.from(source["layerNames"]),
       });
     }
   }
   object.userData={...(object.userData??{}),aurumLayerMetadataAudit:{...audit,source:"GLB node extras + source layer table"}};
   if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes||audit.duplicateLayerKeys.length>0){
-    console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
+    console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData["aurumLayerMetadataAudit"]);
   }else{
-    console.info("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
+    console.info("[AURUM][LAYER METADATA AUDIT]",object.userData["aurumLayerMetadataAudit"]);
   }
   object.updateMatrixWorld?.(true);
 }
