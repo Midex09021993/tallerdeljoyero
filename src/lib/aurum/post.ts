@@ -149,7 +149,7 @@ export async function createAurumPostPipeline(
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`uniform sampler2D tDiffuse; uniform float contrast; uniform float saturation; varying vec2 vUv; void main(){vec4 c=texture2D(tDiffuse,vUv); float l=dot(c.rgb,vec3(.2126,.7152,.0722)); c.rgb=mix(vec3(l),c.rgb,saturation); c.rgb=(c.rgb-.5)*contrast+.5; gl_FragColor=c;}`,
     });
-    gradingPass.enabled=!Boolean(config.capture) && Boolean(config.gradeEnabled);
+    gradingPass.enabled=!config.capture && Boolean(config.gradeEnabled);
     composer.addPass(gradingPass);
 
     try {
@@ -261,7 +261,7 @@ export async function createAurumPostPipeline(
       bloomPass.radius=Math.max(0,Math.min(1,Number(config.bloomRadius??.35)));
     }
     if(gradingPass){
-      gradingPass.enabled=!Boolean(options.capture) && Boolean(config.gradeEnabled);
+      gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
       gradingPass.uniforms.contrast.value=Math.max(.5,Math.min(1.8,Number(config.gradeContrast??1)));
       gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
