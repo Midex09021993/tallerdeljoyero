@@ -256,7 +256,7 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
   greenColor.lerp(whiteColor,mix);
   // Pale champagne yellow with a subtle rosy undertone, closer to the iJewel reference.
   // Slightly rosier champagne gold; preserve a yellow-gold identity rather than rose gold.
-  const yellowGold=new THREE.Color(0xd4a875);
+  const yellowGold=new THREE.Color(0xd2a77a);
   // Keep a restrained green/white alloy undertone while matching the stronger
   // warm-yellow reference seen in iJewel. This adjusts only this preset's base
   // color; roughness, metalness, environment intensity and all other profiles stay intact.
@@ -266,7 +266,7 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
     color:blendedColor.getHex(),
     metalness:green.metalness*(1-mix)+white.metalness*mix,
     roughness:green.roughness*(1-mix)+white.roughness*mix,
-    envMapIntensity:(green.envMapIntensity*(1-mix)+white.envMapIntensity*mix)*.92,
+    envMapIntensity:(green.envMapIntensity*(1-mix)+white.envMapIntensity*mix)*.84,
     clearcoat:green.clearcoat*(1-mix)+white.clearcoat*mix,
     anisotropy:green.anisotropy*(1-mix)+white.anisotropy*mix,
     anisotropyRotation:0,
