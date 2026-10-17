@@ -41,7 +41,7 @@ export function EspecialidadesOwner() {
   });
   const { data: participantes = [] } = useQuery({
     queryKey: ["ecosistema-participantes", "selector-especialidades"],
-    staleTime: 15_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("ecosistema_participantes").select("id,nombre,razon_social,sede_id").order("nombre");
       if (error) throw error;
