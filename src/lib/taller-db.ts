@@ -575,13 +575,6 @@ export function usePedidos() {
       let pedidosData: Array<Record<string, unknown>> | null = null;
       let pedidosError: { message?: string; code?: string; details?: string } | null = null;
 
-      // El enriquecimiento comercial es independiente de la consulta principal;
-      // iniciar ambas al mismo tiempo reduce la latencia total de la bandeja.
-      const comercialesPromise = supabase
-        .from("pedido_comercial")
-        .select(CAMPOS_PEDIDO_COMERCIAL)
-        .then((resultado) => resultado);
-
       const principal = await supabase
         .from("pedidos")
         .select(CAMPOS_PEDIDO_BASE)
@@ -607,12 +600,6 @@ export function usePedidos() {
         }
       }
 
-      const { data: comercialesData, error: comercialesError } = await comercialesPromise;
-
-      if (comercialesError && !esErrorCampoFaltante(comercialesError)) {
-        console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
-      }
-
       // La identidad operativa del pedido puede venir por participante_id (canónica)
       // o por sede_id (compatibilidad histórica). Resolvemos ambas para que nunca
       // aparezca "Taller no asignado" cuando el pedido sí tiene taller.
@@ -632,10 +619,22 @@ export function usePedidos() {
       ];
       // Ambos directorios dependen de los pedidos cargados, pero no entre sí.
       // Consultarlos en paralelo evita sumar una ida y vuelta de red al tiempo de carga.
+      const pedidoIds = [...new Set(
+        ((pedidosData ?? []) as Array<Record<string, unknown>>)
+          .map((pedido) => pedido["id"])
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      )];
+
+      // Limitar el enriquecimiento comercial a los pedidos de esta bandeja evita
+      // descargar registros históricos ajenos al conjunto visible.
       const [
+        { data: comercialesData, error: comercialesError },
         { data: participantesData, error: participantesError },
         { data: sedesData, error: sedesError },
       ] = await Promise.all([
+        pedidoIds.length
+          ? supabase.from("pedido_comercial").select(CAMPOS_PEDIDO_COMERCIAL).in("pedido_id", pedidoIds)
+          : Promise.resolve({ data: [], error: null }),
         participanteIds.length
           ? supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
           : Promise.resolve({ data: [], error: null }),
@@ -643,6 +642,10 @@ export function usePedidos() {
           ? supabase.from("sedes").select("id,nombre").in("id", sedeIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
+
+      if (comercialesError && !esErrorCampoFaltante(comercialesError)) {
+        console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
+      }
 
       if (participantesError) {
         console.warn("[Pedidos] No se pudo cargar el nombre del participante; se usa la sede como respaldo.", participantesError);
