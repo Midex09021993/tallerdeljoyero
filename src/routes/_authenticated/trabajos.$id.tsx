@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
