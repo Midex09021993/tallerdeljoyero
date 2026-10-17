@@ -259,14 +259,13 @@ function MiNubePage() {
   }, [participanteId, usuarioId]);
 
   useEffect(() => {
-    // Si el usuario pausa el NAS o el equipo está apagado, no mantener sondeos en segundo plano.
+    // Comprobar al entrar; las acciones de NAS tienen comprobación explícita
+    // y el usuario puede volver a comprobar desde el control de estado.
     if (nasPausado) {
       setMensajeNas("Conexión pausada manualmente.");
       return;
     }
     void comprobarNas();
-    const intervalo = window.setInterval(() => void comprobarNas(), 60_000);
-    return () => window.clearInterval(intervalo);
   }, [comprobarNas, nasPausado]);
 
   // Carga exclusiva de Supabase Storage. No consulta ni depende del estado del NAS.
