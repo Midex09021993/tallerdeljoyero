@@ -23,7 +23,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
   const [modalidadesIniciales, setModalidadesIniciales] = useState<{ produccion_activa: boolean; servicios_externos_activos: boolean } | null>(null);
 
   const { data: especialidades = [], isLoading: loadingEspecialidades } = useQuery({
-    queryKey: ["capacidades-catalogo"],
+    queryKey: ["ecosistema-especialidades", "activas"],
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");
