@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState } from "react";
 import { Palette, Plus, Save, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,7 +22,7 @@ type ConfigCotizacion = { introduccion: string; terminos: string[]; atendido_por
 const DEFAULT_COTIZACION: ConfigCotizacion = { introduccion: "Es grato dirigirnos a usted, con la finalidad de remitir la siguiente cotización.", terminos: ["Precios y condiciones sujetos a la vigencia indicada en la cotización.", "La fecha de entrega será coordinada según disponibilidad y alcance del servicio.", "La forma de pago y cualquier condición especial se detallan en la propuesta comercial."], atendido_por: "", responsable_cargo: "", firma_nombre: "", firma_cargo: "", mostrar_bancos: true, cuentas_bancarias: [] };
 
 function obtenerConfigCotizacion(metadata: Record<string, any> | null | undefined): ConfigCotizacion {
-  const raw = metadata?.cotizacion;
+  const raw = metadata?.["cotizacion"];
   return {
     ...DEFAULT_COTIZACION,
     ...(raw && typeof raw === "object" ? raw : {}),
@@ -68,7 +67,9 @@ function obtenerZonasHorarias(): string[] {
     const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
     const zonas = intl.supportedValuesOf?.("timeZone");
     if (zonas?.length) return Array.from(new Set([...zonas, ...ZONAS_HORARIAS_FALLBACK])).sort((a, b) => a.localeCompare(b));
-  } catch {}
+  } catch {
+    // Use the curated list if the runtime cannot enumerate time zones.
+  }
   return ZONAS_HORARIAS_FALLBACK;
 }
 
@@ -117,7 +118,9 @@ function obtenerEtiquetaZonaHoraria(zona: string): string {
       const normalizado = nombre.replace(/^GMT/, "UTC");
       offset = normalizado === "UTC" ? "UTC+00:00" : normalizado;
     }
-  } catch {}
+  } catch {
+    // Keep the UTC fallback if the browser cannot resolve the offset.
+  }
   const ciudad = CIUDADES_ZONA[zona] ?? zona.split("/").pop()?.replace(/_/g, " ") ?? zona;
   return `(${offset}) ${ciudad} · ${zona}`;
 }
@@ -245,9 +248,9 @@ export function ConfiguracionIdentidadComercial() {
   }
 
   async function subirLogo(file: File) {
-    if (!form?.participante_id) return toast.error("No se pudo resolver el taller propietario.");
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return toast.error("El logo debe ser JPG, PNG o WebP.");
-    if (file.size > 5 * 1024 * 1024) return toast.error("El logo no puede superar 5 MB.");
+    if (!form?.participante_id) { toast.error("No se pudo resolver el taller propietario."); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { toast.error("El logo debe ser JPG, PNG o WebP."); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("El logo no puede superar 5 MB."); return; }
 
     setGuardando(true);
     let archivo = file;
@@ -313,7 +316,9 @@ export function ConfiguracionIdentidadComercial() {
           const oldPath = decodeURIComponent(form.logo_url.slice(index + marker.length));
           if (oldPath && oldPath !== path) await supabase.storage.from("identidades-comerciales").remove([oldPath]);
         }
-      } catch {}
+      } catch {
+        // Logo cleanup is best-effort; the saved public URL remains usable.
+      }
     }
 
     setForm((x) => x ? { ...x, logo_url: publicUrl } : x);
@@ -323,6 +328,7 @@ export function ConfiguracionIdentidadComercial() {
 
   async function quitarLogo() {
     if (!form) return;
+    if (!form.participante_id) { toast.error("No se pudo resolver el taller propietario."); return; }
     setGuardando(true);
     if (form.logo_url) {
       try {
@@ -332,7 +338,9 @@ export function ConfiguracionIdentidadComercial() {
           const oldPath = decodeURIComponent(form.logo_url.slice(index + marker.length));
           if (oldPath) await supabase.storage.from("identidades-comerciales").remove([oldPath]);
         }
-      } catch {}
+      } catch {
+        // Continue updating the record if deleting the old object fails.
+      }
     }
     const { error } = await supabase.from("identidades_comerciales").update({ logo_url: null }).eq("id", form.id);
     if (error) toast.error(error.message);
@@ -352,9 +360,9 @@ export function ConfiguracionIdentidadComercial() {
 
   async function crearIdentidad() {
     const participanteObjetivo = participantes.find((p) => p.id === participanteNuevo);
-    if (!participanteObjetivo) return toast.error("No se pudo resolver el taller propietario.");
+    if (!participanteObjetivo) { toast.error("No se pudo resolver el taller propietario."); return; }
     if (!sesion?.esDueno && participanteObjetivo.id !== sesion?.participante?.id) {
-      return toast.error("No puedes crear una identidad para otro taller.");
+      { toast.error("No puedes crear una identidad para otro taller."); return; }
     }
 
     setCreando(true);
@@ -376,12 +384,12 @@ export function ConfiguracionIdentidadComercial() {
 
   async function guardar() {
     if (!form) return;
-    if (!form.nombre_comercial.trim()) return toast.error("El nombre comercial es obligatorio.");
-    if (!form.participante_id) return toast.error("No se pudo resolver automáticamente el taller propietario de esta identidad.");
+    if (!form.nombre_comercial.trim()) { toast.error("El nombre comercial es obligatorio."); return; }
+    if (!form.participante_id) { toast.error("No se pudo resolver automáticamente el taller propietario de esta identidad."); return; }
     const tasa = Number(form.impuesto_tasa);
-    if (!Number.isFinite(tasa) || tasa < 0 || tasa > 100) return toast.error("La tasa de impuesto debe estar entre 0 y 100.");
-    if (!/^[A-Z]{3}$/.test(form.moneda_codigo.trim().toUpperCase())) return toast.error("La moneda debe usar un código de 3 letras.");
-    if (!ZONAS_HORARIAS.includes(form.zona_horaria.trim())) return toast.error("Selecciona una zona horaria válida de la lista.");
+    if (!Number.isFinite(tasa) || tasa < 0 || tasa > 100) { toast.error("La tasa de impuesto debe estar entre 0 y 100."); return; }
+    if (!/^[A-Z]{3}$/.test(form.moneda_codigo.trim().toUpperCase())) { toast.error("La moneda debe usar un código de 3 letras."); return; }
+    if (!ZONAS_HORARIAS.includes(form.zona_horaria.trim())) { toast.error("Selecciona una zona horaria válida de la lista."); return; }
     setGuardando(true);
     const payload = {
       participante_id: form.participante_id || null,

@@ -34,6 +34,8 @@ import { ChevronDown, Download, Expand, FileJson, Gem, Image as ImageIcon, Maxim
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
+const diagnosticoSeleccionHabilitado = false;
+
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
   if (!c) return undefined;
@@ -193,7 +195,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(() => {
     let vivo = true;
     let cleanup = () => {};
-    let frame = 0;
+    const frame = 0;
     (async () => {
       const THREE = await import("three");
             const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
@@ -383,7 +385,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
       };
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
-      let liveGeometryPreparing=false;
+      const liveGeometryPreparing=false;
       const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
       const lucesAurum = (lightingController as any).lights ?? {};
 
@@ -1200,7 +1202,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
-          let capturePassStates: Array<{pass:any;enabled:boolean}> = [];
+          const capturePassStates: Array<{pass:any;enabled:boolean}> = [];
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
@@ -2094,7 +2096,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-            {false&&parteSeleccionada&&diagnosticoSeleccion&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
+            {parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[9px] uppercase tracking-[.16em] text-[#d4af37]">Diagnóstico de selección</div>

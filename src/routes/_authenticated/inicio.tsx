@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
@@ -64,7 +63,7 @@ function Inicio() {
     const q=supabase.from("clientes").select("id,nombre,fecha_nacimiento,sede_id,participante_id").not("fecha_nacimiento","is",null);
     const {data,error}=esDueno?await q:await q.eq("participante_id",sesion!.participante!.id);if(error)throw error;
     const t=new Date();t.setHours(0,0,0,0);const leap=(y:number)=>y%4===0&&(y%100!==0||y%400===0);
-    return (data??[]).filter(c=>!sedeContextoId||c.sede_id===sedeContextoId).map(c=>{const [y,m,d]=String(c.fecha_nacimiento).slice(0,10).split("-").map(Number);let day=d;if(m===2&&d===29&&!leap(t.getFullYear()))day=28;let f=new Date(t.getFullYear(),m-1,day);if(f<t){const year=t.getFullYear()+1;day=m===2&&d===29&&!leap(year)?28:d;f=new Date(year,m-1,day)}return{id:c.id,nombre:c.nombre,fecha:f,dias:Math.round((f.getTime()-t.getTime())/86400000)}}).filter(c=>c.dias<=30).sort((a,b)=>a.dias-b.dias).slice(0,5)
+    return (data??[]).filter(c=>!sedeContextoId||c.sede_id===sedeContextoId).map(c=>{const [,m,d]=String(c.fecha_nacimiento).slice(0,10).split("-").map(Number);const monthOfBirth=m??1;let day=d??1;if(monthOfBirth===2&&day===29&&!leap(t.getFullYear()))day=28;let f=new Date(t.getFullYear(),monthOfBirth-1,day);if(f<t){const year=t.getFullYear()+1;day=monthOfBirth===2&&day===29&&!leap(year)?28:day;f=new Date(year,monthOfBirth-1,day)}return{id:c.id,nombre:c.nombre,fecha:f,dias:Math.round((f.getTime()-t.getTime())/86400000)}}).filter(c=>c.dias<=30).sort((a,b)=>a.dias-b.dias).slice(0,5)
   }});
 
   const { data: preparacion, isLoading: cargandoPreparacion } = useQuery({
@@ -124,7 +123,7 @@ function Inicio() {
   useEffect(() => {
     if (!sesion?.esAdmin || !sesion.user) return;
     const metadata = sesion.user.user_metadata ?? {};
-    const version = Number(metadata.aurum_onboarding_version ?? 0);
+    const version = Number(metadata["aurum_onboarding_version"] ?? 0);
     const requiereInduccion = version < AURUM_INDUCCION_VERSION;
     setPasoBienvenida(0);
     setMostrarBienvenida(requiereInduccion);
@@ -337,7 +336,7 @@ function Inicio() {
             </div>
           ) : (
             <InicioPreparacion
-              preparacion={preparacion}
+              preparacion={preparacion ? preparacion : undefined}
               cargando={cargandoPreparacion}
               tienePedido={pedidosSede.length > 0}
               destinoGestion="/gestion"
@@ -503,7 +502,7 @@ function Inicio() {
                   </div>
                 ))}
               </div>
-              {(() => { const paso = pasosBienvenida[pasoBienvenida]; const Icono = paso.icono; return (
+              {(() => { const paso = pasosBienvenida[pasoBienvenida]; if (!paso) return null; const Icono = paso.icono; return (
                 <div className="rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="grid size-12 place-items-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep"><Icono className="size-6" /></div>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -73,7 +72,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
     const inventario = ordenar(CAPACIDADES_INVENTARIO);
     const herramientas = ordenar(CAPACIDADES_HERRAMIENTAS);
     const administracion = ordenar(CAPACIDADES_ADMINISTRACION);
-    const conocidas = new Set([...CAPACIDADES_PRODUCCION, ...CAPACIDADES_COMERCIALES, ...CAPACIDADES_INVENTARIO, ...CAPACIDADES_HERRAMIENTAS, ...CAPACIDADES_ADMINISTRACION]);
+    const conocidas = new Set<string>([...CAPACIDADES_PRODUCCION, ...CAPACIDADES_COMERCIALES, ...CAPACIDADES_INVENTARIO, ...CAPACIDADES_HERRAMIENTAS, ...CAPACIDADES_ADMINISTRACION]);
     const servicios = especialidades.filter((e) => !conocidas.has(e.nombre)).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
     return [
       ...(produccion.length ? [["Producción", produccion] as [string, Especialidad[]]] : []),
@@ -126,8 +125,9 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
         throw new Error(detalle || "No se pudo ejecutar guardar_configuracion_taller");
       }
 
-      if (!data?.ok) {
-        const detalle = [data?.message, data?.detail, data?.hint, data?.code].filter(Boolean).join(" · ");
+      const resultado = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : null;
+      if (!resultado || resultado['ok'] !== true) {
+        const detalle = [resultado?.['message'], resultado?.['detail'], resultado?.['hint'], resultado?.['code']].filter((valor): valor is string => typeof valor === "string" && valor.length > 0).join(" · ");
         throw new Error(detalle || "El servidor rechazó el guardado de la configuración");
       }
 

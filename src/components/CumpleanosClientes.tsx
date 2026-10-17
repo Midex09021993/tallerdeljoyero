@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { useEffect,useMemo,useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Cake,CalendarDays,Gift,ChevronLeft,ChevronRight,MessageCircle } from "lucide-react";
 type C={id:string;nombre:string;telefono:string|null;email:string|null;fecha_nacimiento:string|null;notas:string|null;sede_nombre:string;participante_id:string|null};
-const dateOf=(s:string)=>{const [y,m,d]=s.slice(0,10).split("-").map(Number);return new Date(y,m-1,d)};
+const dateOf=(s:string)=>{const [y=2000,m=1,d=1]=s.slice(0,10).split("-").map(Number);return new Date(y,m-1,d)};
 const iso=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const leap=(y:number)=>y%4===0&&(y%100!==0||y%400===0);
 function days(s:string){const n=dateOf(s),t=new Date();t.setHours(0,0,0,0);let d=n.getDate();if(n.getMonth()===1&&d===29&&!leap(t.getFullYear()))d=28;let next=new Date(t.getFullYear(),n.getMonth(),d);if(next<t){const y=t.getFullYear()+1;d=n.getMonth()===1&&n.getDate()===29&&!leap(y)?28:n.getDate();next=new Date(y,n.getMonth(),d)}return Math.round((next.getTime()-t.getTime())/86400000)}

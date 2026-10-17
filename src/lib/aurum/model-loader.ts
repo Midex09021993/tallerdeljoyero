@@ -9,7 +9,9 @@ function getAurumNormalExperimentMode(): AurumNormalMode {
   try {
     const value = new URLSearchParams(window.location.search).get("aurumNormals");
     if (value === "authored" || value === "diagnostic" || value === "recompute-metal" || value === "crease-metal") return value;
-  } catch {}
+  } catch {
+    // URL diagnostics are optional; preserve the authored CAD normals by default.
+  }
   // Preserve authored CAD normals by default. The crease-normal path remains
   // available as an explicit diagnostic experiment via ?aurumNormals=crease-metal;
   // forcing it on every metal mesh can introduce visible shading seams on polished

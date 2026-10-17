@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState, type FormEvent } from "react";
 import { FileText, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +25,10 @@ export type CatalogoProductoEditor = {
   piedras: string | null;
   medidas: string | null;
   talla: string | null;
+  modalidad_talla: string | null;
+  sistema_tallas: string | null;
+  tallas_disponibles: string | null;
+  notas_internas: string | null;
   tecnica: string | null;
   acabado: string | null;
   disponibilidad: string;
@@ -226,7 +229,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         disponibilidad: String(c.disponibilidad ?? "").trim() || v.disponibilidad,
       }));
       setArchivoPdfNombre(file?.name ?? initialPdf?.nombre ?? "PDF de Mi Nube");
-      const avisos = Array.isArray(data.advertencias) ? data.advertencias.filter((x) => typeof x === "string") : [];
+      const avisos = Array.isArray(data.advertencias) ? data.advertencias.filter((x: unknown): x is string => typeof x === "string") : [];
       if (typeof c.peso_evidencia === "string" && c.peso_evidencia.trim()) avisos.unshift(`Referencia de peso leída del PDF: “${c.peso_evidencia.trim()}”. Comprueba que corresponda al peso total de la joya.`);
       setAvisosExtraccion(avisos);
     } catch (e) {
@@ -334,7 +337,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         if (sufijo > 10000) throw new Error("No se pudo generar una URL única para esta joya.");
       }
 
+      const codigo = producto?.codigo ?? (form.codigo.trim() || `JOY-${slug.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24)}`);
       const payload = {
+        codigo,
         participante_id: participanteId,
         nombre,
         slug,

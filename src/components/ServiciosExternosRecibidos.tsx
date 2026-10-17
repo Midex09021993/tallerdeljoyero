@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ArrowUpRight, Building2, CheckCircle2, ChevronDown, ExternalLink, FileArchive, PackageCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -74,6 +73,7 @@ export function ServiciosExternosRecibidos() {
         <div className="divide-y divide-border">
           {pedidos.map((grupo) => {
             const primero = grupo[0];
+            if (!primero) return null;
             const abierto = abiertos[primero.pedido_id] ?? true;
             const pendientes = grupo.filter((s) => s.estado === "pendiente").length;
 
@@ -109,13 +109,14 @@ function PedidoTecnicoRecibido({
 }) {
   const servicios = grupo ?? [];
   const primero = servicios[0];
+  const primerServicioId = primero?.id ?? "";
 
   const { data: ficha, isLoading: cargandoFicha } = useQuery({
-    queryKey: ["ficha-tecnica-pedido-recibido", primero?.id],
-    enabled: Boolean(abierto && primero?.id),
+    queryKey: ["ficha-tecnica-pedido-recibido", primerServicioId],
+    enabled: abierto && Boolean(primero),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
-        _trabajo_id: primero.id,
+        _trabajo_id: primerServicioId,
       });
       if (error) throw error;
       return data as {
@@ -136,7 +137,7 @@ function PedidoTecnicoRecibido({
   }>;
 
   const archivosConUrl = useQuery({
-    queryKey: ["ficha-tecnica-archivos-recibidos", primero?.id, archivos.map((a) => a.id).join("|")],
+    queryKey: ["ficha-tecnica-archivos-recibidos", primerServicioId, archivos.map((a) => a.id).join("|")],
     enabled: archivos.length > 0,
     queryFn: async () => Promise.all(archivos.map(async (archivo) => {
       if (!archivo.url || archivo.es_enlace) return archivo;
@@ -145,6 +146,8 @@ function PedidoTecnicoRecibido({
     })),
     staleTime: 50 * 60 * 1000,
   });
+
+  if (!primero) return null;
 
   const archivosVisibles = archivosConUrl.data ?? archivos;
   const pedido = ficha?.pedido ?? {};
@@ -182,55 +185,55 @@ function PedidoTecnicoRecibido({
           <div className="rounded-xl border border-border bg-surface-muted/20 p-4">
             <div className="mb-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ficha técnica completa</p>
-              <p className="mt-1 text-sm font-semibold">{campo(pedido.pieza ?? primero.pieza) || "Pieza sin nombre"}</p>
+              <p className="mt-1 text-sm font-semibold">{campo(pedido["pieza"] ?? primero.pieza) || "Pieza sin nombre"}</p>
             </div>
 
             <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["Referencia", pedido.referencia],
-                ["Pieza", pedido.pieza],
-                ["Trabajo", pedido.trabajo],
-                ["Material", pedido.material],
-                ["Talla", pedido.talla],
-                ["Piedras", pedido.piedras],
-                ["Peso estimado", pedido.peso_estimado],
-                ["Cantidad", pedido.cantidad_piezas],
-                ["Fecha de ingreso", pedido.fecha_ingreso],
-                ["Fecha de entrega", pedido.fecha_entrega],
-                ["Origen", pedido.origen],
-                ["Área actual", pedido.area_actual],
-                ["Área desde", pedido.area_desde],
+                ["Referencia", pedido["referencia"]],
+                ["Pieza", pedido["pieza"]],
+                ["Trabajo", pedido["trabajo"]],
+                ["Material", pedido["material"]],
+                ["Talla", pedido["talla"]],
+                ["Piedras", pedido["piedras"]],
+                ["Peso estimado", pedido["peso_estimado"]],
+                ["Cantidad", pedido["cantidad_piezas"]],
+                ["Fecha de ingreso", pedido["fecha_ingreso"]],
+                ["Fecha de entrega", pedido["fecha_entrega"]],
+                ["Origen", pedido["origen"]],
+                ["Área actual", pedido["area_actual"]],
+                ["Área desde", pedido["area_desde"]],
               ].map(([etiqueta, valor]) => (
                 <div key={String(etiqueta)} className="min-w-0 rounded-lg border border-border bg-card p-3">
-                  <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{String(etiqueta)}</p>
                   <p className="mt-1 break-words text-xs font-medium text-foreground">{campo(valor)}</p>
                 </div>
               ))}
             </div>
 
-            {pedido.ruta ? (
+            {pedido["ruta"] ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Ruta de fabricación</p>
-                <p className="mt-1 text-xs font-medium">{campo(pedido.ruta)}</p>
+                <p className="mt-1 text-xs font-medium">{campo(pedido["ruta"])}</p>
               </div>
             ) : null}
 
-            {(pedido.corte_texto || pedido.corte_tipografia || pedido.corte_ubicacion || pedido.corte_observaciones) ? (
+            {(pedido["corte_texto"] || pedido["corte_tipografia"] || pedido["corte_ubicacion"] || pedido["corte_observaciones"]) ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Especificaciones de corte</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  <p className="text-xs"><span className="text-muted-foreground">Texto:</span> {campo(pedido.corte_texto)}</p>
-                  <p className="text-xs"><span className="text-muted-foreground">Tipografía:</span> {campo(pedido.corte_tipografia)}</p>
-                  <p className="text-xs"><span className="text-muted-foreground">Ubicación:</span> {campo(pedido.corte_ubicacion)}</p>
-                  <p className="text-xs"><span className="text-muted-foreground">Observaciones:</span> {campo(pedido.corte_observaciones)}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Texto:</span> {campo(pedido["corte_texto"])}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Tipografía:</span> {campo(pedido["corte_tipografia"])}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Ubicación:</span> {campo(pedido["corte_ubicacion"])}</p>
+                  <p className="text-xs"><span className="text-muted-foreground">Observaciones:</span> {campo(pedido["corte_observaciones"])}</p>
                 </div>
               </div>
             ) : null}
 
-            {pedido.notas ? (
+            {pedido["notas"] ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Notas técnicas</p>
-                <p className="mt-1 whitespace-pre-wrap text-xs">{String(pedido.notas)}</p>
+                <p className="mt-1 whitespace-pre-wrap text-xs">{String(pedido["notas"])}</p>
               </div>
             ) : null}
 
@@ -239,9 +242,9 @@ function PedidoTecnicoRecibido({
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Materiales planificados</p>
                 <div className="mt-2 space-y-2">
                   {materiales.map((material) => (
-                    <div key={String(material.id)} className="flex flex-wrap justify-between gap-2 text-xs">
-                      <span className="font-medium">{campo(material.material)}{material.codigo ? ` · ${String(material.codigo)}` : ""}</span>
-                      <span className="text-muted-foreground">{campo(material.cantidad_planificada)} {campo(material.unidad)}</span>
+                    <div key={String(material["id"])} className="flex flex-wrap justify-between gap-2 text-xs">
+                      <span className="font-medium">{campo(material["material"])}{material["codigo"] ? ` · ${String(material["codigo"])}` : ""}</span>
+                      <span className="text-muted-foreground">{campo(material["cantidad_planificada"])} {campo(material["unidad"])}</span>
                     </div>
                   ))}
                 </div>
