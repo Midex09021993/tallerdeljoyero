@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
 import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
