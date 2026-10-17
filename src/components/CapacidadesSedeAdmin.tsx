@@ -115,8 +115,8 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
       }
 
       const resultado = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : null;
-      if (!resultado || resultado.ok !== true) {
-        const detalle = [resultado?.message, resultado?.detail, resultado?.hint, resultado?.code].filter((valor): valor is string => typeof valor === "string" && valor.length > 0).join(" · ");
+      if (!resultado || resultado['ok'] !== true) {
+        const detalle = [resultado?.['message'], resultado?.['detail'], resultado?.['hint'], resultado?.['code']].filter((valor): valor is string => typeof valor === "string" && valor.length > 0).join(" · ");
         throw new Error(detalle || "El servidor rechazó el guardado de la configuración");
       }
 
