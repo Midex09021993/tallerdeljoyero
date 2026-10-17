@@ -212,7 +212,7 @@ const selectionLayerIndex=(part:any):number|null=>{
   return null;
 };
 
-export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any) {
+export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any,applyAll=false) {
   if (!model || !activePart?.isMesh) return false;
   const selectedMeta=selectionMeta(activePart);
   const selectedLayer=selectedMeta.capa||activePart?.userData?.attributes?.layerName||null;
@@ -236,7 +236,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const partLayerKey=meta.layerKey??resolveAurumLayerKey({layerId:partLayerId,layerIndex:partLayerIndex,layerName:meta.capa,layerColor:meta.colorCapa,category,existingKey:meta.layerKey});
     const sameLayerIdentity=Boolean(selectedLayerKey&&partLayerKey&&selectedLayerKey===partLayerKey);
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
-    const shouldApply=x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer);
+    const shouldApply=applyAll ? (category==="metal"||category==="otro") : (x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer));
     if(shouldApply){
       const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);
@@ -280,7 +280,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   if(selectedCategory!=="gema")return false;
