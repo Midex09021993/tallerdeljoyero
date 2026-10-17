@@ -2473,6 +2473,7 @@ export function useCrearMaterialReal() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["inventario-real"] });
       void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["compras-materiales"] });
       void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
       void qc.invalidateQueries({ queryKey: ["inventario-movimientos-real"] });
     },
@@ -2506,6 +2507,7 @@ export function useActualizarMaterialReal() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["inventario-real"] });
       void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["compras-materiales"] });
     },
   });
 }
