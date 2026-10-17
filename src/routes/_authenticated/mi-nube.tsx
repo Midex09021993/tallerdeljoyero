@@ -1,6 +1,6 @@
 import { useNuevaVersion } from "@/hooks/use-nueva-version";
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -168,6 +168,7 @@ function MiNubePage() {
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<ArchivoNube[]>([]);
+  const cargaBibliotecaEnCurso = useRef(false);
   useEffect(() => {
     setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
   }, [archivos]);
@@ -298,11 +299,13 @@ function MiNubePage() {
 
   // Carga exclusiva de Supabase Storage. No consulta ni depende del estado del NAS.
   const cargarBiblioteca = useCallback(async () => {
+    if (cargaBibliotecaEnCurso.current) return;
     if (!participanteId || !usuarioId) {
       setCarpetas([]);
       setArchivos([]);
       return;
     }
+    cargaBibliotecaEnCurso.current = true;
     setCargando(true);
     setError(null);
     try {
@@ -405,6 +408,7 @@ function MiNubePage() {
       setError(mensaje);
       console.error("[Mi Nube] Falló la carga de Supabase Storage.", mensaje);
     } finally {
+      cargaBibliotecaEnCurso.current = false;
       setCargando(false);
     }
   }, [participanteId, usuarioId]);
