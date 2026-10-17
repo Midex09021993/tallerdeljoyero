@@ -109,12 +109,11 @@ function PedidoTecnicoRecibido({
 }) {
   const servicios = grupo ?? [];
   const primero = servicios[0];
-  if (!primero) return null;
-  const primerServicioId = primero.id;
+  const primerServicioId = primero?.id ?? "";
 
   const { data: ficha, isLoading: cargandoFicha } = useQuery({
     queryKey: ["ficha-tecnica-pedido-recibido", primerServicioId],
-    enabled: abierto,
+    enabled: abierto && Boolean(primero),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
         _trabajo_id: primerServicioId,
@@ -147,6 +146,8 @@ function PedidoTecnicoRecibido({
     })),
     staleTime: 50 * 60 * 1000,
   });
+
+  if (!primero) return null;
 
   const archivosVisibles = archivosConUrl.data ?? archivos;
   const pedido = ficha?.pedido ?? {};
@@ -217,7 +218,7 @@ function PedidoTecnicoRecibido({
               </div>
             ) : null}
 
-            {Boolean(pedido["corte_texto"] || pedido["corte_tipografia"] || pedido["corte_ubicacion"] || pedido["corte_observaciones"]) ? (
+            {(pedido["corte_texto"] || pedido["corte_tipografia"] || pedido["corte_ubicacion"] || pedido["corte_observaciones"]) ? (
               <div className="mt-3 rounded-lg border border-border bg-card p-3">
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Especificaciones de corte</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
