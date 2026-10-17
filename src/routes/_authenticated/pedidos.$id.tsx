@@ -127,6 +127,7 @@ function PedidoDetalle() {
   const { data: capacidadesSede = [], error: capacidadesSedeError } = useQuery({
     queryKey: ["pedidos-capacidades-sede", sedeProduccionId],
     enabled: Boolean(sedeProduccionId && sesion?.esAdmin),
+    staleTime: 60_000,
     queryFn: async () => {
       if (!sedeProduccionId || !sesion?.esAdmin) return [];
       const { data, error } = await supabase
