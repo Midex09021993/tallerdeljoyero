@@ -445,7 +445,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
       setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
-      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, url_imagen_externa: typeof slide.url_imagen_externa === "string" ? slide.url_imagen_externa : "", enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false, tipo_media: slide.tipo_media === "video" ? "video" : "imagen" })) : []);
+      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, url_imagen_externa: typeof slide.url_imagen_externa === "string" ? slide.url_imagen_externa : "", enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false, tipo_media: slide.tipo_media === "video" || /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(slide.imagen_url) ? "video" : "imagen" })) : []);
     });
   }, [open, initial, participanteId]);
 
