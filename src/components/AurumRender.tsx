@@ -613,9 +613,9 @@ export function AurumRender({ compact = false, initialModelUrl = null, initialMo
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
-      const aplicarGema = (g:GemaConfig, objetivo?:any) => {
+      const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false) => {
         const target=objetivo||parteActiva;
-        applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.());
+        applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.(),aplicarTodas);
         if (String(g?.familia ?? "").toLocaleLowerCase() === "diamante") {
           void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
         } else {
@@ -624,12 +624,12 @@ export function AurumRender({ compact = false, initialModelUrl = null, initialMo
         aplicarPerfilLive();
         invalidateRenderRef.current?.();
       };
-      const aplicarMaterial = (m:MaterialConfig) => {
+      const aplicarMaterial = (m:MaterialConfig, aplicarTodos=false) => {
         if (!modelo) {
           configurarMaterial(material, m);
           return;
         }
-        applyAurumMaterialToModel(modelo, parteActiva, m, material);
+        applyAurumMaterialToModel(modelo, parteActiva, m, material, aplicarTodos);
         const materialPostApplyAudit:any[]=[];
         modelo.traverse((x:any)=>{
           if(!x.isMesh||!x.material)return;
@@ -1785,8 +1785,8 @@ export function AurumRender({ compact = false, initialModelUrl = null, initialMo
     };
   }, [cargarArchivo]);
 
-  useEffect(() => { if (selectedMaterialId && MATERIALES.some(m => m.id === selectedMaterialId)) setMaterialId(selectedMaterialId as MaterialId); }, [selectedMaterialId]);
-  useEffect(() => { if (selectedGemId && GEMAS.some(g => g.id === selectedGemId)) setGemaId(selectedGemId as GemaId); }, [selectedGemId]);
+  useEffect(() => { if (selectedMaterialId && MATERIALES.some(m => m.id === selectedMaterialId)) { const selected=MATERIALES.find(m=>m.id===selectedMaterialId)!; setMaterialId(selected.id); apiRef.current?.material(selected,true); } }, [selectedMaterialId]);
+  useEffect(() => { if (selectedGemId && GEMAS.some(g => g.id === selectedGemId)) { const selected=GEMAS.find(g=>g.id===selectedGemId)!; setGemaId(selected.id); apiRef.current?.gema(selected,undefined,true); } }, [selectedGemId]);
   useEffect(() => {
     if (!initialModelUrl) return;
     let cancelled = false;
@@ -1806,6 +1806,11 @@ export function AurumRender({ compact = false, initialModelUrl = null, initialMo
         const blob = await response.blob();
         if (cancelled) return;
         await cargarArchivo(new File([blob], initialModelName || "modelo.3dm", { type: blob.type || "application/octet-stream" }));
+        // Apply the public configurator selections only after the 3DM and its layer identities are ready.
+        const selectedMetal=MATERIALES.find(m=>m.id===selectedMaterialId);
+        const selectedGem=GEMAS.find(g=>g.id===selectedGemId);
+        if(selectedMetal) apiRef.current?.material(selectedMetal,true);
+        if(selectedGem) apiRef.current?.gema(selectedGem,undefined,true);
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : "No se pudo cargar el modelo del catálogo.");
       } finally {
