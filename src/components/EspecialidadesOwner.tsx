@@ -34,7 +34,7 @@ export function EspecialidadesOwner() {
     queryKey: ["ecosistema-especialidades", "todas"],
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("especialidades").select("*").order("categoria").order("nombre");
+      const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").order("categoria").order("nombre");
       if (error) throw error;
       return (data ?? []) as Especialidad[];
     },
