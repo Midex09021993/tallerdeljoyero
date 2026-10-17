@@ -28,6 +28,7 @@ function GestionTiendaInsumos() {
   const autorizado = Boolean(esFadilab && sesion?.esAdmin && sesion?.participante?.id);
   const { data: tienda, isLoading: cargandoTienda, error: errorTienda } = useQuery({
     queryKey: ["tienda-insumos-admin", sesion?.participante?.id],
+    staleTime: 15_000,
     enabled: autorizado,
     queryFn: async () => {
       const { data, error } = await supabase.from("tiendas_insumos").select("id, slug, nombre_publico, descripcion, whatsapp, moneda, visible").eq("participante_id", sesion!.participante!.id).maybeSingle();
@@ -37,6 +38,7 @@ function GestionTiendaInsumos() {
   });
   const { data: productos = [], isLoading: cargandoProductos } = useQuery({
     queryKey: ["tienda-insumos-productos-admin", tienda?.id],
+    staleTime: 15_000,
     enabled: Boolean(tienda?.id && autorizado),
     queryFn: async () => {
       const { data, error } = await supabase.from("tienda_insumos_productos").select("id, nombre, slug, codigo, categoria, descripcion, imagen_url, precio, moneda, stock, unidad, publicado, destacado").eq("tienda_id", tienda!.id).order("orden", { ascending: true }).order("nombre", { ascending: true });
