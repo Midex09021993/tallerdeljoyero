@@ -216,6 +216,7 @@ function NuevoPedido() {
   const { data: capacidadesSedeRuta = [], error: capacidadesSedeRutaError } = useQuery({
     queryKey: ["pedidos-nuevo-capacidades-sede", sedeId],
     enabled: Boolean(sesion?.esAdmin && sedeId),
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sede_especialidades")
