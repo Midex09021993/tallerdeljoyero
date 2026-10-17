@@ -21,7 +21,7 @@ export type MaterialId =
   | "oro22a_pulido" | "oro22a_satinado" | "oro22a_mate"
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
   | "platino_pulido" | "platino_mate"
-  | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel"
+  | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel" | "oro18_verde_blanco_glb"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference";
@@ -206,6 +206,8 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"oro18_verde", grupo:"Especiales", nombre:"Oro Verde", color:0xb5b66f, metalness:1, roughness:.13, envMapIntensity:1.98, clearcoat:.15 },
   // Perfil experimental 58: apariencia amarilla de referencia al combinar visualmente oro verde y oro blanco pulido. Conserva los perfiles base sin modificarlos.
   { id:"oro18_verde_blanco_ijewel", grupo:"Especiales", nombre:"Oro Verde + Blanco · Referencia iJewel", color:0xc9a34a, metalness:1, roughness:.10, envMapIntensity:1.95, clearcoat:.14, anisotropy:.045 },
+  // Comparativa experimental: parámetros ópticos tomados de los materiales verde y blanco del GLB aportado; sin teñir el resultado hacia amarillo.
+  { id:"oro18_verde_blanco_glb", grupo:"Especiales", nombre:"Oro Verde + Blanco · Datos GLB", color:0xb9a989, metalness:1, roughness:0, envMapIntensity:.9, clearcoat:0, anisotropy:0 },
   { id:"paladio_pulido", grupo:"Especiales", nombre:"Paladio Pulido", color:0xd1d5d9, metalness:1, roughness:.085, envMapIntensity:2.05, clearcoat:.18 },
   { id:"rodio_negro", grupo:"Especiales", nombre:"Rodio Negro", color:0x2b3035, metalness:1, roughness:.13, envMapIntensity:1.62, clearcoat:.16 },
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
