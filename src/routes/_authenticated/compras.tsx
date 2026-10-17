@@ -24,6 +24,7 @@ function ComprasPage() {
 
   const { data: compras = [] } = useQuery({
     queryKey: ["compras", sesion?.participante?.id],
+    staleTime: 15_000,
     enabled: Boolean(sesion?.participante?.id && sesion?.esAdmin),
     queryFn: async () => {
       const sedeId = sesion!.participante!.sede_id;
@@ -37,6 +38,7 @@ function ComprasPage() {
   });
   const { data: materiales = [] } = useQuery({
     queryKey: ["compras-materiales", sesion?.participante?.id],
+    staleTime: 15_000,
     enabled: Boolean(sesion?.participante?.id),
     queryFn: async () => {
       const sedeId = sesion!.participante!.sede_id;
