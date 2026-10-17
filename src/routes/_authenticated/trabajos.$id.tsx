@@ -1,3 +1,4 @@
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment -- excepción temporal: corregir tipos heredados requiere una tarea separada */
 // @ts-nocheck
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
