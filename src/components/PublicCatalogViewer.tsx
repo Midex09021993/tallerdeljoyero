@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
@@ -11,7 +12,7 @@ import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string };
-const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
+const classifyMesh = (mesh: THREE.Mesh): "metal" | "gema" | "otro" => {
   const attrs = mesh?.userData?.attributes ?? {};
   const rhino = mesh?.userData?.aurumRhino ?? {};
   const text = [mesh?.name, rhino?.capa, attrs?.layerName, attrs?.LayerName, mesh?.material?.name]
@@ -36,12 +37,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
     const host = hostRef.current;
     if (!host) return;
     let cancelled = false;
-    let renderer: any = null;
-    let scene: any = null;
-    let camera: any = null;
-    let controls: any = null;
+    let renderer: THREE.WebGLRenderer | null = null;
+    let scene: THREE.Scene | null = null;
+    let camera: THREE.PerspectiveCamera | null = null;
+    let controls: OrbitControls | null = null;
     let model: THREE.Object3D | null = null;
-    let loop: any = null;
+    let loop: ReturnType<typeof startAurumViewerLoop> | null = null;
     let resizeObserver: ResizeObserver | null = null;
     let environment: THREE.Texture | null = null;
     let gemEnvironment: THREE.Texture | null = null;
@@ -121,7 +122,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         if (cancelled) return;
         // Give each mesh its own material instance so changing a profile in the
         // public viewer cannot mutate a shared CAD material or another family.
-        model.traverse((object: any) => {
+        model.traverse((node) => {
+          const object = node as THREE.Mesh;
           if (!object.isMesh || !object.material) return;
           object.material = Array.isArray(object.material)
             ? object.material.map((material: any) => material?.clone ? material.clone() : material)
@@ -129,7 +131,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         });
         model.updateMatrixWorld(true);
         const bounds = new THREE.Box3();
-        model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
+        model.traverse((node) => { const object = node as THREE.Mesh; if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
         if (bounds.isEmpty()) throw new Error("El 3DM no contiene mallas visibles para mostrar.");
         const center = bounds.getCenter(new THREE.Vector3());
         model.position.sub(center);
@@ -175,7 +177,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       if (model) model.traverse((object: any) => {
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material: any) => material?.dispose?.());
+        materials.forEach((material) => material?.dispose?.());
       });
       if (renderer) disposeAurumViewer({ node: host, renderer, controls, ...(resizeObserver ? { observer: resizeObserver } : {}) });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
@@ -196,7 +198,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       if (!object.isMesh || !object.material) return;
       const family = classifyMesh(object);
       const materials = Array.isArray(object.material) ? object.material : [object.material];
-      materials.forEach((material: any) => {
+      materials.forEach((material) => {
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
         if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
         material.needsUpdate = true;

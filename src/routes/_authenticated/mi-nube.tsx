@@ -572,13 +572,13 @@ function MiNubePage() {
     cargaCompartidasEnCurso.current = true;
     setCargandoCompartidas(true);
     try {
-      const { data: recibidas, error: errorRecibidas } = await (supabase as any)
+      const { data: recibidas, error: errorRecibidas } = await supabase
         .from("mi_nube_compartidas")
         .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
         .eq("destinatario_participante_id", participanteId)
         .is("revoked_at", null);
       if (errorRecibidas) throw errorRecibidas;
-      const { data: enviadas, error: errorEnviadas } = await (supabase as any).from("mi_nube_compartidas")
+      const { data: enviadas, error: errorEnviadas } = await supabase.from("mi_nube_compartidas")
         .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
         .eq("propietario_usuario_id", usuarioId)
         .is("revoked_at", null);
@@ -589,7 +589,7 @@ function MiNubePage() {
       const idsDestinatarios = [...new Set((enviadas ?? []).map((s: CarpetaCompartida) => s.destinatario_participante_id).filter(Boolean))];
       let nombresDestinatarios = new Map<string, string>();
       if (idsDestinatarios.length > 0) {
-        const { data: destinatarios, error: errorDestinatarios } = await (supabase as any)
+        const { data: destinatarios, error: errorDestinatarios } = await supabase
           .from("ecosistema_participantes")
           .select("id, nombre")
           .in("id", idsDestinatarios);
@@ -724,7 +724,7 @@ function MiNubePage() {
     setCargandoTalleres(true);
     const participanteConsultado = participanteId;
     try {
-      const { data, error } = await (supabase as any).rpc("listar_talleres_para_compartir_mi_nube");
+      const { data, error } = await supabase.rpc("listar_talleres_para_compartir_mi_nube");
       if (error) throw error;
       if (participanteId === participanteConsultado) {
         setTalleresDisponibles((data ?? []) as TallerCompartir[]);
@@ -744,7 +744,7 @@ function MiNubePage() {
     }
     setGuardandoComparticion(true);
     try {
-      const { error } = await (supabase as any).from("mi_nube_compartidas").upsert({
+      const { error } = await supabase.from("mi_nube_compartidas").upsert({
         propietario_participante_id: participanteId,
         propietario_usuario_id: usuarioId,
         carpeta: proyectoParaCompartir,
@@ -762,7 +762,7 @@ function MiNubePage() {
   };
 
   const revocarComparticion = async (share: CarpetaCompartida) => {
-    const { error } = await (supabase as any).from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
+    const { error } = await supabase.from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Se revocó el acceso a la carpeta.");
     await cargarCompartidas();
@@ -1088,7 +1088,7 @@ function MiNubePage() {
 
       setProyectoAbierto(null);
       setModoEdicion(null);
-      const { error: errorRevocarComparticiones } = await (supabase as any)
+      const { error: errorRevocarComparticiones } = await supabase
         .from("mi_nube_compartidas")
         .update({ revoked_at: new Date().toISOString() })
         .eq("propietario_usuario_id", usuarioId)
