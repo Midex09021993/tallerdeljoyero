@@ -76,6 +76,35 @@ La preparación de producción comprueba las modalidades configuradas para la se
 ### H6 — GitHub no acredita por sí solo el estado de la base de datos desplegada
 El mapa de dependencias ya registra historial de redefiniciones de RPC y posibles diferencias entre GitHub y producción. La consulta de estado de checks para el último commit de `main` no devolvió checks; no se debe interpretar como Build/TypeScript aprobados. Tampoco se obtuvo evidencia directa del esquema/RPC que está instalado en Supabase.
 
+## Hallazgo funcional confirmado y corrección preparada
+
+### H7 — La ausencia de configuración de modalidades podía no bloquear la preparación de Producción
+
+En la función de `supabase/migrations/20261008203100_respetar_modalidades_produccion.sql`, el `SELECT ... INTO` de `sede_modalidades` asigna `NULL` a las variables cuando la sede no tiene fila de configuración. En PL/pgSQL, una condición `IF NOT boolean_variable` cuyo valor es `NULL` no entra en la rama de bloqueo. Por eso, los controles `if not v_produccion_activa` y `if v_tipo = 'externo' and not v_servicios_externos_activos` no bloqueaban de forma fiable el caso sin fila.
+
+**Corrección añadida a GitHub en una migración nueva y aislada:**
+- Archivo: `supabase/migrations/20261017120000_bloquear_produccion_sin_configuracion_modalidades.sql`
+- Commit: `0f9b61ef310b3712bee8ade9a01848e05d44d511`
+- Normaliza ambos booleanos con `coalesce(variable, false)` inmediatamente después de leer la configuración.
+- Conserva el resto de la función canónica de preparación y sus permisos; no cambia la configuración ni los datos de ningún taller.
+
+Esta corrección es deliberadamente conservadora: una sede sin configuración explícita se trata como si Producción y Servicios externos estuvieran desactivados. El cambio está **registrado en GitHub, pero no se afirma desplegado en Supabase ni probado en producción**. Antes de considerarlo terminado, ejecutar la migración en el entorno previsto y comprobar: (a) sede sin fila, (b) Producción desactivada, (c) Producción activa con Servicios externos desactivados y ruta externa, (d) ambas modalidades activas, (e) taller distinto sin cambios.
+
+### H8 — Idempotencia de la preparación de Producción
+
+La función bloquea el pedido, busca una orden existente y utiliza un bloqueo transaccional por pedido antes de crear la OP. Además, existe una restricción única `ordenes_produccion_pedido_unique` sobre `pedido_id`. El código evita volver a generar trabajos y piezas si ya encuentra los existentes.
+
+Debe validarse mediante dos llamadas concurrentes al mismo pedido y mediante reintento después de un error. La restricción única y la transacción son defensas importantes, pero no sustituyen las pruebas de concurrencia.
+
+### H9 — Contratos y entregas tienen protecciones de integridad en base de datos
+
+- `contratos_una_cotizacion_un_contrato` limita a un contrato del sistema por cotización.
+- `revisar_firma_contrato` requiere firma recibida y un archivo de firma, pero la migración revisada restringe esta revisión a `es_admin`.
+- `exigir_firma_validada_para_pedido` bloquea la vinculación del pedido a contratos originados en cotización mientras la firma no esté validada.
+- `transicionar_entrega_pedido` comprueba el acceso a la sede y el permiso de ventas; exige packing antes de despachar y receptor al registrar la entrega, y controla el saldo pendiente.
+
+Estas protecciones deben conservarse al integrar talleres. No se debe permitir que un cambio de estado operativo modifique por sí mismo pagos, saldo o firma comercial.
+
 ## Contrato de integración propuesto
 
 ### Comercial → Pedido de fabricación
