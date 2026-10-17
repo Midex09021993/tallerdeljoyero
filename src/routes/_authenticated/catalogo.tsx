@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -395,7 +394,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
   const [intervaloPortada, setIntervaloPortada] = useState(5);
-  const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean }[]>([]);
+  const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean; tipo_media: "imagen" | "video" }[]>([]);
   const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
   const [progresoCarrusel, setProgresoCarrusel] = useState("");
   const [progresoCarruselPorcentaje, setProgresoCarruselPorcentaje] = useState(0);
@@ -438,7 +437,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setDireccionContacto(configResult.data?.direccion_contacto ?? "");
       const redesValue = configResult.data?.redes_sociales;
       const redes = redesValue && typeof redesValue === "object" && !Array.isArray(redesValue) ? redesValue as Record<string, string | null | undefined> : {};
-      setRedesSociales({ instagram: redes.instagram ?? "", tiktok: redes.tiktok ?? "", youtube: redes.youtube ?? "", facebook: redes.facebook ?? "", pinterest: redes.pinterest ?? "" });
+      setRedesSociales({ instagram: redes["instagram"] ?? "", tiktok: redes["tiktok"] ?? "", youtube: redes["youtube"] ?? "", facebook: redes["facebook"] ?? "", pinterest: redes["pinterest"] ?? "" });
       setDescripcion(configResult.data?.descripcion ?? "");
       setFrasePortada(configResult.data?.frase_portada ?? "");
       setTextoSuperiorPortada(configResult.data?.texto_superior_portada ?? "");
