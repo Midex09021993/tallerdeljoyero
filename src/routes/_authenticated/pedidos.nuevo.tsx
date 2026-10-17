@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronDown, ClipboardList, Factory, ImagePlus, Trash2, Upload, UserRound } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, useCapacidadesMenu } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useCrearPedido, usePedidos, useSedes, type PedidoNuevo } from "@/lib/taller-db";
@@ -132,6 +132,7 @@ function Campo({ label, value, onChange, placeholder, type = "text", required = 
 }
 
 function NuevoPedido() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: sesion } = useSesion();
   const { esDueno, sedeFiltro } = useSedeFiltroDueno();
@@ -464,6 +465,7 @@ function NuevoPedido() {
           `Pedido ${resultado?.referencia ?? nuevo.referencia} creado, pero no se pudieron guardar todas las referencias: ${errorArchivos instanceof Error ? errorArchivos.message : "error de archivos"}`,
         );
       }
+      await queryClient.invalidateQueries({ queryKey: ["archivos-pedidos"] });
       toast.success(`Pedido ${resultado?.referencia ?? nuevo.referencia} creado correctamente.`);
       navigate({ to: "/pedidos/$id", params: { id: resultado.id } });
     } catch (error) {
