@@ -40,6 +40,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
     let resizeObserver: ResizeObserver | null = null;
     let environment: THREE.Texture | null = null;
     let gemEnvironment: THREE.Texture | null = null;
+    let pmrem: THREE.PMREMGenerator | null = null;
+    let roomEnvironmentTexture: THREE.Texture | null = null;
     const fallbackMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdfe3e7, metalness: 1, roughness: .12 });
 
     const applyProfiles = () => {
@@ -51,7 +53,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const family = classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const next = originalMaterials.map((original: any) => {
-          const material = original.clone();
+          const material = original;
           if (family === "metal") {
             applyAurumMetal(material, metalPresetFromConfig(metal));
             material.envMap = environment;
@@ -77,11 +79,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
         const fill = new THREE.DirectionalLight(0xffffff, 1.0); fill.position.set(-5, 2, -3); scene.add(fill);
         const room = new RoomEnvironment();
-        const pmrem = new THREE.PMREMGenerator(renderer);
+        pmrem = new THREE.PMREMGenerator(renderer);
         pmrem.compileEquirectangularShader();
         const roomTarget = pmrem.fromScene(room, .04);
         scene.environment = roomTarget.texture;
         room.dispose();
+        roomEnvironmentTexture = roomTarget.texture;
         environment = roomTarget.texture;
         gemEnvironment = environment;
 
@@ -105,6 +108,14 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         model = await parseAurumInput(new File([blob], modelName || "modelo.3dm", { type: "application/octet-stream" }), "3dm", fallbackMaterial);
         await preprocessAurumModel(model);
         if (cancelled) return;
+        // Give each mesh its own material instance so changing a profile in the
+        // public viewer cannot mutate a shared CAD material or another family.
+        model.traverse((object: any) => {
+          if (!object.isMesh || !object.material) return;
+          object.material = Array.isArray(object.material)
+            ? object.material.map((material: any) => material?.clone ? material.clone() : material)
+            : (object.material?.clone ? object.material.clone() : object.material);
+        });
         model.updateMatrixWorld(true);
         const bounds = new THREE.Box3();
         model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
@@ -156,8 +167,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         materials.forEach((material: any) => material?.dispose?.());
       });
       if (renderer) disposeAurumViewer({ node: host, renderer, controls, observer: resizeObserver });
-      environment?.dispose?.();
-      if (gemEnvironment && gemEnvironment !== environment) gemEnvironment.dispose?.();
+      if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
+      if (gemEnvironment && gemEnvironment !== environment && gemEnvironment !== roomEnvironmentTexture) gemEnvironment.dispose?.();
+      roomEnvironmentTexture?.dispose?.();
+      pmrem?.dispose?.();
       fallbackMaterial.dispose();
       modelRef.current = null; renderRef.current = null;
     };
