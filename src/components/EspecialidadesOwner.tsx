@@ -31,7 +31,7 @@ export function EspecialidadesOwner() {
   const [asignar, setAsignar] = useState<Participante | null>(null);
 
   const { data: especialidades = [], isLoading } = useQuery({
-    queryKey: ["ecosistema-especialidades"],
+    queryKey: ["ecosistema-especialidades", "todas"],
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("especialidades").select("*").order("categoria").order("nombre");
@@ -40,7 +40,7 @@ export function EspecialidadesOwner() {
     },
   });
   const { data: participantes = [] } = useQuery({
-    queryKey: ["ecosistema-participantes"],
+    queryKey: ["ecosistema-participantes", "selector-especialidades"],
     staleTime: 15_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("ecosistema_participantes").select("id,nombre,razon_social,sede_id").order("nombre");
@@ -158,7 +158,7 @@ export function Asignador({ participante, especialidades, onClose }: { participa
     },
   });
   const { data: catalogo = [] } = useQuery({
-    queryKey: ["ecosistema-especialidades"],
+    queryKey: ["ecosistema-especialidades", "activas"],
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");
