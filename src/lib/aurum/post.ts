@@ -189,7 +189,7 @@ export async function createAurumPostPipeline(
     && diagnosticParams?.get("aurumSSR") === "off";
   let lastDiagnosticSignature = "";
   let lastKnownQualityId = "";
-  const applyQuality=(next:any, options:{capture?:boolean}={})=>{
+  const applyQuality=(next:any, options:{capture?:boolean;width?:number;height?:number}={})=>{
     if(!composer) return;
     const q=next||{};
     const incomingQualityId=String(q?.qualityId??"");
@@ -277,9 +277,15 @@ export async function createAurumPostPipeline(
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
       vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
-    const finalPixelRatio=Math.max(1,Math.min(1.75,Number(q.pixelRatio??1.5)));
+    const finalPixelRatio=options.capture?1:Math.max(1,Math.min(1.75,Number(q.pixelRatio??1.5)));
     composer.setPixelRatio?.(finalPixelRatio);
-    composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
+    if(options.capture && Number(options.width)>0 && Number(options.height)>0){
+      // A still capture renders the full target size, independent of the
+      // viewer's CSS dimensions. Keep DPR at 1 to avoid double scaling.
+      composer.setSize?.(Math.floor(Number(options.width)),Math.floor(Number(options.height)));
+    }else{
+      composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
+    }
     if(ssrSavePass){
       ssrSavePass.setSize?.(
         renderer.domElement.width||renderer.domElement.clientWidth||1,
