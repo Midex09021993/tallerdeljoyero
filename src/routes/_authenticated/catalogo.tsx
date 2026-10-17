@@ -409,7 +409,7 @@ function CatalogoPage() {
   );
 }
 
-type CatalogoConfiguracionDialogProps = { open: boolean; participanteId: string; initial: { nombre_publico?: string | null; slug?: string | null; visible?: boolean | null } | null; onClose: () => void; onSaved: () => void };
+type CatalogoConfiguracionDialogProps = { open: boolean; participanteId: string; initial: { nombre_publico?: string | null; slug?: string | null; visible?: boolean | null } | null | undefined; onClose: () => void; onSaved: () => void };
 
 function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, onSaved }: CatalogoConfiguracionDialogProps) {
   const [nombre, setNombre] = useState("");
