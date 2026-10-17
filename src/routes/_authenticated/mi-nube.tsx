@@ -473,7 +473,7 @@ function MiNubePage() {
     void (async () => {
       try {
         const { data, error: importError } = await supabase.functions.invoke("aurum-transfer-import", {
-          body: { token: importTransfer, participantId },
+          body: { token: importTransfer, participantId: participanteId ?? undefined },
         });
         if (importError) throw importError;
         if (data?.error) throw new Error(data.error);
@@ -485,7 +485,7 @@ function MiNubePage() {
         setImportandoTransferencia(false);
       }
     })();
-  }, [sesion, importandoTransferencia, cargarBiblioteca]);
+  }, [sesion, participanteId, importandoTransferencia, cargarBiblioteca]);
 
   useEffect(() => {
     const proyectoSolicitado = new URLSearchParams(window.location.search).get("proyecto")?.trim().slice(0, 120);
