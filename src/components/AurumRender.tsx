@@ -302,9 +302,11 @@ export function AurumRender() {
       cargarEntornoGema("gemNeutral", .54, .98);
 
       let hdrRequestId = 0;
-      const cargarHDRI = (environmentKey:string) => {
+      const cargarHDRI = (environmentKey:string, urlOverride?:string, rotation?:number, intensity?:number) => {
         const requestId = ++hdrRequestId;
-        const url = getAurumHdriUrl(environmentKey);
+        const url = urlOverride ?? getAurumHdriUrl(environmentKey);
+        if (Number.isFinite(rotation)) environmentController.setRotation(rotation as number);
+        if (Number.isFinite(intensity)) environmentController.setIntensity(intensity as number);
         console.info("[AURUM][HDR METAL][REQUEST]", {
           perfil: environmentKey,
           urlSolicitada: url,
@@ -969,6 +971,10 @@ export function AurumRender() {
           const preset=AURUM_AMBIENT_PRESETS[key];
           if (!preset) return;
           setAmbienteId(key);
+          // Un ambiente es un rig HDR compartido: debe reflejarse tanto en
+          // los metales como en las gemas. Los selectores HDR independientes
+          // siguen disponibles para ajustes manuales posteriores.
+          cargarHDRI(key,preset.url,preset.rotation,preset.intensity);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
         },
         fondo:(key:string)=>{
