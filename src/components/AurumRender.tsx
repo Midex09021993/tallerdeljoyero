@@ -1145,6 +1145,10 @@ export function AurumRender() {
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
+          reportProgress("Renderizando imagen",10);
+          // Paint the status once before the synchronous high-resolution render.
+          // Do not yield between TAA samples: live resize/render callbacks can corrupt the capture.
+          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
