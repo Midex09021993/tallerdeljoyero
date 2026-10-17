@@ -216,8 +216,8 @@ function CatalogoPublicoPage() {
         direccion_contacto: typeof contacto['direccion_contacto'] === "string" ? contacto['direccion_contacto'] : null,
       })) as CatalogoRow[];
     },
-    staleTime: 15_000,
-    refetchOnWindowFocus: true,
+    // El catálogo público cambia poco; reduce refetches al volver a la pestaña.
+    staleTime: 60_000,
     retry: 1,
   });
 
