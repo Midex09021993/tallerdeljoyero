@@ -253,10 +253,10 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
   const whiteColor=new THREE.Color(white.color);
   greenColor.lerp(whiteColor,mix);
   const yellowGold=new THREE.Color(0xd8ad4c);
-  // Restore the earlier premium-looking calibration: a softer, less saturated
-  // yellow-gold tone with a subtle green/white alloy undertone.
-  // This remains a visual PBR approximation; studio reflections still depend on the HDR.
-  const blendedColor=yellowGold.lerp(greenColor,.12);
+  // Keep a restrained green/white alloy undertone while matching the stronger
+  // warm-yellow reference seen in iJewel. This adjusts only this preset's base
+  // color; roughness, metalness, environment intensity and all other profiles stay intact.
+  const blendedColor=yellowGold.lerp(greenColor,.05);
   return {
     id:"oro18_verde_blanco_ijewel",
     color:blendedColor.getHex(),
