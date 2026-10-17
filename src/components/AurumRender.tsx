@@ -969,6 +969,36 @@ export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
         cargar,
         material:aplicarMaterial,
         gema:aplicarGema,
+        materialCatalogo:(m:MaterialConfig)=>{
+          if(!modelo)return;
+          const visited=new Set<string>();
+          modelo.traverse((x:any)=>{
+            if(!x.isMesh||x.userData?.aurumInternalInclusion||selectionCategory(x)!=="metal")return;
+            const meta=x.userData?.aurumRhino??{};
+            const attrs=x.userData?.attributes??{};
+            const layer=String(meta.capa??attrs.layerName??attrs.LayerName??"").trim().toLocaleLowerCase();
+            const key=layer||String(meta.layerKey??x.uuid);
+            if(visited.has(key))return;
+            visited.add(key);
+            aplicarMaterial(m,x);
+          });
+          invalidateRenderRef.current?.();
+        },
+        gemaCatalogo:(g:GemaConfig)=>{
+          if(!modelo)return;
+          const visited=new Set<string>();
+          modelo.traverse((x:any)=>{
+            if(!x.isMesh||x.userData?.aurumInternalInclusion||selectionCategory(x)!=="gema")return;
+            const meta=x.userData?.aurumRhino??{};
+            const attrs=x.userData?.attributes??{};
+            const layer=String(meta.capa??attrs.layerName??attrs.LayerName??"").trim().toLocaleLowerCase();
+            const key=layer||String(meta.layerKey??x.uuid);
+            if(visited.has(key))return;
+            visited.add(key);
+            aplicarGema(g,x);
+          });
+          invalidateRenderRef.current?.();
+        },
         escenario:aplicarEscenario,
         hdriGround:(config:any={})=>{
           if (config.enabled!==undefined) groundController.setHdriGroundEnabled(!!config.enabled);
