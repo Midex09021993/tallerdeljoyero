@@ -243,8 +243,10 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
       clearcoat:m.clearcoat,anisotropy:m.anisotropy,anisotropyRotation:m.anisotropyRotation
     };
   }
-  const green={color:0xb5b66f,metalness:1,roughness:.13,envMapIntensity:1.98,clearcoat:.15,anisotropy:0};
-  const white={color:0xdce1e5,metalness:1,roughness:.11,envMapIntensity:1.80,clearcoat:.15,anisotropy:.05};
+  // Slightly tighter polish for this reference-only preset: clearer studio reflections
+  // without changing the source catalog materials or any other metal profile.
+  const green={color:0xb5b66f,metalness:1,roughness:.12,envMapIntensity:1.98,clearcoat:.15,anisotropy:0};
+  const white={color:0xdce1e5,metalness:1,roughness:.09,envMapIntensity:1.80,clearcoat:.15,anisotropy:.05};
   // The target reference is a warm 18K yellow gold. Retain both source profiles'
   // polished optical response, but bias the alloy color toward yellow so the
   // white-gold component does not wash the result into silver/olive.
