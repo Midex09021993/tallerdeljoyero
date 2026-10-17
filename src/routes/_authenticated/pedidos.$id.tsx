@@ -255,20 +255,28 @@ function PedidoDetalle() {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      return Promise.all(
-        (Array.isArray(data) ? data : []).map(async (archivo) => {
-          if (!archivo.url) return archivo;
-          const { data: firmado } = await supabase.storage
-            .from("pedidos")
-            .createSignedUrl(archivo.url, 3600);
-          const esImagen = /\.(jpe?g|png|webp|gif)$/i.test(archivo.nombre || "");
-          return {
-            ...archivo,
-            signedUrl: firmado?.signedUrl ?? "",
-            poster: archivo.poster || (esImagen ? firmado?.signedUrl ?? "" : ""),
-          };
-        }),
-      );
+      const archivos = Array.isArray(data) ? data : [];
+      const rutasParaFirmar = [...new Set(archivos.filter((archivo) => archivo.url).map((archivo) => archivo.url))];
+      const urlsFirmadas = new Map<string, string>();
+      if (rutasParaFirmar.length) {
+        const { data: firmados, error: errorFirmas } = await supabase.storage
+          .from("pedidos")
+          .createSignedUrls(rutasParaFirmar, 3600);
+        if (!errorFirmas) {
+          for (const firmado of firmados ?? []) {
+            if (firmado.path && firmado.signedUrl && !firmado.error) urlsFirmadas.set(firmado.path, firmado.signedUrl);
+          }
+        }
+      }
+      return archivos.map((archivo) => {
+        const signedUrl = archivo.url ? urlsFirmadas.get(archivo.url) ?? "" : "";
+        const esImagen = /\.(jpe?g|png|webp|gif)$/i.test(archivo.nombre || "");
+        return {
+          ...archivo,
+          signedUrl,
+          poster: archivo.poster || (esImagen ? signedUrl : ""),
+        };
+      });
     },
   });
 
