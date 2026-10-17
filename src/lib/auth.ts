@@ -53,8 +53,10 @@ export type Sesion = {
 
 export function useSesion() {
   return useQuery({
-    queryKey: ["sesion"], staleTime: 0, gcTime: 5 * 60 * 1000,
-    refetchOnMount: "always", refetchOnWindowFocus: true, refetchOnReconnect: true, retry: 1,
+    queryKey: ["sesion"], staleTime: 60_000, gcTime: 5 * 60 * 1000,
+    // Reutiliza la sesión durante 60 s; al vencer, el foco vuelve a validar roles y acceso.
+    // SIGNED_IN/USER_UPDATED invalidan explícitamente esta query y SIGNED_OUT limpia la caché.
+    refetchOnMount: true, refetchOnWindowFocus: true, refetchOnReconnect: true, retry: 1,
     queryFn: async (): Promise<Sesion | null> => {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) console.warn("[auth] Error al leer sesión persistida", sessionError.message);
@@ -102,16 +104,6 @@ export function useSesion() {
       // resolver el participante canónico. Esto evita perder la identidad visual
       // durante la migración sin convertir sede_id en fuente de autorización.
       let participanteResuelto = participantes[0] ?? null;
-
-      if (!participanteResuelto && perfil?.participante_id) {
-        const { data } = await supabase
-          .from("ecosistema_participantes")
-          .select("id, nombre, ciudad, sede_id")
-          .eq("id", perfil.participante_id)
-          .eq("estado", "activo")
-          .maybeSingle();
-        participanteResuelto = (data ?? null) as Sesion["participante"];
-      }
 
       if (!participanteResuelto && perfil?.sede_id) {
         const { data } = await supabase
