@@ -1882,17 +1882,11 @@ export function AurumRender() {
                       ...Object.values(AURUM_AMBIENT_PRESETS).map(preset=>({key:preset.id,label:preset.name+" · iJewel"})),
                     ].map(option=><option key={option.key} value={option.key}>{option.label}</option>)}
                   </select>
-                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla el entorno óptico de las piedras sin cambiar el HDR de los metales.</p>
+                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Selecciona un HDR de estudio o uno de los diez ambientes importados. Los metales permanecen independientes.</p>
                 </div>
-              </div>}
-              {uxSection==="ambientes"&&<div className="pb-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes de iluminación</div>
-                    <p className="mt-1 text-[10px] text-[#77756f]">Selecciona el reflejo que quieres probar en tus gemas.</p>
-                  </div>
-                  <span className="rounded-full border border-[#92743b]/20 bg-white px-2 py-1 text-[9px] font-semibold text-[#92743b]">10 HDR</span>
-                </div>
+
+                <div>
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">10 ambientes importados · comparar gemas</div>
                 <div className="grid grid-cols-3 gap-3">
                   {Object.values(AURUM_AMBIENT_PRESETS).map((preset,index)=>{
                     const looks=[
@@ -1907,7 +1901,7 @@ export function AurumRender() {
                       "radial-gradient(ellipse at 32% 22%,#ffffff 0 8%,transparent 30%),linear-gradient(130deg,#d9dedf 0%,#ffffff 26%,#7e878d 48%,#f3f3ef 70%,#454b50 100%)",
                       "radial-gradient(ellipse at 72% 24%,#fff3c9 0 8%,transparent 30%),linear-gradient(130deg,#514637 0%,#dfc58b 25%,#fff8e8 44%,#565b5e 68%,#e4dfd0 100%)"
                     ];
-                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
                       <span className={"relative mb-1.5 block aspect-[1.12] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
                         <span className="absolute inset-0" style={{background:looks[index]}}/>
                         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"/>
@@ -1919,15 +1913,9 @@ export function AurumRender() {
                     </button>;
                   })}
                 </div>
-                <div className="mt-3 rounded-xl border border-black/[.07] bg-white p-3">
-                  <div className="text-[10px] font-semibold text-[#292824]">HDR exclusivo para gemas</div>
-                  <p className="mt-1 text-[9px] leading-relaxed text-[#77756f]">Los ambientes seleccionados modifican las piedras. Los metales conservan su propio HDR y calibración.</p>
+
                 </div>
-                <div className="mt-3 rounded-lg border border-black/[.07] bg-white/70 p-2.5">
-                  <div className="text-[10px] font-semibold text-[#292824]">{ambienteId?AURUM_AMBIENT_PRESETS[ambienteId]?.name:"Ningún ambiente seleccionado"}</div>
-                  <p className="mt-1 text-[9px] leading-relaxed text-[#77756f]">Estas miniaturas son referencias visuales de los estilos de iluminación, no capturas de los HDR originales. El HDR de metales y el fondo se mantienen independientes.</p>
-                </div>
-              </div>}
+              </div>
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
                 {[{id:"escena",label:"Según la escena",swatch:"linear-gradient(135deg,#fff,#e9e7df)"},{id:"blanco",label:"Blanco puro",swatch:"#ffffff"},{id:"marfil",label:"Marfil cálido",swatch:"#f4f1e9"},{id:"grisClaro",label:"Gris claro",swatch:"#e7e7e4"},{id:"grisMedio",label:"Gris medio",swatch:"#a6a6a3"},{id:"grisOscuro",label:"Gris oscuro",swatch:"#303236"},{id:"negro",label:"Negro",swatch:"#090b0e"},{id:"transparente",label:"Transparente",swatch:"linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%)"}].map(bg=><button key={bg.id} type="button" onClick={()=>apiRef.current?.fondo(bg.id)} className={"flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition "+(fondoId===bg.id?"border-[#92743b]/50 bg-white shadow-sm":"border-black/[.07] bg-white/60 hover:bg-white")}><span className="size-8 shrink-0 rounded-lg border border-black/10" style={{background:bg.swatch}}/><span className="flex-1 text-xs text-[#45433e]">{bg.label}</span>{fondoId===bg.id&&<span className="text-xs font-semibold text-[#92743b]">✓</span>}</button>)}
