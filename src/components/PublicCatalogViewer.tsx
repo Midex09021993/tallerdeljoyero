@@ -96,13 +96,17 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         // Use the same dedicated metal and gem HDR sources as Aurum Render when available.
         const metalUrl = getAurumHdriUrl("ijewelMetal");
         const gemUrl = getAurumGemHdriUrl("ijewelGem");
+        const acceptHdr = (texture: THREE.Texture, done: (texture: THREE.Texture) => void) => {
+          if (cancelled) { texture.dispose(); return; }
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          done(texture);
+        };
         const loadHdr = (url: string, done: (texture: THREE.Texture) => void) => {
-          const Loader = /\\.exr(?:$|[?#])/i.test(url) ? EXRLoader : RGBELoader;
-          new Loader().load(url, (texture: THREE.Texture) => {
-            if (cancelled) { texture.dispose(); return; }
-            texture.mapping = THREE.EquirectangularReflectionMapping;
-            done(texture);
-          }, undefined, () => {});
+          if (/\\.exr(?:$|[?#])/i.test(url)) {
+            new EXRLoader().load(url, (texture) => acceptHdr(texture, done), undefined, () => {});
+          } else {
+            new RGBELoader().load(url, (texture) => acceptHdr(texture, done), undefined, () => {});
+          }
         };
         loadHdr(metalUrl, (texture) => { environment = texture; if (scene) scene.environment = texture; applyProfiles(); renderRef.current?.(); });
         if (gemUrl !== metalUrl) loadHdr(gemUrl, (texture) => { gemEnvironment = texture; applyProfiles(); renderRef.current?.(); });
