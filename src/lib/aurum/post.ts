@@ -180,7 +180,8 @@ export async function createAurumPostPipeline(
   const diagnosticParams = typeof window !== "undefined"
     ? new URLSearchParams(window.location.search)
     : null;
-  const diagnosticMode = diagnosticParams?.get("aurumDiag") ?? null;
+  // Official default = validated "environment" profile; "?aurumDiag=standard" for A/B.
+  const diagnosticMode = diagnosticParams?.get("aurumDiag") ?? "environment";
   // Controlled A/B switch: only available in environment diagnostic mode.
   // Normal Aurum Render behavior is unchanged unless aurumDiag=environment
   // and aurumSSR=off are both explicitly present in the URL.
