@@ -972,17 +972,28 @@ export function AurumRender() {
           cargarHDRI(key);
         },
         gemHdri:(key:string)=>{
+          const ambientPreset=AURUM_AMBIENT_PRESETS[key];
+          if (ambientPreset) {
+            // The ten supplied iJewel VJSON environments are first-class gem
+            // HDR options. Preserve their exact URL, rotation and intensity.
+            setGemHdriId(key);
+            setAmbienteId(key);
+            cargarEntornoGema(key,ambientPreset.rotation,ambientPreset.intensity);
+            invalidateRenderRef.current?.();
+            return;
+          }
           if (!(key in AURUM_GEM_HDRI_URLS)) return;
           gemHdriOverride = key;
           setGemHdriId(key);
+          setAmbienteId(null);
           cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
         },
         ambiente:(key:string)=>{
           const preset=AURUM_AMBIENT_PRESETS[key];
           if (!preset) return;
+          // Backwards-compatible entry point for the existing Ambientes grid.
           setAmbienteId(key);
-          // These ten presets are for gemstones only. Leave the metal HDR,
-          // metal envMapIntensity, material color and roughness untouched.
+          setGemHdriId(key);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
           invalidateRenderRef.current?.();
         },
@@ -1866,7 +1877,10 @@ export function AurumRender() {
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Entorno HDR de gemas</div>
                   <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
-                    {Object.keys(AURUM_GEM_HDRI_URLS).map(key=><option key={key} value={key}>{({ijewelGem:"Referencia Gemas · Perfil 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key}</option>)}
+                    {[
+                      ...Object.keys(AURUM_GEM_HDRI_URLS).map(key=>({key,label:({ijewelGem:"Referencia Gemas · Perfil 010",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key})),
+                      ...Object.values(AURUM_AMBIENT_PRESETS).map(preset=>({key:preset.id,label:preset.name+" · iJewel"})),
+                    ].map(option=><option key={option.key} value={option.key}>{option.label}</option>)}
                   </select>
                   <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Controla el entorno óptico de las piedras sin cambiar el HDR de los metales.</p>
                 </div>
