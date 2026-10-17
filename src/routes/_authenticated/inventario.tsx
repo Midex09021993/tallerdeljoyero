@@ -114,7 +114,7 @@ function InventarioPage() {
     if (!esAdmin || !sedeId) return;
     setCargando(true);
     const [a, b, c] = await Promise.all([
-      supabase.from("inventario").select("*").eq("sede_id", sedeId).order("material"),
+      supabase.from("inventario").select("id,sede_id,codigo,material,categoria,unidad,stock,minimo,lote,ubicacion,proveedor,costo_unitario,activo").eq("sede_id", sedeId).order("material"),
       supabase.from("inventario_movimientos")
         .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,pedido_id,created_at,inventario(material,unidad)")
         .order("created_at", { ascending: false }).limit(100),
