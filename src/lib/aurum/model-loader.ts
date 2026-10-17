@@ -236,7 +236,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
         });
       }
     });
-    console.info("[AURUM][NORMALS AUDIT]", { ...object.userData.aurumPreprocess, suspiciousMeshes });
+    console.info("[AURUM][NORMALS AUDIT]", { ...object.userData["aurumPreprocess"], suspiciousMeshes });
   }
   return object;
 }
