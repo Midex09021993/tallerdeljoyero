@@ -109,13 +109,14 @@ function PedidoTecnicoRecibido({
   const servicios = grupo ?? [];
   const primero = servicios[0];
   if (!primero) return null;
+  const primerServicioId = primero.id;
 
   const { data: ficha, isLoading: cargandoFicha } = useQuery({
-    queryKey: ["ficha-tecnica-pedido-recibido", primero?.id],
-    enabled: Boolean(abierto && primero?.id),
+    queryKey: ["ficha-tecnica-pedido-recibido", primerServicioId],
+    enabled: abierto,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("obtener_ficha_servicio_externo", {
-        _trabajo_id: primero.id,
+        _trabajo_id: primerServicioId,
       });
       if (error) throw error;
       return data as {
@@ -136,7 +137,7 @@ function PedidoTecnicoRecibido({
   }>;
 
   const archivosConUrl = useQuery({
-    queryKey: ["ficha-tecnica-archivos-recibidos", primero?.id, archivos.map((a) => a.id).join("|")],
+    queryKey: ["ficha-tecnica-archivos-recibidos", primerServicioId, archivos.map((a) => a.id).join("|")],
     enabled: archivos.length > 0,
     queryFn: async () => Promise.all(archivos.map(async (archivo) => {
       if (!archivo.url || archivo.es_enlace) return archivo;
@@ -202,7 +203,7 @@ function PedidoTecnicoRecibido({
                 ["Área desde", pedido["area_desde"]],
               ].map(([etiqueta, valor]) => (
                 <div key={String(etiqueta)} className="min-w-0 rounded-lg border border-border bg-card p-3">
-                  <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{etiqueta}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{String(etiqueta)}</p>
                   <p className="mt-1 break-words text-xs font-medium text-foreground">{campo(valor)}</p>
                 </div>
               ))}
@@ -239,9 +240,9 @@ function PedidoTecnicoRecibido({
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Materiales planificados</p>
                 <div className="mt-2 space-y-2">
                   {materiales.map((material) => (
-                    <div key={String(material.id)} className="flex flex-wrap justify-between gap-2 text-xs">
-                      <span className="font-medium">{campo(material.material)}{material.codigo ? ` · ${String(material.codigo)}` : ""}</span>
-                      <span className="text-muted-foreground">{campo(material.cantidad_planificada)} {campo(material.unidad)}</span>
+                    <div key={String(material["id"])} className="flex flex-wrap justify-between gap-2 text-xs">
+                      <span className="font-medium">{campo(material["material"])}{material["codigo"] ? ` · ${String(material["codigo"])}` : ""}</span>
+                      <span className="text-muted-foreground">{campo(material["cantidad_planificada"])} {campo(material["unidad"])}</span>
                     </div>
                   ))}
                 </div>
