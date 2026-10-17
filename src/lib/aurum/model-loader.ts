@@ -27,8 +27,8 @@ function getAurumMeshFamily(x: RhinoObject): "metal" | "gema" | "otro" {
   const text = [
     x?.name,
     layer?.capa,
-    x?.userData?.["attributes"]?.layerName,
-    x?.userData?.attributes?.LayerName,
+    x?.userData?.["attributes"]?.["layerName"],
+    x?.userData?.["attributes"]?.["LayerName"],
     ...(Array.isArray(x?.material) ? x.material : [x?.material]).map((m: THREE.Material | undefined) => m?.name),
   ].map((v: unknown) => String(v ?? "").toLowerCase()).join(" ");
   if (layer?.categoria === "gema" || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(text)) return "gema";
@@ -117,7 +117,7 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     cache.set(index, true); return true;
   };
   const resolveLayerIndex = (x: RhinoObject) => {
-    const candidates = [x?.userData?.attributes?.layerIndex, x?.userData?.attributes?.LayerIndex, x?.userData?.["layerIndex"], x?.userData?.["LayerIndex"]];
+    const candidates = [x?.userData?.["attributes"]?.layerIndex, x?.userData?.["attributes"]?.LayerIndex, x?.userData?.["layerIndex"], x?.userData?.["LayerIndex"]];
     for (const value of candidates) { const n = Number(value); if (Number.isInteger(n) && n >= 0) return n; }
     return -1;
   };
@@ -129,7 +129,7 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     let layerVisible = true;
     if (index >= 0) layerVisible = effectiveVisible(index);
     else {
-      const layerName = String(x.userData?.["attributes"]?.layerName ?? x.userData?.["layerName"] ?? "").trim().toLowerCase();
+      const layerName = String(x.userData?.["attributes"]?.["layerName"] ?? x.userData?.["layerName"] ?? "").trim().toLowerCase();
       const namedLayer = byName.get(layerName);
       if (layerName && namedLayer) layerVisible = effectiveVisible(layers.indexOf(namedLayer));
     }
@@ -314,7 +314,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
         group.traverse((node) => {
           const child = node as RhinoObject;
           if (!child.isMesh) return;
-          const definitionAttributes = child.userData?.attributes ?? {};
+          const definitionAttributes = child.userData?.["attributes"] ?? {};
           child.userData = {
             ...child.userData,
             aurumRhinoInstanceSource: {

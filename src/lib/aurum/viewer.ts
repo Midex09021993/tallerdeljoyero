@@ -24,7 +24,7 @@ export function frameAurumProduct<TSceneId extends string>(viewer: AurumViewerFr
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
-  const controls = controls;
+  const controls = viewer.controls;
   if (!controls) return;
   const wasPrepared = !!model.userData?.["aurumInitialFrameApplied"];
 
