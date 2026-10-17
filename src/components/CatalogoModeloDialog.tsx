@@ -38,6 +38,17 @@ export type CatalogoProductoEditor = {
   mostrar_ficha_tecnica: boolean;
 };
 
+type CatalogoNubeArchivo = { nombre: string; ruta: string; categoria: string; bytes: number; origen: "supabase" | "nas"; actualizado: string | null };
+
+function esCatalogoNubeArchivo(value: unknown): value is CatalogoNubeArchivo {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const archivo = value as Record<string, unknown>;
+  return typeof archivo["nombre"] === "string" && typeof archivo["ruta"] === "string"
+    && typeof archivo["categoria"] === "string" && typeof archivo["bytes"] === "number"
+    && (archivo["origen"] === "supabase" || archivo["origen"] === "nas")
+    && (archivo["actualizado"] === null || typeof archivo["actualizado"] === "string");
+}
+
 type Props = {
   open: boolean;
   producto: CatalogoProductoEditor | null;

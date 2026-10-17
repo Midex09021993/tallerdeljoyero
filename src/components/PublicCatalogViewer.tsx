@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
@@ -13,9 +12,10 @@ import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-sc
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string };
 const classifyMesh = (mesh: THREE.Mesh): "metal" | "gema" | "otro" => {
-  const attrs = mesh?.userData?.attributes ?? {};
-  const rhino = mesh?.userData?.aurumRhino ?? {};
-  const text = [mesh?.name, rhino?.capa, attrs?.layerName, attrs?.LayerName, mesh?.material?.name]
+  const attrs = mesh?.userData?.["attributes"] ?? {};
+  const rhino = mesh?.userData?.["aurumRhino"] ?? {};
+  const materialName = Array.isArray(mesh.material) ? mesh.material.map((material) => material.name).join(" ") : mesh.material?.name;
+  const text = [mesh?.name, rhino?.capa, attrs?.layerName, attrs?.LayerName, materialName]
     .map((value) => String(value ?? "")).join(" ").toLowerCase();
   if (rhino?.categoria === "gema" || /(gema|piedra|gem|diamond|diamante|esmeralda|emerald|rubi|rubí|ruby|zafiro|sapphire|amatista|moissanita)/.test(text)) return "gema";
   if (rhino?.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(text)) return "metal";
@@ -54,11 +54,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       if (!model) return;
       const metal = MATERIALES.find((item) => item.id === materialIdRef.current) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!
       const gem = GEMAS.find((item) => item.id === gemIdRef.current) ?? GEMAS.find((item) => item.id === "diamante_natural")!
-      model.traverse((object: any) => {
+      model.traverse((node) => {
+        const object = node as THREE.Mesh;
         if (!object.isMesh || !object.material) return;
         const family = classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
-        const next = originalMaterials.map((original: any) => {
+        const next = originalMaterials.map((original) => {
           const material = original;
           if (family === "metal") {
             applyAurumMetal(material, metalPresetFromConfig(metal));
@@ -80,6 +81,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       try {
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.75), controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
+      if (!scene || !camera || !renderer || !controls) throw new Error("No se pudo inicializar la vista pública del modelo.");
         scene.background = new THREE.Color("#f7f6f2");
         scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
@@ -126,7 +128,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
           const object = node as THREE.Mesh;
           if (!object.isMesh || !object.material) return;
           object.material = Array.isArray(object.material)
-            ? object.material.map((material: any) => material?.clone ? material.clone() : material)
+            ? object.material.map((material) => material?.clone ? material.clone() : material)
             : (object.material?.clone ? object.material.clone() : object.material);
         });
         model.updateMatrixWorld(true);
@@ -174,7 +176,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       cancelled = true;
       loop?.stop?.();
       resizeObserver?.disconnect();
-      if (model) model.traverse((object: any) => {
+      if (model) model.traverse((node) => {
+        const object = node as THREE.Mesh;
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material) => material?.dispose?.());
@@ -194,7 +197,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
     if (!model) return;
     const metal = MATERIALES.find((item) => item.id === materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
     const gem = GEMAS.find((item) => item.id === gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
-    model.traverse((object: any) => {
+    model.traverse((node) => {
+        const object = node as THREE.Mesh;
       if (!object.isMesh || !object.material) return;
       const family = classifyMesh(object);
       const materials = Array.isArray(object.material) ? object.material : [object.material];
