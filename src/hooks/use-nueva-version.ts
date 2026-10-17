@@ -26,10 +26,18 @@ export function useNuevaVersion(puedeRecargar = true, intervaloMs = 120_000): bo
     const inicial = entradaActual();
     if (!inicial || !/\/assets\//.test(inicial)) return;
     let cancelado = false;
+    let ultimaComprobacion = 0;
+    let comprobando = false;
 
-    const comprobar = async () => {
+    const comprobar = async (forzar = false) => {
+      if (document.visibilityState !== "visible" || comprobando) return;
+      const ahora = Date.now();
+      // Evita reconsultas al cambiar de foco varias veces en pocos segundos.
+      if (!forzar && ahora - ultimaComprobacion < Math.max(intervaloMs, 300_000)) return;
+      ultimaComprobacion = ahora;
+      comprobando = true;
       try {
-        const url = window.location.origin + "/?_version_check=" + Date.now();
+        const url = window.location.origin + "/?_version_check=" + ahora;
         const res = await fetch(url, {
           cache: "no-store",
           credentials: "same-origin",
@@ -39,19 +47,21 @@ export function useNuevaVersion(puedeRecargar = true, intervaloMs = 120_000): bo
         const publicado = entradaDesdeHtml(await res.text());
         if (!cancelado && publicado && publicado !== inicial) setNueva(true);
       } catch {
-        // Sin conexión, no mostrar un aviso falso; volver a comprobar después.
+        // Sin conexión, no mostrar un aviso falso; se reintentará al volver a enfocar.
+      } finally {
+        comprobando = false;
       }
     };
 
-    void comprobar();
-    const id = window.setInterval(() => void comprobar(), intervaloMs);
+    void comprobar(true);
     const alVolver = () => {
       if (document.visibilityState === "visible") void comprobar();
     };
+    window.addEventListener("focus", alVolver);
     document.addEventListener("visibilitychange", alVolver);
     return () => {
       cancelado = true;
-      window.clearInterval(id);
+      window.removeEventListener("focus", alVolver);
       document.removeEventListener("visibilitychange", alVolver);
     };
   }, [intervaloMs]);
