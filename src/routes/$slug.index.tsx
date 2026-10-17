@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X, Menu, Instagram, Youtube, Facebook, Music2, Pin } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/$slug/")({
@@ -157,6 +157,7 @@ function CatalogoPublicoPage() {
   const totalCarrito = carrito.reduce((n, x) => n + (x.precio ?? 0) * x.cantidad, 0);
   const carritoConPrecio = carrito.length > 0 && carrito.every((x) => x.precio != null);
 
+  const queryClient = useQueryClient();
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
@@ -220,6 +221,10 @@ function CatalogoPublicoPage() {
     refetchOnWindowFocus: true,
     retry: 1,
   });
+
+  useEffect(() => {
+    queryClient.setQueryData(["portal-publico-productos", slugNormalizado], rows);
+  }, [queryClient, rows, slugNormalizado]);
 
   const config = rows[0] ?? null;
   const mensajePedido = "Hola, quisiera solicitar este pedido a " + (config?.nombre_publico ?? "") + ":\n\n" + carrito.map((x) => x.cantidad + " x " + x.nombre + " (" + x.codigo + ")" + (x.talla ? " — Talla americana US " + x.talla : "") + (x.tipoEnvio ? " — " + (x.tipoEnvio === "rapido" ? "Envío rápido" : "Hecho a pedido") + " (" + x.plazoEntrega + ", llegada estimada " + x.fechaEntregaDesde + " a " + x.fechaEntregaHasta + ")" : "") + (x.precio != null ? " — " + formatPrice(x.precio * x.cantidad, x.moneda ?? "PEN") : " — precio por confirmar")).join("\n") + "\n\n" + (carritoConPrecio ? "Total referencial: " + formatPrice(totalCarrito, carrito[0]?.moneda ?? "PEN") : "Por favor, confirmen los precios finales.");
