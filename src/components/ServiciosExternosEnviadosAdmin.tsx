@@ -49,8 +49,8 @@ export function ServiciosExternosEnviadosAdmin({ sedeId }: { sedeId: string | nu
   });
 
   const pendientes = servicios.filter((s: ServicioExternoEnviado) => ["pendiente", "en_proceso", "bloqueado"].includes(s.estado)).length;
-  const completados = servicios.filter((s: any) => s.estado === "completado").length;
-  const bloqueados = servicios.filter((s: any) => s.estado === "bloqueado").length;
+  const completados = servicios.filter((s) => s.estado === "completado").length;
+  const bloqueados = servicios.filter((s) => s.estado === "bloqueado").length;
 
   return (
     <div className="space-y-5">

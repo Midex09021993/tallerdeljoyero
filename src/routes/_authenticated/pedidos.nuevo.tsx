@@ -223,7 +223,7 @@ function NuevoPedido() {
         .eq("especialidades.categoria", "Producción");
       if (error) throw error;
       return (data ?? [])
-        .map((row: any) => Array.isArray(row.especialidades) ? row.especialidades[0]?.nombre : row.especialidades?.nombre)
+        .map((row) => Array.isArray(row.especialidades) ? row.especialidades[0]?.nombre : row.especialidades?.nombre)
         .filter(Boolean);
     },
   });
