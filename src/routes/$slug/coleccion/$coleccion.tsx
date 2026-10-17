@@ -56,6 +56,7 @@ function ColeccionPublicaPage() {
   if (error || !rows.length) return <Estado titulo="Colección no disponible" texto="La colección no existe, está oculta o todavía no tiene modelos publicados." />;
 
   const config = rows[0];
+  if (!config) return <Estado titulo="Colección no disponible" texto="No se encontró la configuración de esta colección." />;
   const productos = Array.from(new Map(rows.filter((row) => row.producto_id).map((row) => [row.producto_id, row])).values());
   const whatsappHref = config.whatsapp ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}` : null;
 
