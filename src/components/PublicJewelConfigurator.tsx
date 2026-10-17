@@ -4,7 +4,8 @@ import { Box, RotateCcw } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "@/lib/aurum-material-engine";
 import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
-import { createAurumWebGLViewer } from "@/lib/aurum/viewer";
+import { createAurumWebGLViewer, frameAurumProduct, startAurumViewerLoop, disposeAurumViewer } from "@/lib/aurum/viewer";
+import { prepareAurumModel } from "@/lib/aurum/model-prep";
 
 type Props = { slug: string; producto: string };
 const metales = [
@@ -44,11 +45,12 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    let disposed = false, frame = 0;
+    let disposed = false;
     let renderer: THREE.WebGLRenderer | null = null;
     let scene: THREE.Scene | null = null;
     let camera: THREE.PerspectiveCamera | null = null;
-    let controls: any = null, model: THREE.Object3D | null = null, observer: ResizeObserver | null = null;
+    let controls: any = null, model: THREE.Object3D | null = null;
+    let viewerLoop: ReturnType<typeof startAurumViewerLoop> | null = null;
     const host = hostRef.current;
     if (!host) return;
     const start = async () => {
@@ -110,53 +112,31 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
         });
         if (meshCount === 0) throw new Error("El archivo 3DM no contiene mallas visibles para el visor 3D. Revisa las capas y la geometría del archivo.");
         model.updateMatrixWorld(true);
-        // Encadrar solo las mallas visibles; las curvas y guías CAD no deben alejar la cámara.
-        const bounds = new THREE.Box3();
-        model.traverse((object: any) => {
-          if (!object.isMesh || !object.geometry || !object.visible) return;
-          bounds.expandByObject(object);
-        });
-        if (bounds.isEmpty()) throw new Error("No pudimos calcular el tamaño de las mallas visibles de la joya.");
-        const center = bounds.getCenter(new THREE.Vector3());
-        model.position.sub(center);
-        model.updateMatrixWorld(true);
-        const centeredBounds = new THREE.Box3().setFromObject(model);
-        const sphere = centeredBounds.getBoundingSphere(new THREE.Sphere());
-        const radius = Math.max(sphere.radius, 0.001);
         aurumScene.add(model);
-        aurumCamera.fov = 35;
-        const distance = (radius / Math.sin(THREE.MathUtils.degToRad(aurumCamera.fov / 2))) * 1.25;
-        aurumCamera.position.copy(new THREE.Vector3(1, 0.65, 1).normalize().multiplyScalar(distance));
-        aurumCamera.near = Math.max(radius / 100, 0.001);
-        aurumCamera.far = Math.max(distance + radius * 20, 100);
-        aurumCamera.lookAt(0, 0, 0);
-        aurumCamera.updateProjectionMatrix();
-        const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
-        controls = new OrbitControls(aurumCamera, aurumRenderer.domElement);
-        controls.enableDamping = true; controls.dampingFactor = 0.06;
-        controls.minDistance = radius * 0.6; controls.maxDistance = radius * 12; controls.target.set(0, 0, 0); controls.update();
+        const prepared = prepareAurumModel(model, 2.6);
+        const viewerFrame = { node: host, scene: aurumScene, camera: aurumCamera, renderer: aurumRenderer, controls, lights: { key, rim }, groundController: { positionUnderModel: () => {}, positionBakedShadow: () => {} } };
+        frameAurumProduct(viewerFrame as any, model, () => prepared, () => {}, "publicCatalog", "Anillo");
         modelRef.current = model;
-        observer = new ResizeObserver(() => {
-          if (!host || !camera || !renderer) return;
-          const width = Math.max(host.clientWidth, 1), height = Math.max(host.clientHeight, 1);
-          camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height);
-        });
-        observer.observe(host);
-        const render = () => { if (disposed || !renderer || !scene || !camera) return; frame = requestAnimationFrame(render); controls?.update(); renderer.render(scene, camera); };
-        render(); setReady(true); setStatus("");
+        viewerLoop = startAurumViewerLoop({ node: host, camera: aurumCamera, renderer: aurumRenderer, controls }, () => {
+          if (!disposed) aurumRenderer.render(aurumScene, aurumCamera);
+        }, { progressiveFrames: 2 });
+        viewerLoop.converge(2);
+        setReady(true); setStatus("");
       } catch (cause) {
         if (!disposed) setStatus(cause instanceof Error ? cause.message : "No se pudo cargar el modelo 3D.");
       }
     };
     void start();
     return () => {
-      disposed = true; cancelAnimationFrame(frame); observer?.disconnect(); controls?.dispose?.();
+      disposed = true;
+      viewerLoop?.stop();
       if (model) model.traverse((object: any) => {
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material: any) => material?.dispose?.());
       });
-      renderer?.dispose(); renderer?.domElement.remove(); modelRef.current = null;
+      if (renderer && scene) disposeAurumViewer({ node: host, renderer, controls, observer: undefined });
+      modelRef.current = null;
     };
   }, [slug, producto]);
 
