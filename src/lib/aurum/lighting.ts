@@ -22,9 +22,11 @@ export function createAurumLightingController(
   let activeRigId = "jewelry";
   let lastRadius = 1;
   let lastTargetY = 0;
-  const diagnosticMode = typeof window !== "undefined"
+  // Official default = validated "environment" profile (HDR/IBL only).
+  // "?aurumDiag=standard" restores the previous direct-light rig for A/B.
+  const diagnosticMode = (typeof window !== "undefined"
     ? new URLSearchParams(window.location.search).get("aurumDiag")
-    : null;
+    : null) ?? "environment";
   const diagnosticEnvironmentOnly = diagnosticMode === "environment";
 
   const configureShadow = (light: any) => {
