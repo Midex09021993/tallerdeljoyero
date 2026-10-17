@@ -235,15 +235,20 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
   }
   const green={color:0xb5b66f,metalness:1,roughness:.13,envMapIntensity:1.98,clearcoat:.15,anisotropy:0};
   const white={color:0xdce1e5,metalness:1,roughness:.11,envMapIntensity:1.80,clearcoat:.15,anisotropy:.05};
+  // The target reference is a warm 18K yellow gold. Retain both source profiles'
+  // polished optical response, but bias the alloy color toward yellow so the
+  // white-gold component does not wash the result into silver/olive.
   const mix=.5;
   const greenColor=new THREE.Color(green.color);
   const whiteColor=new THREE.Color(white.color);
-  // Blend in linear-light space to avoid the overly bright result of averaging
-  // display-space hex channels.
   greenColor.lerp(whiteColor,mix);
+  const yellowGold=new THREE.Color(0xd8ad4c);
+  // Use the green/white blend as a subtle undertone, with the yellow-gold
+  // reference carrying the final hue. This is a visual PBR approximation.
+  const blendedColor=yellowGold.lerp(greenColor,.12);
   return {
     id:"oro18_verde_blanco_ijewel",
-    color:greenColor.getHex(),
+    color:blendedColor.getHex(),
     metalness:green.metalness*(1-mix)+white.metalness*mix,
     roughness:green.roughness*(1-mix)+white.roughness*mix,
     envMapIntensity:green.envMapIntensity*(1-mix)+white.envMapIntensity*mix,
