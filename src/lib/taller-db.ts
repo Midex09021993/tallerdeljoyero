@@ -2272,7 +2272,7 @@ export function useArchivosPedidos() {
       // Firma en una sola operación las imágenes que todavía no tienen póster.
       const rutasParaFirmar = [...new Set(
         archivos
-          .filter(({ resto }) => !resto.poster && resto.url && /\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || ""))
+          .filter(({ resto }) => !resto.poster && !resto.es_enlace && resto.url && !/^https?:\/\//i.test(resto.url) && /\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || ""))
           .map(({ resto }) => resto.url as string),
       )];
       const postersFirmados = new Map<string, string>();
