@@ -223,8 +223,9 @@ function CatalogoPublicoPage() {
   });
 
   useEffect(() => {
+    if (isLoading || error) return;
     queryClient.setQueryData(["portal-publico-productos", slugNormalizado], rows);
-  }, [queryClient, rows, slugNormalizado]);
+  }, [queryClient, rows, slugNormalizado, isLoading, error]);
 
   const config = rows[0] ?? null;
   const mensajePedido = "Hola, quisiera solicitar este pedido a " + (config?.nombre_publico ?? "") + ":\n\n" + carrito.map((x) => x.cantidad + " x " + x.nombre + " (" + x.codigo + ")" + (x.talla ? " — Talla americana US " + x.talla : "") + (x.tipoEnvio ? " — " + (x.tipoEnvio === "rapido" ? "Envío rápido" : "Hecho a pedido") + " (" + x.plazoEntrega + ", llegada estimada " + x.fechaEntregaDesde + " a " + x.fechaEntregaHasta + ")" : "") + (x.precio != null ? " — " + formatPrice(x.precio * x.cantidad, x.moneda ?? "PEN") : " — precio por confirmar")).join("\n") + "\n\n" + (carritoConPrecio ? "Total referencial: " + formatPrice(totalCarrito, carrito[0]?.moneda ?? "PEN") : "Por favor, confirmen los precios finales.");
