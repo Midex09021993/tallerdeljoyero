@@ -985,7 +985,7 @@ export function AurumRender() {
           // jumps. The selected VJSON HDR and its rotation remain dedicated to gems.
           cargarHDRI("studioSoft",undefined,0,1);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
-          const initialScale=ambienteMetalInfluence/100;
+          const initialScale=0.25+(Math.max(0,Math.min(100,ambienteMetalInfluence))/100)*0.75;
           if(modelo) modelo.traverse((x:any)=>{
             if(!x.isMesh||!x.material)return;
             const adjust=(m:any)=>{
