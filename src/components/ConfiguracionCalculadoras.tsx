@@ -97,6 +97,22 @@ function clonar<T>(valor: T): T {
 
 export function ConfiguracionCalculadoras() {
   const { data: sesion } = useSesion();
+
+  if (!sesion?.esDueno) {
+    return (
+      <Panel titulo="Configuración de Calculadoras">
+        <div className="flex items-center gap-3 p-6 text-sm text-muted-foreground">
+          <ShieldCheck className="size-5 text-gold" />
+          Esta configuración está disponible únicamente para el usuario Dueño.
+        </div>
+      </Panel>
+    );
+  }
+
+  return <ConfiguracionCalculadorasAdmin />;
+}
+
+function ConfiguracionCalculadorasAdmin() {
   const visualizador = useConfigSistema(CLAVES_CALCULADORAS.visualizador);
   const aleacion = useConfigSistema(CLAVES_CALCULADORAS.aleacion);
   const yeso = useConfigSistema(CLAVES_CALCULADORAS.yeso);
@@ -104,7 +120,6 @@ export function ConfiguracionCalculadoras() {
   const pesoGemas = useConfigSistema(CLAVES_CALCULADORAS.pesoGemas);
   const guardar = useGuardarConfigSistema();
 
-  const esDueno = Boolean(sesion?.esDueno);
   const [cfgVisualizador, setCfgVisualizador] = useState<ConfigVisualizador3D>(
     clonar(DEFAULT_CONFIG_VISUALIZADOR),
   );
@@ -132,17 +147,6 @@ export function ConfiguracionCalculadoras() {
   useEffect(() => {
     if (pesoGemas.data) setCfgPesoGemas(leerConfigPesoGemas(pesoGemas.data.valor));
   }, [pesoGemas.data]);
-
-  if (!esDueno) {
-    return (
-      <Panel titulo="Configuración de Calculadoras">
-        <div className="flex items-center gap-3 p-6 text-sm text-muted-foreground">
-          <ShieldCheck className="size-5 text-gold" />
-          Esta configuración está disponible únicamente para el usuario Dueño.
-        </div>
-      </Panel>
-    );
-  }
 
   const guardando = guardar.isPending;
 
