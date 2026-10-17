@@ -132,10 +132,14 @@ export function applyAurumInitialModelMaterials(
       // Only source-material names that explicitly identify green gold or white
       // gold override the uniform first-load silver fallback.
       const sourceMaterials=Array.isArray(x.material)?x.material:[x.material];
-      const resolveInitialMetal=(source:any)=>{
-        // Imported CAD/GLB materials may store the alloy name in the material
-        // name, PMAT filename, or userData. Infer an alloy only when explicit.
+      const resolveInitialMetal=(source:any,mesh:any)=>{
+        // Alloy identity may be stored on the imported material, mesh, or CAD
+        // layer. Inspect all explicit labels so a generic material name does
+        // not hide a more useful source-layer name.
         const sourceMeta=source?.userData??{};
+        const meshMeta=mesh?.userData??{};
+        const attributes=meshMeta?.attributes??{};
+        const rhino=meshMeta?.aurumRhino??{};
         const sourceLabel=[
           source?.name,
           sourceMeta?.name,
@@ -143,6 +147,13 @@ export function applyAurumInitialModelMaterials(
           sourceMeta?.sourceRootPath,
           sourceMeta?.sourceFile,
           sourceMeta?.originalMaterialName,
+          mesh?.name,
+          rhino?.capa,
+          rhino?.layerName,
+          attributes?.layerName,
+          attributes?.LayerName,
+          meshMeta?.layerName,
+          meshMeta?.LayerName,
         ].filter((value:any)=>typeof value==="string"&&value.trim())
           .join(" ")
           .toLowerCase()
@@ -160,7 +171,7 @@ export function applyAurumInitialModelMaterials(
           ?? options.metals[0];
       };
       const configureSourceMaterial=(source:any)=>{
-        const metal=resolveInitialMetal(source);
+        const metal=resolveInitialMetal(source,x);
         if(!metal)return source?.clone?source.clone():new THREE.MeshPhysicalMaterial();
         const mat=source?.clone?source.clone():new THREE.MeshPhysicalMaterial();
         options.configureMetal(mat,metal);
