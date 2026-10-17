@@ -125,7 +125,8 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
 
   return useQuery({
     queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
-    staleTime: 60_000,
+    // La configuración se invalida al guardar capacidades; evita refetches al navegar entre módulos.
+    staleTime: 5 * 60_000,
     enabled: Boolean(sesion?.esAdmin),
     queryFn: async () => {
       const { data, error } = await supabase
