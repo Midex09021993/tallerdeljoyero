@@ -1002,7 +1002,11 @@ export function AurumRender() {
           invalidateRenderRef.current?.();
         },
         influenciaMetalAmbiente:(percent:number)=>{
-          const scale=Math.max(0,Math.min(1.5,(Number.isFinite(percent)?percent:45)/100));
+          // Keep a minimum reflection contribution so a metallic material does
+          // not lose all studio reflections and look like a flat gray base color
+          // when the user moves the environment influence to 0%.
+          const value=Math.max(0,Math.min(100,Number.isFinite(percent)?percent:45));
+          const scale=0.25+(value/100)*0.75;
           if (!modelo) return;
           modelo.traverse((x:any)=>{
             if(!x.isMesh||!x.material)return;
@@ -1019,7 +1023,7 @@ export function AurumRender() {
               }
               const base=Number(m.userData.aurumAmbientBaseEnvMapIntensity);
               m.envMapIntensity=base*scale;
-              m.userData.aurumAmbientInfluence=percent;
+              m.userData.aurumAmbientInfluence=value;
               return m;
             };
             x.material=Array.isArray(x.material)?x.material.map(adjust):adjust(x.material);
