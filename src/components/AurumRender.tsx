@@ -1141,6 +1141,10 @@ export function AurumRender() {
           const context=output.getContext("2d");
           if(!context) throw new Error("No se pudo preparar la imagen de salida.");
           let dataUrl="";
+          // Prevent the live animation loop from clearing/replacing the high-resolution
+          // capture between progress-frame yields. The browser can still paint React UI.
+          const loop:any=viewerLoopRef.current;
+          loop?.pause?.();
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
@@ -1253,6 +1257,8 @@ export function AurumRender() {
               camara.updateProjectionMatrix?.();
             }
             invalidateRenderRef.current?.();
+            loop?.resume?.();
+            loop?.resize?.();
           }
           if(!dataUrl||dataUrl.length<1000) {
             throw new Error("La captura del visor está vacía. Espera a que termine de dibujarse y vuelve a intentar.");
