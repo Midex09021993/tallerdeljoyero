@@ -3,7 +3,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
-import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS } from "../lib/aurum-photographic-scene-engine";
+import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS, AURUM_AMBIENT_PRESETS } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -105,6 +105,7 @@ export function AurumRender() {
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("ijewelGem");
+  const [ambienteId, setAmbienteId] = useState("ambiente01");
   const [fondoId, setFondoId] = useState("escena");
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -270,7 +271,7 @@ export function AurumRender() {
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
       const cargarEntornoGema = (key="gemNeutral", rotation=.54, intensityScale=.98) => {
-        gemEnvironmentUrl = getAurumGemHdriUrl(key);
+        gemEnvironmentUrl = AURUM_AMBIENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
         gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
         const requestId = ++gemEnvironmentRequestId;
@@ -963,6 +964,12 @@ export function AurumRender() {
           gemHdriOverride = key;
           setGemHdriId(key);
           cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
+        },
+        ambiente:(key:string)=>{
+          const preset=AURUM_AMBIENT_PRESETS[key];
+          if (!preset) return;
+          setAmbienteId(key);
+          cargarEntornoGema(key,preset.rotation,preset.intensity);
         },
         fondo:(key:string)=>{
           setFondoId(key);
@@ -1814,12 +1821,15 @@ export function AurumRender() {
                 </div>
               </div>}
               {uxSection==="ambientes"&&<div className="space-y-3 pb-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Plantillas de ambiente</div>
-                <div className="rounded-2xl border border-dashed border-[#92743b]/35 bg-white/70 px-4 py-7 text-center">
-                  <div className="mx-auto mb-3 grid size-11 place-items-center rounded-xl bg-[#92743b]/10 text-[#92743b]"><ImageIcon className="size-5"/></div>
-                  <div className="text-sm font-semibold text-[#292824]">Tu biblioteca de ambientes</div>
-                  <p className="mx-auto mt-2 max-w-[250px] text-[11px] leading-relaxed text-[#77756f]">Aquí reuniremos las plantillas visuales que compartas para presentar tus joyas. Cada ambiente podrá definir su presentación sin reemplazar los HDR de metales o gemas ni los fondos independientes.</p>
-                  <div className="mt-3 inline-flex rounded-full border border-black/[.07] bg-[#f7f5f0] px-3 py-1 text-[10px] text-[#77756f]">Esperando tus plantillas</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">10 plantillas de ambiente</div>
+                <p className="text-[10px] leading-relaxed text-[#77756f]">Plantillas recuperadas de tus VJSON. Aplican el HDR y la rotación originales al entorno óptico de las gemas; el HDR de metales y el fondo permanecen independientes.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group rounded-xl border p-2 text-left transition "+(ambienteId===preset.id?"border-[#92743b]/60 bg-[#92743b]/[.08] shadow-sm":"border-black/[.07] bg-white/70 hover:border-[#92743b]/35 hover:bg-white")}>
+                    <span className={"mb-2 flex aspect-[1.35] items-center justify-center overflow-hidden rounded-lg border "+(ambienteId===preset.id?"border-[#92743b]/25 bg-[#e8e0cf]":"border-black/[.06] bg-[#eeede8]")}><ImageIcon className={"size-5 "+(ambienteId===preset.id?"text-[#92743b]":"text-[#aaa59a]")}/></span>
+                    <span className="block text-[11px] font-medium text-[#292824]">{preset.name}</span>
+                    <span className="mt-0.5 block text-[9px] text-[#858178]">HDR · rotación original</span>
+                    {ambienteId===preset.id&&<span className="mt-1 block text-[9px] font-semibold text-[#92743b]">Activo ✓</span>}
+                  </button>)}
                 </div>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
