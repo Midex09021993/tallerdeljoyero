@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Box, MessageCircle, Share2, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
