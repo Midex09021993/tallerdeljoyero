@@ -149,7 +149,7 @@ export async function createAurumPostPipeline(
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`uniform sampler2D tDiffuse; uniform float contrast; uniform float saturation; varying vec2 vUv; void main(){vec4 c=texture2D(tDiffuse,vUv); float l=dot(c.rgb,vec3(.2126,.7152,.0722)); c.rgb=mix(vec3(l),c.rgb,saturation); c.rgb=(c.rgb-.5)*contrast+.5; gl_FragColor=c;}`,
     });
-    gradingPass.enabled=Boolean(config.gradeEnabled);
+    gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
     composer.addPass(gradingPass);
 
     try {
@@ -212,7 +212,7 @@ export async function createAurumPostPipeline(
     const taaEnabled=Boolean(options.capture) || (config.temporalAA!==false && config.taa!==false && !isLowQuality);
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
-    const ssrEnabled=!diagnosticDisableSSR && Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
+    const ssrEnabled=!options.capture && !diagnosticDisableSSR && Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
     if(taaPass){
       taaPass.enabled=taaEnabled;
@@ -240,7 +240,7 @@ export async function createAurumPostPipeline(
     }
 
     if(ssaoPass){
-      ssaoPass.enabled=Boolean(config.ssao) && high;
+      ssaoPass.enabled=!options.capture && Boolean(config.ssao) && high;
       ssaoPass.kernelSize=ultra?24:high?20:12;
       const ssaoScale=ultra?.72:high?.82:.70;
       ssaoPass.setSize?.(
@@ -251,7 +251,8 @@ export async function createAurumPostPipeline(
       ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
     }
     if(bloomPass){
-      bloomPass.enabled=Boolean(config.bloom) && high;
+      // Bloom creates colored fringes around high-contrast jewelry edges; keep it out of PNG AA-only capture.
+      bloomPass.enabled=!options.capture && Boolean(config.bloom) && high;
       bloomPass.strength=config.bloomIntensity??.035;
       bloomPass.threshold=config.bloomThreshold??1.5;
       bloomPass.radius=Math.max(0,Math.min(1,Number(config.bloomRadius??.35)));
@@ -262,18 +263,18 @@ export async function createAurumPostPipeline(
       gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
     if(lutPass){
-      lutPass.enabled=config.lut!==false && !isLowQuality;
+      lutPass.enabled=!options.capture && config.lut!==false && !isLowQuality;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
-      dofPass.enabled=ultra && config.dof===true;
+      dofPass.enabled=!options.capture && ultra && config.dof===true;
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
         dofPass.uniforms.maxblur.value=Math.max(0,Number(config.dofMaxBlur??0.006));
       }
     }
     if(vignettePass){
-      vignettePass.enabled=config.vignette!==false && !isLowQuality;
+      vignettePass.enabled=!options.capture && config.vignette!==false && !isLowQuality;
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
       vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
