@@ -100,9 +100,9 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
   </button>;
 };
 
-type AurumRenderProps = { onCatalogApiReady?: (api: AurumCatalogApi | null) => void };
+type AurumRenderProps = { embedded?: boolean; onCatalogApiReady?: (api: AurumCatalogApi | null) => void };
 
-export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
+export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRenderProps = {}) {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
@@ -1842,8 +1842,8 @@ export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
     </div>
   );
   return (<>
-    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#eeede8] text-white">
-      <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-black/10 bg-[#f7f6f2]/95 px-5 text-[#242424] shadow-sm backdrop-blur-xl">
+    <div className={(embedded ? "relative h-full min-h-0 w-full " : "fixed inset-0 z-40 ") + "flex flex-col overflow-hidden bg-[#eeede8] text-white"}>
+      {!embedded && <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-black/10 bg-[#f7f6f2]/95 px-5 text-[#242424] shadow-sm backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
             <div className="font-display text-[23px] font-semibold tracking-[.16em] text-[#92743b]">AURUM <span className="tracking-normal text-[#292824]">RENDER</span></div>
@@ -1862,9 +1862,9 @@ export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
         </div>
-      </header>
+      </header>}
 
-      {exportOpen&&<div className="absolute right-5 top-[82px] z-[80] w-[290px] rounded-2xl border border-black/10 bg-[#fbfaf7]/[.98] text-[#292824] p-4 shadow-2xl backdrop-blur-xl">
+      {!embedded && exportOpen&&<div className="absolute right-5 top-[82px] z-[80] w-[290px] rounded-2xl border border-black/10 bg-[#fbfaf7]/[.98] text-[#292824] p-4 shadow-2xl backdrop-blur-xl">
         <div className="mb-3 flex items-center justify-between"><div><div className="text-sm font-semibold text-[#292824]">Exportación AURUM</div><div className="mt-1 text-[10px] text-[#77756f]">Descarga para comparar con iJewel</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="space-y-2">
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-3 rounded-xl bg-[#7168f4] px-3 py-3 text-left text-sm font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>
@@ -1899,8 +1899,8 @@ export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-[#77756f]">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
       </div>}
-      <div className="flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3">
-        <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
+      <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
+        {!embedded && <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
@@ -2038,11 +2038,11 @@ export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
               </button>
             </div>
           </div>
-        </aside>
+        </aside>}
 
-        <main className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-[#090b0e]">
+        <main className={"relative min-w-0 flex-1 overflow-hidden bg-[#090b0e] " + (embedded ? "rounded-none" : "rounded-2xl")}>
           <div ref={visorRef} className="absolute inset-0">
-            {!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span></button></div></div>}
+            {!embedded&&!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span></button></div></div>}
             {(cargando || presentationCover) && <div
               className={"absolute inset-0 z-40 overflow-hidden transition-opacity duration-700 "+((cargando || presentationVisible)?"pointer-events-auto opacity-100":"pointer-events-none opacity-0")}
               aria-live="polite"
@@ -2141,12 +2141,12 @@ export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
                 <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/65">{JSON.stringify(diagnosticoSeleccion.existingAssignment,null,2)}</pre>
               </details>
             </div>}
-            {archivo&&<div className="absolute right-16 top-3 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] text-white/60 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
+            {!embedded&&archivo&&<div className="absolute right-16 top-3 z-20 max-w-[45%] truncate rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] text-white/60 backdrop-blur">{archivo} <span className="ml-2 text-[#d4af37]/80">· GLB interno</span></div>}
 
-            <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/15 bg-[#202124]/80 px-3 py-2 shadow-lg backdrop-blur-2xl">
+            {!embedded && <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/15 bg-[#202124]/80 px-3 py-2 shadow-lg backdrop-blur-2xl">
               <span title="Clic izquierdo + arrastrar para orbitar" className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85"><span className="grid size-5 place-items-center rounded-md bg-white/10">◉</span><span>Órbita</span><span className="text-[9px] text-white/45">Clic izq.</span></span><span title="Clic derecho + arrastrar para desplazar la vista" className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85"><span className="grid size-5 place-items-center rounded-md bg-white/10">✋</span><span>Pan</span><span className="text-[9px] text-white/45">Clic der.</span></span><span title="Usa la rueda del ratón para acercar o alejar" className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85"><span className="grid size-5 place-items-center rounded-md bg-white/10">⌕</span><span>Zoom</span><span className="text-[9px] text-white/45">Rueda</span></span><button type="button" title="Restablecer el encuadre inicial" onClick={()=>apiRef.current?.reset()} className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85 transition hover:bg-white/10 hover:text-white"><span className="grid size-5 place-items-center rounded-md bg-white/10">⌗</span><span>Ajustar</span></button>
             </div>
-            <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
+            {!embedded && <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
               <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
               <button type="button" onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Expand className="size-3.5"/></button>
             </div>
