@@ -73,6 +73,7 @@ export function ServiciosExternosRecibidos() {
         <div className="divide-y divide-border">
           {pedidos.map((grupo) => {
             const primero = grupo[0];
+            if (!primero) return null;
             const abierto = abiertos[primero.pedido_id] ?? true;
             const pendientes = grupo.filter((s) => s.estado === "pendiente").length;
 
