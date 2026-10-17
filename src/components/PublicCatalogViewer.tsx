@@ -177,7 +177,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material: any) => material?.dispose?.());
       });
-      if (renderer) disposeAurumViewer({ node: host, renderer, controls, observer: resizeObserver ?? undefined });
+      if (renderer) disposeAurumViewer({ node: host, renderer, controls, ...(resizeObserver ? { observer: resizeObserver } : {}) });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
       if (gemEnvironment && gemEnvironment !== environment && gemEnvironment !== roomEnvironmentTexture) gemEnvironment.dispose?.();
       roomEnvironmentTexture?.dispose?.();
