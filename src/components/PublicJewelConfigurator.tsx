@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
-import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
+import { AurumRender } from "@/components/AurumRender";
+import type { AurumCatalogApi } from "@/lib/aurum/api";
+import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
 
 type Props = { slug: string; producto: string };
 const metales = [
@@ -25,11 +27,14 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
   const [modelName, setModelName] = useState("modelo.3dm");
   const [status, setStatus] = useState("Preparando modelo 3D…");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [catalogApi, setCatalogApi] = useState<AurumCatalogApi | null>(null);
+  const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const loadModelReference = async () => {
       setModelUrl(null);
+      setLoadedModelUrl(null);
       setLoadError(null);
       setStatus("Buscando el modelo 3D del catálogo…");
       try {
@@ -52,6 +57,41 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
 
   const selectedMetal = metales.find((item) => item.id === metalId) ?? metales[0];
   const selectedGem = gemas.find((item) => item.id === gemaId) ?? gemas[0];
+  const aurumMaterial = MATERIALES.find((item) => item.id === selectedMetal.materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
+  const aurumGem = GEMAS.find((item) => item.id === selectedGem.gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!modelUrl || !catalogApi?.cargar || loadedModelUrl === modelUrl) return;
+    const loadIntoAurum = async () => {
+      setStatus("Abriendo modelo en Aurum Render…");
+      setLoadError(null);
+      try {
+        const response = await fetch(modelUrl);
+        if (!response.ok) throw new Error("No se pudo descargar el modelo 3D del catálogo.");
+        const blob = await response.blob();
+        if (cancelled) return;
+        const file = new File([blob], modelName || "modelo.3dm", { type: blob.type || "application/octet-stream" });
+        await catalogApi.cargar?.(file, (progress: string) => { if (!cancelled && progress) setStatus(progress); });
+        if (cancelled) return;
+        setLoadedModelUrl(modelUrl);
+        setStatus("");
+      } catch (cause) {
+        if (!cancelled) {
+          setLoadError(cause instanceof Error ? cause.message : "No se pudo abrir el modelo 3D.");
+          setStatus("");
+        }
+      }
+    };
+    void loadIntoAurum();
+    return () => { cancelled = true; };
+  }, [modelUrl, modelName, catalogApi, loadedModelUrl]);
+
+  useEffect(() => {
+    if (!catalogApi || loadedModelUrl !== modelUrl) return;
+    catalogApi.materialCatalogo?.(aurumMaterial);
+    catalogApi.gemaCatalogo?.(aurumGem);
+  }, [catalogApi, loadedModelUrl, modelUrl, aurumMaterial, aurumGem]);
 
   return (
     <section className="mt-5 overflow-hidden rounded-[28px] border border-[#1f1b1818] bg-white/80 shadow-[0_20px_60px_-45px_rgba(31,27,24,.45)]">
@@ -61,8 +101,8 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
       </div>
       <div className="grid lg:grid-cols-[minmax(0,1fr)_240px]">
         <div className="relative min-h-[320px] bg-[#f7f6f2] sm:min-h-[440px]">
-          {modelUrl && <PublicCatalogViewer modelUrl={modelUrl} modelName={modelName} materialId={selectedMetal.materialId} gemId={selectedGem.gemId} />}
-          {!modelUrl && <div className="absolute inset-0 grid place-items-center p-6 text-center"><p className="max-w-sm text-sm text-[#625b54]">{loadError || status}</p></div>}
+          {modelUrl && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
+          {(!modelUrl || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center " + (loadedModelUrl === modelUrl && !loadError && !status ? "pointer-events-none opacity-0" : "bg-[#f7f6f2]/90")}><p className="max-w-sm text-sm text-[#625b54]">{loadError || status || "Preparando visor 3D…"}</p></div>}
         </div>
         <aside className="border-t border-[#1f1b1810] p-4 lg:border-l lg:border-t-0">
           <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#8a6b36]">Metal</p>
