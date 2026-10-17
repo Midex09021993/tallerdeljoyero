@@ -68,7 +68,9 @@ function obtenerZonasHorarias(): string[] {
     const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
     const zonas = intl.supportedValuesOf?.("timeZone");
     if (zonas?.length) return Array.from(new Set([...zonas, ...ZONAS_HORARIAS_FALLBACK])).sort((a, b) => a.localeCompare(b));
-  } catch {}
+  } catch {
+    // Use the curated list if the runtime cannot enumerate time zones.
+  }
   return ZONAS_HORARIAS_FALLBACK;
 }
 
@@ -117,7 +119,9 @@ function obtenerEtiquetaZonaHoraria(zona: string): string {
       const normalizado = nombre.replace(/^GMT/, "UTC");
       offset = normalizado === "UTC" ? "UTC+00:00" : normalizado;
     }
-  } catch {}
+  } catch {
+    // Keep the UTC fallback if the browser cannot resolve the offset.
+  }
   const ciudad = CIUDADES_ZONA[zona] ?? zona.split("/").pop()?.replace(/_/g, " ") ?? zona;
   return `(${offset}) ${ciudad} · ${zona}`;
 }
@@ -313,7 +317,9 @@ export function ConfiguracionIdentidadComercial() {
           const oldPath = decodeURIComponent(form.logo_url.slice(index + marker.length));
           if (oldPath && oldPath !== path) await supabase.storage.from("identidades-comerciales").remove([oldPath]);
         }
-      } catch {}
+      } catch {
+        // Logo cleanup is best-effort; the saved public URL remains usable.
+      }
     }
 
     setForm((x) => x ? { ...x, logo_url: publicUrl } : x);
@@ -332,7 +338,9 @@ export function ConfiguracionIdentidadComercial() {
           const oldPath = decodeURIComponent(form.logo_url.slice(index + marker.length));
           if (oldPath) await supabase.storage.from("identidades-comerciales").remove([oldPath]);
         }
-      } catch {}
+      } catch {
+        // Continue updating the record if deleting the old object fails.
+      }
     }
     const { error } = await supabase.from("identidades_comerciales").update({ logo_url: null }).eq("id", form.id);
     if (error) toast.error(error.message);
