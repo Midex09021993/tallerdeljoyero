@@ -759,36 +759,12 @@ function MiNubePage() {
           });
           if (finalizeError) throw new Error(`No se pudo finalizar el vídeo en el NAS. ${finalizeError.message}`);
           if (finalized?.error) throw new Error(String(finalized.error));
-          if (!finalized?.ok || Number(finalized.bytes) !== file.size) throw new Error("Nextcloud no confirmó el guardado del vídeo.");
-          setEstadoSubida(`Verificando ${nombre} en el NAS…`);
-          // Verificación real en Nextcloud: dar tiempo a que WebDAV refleje el archivo.
-          // Nunca mostramos éxito hasta encontrar nombre, carpeta y tamaño exactos.
-          let existe = false;
-          let ultimoError: string | null = null;
-          const intentosVerificacion = 5;
-          for (let intento = 1; intento <= intentosVerificacion; intento++) {
-            if (intento > 1) await new Promise((resolve) => window.setTimeout(resolve, 1500 * (intento - 1)));
-            const { data: verificado, error: verificarError } = await supabase.functions.invoke("nextcloud-video-files", {
-              body: { action: "list", participantId: participanteId },
-            });
-            if (verificarError) {
-              ultimoError = verificarError.message;
-              continue;
-            }
-            if (verificado?.error) {
-              ultimoError = String(verificado.error);
-              continue;
-            }
-            existe = Array.isArray(verificado?.files) && verificado.files.some(
-              (f: { name: string; folder: string; bytes: number }) =>
-                f.folder === carpetaSegura && f.name === filename && Number(f.bytes) === file.size,
-            );
-            if (existe) break;
+          if (!finalized?.ok || finalized.verified !== true || finalized.folder !== carpetaSegura || finalized.name !== filename || Number(finalized.bytes) !== file.size) {
+            throw new Error("Nextcloud no confirmó la existencia y el tamaño exacto del vídeo.");
           }
-          if (!existe) {
-            const detalle = ultimoError ? ` Detalle: ${ultimoError}` : "";
-            throw new Error(`El vídeo se envió, pero no pudimos confirmar que esté guardado en el NAS tras ${intentosVerificacion} comprobaciones. No lo damos por guardado.${detalle}`);
-          }
+          // La función verifica la ruta final mediante PROPFIND y confirma bytes exactos.
+          // Así evitamos repetir hasta cinco listados completos de todas las carpetas del NAS.
+          setEstadoSubida(`Vídeo verificado en el NAS: ${nombre}`);
         } else {
           almacenamientoEnProceso = "supabase";
           await subirConProgreso({
