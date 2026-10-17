@@ -67,6 +67,7 @@ function Venta2Detalle() {
 
   const { data: entregaEventos = [] } = useQuery({
     queryKey: ["ventas-entrega-eventos", id],
+    staleTime: 30_000,
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_entrega_eventos").select("id,tipo,usuario_id,datos,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100);
@@ -77,6 +78,7 @@ function Venta2Detalle() {
 
   const { data: movimientos = [] } = useQuery({
     queryKey: ["ventas-movimientos", id],
+    staleTime: 30_000,
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_movimientos").select("id,area_origen,area_destino,accion,nota,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100);
