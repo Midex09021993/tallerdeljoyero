@@ -564,6 +564,26 @@ function MiNubePage() {
         ...s,
         destinatario_nombre: nombresDestinatarios.get(s.destinatario_participante_id) ?? "Taller del ecosistema",
       })));
+
+      // Resolver los propietarios de todas las carpetas recibidas en una sola
+      // consulta, en vez de ejecutar una consulta por cada carpeta compartida.
+      const idsPropietarios = [...new Set(((recibidas ?? []) as CarpetaCompartida[])
+        .map((share) => share.propietario_participante_id)
+        .filter(Boolean))];
+      const nombresPropietarios = new Map<string, string>();
+      if (idsPropietarios.length > 0) {
+        const { data: propietarios, error: errorPropietarios } = await supabase
+          .from("ecosistema_participantes")
+          .select("id, nombre")
+          .in("id", idsPropietarios);
+        if (errorPropietarios) {
+          console.warn("[Mi Nube] No se pudieron resolver los nombres de los propietarios.", errorPropietarios.message);
+        } else {
+          for (const propietario of propietarios ?? []) {
+            nombresPropietarios.set(propietario.id, propietario.nombre?.trim() || "Taller del ecosistema");
+          }
+        }
+      }
       const carpetas = await Promise.all(((recibidas ?? []) as CarpetaCompartida[]).map(async (share) => {
         const ruta = `${share.propietario_participante_id}/${share.propietario_usuario_id}/${share.carpeta}`;
         const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(ruta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
@@ -585,9 +605,14 @@ function MiNubePage() {
           const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60);
           return { ...archivo, urlVista: data?.signedUrl ?? null };
         }));
-        const { data: propietario } = await supabase.from("ecosistema_participantes").select("nombre").eq("id", share.propietario_participante_id).maybeSingle();
         const imagenPortada = conVistas.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null;
-        return { id: share.id, nombre: share.carpeta, propietarioNombre: propietario?.nombre ?? "Taller del ecosistema", archivos: conVistas, portada: imagenPortada };
+        return {
+          id: share.id,
+          nombre: share.carpeta,
+          propietarioNombre: nombresPropietarios.get(share.propietario_participante_id) ?? "Taller del ecosistema",
+          archivos: conVistas,
+          portada: imagenPortada,
+        };
       }));
       setCarpetasRecibidas(carpetas);
     } catch (cause) {
