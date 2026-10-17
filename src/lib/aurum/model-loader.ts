@@ -220,6 +220,24 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
   }
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
   object.userData = { ...object.userData, aurumPreprocess: { version: 9, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, metalNormalsExperimentOnly: experimentMode === "crease-metal" || experimentMode === "recompute-metal", creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
+  if (experimentMode === "diagnostic") {
+    const suspiciousMeshes: any[] = [];
+    object.traverse((x: any) => {
+      if (!x.isMesh) return;
+      const diagnostic = x.userData?.aurumNormalDiagnostics;
+      if (diagnostic?.valid && Number(diagnostic.suspiciousRatio) >= 0.12) {
+        suspiciousMeshes.push({
+          mesh: String(x.name || x.uuid),
+          family: getAurumMeshFamily(x),
+          vertices: diagnostic.vertices,
+          suspiciousNormalRatio: Number(Number(diagnostic.suspiciousRatio).toFixed(3)),
+          triangles: x.geometry?.index ? Math.floor(x.geometry.index.count / 3) : Math.floor((x.geometry?.attributes?.position?.count ?? 0) / 3),
+          material: Array.isArray(x.material) ? x.material.map((m: any) => m?.name || m?.type) : (x.material?.name || x.material?.type || null),
+        });
+      }
+    });
+    console.info("[AURUM][NORMALS AUDIT]", { ...object.userData.aurumPreprocess, suspiciousMeshes });
+  }
   return object;
 }
 
