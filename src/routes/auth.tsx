@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
-import { SolicitudAcceso } from "@/components/SolicitudAcceso";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
@@ -668,13 +667,6 @@ function LoginPage() {
               ) : null}
             </div>
 
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-4 sm:px-7">
-              <p className="text-[10px] text-white/35">Aurum Lab · Plataforma especializada para el sector joyero</p>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setMostrarPlataforma(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/65 hover:border-gold/40 hover:text-white">Cerrar</button>
-                <SolicitudAcceso />
-              </div>
-            </div>
           </div>
         </div>
       ) : null}
