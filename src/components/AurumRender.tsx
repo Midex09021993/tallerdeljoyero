@@ -1154,10 +1154,9 @@ export function AurumRender() {
               camara.aspect=renderWidth/renderHeight;
               camara.updateProjectionMatrix?.();
             }
-            // Still PNG needs the diamond-only final optical budget; the live
-            // budget (3 bounces) is tuned for interaction and visibly loses facet
-            // contrast/fire in a high-resolution still. Restore it in finally.
-            if(!isPoster) diamondBvhRuntime?.setDiamondQuality("final");
+            // Keep the same diamond optical budget in the PNG and live viewer.
+            // A higher capture-only bounce count changed the stone's appearance
+            // without a verified visual gain, so capture only increases spatial AA.
             diamondBvhRuntime?.update();
             if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
@@ -1226,9 +1225,6 @@ export function AurumRender() {
             context.drawImage(renderer.domElement,0,0,width,height);
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
-            // Restore the interactive diamond budget after the still capture,
-            // including on failures, so orbit performance remains unchanged.
-            if(!isPoster) diamondBvhRuntime?.setDiamondQuality("interactive");
             // Refresh diamond camera uniforms after restoring the live camera.
             diamondBvhRuntime?.update();
             // Restore the interactive viewport immediately, including DPR and
