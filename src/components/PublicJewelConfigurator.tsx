@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
-import { AurumRender } from "@/components/AurumRender";
+import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
 
 type Props = { slug: string; producto: string };
 const metales = [
@@ -61,7 +61,7 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
       </div>
       <div className="grid lg:grid-cols-[minmax(0,1fr)_240px]">
         <div className="relative min-h-[320px] bg-[#f7f6f2] sm:min-h-[440px]">
-          {modelUrl && <AurumRender compact initialModelUrl={modelUrl} initialModelName={modelName} selectedMaterialId={selectedMetal.materialId} selectedGemId={selectedGem.gemId} />}
+          {modelUrl && <PublicCatalogViewer modelUrl={modelUrl} modelName={modelName} materialId={selectedMetal.materialId} gemId={selectedGem.gemId} />}
           {!modelUrl && <div className="absolute inset-0 grid place-items-center p-6 text-center"><p className="max-w-sm text-sm text-[#625b54]">{loadError || status}</p></div>}
         </div>
         <aside className="border-t border-[#1f1b1810] p-4 lg:border-l lg:border-t-0">
