@@ -892,7 +892,7 @@ export function useCrearContrato() {
 export function useContratos(incluirFinanzas = true) {
   return useQuery({
     queryKey: ["contratos", incluirFinanzas],
-    refetchInterval: 15000,
+    staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato[]> => {
       const { data, error } = await supabase
@@ -1004,7 +1004,7 @@ function pagosDesdeRows(rows: Array<Record<string, unknown>>): PagoContrato[] {
 export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined, habilitado = true) {
   return useQuery({
     queryKey: ["contrato_pagos", contrato?.id, contrato?.numero],
-    refetchInterval: 15000,
+    staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<PagoContrato[]> => {
       if (!contrato) return [];
@@ -1036,7 +1036,7 @@ export function usePagosContratos(
   const numeros = contratos.map((c) => c.numero).filter(Boolean);
   return useQuery({
     queryKey: ["contrato_pagos", ids.slice().sort(), numeros.slice().sort()],
-    refetchInterval: 15000,
+    staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<PagoContrato[]> => {
       if (ids.length === 0 && numeros.length === 0) return [];
@@ -1246,7 +1246,7 @@ export function useCrearContratoDesdePedido() {
 export function useContrato(id: string, habilitado = true) {
   return useQuery({
     queryKey: ["contrato", id],
-    refetchInterval: 15000,
+    staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<Contrato | null> => {
       const selector = esUuid(id) ? "id" : "numero";
