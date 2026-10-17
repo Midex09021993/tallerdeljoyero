@@ -13,6 +13,8 @@ export type AurumCatalogApi = {
   cargar?: (...args: any[]) => any;
   material?: (...args: any[]) => any;
   gema?: (...args: any[]) => any;
+  materialCatalogo?: (...args: any[]) => any;
+  gemaCatalogo?: (...args: any[]) => any;
   escenario?: (...args: any[]) => any;
   metalHdri?: (...args: any[]) => any;
   gemHdri?: (...args: any[]) => any;
@@ -25,6 +27,8 @@ const CATALOG_API_METHODS = [
   "cargar",
   "material",
   "gema",
+  "materialCatalogo",
+  "gemaCatalogo",
   "escenario",
   "metalHdri",
   "gemHdri",
