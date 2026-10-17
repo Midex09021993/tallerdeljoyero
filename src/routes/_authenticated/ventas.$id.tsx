@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Banknote, CheckCircle2, CreditCard, History, PackageCheck, Truck, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/ventas/$id")({
 function Venta2Detalle() {
   const { id } = useParams({ from: "/_authenticated/ventas/$id" });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: sesion } = useSesion();
   const { data: pedidos = [] } = usePedidos();
   const { filtrarPedidos } = useSedeFiltroDueno();
@@ -62,7 +63,11 @@ function Venta2Detalle() {
     setGuardando(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Pago registrado");
-    setMonto(""); setAccion(null); window.location.reload();
+    setMonto("");
+    setAccion(null);
+    void queryClient.invalidateQueries({ queryKey: ["contrato_pagos"] });
+    void queryClient.invalidateQueries({ queryKey: ["contratos"] });
+    void queryClient.invalidateQueries({ queryKey: ["pedidos"] });
   };
 
   const { data: entregaEventos = [] } = useQuery({
