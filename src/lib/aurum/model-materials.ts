@@ -133,10 +133,25 @@ export function applyAurumInitialModelMaterials(
       // gold override the uniform first-load silver fallback.
       const sourceMaterials=Array.isArray(x.material)?x.material:[x.material];
       const resolveInitialMetal=(source:any)=>{
-        const sourceName=String(source?.name??"").toLowerCase();
-        const sourceId=sourceName.includes("greengold")||sourceName.includes("green_gold")||sourceName.includes("green gold")
+        // Imported CAD/GLB materials may store the alloy name in the material
+        // name, PMAT filename, or userData. Infer an alloy only when explicit.
+        const sourceMeta=source?.userData??{};
+        const sourceLabel=[
+          source?.name,
+          sourceMeta?.name,
+          sourceMeta?.materialName,
+          sourceMeta?.sourceRootPath,
+          sourceMeta?.sourceFile,
+          sourceMeta?.originalMaterialName,
+        ].filter((value:any)=>typeof value==="string"&&value.trim())
+          .join(" ")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g,"");
+        const key=sourceLabel.replace(/[^a-z0-9]+/g,"");
+        const sourceId=key.includes("greengold")||key.includes("oro18verde")||key.includes("oroverde")
           ? "oro18_verde"
-          : sourceName.includes("whitegold")||sourceName.includes("white_gold")||sourceName.includes("white gold")
+          : key.includes("whitegold")||key.includes("oroblanco")
             ? "oro18b_pulido"
             : options.initialMetalId ?? "plata925_pulida";
         return options.metals.find((m:any)=>m.id===sourceId)
