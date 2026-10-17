@@ -1109,6 +1109,7 @@ export function AurumRender() {
           const originalCssWidth=originalBufferWidth/originalPixelRatio;
           const originalCssHeight=originalBufferHeight/originalPixelRatio;
           const originalAspect=camara.aspect;
+          const originalToneMappingExposure=Number(renderer.toneMappingExposure ?? 1);
           const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
           const width=isPoster
             ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
@@ -1178,6 +1179,10 @@ export function AurumRender() {
                 throw new Error("El búfer interno del compositor no coincide con la resolución de captura solicitada.");
               }
               captureTaaPass = composer.passes?.find((pass:any)=>pass && "sampleLevel" in pass && "accumulateIndex" in pass && "accumulate" in pass) ?? null;
+              // Protect polished-metal highlights in the supersampled still. The
+              // live exposure remains authoritative; this small capture-only reduction
+              // is restored in finally and does not modify any material or lighting.
+              renderer.toneMappingExposure=originalToneMappingExposure*0.94;
               if(captureTaaPass){
                 // A previous viewer frame may have left TAA halfway through its
                 // accumulation sequence. Every still capture must start clean.
@@ -1230,6 +1235,7 @@ export function AurumRender() {
             // Restore the interactive viewport immediately, including DPR and
             // camera projection, even if capture or encoding fails.
             renderer.setPixelRatio(originalPixelRatio);
+            renderer.toneMappingExposure=originalToneMappingExposure;
             (renderer as any).transmissionResolutionScale=originalTransmissionResolutionScale;
             renderer.setSize(originalCssWidth,originalCssHeight,false);
             if(composer && applyPostQuality){
