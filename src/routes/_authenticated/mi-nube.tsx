@@ -362,29 +362,36 @@ function MiNubePage() {
       }
 
       const archivosPlanos = resultados.flat();
-      // Solo se necesita una portada por carpeta; firmar cada foto genera
-      // solicitudes innecesarias en bibliotecas con muchas imágenes.
-      const primeraFotoPorCarpeta = new Set<string>();
-      const archivosConVistas: ArchivoNube[] = [];
-      // Mantener un máximo de cuatro firmas de URL en paralelo, incluso si
-      // la biblioteca contiene cientos de carpetas con fotografías.
+      // Preparar solo las portadas necesarias antes de firmar URLs; los demás
+      // archivos no deben entrar en lotes de trabajo de vistas previas.
+      const primeraFotoPorCarpeta = new Map<string, ArchivoNube>();
+      for (const archivo of archivosPlanos) {
+        if (archivo.categoria === "fotos" && !primeraFotoPorCarpeta.has(archivo.carpeta)) {
+          primeraFotoPorCarpeta.set(archivo.carpeta, archivo);
+        }
+      }
+      const portadas = [...primeraFotoPorCarpeta.values()];
+      const urlPorRuta = new Map<string, string | null>();
+      // Firmar como máximo cuatro portadas en paralelo, independientemente
+      // del número total de archivos que tenga la biblioteca.
       const concurrenciaVistas = 4;
-      for (let inicio = 0; inicio < archivosPlanos.length; inicio += concurrenciaVistas) {
-        const lote = archivosPlanos.slice(inicio, inicio + concurrenciaVistas);
-        const loteConVistas = await Promise.all(lote.map(async (archivo) => {
-          if (archivo.categoria !== "fotos" || primeraFotoPorCarpeta.has(archivo.carpeta)) return archivo;
-          primeraFotoPorCarpeta.add(archivo.carpeta);
+      for (let inicio = 0; inicio < portadas.length; inicio += concurrenciaVistas) {
+        const lote = portadas.slice(inicio, inicio + concurrenciaVistas);
+        await Promise.all(lote.map(async (archivo) => {
           try {
             const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
             if (signedError) console.warn("[Mi Nube] No se pudo generar vista previa.", archivo.nombre, signedError.message);
-            return { ...archivo, urlVista: data?.signedUrl ?? null };
+            urlPorRuta.set(archivo.ruta, data?.signedUrl ?? null);
           } catch (previewCause) {
             console.warn("[Mi Nube] Falló una vista previa; se conserva el archivo en el listado.", archivo.nombre, previewCause);
-            return { ...archivo, urlVista: null };
+            urlPorRuta.set(archivo.ruta, null);
           }
         }));
-        archivosConVistas.push(...loteConVistas);
       }
+      const archivosConVistas = archivosPlanos.map((archivo) => {
+        if (archivo.categoria !== "fotos" || primeraFotoPorCarpeta.get(archivo.carpeta)?.ruta !== archivo.ruta) return archivo;
+        return { ...archivo, urlVista: urlPorRuta.get(archivo.ruta) ?? null };
+      });
 
       setArchivos((actuales) => [
         ...archivosConVistas,
