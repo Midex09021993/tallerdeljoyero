@@ -205,7 +205,7 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"oro18_champan", grupo:"Especiales", nombre:"Oro Champán", color:0xd6b875, metalness:1, roughness:.12, envMapIntensity:2.05, clearcoat:.16 },
   { id:"oro18_verde", grupo:"Especiales", nombre:"Oro Verde", color:0xb5b66f, metalness:1, roughness:.13, envMapIntensity:1.98, clearcoat:.15 },
   // Perfil experimental 58: apariencia amarilla de referencia al combinar visualmente oro verde y oro blanco pulido. Conserva los perfiles base sin modificarlos.
-  { id:"oro18_verde_blanco_ijewel", grupo:"Especiales", nombre:"Oro Verde + Blanco · Referencia iJewel", color:0xc9a34a, metalness:1, roughness:.10, envMapIntensity:1.95, clearcoat:.14, anisotropy:.045 },
+  { id:"oro18_verde_blanco_ijewel", grupo:"Especiales", nombre:"Oro Amarillo 18K · Mezcla Verde + Blanco", color:0xc9a34a, metalness:1, roughness:.10, envMapIntensity:1.95, clearcoat:.14, anisotropy:.045 },
   // Comparativa experimental: parámetros ópticos tomados de los materiales verde y blanco del GLB aportado; sin teñir el resultado hacia amarillo.
   { id:"oro18_verde_blanco_glb", grupo:"Especiales", nombre:"Oro Verde + Blanco · Datos GLB", color:0xb9a989, metalness:1, roughness:0, envMapIntensity:.9, clearcoat:0, anisotropy:0 },
   { id:"paladio_pulido", grupo:"Especiales", nombre:"Paladio Pulido", color:0xd1d5d9, metalness:1, roughness:.085, envMapIntensity:2.05, clearcoat:.18 },
