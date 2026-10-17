@@ -118,7 +118,7 @@ function CatalogoPage() {
     if (!puedeGestionar || guardandoAccion) return;
     setGuardandoAccion(campo + ":" + id);
     try {
-      const { error } = await supabase.from("catalogo_productos").update({ [campo]: valor }).eq("id", id).eq("participante_id", sesion!.participante!.id);
+      const { error } = await supabase.from("catalogo_productos").update(campo === "publicado" ? { publicado: valor } : { destacado: valor }).eq("id", id).eq("participante_id", sesion!.participante!.id);
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion?.participante?.id] });
     } catch (error) { window.alert(error instanceof Error ? error.message : "No se pudo actualizar el modelo."); }
@@ -185,7 +185,7 @@ function CatalogoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("catalogo_categorias")
-        .select("id, nombre, slug, orden, activo, parent_id")
+        .select("id, nombre, slug, orden, activo")
         .eq("participante_id", sesion!.participante!.id)
         .eq("activo", true)
         .order("orden", { ascending: true })
@@ -196,14 +196,8 @@ function CatalogoPage() {
     staleTime: 30_000,
   });
   const categoriasDisponibles = useMemo(() => {
-    const rows = categoriasRows as Array<{ id: string; nombre: string; parent_id: string | null; activo: boolean }>;
-    const principales = rows.filter((item) => !item.parent_id);
-    const etiquetas = principales.map((item) => item.nombre);
-    for (const sub of rows.filter((item) => item.parent_id)) {
-      const parent = principales.find((item) => item.id === sub.parent_id);
-      if (parent && parent.activo) etiquetas.push(`${parent.nombre} / ${sub.nombre}`);
-    }
-    return etiquetas;
+    const principales = categoriasRows.filter((item) => item.activo);
+    return principales.map((item) => item.nombre);
   }, [categoriasRows]);
 
   const { data: productoRows = [], isLoading: productosLoading, error: productosError } = useQuery({
@@ -369,7 +363,7 @@ function CatalogoPage() {
         )}
       </section>
 
-      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url} initialName={imagenDesdeMiNube?.nombre} initialProject={proyectoDesdeMiNube} initialPdf={pdfDesdeMiNube} onClose={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); }} onSaved={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
+      <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url ?? null} initialName={imagenDesdeMiNube?.nombre ?? null} initialProject={proyectoDesdeMiNube ?? null} initialPdf={pdfDesdeMiNube ?? null} onClose={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); }} onSaved={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
       <CatalogoCategoriasDialog open={categoriasAbierta} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
       <CatalogoColeccionesDialog open={coleccionesAbierta} participanteId={sesion?.participante?.id ?? ""} productos={productoRows.map((p) => ({ id: p.id, nombre: p.nombre, codigo: p.codigo }))} onClose={() => setColeccionesAbierta(false)} onChanged={() => { if (sesion?.participante?.id) { void queryClient.invalidateQueries({ queryKey: ["catalogo-producto-colecciones", sesion.participante.id] }); void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); } }} />
@@ -441,7 +435,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setTelefonoContacto(configResult.data?.telefono_contacto ?? "");
       setEmailContacto(configResult.data?.email_contacto ?? "");
       setDireccionContacto(configResult.data?.direccion_contacto ?? "");
-      const redes = configResult.data?.redes_sociales && typeof configResult.data.redes_sociales === "object" ? configResult.data.redes_sociales : {};
+      const redesValue = configResult.data?.redes_sociales;
+      const redes = redesValue && typeof redesValue === "object" && !Array.isArray(redesValue) ? redesValue as Record<string, string | null | undefined> : {};
       setRedesSociales({ instagram: redes.instagram ?? "", tiktok: redes.tiktok ?? "", youtube: redes.youtube ?? "", facebook: redes.facebook ?? "", pinterest: redes.pinterest ?? "" });
       setDescripcion(configResult.data?.descripcion ?? "");
       setFrasePortada(configResult.data?.frase_portada ?? "");
