@@ -1098,10 +1098,12 @@ export function AurumRender() {
         },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
-          // Faithful viewer capture: copy the canvas currently shown to the user.
-          // Do not switch render modes, run the photographic composer, alter exposure,
-          // change gemstone transmission, resize WebGL, or mutate the camera/materials.
-          const liveCanvas=visorRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+          // Re-render the current live scene and read it synchronously in the same
+          // task. With preserveDrawingBuffer:false, reading a previously displayed
+          // frame can return white/empty after the browser has composited it.
+          // Keep the current camera, materials, lighting, HDRs and live render path.
+          renderer.render(escena,camara);
+          const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
           if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
             throw new Error("El visor todavía no tiene una imagen disponible para capturar.");
           }
