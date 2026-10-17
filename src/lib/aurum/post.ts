@@ -171,7 +171,10 @@ export async function createAurumPostPipeline(
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
     composer.addPass(outputPass);
-  } catch {
+  } catch (error) {
+    // Keep the live viewer resilient, but never hide why the photographic
+    // pipeline failed: PNG capture diagnostics need the original exception.
+    console.error("[AURUM][POST] No se pudo inicializar el compositor fotográfico; se usará render directo.", error);
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
     composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null;
