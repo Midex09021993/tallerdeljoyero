@@ -1159,12 +1159,33 @@ export function AurumRender() {
             if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
             }
+            const drawingBufferSize = renderer.getDrawingBufferSize(new THREE.Vector2());
+            if(Math.round(drawingBufferSize.x)!==renderWidth || Math.round(drawingBufferSize.y)!==renderHeight){
+              throw new Error("El búfer de dibujo WebGL no coincide con la resolución interna solicitada.");
+            }
+            let captureComposerBuffer: { width: number; height: number } | null = null;
+            let captureTaaPass: any = null;
             if(composer && applyPostQuality){
               // Capture-only photographic pass: enable temporal AA and size the
               // composer to the supersampled target, not the small viewer CSS box.
               applyPostQuality({...renderQuality,pixelRatio:1,qualityId:"ultra"},{capture:true,width:renderWidth,height:renderHeight});
-              // TAA converges across jittered samples. Keep this work exclusive
-              // to export so camera movement remains on the fast direct path.
+              captureComposerBuffer = composer.readBuffer
+                ? { width: Number(composer.readBuffer.width), height: Number(composer.readBuffer.height) }
+                : null;
+              if(!captureComposerBuffer || captureComposerBuffer.width!==renderWidth || captureComposerBuffer.height!==renderHeight){
+                throw new Error("El búfer interno del compositor no coincide con la resolución de captura solicitada.");
+              }
+              captureTaaPass = composer.passes?.find((pass:any)=>pass?.constructor?.name==="TAARenderPass") ?? null;
+              if(captureTaaPass){
+                // A previous viewer frame may have left TAA halfway through its
+                // accumulation sequence. Every still capture must start clean.
+                captureTaaPass.enabled=true;
+                captureTaaPass.accumulate=true;
+                captureTaaPass.sampleLevel=5; // 32 jitter samples
+                captureTaaPass.accumulateIndex=-1;
+              }
+              // TAA converges across a fresh 32-sample sequence. This work is
+              // exclusive to export; camera movement keeps the fast live path.
               for(let sample=0;sample<32;sample++){
                 diamondBvhRuntime?.update();
                 composer.render();
@@ -1175,6 +1196,14 @@ export function AurumRender() {
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
               requestedOutput: { width, height },
               internalRender: { width: renderer.domElement.width, height: renderer.domElement.height },
+              drawingBuffer: { width: Math.round(drawingBufferSize.x), height: Math.round(drawingBufferSize.y) },
+              composerBuffer: captureComposerBuffer,
+              taa: captureTaaPass ? {
+                enabled: Boolean(captureTaaPass.enabled),
+                accumulate: Boolean(captureTaaPass.accumulate),
+                sampleLevel: Number(captureTaaPass.sampleLevel ?? -1),
+                accumulateIndex: Number(captureTaaPass.accumulateIndex ?? -1),
+              } : null,
               outputCanvas: { width: output.width, height: output.height },
               supersamplingScale: renderScale,
               diamondBvh: diamondBvhRuntime?.diagnostics() ?? {
