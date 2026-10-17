@@ -320,6 +320,7 @@ function NuevoPedido() {
 
     const nuevo: PedidoNuevo = {
       referencia: siguienteReferencia(sede?.nombre ?? "Taller", pedidos.map((p) => p.referencia)),
+      tipo_operacion: tipoOperacion,
       pieza: form.trabajo.trim(),
       trabajo: form.trabajo.trim(),
       cliente: form.cliente.trim() || "Cliente pendiente de registrar",
@@ -493,6 +494,7 @@ function NuevoPedido() {
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><ClipboardList className="size-5" /></span><div><h2 className="text-base font-semibold">Identificación del pedido</h2><p className="mt-1 text-xs text-muted-foreground">Define qué joya entra al sistema y a quién pertenece.</p></div></div>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de operación</span><div className="mt-1.5 grid gap-2 sm:grid-cols-3">{([{value:"fabricacion",label:"Fabricación",detail:"Joya nueva"},{value:"reparacion",label:"Reparación",detail:"Trabajo sobre una pieza"},{value:"venta_stock",label:"Venta de stock",detail:"Pieza disponible"}] as const).map((op) => <button key={op.value} type="button" aria-pressed={tipoOperacion === op.value} onClick={() => { setTipoOperacion(op.value); if (op.value !== "fabricacion") setRutaProduccion([]); }} className={`rounded-xl border px-3 py-3 text-left transition ${tipoOperacion === op.value ? "border-gold/50 bg-gold/5" : "border-border bg-background hover:bg-surface-muted"}`}><span className="block text-sm font-semibold">{op.label}</span><span className="mt-1 block text-[10px] text-muted-foreground">{op.detail}</span></button>)}</div></div>
                 <div className="sm:col-span-2"><label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</span><input value={clienteBusqueda || form.cliente} onChange={(e) => { setClienteBusqueda(e.target.value); set("cliente", e.target.value); setClienteId(""); setCotizacionId(""); set("contrato", ""); }} placeholder="Buscar por nombre o teléfono" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/10" /></label>
   {!clienteId && clienteBusqueda.trim().length >= 2 ? <div className="mt-1 min-h-5 text-[11px]">
     {clientePredictivo ? <button type="button" onClick={async () => {
@@ -516,7 +518,7 @@ function NuevoPedido() {
               </div>
             </section>
 
-            <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
+            {tipoOperacion === "fabricacion" ? <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-xl bg-gold/10 text-gold"><Factory className="size-5" /></span><div><h2 className="text-base font-semibold">Ruta de producción</h2><p className="mt-1 text-xs text-muted-foreground">Selecciona el recorrido previsto para este pedido.</p></div></div>
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 {rutas.map((area) => {
@@ -543,7 +545,7 @@ function NuevoPedido() {
               </div>
               {capacidadesSedeRutaError || capacidadesExternasRutaError ? <p className="mt-3 rounded-xl border border-danger/20 bg-danger/5 p-3 text-xs text-danger">No se pudieron consultar todas las capacidades disponibles para la ruta.</p> : null}
               {!capacidadesSedeRutaError && !capacidadesExternasRutaError && rutasDisponibles.length === 0 ? <p className="mt-3 rounded-xl border border-warning/20 bg-warning-soft/50 p-3 text-xs text-warning">No hay capacidad interna ni servicio externo configurado todavía. Puedes seleccionar igualmente la ruta; la ejecución se distribuirá en Producción.</p> : null}
-            </section>
+            </section> : <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6"><h2 className="text-sm font-semibold">{tipoOperacion === "reparacion" ? "Recepción de reparación" : "Registro de pieza de stock"}</h2><p className="mt-1 text-xs text-muted-foreground">{tipoOperacion === "reparacion" ? "Describe el daño, ajuste o trabajo requerido en las notas de recepción." : "Identifica la pieza disponible y la cantidad. La salida de inventario debe seguir el flujo de stock correspondiente."}</p></section>}
 
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card sm:p-6">
               <h2 className="text-base font-semibold">Fechas y documentación</h2>
@@ -611,10 +613,11 @@ function NuevoPedido() {
             <section className="rounded-[24px] border border-border bg-card p-5 shadow-card">
               <h2 className="text-sm font-semibold">Condición comercial</h2>
               <p className="mt-1 text-xs text-muted-foreground">Registra el precio acordado y el anticipo. El saldo se calcula automáticamente.</p>
+              {cotizacionesHabilitadas && clienteId ? <label className="mt-4 block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cotización aprobada (opcional)</span><select value={cotizacionId} onChange={(e) => { setCotizacionId(e.target.value); set("importe_directo", ""); }} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50"><option value="">Pedido directo, sin cotización</option>{cotizacionesCliente.map((cotizacion) => <option key={cotizacion.id} value={cotizacion.id}>{cotizacion.numero}{cotizacion.version ? ` · v${cotizacion.version}` : ""} — {cotizacion.moneda} {Number(cotizacion.total || 0).toFixed(2)}</option>)}</select>{buscandoCotizaciones ? <span className="mt-1 block text-[10px] text-muted-foreground">Buscando cotizaciones aprobadas…</span> : null}{!buscandoCotizaciones && cotizacionesCliente.length === 0 ? <span className="mt-1 block text-[10px] text-muted-foreground">No hay cotizaciones aprobadas para este cliente en este taller.</span> : null}</label> : null}
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Campo label="N° contrato (opcional)" value={form.contrato} onChange={(v) => set("contrato", v)} placeholder="Ej. CTR-2026-0001" />
-                <Campo label="N° cotización (referencia externa, opcional)" value={form.cotizacion_numero} onChange={(v) => set("cotizacion_numero", v)} placeholder="Ej. COT-EXT-2026-0001" />
-                <Campo label="Precio total" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="0.00" type="number" required />
+                <Campo label="N° cotización externa (opcional)" value={form.cotizacion_numero} onChange={(v) => set("cotizacion_numero", v)} placeholder="Ej. COT-EXT-2026-0001" />
+                {cotizacionSeleccionada ? <div className="rounded-xl border border-gold/20 bg-gold/5 p-3 sm:col-span-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Importe de cotización aprobada</p><p className="mt-1 text-lg font-semibold">{cotizacionSeleccionada.moneda} {totalComercial.toFixed(2)}</p><p className="mt-1 text-[10px] text-muted-foreground">Se toma el importe del documento aprobado; no necesitas volver a escribirlo.</p></div> : <Campo label="Precio total" value={form.importe_directo} onChange={(v) => set("importe_directo", v)} placeholder="0.00" type="number" required />}
                 <Campo label="Anticipo" value={form.a_cuenta} onChange={(v) => set("a_cuenta", v)} placeholder="0.00" type="number" />
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
