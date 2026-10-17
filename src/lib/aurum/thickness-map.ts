@@ -138,7 +138,7 @@ const gridRayDistance=(origin:THREE.Vector3,direction:THREE.Vector3,grid:CellGri
     const boundary=min+(s>0?(coord===0?x:coord===1?y:z)+1:(coord===0?x:coord===1?y:z))*st;
     return {t:(boundary-origin.getComponent(coord))/d,delta:Math.abs(st/d)};
   };
-  let ax=axisData(0,grid.min.x,step.x,sx),ay=axisData(1,grid.min.y,step.y,sy),az=axisData(2,grid.min.z,step.z,sz);
+  const ax=axisData(0,grid.min.x,step.x,sx),ay=axisData(1,grid.min.y,step.y,sy),az=axisData(2,grid.min.z,step.z,sz);
   const visited=new Set<number>();
   for(let guard=0;guard<dims[0]+dims[1]+dims[2]+96;guard++){
     if(x<0||x>=dims[0]||y<0||y>=dims[1]||z<0||z>=dims[2])break;
