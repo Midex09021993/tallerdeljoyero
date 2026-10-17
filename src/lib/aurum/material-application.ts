@@ -220,7 +220,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   const selectedCategory=selectionCategory(activePart);
   const selectedLayerId=selectedMeta.rhinoLayerId??activePart?.userData?.attributes?.layerId??activePart?.userData?.attributes?.LayerId??activePart?.userData?.layerId??activePart?.userData?.LayerId??null;
   const selectedLayerKey=resolveAurumLayerKey({layerId:selectedLayerId,layerIndex:selectedLayerIndex,layerName:selectedLayer,layerColor:selectedMeta.colorCapa,category:selectedCategory,existingKey:selectedMeta.layerKey});
-  if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
+  if(selectedCategory!=="metal"&&selectedCategory!=="otro"&&!applyToAllMatchingMetals) return false;
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
   applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
   let applied=0;
@@ -283,7 +283,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
 export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyToAllMatchingGems=false) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
-  if(selectedCategory!=="gema")return false;
+  if(selectedCategory!=="gema"&&!applyToAllMatchingGems)return false;
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
