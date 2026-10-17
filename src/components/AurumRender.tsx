@@ -793,6 +793,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camera: camara, controls: controles, lights: lucesAurum,
           groundController, lightingController, scene: escena, renderer,
         }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
+        // Embedded public configurators have a narrower viewport than the
+        // full editor. Pull the camera back slightly so the entire jewel has
+        // breathing room without changing framing in the main editor.
+        if (embedded && controles?.target && camara?.position) {
+          const target = controles.target;
+          const offset = camara.position.clone().sub(target);
+          offset.multiplyScalar(1.16);
+          camara.position.copy(target).add(offset);
+          camara.updateProjectionMatrix?.();
+          controles.update?.();
+        }
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
