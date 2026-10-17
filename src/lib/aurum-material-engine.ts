@@ -220,10 +220,38 @@ export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)
   material.transparent=false; material.opacity=1; material.needsUpdate=true; return material;
 };
 
-export const metalPresetFromConfig=(m:any):AurumMetalPreset=>({
-  id:m.id,color:m.color,metalness:m.metalness,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
-  clearcoat:m.clearcoat,anisotropy:m.anisotropy,anisotropyRotation:m.anisotropyRotation
-});
+/**
+ * Resolve the experimental green-gold + white-gold reference as a real
+ * parameter blend of the two existing catalog profiles. This is a visual
+ * shader/material blend approximation, not a claim about metallurgical alloy
+ * chemistry. Keep the source profiles untouched.
+ */
+export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
+  if(String(m?.id??"")!=="oro18_verde_blanco_ijewel"){
+    return {
+      id:m.id,color:m.color,metalness:m.metalness,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
+      clearcoat:m.clearcoat,anisotropy:m.anisotropy,anisotropyRotation:m.anisotropyRotation
+    };
+  }
+  const green={color:0xb5b66f,metalness:1,roughness:.13,envMapIntensity:1.98,clearcoat:.15,anisotropy:0};
+  const white={color:0xdce1e5,metalness:1,roughness:.11,envMapIntensity:1.80,clearcoat:.15,anisotropy:.05};
+  const mix=.5;
+  const greenColor=new THREE.Color(green.color);
+  const whiteColor=new THREE.Color(white.color);
+  // Blend in linear-light space to avoid the overly bright result of averaging
+  // display-space hex channels.
+  greenColor.lerp(whiteColor,mix);
+  return {
+    id:"oro18_verde_blanco_ijewel",
+    color:greenColor.getHex(),
+    metalness:green.metalness*(1-mix)+white.metalness*mix,
+    roughness:green.roughness*(1-mix)+white.roughness*mix,
+    envMapIntensity:green.envMapIntensity*(1-mix)+white.envMapIntensity*mix,
+    clearcoat:green.clearcoat*(1-mix)+white.clearcoat*mix,
+    anisotropy:green.anisotropy*(1-mix)+white.anisotropy*mix,
+    anisotropyRotation:0,
+  };
+};
 
 export const gemPresetFromConfig=(g:any):AurumGemPreset=>({
   id:g.id,familia:g.familia,variante:g.variante,color:g.color,transmission:g.transmission,
