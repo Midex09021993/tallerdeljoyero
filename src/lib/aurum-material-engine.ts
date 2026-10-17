@@ -145,21 +145,19 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // roughness floor on every white metal. A lower floor reduces the broad, hazy
   // reflection that can read as surface grain, while leaving authored satin/matte
   // values untouched and retaining a small physically plausible microfacet spread.
-  material.roughness=!useAurumRenderCalibration
-    ? baseRoughness
-    : isPolishedPreciousMetal
-      ? Math.max(.065,Math.min(.55,calibratedRoughness))
-      : calibratedRoughness;
+  material.roughness=useAurumRenderCalibration
+    ? Math.max(.065,Math.min(.55,calibratedRoughness))
+    : baseRoughness;
 
-  material.envMapIntensity=!useAurumRenderCalibration
-    ? Number(preset.envMapIntensity)
-    : response.environmentIntensity;
+  material.envMapIntensity=useAurumRenderCalibration
+    ? response.environmentIntensity
+    : Number(preset.envMapIntensity);
 
   // Normal rendering retains the existing metal response. The explicit
   // diagnostic comparison mode uses the catalog clearcoat value unchanged.
-  material.clearcoat=!useAurumRenderCalibration
-    ? Number(preset.clearcoat??0)
-    : Math.max(.025,Math.min(.055,preset.clearcoat*.10+.015));
+  material.clearcoat=useAurumRenderCalibration
+    ? Math.max(.025,Math.min(.055,Number(preset.clearcoat??0)*.10+.015))
+    : Number(preset.clearcoat??0);
   material.clearcoatRoughness=Math.max(.025,Math.min(.12,material.roughness*.7));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
