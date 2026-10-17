@@ -185,7 +185,7 @@ function CatalogoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("catalogo_categorias")
-        .select("id, nombre, slug, orden, activo")
+        .select("id, nombre, slug, orden, activo, parent_id")
         .eq("participante_id", sesion!.participante!.id)
         .eq("activo", true)
         .order("orden", { ascending: true })
@@ -196,8 +196,13 @@ function CatalogoPage() {
     staleTime: 30_000,
   });
   const categoriasDisponibles = useMemo(() => {
-    const principales = categoriasRows.filter((item) => item.activo);
-    return principales.map((item) => item.nombre);
+    const categoriasActivas = categoriasRows.filter((item) => item.activo);
+    const porId = new Map(categoriasActivas.map((item) => [item.id, item]));
+    return categoriasActivas.map((item) => {
+      if (!item.parent_id) return item.nombre;
+      const padre = porId.get(item.parent_id);
+      return padre ? `${padre.nombre} / ${item.nombre}` : item.nombre;
+    });
   }, [categoriasRows]);
 
   const { data: productoRows = [], isLoading: productosLoading, error: productosError } = useQuery({
