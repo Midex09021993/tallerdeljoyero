@@ -1159,6 +1159,19 @@ export function AurumRender() {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
             }
             renderer.render(escena,camara);
+            console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
+              requestedOutput: { width, height },
+              internalRender: { width: renderer.domElement.width, height: renderer.domElement.height },
+              outputCanvas: { width: output.width, height: output.height },
+              supersamplingScale: renderScale,
+              diamondBvh: diamondBvhRuntime?.diagnostics() ?? {
+                activeMeshes: 0,
+                triangleCount: 0,
+                diamondMeshes: 0,
+                diamondTriangleCount: 0,
+                enabled: false,
+              },
+            });
             context.fillStyle="#ffffff";
             context.fillRect(0,0,width,height);
             context.imageSmoothingEnabled=true;
