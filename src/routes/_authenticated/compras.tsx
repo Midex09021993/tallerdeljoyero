@@ -78,7 +78,7 @@ function ComprasPage() {
   const recibir = async (id: string) => {
     const { error } = await supabase.rpc("recibir_compra", { _compra_id: id });
     if (error) toast.error(error.message);
-    else { toast.success("Compra recibida: entrada registrada en Kardex"); await qc.invalidateQueries({ queryKey: ["compras", sesion?.sede?.id] }); await qc.invalidateQueries({ queryKey: ["inventario-real", sesion?.sede?.id] }); }
+    else { toast.success("Compra recibida: entrada registrada en Kardex"); await Promise.all([qc.invalidateQueries({ queryKey: ["compras"] }), qc.invalidateQueries({ queryKey: ["inventario-real"] }), qc.invalidateQueries({ queryKey: ["inventario"] }), qc.invalidateQueries({ queryKey: ["inventario-movimientos-real"] }), qc.invalidateQueries({ queryKey: ["inventario-movimientos"] })]); }
   };
 
   if (sesion && !sesion.esAdmin) {
