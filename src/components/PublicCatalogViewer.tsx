@@ -24,6 +24,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const renderRef = useRef<(() => void) | null>(null);
+  const materialIdRef = useRef(materialId);
+  const gemIdRef = useRef(gemId);
+  materialIdRef.current = materialId;
+  gemIdRef.current = gemId;
   const [status, setStatus] = useState("Cargando diseño 3D…");
   const [error, setError] = useState<string | null>(null);
 
@@ -46,8 +50,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
 
     const applyProfiles = () => {
       if (!model) return;
-      const metal = MATERIALES.find((item) => item.id === materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
-      const gem = GEMAS.find((item) => item.id === gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
+      const metal = MATERIALES.find((item) => item.id === materialIdRef.current) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!
+      const gem = GEMAS.find((item) => item.id === gemIdRef.current) ?? GEMAS.find((item) => item.id === "diamante_natural")!
       model.traverse((object: any) => {
         if (!object.isMesh || !object.material) return;
         const family = classifyMesh(object);
