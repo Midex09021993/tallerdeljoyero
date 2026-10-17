@@ -4,7 +4,7 @@ import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
-type RhinoLayer = { [key: string]: unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; color?: unknown; Color?: unknown; mode?: unknown; Mode?: unknown; objectMode?: unknown; ObjectMode?: unknown; visible?: unknown; Visible?: unknown; isVisible?: unknown; visibility?: unknown; visibilityMode?: unknown; VisibilityMode?: unknown; parentLayerId?: unknown; parentId?: unknown; parentLayerID?: unknown; ParentLayerId?: unknown; };
+type RhinoLayer = { [key: string]: unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; mode?:unknown; Mode?:unknown; objectMode?:unknown; ObjectMode?:unknown; visible?:unknown; Visible?:unknown; isVisible?:unknown; visibility?:unknown; visibilityMode?:unknown; VisibilityMode?:unknown; parentLayerId?:unknown; parentId?:unknown; parentLayerID?:unknown; ParentLayerId?:unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; color?: unknown; Color?: unknown; mode?: unknown; Mode?: unknown; objectMode?: unknown; ObjectMode?: unknown; visible?: unknown; Visible?: unknown; isVisible?: unknown; visibility?: unknown; visibilityMode?: unknown; VisibilityMode?: unknown; parentLayerId?: unknown; parentId?: unknown; parentLayerID?: unknown; ParentLayerId?: unknown; };
 type RhinoObject = THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isLineSegments?: boolean; isPoints?: boolean; geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
 type RhinoGeometryData = { objects?: Array<{ objectType?: string; geometry?: { xform?: { array?: unknown } }; attributes?: Record<string, unknown> }> };
 
@@ -101,7 +101,7 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     if (cache.has(index)) return cache.get(index)!;
     if (trail.has(index)) return true;
     const layer = layers[index];
-    if (!directVisible(layer)) { cache.set(index, false); return false; }
+    if (!layer || !directVisible(layer)) { cache.set(index, false); return false; }
     const parentId = layer?.parentLayerId ?? layer?.parentId ?? layer?.parentLayerID ?? layer?.ParentLayerId;
     if (parentId != null && String(parentId) && String(parentId) !== "00000000-0000-0000-0000-000000000000") {
       const parent = byId.get(String(parentId));
@@ -130,7 +130,8 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
     if (index >= 0) layerVisible = effectiveVisible(index);
     else {
       const layerName = String(x.userData?.["attributes"]?.layerName ?? x.userData?.["layerName"] ?? "").trim().toLowerCase();
-      if (layerName && byName.has(layerName)) layerVisible = effectiveVisible(layers.indexOf(byName.get(layerName)));
+      const namedLayer = byName.get(layerName);
+      if (layerName && namedLayer) layerVisible = effectiveVisible(layers.indexOf(namedLayer));
     }
     const objectVisible = !isRhinoObjectHiddenForExport(attrs);
     const visible = objectVisible && layerVisible;

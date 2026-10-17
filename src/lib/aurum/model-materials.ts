@@ -143,8 +143,8 @@ export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMe
         // not hide a more useful source-layer name.
         const sourceMeta=source?.userData??{};
         const meshMeta=mesh?.userData??{};
-        const attributes=meshMeta?.attributes??{};
-        const rhino=meshMeta?.aurumRhino??{};
+        const attributes=meshMeta?.["attributes"]??{};
+        const rhino=meshMeta?.["aurumRhino"]??{};
         const sourceLabel=[
           source?.name,
           sourceMeta?.["name"],

@@ -1,30 +1,24 @@
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
-import { getAurumLightingPreset, type AurumLightingRenderPresetId, type AurumLightConfig } from "../aurum-lighting-engine";
-import type { Light, LightShadow, Object3D, Scene } from "three";
+import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
 import { getAurumReflectionRigProfile } from "../aurum-reflection-engine";
 
-type AurumLightSourceConfig = { enabled:boolean; intensity:number; position:[number,number,number]; angle?:number; penumbra?:number };
-type AurumManagedLight = Light & { distance?:number; castShadow?:boolean; shadow?:LightShadow; target?:Object3D; angle?:number; penumbra?:number; width?:number; height?:number; lookAt?:(x:number,y:number,z:number)=>void; dispose?:()=>void };
-type AurumShadowConfig = { mapSize?:number; bias:number; normalBias:number; contact?:boolean; contactScale?:number };
-type AurumRenderQuality = { shadowMapSize?:number };
-
 export interface AurumLightingController {
-  readonly lights: Record<string, AurumManagedLight>;
+  readonly lights: Record<string, any>;
   create: () => void;
   applyPreset: (id: string) => void;
-  update: (patch: Partial<AurumLightConfig>) => void;
+  update: (patch: any) => void;
   scaleToModel: (radius: number, targetY: number) => void;
   dispose: () => void;
 }
 
 export function createAurumLightingController(
-  THREE: typeof import("three"),
-  scene: Scene,
-  config: AurumLightConfig,
-  shadowConfig: AurumShadowConfig,
-  renderQuality: AurumRenderQuality
+  THREE: any,
+  scene: any,
+  config: any,
+  shadowConfig: any,
+  renderQuality: any
 ): AurumLightingController {
-  const lights: Record<string, AurumManagedLight> = {};
+  const lights: any = {};
   let activeRigId = "jewelry";
   let lastRadius = 1;
   let lastTargetY = 0;
@@ -35,7 +29,7 @@ export function createAurumLightingController(
     : null) ?? "environment";
   const diagnosticEnvironmentOnly = diagnosticMode === "environment";
 
-  const configureShadow = (light: AurumManagedLight | undefined) => {
+  const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
     const configuredSize = Number(shadowConfig?.mapSize);
@@ -51,7 +45,7 @@ export function createAurumLightingController(
     light.shadow.normalBias = shadowConfig.normalBias;
     light.shadow.radius = shadowConfig.contact ? shadowConfig.contactScale : 1;
   };
-  const apply = (light: AurumManagedLight | undefined, cfg: AurumLightSourceConfig | undefined) => {
+  const apply = (light: any, cfg: any) => {
     if (!light || !cfg) return;
     light.visible = cfg.enabled;
     light.intensity = cfg.intensity;
@@ -95,7 +89,7 @@ export function createAurumLightingController(
         // shadows; the key spot remains responsible for the contact shadow.
         if (THREE.RectAreaLight) {
           const rig = getAurumReflectionRigProfile("jewelry");
-          const createSource = (profile:ReturnType<typeof getAurumReflectionRigProfile>["softbox"]) => {
+          const createSource = (profile:any) => {
             const light = new THREE.RectAreaLight(0xffffff, profile.intensity, profile.width, profile.height);
             light.position.set(...profile.position);
             light.lookAt(0, 0, 0);
@@ -129,7 +123,7 @@ export function createAurumLightingController(
       // and rectangular reflection source. Production behavior is unchanged
       // unless ?aurumDiag=environment is explicitly present in the URL.
       if (diagnosticEnvironmentOnly) {
-        Object.values(lights).forEach((light) => {
+        Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
         if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDiag")) console.info("[AURUM][LIGHTING][DIAGNOSTIC]", {
@@ -137,15 +131,15 @@ export function createAurumLightingController(
           rig: activeRigId,
           environmentUuid: scene.environment?.uuid ?? null,
           environmentPresent: Boolean(scene.environment),
-          lights: Object.entries(lights).map(([name, light]) => ({
+          lights: Object.entries(lights).map(([name, light]: any) => ({
             name,
             type: light?.type ?? light?.constructor?.name ?? "unknown",
             visible: Boolean(light?.visible),
             intensity: Number.isFinite(Number(light?.intensity)) ? Number(light.intensity) : null,
           })),
           allSceneLights: scene.children
-            .filter((child) => (child as Object3D & {isLight?:boolean}).isLight)
-            .map((light) => ({
+            .filter((child: any) => child?.isLight)
+            .map((light: any) => ({
               name: light.name || "(unnamed)",
               type: light.type ?? light.constructor?.name ?? "unknown",
               visible: Boolean(light.visible),
@@ -179,7 +173,7 @@ export function createAurumLightingController(
         edgeLeft: {light: lights.edgeLeft, profile: rig.edgeLeft, multiplier: preset.edgeLeft},
         edgeRight: {light: lights.edgeRight, profile: rig.edgeRight, multiplier: preset.edgeRight},
       };
-      Object.values(sourceSettings).forEach((entry) => {
+      Object.values(sourceSettings).forEach((entry:any) => {
         const light = entry.light;
         const profile = entry.profile;
         if (!light || !profile) return;
@@ -214,12 +208,12 @@ export function createAurumLightingController(
       lastTargetY = Number(targetY) || 0;
       const rigScale = Math.max(safeRadius * 2.25, 1.8);
       const distance = Math.max(safeRadius * 6, 12);
-      const normalizedPosition = (position: unknown): [number,number,number] => {
+      const normalizedPosition = (position: any) => {
         if (!Array.isArray(position) || position.length < 3) return [0, 0, 0] as [number, number, number];
-        const maxComponent = Math.max(...position.slice(0, 3).map((v:unknown) => Math.abs(Number(v) || 0)), 1);
-        return position.slice(0, 3).map((v:unknown) => (Number(v) || 0) / maxComponent) as [number, number, number];
+        const maxComponent = Math.max(...position.slice(0, 3).map((v:any) => Math.abs(Number(v) || 0)), 1);
+        return position.slice(0, 3).map((v:any) => (Number(v) || 0) / maxComponent) as [number, number, number];
       };
-      Object.entries(lights).forEach(([name, light]) => {
+      Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
         if (name === "softbox" || name === "strip" || name === "front" || name === "kicker" || name === "edgeLeft" || name === "edgeRight") {
           const rig = getAurumReflectionRigProfile(activeRigId);
@@ -230,8 +224,7 @@ export function createAurumLightingController(
           return;
         }
         if (light.distance !== undefined) light.distance = distance;
-        const configEntry = name in config ? config[name as keyof AurumLightConfig] : undefined;
-        const source = configEntry && typeof configEntry === "object" && "position" in configEntry ? configEntry.position : undefined;
+        const source = config?.[name]?.position;
         if (source) {
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
@@ -255,7 +248,7 @@ export function createAurumLightingController(
       });
     },
     dispose() {
-      Object.values(lights).forEach((light) => {
+      Object.values(lights).forEach((light: any) => {
         if (light?.target) scene.remove(light.target);
         scene.remove(light);
         light.dispose?.();

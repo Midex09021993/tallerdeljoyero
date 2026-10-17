@@ -11,8 +11,6 @@ import {
   applyAurumIJEWELReferenceFromMaterial,
   getAurumOpticalProfile,
   metalPresetFromConfig,
-  type AurumGemPreset,
-  type AurumMetalPreset,
 } from "../aurum-material-engine";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
 import { applyAurumDynamicScintillation } from "./scintillation";
@@ -24,13 +22,10 @@ import { buildAurumThicknessMap } from "./thickness-map";
 import { resolveAurumGemPhysicalModel, attachAurumGemPhysicalModel } from "./gem-physical-core";
 import { getAurumDiamondPipelineDiagnostics } from "./aurum-diamond-pipeline";
 
-type AurumGemCatalogEntry = { id?:string; familia?:string; nombre?:string; color?:number; transmission?:number; ior?:number; roughness?:number; envMapIntensity?:number; attenuationColor?:number; attenuationDistance?:number; dispersion?:number; iridescence?:number; thicknessScale?:number; inclusionStrength?:number; inclusionStyle?:string; perfilInterno?:string; fenomenoOptico?:string; phenomenonScaleNm?:number; };
-type AurumMeshTarget = THREE.Object3D & { isMesh?:boolean; geometry?:THREE.BufferGeometry; material?:THREE.Material | THREE.Material[] };
-
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
 
-const presetFromCatalog=(g:AurumGemCatalogEntry):AurumGemPreset=>({
+const presetFromCatalog=(g:any):any=>({
   id:String(g.id??"gema"),
   familia:String(g.familia??"Gema"),
   variante:String(g.nombre??g.id??"Natural"),
@@ -49,7 +44,7 @@ const presetFromCatalog=(g:AurumGemCatalogEntry):AurumGemPreset=>({
   inclusionType:inclusionTypeFromCatalog(g.inclusionStyle),
 });
 
-const opticalProfileFromCatalog=(g:AurumGemCatalogEntry)=>{
+const opticalProfileFromCatalog=(g:any)=>{
   const knownFamilies=new Set(["Diamante","Moissanita","Esmeralda","Rubí","Zafiro"]);
   const base=knownFamilies.has(String(g.familia))
     ? getAurumOpticalProfile(String(g.familia))
@@ -124,7 +119,7 @@ const opticalProfileFromCatalog=(g:AurumGemCatalogEntry)=>{
             : family==="Perla"
               ? {enabled:true,lw:new THREE.Color(0xb7d9ff),sw:new THREE.Color(0x8dc7e8),strength:.08}
               : undefined;
-  const phenomenon=g.fenomenoOptico;
+  const phenomenon=(g as any).fenomenoOptico;
   const phenomenonProfile=phenomenon
     ? {
         enabled:true,
@@ -157,7 +152,7 @@ const opticalProfileFromCatalog=(g:AurumGemCatalogEntry)=>{
  * We intentionally keep this a conservative scalar estimate for this step;
  * per-ray geometric depth/BVH remains a later enhancement.
  */
-const estimateAurumGemThickness=(target:AurumMeshTarget,thicknessScale=1)=>{
+const estimateAurumGemThickness=(target:any,thicknessScale=1)=>{
   const geometry=target?.geometry;
   if(!geometry)return .015;
   geometry.computeBoundingBox?.();
@@ -169,7 +164,7 @@ const estimateAurumGemThickness=(target:AurumMeshTarget,thicknessScale=1)=>{
 };
 
 
-const inspectAurumGemGeometry=(target:AurumMeshTarget)=>{
+const inspectAurumGemGeometry=(target:any)=>{
   const geometry=target?.geometry;
   if(!geometry)return {available:false};
   geometry.computeBoundingBox?.();
@@ -198,9 +193,9 @@ const inspectAurumGemGeometry=(target:AurumMeshTarget)=>{
   };
 };
 
-const selectionMeta=(part:THREE.Object3D)=>part?.userData?.aurumRhino||{};
-const selectionCategory=(part:THREE.Object3D)=>String(selectionMeta(part).categoria||"").toLowerCase();
-const selectionLayerIndex=(part:THREE.Object3D):number|null=>{
+const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
+const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
+const selectionLayerIndex=(part:any):number|null=>{
   const meta=selectionMeta(part);
   const candidates=[
     meta.layerIndex,
@@ -217,11 +212,10 @@ const selectionLayerIndex=(part:THREE.Object3D):number|null=>{
   return null;
 };
 
-export function applyAurumMaterialToModel(model:THREE.Object3D,activePart:THREE.Object3D|null,materialConfig:AurumMetalPreset,sharedMaterial:THREE.MeshPhysicalMaterial,applyAll=false) {
+export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any,applyAll=false) {
   if (!model) return false;
   if (!activePart?.isMesh && applyAll) {
-    model.traverse((node) => {
-    const part = node as AurumMeshTarget;
+    model.traverse((part:any) => {
       if (!activePart && part?.isMesh && (selectionCategory(part)==="metal" || selectionCategory(part)==="otro")) activePart=part;
     });
   }
@@ -236,9 +230,8 @@ export function applyAurumMaterialToModel(model:THREE.Object3D,activePart:THREE.
   applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
   applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
   let applied=0;
-  const auditedMaterials:Array<{mesh:string;material:THREE.Material}>=[];
-  model.traverse((node)=>{
-    const x = node as AurumMeshTarget;
+  const auditedMaterials:any[]=[];
+  model.traverse((x:any)=>{
     if(!x.isMesh)return;
     const category=selectionCategory(x);
     x.castShadow=category !== "gema";
@@ -251,10 +244,10 @@ export function applyAurumMaterialToModel(model:THREE.Object3D,activePart:THREE.
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
     const shouldApply=applyAll ? (category==="metal"||category==="otro") : (x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer));
     if(shouldApply){
-      const apply=(base:THREE.Material)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
+      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);
       const finalMaterials=Array.isArray(x.material)?x.material:[x.material];
-      auditedMaterials.push(...finalMaterials.filter(Boolean).map((m:THREE.Material)=>({mesh:x.name||x.uuid,material:m})));
+      auditedMaterials.push(...finalMaterials.filter(Boolean).map((m:any)=>({mesh:x.name||x.uuid,material:m})));
       applied++;
     }
   });
@@ -270,7 +263,7 @@ export function applyAurumMaterialToModel(model:THREE.Object3D,activePart:THREE.
         envMapIntensity:materialConfig?.envMapIntensity??null,
       },
       appliedCount:applied,
-      materials:auditedMaterials.map(({mesh,material:m})=>({
+      materials:auditedMaterials.map(({mesh,material:m}:any)=>({
         mesh,
         name:m.name??null,
         colorHex:m.color?.getHexString?.()??null,
@@ -293,11 +286,11 @@ export function applyAurumMaterialToModel(model:THREE.Object3D,activePart:THREE.
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemCatalogEntry,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   if(selectedCategory!=="gema")return false;
-  let modelRoot:THREE.Object3D=target;
+  let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
   const selectedMeta=selectionMeta(target);
@@ -318,9 +311,9 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
       : selectedLayerId!=null&&String(selectedLayerId).trim()!==""
         ? "rhino-id:"+String(selectedLayerId).trim()
         : "mesh:"+target.uuid;
-  const targets:AurumMeshTarget[]=[];
-  const allGemMeshes:AurumMeshTarget[]=[];
-  const sameSourceLayer=(part:AurumMeshTarget):boolean=>{
+  const targets:any[]=[];
+  const allGemMeshes:any[]=[];
+  const sameSourceLayer=(part:any):boolean=>{
     if(!part?.isMesh)return false;
     const meta=selectionMeta(part);
     const partLayer=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim();
@@ -336,8 +329,7 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
     if(selectedLayerId!=null&&String(selectedLayerId).trim()!=="")return partLayerId!=null&&String(partLayerId).trim()===String(selectedLayerId).trim();
     return part.uuid===target.uuid;
   };
-  modelRoot.traverse((node)=>{
-    const x = node as AurumMeshTarget;
+  modelRoot?.traverse?.((x:any)=>{
     if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
     const category=selectionCategory(x);
     if(category==="gema")allGemMeshes.push(x);
@@ -364,7 +356,7 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
     gemId:String(gemConfig?.id??""),
     gemName:String(gemConfig?.nombre??""),
     updatedAt:Date.now(),
-    matchedMeshUuids:targets.map((part)=>part.uuid),
+    matchedMeshUuids:targets.map((part:any)=>part.uuid),
     identityResolved:hasStableLayerIdentity,
   };
   modelRoot.userData={
@@ -384,7 +376,7 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
     gemId:String(gemConfig?.id??""),
     matchedMeshes:targets.length,
     identityResolved:hasStableLayerIdentity,
-    matches:targets.map((part)=>({
+    matches:targets.map((part:any)=>({
       mesh:part.name||part.uuid,
       layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
       layerKey:selectionMeta(part).layerKey??null,
@@ -395,10 +387,10 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
   });
 
   const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
-  const preset:AurumGemPreset=presetFromCatalog(gemConfig);
+  const preset:any=presetFromCatalog(gemConfig);
   const opticalProfile=opticalProfileFromCatalog(gemConfig);
   const thickness=estimateAurumGemThickness(target,preset.thicknessScale);
-  const apply=(base:THREE.Material,partTarget:AurumMeshTarget,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
+  const apply=(base:any,partTarget:any,partThickness:number,thicknessMap:THREE.DataTexture|null)=>{
     // Gem optics require MeshPhysicalMaterial. Rhino 3DM imports commonly
     // arrive as MeshStandardMaterial; cloning that class silently ignores
     // transmission, IOR, attenuation, dispersion and the dedicated diamond shader.
@@ -430,7 +422,7 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
       // source-reference metadata is attached so activation cannot be lost.
       activateAurumDiamondMaterial(next,preset);
     }
-    applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as ReturnType<typeof getAurumOpticalProfile>);
+    applyAurumDynamicScintillation(next,{...opticalProfile,crystal:physicalModel.crystal,structure:physicalModel.structure,luminescence:physicalModel.luminescence} as any);
     const geometry=partTarget?.geometry;
     const hasUsableNormals=!!geometry?.attributes?.normal&&geometry.attributes.normal.count===geometry.attributes.position?.count;
     next.flatShading=!hasUsableNormals;
@@ -439,11 +431,11 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
     next.needsUpdate=true;
     return next;
   };
-  targets.forEach((part)=>{
+  targets.forEach((part:any)=>{
     const stableSourceMaterials=getAurumSourceMaterials(part);
     const originalMaterialIsArray=hadAurumSourceMaterialArray(part);
     part.material=originalMaterialIsArray
-      ? stableSourceMaterials.map((base:THREE.Material)=>apply(base,part,thickness,null))
+      ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
     const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
     const activeGemId=String(gemConfig?.id??"");
@@ -463,7 +455,7 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
     console.warn("[AURUM][GEM MATERIAL APPLIED]",{
       mesh:part.name||part.uuid,
       selectedGem:{id:String(gemConfig?.id??""),nombre:String(gemConfig?.nombre??""),familia:String(gemConfig?.familia??""),color:String(gemConfig?.color??"")},
-      material:Array.isArray(part.material)?part.material.map((m:THREE.Material)=>({color:m?.color?.getHexString?.(),metalness:m?.metalness,transmission:m?.transmission,ior:m?.ior,thickness:m?.thickness})):part.material?{color:part.material.color?.getHexString?.(),metalness:part.material.metalness,transmission:part.material.transmission,ior:part.material.ior,thickness:part.material.thickness}:null
+      material:Array.isArray(part.material)?part.material.map((m:any)=>({color:m?.color?.getHexString?.(),metalness:m?.metalness,transmission:m?.transmission,ior:m?.ior,thickness:m?.thickness})):part.material?{color:part.material.color?.getHexString?.(),metalness:part.material.metalness,transmission:part.material.transmission,ior:part.material.ior,thickness:part.material.thickness}:null
     });
     console.warn("[AURUM][GEM GEOMETRY]",{mesh:part.name||part.uuid,diagnostics:part.userData.aurumGemGeometryDiagnostics});
     part.userData={...part.userData,aurumGemPhysicalModel:{...physicalModel,crystal:{...physicalModel.crystal,axisA:physicalModel.crystal.axisA.toArray(),axisB:physicalModel.crystal.axisB.toArray(),axisC:physicalModel.crystal.axisC.toArray()}}};
@@ -477,12 +469,12 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
         if(root?.userData?.aurumDisposed)return;
         if(part.userData?.aurumGemApplicationToken!==applicationToken||part.userData?.aurumActiveGemId!==activeGemId)return;
         const currentMaterials=Array.isArray(part.material)?part.material:[part.material];
-        if(currentMaterials.length!==expectedMaterials.length||currentMaterials.some((mat,index:number)=>mat!==expectedMaterials[index]))return;
+        if(currentMaterials.length!==expectedMaterials.length||currentMaterials.some((mat:any,index:number)=>mat!==expectedMaterials[index]))return;
         const thicknessResolution=preset.familia==="Diamante"?512:preset.familia==="Moissanita"?384:256;
         const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
         if(!result)return;
         const materials=Array.isArray(part.material)?part.material:[part.material];
-        materials.forEach((mat)=>{
+        materials.forEach((mat:any)=>{
           if(!mat)return;
           mat.thickness=result.baseThickness;
           mat.thicknessMap=result.texture;
@@ -503,4 +495,4 @@ export function applyAurumGemToTarget(target:AurumMeshTarget,gemConfig:AurumGemC
   requestRender?.();
   return true;
 }
-export function clearAurumGemFromTarget(target:THREE.Object3D){if(target)clearAurumInclusions(target);}
+export function clearAurumGemFromTarget(target:any){if(target)clearAurumInclusions(target);}

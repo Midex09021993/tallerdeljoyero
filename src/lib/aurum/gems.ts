@@ -7,7 +7,7 @@ import * as THREE from "three";
 import type { Object3D, Vector3 } from "three";
 import { createAurumInclusionConfig, generateAurumInclusionPoints, getAurumGemPreset } from "../aurum-material-engine";
 
-export type AurumGemInclusionInput = { id:string; inclusionStrength?:number; inclusionStyle?:string; fenomenoOptico?: "chatoyancy" | "asterism" | "schiller" | "peristerescence" | "iridescence" | "orient"; familia?: string; };
+export type AurumGemInclusionInput = { id:string; inclusionStrength?:number; inclusionStyle?:string; fenomenoOptico?: string; familia?: string; };
 type AurumInclusionConfig = ReturnType<typeof createAurumInclusionConfig>;
 type AurumInclusionPoint = ReturnType<typeof generateAurumInclusionPoints>[number];
 
@@ -306,7 +306,7 @@ export const renderAurumInclusions=(THREE:typeof import("three"),target:Object3D
     addAlexandriteInclusions(THREE,target,config,size);
     return;
   }
-  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && g.fenomenoOptico){
+  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && (g.fenomenoOptico==="chatoyancy" || g.fenomenoOptico==="asterism")){
     addChrysoberylPhenomenalInclusions(THREE,target,config,size,g.fenomenoOptico);
     return;
   }

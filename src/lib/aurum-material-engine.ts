@@ -216,10 +216,7 @@ export const applyAurumGem=(material:any,preset:AurumGemPreset,thickness:number)
  * shader/material blend approximation, not a claim about metallurgical alloy
  * chemistry. Keep the source profiles untouched.
  */
-type AurumMetalPresetInput = { id?:string; color:number; metalness:number; roughness:number; envMapIntensity:number; clearcoat:number; anisotropy?:number; anisotropyRotation?:number };
-type AurumGemPresetInput = AurumGemPreset & { inclusionStrength?:number };
-
-export const metalPresetFromConfig=(m:AurumMetalPresetInput):AurumMetalPreset=>{
+export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
   // Comparative profile grounded in the supplied GLB's source material factors:
   // green gold [0.5583404, 0.4178851, 0.1778884], white gold
   // [0.5394795, 0.5394795, 0.5457245]. Both source PMAT references specify
@@ -277,7 +274,7 @@ export const metalPresetFromConfig=(m:AurumMetalPresetInput):AurumMetalPreset=>{
   };
 };
 
-export const gemPresetFromConfig=(g:AurumGemPresetInput):AurumGemPreset=>({
+export const gemPresetFromConfig=(g:any):AurumGemPreset=>({
   id:g.id,familia:g.familia,variante:g.variante,color:g.color,transmission:g.transmission,
   ior:g.ior,roughness:g.roughness,envMapIntensity:g.envMapIntensity,
   attenuationColor:g.attenuationColor,attenuationDistance:g.attenuationDistance,
