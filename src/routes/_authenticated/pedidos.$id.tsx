@@ -31,6 +31,7 @@ function PedidoDetalle() {
 
   const { data: contratoFinanciero } = useQuery({
     queryKey: ["pedido-contrato-financiero", pedido?.contrato_id],
+    staleTime: 30_000,
     enabled: Boolean(pedido?.contrato_id),
     queryFn: async () => {
       if (!pedido?.contrato_id) return null;
@@ -46,6 +47,7 @@ function PedidoDetalle() {
 
   const { data: pagosContrato = [] } = useQuery({
     queryKey: ["pedido-contrato-pagos", pedido?.contrato_id],
+    staleTime: 30_000,
     enabled: Boolean(pedido?.contrato_id),
     queryFn: async () => {
       if (!pedido?.contrato_id) return [];
