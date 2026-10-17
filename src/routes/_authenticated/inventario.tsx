@@ -74,17 +74,6 @@ function InventarioPage() {
   const esAdmin = Boolean(sesion?.esAdmin);
   const puedeMover = esAdmin;
 
-  if (sesion && !esAdmin) {
-    return (
-      <AppShell titulo="Inventario" subtitulo="Acceso restringido">
-        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-card">
-          <p className="text-base font-semibold">Inventario restringido</p>
-          <p className="mt-2 text-sm text-muted-foreground">Tu cuenta operativa no tiene acceso al inventario general ni al Kardex.</p>
-        </div>
-      </AppShell>
-    );
-  }
-
   const [tab, setTab] = useState<Tab>("resumen");
   const [materiales, setMateriales] = useState<Material[]>([]);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -122,7 +111,7 @@ function InventarioPage() {
   });
 
   async function cargar() {
-    if (!sedeId) return;
+    if (!esAdmin || !sedeId) return;
     setCargando(true);
     const [a, b, c] = await Promise.all([
       supabase.from("inventario").select("*").eq("sede_id", sedeId).order("material"),
@@ -157,7 +146,7 @@ function InventarioPage() {
     setCargando(false);
   }
 
-  useEffect(() => { void cargar(); }, [sedeId]);
+  useEffect(() => { void cargar(); }, [sedeId, esAdmin]);
 
   useEffect(() => {
     if (!joyaSeleccionada) {
@@ -419,6 +408,17 @@ function InventarioPage() {
   }
 
   if (!sesion) return null;
+
+  if (!esAdmin) {
+    return (
+      <AppShell titulo="Inventario" subtitulo="Acceso restringido">
+        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+          <p className="text-base font-semibold">Inventario restringido</p>
+          <p className="mt-2 text-sm text-muted-foreground">Tu cuenta operativa no tiene acceso al inventario general ni al Kardex.</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell
