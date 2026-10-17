@@ -17,7 +17,7 @@ const empty={tipo_participante:"profesional" as Tipo,nombre:"",razon_social:"",e
 
 export function EcosistemaParticipantesOwner(){
  const qc=useQueryClient(); const [vincular,setVincular]=useState<Participante|null>(null); const [capacidades,setCapacidades]=useState<Participante|null>(null); const [buscar,setBuscar]=useState(""); const [tipo,setTipo]=useState<"todos"|Tipo>("todos"); const [estado,setEstado]=useState<"todos"|Estado>("activo"); const [edit,setEdit]=useState<Participante|null>(null); const [form,setForm]=useState(empty); const [nuevo,setNuevo]=useState(false); const [saving,setSaving]=useState(false);
- const {data=[],isLoading,error}=useQuery({queryKey:["ecosistema-participantes"],staleTime:15_000,queryFn:async()=>{const {data,error}=await supabase.from("ecosistema_participantes").select("*").order("nombre");if(error)throw error;return(data??[]) as Participante[]}});
+ const {data=[],isLoading,error}=useQuery({queryKey:["ecosistema-participantes"],staleTime:15_000,queryFn:async()=>{const {data,error}=await supabase.from("ecosistema_participantes").select("id,tipo_participante,nombre,razon_social,email,telefono,ciudad,descripcion,estado,notas_owner,sede_id,metadata").order("nombre");if(error)throw error;return(data??[]) as Participante[]}});
  type CuotaPlan = { plan_id: PlanComercialId; operaciones_comerciales_mes: number; almacenamiento_mib: number; usos_render_mes: number; productos_catalogo_max: number };
  const [cuotasEdit, setCuotasEdit] = useState<Record<string, CuotaPlan>>({});
  const [guardandoCuota, setGuardandoCuota] = useState<string | null>(null);
