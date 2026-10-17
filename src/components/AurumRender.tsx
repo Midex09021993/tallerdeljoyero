@@ -999,16 +999,25 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gemaCatalogo:(g:GemaConfig)=>{
           if(!modelo)return;
           const visited=new Set<string>();
+          let gemMeshes=0;
           modelo.traverse((x:any)=>{
-            if(!x.isMesh||x.userData?.aurumInternalInclusion||String(x.userData?.aurumRhino?.categoria ?? "").toLowerCase()!=="gema")return;
+            if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
             const meta=x.userData?.aurumRhino??{};
             const attrs=x.userData?.attributes??{};
-            const layer=String(meta.capa??attrs.layerName??attrs.LayerName??"").trim().toLocaleLowerCase();
+            const layerName=String(meta.capa??attrs.layerName??attrs.LayerName??x.name??"").trim();
+            // Some public 3DM exports preserve the source layer name but omit
+            // the normalized category. Recover only positively identified gem
+            // layers; never guess from color or recolor the whole model.
+            const category=String(meta.categoria??clasificarCapa(layerName,colorRhinoHex(meta.colorCapa))).toLowerCase();
+            if(category!=="gema")return;
+            gemMeshes++;
+            const layer=layerName.toLocaleLowerCase();
             const key=layer||String(meta.layerKey??x.uuid);
             if(visited.has(key))return;
             visited.add(key);
             aplicarGema(g,x);
           });
+          console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
           invalidateRenderRef.current?.();
         },
         escenario:aplicarEscenario,
