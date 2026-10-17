@@ -49,3 +49,6 @@ jobs:
 
       - name: Type-check contract PDF generator
         run: deno check supabase/functions/generar-contrato-pdf/index.ts
+
+      - name: Type-check Nextcloud video files
+        run: deno check supabase/functions/nextcloud-video-files/index.ts
