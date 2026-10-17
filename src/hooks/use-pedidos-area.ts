@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { esEstadoFinalPedido, pedidoEnRecepcion, type Pedido } from "@/lib/taller-db";
 
 export type TrabajoBandeja = {
@@ -52,15 +52,22 @@ export function usePedidosDeArea(area: string) {
   const { filtrarPedidos, sedeFiltro, esDueno } = useSedeFiltroDueno();
 
   const query = useQuery({
-    queryKey: ["pedidos-area-operativa", sesion?.user.id, esDueno ? sedeFiltro : sesion?.participante?.sede_id],
+    queryKey: ["pedidos", "area-operativa", sesion?.user.id, esDueno ? sedeFiltro : sesion?.participante?.sede_id],
     // Reutiliza la bandeja al cambiar de área; las mutaciones deben invalidar esta clave.
     staleTime: 60_000,
     queryFn: async (): Promise<PedidoOperativo[]> => {
-      const { data, error } = await supabase
+      let consulta = supabase
         .from("pedidos")
         .select(CAMPOS_PEDIDO_OPERATIVO)
-        .eq("estado", "En Producción")
-        .order("created_at", { ascending: false });
+        .eq("estado", "En Producción");
+
+      // La bandeja del dueño ya restringe estos resultados por sede en el cliente.
+      // Aplicamos el mismo criterio en Supabase para evitar transferir pedidos de otras sedes.
+      if (esDueno && sedeFiltro !== TODAS_LAS_SEDES) {
+        consulta = consulta.eq("sede_id", sedeFiltro);
+      }
+
+      const { data, error } = await consulta.order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((pedido) => {
         const participante = pedido.ecosistema_participantes as { nombre: string } | null;
