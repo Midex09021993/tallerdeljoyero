@@ -365,18 +365,26 @@ function MiNubePage() {
       // Solo se necesita una portada por carpeta; firmar cada foto genera
       // solicitudes innecesarias en bibliotecas con muchas imágenes.
       const primeraFotoPorCarpeta = new Set<string>();
-      const archivosConVistas = await Promise.all(archivosPlanos.map(async (archivo) => {
-        if (archivo.categoria !== "fotos" || primeraFotoPorCarpeta.has(archivo.carpeta)) return archivo;
-        primeraFotoPorCarpeta.add(archivo.carpeta);
-        try {
-          const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
-          if (signedError) console.warn("[Mi Nube] No se pudo generar vista previa.", archivo.nombre, signedError.message);
-          return { ...archivo, urlVista: data?.signedUrl ?? null };
-        } catch (previewCause) {
-          console.warn("[Mi Nube] Falló una vista previa; se conserva el archivo en el listado.", archivo.nombre, previewCause);
-          return { ...archivo, urlVista: null };
-        }
-      }));
+      const archivosConVistas: ArchivoNube[] = [];
+      // Mantener un máximo de cuatro firmas de URL en paralelo, incluso si
+      // la biblioteca contiene cientos de carpetas con fotografías.
+      const concurrenciaVistas = 4;
+      for (let inicio = 0; inicio < archivosPlanos.length; inicio += concurrenciaVistas) {
+        const lote = archivosPlanos.slice(inicio, inicio + concurrenciaVistas);
+        const loteConVistas = await Promise.all(lote.map(async (archivo) => {
+          if (archivo.categoria !== "fotos" || primeraFotoPorCarpeta.has(archivo.carpeta)) return archivo;
+          primeraFotoPorCarpeta.add(archivo.carpeta);
+          try {
+            const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60 * 10);
+            if (signedError) console.warn("[Mi Nube] No se pudo generar vista previa.", archivo.nombre, signedError.message);
+            return { ...archivo, urlVista: data?.signedUrl ?? null };
+          } catch (previewCause) {
+            console.warn("[Mi Nube] Falló una vista previa; se conserva el archivo en el listado.", archivo.nombre, previewCause);
+            return { ...archivo, urlVista: null };
+          }
+        }));
+        archivosConVistas.push(...loteConVistas);
+      }
 
       setArchivos((actuales) => [
         ...archivosConVistas,
