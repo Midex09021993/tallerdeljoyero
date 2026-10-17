@@ -18,7 +18,7 @@ export type AurumDiamondBvhRuntime = {
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
-  diagnostics: () => { activeMeshes: number; triangleCount: number; enabled: boolean };
+  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; enabled: boolean };
 };
 
 const getGemFamily = (material: any) =>
@@ -183,11 +183,24 @@ export async function createAurumDiamondBvhRuntime(options: {
     },
     diagnostics() {
       let triangleCount = 0;
-      for (const mesh of entries.keys()) {
+      let diamondMeshes = 0;
+      let diamondTriangleCount = 0;
+      for (const [mesh, entry] of entries) {
         const geometry = mesh.geometry;
-        triangleCount += Math.floor((geometry.getIndex()?.count ?? geometry.getAttribute("position")?.count ?? 0) / 3);
+        const triangles = Math.floor((geometry.getIndex()?.count ?? geometry.getAttribute("position")?.count ?? 0) / 3);
+        triangleCount += triangles;
+        if (entry.family === "diamante") {
+          diamondMeshes += 1;
+          diamondTriangleCount += triangles;
+        }
       }
-      return { activeMeshes: entries.size, triangleCount, enabled: entries.size > 0 };
+      return {
+        activeMeshes: entries.size,
+        triangleCount,
+        diamondMeshes,
+        diamondTriangleCount,
+        enabled: entries.size > 0,
+      };
     },
   };
 }
