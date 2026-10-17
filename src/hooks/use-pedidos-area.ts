@@ -157,10 +157,19 @@ export function useTrabajosDelOperario() {
       // Solo se intenta para pedidos de esta sede cuya ruta/área coincide con las
       // áreas asignadas al operario.
       if (sesion.areas?.length) {
-        const { data: pedidosProduccion, error: pedidosError } = await supabase
+        let consultaPedidos = supabase
           .from("pedidos")
           .select("id, ruta, area_actual")
           .eq("estado", "En Producción");
+
+        // La reparación solo debe revisar pedidos de la sede del operario.
+        // Si la sesión no tiene sede, mantenemos el alcance anterior por seguridad funcional.
+        const sedeOperario = sesion.participante?.sede_id;
+        if (sedeOperario) {
+          consultaPedidos = consultaPedidos.eq("sede_id", sedeOperario);
+        }
+
+        const { data: pedidosProduccion, error: pedidosError } = await consultaPedidos;
 
         if (pedidosError) {
           throw new Error(
