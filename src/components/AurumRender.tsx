@@ -175,7 +175,7 @@ export function AurumRender() {
   const [busquedaMateriales, setBusquedaMateriales] = useState("");
   const [busquedaGemas, setBusquedaGemas] = useState("");
   const materialesVisibles = useMemo(() => {
-    const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "plata925_pulida", "platino_pulido"]);
+    const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "oro18_verde_blanco_ijewel", "plata925_pulida", "platino_pulido"]);
     const termino = busquedaMateriales.trim().toLocaleLowerCase("es");
     return MATERIALES.filter((m) => (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId) && (!termino || (m.nombre+" "+m.id).toLocaleLowerCase("es").includes(termino))).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
   }, [mostrarTodosMateriales, materialId, busquedaMateriales]);
