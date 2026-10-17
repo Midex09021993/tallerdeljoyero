@@ -60,19 +60,19 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const family = classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const next = originalMaterials.map((original) => {
-          const material = original;
+          const material = original as THREE.MeshPhysicalMaterial;
           if (family === "metal") {
             applyAurumMetal(material, metalPresetFromConfig(metal));
             material.envMap = environment;
           } else if (family === "gema") {
-            applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+            applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.["aurumOpticalProfile"]?.thickness ?? 1)));
             material.envMap = gemEnvironment ?? environment;
             material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia, aurumGemEnvIntensity: gem.envMapIntensity };
           }
           material.needsUpdate = true;
           return material;
         });
-        object.material = Array.isArray(object.material) ? next : next[0];
+        object.material = Array.isArray(object.material) ? next : next[0]!;
       });
       renderRef.current?.();
     };
@@ -147,17 +147,17 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         camera.far = Math.max(distance + radius * 20, 100);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
-        controls.target.set(0, 0, 0);
-        controls.minDistance = radius * .6;
-        controls.maxDistance = radius * 12;
-        controls.enablePan = false;
-        controls.enableRotate = true;
-        controls.enableZoom = true;
-        controls.update();
+        controls!.target.set(0, 0, 0);
+        controls!.minDistance = radius * .6;
+        controls!.maxDistance = radius * 12;
+        controls!.enablePan = false;
+        controls!.enableRotate = true;
+        controls!.enableZoom = true;
+        controls!.update();
         scene.add(model);
         modelRef.current = model;
         applyProfiles();
-        loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => renderer.render(scene, camera), { progressiveFrames: 3 });
+        loop = startAurumViewerLoop({ node: host, camera: camera!, renderer: renderer!, controls: controls! }, () => renderer!.render(scene!, camera!), { progressiveFrames: 3 });
         renderRef.current = () => loop?.converge?.(3);
         resizeObserver = new ResizeObserver(() => {
           if (!host || !camera || !renderer) return;
@@ -204,7 +204,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       materials.forEach((material) => {
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
-        if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+        if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.["aurumOpticalProfile"]?.thickness ?? 1)));
         material.needsUpdate = true;
       });
     });

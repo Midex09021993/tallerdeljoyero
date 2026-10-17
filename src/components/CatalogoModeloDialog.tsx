@@ -195,7 +195,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           return;
         }
         if (data && typeof data.carpeta === "string" && Array.isArray(data.archivos)) {
-          setProyectoNube({ carpeta: data.carpeta, archivos: data.archivos });
+          setProyectoNube({ carpeta: data.carpeta, archivos: data.archivos.filter(esCatalogoNubeArchivo) });
         }
       })();
     }
