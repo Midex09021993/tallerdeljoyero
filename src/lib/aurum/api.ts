@@ -40,7 +40,7 @@ const CATALOG_API_METHODS = [
 export function createAurumCatalogApi(api: Partial<AurumApi>): AurumCatalogApi {
   const publicApi: AurumCatalogApi = {};
   for (const method of CATALOG_API_METHODS) {
-    const candidate = api[method];
+    const candidate = (api as Record<string, unknown>)[method];
     if (typeof candidate === "function") {
       publicApi[method] = (...args: any[]) => candidate(...args);
     }
