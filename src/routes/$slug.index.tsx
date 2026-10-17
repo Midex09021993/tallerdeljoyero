@@ -216,8 +216,7 @@ function CatalogoPublicoPage() {
         direccion_contacto: typeof contacto['direccion_contacto'] === "string" ? contacto['direccion_contacto'] : null,
       })) as CatalogoRow[];
     },
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 15_000,
     refetchOnWindowFocus: true,
     retry: 1,
   });
