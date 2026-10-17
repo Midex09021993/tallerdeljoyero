@@ -246,6 +246,7 @@ function PedidoDetalle() {
 
   const { data: archivos = [] } = useQuery({
     queryKey: ["pedidos-archivos", id],
+    staleTime: 30_000,
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -282,6 +283,7 @@ function PedidoDetalle() {
 
   const { data: eventos = [] } = useQuery({
     queryKey: ["pedidos-eventos", id],
+    staleTime: 30_000,
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("produccion_eventos").select("id,tipo,estado_anterior,estado_nuevo,usuario_id,datos,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(150);
@@ -292,6 +294,7 @@ function PedidoDetalle() {
 
   const { data: movimientos = [] } = useQuery({
     queryKey: ["pedidos-movimientos", id],
+    staleTime: 30_000,
     enabled: Boolean(id),
     queryFn: async () => {
       const { data, error } = await supabase.from("pedido_movimientos").select("id,area_origen,area_destino,accion,usuario_id,nota,created_at").eq("pedido_id", id).order("created_at", { ascending: false }).limit(100);
