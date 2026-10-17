@@ -26,7 +26,7 @@ import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarg
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
-import { createAurumApi } from "../lib/aurum/api";
+import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -100,7 +100,9 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
   </button>;
 };
 
-export function AurumRender() {
+type AurumRenderProps = { onCatalogApiReady?: (api: AurumCatalogApi | null) => void };
+
+export function AurumRender({ onCatalogApiReady }: AurumRenderProps = {}) {
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
@@ -132,6 +134,8 @@ export function AurumRender() {
     refrescarLuces(n=>n+1);
   }, []);
   const apiRef = useRef<any>(null);
+  const onCatalogApiReadyRef = useRef(onCatalogApiReady);
+  onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
@@ -1296,6 +1300,7 @@ export function AurumRender() {
           URL.revokeObjectURL(url);
         },
       });
+      onCatalogApiReadyRef.current?.(createAurumCatalogApi(apiRef.current));
       const limpiarResaltado = () => {
         if (!resaltado) return;
         escena.remove(resaltado);
@@ -1696,6 +1701,7 @@ export function AurumRender() {
       frameRef.current=null;
     }
     apiRef.current=null;
+    onCatalogApiReadyRef.current?.(null);
     viewerLoopRef.current=null;
     ptAbortRef.current?.abort();
     composerRef.current=null;
