@@ -2257,33 +2257,48 @@ export function useArchivosPedidos() {
         .limit(300);
       if (error) throw error;
 
-      return Promise.all(
-        (data ?? []).map(async (a) => {
-          const { pedidos, ...resto } = a as typeof a & {
-            pedidos: {
-              referencia: string;
-              cliente: string;
-              trabajo: string;
-              area_actual: string;
-            } | null;
-          };
-          let poster = resto.poster ?? "";
-          if (!poster && resto.url && /\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || "")) {
-            const { data: firmado } = await supabase.storage
-              .from("pedidos")
-              .createSignedUrl(resto.url, 3600);
-            poster = firmado?.signedUrl ?? "";
+      const archivos = (data ?? []).map((a) => {
+        const { pedidos, ...resto } = a as typeof a & {
+          pedidos: {
+            referencia: string;
+            cliente: string;
+            trabajo: string;
+            area_actual: string;
+          } | null;
+        };
+        return { pedidos, resto };
+      });
+
+      // Firma en una sola operación las imágenes que todavía no tienen póster.
+      const rutasParaFirmar = [...new Set(
+        archivos
+          .filter(({ resto }) => !resto.poster && resto.url && /\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || ""))
+          .map(({ resto }) => resto.url as string),
+      )];
+      const postersFirmados = new Map<string, string>();
+      if (rutasParaFirmar.length > 0) {
+        const { data: firmados, error: errorFirmas } = await supabase.storage
+          .from("pedidos")
+          .createSignedUrls(rutasParaFirmar, 3600);
+        if (errorFirmas) {
+          console.warn("[Archivos de pedidos] No se pudieron firmar todas las imágenes.", errorFirmas.message);
+        } else {
+          for (const firmado of firmados ?? []) {
+            if (firmado.path && firmado.signedUrl && !firmado.error) {
+              postersFirmados.set(firmado.path, firmado.signedUrl);
+            }
           }
-          return {
-            ...resto,
-            poster,
-            referencia: pedidos?.referencia ?? "",
-            cliente: pedidos?.cliente ?? "",
-            trabajo: pedidos?.trabajo ?? "",
-            area_actual: pedidos?.area_actual ?? "",
-          };
-        }),
-      );
+        }
+      }
+
+      return archivos.map(({ pedidos, resto }) => ({
+        ...resto,
+        poster: resto.poster || (resto.url ? postersFirmados.get(resto.url) : undefined) || "",
+        referencia: pedidos?.referencia ?? "",
+        cliente: pedidos?.cliente ?? "",
+        trabajo: pedidos?.trabajo ?? "",
+        area_actual: pedidos?.area_actual ?? "",
+      }));
     },
   });
 }
