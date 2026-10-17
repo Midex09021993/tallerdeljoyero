@@ -8,6 +8,7 @@ type Categoria = {
   slug: string;
   orden: number;
   activo: boolean;
+  parent_id: string | null;
 };
 
 type Props = {
@@ -24,6 +25,7 @@ function slugify(value: string) {
 export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChanged }: Props) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [nombre, setNombre] = useState("");
+  const [parentId, setParentId] = useState("");
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
     setError(null);
     const { data, error: queryError } = await supabase
       .from("catalogo_categorias")
-      .select("id, nombre, slug, orden, activo")
+      .select("id, nombre, slug, orden, activo, parent_id")
       .eq("participante_id", participanteId)
       .order("orden", { ascending: true })
       .order("nombre", { ascending: true });
@@ -52,16 +54,26 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
     if (!limpio) return setError("Escribe el nombre de la categoría.");
     setGuardando(true);
     setError(null);
-    const maxOrden = categorias.reduce((max, item) => Math.max(max, item.orden), 0);
+    const parent = parentId ? categorias.find((item) => item.id === parentId) : null;
+    if (parentId && (!parent || parent.parent_id)) {
+      setError("Las subcategorías deben depender de una categoría principal, sin más niveles.");
+      setGuardando(false);
+      return;
+    }
+    const maxOrden = categorias.filter((item) => item.parent_id === (parent?.id ?? null)).reduce((max, item) => Math.max(max, item.orden), 0);
+    const slugBase = slugify(limpio);
+    const slug = parent ? `${parent.slug}-${slugBase}`.slice(0, 80).replace(/-+$/g, "") : slugBase;
     const { error: insertError } = await supabase.from("catalogo_categorias").insert({
       participante_id: participanteId,
       nombre: limpio,
-      slug: slugify(limpio),
+      slug,
+      parent_id: parent?.id ?? null,
       orden: maxOrden + 10,
     });
     if (insertError) setError(insertError.message);
     else {
       setNombre("");
+      setParentId("");
       await cargar();
       onChanged();
     }
@@ -87,7 +99,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
       .from("catalogo_productos")
       .select("id", { count: "exact", head: true })
       .eq("participante_id", participanteId)
-      .eq("categoria", item.nombre);
+      .eq("categoria", item.parent_id ? `${categorias.find((parent) => parent.id === item.parent_id)?.nombre ?? ""} / ${item.nombre}` : item.nombre);
     if (countError) {
       setError(countError.message);
       return;
@@ -124,12 +136,16 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
         </div>
 
         <div className="grid gap-5 p-6">
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <select value={parentId} onChange={(e) => setParentId(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40">
+              <option value="">Categoría principal</option>
+              {categorias.filter((item) => !item.parent_id).map((item) => <option key={item.id} value={item.id}>Subcategoría de: {item.nombre}</option>)}
+            </select>
             <input
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void crear(); } }}
-              placeholder="Nueva categoría, por ejemplo: Brazaletes"
+              placeholder={parentId ? "Nueva subcategoría, por ejemplo: Compromiso" : "Nueva categoría, por ejemplo: Brazaletes"}
               className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40"
             />
             <button type="button" onClick={() => void crear()} disabled={guardando} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-xs font-semibold text-gold-foreground disabled:opacity-50">
@@ -147,8 +163,8 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
                 <div key={item.id} className="flex items-center gap-3 p-3">
                   <Tags className="size-4 text-gold" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">{item.nombre}</p>
-                    <p className="text-[10px] text-muted-foreground">/{item.slug}</p>
+                    <p className="text-sm font-semibold">{item.parent_id ? <span className="text-muted-foreground">{categorias.find((parent) => parent.id === item.parent_id)?.nombre} / </span> : null}{item.nombre}</p>
+                    <p className="text-[10px] text-muted-foreground">/{item.slug}{item.parent_id ? " · Subcategoría" : " · Principal"}</p>
                   </div>
                   <button type="button" onClick={() => void cambiarActivo(item)} className="rounded-lg bg-surface-muted px-2.5 py-1.5 text-[10px] font-semibold">
                     {item.activo ? "Activa" : "Oculta"}
@@ -164,7 +180,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
           )}
 
           <p className="text-[11px] text-muted-foreground">
-            Las categorías ocultas dejan de aparecer en el desplegable, pero no borran modelos existentes.
+            Las categorías principales pueden tener subcategorías. Ocultar una categoría no borra los modelos existentes; cada subcategoría usa la ruta de su categoría principal.
           </p>
         </div>
       </div>
