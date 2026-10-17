@@ -565,7 +565,8 @@ export function usePedidosSelector() {
 export function usePedidos() {
   return useQuery({
     queryKey: ["pedidos"],
-    staleTime: 60_000,
+    // Las mutaciones invalidan este prefijo; la caché evita refetch al volver a la pantalla.
+    staleTime: 120_000,
     queryFn: async (): Promise<Pedido[]> => {
       // La tabla pedidos es la fuente principal de esta bandeja.
       // Los datos comerciales son enriquecimiento opcional: un problema de RLS,
