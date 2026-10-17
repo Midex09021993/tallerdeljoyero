@@ -233,6 +233,8 @@ function MiNubePage() {
   const [compartidas, setCompartidas] = useState<CarpetaCompartida[]>([]);
   const [carpetasRecibidas, setCarpetasRecibidas] = useState<CarpetaRecibida[]>([]);
   const [cargandoCompartidas, setCargandoCompartidas] = useState(false);
+  const cargaCompartidasEnCurso = useRef(false);
+  const cargaCompartidasPendiente = useRef(false);
   const [anadiendoCatalogo, setAnadiendoCatalogo] = useState<string | null>(null);
 
   type EstadoNas = "checking" | "online" | "offline" | "misconfigured" | "not_configured" | "unknown";
@@ -560,7 +562,12 @@ function MiNubePage() {
     finally { setAnadiendoCatalogo(null); }
   };
   const cargarCompartidas = useCallback(async () => {
+    if (cargaCompartidasEnCurso.current) {
+      cargaCompartidasPendiente.current = true;
+      return;
+    }
     if (!participanteId || !usuarioId) { setCompartidas([]); setCarpetasRecibidas([]); return; }
+    cargaCompartidasEnCurso.current = true;
     setCargandoCompartidas(true);
     try {
       const { data: recibidas, error: errorRecibidas } = await (supabase as any)
@@ -653,7 +660,14 @@ function MiNubePage() {
       setCarpetasRecibidas(carpetas);
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar las carpetas compartidas.");
-    } finally { setCargandoCompartidas(false); }
+    } finally {
+      cargaCompartidasEnCurso.current = false;
+      setCargandoCompartidas(false);
+      if (cargaCompartidasPendiente.current) {
+        cargaCompartidasPendiente.current = false;
+        window.setTimeout(() => { void cargarCompartidas(); }, 0);
+      }
+    }
   }, [participanteId, usuarioId]);
 
   useEffect(() => { void cargarCompartidas(); }, [cargarCompartidas]);
