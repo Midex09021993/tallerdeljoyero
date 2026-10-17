@@ -633,20 +633,16 @@ function MiNubePage() {
             bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
             categoria: clasificarArchivo(nombreVisible(e.name)), origen: "supabase",
           }));
-        // La ficha compartida también necesita una sola portada, no URL firmada por foto.
+        // No firmar URLs dentro de cada carpeta: se agrupan en una sola
+        // solicitud después de listar las carpetas recibidas.
         const primeraFoto = base.find((archivo) => archivo.categoria === "fotos");
-        const conVistas = await Promise.all(base.map(async (archivo) => {
-          if (archivo !== primeraFoto) return archivo;
-          const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 60);
-          return { ...archivo, urlVista: data?.signedUrl ?? null };
-        }));
-        const imagenPortada = conVistas.find((archivo) => archivo.categoria === "fotos" && archivo.urlVista)?.urlVista ?? null;
         return {
           id: share.id,
           nombre: share.carpeta,
           propietarioNombre: nombresPropietarios.get(share.propietario_participante_id) ?? "Taller del ecosistema",
-          archivos: conVistas,
-          portada: imagenPortada,
+          archivos: base,
+          portada: null,
+          rutaPortada: primeraFoto?.ruta ?? null,
         };
       };
       // Limitar a cuatro carpetas simultáneas evita ráfagas de solicitudes a
@@ -657,7 +653,32 @@ function MiNubePage() {
         const lote = recibidasNormalizadas.slice(i, i + concurrenciaMaxima);
         carpetas.push(...await Promise.all(lote.map(cargarCarpetaRecibida)));
       }
-      setCarpetasRecibidas(carpetas);
+      // Supabase permite firmar varias rutas en una petición. Agrupar las
+      // portadas evita una llamada por cada carpeta compartida.
+      const rutasPortada = carpetas
+        .map((carpeta) => (carpeta as typeof carpeta & { rutaPortada?: string | null }).rutaPortada)
+        .filter((ruta): ruta is string => Boolean(ruta));
+      const urlPorRuta = new Map<string, string>();
+      if (rutasPortada.length > 0) {
+        const { data: urlsFirmadas, error: errorFirmas } = await supabase.storage
+          .from(BUCKET)
+          .createSignedUrls(rutasPortada, 60);
+        if (errorFirmas) {
+          console.warn("[Mi Nube] No se pudieron firmar algunas portadas compartidas.", errorFirmas.message);
+        } else {
+          for (const urlFirmada of urlsFirmadas ?? []) {
+            if (urlFirmada.path && urlFirmada.signedUrl) urlPorRuta.set(urlFirmada.path, urlFirmada.signedUrl);
+          }
+        }
+      }
+      setCarpetasRecibidas(carpetas.map((carpeta) => {
+        const rutaPortada = (carpeta as typeof carpeta & { rutaPortada?: string | null }).rutaPortada;
+        const archivos = carpeta.archivos.map((archivo) => {
+          const urlVista = rutaPortada === archivo.ruta ? urlPorRuta.get(archivo.ruta) ?? null : undefined;
+          return urlVista ? { ...archivo, urlVista } : archivo;
+        });
+        return { ...carpeta, archivos, portada: rutaPortada ? urlPorRuta.get(rutaPortada) ?? null : null };
+      }));
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar las carpetas compartidas.");
     } finally {
