@@ -129,22 +129,15 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   const diagnosticParams=typeof window!=="undefined"
     ? new URLSearchParams(window.location.search)
     : null;
-  const useAurumRenderCalibration=diagnosticParams?.get("aurumMetalCalibrated")==="off"
-    ? false
-    : true;
+  // Official profile = values validated with ?aurumMetalCalibrated=on
+  // (catalog optics unchanged). "?aurumMetalCalibrated=legacy" restores the
+  // previous attenuated response for A/B diagnostics only.
+  const useAurumRenderCalibration=diagnosticParams?.get("aurumMetalCalibrated")==="legacy";
 
-  // Keep authored finish categories. Polished yellow gold gets only a modest
-  // roughness increase so studio reflections remain defined rather than hazy.
   const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
-  const finishId=String(preset.id??"").toLowerCase();
-  const isPolishedPreciousMetal=/(pulid[oa]|polished|rodinad[oa])/.test(finishId);
   const calibratedRoughness=response.family==="yellow-gold"
     ? Math.max(.075,Math.min(.55,baseRoughness*1.12))
     : baseRoughness;
-  // Preserve the preset's polished finish instead of imposing the previous .11
-  // roughness floor on every white metal. A lower floor reduces the broad, hazy
-  // reflection that can read as surface grain, while leaving authored satin/matte
-  // values untouched and retaining a small physically plausible microfacet spread.
   material.roughness=useAurumRenderCalibration
     ? Math.max(.065,Math.min(.55,calibratedRoughness))
     : baseRoughness;
@@ -153,8 +146,6 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     ? response.environmentIntensity
     : Number(preset.envMapIntensity);
 
-  // Normal rendering retains the existing metal response. The explicit
-  // diagnostic comparison mode uses the catalog clearcoat value unchanged.
   material.clearcoat=useAurumRenderCalibration
     ? Math.max(.025,Math.min(.055,Number(preset.clearcoat??0)*.10+.015))
     : Number(preset.clearcoat??0);
@@ -176,9 +167,9 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
     aurumMetalRenderProfile:response,
     aurumMetalBaseEnvMapIntensity:material.envMapIntensity,
     aurumMetalSurfaceRoughness:material.roughness,
-    aurumMetalCalibrationMode:useAurumRenderCalibration?"aurum-render-default":"catalog-reference",
+    aurumMetalCalibrationMode:useAurumRenderCalibration?"legacy-attenuated":"catalog-reference",
     aurumMetalEffectiveOptics:{
-      mode:useAurumRenderCalibration?"aurum-render-default":"catalog-reference",
+      mode:useAurumRenderCalibration?"legacy-attenuated":"catalog-reference",
       requested:{
         color:preset.color,
         metalness:preset.metalness,
