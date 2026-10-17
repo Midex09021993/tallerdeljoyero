@@ -2145,13 +2145,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             {!embedded && <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/15 bg-[#202124]/80 px-3 py-2 shadow-lg backdrop-blur-2xl">
               <span title="Clic izquierdo + arrastrar para orbitar" className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85"><span className="grid size-5 place-items-center rounded-md bg-white/10">◉</span><span>Órbita</span><span className="text-[9px] text-white/45">Clic izq.</span></span><span title="Clic derecho + arrastrar para desplazar la vista" className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85"><span className="grid size-5 place-items-center rounded-md bg-white/10">✋</span><span>Pan</span><span className="text-[9px] text-white/45">Clic der.</span></span><span title="Usa la rueda del ratón para acercar o alejar" className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85"><span className="grid size-5 place-items-center rounded-md bg-white/10">⌕</span><span>Zoom</span><span className="text-[9px] text-white/45">Rueda</span></span><button type="button" title="Restablecer el encuadre inicial" onClick={()=>apiRef.current?.reset()} className="flex items-center gap-1.5 rounded-xl px-2 py-1 text-[10px] text-white/85 transition hover:bg-white/10 hover:text-white"><span className="grid size-5 place-items-center rounded-md bg-white/10">⌗</span><span>Ajustar</span></button>
-            </div>
+            </div>}
             {!embedded && <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
               <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
               <button type="button" onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Expand className="size-3.5"/></button>
-            </div>
+            </div>}
 
-            <div className="absolute right-5 top-1/2 z-30 -translate-y-1/2">
+            {!embedded && <div className="absolute right-5 top-1/2 z-30 -translate-y-1/2">
               <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/[.08] bg-white/90 p-1.5 shadow-[0_8px_28px_rgba(0,0,0,.12)] backdrop-blur-2xl">
                 <button type="button" title="Calidad de render" onClick={()=>setQualityOpen(v=>!v)} className={"grid size-10 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-black/5")}><Sparkles className="size-[18px]"/></button>
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><RotateCcw className="size-[18px]"/></button>
@@ -2160,14 +2160,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>
 
-            {qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-2 text-[#292824] shadow-xl backdrop-blur-2xl">
+            {!embedded && qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-2 text-[#292824] shadow-xl backdrop-blur-2xl">
               <div className="px-2 pb-2 text-[9px] font-semibold uppercase tracking-[.16em] text-[#858178]">Calidad de render</div>
               {([["low","Baja","Vista rápida"],["high","Alta","Producción"],["ultra","Ultra","Máximo detalle"]] as const).map(([id,nombre,desc])=><button key={id} type="button" onClick={()=>cambiarCalidad(id)} className={"mb-1 w-full rounded-lg border px-2.5 py-2 text-left "+(renderQualityId===id?"border-[#d4af37]/60 bg-[#d4af37]/10":"border-white/10 bg-white/[.03]")}><span className="block text-[10px] font-semibold">{nombre}</span><span className="text-[8px] text-white/40">{desc}</span></button>)}
             </div>}
             {lightingOpen && lightingPanel}
           </div>
         </main>
-        <aside className="hidden w-[260px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)] xl:block">
+        {!embedded && <aside className="hidden w-[260px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)] xl:block">
           <div className="h-full overflow-y-auto">
             <div className="border-b border-black/10 px-4 py-5">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Inspector</div>
@@ -2211,7 +2211,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </button>
             </section>
           </div>
-        </aside>
+        </aside>}
       </div>
     </div>
   </>);
